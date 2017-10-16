@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
@@ -61,6 +62,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
+import org.pf4j.PluginManager;
 
 /** Unit test for {@link CleanCommand}. */
 public class CleanCommandTest extends EasyMockSupport {
@@ -140,6 +142,8 @@ public class CleanCommandTest extends EasyMockSupport {
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
     return CommandRunnerParams.builder()
         .setConsole(new TestConsole())
         .setBuildInfoStoreManager(new BuildInfoStoreManager())
@@ -166,7 +170,8 @@ public class CleanCommandTest extends EasyMockSupport {
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setActionGraphCache(new ActionGraphCache())
         .setKnownBuildRuleTypesFactory(
-            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider))
+            new KnownBuildRuleTypesFactory(
+                processExecutor, sdkEnvironment, toolchainProvider, pluginManager))
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setToolchainProvider(toolchainProvider)

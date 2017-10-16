@@ -231,11 +231,11 @@ public class AndroidAarIntegrationTest {
   @Test
   public void testNativeLibraryDependent() throws InterruptedException, IOException {
     Main.KnownBuildRuleTypesFactoryFactory factoryFactory =
-        (processExecutor, sdkEnvironment, toolchainProvider) -> {
+        (processExecutor, sdkEnvironment, toolchainProvider, pluginManager) -> {
           TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
           testToolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
           return new KnownBuildRuleTypesFactory(
-              processExecutor, sdkEnvironment, testToolchainProvider);
+              processExecutor, sdkEnvironment, testToolchainProvider, pluginManager);
         };
 
     AssumeAndroidPlatform.assumeNdkIsAvailable();

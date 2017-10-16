@@ -164,7 +164,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionedAliasDescription;
-import com.facebook.buck.zip.rules.ZipFileDescription;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -173,10 +172,12 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import javax.annotation.Nullable;
+import org.pf4j.PluginManager;
 
 /** A registry of all the build rules types understood by Buck. */
 public class KnownBuildRuleTypes {
@@ -236,7 +237,8 @@ public class KnownBuildRuleTypes {
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
-      SdkEnvironment sdkEnvironment)
+      SdkEnvironment sdkEnvironment,
+      PluginManager pluginManager)
       throws InterruptedException, IOException {
 
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
@@ -626,7 +628,14 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());
     builder.register(new XcodeWorkspaceConfigDescription());
-    builder.register(new ZipFileDescription());
+
+    List<DescriptionProvider> descriptionProviders =
+        pluginManager.getExtensions(DescriptionProvider.class);
+    for (DescriptionProvider provider : descriptionProviders) {
+      for (Description<?> description : provider.getDescriptions()) {
+        builder.register(description);
+      }
+    }
 
     builder.setCxxPlatforms(cxxPlatforms);
     builder.setDefaultCxxPlatform(defaultCxxPlatform);

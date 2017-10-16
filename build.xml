@@ -51,6 +51,7 @@
 
   <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.5.6.jar" />
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.5.6.jar" />
+  <property name="pf4j-standalone.jar" value="${third-party.dir}/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
 
   <property name="manual.gensrc.dir" value="${basedir}/src-gen" />
   <property name="manual.gensrc.classes.dir" value="${build.dir}/src-gen/classes" />
@@ -138,6 +139,7 @@
     <include name="thrift/libthrift-0.10.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
     <include name="bazel/skylark-lang_deploy.jar" />
+    <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />
@@ -187,6 +189,7 @@
   <path id="processorpath">
     <pathelement location="${immutables-value-standalone.jar}"/>
     <pathelement location="${immutables-builder-standalone.jar}"/>
+    <pathelement location="${pf4j-standalone.jar}"/>
   </path>
 
   <pathconvert refid="processorpath" property="processorpath" />
@@ -415,6 +418,7 @@
         </compilerclasspath>
         <compilerarg value="-processorpath" />
         <compilerarg value="${processorpath}" />
+        <compilerarg value="-Apf4j.storageClassName=org.pf4j.processor.ServiceProviderExtensionStorage" />
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
         <ecj-params />

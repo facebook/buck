@@ -1,4 +1,8 @@
-java_immutables_library(
+# BUILD FILE SYNTAX: SKYLARK
+
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
     name = "rules",
     srcs = glob(["*.java"]),
     exported_deps = [
@@ -9,7 +13,7 @@ java_immutables_library(
         "//test/com/facebook/buck/zip/rules:rules",
     ],
     visibility = [
-        "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/cli:main",
         "//test/com/facebook/buck/zip/rules:rules",
     ],
     deps = [

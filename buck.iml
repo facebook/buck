@@ -102,5 +102,6 @@
     <orderEntry type="library" name="jmh" level="project" />
     <orderEntry type="library" name="bazel" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" name="pf4j-2.0.0-SNAPSHOT" level="project" />
   </component>
 </module>

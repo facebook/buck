@@ -80,6 +80,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
@@ -204,6 +205,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
+import org.pf4j.PluginManager;
 
 public final class Main {
 
@@ -329,7 +331,8 @@ public final class Main {
     KnownBuildRuleTypesFactory create(
         ProcessExecutor processExecutor,
         SdkEnvironment sdkEnvironment,
-        ToolchainProvider toolchainProvider);
+        ToolchainProvider toolchainProvider,
+        PluginManager pluginManager);
   }
 
   private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
@@ -563,6 +566,8 @@ public final class Main {
       return INTERNAL_ERROR_EXIT_CODE;
     }
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
     Config config = setupDefaultConfig(canonicalRootPath, command);
@@ -665,7 +670,7 @@ public final class Main {
 
         KnownBuildRuleTypesFactory factory =
             knownBuildRuleTypesFactoryFactory.create(
-                processExecutor, sdkEnvironment, toolchainProvider);
+                processExecutor, sdkEnvironment, toolchainProvider, pluginManager);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
@@ -719,7 +724,8 @@ public final class Main {
                       DefaultFileHashCache.createDefaultFileHashCache(
                           cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()))
               .forEach(allCaches::add);
-          // The Daemon caches a buck-out filehashcache for the root cell, so the non-daemon case needs to create that itself.
+          // The Daemon caches a buck-out filehashcache for the root cell, so the non-daemon case
+          // needs to create that itself.
           allCaches.add(
               DefaultFileHashCache.createBuckOutFileHashCache(
                   rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));

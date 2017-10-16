@@ -31,6 +31,9 @@ java_immutables_library(
         ["*.java"],
         excludes = CLI_EXCLUDES,
     ),
+    exported_deps = [
+        "//third-party/java/pf4j:pf4j",
+    ],
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
         "//src/com/facebook/buck/event/api:api",
@@ -128,6 +131,7 @@ java_immutables_library(
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/plugin:plugin",
         "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/python:support",
         "//src/com/facebook/buck/query:query",
@@ -335,6 +339,7 @@ java_binary(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
+        "//src/com/facebook/buck/zip/rules:rules",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:ddmlib",
         "//third-party/java/android:tools-sdk-common",

@@ -23,6 +23,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
@@ -93,7 +94,11 @@ public class TestCellBuilder {
 
     KnownBuildRuleTypesFactory typesFactory =
         knownBuildRuleTypesFactory == null
-            ? new KnownBuildRuleTypesFactory(executor, sdkEnvironment, toolchainProvider)
+            ? new KnownBuildRuleTypesFactory(
+                executor,
+                sdkEnvironment,
+                toolchainProvider,
+                BuckPluginManagerFactory.createPluginManager())
             : knownBuildRuleTypesFactory;
 
     return CellProvider.createForLocalBuild(

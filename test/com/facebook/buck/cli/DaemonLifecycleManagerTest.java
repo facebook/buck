@@ -31,6 +31,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -176,7 +177,11 @@ public class DaemonLifecycleManagerTest {
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     KnownBuildRuleTypesFactory factory =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, sdkEnvironment, toolchainProvider);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor,
+            sdkEnvironment,
+            toolchainProvider,
+            BuckPluginManagerFactory.createPluginManager());
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
@@ -189,7 +194,11 @@ public class DaemonLifecycleManagerTest {
 
     sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     factory =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, sdkEnvironment, toolchainProvider);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor,
+            sdkEnvironment,
+            toolchainProvider,
+            BuckPluginManagerFactory.createPluginManager());
 
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
@@ -203,7 +212,11 @@ public class DaemonLifecycleManagerTest {
 
     sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     factory =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, sdkEnvironment, toolchainProvider);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor,
+            sdkEnvironment,
+            toolchainProvider,
+            BuckPluginManagerFactory.createPluginManager());
 
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
@@ -217,7 +230,11 @@ public class DaemonLifecycleManagerTest {
 
     sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     factory =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, sdkEnvironment, toolchainProvider);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor,
+            sdkEnvironment,
+            toolchainProvider,
+            BuckPluginManagerFactory.createPluginManager());
 
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
@@ -266,7 +283,12 @@ public class DaemonLifecycleManagerTest {
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider1);
 
     KnownBuildRuleTypesFactory factory1 =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, sdkEnvironment1, toolchainProvider1);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor,
+            sdkEnvironment1,
+            toolchainProvider1,
+            BuckPluginManagerFactory.createPluginManager());
+
     TestToolchainProvider toolchainProvider2 = new TestToolchainProvider();
     toolchainProvider2.addAndroidToolchain(
         new TestAndroidToolchain(filesystem.getPath("/path/to/sdkv2")));
@@ -274,7 +296,11 @@ public class DaemonLifecycleManagerTest {
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider2);
 
     KnownBuildRuleTypesFactory factory2 =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, sdkEnvironment2, toolchainProvider2);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor,
+            sdkEnvironment2,
+            toolchainProvider2,
+            BuckPluginManagerFactory.createPluginManager());
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(

@@ -32,6 +32,7 @@ import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -51,6 +52,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.pf4j.PluginManager;
 
 public class KnownBuildRuleTypesIntegrationTest {
 
@@ -98,11 +100,18 @@ public class KnownBuildRuleTypesIntegrationTest {
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         Matchers.containsString(
             "There are two conflicting SDKs providing the same platform \"macosx-i386\":\n"));
     KnownBuildRuleTypes.createInstance(
-        buckConfig, projectFilesystem, processExecutor, toolchainProvider, sdkEnvironment);
+        buckConfig,
+        projectFilesystem,
+        processExecutor,
+        toolchainProvider,
+        sdkEnvironment,
+        pluginManager);
   }
 }

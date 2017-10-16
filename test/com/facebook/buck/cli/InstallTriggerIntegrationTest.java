@@ -72,9 +72,9 @@ public class InstallTriggerIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, sdkEnvironment, toolchainProvider) ->
+        (processExecutor, sdkEnvironment, toolchainProvider, pluginManager) ->
             new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider) {
+                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider, pluginManager) {
               @Override
               public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
                   throws IOException, InterruptedException {

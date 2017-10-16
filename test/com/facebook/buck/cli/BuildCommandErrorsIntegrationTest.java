@@ -80,9 +80,9 @@ public class BuildCommandErrorsIntegrationTest {
     workspace.setUp();
     mockDescription = new MockDescription();
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, sdkEnvironment, toolchainProvider) ->
+        (processExecutor, sdkEnvironment, toolchainProvider, pluginManager) ->
             new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider) {
+                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider, pluginManager) {
               @Override
               public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
                   throws IOException, InterruptedException {

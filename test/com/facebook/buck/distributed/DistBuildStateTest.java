@@ -40,6 +40,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
@@ -96,6 +97,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.pf4j.PluginManager;
 
 public class DistBuildStateTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -110,8 +112,11 @@ public class DistBuildStateTest {
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     sdkEnvironment = SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
     knownBuildRuleTypesFactory =
-        new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider);
+        new KnownBuildRuleTypesFactory(
+            processExecutor, sdkEnvironment, toolchainProvider, pluginManager);
   }
 
   @Test

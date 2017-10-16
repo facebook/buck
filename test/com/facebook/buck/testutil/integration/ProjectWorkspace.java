@@ -43,6 +43,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.CellProvider;
@@ -104,6 +105,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.tools.ToolProvider;
 import org.hamcrest.Matchers;
+import org.pf4j.PluginManager;
 
 /**
  * {@link ProjectWorkspace} is a directory that contains a Buck project, complete with build files.
@@ -215,8 +217,10 @@ public class ProjectWorkspace {
             public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
                 throws IOException {
               // On Windows, symbolic links from git repository are checked out as normal files
-              // containing a one-line path. In order to distinguish them, paths are read and pointed
-              // files are trued to locate. Once the pointed file is found, it will be copied to target.
+              // containing a one-line path. In order to distinguish them, paths are read and
+              // pointed
+              // files are trued to locate. Once the pointed file is found, it will be copied to
+              // target.
               // On NTFS length of path must be greater than 0 and less than 4096.
               if (attrs.size() > 0 && attrs.size() <= 4096) {
                 String linkTo = new String(Files.readAllBytes(path), UTF_8);
@@ -224,7 +228,8 @@ public class ProjectWorkspace {
                 try {
                   linkToFile = templatePath.resolve(linkTo);
                 } catch (InvalidPathException e) {
-                  // Let's assume we were reading a normal text file, and not something meant to be a
+                  // Let's assume we were reading a normal text file, and not something meant to be
+                  // a
                   // link.
                   return FileVisitResult.CONTINUE;
                 }
@@ -765,12 +770,15 @@ public class ProjectWorkspace {
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
     return CellProvider.createForLocalBuild(
             filesystem,
             Watchman.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider),
+            new KnownBuildRuleTypesFactory(
+                processExecutor, sdkEnvironment, toolchainProvider, pluginManager),
             sdkEnvironment,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());

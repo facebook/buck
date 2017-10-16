@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -35,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.pf4j.PluginManager;
 
 public final class KnownBuildRuleTypesTestUtil {
 
@@ -107,7 +109,9 @@ public final class KnownBuildRuleTypesTestUtil {
     SdkEnvironment sdkEnvironment =
         AbstractSdkEnvironment.create(config, processExecutor, toolchainProvider);
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
     return KnownBuildRuleTypes.createInstance(
-        config, filesystem, processExecutor, toolchainProvider, sdkEnvironment);
+        config, filesystem, processExecutor, toolchainProvider, sdkEnvironment, pluginManager);
   }
 }
