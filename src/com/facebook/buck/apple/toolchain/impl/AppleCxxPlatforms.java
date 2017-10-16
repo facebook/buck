@@ -192,7 +192,7 @@ public class AppleCxxPlatforms {
     }
     if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
       ldflagsBuilder.addAll(
-          Linkers.iXlinker("-bitcode_verify", "-bitcode_hide_symbols", "-bitcode_symbol_map"));
+          Linkers.iXlinker("-bitcode_verify"));
     }
 
     // Populate Xcode version keys from Xcode's own Info.plist if available.
