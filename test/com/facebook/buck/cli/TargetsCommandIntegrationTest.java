@@ -669,6 +669,23 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void canSerializeSkylarkBuildFileToJson() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "skylark", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--json", "--show-output", "--output-attributes", "srcs");
+    result.assertSuccess();
+
+    assertThat(result.getStdout(), equalTo("[\n{\n  \"srcs\" : [ \"Foo.java\" ]\n}\n]\n"));
+  }
+
+  @Test
   public void testRuleKeyDotOutput() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command_dot", tmp);

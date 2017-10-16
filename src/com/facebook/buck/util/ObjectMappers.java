@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.skylark.json.SkylarkModule;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -142,6 +143,8 @@ public class ObjectMappers {
     // Add support for serializing Guava collections.
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new Jdk8Module());
+    // Add support for serializing Skylark types.
+    mapper.registerModule(new SkylarkModule());
     return mapper;
   }
 
