@@ -20,7 +20,6 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetAddress;
 
 public class CoordinatorModeRunner implements DistBuildModeRunner {
 
@@ -64,8 +63,6 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
           new ThriftCoordinatorServer(
               coordinatorPort, queue, stampedeId, maxBuildNodesPerMinion, eventListener);
       this.server.start();
-      eventListener.onThriftServerStarted(
-          InetAddress.getLocalHost().getHostName(), coordinatorPort);
     }
 
     public int getExitCode() {
