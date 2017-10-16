@@ -56,7 +56,8 @@ public class ThriftCoordinatorServerIntegrationTest {
         EasyMock.createMock(ThriftCoordinatorServer.EventListener.class);
     eventListener.onThriftServerStarted(EasyMock.anyString(), EasyMock.eq(port));
     EasyMock.expectLastCall().once();
-    eventListener.onThriftServerClosing(EasyMock.eq(0));
+    eventListener.onThriftServerClosing(
+        EasyMock.eq(ThriftCoordinatorServer.UNEXPECTED_STOP_EXIT_CODE));
     EasyMock.expectLastCall().once();
     EasyMock.replay(eventListener);
 
@@ -79,6 +80,8 @@ public class ThriftCoordinatorServerIntegrationTest {
       Assert.assertEquals(
           GetTargetsToBuildAction.BUILD_TARGETS, targetsToBuildResponse.getAction());
       Assert.assertEquals(2, targetsToBuildResponse.getBuildTargetsSize());
+
+      // We will now close the ThriftCoordinatorServer while there is still more work to be done.
     }
 
     EasyMock.verify(eventListener);
