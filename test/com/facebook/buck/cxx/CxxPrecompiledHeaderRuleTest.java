@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PchUnavailableException;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -98,6 +99,26 @@ public class CxxPrecompiledHeaderRuleTest {
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
       CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(PREPROCESSOR_SUPPORTING_PCH);
+
+  private static final CxxBuckConfig CXX_CONFIG_PCH_DISABLED_GENERATE_ERROR =
+      new CxxBuckConfig(
+          FakeBuckConfig.builder()
+              .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=error\n")
+              .build());
+
+  private static final CxxPlatform PLATFORM_NOT_SUPPORTING_PCH_ERROR =
+      CxxPlatformUtils.build(CXX_CONFIG_PCH_DISABLED_GENERATE_ERROR)
+          .withCpp(PREPROCESSOR_SUPPORTING_PCH);
+
+  private static final CxxBuckConfig CXX_CONFIG_PCH_DISABLED_GENERATE_WARNING =
+      new CxxBuckConfig(
+          FakeBuckConfig.builder()
+              .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=warn\n")
+              .build());
+
+  private static final CxxPlatform PLATFORM_NOT_SUPPORTING_PCH_WARNING =
+      CxxPlatformUtils.build(CXX_CONFIG_PCH_DISABLED_GENERATE_WARNING)
+          .withCpp(PREPROCESSOR_SUPPORTING_PCH);
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
   private ProjectFilesystem filesystem;
@@ -466,6 +487,45 @@ public class CxxPrecompiledHeaderRuleTest {
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
       assertThat(container, Matchers.hasItem(item));
+    }
+  }
+
+  @Test
+  public void pchDisabledWithErrorModeShouldThrow() throws Exception {
+    BuildTarget pchTarget = newTarget("//test:pch");
+    CxxPrecompiledHeaderTemplate pch =
+        newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
+    ruleResolver.addToIndex(pch);
+    PchUnavailableException caught = null;
+    try {
+      newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
+          .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
+          .setCxxPlatform(PLATFORM_NOT_SUPPORTING_PCH_ERROR)
+          .setCxxBuckConfig(CXX_CONFIG_PCH_DISABLED_GENERATE_ERROR)
+          .build()
+          .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
+      throw new Error("`requirePreprocessAndCompileBuildRule` should have failed");
+    } catch (PchUnavailableException e) {
+      caught = e;
+    }
+    assertNotNull(caught);
+  }
+
+  @Test
+  public void pchDisabledWithWarnModeShouldNotThrow() throws Exception {
+    BuildTarget pchTarget = newTarget("//test:pch");
+    CxxPrecompiledHeaderTemplate pch =
+        newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
+    ruleResolver.addToIndex(pch);
+    try {
+      newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
+          .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
+          .setCxxPlatform(PLATFORM_NOT_SUPPORTING_PCH_WARNING)
+          .setCxxBuckConfig(CXX_CONFIG_PCH_DISABLED_GENERATE_WARNING)
+          .build()
+          .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
+    } catch (PchUnavailableException e) {
+      throw new Error("This exception should not have been thrown: " + e);
     }
   }
 
