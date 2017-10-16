@@ -3,7 +3,7 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/log/thrift:rule_key_logger",
+        "//src/com/facebook/buck/log/thrift:thrift",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

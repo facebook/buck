@@ -433,7 +433,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/log/thrift:rule_key_logger",
+        "//src/com/facebook/buck/log/thrift:thrift",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",

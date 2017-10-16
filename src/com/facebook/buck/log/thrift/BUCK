@@ -1,5 +1,5 @@
 java_library(
-    name = "rule_key_logger",
+    name = "thrift",
     srcs = ["ThriftRuleKeyLogger.java"],
     exported_deps = [
         "//src-gen:thrift",

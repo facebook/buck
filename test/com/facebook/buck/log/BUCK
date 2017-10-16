@@ -49,7 +49,7 @@ standard_java_test(
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",
-        "//src/com/facebook/buck/log/thrift:rule_key_logger",
+        "//src/com/facebook/buck/log/thrift:thrift",
         "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/model:build_id",

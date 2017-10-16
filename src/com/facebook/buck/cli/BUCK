@@ -119,7 +119,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/log/memory:memory",
-        "//src/com/facebook/buck/log/thrift:rule_key_logger",
+        "//src/com/facebook/buck/log/thrift:thrift",
         "//src/com/facebook/buck/macho:macho",
         "//src/com/facebook/buck/maven:maven",
         "//src/com/facebook/buck/maven:util",
