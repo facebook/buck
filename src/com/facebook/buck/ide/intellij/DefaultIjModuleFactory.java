@@ -47,7 +47,8 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
   @Override
   @SuppressWarnings(
-      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
+  // TargetNode not TargetNode<?, ?>
   public IjModule createModule(
       Path moduleBasePath, ImmutableSet<TargetNode> targetNodes, Set<Path> excludes) {
     return createModuleUsingSortedTargetNodes(
@@ -97,6 +98,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     return IjModule.builder()
         .setModuleBasePath(moduleBasePath)
         .setTargets(moduleBuildTargets)
+        .setNonSourceBuildTargets(context.getNonSourceBuildTargets())
         .addAllFolders(context.getSourceFolders())
         .putAllDependencies(context.getDependencies())
         .setAndroidFacet(context.getAndroidFacet())

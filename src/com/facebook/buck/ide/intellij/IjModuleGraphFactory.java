@@ -38,8 +38,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -183,14 +185,21 @@ public final class IjModuleGraphFactory {
               // in the module, so filter those out.
               return !module.getTargets().contains(input);
             })
-        .map(
+        .flatMap(
             depTarget -> {
+              List<IjProjectElement> elements = new ArrayList<>();
               IjModule depModule = rulesToModules.get(depTarget);
               if (depModule != null) {
-                return depModule;
+                elements.add(depModule);
               }
-              TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
-              return libraryFactory.getLibrary(targetNode).orElse(null);
+              if (depModule == null || depModule.getNonSourceBuildTargets().contains(depTarget)) {
+                // all BuildTarget's are merged into IJModule
+                // if a BuildTarget is not built from Java sources, it will also be added as a
+                // library
+                TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
+                elements.add(libraryFactory.getLibrary(targetNode).orElse(null));
+              }
+              return elements.stream();
             })
         .filter(Objects::nonNull)
         .collect(MoreCollectors.toImmutableSet());

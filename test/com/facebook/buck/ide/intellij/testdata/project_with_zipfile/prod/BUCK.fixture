@@ -1,0 +1,29 @@
+java_binary(
+    name = "prod",
+    deps = [
+        "//dep:zipdep",
+        "//dep:srcdep",
+        "//dep1:zipdep",
+        "//dep2:zipdep",
+        ":zipdep",
+    ],
+)
+
+genrule(
+    name = "copyfile",
+    srcs = ["A.java.test"],
+    cmd = "cp $SRCS $OUT",
+    out = ".",
+)
+
+zip_file(
+    name = "dep.src.zip",
+    srcs = [":copyfile",],
+)
+
+java_library(
+    name = "zipdep",
+    srcs = [":dep.src.zip"],
+    visibility = ["PUBLIC"],
+)
+

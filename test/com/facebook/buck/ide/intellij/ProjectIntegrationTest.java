@@ -156,6 +156,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testZipFile() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_zipfile");
+  }
+
+  @Test
   public void testAndroidResourcesAndLibraryInTheSameFolder()
       throws InterruptedException, IOException {
     runBuckProjectAndVerify("android_resources_in_the_same_folder");

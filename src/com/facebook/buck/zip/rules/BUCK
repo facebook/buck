@@ -15,6 +15,7 @@ java_library_with_plugins(
     visibility = [
         "//src/com/facebook/buck/cli:main",
         "//test/com/facebook/buck/zip/rules:rules",
+        "//test/com/facebook/buck/ide/intellij:intellij",
     ],
     deps = [
         "//src/com/facebook/buck/event:interfaces",

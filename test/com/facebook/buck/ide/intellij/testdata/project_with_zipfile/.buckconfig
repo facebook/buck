@@ -1,0 +1,6 @@
+[project]
+  ide = intellij
+
+[intellij]
+  jdk_name = 1.8
+  jdk_type = JavaSDK
