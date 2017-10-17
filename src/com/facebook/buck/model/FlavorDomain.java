@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Provides a named flavor abstraction on top of boolean flavors. */
 public class FlavorDomain<T> {
@@ -152,7 +153,12 @@ public class FlavorDomain<T> {
   public T getValue(Flavor flavor) {
     T result = translation.get(flavor);
     if (result == null) {
-      throw new FlavorDomainException(String.format("\"%s\" has no flavor \"%s\"", name, flavor));
+      final String availableFlavors =
+          translation.keySet().stream().map(Flavor::getName).collect(Collectors.joining(", "));
+
+      throw new FlavorDomainException(
+          String.format(
+              "\"%s\" has no flavor \"%s\"; available ones: %s", name, flavor, availableFlavors));
     }
     return result;
   }

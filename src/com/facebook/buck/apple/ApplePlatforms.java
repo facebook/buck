@@ -58,9 +58,11 @@ public class ApplePlatforms {
             e,
             "%s: Apple bundle requires an Apple platform, found '%s'\n\n"
                 + "A common cause of this error is that the required SDK is missing.\n"
-                + "Please check whether it's installed and retry.",
+                + "Please check whether it's installed and retry.\n"
+                + "Original exception: %s",
             target,
-            cxxPlatform.getFlavor().getName());
+            cxxPlatform.getFlavor().getName(),
+            e.getMessage());
       }
     }
 
