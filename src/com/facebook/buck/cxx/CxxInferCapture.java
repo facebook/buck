@@ -96,9 +96,9 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     return commandBuilder
         .add(this.inferConfig.getInferTopLevel().toString())
-        .add("-a", "capture")
-        .add("--project_root", getProjectFilesystem().getRootPath().toString())
-        .add("--out", resultsDir.toString())
+        .add("capture")
+        .add("--results-dir", resultsDir.toString())
+        .add("--project-root", getProjectFilesystem().getRootPath().toString())
         .add("--")
         .add("clang")
         .add("@" + getArgfile())

@@ -105,10 +105,10 @@ class CxxInferAnalyze extends AbstractBuildRule {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder
         .add(inferConfig.getInferTopLevel().toString())
-        .add("--project_root", getProjectFilesystem().getRootPath().toString())
-        .add("--out", resultsDir.toString())
+        .add("analyze")
+        .add("--results-dir", resultsDir.toString())
+        .add("--project-root", getProjectFilesystem().getRootPath().toString())
         .add("--specs-dir-list-file", getProjectFilesystem().resolve(specsPathList).toString());
-    commandBuilder.add("--", "analyze");
 
     return commandBuilder.build();
   }
