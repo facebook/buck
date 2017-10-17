@@ -855,16 +855,18 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
       ThreadInfo threadInfo = threadMXBean.getThreadInfo(threadId);
 
-      submitTraceEvent(
-          new ChromeTraceEvent(
-              "buck",
-              "thread_name",
-              Phase.METADATA,
-              0,
-              threadId,
-              timestampInMicroseconds,
-              threadTimestampInMicroseconds,
-              ImmutableMap.of("name", threadInfo.getThreadName())));
+      if (threadInfo != null) {
+        submitTraceEvent(
+            new ChromeTraceEvent(
+                "buck",
+                "thread_name",
+                Phase.METADATA,
+                0,
+                threadId,
+                timestampInMicroseconds,
+                threadTimestampInMicroseconds,
+                ImmutableMap.of("name", threadInfo.getThreadName())));
+      }
 
       // Force sort by thread ID so that the sort order is in creation order. This produces the
       // most readable traces.
