@@ -3,8 +3,8 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = [],  # Only visible to this build file.
     deps = [
-        "//third-party/java/jacoco:jacoco",
         "//third-party/java/guava:guava",
+        "//third-party/java/jacoco:jacoco",
         "//third-party/java/plexus:plexus-utils",
     ],
 )

@@ -1,10 +1,13 @@
 java_library(
     name = "clang",
-    srcs = glob([
-        "*.java",
-    ], excludes = [
-        "PrintHeaderMap.java"
-    ]),
+    srcs = glob(
+        [
+            "*.java",
+        ],
+        excludes = [
+            "PrintHeaderMap.java",
+        ],
+    ),
     tests = [
         "//test/com/facebook/buck/apple/clang:clang",
     ],
@@ -16,9 +19,9 @@ java_library(
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
 )
