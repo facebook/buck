@@ -1,0 +1,159 @@
+/*
+ * Copyright 2017-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.facebook.buck.distributed;
+
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidPlatformTargetSupplier;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.cli.MetadataChecker;
+import com.facebook.buck.command.Build;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
+import com.facebook.buck.rules.CachingBuildEngineDelegate;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import java.io.IOException;
+import java.util.Optional;
+
+/** * Used by Stampede to build a given set of targets on the local machine. */
+public class LocalBuilderImpl implements LocalBuilder {
+  private static final boolean KEEP_GOING = true;
+
+  private final BuckConfig distBuildConfig;
+  private final CachingBuildEngineBuckConfig engineConfig;
+  private final ResourcesConfig resourcesConfig;
+  private final DistBuildExecutorArgs args;
+  private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
+  private final ActionGraphAndResolver actionGraphAndResolver;
+
+  public LocalBuilderImpl(
+      DistBuildExecutorArgs args,
+      CachingBuildEngineDelegate cachingBuildEngineDelegate,
+      ActionGraphAndResolver actionGraphAndResolver) {
+    this.args = args;
+    this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
+    this.actionGraphAndResolver = actionGraphAndResolver;
+    this.distBuildConfig = args.getRemoteRootCellConfig();
+    this.engineConfig = distBuildConfig.getView(CachingBuildEngineBuckConfig.class);
+    this.resourcesConfig = distBuildConfig.getView(ResourcesConfig.class);
+  }
+
+  @Override
+  public int buildLocallyAndReturnExitCode(Iterable<String> targetToBuildStrings)
+      throws IOException, InterruptedException {
+    // TODO(ruibm): Fix this to work with Android.
+    MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
+    final ConcurrencyLimit concurrencyLimit =
+        new ConcurrencyLimit(
+            4,
+            resourcesConfig.getResourceAllocationFairness(),
+            4,
+            resourcesConfig.getDefaultResourceAmounts(),
+            resourcesConfig.getMaximumResourceAmounts().withCpu(4));
+    final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
+    try (CachingBuildEngine buildEngine =
+            new CachingBuildEngine(
+                Preconditions.checkNotNull(cachingBuildEngineDelegate),
+                args.getExecutorService(),
+                new DefaultStepRunner(),
+                engineConfig.getBuildEngineMode(),
+                engineConfig.getBuildMetadataStorage(),
+                engineConfig.getBuildDepFiles(),
+                engineConfig.getBuildMaxDepFileCacheEntries(),
+                engineConfig.getBuildArtifactCacheSizeLimit(),
+                Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+                args.getBuildInfoStoreManager(),
+                engineConfig.getResourceAwareSchedulingInfo(),
+                engineConfig.getConsoleLogBuildRuleFailuresInline(),
+                RuleKeyFactories.of(
+                    distBuildConfig.getKeySeed(),
+                    cachingBuildEngineDelegate.getFileHashCache(),
+                    actionGraphAndResolver.getResolver(),
+                    engineConfig.getBuildInputRuleKeyFileSizeLimit(),
+                    new DefaultRuleKeyCache<>()),
+                distBuildConfig.getFileHashCacheMode());
+        // TODO(shivanker): Supply the target device, adb options, and target device options to work
+        // with Android.
+        ExecutionContext executionContext =
+            ExecutionContext.builder()
+                .setConsole(args.getConsole())
+                .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
+                .setTargetDevice(Optional.empty())
+                .setDefaultTestTimeoutMillis(1000)
+                .setCodeCoverageEnabled(false)
+                .setInclNoLocationClassesEnabled(false)
+                .setDebugEnabled(false)
+                .setRuleKeyDiagnosticsMode(distBuildConfig.getRuleKeyDiagnosticsMode())
+                .setShouldReportAbsolutePaths(false)
+                .setBuckEventBus(args.getBuckEventBus())
+                .setPlatform(args.getPlatform())
+                .setJavaPackageFinder(
+                    distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder())
+                .setConcurrencyLimit(concurrencyLimit)
+                .setPersistentWorkerPools(Optional.empty())
+                .setExecutors(args.getExecutors())
+                .setCellPathResolver(args.getRootCell().getCellPathResolver())
+                .setBuildCellRootPath(args.getRootCell().getRoot())
+                .setProcessExecutor(processExecutor)
+                .setEnvironment(distBuildConfig.getEnvironment())
+                .setProjectFilesystemFactory(args.getProjectFilesystemFactory())
+                .build();
+        Build build =
+            new Build(
+                Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+                args.getRootCell(),
+                buildEngine,
+                args.getArtifactCache(),
+                distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
+                args.getClock(),
+                executionContext,
+                KEEP_GOING)) {
+
+      return build.executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
+          DistBuildUtil.fullyQualifiedNameToBuildTarget(
+              args.getState().getRootCell().getCellPathResolver(), targetToBuildStrings),
+          args.getBuckEventBus(),
+          args.getConsole(),
+          Optional.empty());
+    }
+  }
+
+  private static Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier(
+      DistBuildExecutorArgs args) {
+    AndroidBuckConfig androidConfig =
+        new AndroidBuckConfig(args.getRemoteRootCellConfig(), args.getPlatform());
+
+    AndroidDirectoryResolver dirResolver =
+        new DefaultAndroidDirectoryResolver(
+            args.getRootCell().getFilesystem().getRootPath().getFileSystem(),
+            args.getRemoteRootCellConfig().getEnvironment(),
+            androidConfig.getBuildToolsVersion(),
+            androidConfig.getNdkVersion());
+    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig);
+  }
+}

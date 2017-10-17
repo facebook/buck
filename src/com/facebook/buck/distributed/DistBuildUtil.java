@@ -24,12 +24,18 @@ import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 
 public class DistBuildUtil {
@@ -90,6 +96,28 @@ public class DistBuildUtil {
   public static Path getRemoteBuckLogPath(String runId, Path logDirectoryPath) {
     return getLogDirForRunId(runId, logDirectoryPath)
         .resolve(DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME);
+  }
+
+  /**
+   * * Converts string targets into BuildTarget objects.
+   *
+   * @param distBuildCellPathResolver
+   * @param buildTargets
+   * @return
+   */
+  public static List<BuildTarget> fullyQualifiedNameToBuildTarget(
+      CellPathResolver distBuildCellPathResolver, Iterable<String> buildTargets) {
+    List<BuildTarget> targets = new ArrayList<>();
+    for (String fullyQualifiedBuildTarget : buildTargets) {
+      BuildTarget target =
+          BuildTargetParser.INSTANCE.parse(
+              fullyQualifiedBuildTarget,
+              BuildTargetPatternParser.fullyQualified(),
+              distBuildCellPathResolver);
+      targets.add(target);
+    }
+
+    return targets;
   }
 
   /** Debug logging during a distributed build. */
