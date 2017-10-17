@@ -3,6 +3,8 @@
     "buck-out",
     ".idea",
     ".buckd",
-    "build"
+    "build",
+    "test/com/facebook/buck/testutil/integration/testlibs/buck-out",
+    "test/com/facebook/buck/testutil/integration/testlibs/.buckd",
   ]
 }
