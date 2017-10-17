@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -154,7 +155,8 @@ public class JavacStep implements Step {
       firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
       if (declaredDepsBuildResult != 0) {
-        returnedStderr = processBuildFailure(context, firstOrderStdout, firstOrderStderr);
+        returnedStderr =
+            processBuildFailure(context.getBuckEventBus(), firstOrderStdout, firstOrderStderr);
       } else {
         returnedStderr = Optional.empty();
       }
@@ -163,7 +165,7 @@ public class JavacStep implements Step {
   }
 
   private Optional<String> processBuildFailure(
-      ExecutionContext context, String firstOrderStdout, String firstOrderStderr) {
+      BuckEventBus buckEventBus, String firstOrderStdout, String firstOrderStderr) {
     ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
     errorMessage.add(firstOrderStderr);
 
@@ -171,10 +173,10 @@ public class JavacStep implements Step {
     CompilerErrorEvent evt =
         CompilerErrorEvent.create(
             invokingRule, firstOrderStderr, CompilerErrorEvent.CompilerType.Java, suggestions);
-    context.postEvent(evt);
+    buckEventBus.post(evt);
 
     if (!firstOrderStdout.isEmpty()) {
-      context.postEvent(ConsoleEvent.info("%s", firstOrderStdout));
+      buckEventBus.post(ConsoleEvent.info("%s", firstOrderStdout));
     }
     return Optional.of(Joiner.on("\n").join(errorMessage.build()));
   }
