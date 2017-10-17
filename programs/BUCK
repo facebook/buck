@@ -62,7 +62,6 @@ BUCK_CORE_RESOURCES = {
     "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",
     "logging_config_file": "//config:logging.properties",
     "native_exopackage_fake_path": "//assets/android:native-exopackage-fakes.apk",
-    "path_to_asm_jar": "//third-party/java/asm:asm",
     "path_to_rawmanifest_py": "//src/com/facebook/buck/util/versioncontrol:rawmanifest",
     "path_to_pathlib_py": "//third-party/py/pathlib:pathlib.py",
     "path_to_pex": "//src/com/facebook/buck/python:pex",

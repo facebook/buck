@@ -21,7 +21,6 @@ RESOURCES = {
     "libjcocoa.dylib": "third-party/java/ObjCBridge/libjcocoa.dylib",
     "logging_config_file": "config/logging.properties.st",
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
-    "path_to_asm_jar": "third-party/java/asm/asm-debug-all-6.0_BETA.jar",
     "path_to_rawmanifest_py": "src/com/facebook/buck/util/versioncontrol/rawmanifest.py",
     "path_to_intellij_py": "src/com/facebook/buck/ide/intellij/deprecated/intellij.py",
     "path_to_pex": "src/com/facebook/buck/python/make_pex.py",
