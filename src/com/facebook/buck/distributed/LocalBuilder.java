@@ -21,4 +21,8 @@ import java.io.IOException;
 public interface LocalBuilder {
   int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
       throws IOException, InterruptedException;
+
+  // Destroy any resources associated with this builder. Call this once only, when all
+  // buildLocallyAndReturnExitCode calls have finished.
+  void shutdown() throws IOException;
 }

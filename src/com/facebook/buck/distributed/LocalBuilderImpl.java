@@ -51,6 +51,12 @@ public class LocalBuilderImpl implements LocalBuilder {
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final ActionGraphAndResolver actionGraphAndResolver;
 
+  private final CachingBuildEngine cachingBuildEngine;
+  private final ExecutionContext executionContext;
+  private final Build build;
+
+  private boolean isShutdown = false;
+
   public LocalBuilderImpl(
       DistBuildExecutorArgs args,
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
@@ -61,86 +67,35 @@ public class LocalBuilderImpl implements LocalBuilder {
     this.distBuildConfig = args.getRemoteRootCellConfig();
     this.engineConfig = distBuildConfig.getView(CachingBuildEngineBuckConfig.class);
     this.resourcesConfig = distBuildConfig.getView(ResourcesConfig.class);
+    this.cachingBuildEngine = createCachingBuildEngine();
+    this.executionContext = createExecutionContext();
+    this.build = createBuild();
   }
 
   @Override
   public int buildLocallyAndReturnExitCode(Iterable<String> targetToBuildStrings)
       throws IOException, InterruptedException {
-    // TODO(ruibm): Fix this to work with Android.
-    MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
-    final ConcurrencyLimit concurrencyLimit =
-        new ConcurrencyLimit(
-            4,
-            resourcesConfig.getResourceAllocationFairness(),
-            4,
-            resourcesConfig.getDefaultResourceAmounts(),
-            resourcesConfig.getMaximumResourceAmounts().withCpu(4));
-    final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
-    try (CachingBuildEngine buildEngine =
-            new CachingBuildEngine(
-                Preconditions.checkNotNull(cachingBuildEngineDelegate),
-                args.getExecutorService(),
-                new DefaultStepRunner(),
-                engineConfig.getBuildEngineMode(),
-                engineConfig.getBuildMetadataStorage(),
-                engineConfig.getBuildDepFiles(),
-                engineConfig.getBuildMaxDepFileCacheEntries(),
-                engineConfig.getBuildArtifactCacheSizeLimit(),
-                Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
-                args.getBuildInfoStoreManager(),
-                engineConfig.getResourceAwareSchedulingInfo(),
-                engineConfig.getConsoleLogBuildRuleFailuresInline(),
-                RuleKeyFactories.of(
-                    distBuildConfig.getKeySeed(),
-                    cachingBuildEngineDelegate.getFileHashCache(),
-                    actionGraphAndResolver.getResolver(),
-                    engineConfig.getBuildInputRuleKeyFileSizeLimit(),
-                    new DefaultRuleKeyCache<>()),
-                distBuildConfig.getFileHashCacheMode());
-        // TODO(shivanker): Supply the target device, adb options, and target device options to work
-        // with Android.
-        ExecutionContext executionContext =
-            ExecutionContext.builder()
-                .setConsole(args.getConsole())
-                .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
-                .setTargetDevice(Optional.empty())
-                .setDefaultTestTimeoutMillis(1000)
-                .setCodeCoverageEnabled(false)
-                .setInclNoLocationClassesEnabled(false)
-                .setDebugEnabled(false)
-                .setRuleKeyDiagnosticsMode(distBuildConfig.getRuleKeyDiagnosticsMode())
-                .setShouldReportAbsolutePaths(false)
-                .setBuckEventBus(args.getBuckEventBus())
-                .setPlatform(args.getPlatform())
-                .setJavaPackageFinder(
-                    distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder())
-                .setConcurrencyLimit(concurrencyLimit)
-                .setPersistentWorkerPools(Optional.empty())
-                .setExecutors(args.getExecutors())
-                .setCellPathResolver(args.getRootCell().getCellPathResolver())
-                .setBuildCellRootPath(args.getRootCell().getRoot())
-                .setProcessExecutor(processExecutor)
-                .setEnvironment(distBuildConfig.getEnvironment())
-                .setProjectFilesystemFactory(args.getProjectFilesystemFactory())
-                .build();
-        Build build =
-            new Build(
-                Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
-                args.getRootCell(),
-                buildEngine,
-                args.getArtifactCache(),
-                distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
-                args.getClock(),
-                executionContext,
-                KEEP_GOING)) {
+    Preconditions.checkArgument(!isShutdown);
 
-      return build.executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
-          DistBuildUtil.fullyQualifiedNameToBuildTarget(
-              args.getState().getRootCell().getCellPathResolver(), targetToBuildStrings),
-          args.getBuckEventBus(),
-          args.getConsole(),
-          Optional.empty());
+    return build.executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
+        DistBuildUtil.fullyQualifiedNameToBuildTarget(
+            args.getState().getRootCell().getCellPathResolver(), targetToBuildStrings),
+        args.getBuckEventBus(),
+        args.getConsole(),
+        Optional.empty());
+  }
+
+  @Override
+  public synchronized void shutdown() throws IOException {
+    if (isShutdown) {
+      return;
     }
+
+    isShutdown = true;
+
+    build.close();
+    executionContext.close();
+    cachingBuildEngine.close();
   }
 
   private static Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier(
@@ -155,5 +110,80 @@ public class LocalBuilderImpl implements LocalBuilder {
             androidConfig.getBuildToolsVersion(),
             androidConfig.getNdkVersion());
     return new AndroidPlatformTargetSupplier(dirResolver, androidConfig);
+  }
+
+  private CachingBuildEngine createCachingBuildEngine() {
+    return new CachingBuildEngine(
+        Preconditions.checkNotNull(cachingBuildEngineDelegate),
+        args.getExecutorService(),
+        new DefaultStepRunner(),
+        engineConfig.getBuildEngineMode(),
+        engineConfig.getBuildMetadataStorage(),
+        engineConfig.getBuildDepFiles(),
+        engineConfig.getBuildMaxDepFileCacheEntries(),
+        engineConfig.getBuildArtifactCacheSizeLimit(),
+        Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+        args.getBuildInfoStoreManager(),
+        engineConfig.getResourceAwareSchedulingInfo(),
+        engineConfig.getConsoleLogBuildRuleFailuresInline(),
+        RuleKeyFactories.of(
+            distBuildConfig.getKeySeed(),
+            cachingBuildEngineDelegate.getFileHashCache(),
+            actionGraphAndResolver.getResolver(),
+            engineConfig.getBuildInputRuleKeyFileSizeLimit(),
+            new DefaultRuleKeyCache<>()),
+        distBuildConfig.getFileHashCacheMode());
+  }
+
+  private ExecutionContext createExecutionContext() {
+    try {
+      MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
+    final ConcurrencyLimit concurrencyLimit =
+        new ConcurrencyLimit(
+            4,
+            resourcesConfig.getResourceAllocationFairness(),
+            4,
+            resourcesConfig.getDefaultResourceAmounts(),
+            resourcesConfig.getMaximumResourceAmounts().withCpu(4));
+    return ExecutionContext.builder()
+        .setConsole(args.getConsole())
+        .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
+        .setTargetDevice(Optional.empty())
+        .setDefaultTestTimeoutMillis(1000)
+        .setCodeCoverageEnabled(false)
+        .setInclNoLocationClassesEnabled(false)
+        .setDebugEnabled(false)
+        .setRuleKeyDiagnosticsMode(distBuildConfig.getRuleKeyDiagnosticsMode())
+        .setShouldReportAbsolutePaths(false)
+        .setBuckEventBus(args.getBuckEventBus())
+        .setPlatform(args.getPlatform())
+        .setJavaPackageFinder(
+            distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder())
+        .setConcurrencyLimit(concurrencyLimit)
+        .setPersistentWorkerPools(Optional.empty())
+        .setExecutors(args.getExecutors())
+        .setCellPathResolver(args.getRootCell().getCellPathResolver())
+        .setBuildCellRootPath(args.getRootCell().getRoot())
+        .setProcessExecutor(processExecutor)
+        .setEnvironment(distBuildConfig.getEnvironment())
+        .setProjectFilesystemFactory(args.getProjectFilesystemFactory())
+        .build();
+  }
+
+  private Build createBuild() {
+    return new Build(
+        Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
+        args.getRootCell(),
+        cachingBuildEngine,
+        args.getArtifactCache(),
+        distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
+        args.getClock(),
+        executionContext,
+        KEEP_GOING);
   }
 }

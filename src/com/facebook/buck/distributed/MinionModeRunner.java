@@ -81,6 +81,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
         if (!response.isContinueBuilding()) {
           LOG.info(String.format("Minion [%s] told to stop building.", minionId));
+          builder.shutdown();
           return 0;
         }
 

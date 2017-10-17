@@ -106,5 +106,10 @@ public class MinionModeRunnerIntegrationTest {
       callArguments.add(ImmutableList.copyOf(targetsToBuild));
       return 0;
     }
+
+    @Override
+    public void shutdown() throws IOException {
+      // Nothing to cleanup in this implementation
+    }
   }
 }
