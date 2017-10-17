@@ -1,14 +1,68 @@
-# Both files were retrieved from asm-5.0.3-bin.zip, which was retrieved from
-# http://forge.ow2.org/projects/asm. The src.zip in asm-5.0.3-bin.zip was renamed
-# to asm-5.0.3-src.zip for our purposes.
-prebuilt_jar(
+java_library(
     name = "asm",
-    binary_jar = "asm-debug-all-6.0_BETA.jar",
-    licenses = [
-        "LICENSE",
+    exported_deps = [
+        ":asm-jar",
+        ":asm-analysis",
+        ":asm-commons",
+        ":asm-tree",
+        ":asm-util",
+        ":asm-xml",
     ],
-    source_jar = "asm-debug-all-6.0_BETA-sources.jar",
     visibility = [
         "PUBLIC",
     ],
+)
+
+prebuilt_jar(
+    name = "asm-jar",
+    binary_jar = "asm-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-analysis",
+    binary_jar = "asm-analysis-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-commons",
+    binary_jar = "asm-commons-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-tree",
+    binary_jar = "asm-tree-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-util",
+    binary_jar = "asm-util-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-xml",
+    binary_jar = "asm-xml-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
 )
