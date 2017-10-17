@@ -239,6 +239,16 @@
   </extensions>
 
   <actions>
+    <group description="Generate buck projects" id="buck.GenerateProjects" text="GenProjects" type="">
+      <action
+              class="com.facebook.buck.intellij.ideabuck.actions.select.RunSelectedProjectsFromFolderAction"
+              description="Generate buck project"
+              icon="/icons/actions/Project.png"
+              id="buck.GenerateProjectFromFolder"
+              text="Generate Buck Project">
+        <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="ReplaceInPath"/>
+      </action>
+    </group>
     <group id="buck.Menu">
       <action
           id="buck.GoToBuckFile"
@@ -246,6 +256,13 @@
           text="Go to Buck file"
           description="Go to Buck file for this source file.">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
+      </action>
+      <action
+        id="buck.GenerateProjectFromFile"
+        class="com.facebook.buck.intellij.ideabuck.actions.select.RunSelectedProjectFromFileAction"
+        text="Generate Buck Project"
+        description="Generate Buck Project">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
       </action>
       <add-to-group anchor="first" group-id="BuildMenu"/>
       <add-to-group anchor="first" group-id="EditorPopupMenu"/>
