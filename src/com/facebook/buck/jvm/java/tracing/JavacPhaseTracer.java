@@ -32,6 +32,8 @@ public interface JavacPhaseTracer {
 
   void endEnter(List<String> filenames);
 
+  void setIsLastRound(boolean isLastRound);
+
   void beginAnnotationProcessingRound();
 
   void endAnnotationProcessingRound();

@@ -145,6 +145,7 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.endAnnotationProcessingRound();
     tracer.beginParse("lastRoundGenerated");
     tracer.endParse();
+    tracer.setIsLastRound(true);
     tracer.beginEnter();
     tracer.endEnter(ImmutableList.of("file1", "file2", "generatedFile1", "lastRoundGenerated"));
     tracer.beginAnalyze();
@@ -208,6 +209,7 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
     tracer.beginAnnotationProcessingRound();
     tracer.endAnnotationProcessingRound();
+    tracer.setIsLastRound(true);
     tracer.close();
   }
 
