@@ -16,7 +16,10 @@ MY_DIR = os.path.dirname(os.path.realpath(__file__))
 def load_cell_roots(repo_dir: str) -> Dict[str, str]:
     """Returns a map with cell keys and their roots as values."""
     cell_config = subprocess.check_output(['buck', 'audit', 'cell'], cwd=repo_dir).decode().strip()
+    logging.debug('Cell config: %r' % cell_config)
     cell_roots = {}
+    if not cell_config:
+        return cell_roots
     for config in cell_config.split(os.linesep):
         cell, path = map(lambda s: s.strip(), config.split(':'))
         cell_roots[cell] = path
