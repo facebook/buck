@@ -142,7 +142,7 @@ public class BuildSlaveLogsMaterializer {
   }
 
   private void writeLogDirToDisk(LogDir logDir) throws IOException {
-    if (logDir.data.array().length == 0) {
+    if (logDir.getData().length == 0) {
       LOG.warn(
           "Skipping materialiation of remote buck-out log dir for runId [%s]"
               + " as content length was zero.",
@@ -153,7 +153,7 @@ public class BuildSlaveLogsMaterializer {
     Path buckLogUnzipPath = getRemoteBuckLogPath(logDir.buildSlaveRunId.id);
 
     try (NamedTemporaryFile zipFile = new NamedTemporaryFile("remoteBuckLog", "zip")) {
-      Files.write(zipFile.get(), logDir.data.array());
+      Files.write(zipFile.get(), logDir.getData());
       Unzip.extractZipFile(
           zipFile.get(),
           filesystem,
