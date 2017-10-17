@@ -16,11 +16,10 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildAction;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -30,7 +29,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   public static final StampedeId STAMPEDE_ID = new StampedeId().setId("down the line");
 
   private static final String MINION_ID = "super cool minion";
-  private static final int MAX_BUILD_NODES_PER_MINION = 42;
+  private static final int MAX_WORK_UNITS_TO_FETCH = 10;
 
   @Test
   public void testMakingSimpleRequest() throws IOException {
@@ -41,9 +40,10 @@ public class ThriftCoordinatorServerIntegrationTest {
             new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
       server.start();
       client.start();
-      GetTargetsToBuildResponse response = client.getTargetsToBuild(MINION_ID);
+      GetWorkResponse response =
+          client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
       Assert.assertNotNull(response);
-      Assert.assertEquals(GetTargetsToBuildAction.CLOSE_CLIENT, response.getAction());
+      Assert.assertFalse(response.isContinueBuilding()); // Build is finished
     }
   }
 
@@ -56,8 +56,7 @@ public class ThriftCoordinatorServerIntegrationTest {
         EasyMock.createMock(ThriftCoordinatorServer.EventListener.class);
     eventListener.onThriftServerStarted(EasyMock.anyString(), EasyMock.eq(port));
     EasyMock.expectLastCall().once();
-    eventListener.onThriftServerClosing(
-        EasyMock.eq(ThriftCoordinatorServer.UNEXPECTED_STOP_EXIT_CODE));
+    eventListener.onThriftServerClosing(0);
     EasyMock.expectLastCall().once();
     EasyMock.replay(eventListener);
 
@@ -68,20 +67,42 @@ public class ThriftCoordinatorServerIntegrationTest {
       server.start();
       client.start();
 
-      GetTargetsToBuildResponse targetsToBuildResponse = client.getTargetsToBuild(MINION_ID);
-      Assert.assertEquals(
-          GetTargetsToBuildAction.BUILD_TARGETS, targetsToBuildResponse.getAction());
-      Assert.assertEquals(1, targetsToBuildResponse.getBuildTargetsSize());
+      GetWorkResponse responseOne =
+          client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
 
-      FinishedBuildingResponse finishedBuildingResponse = client.finishedBuilding(MINION_ID, 0);
-      Assert.assertTrue(finishedBuildingResponse.continueBuilding);
+      Assert.assertEquals(responseOne.getWorkUnitsSize(), 1);
+      Assert.assertTrue(responseOne.isContinueBuilding());
 
-      targetsToBuildResponse = client.getTargetsToBuild(MINION_ID);
-      Assert.assertEquals(
-          GetTargetsToBuildAction.BUILD_TARGETS, targetsToBuildResponse.getAction());
-      Assert.assertEquals(2, targetsToBuildResponse.getBuildTargetsSize());
+      GetWorkResponse responseTwo =
+          client.getWork(
+              MINION_ID,
+              0,
+              ImmutableList.of(BuildTargetsQueueTest.LEAF_TARGET),
+              MAX_WORK_UNITS_TO_FETCH);
 
-      // We will now close the ThriftCoordinatorServer while there is still more work to be done.
+      Assert.assertEquals(responseTwo.getWorkUnitsSize(), 2);
+      Assert.assertTrue(responseTwo.isContinueBuilding());
+
+      GetWorkResponse responseThree =
+          client.getWork(
+              MINION_ID,
+              0,
+              ImmutableList.of(
+                  BuildTargetsQueueTest.LEFT_TARGET, BuildTargetsQueueTest.RIGHT_TARGET),
+              MAX_WORK_UNITS_TO_FETCH);
+
+      Assert.assertEquals(responseThree.getWorkUnitsSize(), 1);
+      Assert.assertTrue(responseThree.isContinueBuilding());
+
+      GetWorkResponse responseFour =
+          client.getWork(
+              MINION_ID,
+              0,
+              ImmutableList.of(BuildTargetsQueueTest.TARGET_NAME),
+              MAX_WORK_UNITS_TO_FETCH);
+
+      Assert.assertEquals(responseFour.getWorkUnitsSize(), 0);
+      Assert.assertFalse(responseFour.isContinueBuilding());
     }
 
     EasyMock.verify(eventListener);
@@ -106,7 +127,6 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   private static ThriftCoordinatorServer createCoordinatorServer(
       int port, BuildTargetsQueue queue, ThriftCoordinatorServer.EventListener eventListener) {
-    return new ThriftCoordinatorServer(
-        port, queue, STAMPEDE_ID, MAX_BUILD_NODES_PER_MINION, eventListener);
+    return new ThriftCoordinatorServer(port, queue, STAMPEDE_ID, eventListener);
   }
 }

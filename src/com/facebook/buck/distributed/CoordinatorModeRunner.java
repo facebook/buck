@@ -27,21 +27,18 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   private final int coordinatorPort;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
-  private final int maxBuildNodesPerMinion;
 
   public CoordinatorModeRunner(
       int coordinatorPort,
       BuildTargetsQueue queue,
       StampedeId stampedeId,
-      ThriftCoordinatorServer.EventListener eventListener,
-      int maxBuildNodesPerMinion) {
+      ThriftCoordinatorServer.EventListener eventListener) {
     this.stampedeId = stampedeId;
     Preconditions.checkArgument(
         coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.queue = queue;
     this.coordinatorPort = coordinatorPort;
     this.eventListener = eventListener;
-    this.maxBuildNodesPerMinion = maxBuildNodesPerMinion;
   }
 
   @Override
@@ -56,12 +53,11 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   }
 
   public class AsyncCoordinatorRun implements Closeable {
+
     private final ThriftCoordinatorServer server;
 
     private AsyncCoordinatorRun(BuildTargetsQueue queue) throws IOException {
-      this.server =
-          new ThriftCoordinatorServer(
-              coordinatorPort, queue, stampedeId, maxBuildNodesPerMinion, eventListener);
+      this.server = new ThriftCoordinatorServer(coordinatorPort, queue, stampedeId, eventListener);
       this.server.start();
     }
 

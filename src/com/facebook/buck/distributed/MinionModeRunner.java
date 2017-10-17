@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Joiner;
@@ -28,23 +28,26 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 public class MinionModeRunner implements DistBuildModeRunner {
+
   private static final Logger LOG = Logger.get(MinionModeRunner.class);
 
-  private static final int RETRY_BACKOFF_MILLIS = 1000;
+  // TODO(alisdair): make this a .buckconfig setting
+  private static final int IDLE_SLEEP_INTERVAL_MS = 10;
 
   private final String coordinatorAddress;
   private final int coordinatorPort;
   private final LocalBuilder builder;
   private final StampedeId stampedeId;
   private final BuildCompletionChecker buildCompletionChecker;
+  private final int maxParallelWorkUnits;
 
   /** Callback when the build has completed. */
   public interface BuildCompletionChecker {
-    public boolean hasBuildFinished() throws IOException;
+
+    boolean hasBuildFinished() throws IOException;
   }
 
   public MinionModeRunner(
@@ -52,6 +55,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
       int coordinatorPort,
       LocalBuilder builder,
       StampedeId stampedeId,
+      int maxParallelWorkUnits,
       BuildCompletionChecker buildCompletionChecker) {
     this.buildCompletionChecker = buildCompletionChecker;
     this.builder = builder;
@@ -60,66 +64,61 @@ public class MinionModeRunner implements DistBuildModeRunner {
         coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.coordinatorAddress = coordinatorAddress;
     this.coordinatorPort = coordinatorPort;
+    this.maxParallelWorkUnits = maxParallelWorkUnits;
   }
 
   @Override
   public int runAndReturnExitCode() throws IOException, InterruptedException {
+    int lastExitCode = 0;
     try (ThriftCoordinatorClient client =
         new ThriftCoordinatorClient(coordinatorAddress, coordinatorPort, stampedeId)) {
-      Optional<Integer> buildExitCode = Optional.empty();
-      try {
-        client.start();
-        final String minionId = generateNewMinionId();
-        while (true) {
-          GetTargetsToBuildResponse response = client.getTargetsToBuild(minionId);
-          switch (response.getAction()) {
-            case BUILD_TARGETS:
-              List<String> targetsToBuild = Lists.newArrayList(response.getBuildTargets());
-              LOG.debug(
-                  String.format(
-                      "Minion [%s] is about to build [%d] targets: [%s]",
-                      minionId, targetsToBuild.size(), Joiner.on(", ").join(targetsToBuild)));
-              buildExitCode = Optional.of(builder.buildLocallyAndReturnExitCode(targetsToBuild));
-              LOG.debug(
-                  String.format(
-                      "Minion [%s] finished with exit code [%d].", minionId, buildExitCode.get()));
-              FinishedBuildingResponse finishedResponse =
-                  client.finishedBuilding(minionId, buildExitCode.get());
-              if (!finishedResponse.isContinueBuilding()) {
-                LOG.debug(String.format("Minion [%s] told to finish building.", minionId));
-                return 0;
-              }
-              break;
+      client.start();
+      final String minionId = generateNewMinionId();
+      List<String> targetsToBuild = Lists.newArrayList();
+      while (true) {
+        GetWorkResponse response =
+            client.getWork(minionId, lastExitCode, targetsToBuild, maxParallelWorkUnits);
 
-            case RETRY_LATER:
-              try {
-                LOG.debug(String.format("Minion [%s] told to retry later. Sleeping..", minionId));
-                Thread.sleep(RETRY_BACKOFF_MILLIS);
-              } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-              }
-              break;
-
-            case CLOSE_CLIENT:
-              LOG.debug(String.format("Minion [%s] told to close client.", minionId));
-              return 0;
-
-            case UNKNOWN:
-            default:
-              throw new RuntimeException(
-                  String.format(
-                      "CoordinatorClient received unexpected action [%s].", response.getAction()));
-          }
-        }
-      } catch (ThriftException e) {
-        if (buildCompletionChecker.hasBuildFinished()) {
-          // If the build has finished and this minion was not doing anything and was just
-          // waiting for work, just exit gracefully with return code 0.
-          return buildExitCode.orElse(0);
+        if (!response.isContinueBuilding()) {
+          LOG.info(String.format("Minion [%s] told to stop building.", minionId));
+          return 0;
         }
 
-        throw e;
+        targetsToBuild = Lists.newArrayList();
+
+        // If there was nothing to build, then go to sleep for a few milliseconds and try again.
+        if (response.getWorkUnits().size() == 0) {
+          Thread.sleep(IDLE_SLEEP_INTERVAL_MS);
+          continue;
+        }
+
+        // Each work unit consists of one of more build targets. Aggregate them all together
+        // and feed them to the build engine as a batch
+        // TODO(alisdair): get rid of existing batch based approach and fetch/signal in real-time.
+        for (WorkUnit workUnit : response.getWorkUnits()) {
+          targetsToBuild.addAll(workUnit.getBuildTargets());
+        }
+
+        LOG.info(
+            String.format(
+                "Minion [%s] is about to build [%d] targets as part of [%d] work units",
+                minionId, targetsToBuild.size(), response.getWorkUnits().size()));
+
+        LOG.debug(String.format("Targets: [%s]", Joiner.on(", ").join(targetsToBuild)));
+
+        lastExitCode = builder.buildLocallyAndReturnExitCode(targetsToBuild);
+
+        LOG.info(
+            String.format("Minion [%s] finished with exit code [%d].", minionId, lastExitCode));
       }
+    } catch (ThriftException e) {
+      if (buildCompletionChecker.hasBuildFinished()) {
+        // If the build has finished and this minion was not doing anything and was just
+        // waiting for work, just exit gracefully with return code 0.
+        return lastExitCode;
+      }
+
+      throw e;
     }
   }
 

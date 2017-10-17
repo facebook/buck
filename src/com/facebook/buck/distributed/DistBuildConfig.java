@@ -63,7 +63,7 @@ public class DistBuildConfig {
   private static final String MINION_QUEUE = "minion_queue";
 
   private static final String MAX_BUILD_NODES_PER_MINION = "max_build_nodes_per_minion";
-  private static final int DEFAULT_MAX_BUILD_NODES_PER_MINION = 100;
+  private static final int DEFAULT_MAX_BUILD_NODES_PER_MINION = 28;
 
   private static final String SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS =
       "source_file_multi_fetch_buffer_period_ms";

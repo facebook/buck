@@ -16,82 +16,52 @@
 
 package com.facebook.buck.distributed;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import java.util.HashMap;
+import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.log.Logger;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Allocates and keeps track of what BuildTargets are allocated to which Minions. NOTE: Not thread
- * safe.
+ * safe. Caller needs to synchronize access if using multiple threads.
  */
 public class MinionWorkloadAllocator {
+  private static final Logger LOG = Logger.get(MinionWorkloadAllocator.class);
 
   private final BuildTargetsQueue queue;
-  private final int maxTargetsPerMinion;
-  private final Map<String, MinionWorkload> minionAllocations;
-  private final List<String> targetsNotAssignedYet;
+  private final List<String> nodesAssignedToMinions = new ArrayList<>();
 
-  public MinionWorkloadAllocator(BuildTargetsQueue queue, int maxTargetsPerMinion) {
+  public MinionWorkloadAllocator(BuildTargetsQueue queue) {
     this.queue = queue;
-    this.minionAllocations = new HashMap<>();
-    this.targetsNotAssignedYet =
-        Lists.newArrayList(queue.dequeueZeroDependencyNodes(ImmutableList.of()));
-    this.maxTargetsPerMinion = maxTargetsPerMinion;
-  }
-
-  public ImmutableList<String> getTargetsToBuild(String minionId) {
-    // Return existing one if already allocated.
-    if (minionAllocations.containsKey(minionId)) {
-      return minionAllocations.get(minionId).getTargetsBeingBuilt();
-    }
-
-    // Make sure we keep the list of targets ready to build stocked up.
-    if (targetsNotAssignedYet.size() < maxTargetsPerMinion) {
-      targetsNotAssignedYet.addAll(queue.dequeueZeroDependencyNodes(ImmutableList.of()));
-    }
-
-    if (targetsNotAssignedYet.isEmpty()) {
-      return ImmutableList.of();
-    }
-
-    // Assign new minionWorkload to the worker.
-
-    // NOTE: This is just a view into the original collection. It's not a clone.
-    int lastIndex = Math.min(targetsNotAssignedYet.size(), maxTargetsPerMinion);
-    List<String> viewIntoTargetsToBuild = targetsNotAssignedYet.subList(0, lastIndex);
-    ImmutableList<String> targetsToBuild = ImmutableList.copyOf(viewIntoTargetsToBuild);
-
-    // Because this is a view over the original List, the .clear() method will remove the
-    // items from the original list.
-    viewIntoTargetsToBuild.clear();
-
-    MinionWorkload minionWorkload = new MinionWorkload(targetsToBuild);
-    minionAllocations.put(minionId, minionWorkload);
-    return targetsToBuild;
-  }
-
-  public void finishedBuildingTargets(String minionId) {
-    MinionWorkload minionWorkload = Preconditions.checkNotNull(minionAllocations.remove(minionId));
-    targetsNotAssignedYet.addAll(
-        queue.dequeueZeroDependencyNodes(minionWorkload.getTargetsBeingBuilt()));
   }
 
   public boolean isBuildFinished() {
-    return minionAllocations.size() == 0 && targetsNotAssignedYet.size() == 0;
+    return nodesAssignedToMinions.size() == 0 && !queue.hasReadyZeroDependencyNodes();
   }
 
-  private static class MinionWorkload {
-    private final ImmutableList<String> targetsBeingBuilt;
+  /** Returns nodes that have all their dependencies satisfied. */
+  public List<WorkUnit> dequeueZeroDependencyNodes(
+      String minionId, List<String> finishedNodes, int maxWorkUnits) {
+    nodesAssignedToMinions.removeAll(finishedNodes);
 
-    public MinionWorkload(ImmutableList<String> targetsBeingBuilt) {
-      this.targetsBeingBuilt = targetsBeingBuilt;
-    }
+    List<WorkUnit> workUnits = queue.dequeueZeroDependencyNodes(finishedNodes, maxWorkUnits);
 
-    public ImmutableList<String> getTargetsBeingBuilt() {
-      return targetsBeingBuilt;
+    List<String> nodesForMinions = new ArrayList<>();
+    for (WorkUnit workUnit : workUnits) {
+      nodesForMinions.addAll(workUnit.buildTargets);
     }
+    nodesAssignedToMinions.addAll(nodesForMinions);
+
+    LOG.info(
+        String.format(
+            "Minion [%s] finished [%s] nodes, and fetched [%s] new nodes. "
+                + "Total nodes assigned to minions [%s]. Unscheduled zero dependency nodes? [%s]",
+            minionId,
+            finishedNodes.size(),
+            nodesForMinions.size(),
+            nodesAssignedToMinions.size(),
+            queue.hasReadyZeroDependencyNodes()));
+
+    return workUnits;
   }
 }

@@ -80,6 +80,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class DistBuildSlaveExecutor {
+
   private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
   private static final String LOCALHOST_ADDRESS = "localhost";
 
@@ -139,7 +140,6 @@ public class DistBuildSlaveExecutor {
 
   private MinionModeRunner newMinionMode(
       LocalBuilder localBuilder, String coordinatorAddress, int coordinatorPort) {
-
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
@@ -147,7 +147,12 @@ public class DistBuildSlaveExecutor {
         };
 
     return new MinionModeRunner(
-        coordinatorAddress, coordinatorPort, localBuilder, args.getStampedeId(), checker);
+        coordinatorAddress,
+        coordinatorPort,
+        localBuilder,
+        args.getStampedeId(),
+        args.getDistBuildConfig().getMaxBuildNodesPerMinion(),
+        checker);
   }
 
   private CoordinatorModeRunner newCoordinatorMode(
@@ -166,12 +171,7 @@ public class DistBuildSlaveExecutor {
             args.getStampedeId(),
             minionQueue.get(),
             isLocalMinionAlsoRunning);
-    return new CoordinatorModeRunner(
-        coordinatorPort,
-        queue,
-        args.getStampedeId(),
-        listener,
-        args.getDistBuildConfig().getMaxBuildNodesPerMinion());
+    return new CoordinatorModeRunner(coordinatorPort, queue, args.getStampedeId(), listener);
   }
 
   private TargetGraph createTargetGraph() throws IOException, InterruptedException {
@@ -362,6 +362,7 @@ public class DistBuildSlaveExecutor {
   }
 
   private class LocalBuilderImpl implements LocalBuilder {
+
     private static final boolean KEEP_GOING = true;
     private final BuckConfig distBuildConfig;
     private final CachingBuildEngineBuckConfig engineConfig;
@@ -456,6 +457,7 @@ public class DistBuildSlaveExecutor {
   }
 
   private static class StackedFileHashCaches {
+
     public final StackedFileHashCache remoteStateCache;
     public final StackedFileHashCache materializingCache;
 

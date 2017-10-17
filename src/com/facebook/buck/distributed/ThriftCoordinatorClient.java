@@ -17,15 +17,15 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.CoordinatorService;
-import com.facebook.buck.distributed.thrift.FinishedBuildingRequest;
-import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildRequest;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.GetWorkRequest;
+import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
+import java.io.IOException;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -73,32 +73,26 @@ public class ThriftCoordinatorClient implements Closeable {
     return this;
   }
 
-  /** Gets the next set of targets to build for a given Minion. */
-  public GetTargetsToBuildResponse getTargetsToBuild(String minionId) throws ThriftException {
-    LOG.debug(String.format("Minion [%s] is requesting targets to build.", minionId));
+  /** Requests for more work from the Coordinator to build locally. */
+  public synchronized GetWorkResponse getWork(
+      String minionId, int minionExitCode, List<String> finishedTargets, int maxWorkUnitsToFetch)
+      throws IOException {
+    LOG.debug(
+        String.format(
+            "Minion [%s] is reporting that it finished building [%s] items. Requesting [%s] items.",
+            minionId, finishedTargets.size(), maxWorkUnitsToFetch));
     Preconditions.checkNotNull(client, "Client was not started.");
-    GetTargetsToBuildRequest request =
-        new GetTargetsToBuildRequest().setMinionId(minionId).setStampedeId(stampedeId);
-    try {
-      GetTargetsToBuildResponse response = client.getTargetsToBuild(request);
-      return response;
-    } catch (TException e) {
-      throw new ThriftException(e);
-    }
-  }
 
-  public FinishedBuildingResponse finishedBuilding(String minionId, int minionExitCode)
-      throws ThriftException {
-    LOG.debug(String.format("Minion [%s] is reporting that it finished building.", minionId));
-    Preconditions.checkNotNull(client, "Client was not started.");
-    FinishedBuildingRequest request =
-        new FinishedBuildingRequest()
+    GetWorkRequest request =
+        new GetWorkRequest()
             .setStampedeId(stampedeId)
             .setMinionId(minionId)
-            .setBuildExitCode(minionExitCode);
+            .setFinishedTargets(finishedTargets)
+            .setMaxWorkUnitsToFetch(maxWorkUnitsToFetch)
+            .setLastExitCode(minionExitCode);
+
     try {
-      FinishedBuildingResponse response = client.finishedBuilding(request);
-      return response;
+      return client.getWork(request);
     } catch (TException e) {
       throw new ThriftException(e);
     }

@@ -23,13 +23,13 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+  private static final int MAX_PARALLEL_WORK_UNITS = 10;
 
   @Test(expected = ThriftException.class)
   public void testMinionWithoutServerAndWithUnfinishedBuild()
@@ -37,7 +37,8 @@ public class MinionModeRunnerIntegrationTest {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
     LocalBuilderImpl localBuilder = new LocalBuilderImpl();
     MinionModeRunner minion =
-        new MinionModeRunner("localhost", 42, localBuilder, STAMPEDE_ID, checker);
+        new MinionModeRunner(
+            "localhost", 42, localBuilder, STAMPEDE_ID, MAX_PARALLEL_WORK_UNITS, checker);
 
     minion.runAndReturnExitCode();
     Assert.fail("The previous line should've thrown an exception.");
@@ -49,7 +50,8 @@ public class MinionModeRunnerIntegrationTest {
     MinionModeRunner.BuildCompletionChecker checker = () -> true;
     LocalBuilderImpl localBuilder = new LocalBuilderImpl();
     MinionModeRunner minion =
-        new MinionModeRunner("localhost", 42, localBuilder, STAMPEDE_ID, checker);
+        new MinionModeRunner(
+            "localhost", 42, localBuilder, STAMPEDE_ID, MAX_PARALLEL_WORK_UNITS, checker);
 
     int exitCode = minion.runAndReturnExitCode();
     // Server does not exit because the build has already been marked as finished.
@@ -59,6 +61,7 @@ public class MinionModeRunnerIntegrationTest {
   @Test
   public void testDiamondGraphRun()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
+    MinionModeRunner.BuildCompletionChecker checker = () -> false;
     try (ThriftCoordinatorServer server = createServer()) {
       server.start();
       LocalBuilderImpl localBuilder = new LocalBuilderImpl();
@@ -68,7 +71,8 @@ public class MinionModeRunnerIntegrationTest {
               server.getPort(),
               localBuilder,
               STAMPEDE_ID,
-              EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class));
+              MAX_PARALLEL_WORK_UNITS,
+              checker);
       int exitCode = minion.runAndReturnExitCode();
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(3, localBuilder.getCallArguments().size());

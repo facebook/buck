@@ -15,39 +15,38 @@ namespace java com.facebook.buck.distributed.thrift
 include "stampede.thrift"
 
 ##############################################################################
-## DataTypes
-##############################################################################
-enum GetTargetsToBuildAction {
-  UNKNOWN, // When this hasn't been set.
-  BUILD_TARGETS, // Build the returned build targets.
-  RETRY_LATER, // Retry requesting build targets in a bit as there is currently nothing to build.
-  CLOSE_CLIENT, // Build is finished and the remote client can close.
-}
-
-
-##############################################################################
 ## Request/Response structs
 ##############################################################################
-struct GetTargetsToBuildRequest {
+
+// A work unit is a list of nodes that form a chain within the build graph.
+// The list is reverse dependency ordered, and nodes depend on nothing else besides
+// those earlier in the list. There were either no other dependencies, or the
+// other dependencies have already been built.
+struct WorkUnit {
+  1: optional list<string> buildTargets;
+}
+
+struct GetWorkRequest {
   1: optional string minionId;
   2: optional stampede.StampedeId stampedeId;
+
+  // If a build had just finished, include the exit code.
+  3: optional i32 lastExitCode;
+
+  // All build targets that the minion has finished building (since last request),
+  // and that have completed their upload to the cache.
+  4: optional list<string> finishedTargets;
+
+  // Note: a node finishing, doesn't mean the work unit it was part of is finished
+  // and as a result the corresponding number of nodes to fetch might be zero.
+  // Similarly we might have some left over capacity from a previous core that finished
+  // and got no work from the coordinator.
+  6: optional i32 maxWorkUnitsToFetch;
 }
 
-struct GetTargetsToBuildResponse {
-  1: optional GetTargetsToBuildAction action = GetTargetsToBuildAction.UNKNOWN;
-
-  // Fully qualified name of the BuildTarget from the BuildRule (ActionGraph).
-  2: optional list<string> buildTargets;
-}
-
-struct FinishedBuildingRequest {
-  1: optional string minionId;
-  2: optional i32 buildExitCode;
-  3: optional stampede.StampedeId stampedeId;
-}
-
-struct FinishedBuildingResponse {
+struct GetWorkResponse {
   1: optional bool continueBuilding;
+  2: optional list<WorkUnit> workUnits;
 }
 
 
@@ -55,13 +54,9 @@ struct FinishedBuildingResponse {
 ## Service
 ##############################################################################
 service CoordinatorService {
-  // Called by Minions to request workload to the Coordinator.
-  GetTargetsToBuildResponse getTargetsToBuild(
-      1:GetTargetsToBuildRequest request);
-
-  // Called by Minions to tell the Coordinator they have just finished building their workload.
-  FinishedBuildingResponse finishedBuilding(1:FinishedBuildingRequest request);
-
+  // Called by Minions to request work from the Coordinator.
+  GetWorkResponse getWork(
+      1:GetWorkRequest request);
 
   // TODO(ruibm): Some form of heartbeat protocol needs to exist between Minions and Coordinator to
   // make sure if some Minion has silently died, the workload is picked up by a different machine.

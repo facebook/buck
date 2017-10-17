@@ -17,27 +17,24 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.CoordinatorService;
-import com.facebook.buck.distributed.thrift.FinishedBuildingRequest;
-import com.facebook.buck.distributed.thrift.FinishedBuildingResponse;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildAction;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildRequest;
-import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
+import com.facebook.buck.distributed.thrift.GetWorkRequest;
+import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
-import org.apache.thrift.TException;
 import org.apache.thrift.server.TThreadedSelectorServer;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TTransportException;
@@ -75,13 +72,12 @@ public class ThriftCoordinatorServer implements Closeable {
       int port,
       BuildTargetsQueue queue,
       StampedeId stampedeId,
-      int maxBuildNodesPerMinion,
       ThriftCoordinatorServer.EventListener eventListener) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
-    this.allocator = new MinionWorkloadAllocator(queue, maxBuildNodesPerMinion);
+    this.allocator = new MinionWorkloadAllocator(queue);
     this.port = port;
     this.handler = new CoordinatorServiceHandler();
     this.processor = new CoordinatorService.Processor<>(handler);
@@ -150,60 +146,55 @@ public class ThriftCoordinatorServer implements Closeable {
 
   private class CoordinatorServiceHandler implements CoordinatorService.Iface {
     @Override
-    public GetTargetsToBuildResponse getTargetsToBuild(GetTargetsToBuildRequest request)
-        throws TException {
-      LOG.debug(
-          String.format("Minion [%s] is requesting for new targets to build.", request.minionId));
-      checkBuildId(request.getStampedeId());
-      synchronized (lock) {
-        Preconditions.checkArgument(request.isSetMinionId());
+    public GetWorkResponse getWork(GetWorkRequest request) {
+      LOG.info(
+          String.format(
+              "Got GetWorkRequest from minion [%s]. [%s] targets finished. [%s] units requested",
+              request.getMinionId(),
+              request.getFinishedTargets().size(),
+              request.getMaxWorkUnitsToFetch()));
 
-        GetTargetsToBuildResponse response = new GetTargetsToBuildResponse();
+      checkBuildId(request.getStampedeId());
+      Preconditions.checkArgument(request.isSetMinionId());
+      Preconditions.checkArgument(request.isSetLastExitCode());
+
+      // Create the response with some defaults
+      GetWorkResponse response = new GetWorkResponse();
+      response.setContinueBuilding(true);
+      response.setWorkUnits(new ArrayList<>());
+
+      synchronized (lock) {
+        // There should be no more requests after the coordinator has started shutting down.
+        Preconditions.checkArgument(!exitCodeFuture.isDone());
+
+        // If the minion died, then kill the whole build.
+        if (request.getLastExitCode() != 0) {
+          LOG.error(
+              String.format(
+                  "Got non zero exit code in GetWorkRequest from minion [%s]. Exit code [%s]",
+                  request.getMinionId(), request.getLastExitCode()));
+          exitCodeFuture.complete(request.getLastExitCode());
+          response.setContinueBuilding(false);
+          return response;
+        }
+
+        List<WorkUnit> newWorkUnitsForMinion =
+            allocator.dequeueZeroDependencyNodes(
+                request.getMinionId(),
+                request.getFinishedTargets(),
+                request.getMaxWorkUnitsToFetch());
+
+        // If the build is already finished (or just finished with this update, then signal this to
+        // the minion.
         if (allocator.isBuildFinished()) {
-          LOG.debug(
+          exitCodeFuture.complete(0);
+          LOG.info(
               String.format(
                   "Minion [%s] is being told to exit because the build has finished.",
                   request.minionId));
-          return response.setAction(GetTargetsToBuildAction.CLOSE_CLIENT);
-        }
-
-        ImmutableList<String> targets = allocator.getTargetsToBuild(request.getMinionId());
-        if (targets.isEmpty()) {
-          LOG.debug(
-              String.format(
-                  "Minion [%s] is being told to retry getting more workload later.",
-                  request.minionId));
-          return response.setAction(GetTargetsToBuildAction.RETRY_LATER);
-        } else {
-          LOG.debug(
-              String.format(
-                  "Minion [%s] is being handed [%d] BuildTargets to build: [%s]",
-                  request.minionId, targets.size(), Joiner.on(", ").join(targets)));
-          return response.setAction(GetTargetsToBuildAction.BUILD_TARGETS).setBuildTargets(targets);
-        }
-      }
-    }
-
-    @Override
-    public FinishedBuildingResponse finishedBuilding(FinishedBuildingRequest request)
-        throws TException {
-      LOG.info(String.format("Minion [%s] has finished building.", request.getMinionId()));
-      checkBuildId(request.getStampedeId());
-      synchronized (lock) {
-        Preconditions.checkArgument(request.isSetMinionId());
-        Preconditions.checkArgument(request.isSetBuildExitCode());
-        FinishedBuildingResponse response = new FinishedBuildingResponse();
-        if (request.getBuildExitCode() != 0 && !exitCodeFuture.isDone()) {
-          exitCodeFuture.complete(request.getBuildExitCode());
           response.setContinueBuilding(false);
         } else {
-          allocator.finishedBuildingTargets(request.getMinionId());
-          if (allocator.isBuildFinished()) {
-            exitCodeFuture.complete(0);
-            response.setContinueBuilding(false);
-          } else {
-            response.setContinueBuilding(true);
-          }
+          response.setWorkUnits(newWorkUnitsForMinion);
         }
 
         return response;

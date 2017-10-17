@@ -26,7 +26,7 @@ import org.junit.Test;
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
-  private static final int MAX_BUILD_NODES_PER_MINION = 21;
+  private static final int MAX_PARALLEL_WORK_UNITS = 10;
 
   @Test
   public void testDiamondGraphRun()
@@ -37,11 +37,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
         EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
     CoordinatorModeRunner coordinator =
         new CoordinatorModeRunner(
-            port,
-            BuildTargetsQueueTest.createDiamondDependencyQueue(),
-            STAMPEDE_ID,
-            eventListener,
-            MAX_BUILD_NODES_PER_MINION);
+            port, BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID, eventListener);
     MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
         new MinionModeRunnerIntegrationTest.LocalBuilderImpl();
     MinionModeRunner minion =
@@ -50,6 +46,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             port,
             localBuilder,
             STAMPEDE_ID,
+            MAX_PARALLEL_WORK_UNITS,
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class));
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
