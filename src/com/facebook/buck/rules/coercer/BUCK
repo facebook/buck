@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 INTERFACE_SRCS = [
     "CoerceFailedException.java",
     "CoercedTypeCache.java",

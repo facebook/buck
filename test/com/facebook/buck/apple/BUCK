@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 APPLE_TEST_INTEGRATION_TEST_SRCS = [
     "AppleTestIntegrationTest.java",
     "AppleBundleIntegrationTest.java",

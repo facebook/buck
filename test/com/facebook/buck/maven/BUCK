@@ -1,5 +1,4 @@
-# TODO(mbolin): Replace this with standard_java_test() until prebuilt_jar() supports exported_deps.
-# See //third-party/java/maven:maven-model for an explanation of why this causes issues.
+load("//:DEFS", "java_test")
 
 java_library(
     name = "testutil",

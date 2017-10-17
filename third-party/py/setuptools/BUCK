@@ -1,2 +1,0 @@
-# Note: you shouldn't depend on pkg_resources directly,
-# as it's included in every pex by make_pex.

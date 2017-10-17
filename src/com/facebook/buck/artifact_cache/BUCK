@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 PUBLIC_API_SOURCES = [
     "AbstractArtifactInfo.java",
     "AbstractCacheResult.java",

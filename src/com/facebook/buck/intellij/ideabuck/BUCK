@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 genrule(
     name = "generate_bnf",
     srcs = [

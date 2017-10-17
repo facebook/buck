@@ -18,8 +18,6 @@
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
     ideabuck = //src/com/facebook/buck/intellij/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
-[buildfile]
-    includes = //DEFS
 [log]
     rule_key_logger_enabled = True
 [cache]

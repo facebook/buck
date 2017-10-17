@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 TEST_SRCS = glob(["*Test.java"])
 
 java_test(

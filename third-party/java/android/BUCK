@@ -1,6 +1,4 @@
-# TODO(t10086051) track license information here
-
-version = '25.3.0'
+version = "25.3.0"
 
 prebuilt_jar(
     name = "sdklib",

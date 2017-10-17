@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 # These are separate from the rest of the tests so we can run
 # them separately, avoiding the 20 second timeout in the iOS simulator.
 STANDARD_TEST_SRCS = [

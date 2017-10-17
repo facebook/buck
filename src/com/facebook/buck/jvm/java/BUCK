@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 java_library(
     name = "fat-jar-main",
     srcs = [

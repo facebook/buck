@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 CACHE_INTEGRATION_SRCS = [
     "ServedCacheIntegrationTest.java",
 ]

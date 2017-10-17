@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 STANDARD_TEST_SRCS = [
     "*Test.java",
 ]

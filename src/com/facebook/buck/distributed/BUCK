@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 COMMON_FILES = (
     "AbstractDistBuildClientStats.java",
     "BuildJobStateSerializer.java",

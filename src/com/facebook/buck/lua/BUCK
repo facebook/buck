@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 java_immutables_library(
     name = "lua",
     srcs = glob(["*.java"]),

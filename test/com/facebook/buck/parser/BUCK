@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 # This test is huge, so we run it by itself.
 PARSER_TEST_SRCS = [
     "ParserTest.java",

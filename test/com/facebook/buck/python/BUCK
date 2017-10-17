@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 java_library(
     name = "testutil",
     srcs = glob(

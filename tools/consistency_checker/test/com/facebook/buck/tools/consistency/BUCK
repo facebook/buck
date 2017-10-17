@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 java_test(
     name = "consistency",
     srcs = glob(["*Test.java"]),

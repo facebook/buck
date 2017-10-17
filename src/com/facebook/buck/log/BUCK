@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 LOGGER_FILES = ["Logger.java"]
 
 APPENDABLE_LOG_RECORD_FILES = ["AppendableLogRecord.java"]

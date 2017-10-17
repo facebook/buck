@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 TYPES = [
     "InputPath.java",
     "AbstractLimitedSourcePath.java",

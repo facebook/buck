@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 java_test(
     name = "xml",
     srcs = glob(["*Test.java"]),

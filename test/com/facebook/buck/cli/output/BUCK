@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 java_test(
     name = "output-test",
     srcs = glob(["*.java"]),

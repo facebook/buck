@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 CACHE_RATE_STATS_SRCS = ["CacheRateStatsKeeper.java"]
 
 java_library(

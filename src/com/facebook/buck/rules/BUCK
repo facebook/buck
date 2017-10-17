@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library")
+
 # This is here to break circular dependencies, since this interface is
 # threaded through almost everything.
 java_library(

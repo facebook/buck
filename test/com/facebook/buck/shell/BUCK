@@ -1,3 +1,5 @@
+load("//:DEFS", "java_immutables_library", "standard_java_test")
+
 java_immutables_library(
     name = "testutil",
     srcs = glob(

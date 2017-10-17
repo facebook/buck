@@ -1,3 +1,5 @@
+load("//:DEFS", "java_test")
+
 BINARY_INTEGRATION_SRCS = [
     "CxxBinaryIntegrationTest.java",
 ]
