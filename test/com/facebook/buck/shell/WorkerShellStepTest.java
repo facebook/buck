@@ -358,6 +358,12 @@ public class WorkerShellStepTest {
     assertTrue(firstEvent instanceof ConsoleEvent);
     assertThat(((ConsoleEvent) firstEvent).getLevel(), Matchers.is(Level.SEVERE));
     assertThat(((ConsoleEvent) firstEvent).getMessage(), Matchers.is(stderr));
+    BuckEvent secondEvent = listener.getEvents().get(1);
+    assertTrue(secondEvent instanceof ConsoleEvent);
+    assertThat(((ConsoleEvent) secondEvent).getLevel(), Matchers.is(Level.INFO));
+    assertThat(
+        ((ConsoleEvent) secondEvent).getMessage(),
+        Matchers.containsString("When building rule //dummy:target"));
   }
 
   @Test
