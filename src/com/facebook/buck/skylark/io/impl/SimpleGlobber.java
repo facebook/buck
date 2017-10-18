@@ -51,7 +51,7 @@ public class SimpleGlobber implements Globber {
    */
   @Override
   public Set<String> run(
-      Collection<String> include, Collection<String> exclude, Boolean excludeDirectories)
+      Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
       throws IOException {
     ImmutableSet<String> includePaths =
         resolvePathsMatchingGlobPatterns(include, basePath, excludeDirectories);
@@ -69,12 +69,10 @@ public class SimpleGlobber implements Globber {
    * @return The set of paths corresponding to requested patterns.
    */
   private static ImmutableSet<String> resolvePathsMatchingGlobPatterns(
-      Collection<String> patterns, Path basePath, Boolean excludeDirectories) throws IOException {
-    UnixGlob.Builder includeGlobBuilder = UnixGlob.forPath(basePath).addPatterns(patterns);
-    if (excludeDirectories != null) {
-      includeGlobBuilder.setExcludeDirectories(excludeDirectories);
-    }
-    return includeGlobBuilder
+      Collection<String> patterns, Path basePath, boolean excludeDirectories) throws IOException {
+    return UnixGlob.forPath(basePath)
+        .addPatterns(patterns)
+        .setExcludeDirectories(excludeDirectories)
         .glob()
         .stream()
         .map(includePath -> includePath.relativeTo(basePath).getPathString())

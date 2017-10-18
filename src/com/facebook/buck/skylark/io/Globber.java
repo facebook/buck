@@ -27,6 +27,6 @@ import java.util.Set;
  */
 public interface Globber {
   Set<String> run(
-      Collection<String> include, Collection<String> exclude, Boolean excludeDirectories)
+      Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
       throws IOException;
 }

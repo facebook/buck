@@ -46,7 +46,7 @@ public class SimpleGlobberTest {
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
     assertThat(
-        globber.run(Collections.singleton("*.txt"), Collections.emptySet(), null),
+        globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
   }
 
@@ -56,7 +56,7 @@ public class SimpleGlobberTest {
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
     assertThat(
-        globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), null),
+        globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), false),
         equalTo(ImmutableSet.of("foo.txt")));
   }
 
