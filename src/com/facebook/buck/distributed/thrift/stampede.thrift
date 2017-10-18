@@ -405,10 +405,10 @@ struct MultiGetBuildSlaveEventsResponse {
 # particular backing store.
 struct RuleKeyStoreLogEntry {
   1: optional string storeId;
-  2: optional i64 slaSeconds;
-  3: optional i64 lastStoredTimestampSeconds;
-  4: optional i64 lastAttemptedStoreTimetampSeconds;
-  5: optional i64 lastCacheHitTimestampSeconds;
+  2: optional i64 storeTTLSeconds;
+  3: optional i64 lastStoreEpochSeconds;
+  4: optional i64 lastAttemptedStoreEpochSeconds;
+  5: optional i64 lastFetchEpochSeconds;
 }
 
 struct RuleKeyLogEntry {

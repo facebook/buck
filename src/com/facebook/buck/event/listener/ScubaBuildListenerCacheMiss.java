@@ -51,37 +51,37 @@ class ScubaBuildListenerCacheMiss {
       List<RuleKeyStoreLogEntry> records, long currentTimeMillis) {
     // sanity checks
     for (RuleKeyStoreLogEntry record : records) {
-      if (record.lastStoredTimestampSeconds <= 0) {
+      if (record.lastStoreEpochSeconds <= 0) {
         return new ClassifyResult(CacheMissType.INCORRECT_RECORD, record);
       }
-      if (record.slaSeconds < 0) {
+      if (record.storeTTLSeconds < 0) {
         return new ClassifyResult(CacheMissType.INCORRECT_RECORD, record);
       }
-      if (record.lastAttemptedStoreTimetampSeconds < 0) {
+      if (record.lastAttemptedStoreEpochSeconds < 0) {
         return new ClassifyResult(CacheMissType.INCORRECT_RECORD, record);
       }
-      if (record.lastCacheHitTimestampSeconds < 0) {
+      if (record.lastFetchEpochSeconds < 0) {
         return new ClassifyResult(CacheMissType.INCORRECT_RECORD, record);
       }
     }
 
     List<RuleKeyStoreLogEntry> withSlaLogEntries =
-        records.stream().filter(r -> r.slaSeconds != 0).collect(Collectors.toList());
+        records.stream().filter(r -> r.storeTTLSeconds != 0).collect(Collectors.toList());
 
     long currentTimeSeconds = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
 
     for (RuleKeyStoreLogEntry record : withSlaLogEntries) {
-      if (record.lastStoredTimestampSeconds + record.slaSeconds > currentTimeSeconds) {
+      if (record.lastStoreEpochSeconds + record.storeTTLSeconds > currentTimeSeconds) {
         // Worst possible case: artifact is in SLA and already expired
         return new ClassifyResult(CacheMissType.IN_SLA, record);
       }
     }
 
     for (RuleKeyStoreLogEntry record : withSlaLogEntries) {
-      if (record.lastAttemptedStoreTimetampSeconds == 0) {
+      if (record.lastAttemptedStoreEpochSeconds == 0) {
         continue;
       }
-      if (record.lastAttemptedStoreTimetampSeconds + record.slaSeconds > currentTimeSeconds) {
+      if (record.lastAttemptedStoreEpochSeconds + record.storeTTLSeconds > currentTimeSeconds) {
         // Refresh on store is more important than refresh on fetch
         return new ClassifyResult(
             CacheMissType.OUT_SLA_WOULD_HAVE_BEEN_IN_SLA_IF_REFRESHED_ON_STORE, record);
@@ -89,10 +89,10 @@ class ScubaBuildListenerCacheMiss {
     }
 
     for (RuleKeyStoreLogEntry record : withSlaLogEntries) {
-      if (record.lastCacheHitTimestampSeconds == 0) {
+      if (record.lastFetchEpochSeconds == 0) {
         continue;
       }
-      if (record.lastCacheHitTimestampSeconds + record.slaSeconds > currentTimeSeconds) {
+      if (record.lastFetchEpochSeconds + record.storeTTLSeconds > currentTimeSeconds) {
         return new ClassifyResult(
             CacheMissType.OUT_SLA_WOULD_HAVE_BEEN_IN_SLA_IF_REFRESHED_ON_FETCH, record);
       }

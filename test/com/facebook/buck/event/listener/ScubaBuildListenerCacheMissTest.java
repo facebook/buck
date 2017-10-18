@@ -43,56 +43,56 @@ public class ScubaBuildListenerCacheMissTest {
 
   private static RuleKeyStoreLogEntry memcache() {
     RuleKeyStoreLogEntry e = new RuleKeyStoreLogEntry();
-    e.lastStoredTimestampSeconds = RANDOM_TS_SECONDS - 5;
-    e.slaSeconds = 0;
+    e.lastStoreEpochSeconds = RANDOM_TS_SECONDS - 5;
+    e.storeTTLSeconds = 0;
     return e;
   }
 
   private static RuleKeyStoreLogEntry memcacheWithStoreAndFetch() {
     RuleKeyStoreLogEntry e = new RuleKeyStoreLogEntry();
-    e.lastStoredTimestampSeconds = RANDOM_TS_SECONDS;
-    e.slaSeconds = 0;
-    e.lastAttemptedStoreTimetampSeconds = RANDOM_TS_SECONDS - 20;
-    e.lastCacheHitTimestampSeconds = RANDOM_TS_SECONDS - 30;
+    e.lastStoreEpochSeconds = RANDOM_TS_SECONDS;
+    e.storeTTLSeconds = 0;
+    e.lastAttemptedStoreEpochSeconds = RANDOM_TS_SECONDS - 20;
+    e.lastFetchEpochSeconds = RANDOM_TS_SECONDS - 30;
     return e;
   }
 
   private static RuleKeyStoreLogEntry inSla() {
     RuleKeyStoreLogEntry e = new RuleKeyStoreLogEntry();
-    e.lastStoredTimestampSeconds = RANDOM_TS_SECONDS - 5;
-    e.slaSeconds = 20;
+    e.lastStoreEpochSeconds = RANDOM_TS_SECONDS - 5;
+    e.storeTTLSeconds = 20;
     return e;
   }
 
   private static RuleKeyStoreLogEntry outSlaOther() {
     RuleKeyStoreLogEntry e = new RuleKeyStoreLogEntry();
-    e.lastStoredTimestampSeconds = RANDOM_TS_SECONDS - 50;
-    e.slaSeconds = 20;
+    e.lastStoreEpochSeconds = RANDOM_TS_SECONDS - 50;
+    e.storeTTLSeconds = 20;
     return e;
   }
 
   private static RuleKeyStoreLogEntry outSlaOtherStoredFetched() {
     RuleKeyStoreLogEntry e = new RuleKeyStoreLogEntry();
-    e.lastStoredTimestampSeconds = RANDOM_TS_SECONDS - 50;
-    e.lastAttemptedStoreTimetampSeconds = RANDOM_TS_SECONDS - 40;
-    e.lastCacheHitTimestampSeconds = RANDOM_TS_SECONDS - 30;
-    e.slaSeconds = 20;
+    e.lastStoreEpochSeconds = RANDOM_TS_SECONDS - 50;
+    e.lastAttemptedStoreEpochSeconds = RANDOM_TS_SECONDS - 40;
+    e.lastFetchEpochSeconds = RANDOM_TS_SECONDS - 30;
+    e.storeTTLSeconds = 20;
     return e;
   }
 
   private static RuleKeyStoreLogEntry outSlaWouldHaveBeenInSlaIfRefreshedOnStore() {
     RuleKeyStoreLogEntry e = new RuleKeyStoreLogEntry();
-    e.lastStoredTimestampSeconds = RANDOM_TS_SECONDS - 3000;
-    e.lastAttemptedStoreTimetampSeconds = RANDOM_TS_SECONDS - 3;
-    e.slaSeconds = 20;
+    e.lastStoreEpochSeconds = RANDOM_TS_SECONDS - 3000;
+    e.lastAttemptedStoreEpochSeconds = RANDOM_TS_SECONDS - 3;
+    e.storeTTLSeconds = 20;
     return e;
   }
 
   private static RuleKeyStoreLogEntry outSlaWouldHaveBeenInSlaIfRefreshedOnFetch() {
     RuleKeyStoreLogEntry e = new RuleKeyStoreLogEntry();
-    e.lastStoredTimestampSeconds = RANDOM_TS_SECONDS - 3000;
-    e.lastCacheHitTimestampSeconds = RANDOM_TS_SECONDS - 5;
-    e.slaSeconds = 20;
+    e.lastStoreEpochSeconds = RANDOM_TS_SECONDS - 3000;
+    e.lastFetchEpochSeconds = RANDOM_TS_SECONDS - 5;
+    e.storeTTLSeconds = 20;
     return e;
   }
 
