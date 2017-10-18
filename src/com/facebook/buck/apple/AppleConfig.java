@@ -149,7 +149,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
                 ProcessExecutorParams.builder()
                     .setCommand(ImmutableList.of("xcode-select", "--print-path"))
                     .build();
-            // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
+            // Must specify that stdout is expected or else output may be wrapped in Ansi escape
+            // chars.
             Set<ProcessExecutor.Option> options =
                 EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
             ProcessExecutor.Result result;
@@ -266,6 +267,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldGenerateHeaderSymlinkTreesOnly() {
     return delegate.getBooleanValue(APPLE_SECTION, "generate_header_symlink_tree_only", false);
+  }
+
+  public boolean shouldGenerateMissingUmbrellaHeaders() {
+    return delegate.getBooleanValue(APPLE_SECTION, "generate_missing_umbrella_headers", false);
   }
 
   public boolean shouldUseSwiftDelegate() {
