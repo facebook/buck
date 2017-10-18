@@ -122,6 +122,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final Path logDirectoryPath;
   private final ChromeTraceBuckConfig config;
   private final Set<Long> threadNamesRecorded = new HashSet<>();
+  private final ThreadMXBean threadMXBean;
 
   private final ExecutorService outputExecutor;
 
@@ -131,7 +132,14 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       Clock clock,
       ChromeTraceBuckConfig config)
       throws IOException {
-    this(projectFilesystem, invocationInfo, clock, Locale.US, TimeZone.getDefault(), config);
+    this(
+        projectFilesystem,
+        invocationInfo,
+        clock,
+        Locale.US,
+        TimeZone.getDefault(),
+        ManagementFactory.getThreadMXBean(),
+        config);
   }
 
   @VisibleForTesting
@@ -141,6 +149,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       Clock clock,
       final Locale locale,
       final TimeZone timeZone,
+      ThreadMXBean threadMXBean,
       ChromeTraceBuckConfig config)
       throws IOException {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
@@ -155,6 +164,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             return dateFormat;
           }
         };
+    this.threadMXBean = threadMXBean;
     this.config = config;
     this.outputExecutor =
         MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()));
@@ -852,7 +862,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
     Long boxedThreadId = Long.valueOf(threadId);
     if (!threadNamesRecorded.contains(boxedThreadId)) {
-      ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
       ThreadInfo threadInfo = threadMXBean.getThreadInfo(threadId);
 
       if (threadInfo != null) {
