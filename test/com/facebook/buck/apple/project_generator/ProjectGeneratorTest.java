@@ -4686,6 +4686,10 @@ public class ProjectGeneratorTest {
                 })
             .toSet();
     assertThat(fakeDepPhases.size(), equalTo(1));
+
+    ImmutableMap<String, String> buildSettings =
+        getBuildSettings(barBuildTarget, pbxTarget, "Debug");
+    assertThat(buildSettings.get("DEPLOYMENT_POSTPROCESSING"), equalTo("NO"));
   }
 
   @Test

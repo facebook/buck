@@ -980,6 +980,8 @@ public class ProjectGenerator {
     boolean isModularAppleLibrary = isModularAppleLibrary(targetNode) && isFocusedOnTarget;
     mutator.setFrameworkHeadersEnabled(isModularAppleLibrary);
 
+    Optional<ImmutableMap<String, String>> swiftDepsSettings = Optional.empty();
+
     if (!shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
         mutator
@@ -1054,8 +1056,8 @@ public class ProjectGenerator {
         // which depends on the outputs of the deps (i.e., the static libs). The copy phase
         // will effectively say "Copy libX.a from Products Dir into Products Dir" which is a nop.
         // To be on the safe side, we're explicitly marking the copy phase as only running for
-        // deployment postprocessing (i.e., "Copy only when installing") which is activated
-        // via Product -> Archive in Xcode.
+        // deployment postprocessing (i.e., "Copy only when installing") and disabling
+        // deployment postprocessing (it's enabled by default for release builds).
         ImmutableSet<PBXFileReference> swiftDeps =
             collectRecursiveLibraryDependenciesWithSwiftSources(targetNode);
         if (!swiftDeps.isEmpty()) {
@@ -1070,6 +1072,8 @@ public class ProjectGenerator {
             PBXBuildFile buildFile = new PBXBuildFile(fileRef);
             copyFiles.getFiles().add(buildFile);
           }
+
+          swiftDepsSettings = Optional.of(ImmutableMap.of("DEPLOYMENT_POSTPROCESSING", "NO"));
 
           mutator.setSwiftDependenciesBuildPhase(copyFiles);
         }
@@ -1116,6 +1120,8 @@ public class ProjectGenerator {
 
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
+
+    swiftDepsSettings.ifPresent(settings -> extraSettingsBuilder.putAll(settings));
 
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
     if (isModularAppleLibrary(targetNode) && isFrameworkProductType(productType)) {
