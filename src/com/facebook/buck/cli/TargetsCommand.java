@@ -94,6 +94,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedMap;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
@@ -399,7 +400,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     // plain or json output
-    ImmutableMap<BuildTarget, ShowOptions> showRulesResult;
+    ImmutableMap<BuildTarget, TargetResult> showRulesResult;
     TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
         buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
     boolean useVersioning =
@@ -642,19 +643,19 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void printShowRules(
-      Map<BuildTarget, ShowOptions> showRulesResult, CommandRunnerParams params) {
-    for (Entry<BuildTarget, ShowOptions> entry :
+      Map<BuildTarget, TargetResult> showRulesResult, CommandRunnerParams params) {
+    for (Entry<BuildTarget, TargetResult> entry :
         ImmutableSortedMap.copyOf(showRulesResult).entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.add(entry.getKey().getFullyQualifiedName());
-      ShowOptions showOptions = entry.getValue();
-      showOptions.getRuleKey().ifPresent(builder::add);
+      TargetResult targetResult = entry.getValue();
+      targetResult.getRuleKey().ifPresent(builder::add);
       if (isShowCellPath()) {
         builder.add(entry.getKey().getCellPath().toString());
       }
-      showOptions.getOutputPath().ifPresent(builder::add);
-      showOptions.getGeneratedSourcePath().ifPresent(builder::add);
-      showOptions.getTargetHash().ifPresent(builder::add);
+      targetResult.getOutputPath().ifPresent(builder::add);
+      targetResult.getGeneratedSourcePath().ifPresent(builder::add);
+      targetResult.getTargetHash().ifPresent(builder::add);
       params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
     }
   }
@@ -781,7 +782,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Iterable<TargetNode<?, ?>> targetNodes,
-      ImmutableMap<BuildTarget, ShowOptions> showRulesResult,
+      ImmutableMap<BuildTarget, TargetResult> targetResults,
       ImmutableSet<String> outputAttributes)
       throws BuildFileParseException {
     PatternsMatcher attributesPatternsMatcher = new PatternsMatcher(outputAttributes);
@@ -793,8 +794,7 @@ public class TargetsCommand extends AbstractCommand {
 
     while (targetNodeIterator.hasNext()) {
       TargetNode<?, ?> targetNode = targetNodeIterator.next();
-      Map<String, Object> sortedTargetRule;
-      sortedTargetRule =
+      Map<String, Object> rawTargetNode =
           params
               .getParser()
               .getRawTargetNode(
@@ -803,7 +803,7 @@ public class TargetsCommand extends AbstractCommand {
                   getEnableParserProfiling(),
                   executor,
                   targetNode);
-      if (sortedTargetRule == null) {
+      if (rawTargetNode == null) {
         params
             .getConsole()
             .printErrorText(
@@ -812,72 +812,37 @@ public class TargetsCommand extends AbstractCommand {
         continue;
       }
 
-      sortedTargetRule = attributesPatternsMatcher.filterMatchingMapKeys(sortedTargetRule);
-
-      ShowOptions showOptions = showRulesResult.get(targetNode.getBuildTarget());
-      if (showOptions != null) {
-        putIfValuePresentAndMatches(
-            ShowOptionsName.RULE_KEY.getName(),
-            showOptions.getRuleKey(),
-            sortedTargetRule,
-            attributesPatternsMatcher);
-        putIfValuePresentAndMatches(
-            ShowOptionsName.OUTPUT_PATH.getName(),
-            showOptions.getOutputPath(),
-            sortedTargetRule,
-            attributesPatternsMatcher);
-        putIfValuePresentAndMatches(
-            ShowOptionsName.GEN_SRC_PATH.getName(),
-            showOptions.getGeneratedSourcePath(),
-            sortedTargetRule,
-            attributesPatternsMatcher);
-        putIfValuePresentAndMatches(
-            ShowOptionsName.TARGET_HASH.getName(),
-            showOptions.getTargetHash(),
-            sortedTargetRule,
-            attributesPatternsMatcher);
-        putIfValuePresentAndMatches(
-            ShowOptionsName.RULE_TYPE.getName(),
-            showOptions.getRuleType(),
-            sortedTargetRule,
-            attributesPatternsMatcher);
+      TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
+      if (targetResult != null) {
+        for (TargetResultFieldName field : TargetResultFieldName.values()) {
+          field.getter.apply(targetResult).ifPresent(value -> rawTargetNode.put(field.name, value));
+        }
       }
-      String fullyQualifiedNameAttribute = "fully_qualified_name";
-      if (attributesPatternsMatcher.matches(fullyQualifiedNameAttribute)) {
-        sortedTargetRule.put(
-            fullyQualifiedNameAttribute, targetNode.getBuildTarget().getFullyQualifiedName());
-      }
-      String cellPathAttribute = "buck.cell_path";
-      if (isShowCellPath() && attributesPatternsMatcher.matches(cellPathAttribute)) {
-        sortedTargetRule.put(cellPathAttribute, targetNode.getBuildTarget().getCellPath());
+      rawTargetNode.put(
+          "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
+      if (isShowCellPath()) {
+        rawTargetNode.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
       }
 
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
       try {
-        ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedTargetRule);
+        ObjectMappers.WRITER
+            .withDefaultPrettyPrinter()
+            .writeValue(
+                stringWriter, attributesPatternsMatcher.filterMatchingMapKeys(rawTargetNode));
       } catch (IOException e) {
         // Shouldn't be possible while writing to a StringWriter...
         throw new RuntimeException(e);
       }
-      String output = stringWriter.getBuffer().toString();
+      params.getConsole().getStdOut().print(stringWriter.getBuffer().toString());
       if (targetNodeIterator.hasNext()) {
-        output += ",";
+        params.getConsole().getStdOut().print(',');
       }
-      params.getConsole().getStdOut().println(output);
+      params.getConsole().getStdOut().println();
     }
 
     params.getConsole().getStdOut().println("]");
-  }
-
-  private void putIfValuePresentAndMatches(
-      String key,
-      Optional<String> value,
-      Map<String, Object> targetMap,
-      PatternsMatcher patternsMatcher) {
-    if (value.isPresent() && patternsMatcher.matches(key)) {
-      targetMap.put(key, value.get());
-    }
   }
 
   @VisibleForTesting
@@ -905,22 +870,22 @@ public class TargetsCommand extends AbstractCommand {
    *
    * @return An immutable map consisting of result of show options for to each target rule
    */
-  private ImmutableMap<BuildTarget, ShowOptions> computeShowRules(
+  private ImmutableMap<BuildTarget, TargetResult> computeShowRules(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException {
 
-    Map<BuildTarget, ShowOptions.Builder> showOptionBuilderMap = new HashMap<>();
+    TargetResultBuilders targetResultBuilders = new TargetResultBuilders();
     if (isShowTargetHash()) {
-      computeShowTargetHash(params, executor, targetGraphAndTargetNodes, showOptionBuilderMap);
+      computeShowTargetHash(params, executor, targetGraphAndTargetNodes, targetResultBuilders);
     }
 
     // We only need the action graph if we're showing the output or the keys, and the
     // RuleKeyFactory if we're showing the keys.
-    Optional<ActionGraph> actionGraph = Optional.empty();
-    Optional<BuildRuleResolver> buildRuleResolver = Optional.empty();
+    Optional<ActionGraph> actionGraph;
+    Optional<BuildRuleResolver> buildRuleResolver;
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
@@ -945,29 +910,33 @@ public class TargetsCommand extends AbstractCommand {
                       ruleFinder,
                       Optional.ofNullable(ruleKeyLogger)));
         }
+      } else {
+        actionGraph = Optional.empty();
+        buildRuleResolver = Optional.empty();
       }
 
       for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-        ShowOptions.Builder showOptionsBuilder =
-            getShowOptionBuilder(showOptionBuilderMap, targetNode.getBuildTarget());
-        Preconditions.checkNotNull(showOptionsBuilder);
+        TargetResult.Builder builder =
+            targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
+        Preconditions.checkNotNull(builder);
         if (actionGraph.isPresent()) {
           BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
           if (isShowRuleKey()) {
-            showOptionsBuilder.setRuleKey(ruleKeyFactory.get().build(rule).toString());
+            builder.setRuleKey(ruleKeyFactory.get().build(rule).toString());
             if (isShowTransitiveRuleKeys()) {
-              showTransitiveRuleKeys(rule, ruleKeyFactory.get(), showOptionBuilderMap);
+              showTransitiveRuleKeys(rule, ruleKeyFactory.get(), targetResultBuilders);
             }
           }
         }
       }
 
-      for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
+      for (Map.Entry<BuildTarget, TargetResult.Builder> entry :
+          targetResultBuilders.map.entrySet()) {
         BuildTarget target = entry.getKey();
-        ShowOptions.Builder showOptionsBuilder = entry.getValue();
-        if (actionGraph.isPresent()) {
+        TargetResult.Builder builder = entry.getValue();
+        if (buildRuleResolver.isPresent()) {
           BuildRule rule = buildRuleResolver.get().requireRule(target);
-          showOptionsBuilder.setRuleType(rule.getType());
+          builder.setRuleType(rule.getType());
           if (isShowOutput() || isShowFullOutput()) {
             getUserFacingOutputPath(
                     DefaultSourcePathResolver.from(
@@ -979,7 +948,7 @@ public class TargetsCommand extends AbstractCommand {
                         isShowFullOutput()
                             ? path
                             : params.getCell().getFilesystem().relativize(path))
-                .ifPresent(path -> showOptionsBuilder.setOutputPath(path.toString()));
+                .ifPresent(path -> builder.setOutputPath(path.toString()));
             // If the output dir is requested, also calculate the generated src dir
             if (rule instanceof JavaLibrary) {
               ((JavaLibrary) rule)
@@ -992,14 +961,15 @@ public class TargetsCommand extends AbstractCommand {
                             isShowFullOutput() ? path : rootPath.relativize(sameFsPath);
                         return returnPath.toString();
                       })
-                  .ifPresent(showOptionsBuilder::setGeneratedSourcePath);
+                  .ifPresent(builder::setGeneratedSourcePath);
             }
           }
         }
       }
 
-      ImmutableMap.Builder<BuildTarget, ShowOptions> builder = new ImmutableMap.Builder<>();
-      for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
+      ImmutableMap.Builder<BuildTarget, TargetResult> builder = new ImmutableMap.Builder<>();
+      for (Map.Entry<BuildTarget, TargetResult.Builder> entry :
+          targetResultBuilders.map.entrySet()) {
         builder.put(entry.getKey(), entry.getValue().build());
       }
       return builder.build();
@@ -1007,14 +977,11 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void showTransitiveRuleKeys(
-      BuildRule root,
-      DefaultRuleKeyFactory ruleKeyFactory,
-      Map<BuildTarget, ShowOptions.Builder> optionsMap) {
+      BuildRule root, DefaultRuleKeyFactory ruleKeyFactory, TargetResultBuilders resultBuilders) {
     AbstractBreadthFirstTraversal.traverse(
         root,
         r -> {
-          ShowOptions.Builder showOptionsBuilder =
-              getShowOptionBuilder(optionsMap, r.getBuildTarget());
+          TargetResult.Builder showOptionsBuilder = resultBuilders.getOrCreate(r.getBuildTarget());
           showOptionsBuilder.setRuleKey(ruleKeyFactory.build(r).toString());
           return r.getBuildDeps();
         });
@@ -1116,7 +1083,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes,
-      Map<BuildTarget, ShowOptions.Builder> showRulesResult)
+      TargetResultBuilders resultBuilders)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException {
     LOG.debug("Getting target hash for %s", targetGraphAndTargetNodes.getSecond());
@@ -1143,7 +1110,10 @@ public class TargetsCommand extends AbstractCommand {
             targetGraphWithTests, targetGraphAndTargetNodes.getSecond(), buildTargetHashes);
 
     for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-      processTargetHash(targetNode.getBuildTarget(), showRulesResult, finalHashes);
+      BuildTarget buildTarget = targetNode.getBuildTarget();
+      resultBuilders
+          .getOrCreate(buildTarget)
+          .setTargetHash(getHashCodeOrThrow(finalHashes, buildTarget).toString());
     }
   }
 
@@ -1196,15 +1166,6 @@ public class TargetsCommand extends AbstractCommand {
     hashesWithTests.put(node.getBuildTarget(), hasher.hash());
   }
 
-  private void processTargetHash(
-      BuildTarget buildTarget,
-      Map<BuildTarget, ShowOptions.Builder> showRulesResult,
-      ImmutableMap<BuildTarget, HashCode> finalHashes) {
-    ShowOptions.Builder showOptionsBuilder = getShowOptionBuilder(showRulesResult, buildTarget);
-    HashCode hashCode = getHashCodeOrThrow(finalHashes, buildTarget);
-    showOptionsBuilder.setTargetHash(hashCode.toString());
-  }
-
   private static HashCode getHashCodeOrThrow(
       Map<BuildTarget, HashCode> buildTargetHashCodes, BuildTarget buildTarget) {
     HashCode hashCode = buildTargetHashCodes.get(buildTarget);
@@ -1254,19 +1215,21 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
-  private ShowOptions.Builder getShowOptionBuilder(
-      Map<BuildTarget, ShowOptions.Builder> showRulesBuilderMap, BuildTarget buildTarget) {
-    if (!showRulesBuilderMap.containsKey(buildTarget)) {
-      ShowOptions.Builder builder = ShowOptions.builder();
-      showRulesBuilderMap.put(buildTarget, builder);
-      return builder;
+  /**
+   * Holds the output values for a build target. Handlers for different output types will accumulate
+   * their results in to result builder for each build target.
+   */
+  private static class TargetResultBuilders {
+    final Map<BuildTarget, TargetResult.Builder> map = new HashMap<>();
+
+    TargetResult.Builder getOrCreate(BuildTarget target) {
+      return map.computeIfAbsent(target, ignored -> TargetResult.builder());
     }
-    return showRulesBuilderMap.get(buildTarget);
   }
 
   @Value.Immutable
   @BuckStyleImmutable
-  abstract static class AbstractShowOptions {
+  abstract static class AbstractTargetResult {
     public abstract Optional<String> getOutputPath();
 
     public abstract Optional<String> getGeneratedSourcePath();
@@ -1278,21 +1241,19 @@ public class TargetsCommand extends AbstractCommand {
     public abstract Optional<String> getRuleType();
   }
 
-  private enum ShowOptionsName {
-    OUTPUT_PATH("buck.outputPath"),
-    GEN_SRC_PATH("buck.generatedSourcePath"),
-    TARGET_HASH("buck.targetHash"),
-    RULE_KEY("buck.ruleKey"),
-    RULE_TYPE("buck.ruleType");
+  private enum TargetResultFieldName {
+    OUTPUT_PATH("buck.outputPath", TargetResult::getOutputPath),
+    GEN_SRC_PATH("buck.generatedSourcePath", TargetResult::getGeneratedSourcePath),
+    TARGET_HASH("buck.targetHash", TargetResult::getTargetHash),
+    RULE_KEY("buck.ruleKey", TargetResult::getRuleKey),
+    RULE_TYPE("buck.ruleType", TargetResult::getRuleType);
 
     private String name;
+    private Function<TargetResult, Optional<String>> getter;
 
-    ShowOptionsName(String name) {
+    TargetResultFieldName(String name, Function<TargetResult, Optional<String>> getter) {
       this.name = name;
-    }
-
-    public String getName() {
-      return name;
+      this.getter = getter;
     }
   }
 }
