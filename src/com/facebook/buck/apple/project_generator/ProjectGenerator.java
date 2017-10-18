@@ -73,6 +73,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -129,6 +130,7 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCommonArg;
+import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -491,12 +493,6 @@ public class ProjectGenerator {
         throw originalException;
       }
     }
-  }
-
-  private static Optional<String> getProductNameForTargetNode(TargetNode<?, ?> targetNode) {
-    return targetNode
-        .castArg(AppleBundleDescriptionArg.class)
-        .flatMap(node -> node.getConstructorArg().getProductName());
   }
 
   @SuppressWarnings("unchecked")
@@ -1454,7 +1450,7 @@ public class ProjectGenerator {
     }
 
     Optional<String> moduleName =
-        isModularAppleLibrary ? Optional.of(getProductName(targetNode)) : Optional.empty();
+        isModularAppleLibrary ? Optional.of(getModuleName(targetNode)) : Optional.empty();
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
@@ -1660,11 +1656,6 @@ public class ProjectGenerator {
       sourceGroup.getOrCreateFileReferenceBySourceTreePath(
           new SourceTreePath(PBXReference.SourceTree.SOURCE_ROOT, path, Optional.empty()));
     }
-  }
-
-  private String getProductName(TargetNode<?, ?> buildTargetNode) {
-    return getProductNameForTargetNode(buildTargetNode)
-        .orElse(getProductNameForBuildTargetNode(buildTargetNode));
   }
 
   private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(
@@ -2074,9 +2065,10 @@ public class ProjectGenerator {
 
         projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
       }
-      if (moduleName.isPresent() && resolvedContents.entrySet().size() > 0) {
+      if (moduleName.isPresent() && resolvedContents.size() > 0) {
         if (shouldGenerateUmbrellaHeaderIfMissing) {
-          writeUmbrellaHeaderIfNeeded(moduleName.get(), headerSymlinkTreeRoot, resolvedContents);
+          writeUmbrellaHeaderIfNeeded(
+              moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
         }
         boolean containsSwift = !nonSourcePaths.isEmpty();
         if (containsSwift) {
@@ -2111,20 +2103,17 @@ public class ProjectGenerator {
   }
 
   private void writeUmbrellaHeaderIfNeeded(
-      String moduleName,
-      Path headerSymlinkTreeRoot,
-      ImmutableSortedMap<Path, Path> resolvedContents)
+      String moduleName, ImmutableSortedSet<Path> headerPaths, Path headerSymlinkTreeRoot)
       throws IOException {
-    ImmutableList<String> headerPaths =
-        resolvedContents
-            .keySet()
+    ImmutableList<String> headerPathStrings =
+        headerPaths
             .stream()
             .map(Path::getFileName)
             .map(Path::toString)
             .collect(MoreCollectors.toImmutableList());
     if (!headerPaths.contains(moduleName + ".h")) {
       projectFilesystem.writeContentsToPath(
-          new UmbrellaHeader(moduleName, headerPaths).render(),
+          new UmbrellaHeader(moduleName, headerPathStrings).render(),
           headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h")));
     }
   }
@@ -2393,6 +2382,28 @@ public class ProjectGenerator {
     } else {
       LOG.debug("Not regenerating project at %s (contents have not changed)", serializedProject);
     }
+  }
+
+  private String getModuleName(TargetNode<?, ?> buildTargetNode) {
+    Optional<String> swiftName =
+        buildTargetNode
+            .castArg(SwiftLibraryDescriptionArg.class)
+            .flatMap(node -> node.getConstructorArg().getModuleName());
+    if (swiftName.isPresent()) {
+      return swiftName.get();
+    }
+
+    return buildTargetNode
+        .castArg(CommonArg.class)
+        .flatMap(node -> node.getConstructorArg().getModuleName())
+        .orElse(buildTargetNode.getBuildTarget().getShortName());
+  }
+
+  private String getProductName(TargetNode<?, ?> buildTargetNode) {
+    return buildTargetNode
+        .castArg(AppleBundleDescriptionArg.class)
+        .flatMap(node -> node.getConstructorArg().getProductName())
+        .orElse(getProductNameForBuildTargetNode(buildTargetNode));
   }
 
   private String getProductNameForBuildTargetNode(TargetNode<?, ?> targetNode) {
