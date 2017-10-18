@@ -83,7 +83,7 @@ public class Glob {
       @Param(
         name = "exclude_directories",
         type = Boolean.class,
-        defaultValue = "False",
+        defaultValue = "True",
         positional = false,
         named = true,
         doc = "True indicates directories should not be matched."

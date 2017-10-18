@@ -104,6 +104,16 @@ public class GlobTest {
         equalTo(SkylarkList.createImmutable(ImmutableList.of())));
   }
 
+  @Test
+  public void testMatchingDirectoryIsNotReturnedWhenDirExclusionIsNotSpecified() throws Exception {
+    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['some_dir'])");
+    assertThat(
+        evaluate(buildFile).lookup("txts"),
+        equalTo(SkylarkList.createImmutable(ImmutableList.of())));
+  }
+
   private Environment evaluate(Path buildFile, Mutability mutability)
       throws IOException, InterruptedException {
     BuildFileAST buildFileAst =
