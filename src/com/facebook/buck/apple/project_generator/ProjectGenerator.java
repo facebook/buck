@@ -1430,7 +1430,7 @@ public class ProjectGenerator {
           targetSpecificSwiftFlags.addAll(collectModularTargetSpecificSwiftFlags(targetNode));
         }
 
-        ImmutableList<String> testingOverlay = getExcludesForModulesUnderTests(targetNode);
+        ImmutableList<String> testingOverlay = getFlagsForExcludesForModulesUnderTests(targetNode);
         Iterable<String> otherSwiftFlags =
             Iterables.concat(
                 swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
@@ -1634,21 +1634,21 @@ public class ProjectGenerator {
         .orElse(false);
   }
 
-  private ImmutableList<String> getExcludesForModulesUnderTests(
-      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode) {
+  private ImmutableList<String> getFlagsForExcludesForModulesUnderTests(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> testingTarget) {
     ImmutableList.Builder<String> testingOverlayBuilder = new ImmutableList.Builder<>();
     visitRecursivePrivateHeaderSymlinkTreesForTests(
-        targetNode,
-        (nativeNode, headerVisibility) -> {
+        testingTarget,
+        (targetUnderTest, headerVisibility) -> {
           // If we are testing a modular apple_library, we expose it non-modular. This allows the
           // testing target to see both the public and private interfaces of the tested target
           // without triggering header errors related to modules. We hide the module definition by
           // using a filesystem overlay that overrides the module.modulemap with an empty file.
-          if (isModularAppleLibrary(nativeNode)) {
+          if (isModularAppleLibrary(targetUnderTest)) {
             testingOverlayBuilder.add("-ivfsoverlay");
             Path vfsOverlay =
                 getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
-                    getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
+                    getPathToHeaderSymlinkTree(targetUnderTest, HeaderVisibility.PUBLIC));
             testingOverlayBuilder.add("$REPO_ROOT/" + vfsOverlay.toString());
           }
         });
@@ -2691,7 +2691,7 @@ public class ProjectGenerator {
 
   private Path getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
       Path headerSymlinkTreeRoot) {
-    return headerSymlinkTreeRoot.resolve("testing.yaml");
+    return headerSymlinkTreeRoot.resolve("testing-overlay.yaml");
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
