@@ -77,7 +77,7 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return buildTarget.toString();
   }
 

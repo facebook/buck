@@ -32,7 +32,7 @@ public class BuildSlaveFinishedStatusEvent extends AbstractBuckEvent {
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return getEventName();
   }
 

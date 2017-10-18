@@ -400,7 +400,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return rule.toString();
     }
   }

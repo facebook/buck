@@ -43,7 +43,7 @@ public class BuckInitializationDurationEvent extends AbstractBuckEvent {
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return EVENT_NAME;
   }
 }

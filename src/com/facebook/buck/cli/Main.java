@@ -1572,17 +1572,20 @@ public final class Main {
           SUPER_CONSOLE_REFRESH_RATE.toMillis(), TimeUnit.MILLISECONDS);
       return superConsole;
     }
-    return new SimpleConsoleEventBusListener(
-        console,
-        clock,
-        testResultSummaryVerbosity,
-        config.getHideSucceededRulesInLogMode(),
-        config.getNumberOfSlowRulesToShow(),
-        config.shouldShowSlowRulesInConsole(),
-        locale,
-        testLogPath,
-        executionEnvironment,
-        buildId);
+    SimpleConsoleEventBusListener simpleListener =
+        new SimpleConsoleEventBusListener(
+            console,
+            clock,
+            testResultSummaryVerbosity,
+            config.getHideSucceededRulesInLogMode(),
+            config.getNumberOfSlowRulesToShow(),
+            config.shouldShowSlowRulesInConsole(),
+            locale,
+            testLogPath,
+            executionEnvironment,
+            buildId);
+    simpleListener.startRenderScheduler(1, TimeUnit.SECONDS);
+    return simpleListener;
   }
 
   private boolean isSuperConsoleEnabled(Console console) {

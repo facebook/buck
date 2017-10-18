@@ -38,7 +38,7 @@ public abstract class AutoSparseStateEvents extends AbstractBuckEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return "";
   }
 

@@ -39,7 +39,7 @@ public class CountersSnapshotEvent extends AbstractBuckEvent {
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return String.format("%s with [%d] counters.", getEventName(), snapshots.size());
   }
 }

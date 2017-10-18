@@ -61,7 +61,7 @@ public abstract class StepEvent extends AbstractBuckEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return getShortStepName();
   }
 

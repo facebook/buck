@@ -45,7 +45,7 @@ public abstract class StartActivityEvent extends AbstractBuckEvent
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return String.format("%s %s", getBuildTarget().getFullyQualifiedName(), getActivityName());
   }
 

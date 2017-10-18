@@ -72,7 +72,7 @@ public abstract class TestSummaryEvent extends AbstractBuckEvent
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return String.format("Test case %s test %s", testCaseName, testName);
     }
   }
@@ -96,7 +96,7 @@ public abstract class TestSummaryEvent extends AbstractBuckEvent
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return testResultSummary.toString();
     }
   }

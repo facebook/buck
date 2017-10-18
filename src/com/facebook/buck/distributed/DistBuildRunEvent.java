@@ -32,7 +32,7 @@ public class DistBuildRunEvent extends AbstractBuckEvent {
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return getEventName();
   }
 

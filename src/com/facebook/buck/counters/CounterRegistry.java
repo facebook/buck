@@ -51,7 +51,7 @@ public interface CounterRegistry extends Closeable {
     }
 
     @Override
-    protected String getValueString() {
+    public String getValueString() {
       return toString();
     }
 

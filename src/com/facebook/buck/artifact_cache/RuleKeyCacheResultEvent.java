@@ -36,7 +36,7 @@ public class RuleKeyCacheResultEvent extends AbstractBuckEvent {
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return getEventName() + getEventKey().toString();
   }
 }

@@ -38,7 +38,7 @@ public class WatchmanDiagnosticEvent extends AbstractBuckEvent {
   }
 
   @Override
-  protected String getValueString() {
+  public String getValueString() {
     return watchmanDiagnostic.getMessage();
   }
 }
