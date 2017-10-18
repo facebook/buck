@@ -16,6 +16,8 @@
 
 package com.facebook.buck.plugin;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.pf4j.DefaultPluginManager;
 import org.pf4j.ExtensionFinder;
 import org.pf4j.PluginManager;
@@ -33,6 +35,11 @@ public class BuckPluginManagerFactory {
           @Override
           protected ExtensionFinder createExtensionFinder() {
             return new BuckExtensionFinder();
+          }
+
+          @Override
+          public Path getPluginsRoot() {
+            return Paths.get("buck-plugins");
           }
         };
 
