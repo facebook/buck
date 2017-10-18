@@ -1282,6 +1282,61 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testHeaderSymlinkTreesWithHeadersVisibleForTestingWithModuleOverrides()
+      throws IOException {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+
+    TargetNode<?, ?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("Foo.swift")),
+                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
+            .setTests(ImmutableSortedSet.of(testTarget))
+            .setSwiftVersion(Optional.of("3"))
+            .setModular(true)
+            .build();
+
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Default", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(libraryNode, testNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
+
+    ImmutableMap<String, String> buildSettings =
+        getBuildSettings(testTarget, testPBXTarget, "Default");
+
+    assertThat(
+        buildSettings.get("OTHER_CFLAGS"),
+        containsString("-ivfsoverlay ../buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml"));
+    assertThat(
+        buildSettings.get("OTHER_CPLUSPLUSFLAGS"),
+        containsString("-ivfsoverlay ../buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml"));
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(4));
+
+    Path libSymlinktreePublic = Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub");
+    assertTrue(headerSymlinkTrees.contains(libSymlinktreePublic));
+    assertTrue(projectFilesystem.isFile(libSymlinktreePublic.resolve("testing-overlay.yaml")));
+    assertTrue(projectFilesystem.isFile(libSymlinktreePublic.resolve("lib/testing.modulemap")));
+    assertEquals(
+        projectFilesystem.readFileIfItExists(libSymlinktreePublic.resolve("lib/testing.modulemap")),
+        Optional.of(""));
+  }
+
+  @Test
   public void testHeaderSymlinkTreesWithTestsAndLibraryBundles() throws IOException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
