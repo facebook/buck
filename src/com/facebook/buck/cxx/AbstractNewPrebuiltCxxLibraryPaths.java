@@ -88,7 +88,10 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
     }
 
     if (selectedVersions.isPresent() && versionedElement.isPresent()) {
-      return Optional.of(versionedElement.get().getOnlyMatchingValue(selectedVersions.get()));
+      return Optional.of(
+          versionedElement
+              .get()
+              .getOnlyMatchingValue(getTarget().toString(), selectedVersions.get()));
     }
 
     return Optional.empty();
