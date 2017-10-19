@@ -134,6 +134,7 @@ java_library(
         "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/android/toolchain:testutil",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/distributed:distributed",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",
