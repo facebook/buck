@@ -91,11 +91,14 @@ public class InferBuckConfig implements RuleKeyAppendable {
               } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
               }
-              Optional<String> stdout = result.getStdout();
-              Optional<String> stderr = result.getStderr();
-              String versionOutput = stdout.orElse(stderr.orElse("")).trim();
-              Preconditions.checkState(!Strings.isNullOrEmpty(versionOutput));
-              return VersionedTool.of(topLevel, "infer", versionOutput);
+              Optional<String> versionOutput = result.getStdout();
+              if (!versionOutput.isPresent() || Strings.isNullOrEmpty(versionOutput.get())) {
+                // older versions of infer output on stderr
+                versionOutput = result.getStderr();
+              }
+              String versionString = versionOutput.orElse("").trim();
+              Preconditions.checkState(!Strings.isNullOrEmpty(versionString));
+              return VersionedTool.of(topLevel, "infer", versionString);
             });
   }
 
