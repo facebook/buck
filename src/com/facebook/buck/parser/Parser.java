@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
+import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
@@ -189,7 +190,7 @@ public class Parser {
           return toReturn;
         }
       }
-    } catch (Cell.MissingBuildFileException e) {
+    } catch (MissingBuildFileException e) {
       throw new RuntimeException("Deeply unlikely to be true: the cell is missing: " + targetNode);
     }
     return null;
@@ -464,7 +465,7 @@ public class Parser {
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
         throw new MissingBuildFileException(
-            firstSpec, cell.getFilesystem().getRootPath().relativize(buildFile));
+            firstSpec.toString(), cell.getFilesystem().getRootPath().relativize(buildFile));
       }
 
       for (int index : buildFileSpecs) {

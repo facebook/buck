@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Cell;
@@ -87,7 +88,7 @@ public class ResolveAliasHelper {
     Path buildFile;
     try {
       buildFile = owningCell.getAbsolutePathToBuildFile(buildTarget);
-    } catch (Cell.MissingBuildFileException e) {
+    } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }
 

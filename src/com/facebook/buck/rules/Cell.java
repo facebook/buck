@@ -25,7 +25,7 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
@@ -245,7 +245,12 @@ public class Cell {
     Path buildFile = getAbsolutePathToBuildFileUnsafe(target);
     Cell cell = getCell(target);
     if (!cell.getFilesystem().isFile(buildFile)) {
-      throw new MissingBuildFileException(target, cell.getBuckConfig());
+
+      throw new MissingBuildFileException(
+          target.getFullyQualifiedName(),
+          target
+              .getBasePath()
+              .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
     }
     return buildFile;
   }
@@ -363,23 +368,5 @@ public class Cell {
 
   public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     filesystem.ensureConcreteFilesExist(eventBus);
-  }
-
-  @SuppressWarnings("serial")
-  public static class MissingBuildFileException extends BuildTargetException {
-    public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {
-      super(
-          String.format(
-              "No build file at %s when resolving target %s.",
-              buildTarget
-                  .getBasePath()
-                  .resolve(buckConfig.getView(ParserConfig.class).getBuildFileName()),
-              buildTarget.getFullyQualifiedName()));
-    }
-
-    @Override
-    public String getHumanReadableErrorMessage() {
-      return getMessage();
-    }
   }
 }

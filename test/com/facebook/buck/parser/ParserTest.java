@@ -50,6 +50,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -304,7 +305,7 @@ public class ParserTest {
     BuildTarget target = BuildTargetFactory.newInstance(cellRoot, "//path/to/nowhere", "nowhere");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(target);
 
-    thrown.expect(Cell.MissingBuildFileException.class);
+    thrown.expect(MissingBuildFileException.class);
     thrown.expectMessage(
         String.format(
             "No build file at %s when resolving target //path/to/nowhere:nowhere",
