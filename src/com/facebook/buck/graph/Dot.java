@@ -67,21 +67,14 @@ public class Dot<T> {
 
       @Override
       public void visit(T node) {
-        String source = nodeToName.apply(node);
-        String sourceType = nodeToTypeName.apply(node);
-
         try {
-          output.append(
-              String.format(
-                  "  %s [style=filled,color=%s];\n",
-                  escape(source), Dot.colorFromType(sourceType)));
+          output.append(printNode(node, nodeToName, nodeToTypeName));
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
         for (T sink : graph.getOutgoingNodesFor(node)) {
-          String sinkName = nodeToName.apply(sink);
           try {
-            output.append(String.format("  %s -> %s;\n", escape(source), escape(sinkName)));
+            output.append(printEdge(node, sink, nodeToName));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -114,18 +107,12 @@ public class Dot<T> {
             if (!nodesToFilter.contains(node)) {
               return ImmutableSet.<T>of();
             }
-            String source = nodeToName.apply(node);
-            String sourceType = nodeToTypeName.apply(node);
-            builder.add(
-                String.format(
-                    "  %s [style=filled,color=%s];\n",
-                    escape(source), Dot.colorFromType(sourceType)));
+            builder.add(printNode(node, nodeToName, nodeToTypeName));
             ImmutableSortedSet<T> nodes =
                 ImmutableSortedSet.copyOf(
                     Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains));
             for (T sink : nodes) {
-              String sinkName = nodeToName.apply(sink);
-              builder.add(String.format("  %s -> %s;\n", escape(source), escape(sinkName)));
+              builder.add(printEdge(node, sink, nodeToName));
             }
             return nodes;
           }
@@ -140,15 +127,9 @@ public class Dot<T> {
           if (!nodesToFilter.contains(node)) {
             return;
           }
-          String source = nodeToName.apply(node);
-          String sourceType = nodeToTypeName.apply(node);
-          sortedSetBuilder.add(
-              String.format(
-                  "  %s [style=filled,color=%s];\n",
-                  escape(source), Dot.colorFromType(sourceType)));
+          sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName));
           for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
-            String sinkName = nodeToName.apply(sink);
-            sortedSetBuilder.add(String.format("  %s -> %s;\n", escape(source), escape(sinkName)));
+            sortedSetBuilder.add(printEdge(node, sink, nodeToName));
           }
         }
       }.traverse();
@@ -185,5 +166,19 @@ public class Dot<T> {
     int g = 192 + (type.hashCode() / 64 % 64);
     int b = 192 + (type.hashCode() / 4096 % 64);
     return String.format("\"#%02X%02X%02X\"", r, g, b);
+  }
+
+  private static <T> String printNode(
+      T node, Function<T, String> nodeToName, Function<T, String> nodeToTypeName) {
+    String source = nodeToName.apply(node);
+    String sourceType = nodeToTypeName.apply(node);
+    return String.format(
+        "  %s [style=filled,color=%s];\n", escape(source), Dot.colorFromType(sourceType));
+  }
+
+  private static <T> String printEdge(T sourceN, T sinkN, Function<T, String> nodeToName) {
+    String sourceName = nodeToName.apply(sourceN);
+    String sinkName = nodeToName.apply(sinkN);
+    return String.format("  %s -> %s;\n", escape(sourceName), escape(sinkName));
   }
 }
