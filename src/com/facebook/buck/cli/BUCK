@@ -207,6 +207,7 @@ java_immutables_library(
         "//third-party/java/aosp:aosp",
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",
+        "//third-party/java/bazel:skylark-lang",
         "//third-party/java/dd-plist:dd-plist",
         "//third-party/java/android:ddmlib",
         "//third-party/java/guava:guava",

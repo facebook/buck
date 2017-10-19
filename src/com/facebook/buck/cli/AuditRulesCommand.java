@@ -33,6 +33,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -228,7 +229,10 @@ public class AuditRulesCommand extends AbstractCommand {
     return createDisplayString("", value);
   }
 
-  static String createDisplayString(String indent, @Nullable Object value) {
+  private static String createDisplayString(String indent, @Nullable Object value) {
+    if (value instanceof SkylarkNestedSet) {
+      value = ((SkylarkNestedSet) value).toCollection();
+    }
     if (value == null) {
       return "None";
     } else if (value instanceof Boolean) {
