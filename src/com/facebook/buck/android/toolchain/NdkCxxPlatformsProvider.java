@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.google.common.collect.ImmutableMap;
 
 public class NdkCxxPlatformsProvider {

@@ -93,6 +93,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/apple/toolchain/impl:impl",

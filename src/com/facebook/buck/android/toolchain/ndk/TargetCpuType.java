@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android.toolchain;
+package com.facebook.buck.android.toolchain.ndk;
 
 /** The CPU architectures to target. */
 public enum TargetCpuType {
