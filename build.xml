@@ -218,7 +218,7 @@
        do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
-  <target name="default" depends="clear-successful-build, compile, dx, javac-plugin, report-generator-jar, create-classpath, mark-successful-build" />
+  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -527,6 +527,25 @@
     </exec>
   </target>
 
+  <target name="copy-resources" description="Copy resources used by Buck at runtime to the build directory">
+    <copy todir="${classes.dir}">
+      <fileset dir="${src.dir}">
+        <include name="com/facebook/buck/apple/project_generator/*.st"/>
+        <include name="com/facebook/buck/go/testmaingen.go"/>
+        <include name="com/facebook/buck/httpserver/*.soy"/>
+        <include name="com/facebook/buck/httpserver/resources/static/*"/>
+        <include name="com/facebook/buck/ide/intellij/templates/*"/>
+        <include name="com/facebook/buck/lua/*.in"/>
+        <include name="com/facebook/buck/maven/build-file.st"/>
+        <include name="com/facebook/buck/python/*.py"/>
+        <include name="com/facebook/buck/python/run_inplace.py.in"/>
+        <include name="com/facebook/buck/rules/BuckPyFunction.stg"/>
+        <include name="com/facebook/buck/shell/sh_binary_template"/>
+        <include name="com/facebook/buck/util/versioncontrol/rawmanifest.py"/>
+      </fileset>
+    </copy>
+  </target>
+
   <target name="report-generator-jar" depends="compile">
     <jar destfile="${build.dir}/report-generator.jar">
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.7.7.201606060606.jar"/>
@@ -819,8 +838,6 @@
       <string value="${dx.classes.dir}" />
       <string value="${tracing-api.classes.dir}" />
       <string value="${bootstrapper.classes.dir}" />
-      <string value="${src.dir}" />
-      <string value="${manual.gensrc.dir}" />
       <fileset refid="buck.jars"/>
       <fileset refid="third-party.jars"/>
     </union>
