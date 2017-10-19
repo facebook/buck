@@ -38,6 +38,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -335,7 +336,11 @@ public class DistBuildSlaveExecutor {
         stackedFileHashCache.newDecoratedFileHashCache(
             cache -> {
               try {
-                return args.getState().createMaterializerAndPreload(cache, args.getProvider());
+                return args.getState()
+                    .createMaterializerAndPreload(
+                        cache,
+                        args.getProvider(),
+                        Preconditions.checkNotNull(args.getExecutors().get(ExecutorPool.CPU)));
               } catch (IOException exception) {
                 throw new RuntimeException(
                     String.format(

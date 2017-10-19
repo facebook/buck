@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -211,7 +212,10 @@ public class DistBuildState {
   }
 
   public ProjectFileHashCache createMaterializerAndPreload(
-      ProjectFileHashCache decoratedCache, FileContentsProvider provider) throws IOException {
+      ProjectFileHashCache decoratedCache,
+      FileContentsProvider provider,
+      ListeningExecutorService executorService)
+      throws IOException {
     BuildJobStateFileHashes remoteFileHashes = fileHashes.get(decoratedCache.getFilesystem());
     if (remoteFileHashes == null) {
       // Roots that have no BuildJobStateFileHashes are deemed as not being Cells and don't get
@@ -220,7 +224,8 @@ public class DistBuildState {
     }
 
     MaterializerDummyFileHashCache materializer =
-        new MaterializerDummyFileHashCache(decoratedCache, remoteFileHashes, provider);
+        new MaterializerDummyFileHashCache(
+            decoratedCache, remoteFileHashes, provider, executorService);
 
     // Create all symlinks and touch all other files.
     DistBuildConfig remoteConfig = new DistBuildConfig(getRootCell().getBuckConfig());

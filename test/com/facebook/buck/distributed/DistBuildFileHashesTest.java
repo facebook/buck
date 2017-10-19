@@ -273,7 +273,11 @@ public class DistBuildFileHashesTest {
             .putFileContents(f.javaSrcPath.toString().replace('\\', '/'), f.writtenContents)
             .build();
     MaterializerDummyFileHashCache materializer =
-        new MaterializerDummyFileHashCache(mockCache, fileHashes.get(0), fakeFileContentsProvider);
+        new MaterializerDummyFileHashCache(
+            mockCache,
+            fileHashes.get(0),
+            fakeFileContentsProvider,
+            MoreExecutors.newDirectExecutorService());
 
     materializer.get(f.javaSrcPath);
     materializer
@@ -308,7 +312,8 @@ public class DistBuildFileHashesTest {
         new MaterializerDummyFileHashCache(
             mockCache,
             fileHashes.get(0),
-            new InlineContentsProvider(MoreExecutors.newDirectExecutorService()));
+            new InlineContentsProvider(MoreExecutors.newDirectExecutorService()),
+            MoreExecutors.newDirectExecutorService());
 
     try {
       materializer.get(f.javaSrcPath);
