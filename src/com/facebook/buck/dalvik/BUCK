@@ -98,6 +98,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

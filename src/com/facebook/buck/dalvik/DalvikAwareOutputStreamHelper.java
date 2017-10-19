@@ -17,11 +17,11 @@
 package com.facebook.buck.dalvik;
 
 import com.facebook.buck.jvm.java.classes.FileLike;
+import com.facebook.buck.util.zip.DeterministicZipBuilder;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
@@ -29,8 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.Deflater;
 
 /** Helper to write a Zip file used by {@link DalvikAwareZipSplitter}. */
 public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
@@ -38,7 +37,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private static final int MAX_METHOD_REFERENCES = 64 * 1024;
   private static final int MAX_FIELD_REFERENCES = 64 * 1024;
 
-  private final ZipOutputStream outStream;
+  private final DeterministicZipBuilder zipBuilder;
   private final Set<String> entryNames = new HashSet<>();
   private final long linearAllocLimit;
   private final Writer reportFileWriter;
@@ -52,8 +51,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       Path outputFile, long linearAllocLimit, Path reportDir, DalvikStatsCache dalvikStatsCache)
       throws IOException {
     Preconditions.checkState(Files.exists(outputFile.getParent()));
-    this.outStream =
-        new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outputFile)));
+    this.zipBuilder = new DeterministicZipBuilder(outputFile);
     this.linearAllocLimit = linearAllocLimit;
     Path reportFile = reportDir.resolve(outputFile.getFileName().toString() + ".txt");
     this.reportFileWriter = Files.newBufferedWriter(reportFile, Charsets.UTF_8);
@@ -93,9 +91,9 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
     // proguard seems to handle merging multiple -injars into a single -outjar.
     if (!containsEntry(fileLike)) {
       entryNames.add(name);
-      outStream.putNextEntry(new ZipEntry(name));
       try (InputStream in = fileLike.getInput()) {
-        ByteStreams.copy(in, outStream);
+        byte[] bytes = ByteStreams.toByteArray(in);
+        zipBuilder.addEntry(bytes, name, Deflater.NO_COMPRESSION);
       }
 
       // Make sure FileLike#getSize didn't lie (or we forgot to call canPutEntry).
@@ -122,7 +120,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
 
   @Override
   public void close() throws IOException {
-    outStream.close();
+    zipBuilder.close();
     reportFileWriter.close();
   }
 }
