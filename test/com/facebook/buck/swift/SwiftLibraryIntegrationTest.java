@@ -175,7 +175,7 @@ public class SwiftLibraryIntegrationTest {
                     .getRelativePath(buildRule.getSourcePathToOutput())
                     .resolve("bar.swiftmodule"))));
 
-    Arg objArg = buildRule.getFileListLinkArg();
+    Arg objArg = buildRule.getFileListLinkArg().get(0);
     assertThat(objArg, Matchers.instanceOf(FileListableLinkerInputArg.class));
     FileListableLinkerInputArg fileListArg = (FileListableLinkerInputArg) objArg;
     ExplicitBuildTargetSourcePath fileListSourcePath =

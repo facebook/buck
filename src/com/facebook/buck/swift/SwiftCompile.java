@@ -76,7 +76,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path outputPath;
 
   private final Path modulePath;
-  private final Path objectPath;
+  private final ImmutableList<Path> objectPaths;
   private final Optional<Path> swiftFileListPath;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
@@ -124,7 +124,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     String escapedModuleName = CxxDescriptionEnhancer.normalizeModuleName(moduleName);
     this.moduleName = escapedModuleName;
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
-    this.objectPath = outputPath.resolve(escapedModuleName + ".o");
+    this.objectPaths = ImmutableList.of(outputPath.resolve(escapedModuleName + ".o"));
     this.swiftFileListPath =
         swiftBuckConfig.getUseFileList()
             ? Optional.of(
@@ -205,10 +205,13 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         "-emit-module",
         "-emit-module-path",
         modulePath.toString(),
-        "-o",
-        objectPath.toString(),
         "-emit-objc-header-path",
         headerPath.toString());
+    objectPaths.forEach(
+        x -> {
+          compilerCommand.add("-o");
+          compilerCommand.add(x.toString());
+        });
 
     // Do not use swiftBuckConfig's version by definition
     version.ifPresent(
@@ -341,9 +344,15 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         .build();
   }
 
-  Arg getFileListLinkArg() {
-    return FileListableLinkerInputArg.withSourcePathArg(
-        SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath)));
+  ImmutableList<Arg> getFileListLinkArg() {
+    return FileListableLinkerInputArg.from(
+        objectPaths
+            .stream()
+            .map(
+                objectPath ->
+                    SourcePathArg.of(
+                        ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath)))
+            .collect(MoreCollectors.toImmutableList()));
   }
 
   /** @return The name of the Swift module. */
@@ -352,9 +361,12 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   /** @return {@link SourcePath} to the output object file (i.e., .o file) */
-  public SourcePath getObjectPath() {
+  public ImmutableList<SourcePath> getObjectPaths() {
     // Ensures that users of the object path can depend on this build target
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath);
+    return objectPaths
+        .stream()
+        .map(objectPath -> ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath))
+        .collect(MoreCollectors.toImmutableList());
   }
 
   /** @return File name of the Objective-C Generated Interface Header. */

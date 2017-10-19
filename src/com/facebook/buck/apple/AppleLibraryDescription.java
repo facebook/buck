@@ -934,7 +934,7 @@ public class AppleLibraryDescription
     BuildTarget swiftTarget =
         AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, cxxPlatform);
     SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftTarget);
-    return Optional.of(ImmutableList.of(compile.getObjectPath()));
+    return Optional.of(compile.getObjectPaths());
   }
 
   @Override
