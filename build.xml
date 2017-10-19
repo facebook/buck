@@ -49,8 +49,8 @@
 
   <property name="buck.pythonpath" value="${typing.dir}:${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${testutil.integration.dir}" />
 
-  <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.5.6.jar" />
-  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.5.6.jar" />
+  <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.5.7-SNAPSHOT.jar" />
+  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.5.7-SNAPSHOT.jar" />
   <property name="pf4j-standalone.jar" value="${third-party.dir}/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
 
   <property name="manual.gensrc.dir" value="${basedir}/src-gen" />
@@ -120,8 +120,8 @@
     <include name="guice/guice-multibindings-3.0.jar" />
     <include name="gson/gson-2.2.4.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
-    <include name="immutables/builder-2.5.6.jar" />
-    <include name="immutables/value-2.5.6.jar" />
+    <include name="immutables/builder-2.5.7-SNAPSHOT.jar" />
+    <include name="immutables/value-2.5.7-SNAPSHOT.jar" />
     <include name="infer-annotations/infer-annotations-4.1.jar" />
     <include name="nuprocess/nuprocess-1.1.0.jar" />
     <include name="jacoco/org.jacoco.core-0.7.7.201606060606.jar" />
