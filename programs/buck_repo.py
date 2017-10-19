@@ -2,11 +2,9 @@ from __future__ import print_function
 import logging
 import os
 import sys
-import textwrap
 
 from tracing import Tracing
-from buck_tool import BuckTool, JAVA_MAX_HEAP_SIZE_MB, platform_path
-from buck_tool import BuckToolException
+from buck_tool import BuckTool, platform_path
 from subprocutils import check_output, which
 import buck_version
 

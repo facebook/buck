@@ -3,12 +3,9 @@ import errno
 import contextlib
 import os
 import json
-import logging
 import shutil
 import stat
-import sys
 import tempfile
-import textwrap
 
 import pkg_resources
 import file_locks
