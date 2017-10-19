@@ -23,6 +23,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
+import com.facebook.buck.distributed.build_client.BuildSlaveStats.Builder;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
@@ -30,6 +31,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 
 /** Phase after the build. */
 public class PostBuildPhase {
+
   private static final Logger LOG = Logger.get(PostBuildPhase.class);
 
   private final DistBuildService distBuildService;
@@ -137,14 +140,14 @@ public class PostBuildPhase {
   }
 
   @VisibleForTesting
-  ListenableFuture<?> publishBuildSlaveFinishedStatsEvent(
+  ListenableFuture<BuildSlaveStats> publishBuildSlaveFinishedStatsEvent(
       BuildJob job, ListeningExecutorService executor, EventSender eventSender) {
     if (!job.isSetSlaveInfoByRunId()) {
       return Futures.immediateFuture(null);
     }
 
-    final List<ListenableFuture<BuildSlaveFinishedStats>> slaveFinishedStatsFutures =
-        new ArrayList<>(job.getSlaveInfoByRunIdSize());
+    final List<ListenableFuture<Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>>>>
+        slaveFinishedStatsFutures = new ArrayList<>(job.getSlaveInfoByRunIdSize());
     for (Map.Entry<String, BuildSlaveInfo> entry : job.getSlaveInfoByRunId().entrySet()) {
       String runIdStr = entry.getKey();
       BuildSlaveRunId runId = entry.getValue().getBuildSlaveRunId();
@@ -152,18 +155,33 @@ public class PostBuildPhase {
       Preconditions.checkState(runIdStr.equals(runId.getId().toString()));
 
       slaveFinishedStatsFutures.add(
-          executor.submit(() -> fetchStatsForIndividualSlave(job, runId)));
+          executor.submit(
+              () -> {
+                Optional<BuildSlaveFinishedStats> stats = fetchStatsForIndividualSlave(job, runId);
+                return new Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>>(runId, stats);
+              }));
     }
 
+    final Builder builder = BuildSlaveStats.builder().setStampedeId(job.getStampedeId());
     return Futures.transform(
         Futures.allAsList(slaveFinishedStatsFutures),
-        statsList -> {
-          eventSender.sendBuildFinishedEvent(statsList);
-          return null;
-        });
+        statsList -> createAndPublishBuildSlaveStats(builder, statsList, eventSender));
   }
 
-  private BuildSlaveFinishedStats fetchStatsForIndividualSlave(
+  private BuildSlaveStats createAndPublishBuildSlaveStats(
+      Builder builder,
+      List<Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>>> statsList,
+      EventSender eventSender) {
+    for (Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>> entry : statsList) {
+      builder.putBuildSlaveStats(entry.getFirst(), entry.getSecond());
+    }
+
+    BuildSlaveStats stats = builder.build();
+    eventSender.sendBuildFinishedEvent(stats);
+    return stats;
+  }
+
+  private Optional<BuildSlaveFinishedStats> fetchStatsForIndividualSlave(
       BuildJob job, BuildSlaveRunId runId) {
     Optional<BuildSlaveFinishedStats> finishedStats = Optional.empty();
 
@@ -177,12 +195,6 @@ public class PostBuildPhase {
           ex, "Error fetching BuildSlaveFinishedStats for RunId:[%s] from the frontend.", runId);
     }
 
-    return finishedStats.orElse(
-        // This will set the other fields to null for logging later.
-        new BuildSlaveFinishedStats()
-            .setBuildSlaveStatus(
-                new BuildSlaveStatus()
-                    .setStampedeId(job.getStampedeId())
-                    .setBuildSlaveRunId(runId)));
+    return finishedStats;
   }
 }

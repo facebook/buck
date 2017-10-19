@@ -15,11 +15,9 @@
  */
 package com.facebook.buck.distributed.build_client;
 
-import com.facebook.buck.distributed.ClientSideBuildSlaveFinishedStatsEvent;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildJob;
-import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.BuckEventBus;
@@ -69,8 +67,8 @@ public class EventSender {
     return buckEventBus;
   }
 
-  public void sendBuildFinishedEvent(List<BuildSlaveFinishedStats> statsList) {
-    buckEventBus.post(new ClientSideBuildSlaveFinishedStatsEvent(statsList));
+  public void sendBuildFinishedEvent(BuildSlaveStats buildSlaveStats) {
+    buckEventBus.post(new ClientSideBuildSlaveFinishedStatsEvent(buildSlaveStats));
   }
 
   public void postConsoleEvent(ConsoleEvent event) {

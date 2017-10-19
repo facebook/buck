@@ -14,18 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_client;
 
-import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
-import java.util.List;
 
 public class ClientSideBuildSlaveFinishedStatsEvent extends AbstractBuckEvent {
-  private final List<BuildSlaveFinishedStats> buildSlaveFinishedStats;
+  private final BuildSlaveStats buildSlaveFinishedStats;
 
-  public ClientSideBuildSlaveFinishedStatsEvent(
-      List<BuildSlaveFinishedStats> buildSlaveFinishedStats) {
+  public ClientSideBuildSlaveFinishedStatsEvent(BuildSlaveStats buildSlaveFinishedStats) {
     super(EventKey.unique());
     this.buildSlaveFinishedStats = buildSlaveFinishedStats;
   }
@@ -40,7 +37,7 @@ public class ClientSideBuildSlaveFinishedStatsEvent extends AbstractBuckEvent {
     return this.getClass().getName();
   }
 
-  public List<BuildSlaveFinishedStats> getBuildSlaveFinishedStats() {
+  public BuildSlaveStats getBuildSlaveFinishedStats() {
     return buildSlaveFinishedStats;
   }
 }

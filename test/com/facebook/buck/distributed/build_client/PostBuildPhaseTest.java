@@ -23,7 +23,6 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.distributed.ClientSideBuildSlaveFinishedStatsEvent;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -38,7 +37,9 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -156,6 +157,18 @@ public class PostBuildPhaseTest {
     verify(mockDistBuildService);
     verify(mockEventBus);
 
-    assertEquals(finishedStatsList, capturedEvent.getValue().getBuildSlaveFinishedStats());
+    BuildSlaveStats capturedStats = capturedEvent.getValue().getBuildSlaveFinishedStats();
+    assertEquals(stampedeId, capturedStats.getStampedeId());
+    assertEquals(2, capturedStats.getBuildSlaveStats().size());
+    List<Optional<BuildSlaveFinishedStats>> actualFinishedStats =
+        capturedStats
+            .getBuildSlaveStats()
+            .entrySet()
+            .stream()
+            .sorted(Comparator.comparing(Entry::getKey))
+            .map(x -> x.getValue())
+            .collect(Collectors.toList());
+    assertEquals(finishedStatsList.get(1), actualFinishedStats.get(0).get());
+    assertEquals(Optional.empty(), actualFinishedStats.get(1));
   }
 }
