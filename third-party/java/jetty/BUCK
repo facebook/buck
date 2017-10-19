@@ -24,7 +24,7 @@ java_library(
     ],
     visibility = [
         "//src/com/facebook/buck/httpserver:",
-        "//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib",
+        "//tools/ideabuck:ideabuck-lib",
         "//test/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/doctor:",
         "//test/com/facebook/buck/event/listener:",
@@ -33,7 +33,6 @@ java_library(
         "//test/com/facebook/buck/httpserver:",
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/maven:testutil",
-        "//test/com/facebook/buck/rage:",
         "//test/com/facebook/buck/testutil/integration:",
     ],
     deps = [],

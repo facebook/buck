@@ -19,7 +19,7 @@
 cd third-party/java/intellij/
 sh get_jars.sh "PathToYourIntellijLib" #for unix systems
 get_jars.bat "PathToYourIntellijLib"   #for windows systems
-buck build //src/com/facebook/buck/intellij/ideabuck:ideabuck
+buck build ideabuck
 </pre>
 {/literal}
 Once you have built the plugin, you can install it by following the{sp}
@@ -43,8 +43,8 @@ In order to access it you have to go to <code>View > Tool Windows > Buck</code>.
         After you installed Grammar-Kit you can generate the files by navigating in Intellij to
         {literal}
           <pre>
-src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf
-src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex
+tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf
+tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex
           </pre>
         {/literal}
         and pressing <code>ctrl-shift-G / meta-shift-G</code>.
@@ -53,12 +53,12 @@ src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/
         If you don't want to install the Grammar-Kit plugin you can run
         {literal}
           <pre>
-python scripts/intellij/generate_grammar_kit.py
+python tools/ideabuck/scripts/intellij/generate_grammar_kit.py
           </pre>
         {/literal}
         <p>
           The above mentioned commands will create a <code>gen</code> directory in {sp}
-          <code>src/com/facebook/buck/intellij/ideabuck</code>.
+          <code>tools/ideabuck</code>.
         </p>
       </li>
     </ul>
@@ -71,7 +71,7 @@ python scripts/intellij/generate_grammar_kit.py
     plugin's module sdk</a>.
   </li>
   <li>
-    Remove the Buck Intellij Plugin, <code>buck/src/com/facebook/buck/intellij/ideabuck</code> from{sp}
+    Remove the Buck Intellij Plugin, <code>tools/ideabuck</code> from{sp}
     <a href="https://www.jetbrains.com/help/idea/15.0/compiler-excludes.html?origin=old_help">
     the Compiler Excludes list</a>.
   </li>

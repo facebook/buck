@@ -16,7 +16,7 @@
     buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
     eden = //test/com/facebook/buck/eden/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
-    ideabuck = //src/com/facebook/buck/intellij/ideabuck:ideabuck
+    ideabuck = //tools/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
 [log]
     rule_key_logger_enabled = True

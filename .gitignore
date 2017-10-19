@@ -3,13 +3,6 @@
 
 # IntelliJ build
 /build-ij/
-src/com/facebook/buck/intellij/ideabuck/*.zip
-
-# IntelliJ Plugin
-src/com/facebook/buck/intellij/ideabuck/buck-out
-src/com/facebook/buck/intellij/ideabuck/buck-cache
-src/com/facebook/buck/intellij/ideabuck/.buckd/
-src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 
 # Buck
 /buck-out
@@ -48,16 +41,6 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 /.idea/workspace.xml
 /.idea/misc.xml
 /.idea/copyright/profiles_settings.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/ant.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/dictionaries
-src/com/facebook/buck/intellij/ideabuck/.idea/inspectionProfiles
-src/com/facebook/buck/intellij/ideabuck/.idea/tasks.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/uiDesigner.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/workspace.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/misc.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/runConfigurations
-src/com/facebook/buck/intellij/ideabuck/.idea/copyright/profiles_settings.xml
-
 
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
@@ -81,6 +64,6 @@ src/com/facebook/buck/intellij/ideabuck/.idea/copyright/profiles_settings.xml
 \#*
 
 # IntelliJ plugin generated syntax source files
-src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/_BuckLexer.java
-src/com/facebook/buck/intellij/ideabuck/gen
+tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/_BuckLexer.java
+tools/ideabuck/gen
 
