@@ -611,7 +611,12 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "process_name",
         Phase.METADATA,
-        ImmutableMap.<String, Object>builder().put("name", "BUILD_ID").build());
+        ImmutableMap.<String, Object>builder()
+            .put("name", "BUILD_ID")
+            .put("user_args", ImmutableList.of("@mode/arglist", "--foo", "--bar"))
+            .put("is_daemon", false)
+            .put("timestamp", invocationInfo.getTimestampMillis())
+            .build());
 
     assertNextResult(
         resultListCopy,
