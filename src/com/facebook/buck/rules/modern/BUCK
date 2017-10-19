@@ -29,6 +29,7 @@ java_library(
     exported_deps = [
         ":types",
     ],
+    tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event:interfaces",
