@@ -83,7 +83,7 @@ public class PreBuildPhase {
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     final StampedeId stampedeId = job.getStampedeId();
-    eventBus.post(new DistBuildCreatedEvent(stampedeId.getId()));
+    eventBus.post(new DistBuildCreatedEvent(stampedeId));
 
     distBuildClientStats.setStampedeId(stampedeId.getId());
     LOG.info("Created job. Build id = " + stampedeId.getId());

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -58,8 +59,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SimpleConsoleEventBusListenerTest {
-  private static final String STAMPEDE_ID_ONE = "stampedeIdOne";
-  private static final String STAMPEDE_ID_ONE_MESSAGE = "STAMPEDE ID: stampedeIdOne\n";
+  private static final StampedeId STAMPEDE_ID_ONE = new StampedeId().setId("stampedeIdOne");
+  private static final String STAMPEDE_ID_ONE_MESSAGE = "StampedeId=[stampedeIdOne]\n";
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";

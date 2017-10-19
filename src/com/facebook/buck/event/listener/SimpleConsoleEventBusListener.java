@@ -412,8 +412,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void onDistBuildCreatedEvent(DistBuildCreatedEvent distBuildCreatedEvent) {
     ImmutableList.Builder<String> lines =
-        ImmutableList.<String>builder()
-            .add("STAMPEDE ID: " + distBuildCreatedEvent.getStampedeId());
+        ImmutableList.<String>builder().add(distBuildCreatedEvent.getConsoleLogLine());
     printLines(lines);
   }
 

@@ -15,18 +15,19 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 
 public class DistBuildCreatedEvent extends AbstractBuckEvent {
-  private String stampedeId;
+  private StampedeId stampedeId;
 
-  public DistBuildCreatedEvent(final String stampedeId) {
+  public DistBuildCreatedEvent(StampedeId stampedeId) {
     super(EventKey.unique());
     this.stampedeId = stampedeId;
   }
 
-  public String getStampedeId() {
+  public StampedeId getStampedeId() {
     return stampedeId;
   }
 
@@ -38,5 +39,9 @@ public class DistBuildCreatedEvent extends AbstractBuckEvent {
   @Override
   public String getEventName() {
     return this.getClass().getName();
+  }
+
+  public String getConsoleLogLine() {
+    return String.format("StampedeId=[%s]", stampedeId.getId());
   }
 }
