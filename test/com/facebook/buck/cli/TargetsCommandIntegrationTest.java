@@ -25,7 +25,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -737,5 +740,23 @@ public class TargetsCommandIntegrationTest {
     // Three rules, they could have any number of sub-rule keys and contributors
     assertTrue(ruleKeys.size() >= 3);
     assertTrue(ruleKeys.stream().anyMatch(ruleKey -> ruleKey.name.equals("//:bar")));
+  }
+
+  @Test
+  public void targetsTransitiveRulekeys() throws Exception {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_app_bundle_with_embedded_framework", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand(
+            "targets",
+            "//:DemoApp#iphonesimulator-x86_64",
+            "--show-rulekey",
+            "--show-transitive-rulekeys")
+        .assertSuccess();
   }
 }

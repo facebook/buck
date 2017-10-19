@@ -491,7 +491,7 @@ public class AppleDescriptions {
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     // Target used as the base target of AppleDebuggableBinary.
 
-    BuildTarget baseTarget = strippedBinaryRule.getBuildTarget();
+    BuildTarget baseTarget = unstrippedBinaryRule.getBuildTarget();
     switch (debugFormat) {
       case DWARF:
         return AppleDebuggableBinary.createFromUnstrippedBinary(

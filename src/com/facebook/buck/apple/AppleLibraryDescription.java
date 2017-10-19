@@ -429,14 +429,15 @@ public class AppleLibraryDescription
     // We explicitly remove flavors from params to make sure rule
     // has the same output regardless if we will strip or not.
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(buildTarget);
-    buildTarget = CxxStrip.removeStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
+    BuildTarget unstrippedBuildTarget =
+        CxxStrip.removeStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     BuildRule unstrippedBinaryRule =
         requireUnstrippedBuildRule(
-            buildTarget,
+            unstrippedBuildTarget,
             projectFilesystem,
             params,
             resolver,
@@ -450,7 +451,7 @@ public class AppleLibraryDescription
             extraCxxDeps,
             transitiveCxxPreprocessorInput);
 
-    if (!shouldWrapIntoDebuggableBinary(buildTarget, unstrippedBinaryRule)) {
+    if (!shouldWrapIntoDebuggableBinary(unstrippedBuildTarget, unstrippedBinaryRule)) {
       return unstrippedBinaryRule;
     }
 
@@ -463,14 +464,16 @@ public class AppleLibraryDescription
             .getValue(
                 Iterables.getFirst(
                     Sets.intersection(
-                        delegate.getCxxPlatforms().getFlavors(), buildTarget.getFlavors()),
+                        delegate.getCxxPlatforms().getFlavors(),
+                        unstrippedBuildTarget.getFlavors()),
                     defaultCxxFlavor));
 
-    buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
+    BuildTarget strippedBuildTarget =
+        CxxStrip.restoreStripStyleFlavorInTarget(unstrippedBuildTarget, flavoredStripStyle);
 
     BuildRule strippedBinaryRule =
         CxxDescriptionEnhancer.createCxxStripRule(
-            buildTarget,
+            strippedBuildTarget,
             projectFilesystem,
             resolver,
             flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
@@ -478,7 +481,7 @@ public class AppleLibraryDescription
             representativePlatform);
 
     return AppleDescriptions.createAppleDebuggableBinary(
-        buildTarget,
+        unstrippedBuildTarget,
         projectFilesystem,
         resolver,
         strippedBinaryRule,
