@@ -52,6 +52,9 @@ public class DotTest {
 
     assertEquals("digraph the_graph {", lines.get(0));
 
+    // remove attributes because we are not interested what styles and colors are default
+    lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());
+
     Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
     assertEquals(
         edges,
@@ -62,11 +65,11 @@ public class DotTest {
             "  C -> E;",
             "  D -> E;",
             "  A -> E;",
-            "  A [style=filled,color=\"#C1C1C0\"];",
-            "  B [style=filled,color=\"#C2C1C0\"];",
-            "  C [style=filled,color=\"#C3C1C0\"];",
-            "  D [style=filled,color=\"#C4C1C0\"];",
-            "  E [style=filled,color=\"#C5C1C0\"];"));
+            "  A;",
+            "  B;",
+            "  C;",
+            "  D;",
+            "  E;"));
 
     assertEquals("}", lines.get(lines.size() - 1));
   }
@@ -97,17 +100,13 @@ public class DotTest {
 
     assertEquals("digraph the_graph {", lines.get(0));
 
+    // remove attributes because we are not interested what styles and colors are default
+    lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());
+
     Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
     assertEquals(
         edges,
-        ImmutableSet.of(
-            "  A -> B;",
-            "  B -> C;",
-            "  B -> D;",
-            "  A [style=filled,color=\"#C1C1C0\"];",
-            "  B [style=filled,color=\"#C2C1C0\"];",
-            "  C [style=filled,color=\"#C3C1C0\"];",
-            "  D [style=filled,color=\"#C4C1C0\"];"));
+        ImmutableSet.of("  A -> B;", "  B -> C;", "  B -> D;", "  A;", "  B;", "  C;", "  D;"));
 
     assertEquals("}", lines.get(lines.size() - 1));
   }
