@@ -26,10 +26,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;

@@ -19,6 +19,8 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
@@ -86,7 +88,8 @@ public class AbstractAsynchronousCacheTest {
       MoreAsserts.assertIterablesEquals(
           ImmutableList.of(keys.get(7), keys.get(1)), requestedRuleKeys.get(7));
 
-      // And finally, there's less than concurrency left and it'll go to fetch() instead of multiFetch().
+      // And finally, there's less than concurrency left and it'll go to fetch() instead of
+      // multiFetch().
       MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(5)), requestedRuleKeys.get(8));
       MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(1)), requestedRuleKeys.get(9));
     }

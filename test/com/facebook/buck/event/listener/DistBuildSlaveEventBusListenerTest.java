@@ -24,10 +24,10 @@ import static org.easymock.EasyMock.makeThreadSafe;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;

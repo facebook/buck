@@ -14,26 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.artifact_cache;
+package com.facebook.buck.artifact_cache.config;
 
-public enum ArtifactCacheMode {
-  dir(CacheType.local),
-  http(CacheType.remote),
-  sqlite(CacheType.local),
-  thrift_over_http(CacheType.remote);
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import java.nio.file.Path;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-  private final CacheType mode;
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractDirCacheEntry {
+  public abstract Optional<String> getName();
 
-  ArtifactCacheMode(CacheType mode) {
-    this.mode = mode;
-  }
+  public abstract Path getCacheDir();
 
-  public String getCacheType() {
-    return mode.name();
-  }
+  public abstract Optional<Long> getMaxSizeBytes();
 
-  public enum CacheType {
-    local,
-    remote,
-  }
+  public abstract CacheReadMode getCacheReadMode();
 }

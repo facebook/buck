@@ -24,11 +24,11 @@ import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_CO
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_UPDATE;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheCountersSummary;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;

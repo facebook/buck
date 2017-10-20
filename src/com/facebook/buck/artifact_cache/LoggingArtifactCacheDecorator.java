@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;

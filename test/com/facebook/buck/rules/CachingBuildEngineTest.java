@@ -32,13 +32,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -863,7 +863,8 @@ public class CachingBuildEngineTest {
               ImmutableList.of(InternalFlavor.of("interleaved-2")));
       resolver.addToIndex(interleavedRuleTwo);
 
-      // The engine needs a couple of threads to ensure that it can schedule multiple steps at the same time.
+      // The engine needs a couple of threads to ensure that it can schedule multiple steps at the
+      // same time.
       ListeningExecutorService executorService =
           listeningDecorator(Executors.newFixedThreadPool(4));
       try (CachingBuildEngine cachingBuildEngine =

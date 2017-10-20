@@ -17,10 +17,10 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.DirArtifactCache;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;

@@ -14,16 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.artifact_cache;
+package com.facebook.buck.artifact_cache.config;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.config.resources.ResourcesConfig;
-import com.facebook.buck.randomizedtrial.WithProbability;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -39,9 +37,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.immutables.value.Value;
 
-/** Represents configuration specific to the {@link ArtifactCache}s. */
+/**
+ * Represents configuration specific to the {@link com.facebook.buck.artifact_cache.ArtifactCache}.
+ */
 public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String CACHE_SECTION_NAME = "cache";
 
@@ -125,14 +124,9 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String SCHEDULE_TYPE = "schedule_type";
   private static final String DEFAULT_SCHEDULE_TYPE = "none";
-  static final String MULTI_FETCH = "multi_fetch";
+  public static final String MULTI_FETCH = "multi_fetch";
   private static final String MULTI_FETCH_LIMIT = "multi_fetch_limit";
   private static final int DEFAULT_MULTI_FETCH_LIMIT = 100;
-
-  public enum LoadBalancingType {
-    SINGLE_SERVER,
-    CLIENT_SLB,
-  }
 
   private final BuckConfig buckConfig;
   private final SlbBuckConfig slbConfig;
@@ -144,24 +138,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public ArtifactCacheBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
     this.slbConfig = new SlbBuckConfig(buckConfig, CACHE_SECTION_NAME);
-  }
-
-  public enum MultiFetchType implements WithProbability {
-    ENABLED(0.5),
-    DISABLED(0.5),
-    EXPERIMENT(0.0);
-    public static final MultiFetchType DEFAULT = DISABLED;
-
-    private final double probability;
-
-    MultiFetchType(double probability) {
-      this.probability = probability;
-    }
-
-    @Override
-    public double getProbability() {
-      return probability;
-    }
   }
 
   public MultiFetchType getMultiFetchType() {
@@ -196,15 +172,15 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig.getValue(CACHE_SECTION_NAME, SCHEDULE_TYPE).orElse(DEFAULT_SCHEDULE_TYPE);
   }
 
-  SlbBuckConfig getSlbConfig() {
+  public SlbBuckConfig getSlbConfig() {
     return slbConfig;
   }
 
-  Optional<String> getHybridThriftEndpoint() {
+  public Optional<String> getHybridThriftEndpoint() {
     return buckConfig.getValue(CACHE_SECTION_NAME, HYBRID_THRIFT_ENDPOINT);
   }
 
-  LoadBalancingType getLoadBalancingType() {
+  public LoadBalancingType getLoadBalancingType() {
     return buckConfig
         .getEnum(CACHE_SECTION_NAME, LOAD_BALANCING_TYPE, LoadBalancingType.class)
         .orElse(DEFAULT_LOAD_BALANCING_TYPE);
@@ -224,7 +200,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
             .orElse(DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
   }
 
-  int getMaxFetchRetries() {
+  public int getMaxFetchRetries() {
     return buckConfig
         .getInteger(CACHE_SECTION_NAME, HTTP_MAX_FETCH_RETRIES)
         .orElse(DEFAULT_HTTP_MAX_FETCH_RETRIES);
@@ -236,7 +212,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
         .anyMatch(entry -> entry.getCacheReadMode().equals(CacheReadMode.READWRITE));
   }
 
-  String getHostToReportToRemoteCacheServer() {
+  public String getHostToReportToRemoteCacheServer() {
     return buckConfig.getLocalhost();
   }
 
@@ -264,7 +240,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
         .collect(MoreCollectors.toImmutableSet());
   }
 
-  Optional<DirCacheEntry> getServedLocalCache() {
+  public Optional<DirCacheEntry> getServedLocalCache() {
     if (!getServingLocalCacheEnabled()) {
       return Optional.empty();
     }
@@ -345,18 +321,18 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
         .orElse(DEFAULT_HTTP_THREAD_POOL_SIZE);
   }
 
-  long getThreadPoolKeepAliveDurationMillis() {
+  public long getThreadPoolKeepAliveDurationMillis() {
     return buckConfig
         .getLong(CACHE_SECTION_NAME, HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS)
         .orElse(DEFAULT_HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS);
   }
 
-  boolean getTwoLevelCachingEnabled() {
+  public boolean getTwoLevelCachingEnabled() {
     return buckConfig.getBooleanValue(
         CACHE_SECTION_NAME, TWO_LEVEL_CACHING_ENABLED_FIELD_NAME, false);
   }
 
-  long getTwoLevelCachingMinimumSize() {
+  public long getTwoLevelCachingMinimumSize() {
     return buckConfig
         .getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MIN_SIZE_FIELD_NAME)
         .map(Optional::of)
@@ -365,7 +341,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
         .orElse(TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT);
   }
 
-  Optional<Long> getTwoLevelCachingMaximumSize() {
+  public Optional<Long> getTwoLevelCachingMaximumSize() {
     return buckConfig
         .getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MAX_SIZE_FIELD_NAME)
         .map(SizeUnit::parseBytes);
@@ -519,72 +495,5 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
       }
     }
     return false;
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractArtifactCacheEntries {
-    public abstract ImmutableSet<HttpCacheEntry> getHttpCacheEntries();
-
-    public abstract ImmutableSet<DirCacheEntry> getDirCacheEntries();
-
-    public abstract ImmutableSet<SQLiteCacheEntry> getSQLiteCacheEntries();
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractDirCacheEntry {
-    public abstract Optional<String> getName();
-
-    public abstract Path getCacheDir();
-
-    public abstract Optional<Long> getMaxSizeBytes();
-
-    public abstract CacheReadMode getCacheReadMode();
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractHttpCacheEntry {
-    public abstract URI getUrl();
-
-    public abstract int getConnectTimeoutSeconds();
-
-    public abstract int getReadTimeoutSeconds();
-
-    public abstract int getWriteTimeoutSeconds();
-
-    public abstract ImmutableMap<String, String> getReadHeaders();
-
-    public abstract ImmutableMap<String, String> getWriteHeaders();
-
-    public abstract CacheReadMode getCacheReadMode();
-
-    protected abstract ImmutableSet<String> getBlacklistedWifiSsids();
-
-    public abstract String getErrorMessageFormat();
-
-    public abstract Optional<Long> getMaxStoreSize();
-
-    // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
-    // a distributed cache.
-    boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
-      return !(currentWifiSsid.isPresent()
-          && getBlacklistedWifiSsids().contains(currentWifiSsid.get()));
-    }
-  }
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractSQLiteCacheEntry {
-    public abstract Optional<String> getName();
-
-    public abstract Path getCacheDir();
-
-    public abstract Optional<Long> getMaxSizeBytes();
-
-    public abstract Optional<Long> getMaxInlinedSizeBytes();
-
-    public abstract CacheReadMode getCacheReadMode();
   }
 }

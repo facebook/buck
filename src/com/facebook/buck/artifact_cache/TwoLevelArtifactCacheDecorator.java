@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.SamplingCounter;
@@ -155,7 +156,8 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 LOG.verbose(
                     "Found a second-level artifact with metadata: %s",
                     outputFileFetchResult.getMetadata());
-                // Note: in the case of a hit, we return fetchResult, rather than outputFileFetchResult,
+                // Note: in the case of a hit, we return fetchResult, rather than
+                // outputFileFetchResult,
                 // so that the client gets the correct metadata.
 
                 CacheResult finalResult = fetchResult.withTwoLevelContentHashKey(contentHashKey);

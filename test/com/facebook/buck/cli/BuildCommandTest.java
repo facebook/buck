@@ -20,8 +20,8 @@ import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 import static com.facebook.buck.rules.BuildRuleSuccessType.FETCHED_FROM_CACHE;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.command.BuildExecutionResult;
 import com.facebook.buck.command.BuildReport;
 import com.facebook.buck.io.file.MorePaths;

@@ -26,9 +26,9 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;

@@ -1,0 +1,18 @@
+load("//:DEFS", "java_immutables_library")
+
+java_immutables_library(
+    name = "config",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/config/resources:resources",
+        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
+        "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/unit:unit",
+    ],
+)

@@ -14,25 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.artifact_cache;
+package com.facebook.buck.artifact_cache.config;
 
-/** Describes whether the cache allows stores. */
-public enum CacheReadMode {
-  // No stores allowed.
-  READONLY(false),
-  // "Depends who's asking". Stores allowed, however only from prior caches.
-  PASSTHROUGH(true),
-  // All stores allowed.
-  READWRITE(true),
-  ;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import java.nio.file.Path;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-  private final boolean writable;
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractSQLiteCacheEntry {
+  public abstract Optional<String> getName();
 
-  CacheReadMode(boolean writable) {
-    this.writable = writable;
-  }
+  public abstract Path getCacheDir();
 
-  public boolean isWritable() {
-    return writable;
-  }
+  public abstract Optional<Long> getMaxSizeBytes();
+
+  public abstract Optional<Long> getMaxInlinedSizeBytes();
+
+  public abstract CacheReadMode getCacheReadMode();
 }

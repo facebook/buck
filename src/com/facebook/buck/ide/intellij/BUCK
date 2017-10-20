@@ -19,6 +19,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/artifact_cache:config",
+        "//src/com/facebook/buck/artifact_cache/config:config",
         "//src/com/facebook/buck/cli/parameter_extractors:parameter_extractors",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",

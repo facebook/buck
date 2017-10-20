@@ -15,6 +15,13 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheEntries;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.DirCacheEntry;
+import com.facebook.buck.artifact_cache.config.HttpCacheEntry;
+import com.facebook.buck.artifact_cache.config.MultiFetchType;
+import com.facebook.buck.artifact_cache.config.SQLiteCacheEntry;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -545,13 +552,11 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
   private static boolean getAndRecordMultiFetchEnabled(
       ArtifactCacheBuckConfig buckConfig, BuckEventBus eventBus) {
-    ArtifactCacheBuckConfig.MultiFetchType multiFetchType = buckConfig.getMultiFetchType();
-    if (multiFetchType == ArtifactCacheBuckConfig.MultiFetchType.EXPERIMENT) {
+    MultiFetchType multiFetchType = buckConfig.getMultiFetchType();
+    if (multiFetchType == MultiFetchType.EXPERIMENT) {
       multiFetchType =
           RandomizedTrial.getGroup(
-              ArtifactCacheBuckConfig.MULTI_FETCH,
-              eventBus.getBuildId(),
-              ArtifactCacheBuckConfig.MultiFetchType.class);
+              ArtifactCacheBuckConfig.MULTI_FETCH, eventBus.getBuildId(), MultiFetchType.class);
       switch (multiFetchType) {
         case DISABLED:
         case ENABLED:
@@ -563,7 +568,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
           throw new RuntimeException("RandomizedTrial picked invalid MultiFetchType.");
       }
     }
-    return multiFetchType == ArtifactCacheBuckConfig.MultiFetchType.ENABLED;
+    return multiFetchType == MultiFetchType.ENABLED;
   }
 
   private static class ProgressResponseBody extends ResponseBody {

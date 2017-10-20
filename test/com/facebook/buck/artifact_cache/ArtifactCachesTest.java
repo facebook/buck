@@ -18,6 +18,8 @@ package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

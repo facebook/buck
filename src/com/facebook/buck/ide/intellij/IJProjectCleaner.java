@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
-import com.facebook.buck.artifact_cache.DirCacheEntry;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
