@@ -1,10 +1,12 @@
 java_library(
     name = "randomizedtrial",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/model:build_id",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:build_id",
         "//third-party/java/guava:guava",
     ],
 )

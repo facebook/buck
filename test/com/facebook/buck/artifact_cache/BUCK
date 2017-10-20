@@ -78,7 +78,6 @@ standard_java_test(
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/artifact_cache:binary_protocol",
-        "//src/com/facebook/buck/artifact_cache:config",
         "//src/com/facebook/buck/artifact_cache:impl",
         "//src/com/facebook/buck/charset:charset",
         "//src/com/facebook/buck/cli:cli",

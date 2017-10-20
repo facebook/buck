@@ -18,6 +18,7 @@ PUBLIC_API_SOURCES = [
     "HttpArtifactCacheEvent.java",
     "NoopArtifactCache.java",
     "RuleKeyCacheResultEvent.java",
+    "SingletonArtifactCacheFactory.java",
 ]
 
 java_immutables_library(
@@ -78,50 +79,6 @@ java_immutables_library(
     ],
 )
 
-CONFIG_SOURCES = [
-    "ArtifactCaches.java",
-    "SingletonArtifactCacheFactory.java",
-]
-
-java_immutables_library(
-    name = "config",
-    srcs = CONFIG_SOURCES,
-    tests = [
-        "//test/com/facebook/buck/artifact_cache:artifact_cache",
-        "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/cli:cli",
-        "//src/com/facebook/buck/event/listener:listener",
-        "//src/com/facebook/buck/httpserver:cache_handler",
-        "//src/com/facebook/buck/ide/intellij:intellij",
-        "//test/com/facebook/buck/artifact_cache/...",
-        "//test/com/facebook/buck/cli/...",
-        "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
-    ],
-    deps = [
-        ":artifact_cache",
-        ":impl",
-        "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/config/resources:resources",
-        "//src/com/facebook/buck/event:event",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
-        "//src/com/facebook/buck/slb:slb",
-        "//src/com/facebook/buck/timing:timing",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//src/com/facebook/buck/util/unit:unit",
-        "//third-party/java/okhttp:okhttp",
-    ],
-)
-
 GENERATOR_SOURCE = [
     "HybridPayloadGenerator.java",
 ]
@@ -130,18 +87,21 @@ java_immutables_library(
     name = "impl",
     srcs = glob(
         ["*.java"],
-        excludes = PUBLIC_API_SOURCES + CONFIG_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE,
+        excludes = PUBLIC_API_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE,
     ),
     tests = [
         "//test/com/facebook/buck/artifact_cache:artifact_cache",
     ],
     visibility = [
+        "//src/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/artifact_cache/...",
+        "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
     ],
     deps = [
         ":artifact_cache",
         ":binary_protocol",
         "//src-gen:thrift",
+        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -152,10 +112,12 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/sqlite:sqlite",
+        "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/sha1:sha1",
