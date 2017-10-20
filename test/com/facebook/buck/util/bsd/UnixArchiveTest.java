@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.bsd;
+package com.facebook.buck.util.bsd;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;

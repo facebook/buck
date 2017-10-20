@@ -4,7 +4,7 @@ java_immutables_library(
     name = "bsd",
     srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/bsd:bsd",
+        "//test/com/facebook/buck/util/bsd:bsd",
     ],
     visibility = ["PUBLIC"],
     deps = [
