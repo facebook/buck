@@ -63,9 +63,9 @@ public class JavacStep implements Step {
 
   private final ClasspathChecker classpathChecker;
 
-  private final Optional<JarParameters> jarParameters;
+  @Nullable private final JarParameters libraryJarParameters;
 
-  @Nullable private final Path abiJar;
+  @Nullable private final JarParameters abiJarParameters;
 
   public JavacStep(
       ClassUsageFileWriter usedClassesFileWriter,
@@ -76,8 +76,8 @@ public class JavacStep implements Step {
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
-      Optional<JarParameters> jarParameters,
-      @Nullable Path abiJar) {
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters) {
     this.usedClassesFileWriter = usedClassesFileWriter;
     this.javacOptions = javacOptions;
     this.javac = javac;
@@ -86,8 +86,8 @@ public class JavacStep implements Step {
     this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
     this.compilerParameters = compilerParameters;
-    this.jarParameters = jarParameters;
-    this.abiJar = abiJar;
+    this.abiJarParameters = abiJarParameters;
+    this.libraryJarParameters = libraryJarParameters;
   }
 
   @Override
@@ -140,15 +140,11 @@ public class JavacStep implements Step {
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
-                  jarParameters
-                      .map(
-                          libraryParameters ->
-                              abiJar != null ? libraryParameters.withJarPath(abiJar) : null)
-                      .orElse(null),
-                  jarParameters.orElse(null),
+                  abiJarParameters,
+                  libraryJarParameters,
                   compilerParameters.getAbiGenerationMode(),
                   compilerParameters.getSourceOnlyAbiRuleInfo())) {
-        if (abiJar != null) {
+        if (abiJarParameters != null) {
           declaredDepsBuildResult = invocation.buildSourceAbiJar();
         } else {
           declaredDepsBuildResult = invocation.buildClasses();
@@ -205,17 +201,16 @@ public class JavacStep implements Step {
                 compilerParameters.getSourceFilePaths(),
                 compilerParameters.getPathToSourcesList());
 
-    if (jarParameters.isPresent()) {
-      JarParameters jarParameters = this.jarParameters.get();
-      Optional<Path> manifestFile = jarParameters.getManifestFile();
-      ImmutableSortedSet<Path> entriesToJar = jarParameters.getEntriesToJar();
+    if (libraryJarParameters != null) {
+      Optional<Path> manifestFile = libraryJarParameters.getManifestFile();
+      ImmutableSortedSet<Path> entriesToJar = libraryJarParameters.getEntriesToJar();
       description =
           description
               + "; "
               + String.format(
                   "jar %s %s %s %s",
                   manifestFile.isPresent() ? "cfm" : "cf",
-                  jarParameters.getJarPath(),
+                  libraryJarParameters.getJarPath(),
                   manifestFile.isPresent() ? manifestFile.get() : "",
                   Joiner.on(' ').join(entriesToJar));
     }
@@ -226,9 +221,9 @@ public class JavacStep implements Step {
   @Override
   public String getShortName() {
     String name;
-    if (abiJar != null) {
+    if (abiJarParameters != null) {
       name = "source_abi";
-    } else if (jarParameters.isPresent()) {
+    } else if (libraryJarParameters != null) {
       name = "javac_jar";
     } else {
       name = getJavac().getShortName();

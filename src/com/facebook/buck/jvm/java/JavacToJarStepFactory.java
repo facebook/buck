@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public class JavacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
@@ -96,8 +97,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             projectFilesystem,
             new ClasspathChecker(),
             parameters,
-            Optional.empty(),
-            parameters.shouldGenerateAbiJar() ? parameters.getAbiJarPath() : null));
+            null,
+            null));
   }
 
   @Override
@@ -127,12 +128,16 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       BuildTarget invokingRule,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
-      JarParameters jarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       /* output params */
       Builder<Step> steps,
       BuildableContext buildableContext) {
     Preconditions.checkArgument(
-        jarParameters.getEntriesToJar().contains(compilerParameters.getOutputDirectory()));
+        libraryJarParameters == null
+            || libraryJarParameters
+                .getEntriesToJar()
+                .contains(compilerParameters.getOutputDirectory()));
 
     String spoolMode = javacOptions.getSpoolMode().name();
     // In order to use direct spooling to the Jar:
@@ -180,17 +185,16 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               projectFilesystem,
               new ClasspathChecker(),
               compilerParameters,
-              Optional.of(jarParameters),
-              compilerParameters.shouldGenerateAbiJar()
-                  ? compilerParameters.getAbiJarPath()
-                  : null));
+              abiJarParameters,
+              libraryJarParameters));
     } else {
       super.createCompileToJarStepImpl(
           context,
           invokingRule,
           compilerParameters,
           postprocessClassesCommands,
-          jarParameters,
+          abiJarParameters,
+          libraryJarParameters,
           steps,
           buildableContext);
     }

@@ -167,7 +167,7 @@ public class DummyRDotJavaTest {
                                     filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"))
                             .setClasspathEntries(ImmutableSortedSet.of())
                             .build(),
-                        Optional.empty(),
+                        null,
                         null)
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))

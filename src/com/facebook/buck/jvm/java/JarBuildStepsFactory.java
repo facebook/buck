@@ -140,6 +140,7 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
+    Preconditions.checkArgument(buildTarget.equals(HasJavaAbi.getSourceAbiJar(libraryTarget)));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     CompilerParameters compilerParameters =
@@ -156,8 +157,6 @@ public class JarBuildStepsFactory
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
-    Optional<JarParameters> jarParameters = getAbiJarParameters(context, compilerParameters);
-
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     compileToJarStepFactory.createCompileToJarStep(
         context,
@@ -165,7 +164,8 @@ public class JarBuildStepsFactory
         compilerParameters,
         resourcesParameters,
         ImmutableList.of(),
-        jarParameters,
+        getAbiJarParameters(context, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, compilerParameters).orElse(null),
         steps,
         buildableContext);
 
@@ -174,6 +174,7 @@ public class JarBuildStepsFactory
 
   public ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
+    Preconditions.checkArgument(buildTarget.equals(libraryTarget));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     CompilerParameters compilerParameters =
@@ -189,8 +190,6 @@ public class JarBuildStepsFactory
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
-    Optional<JarParameters> jarParameters = getLibraryJarParameters(context, compilerParameters);
-
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     compileToJarStepFactory.createCompileToJarStep(
         context,
@@ -198,7 +197,8 @@ public class JarBuildStepsFactory
         compilerParameters,
         resourcesParameters,
         postprocessClassesCommands,
-        jarParameters,
+        null,
+        getLibraryJarParameters(context, compilerParameters).orElse(null),
         steps,
         buildableContext);
 

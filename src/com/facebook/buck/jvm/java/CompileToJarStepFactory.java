@@ -40,6 +40,7 @@ import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** Provides a base implementation for post compile steps. */
 public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
@@ -62,10 +63,12 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
       CompilerParameters compilerParameters,
       ResourcesParameters resourcesParameters,
       ImmutableList<String> postprocessClassesCommands,
-      Optional<JarParameters> jarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       /* output params */
       Builder<Step> steps,
       BuildableContext buildableContext) {
+    Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     steps.addAll(
@@ -119,17 +122,22 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
           target,
           compilerParameters,
           postprocessClassesCommands,
-          jarParameters.get(),
+          abiJarParameters,
+          libraryJarParameters,
           steps,
           buildableContext);
     }
 
-    if (jarParameters.isPresent()) {
+    JarParameters jarParameters = abiJarParameters;
+    if (jarParameters == null) {
+      jarParameters = libraryJarParameters;
+    }
+    if (jarParameters != null) {
       // No source files, only resources
       if (compilerParameters.getSourceFilePaths().isEmpty()) {
-        createJarStep(jarParameters.get(), steps);
+        createJarStep(jarParameters, steps);
       }
-      buildableContext.recordArtifact(jarParameters.get().getJarPath());
+      buildableContext.recordArtifact(jarParameters.getJarPath());
     }
   }
 
@@ -138,12 +146,17 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
       BuildTarget target,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
-      JarParameters jarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       /* output params */
       Builder<Step> steps,
       BuildableContext buildableContext) {
+    Preconditions.checkArgument(abiJarParameters == null);
     Preconditions.checkArgument(
-        jarParameters.getEntriesToJar().contains(compilerParameters.getOutputDirectory()));
+        libraryJarParameters != null
+            && libraryJarParameters
+                .getEntriesToJar()
+                .contains(compilerParameters.getOutputDirectory()));
 
     createCompileStep(context, target, compilerParameters, steps, buildableContext);
 
@@ -157,7 +170,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
                 compilerParameters.getClasspathEntries(),
                 getBootClasspath(context))));
 
-    createJarStep(jarParameters, steps);
+    createJarStep(libraryJarParameters, steps);
   }
 
   public void createJarStep(JarParameters parameters, Builder<Step> steps) {
