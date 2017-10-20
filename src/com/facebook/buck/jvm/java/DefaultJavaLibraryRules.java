@@ -388,6 +388,7 @@ public abstract class DefaultJavaLibraryRules {
     return new JarBuildStepsFactory(
         getProjectFilesystem(),
         getSourcePathRuleFinder(),
+        getLibraryTarget(),
         getConfiguredCompiler(),
         getSrcs(),
         getResources(),

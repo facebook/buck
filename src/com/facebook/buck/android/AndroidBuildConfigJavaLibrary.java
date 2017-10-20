@@ -70,6 +70,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
+            buildTarget,
             new JavacToJarStepFactory(
                 resolver,
                 ruleFinder,

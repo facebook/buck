@@ -47,6 +47,7 @@ public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
   private final ProjectFilesystem projectFilesystem;
   private final SourcePathRuleFinder ruleFinder;
+  private final BuildTarget libraryTarget;
 
   @AddToRuleKey private final ConfiguredCompiler configuredCompiler;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
@@ -72,6 +73,7 @@ public class JarBuildStepsFactory
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
+      BuildTarget libraryTarget,
       ConfiguredCompiler configuredCompiler,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
@@ -86,6 +88,7 @@ public class JarBuildStepsFactory
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
+    this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.srcs = srcs;
     this.resources = resources;
@@ -153,8 +156,7 @@ public class JarBuildStepsFactory
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
-    Optional<JarParameters> jarParameters =
-        getJarParameters(context, buildTarget, compilerParameters);
+    Optional<JarParameters> jarParameters = getAbiJarParameters(context, compilerParameters);
 
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     compileToJarStepFactory.createCompileToJarStep(
@@ -187,8 +189,7 @@ public class JarBuildStepsFactory
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
-    Optional<JarParameters> jarParameters =
-        getJarParameters(context, buildTarget, compilerParameters);
+    Optional<JarParameters> jarParameters = getLibraryJarParameters(context, compilerParameters);
 
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     compileToJarStepFactory.createCompileToJarStep(
@@ -219,7 +220,17 @@ public class JarBuildStepsFactory
         .build();
   }
 
-  protected Optional<JarParameters> getJarParameters(
+  protected Optional<JarParameters> getLibraryJarParameters(
+      BuildContext context, CompilerParameters compilerParameters) {
+    return getJarParameters(context, libraryTarget, compilerParameters);
+  }
+
+  protected Optional<JarParameters> getAbiJarParameters(
+      BuildContext context, CompilerParameters compilerParameters) {
+    return getJarParameters(context, HasJavaAbi.getSourceAbiJar(libraryTarget), compilerParameters);
+  }
+
+  private Optional<JarParameters> getJarParameters(
       BuildContext context, BuildTarget buildTarget, CompilerParameters compilerParameters) {
     return getOutputJarPath(buildTarget)
         .map(
