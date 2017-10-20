@@ -16,7 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import javax.annotation.Nullable;
 
@@ -52,10 +54,20 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public ConfiguredCompiler configure(
-      @Nullable JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      @Nullable JvmLibraryArg arg,
+      JavacOptions javacOptions,
+      BuildRuleResolver buildRuleResolver) {
 
     return new JavacToJarStepFactory(
-        getJavac(resolver, arg), javacOptions, extraClasspathFromContextFunction);
+        sourcePathResolver,
+        ruleFinder,
+        projectFilesystem,
+        getJavac(buildRuleResolver, arg),
+        javacOptions,
+        extraClasspathFromContextFunction);
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

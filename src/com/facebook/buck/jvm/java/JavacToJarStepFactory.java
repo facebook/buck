@@ -35,6 +35,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -47,9 +48,13 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @AddToRuleKey private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
 
   public JavacToJarStepFactory(
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+    super(resolver, ruleFinder, projectFilesystem);
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
@@ -59,11 +64,9 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   public void createCompileStep(
       BuildContext context,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
       CompilerParameters parameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
     final JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
@@ -72,7 +75,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
       addAnnotationGenFolderStep(
-          parameters.getGeneratedCodeDirectory(), filesystem, steps, buildableContext, context);
+          parameters.getGeneratedCodeDirectory(),
+          projectFilesystem,
+          steps,
+          buildableContext,
+          context);
     }
 
     final ClassUsageFileWriter usedClassesFileWriter =
@@ -86,7 +93,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             buildTimeOptions,
             invokingRule,
             resolver,
-            filesystem,
+            projectFilesystem,
             new ClasspathChecker(),
             parameters,
             Optional.empty(),
@@ -118,14 +125,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   public void createCompileToJarStepImpl(
       BuildContext context,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem filesystem,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       JarParameters jarParameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
     Preconditions.checkArgument(
         jarParameters.getEntriesToJar().contains(compilerParameters.getOutputDirectory()));
@@ -156,7 +160,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         // Javac requires that the root directory for generated sources already exists.
         addAnnotationGenFolderStep(
             compilerParameters.getGeneratedCodeDirectory(),
-            filesystem,
+            projectFilesystem,
             steps,
             buildableContext,
             context);
@@ -173,7 +177,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               buildTimeOptions,
               invokingRule,
               resolver,
-              filesystem,
+              projectFilesystem,
               new ClasspathChecker(),
               compilerParameters,
               Optional.of(jarParameters),
@@ -184,9 +188,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       super.createCompileToJarStepImpl(
           context,
           invokingRule,
-          resolver,
-          ruleFinder,
-          filesystem,
           compilerParameters,
           postprocessClassesCommands,
           jarParameters,

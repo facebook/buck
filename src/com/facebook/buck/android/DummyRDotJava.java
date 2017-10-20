@@ -260,13 +260,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
     // Compile the .java files.
     compileStepFactory.createCompileStep(
-        context,
-        getBuildTarget(),
-        context.getSourcePathResolver(),
-        getProjectFilesystem(),
-        compilerParameters,
-        steps,
-        buildableContext);
+        context, getBuildTarget(), compilerParameters, steps, buildableContext);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
 
     JarParameters jarParameters =

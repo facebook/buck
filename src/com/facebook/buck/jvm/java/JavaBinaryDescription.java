@@ -135,6 +135,7 @@ public class JavaBinaryDescription
       rule =
           new JarFattener(
               buildTarget,
+              ruleFinder,
               projectFilesystem,
               params.copyAppendingExtraDeps(
                   Suppliers.<Iterable<BuildRule>>ofInstance(

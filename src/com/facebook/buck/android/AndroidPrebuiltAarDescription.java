@@ -209,6 +209,9 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         new JavacToJarStepFactory(
+            pathResolver,
+            ruleFinder,
+            projectFilesystem,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,
             AndroidClasspathFromContextFunction.INSTANCE),

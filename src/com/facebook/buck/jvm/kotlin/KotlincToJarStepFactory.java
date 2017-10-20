@@ -30,10 +30,12 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -51,11 +53,15 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private final JavacOptions javacOptions;
 
   public KotlincToJarStepFactory(
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ExtraClasspathFromContextFunction extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
+    super(resolver, ruleFinder, projectFilesystem);
     this.kotlinc = kotlinc;
     this.extraArguments = extraArguments;
     this.extraClassPath = extraClassPath;
@@ -67,11 +73,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   public void createCompileStep(
       BuildContext buildContext,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
       CompilerParameters parameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
@@ -95,7 +99,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                   .build(),
               kotlinc,
               extraArguments,
-              filesystem));
+              projectFilesystem));
     }
 
     ImmutableSortedSet<Path> javaSourceFiles =
@@ -120,15 +124,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(javac, javacOptions, extraClassPath)
-          .createCompileStep(
-              buildContext,
-              invokingRule,
-              resolver,
-              filesystem,
-              javacParameters,
-              steps,
-              buildableContext);
+      new JavacToJarStepFactory(
+              resolver, ruleFinder, projectFilesystem, javac, javacOptions, extraClassPath)
+          .createCompileStep(buildContext, invokingRule, javacParameters, steps, buildableContext);
     }
   }
 

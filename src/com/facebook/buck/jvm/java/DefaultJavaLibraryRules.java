@@ -348,7 +348,13 @@ public abstract class DefaultJavaLibraryRules {
   @Value.Lazy
   ConfiguredCompiler getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
-        .configure(getArgs(), getJavacOptions(), getBuildRuleResolver());
+        .configure(
+            getSourcePathResolver(),
+            getSourcePathRuleFinder(),
+            getProjectFilesystem(),
+            getArgs(),
+            getJavacOptions(),
+            getBuildRuleResolver());
   }
 
   @Value.Lazy

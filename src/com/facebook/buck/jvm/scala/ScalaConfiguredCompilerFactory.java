@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.scala;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
@@ -26,6 +27,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Optionals;
@@ -61,15 +63,23 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public ConfiguredCompiler configure(
-      @Nullable JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      @Nullable JvmLibraryArg arg,
+      JavacOptions javacOptions,
+      BuildRuleResolver buildRuleResolver) {
 
     return new ScalacToJarStepFactory(
-        getScalac(resolver),
-        resolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
+        sourcePathResolver,
+        ruleFinder,
+        projectFilesystem,
+        getScalac(buildRuleResolver),
+        buildRuleResolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
         scalaBuckConfig.getCompilerFlags(),
-        Preconditions.checkNotNull(arg.getExtraArguments()),
-        resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
-        getJavac(resolver, arg),
+        Preconditions.checkNotNull(arg).getExtraArguments(),
+        buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
+        getJavac(buildRuleResolver, arg),
         javacOptions,
         extraClasspathFromContextFunction);
   }

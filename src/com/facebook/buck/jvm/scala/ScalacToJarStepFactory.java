@@ -37,6 +37,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -59,25 +60,9 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   private final JavacOptions javacOptions;
 
   public ScalacToJarStepFactory(
-      Tool scalac,
-      BuildRule scalaLibraryTarget,
-      ImmutableList<String> configCompilerFlags,
-      ImmutableList<String> extraArguments,
-      ImmutableSet<BuildRule> compilerPlugins,
-      Javac javac,
-      JavacOptions javacOptions) {
-    this(
-        scalac,
-        scalaLibraryTarget,
-        configCompilerFlags,
-        extraArguments,
-        compilerPlugins,
-        javac,
-        javacOptions,
-        ExtraClasspathFromContextFunction.EMPTY);
-  }
-
-  public ScalacToJarStepFactory(
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       Tool scalac,
       BuildRule scalaLibraryTarget,
       ImmutableList<String> configCompilerFlags,
@@ -86,6 +71,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathFromContextFunction extraClassPath) {
+    super(resolver, ruleFinder, projectFilesystem);
     this.scalac = scalac;
     this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
@@ -104,11 +90,9 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   public void createCompileStep(
       BuildContext context,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
       CompilerParameters parameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
 
     ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
@@ -141,7 +125,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                       Optional.ofNullable(extraClassPath.apply(context)).orElse(ImmutableList.of()))
                   .addAll(classpathEntries)
                   .build(),
-              filesystem));
+              projectFilesystem));
     }
 
     ImmutableSortedSet<Path> javaSourceFiles =
@@ -166,15 +150,9 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(javac, javacOptions, extraClassPath)
-          .createCompileStep(
-              context,
-              invokingRule,
-              resolver,
-              filesystem,
-              javacParameters,
-              steps,
-              buildableContext);
+      new JavacToJarStepFactory(
+              resolver, ruleFinder, projectFilesystem, javac, javacOptions, extraClassPath)
+          .createCompileStep(context, invokingRule, javacParameters, steps, buildableContext);
     }
   }
 

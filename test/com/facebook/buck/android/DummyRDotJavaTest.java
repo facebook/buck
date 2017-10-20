@@ -98,7 +98,12 @@ public class DummyRDotJavaTest {
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
+                pathResolver,
+                ruleFinder,
+                filesystem,
+                DEFAULT_JAVAC,
+                ANDROID_JAVAC_OPTIONS,
+                ExtraClasspathFromContextFunction.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
@@ -182,10 +187,12 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testRDotJavaBinFolder() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
@@ -194,7 +201,12 @@ public class DummyRDotJavaTest {
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
+                pathResolver,
+                ruleFinder,
+                filesystem,
+                DEFAULT_JAVAC,
+                ANDROID_JAVAC_OPTIONS,
+                ExtraClasspathFromContextFunction.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),

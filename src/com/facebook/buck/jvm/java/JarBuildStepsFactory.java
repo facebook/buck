@@ -160,9 +160,6 @@ public class JarBuildStepsFactory
     compileToJarStepFactory.createCompileToJarStep(
         context,
         buildTarget,
-        context.getSourcePathResolver(),
-        ruleFinder,
-        projectFilesystem,
         compilerParameters,
         resourcesParameters,
         ImmutableList.of(),
@@ -197,9 +194,6 @@ public class JarBuildStepsFactory
     compileToJarStepFactory.createCompileToJarStep(
         context,
         buildTarget,
-        context.getSourcePathResolver(),
-        ruleFinder,
-        projectFilesystem,
         compilerParameters,
         resourcesParameters,
         postprocessClassesCommands,
