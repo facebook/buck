@@ -54,9 +54,6 @@ abstract class AbstractCompilerParameters {
 
   public abstract Path getPathToSourcesList();
 
-  @Nullable
-  public abstract Path getAbiJarPath();
-
   @Value.Default
   public AbiGenerationMode getAbiGenerationMode() {
     return AbiGenerationMode.CLASS;
@@ -64,11 +61,6 @@ abstract class AbstractCompilerParameters {
 
   @Value.Default
   public boolean shouldTrackClassUsage() {
-    return false;
-  }
-
-  @Value.Default
-  public boolean shouldGenerateAbiJar() {
     return false;
   }
 
@@ -109,8 +101,7 @@ abstract class AbstractCompilerParameters {
           .setDepFilePath(
               getOutputJarDirPath(target, projectFilesystem).resolve("used-classes.json"))
           .setPathToSourcesList(BuildTargets.getGenPath(projectFilesystem, target, "__%s__srcs"))
-          .setOutputDirectory(getClassesDir(target, projectFilesystem))
-          .setAbiJarPath(getAbiJarPath(target, projectFilesystem));
+          .setOutputDirectory(getClassesDir(target, projectFilesystem));
     }
 
     public CompilerParameters.Builder setSourceFileSourcePaths(

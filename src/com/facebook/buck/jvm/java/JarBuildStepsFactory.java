@@ -150,7 +150,6 @@ public class JarBuildStepsFactory
             .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(false)
-            .setShouldGenerateAbiJar(true)
             .setAbiGenerationMode(abiGenerationMode)
             .setSourceOnlyAbiRuleInfo(ruleInfo)
             .build();
