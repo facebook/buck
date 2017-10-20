@@ -42,9 +42,10 @@ public class DotTest {
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot<String> dot =
-        new Dot<String>(graph, "the_graph", Functions.identity(), Functions.identity(), output);
-    dot.writeOutput();
+    Dot.getInstance(graph, "the_graph")
+        .setNodeToName(Functions.identity())
+        .setNodeToTypeName(Functions.identity())
+        .writeOutput(output);
 
     String dotGraph = output.toString();
     List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
@@ -71,20 +72,57 @@ public class DotTest {
   }
 
   @Test
+  public void testGenerateDotOutputFilter() throws IOException {
+    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
+    mutableGraph.addEdge("A", "B");
+    mutableGraph.addEdge("B", "C");
+    mutableGraph.addEdge("B", "D");
+    mutableGraph.addEdge("C", "E");
+    mutableGraph.addEdge("D", "E");
+    mutableGraph.addEdge("A", "E");
+    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+
+    ImmutableSet<String> filter =
+        ImmutableSet.<String>builder().add("A").add("B").add("C").add("D").build();
+
+    StringBuilder output = new StringBuilder();
+    Dot.getInstance(graph, "the_graph")
+        .setNodeToName(Functions.identity())
+        .setNodeToTypeName(Functions.identity())
+        .setNodesToFilter(filter)
+        .writeOutput(output);
+
+    String dotGraph = output.toString();
+    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+
+    assertEquals("digraph the_graph {", lines.get(0));
+
+    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
+    assertEquals(
+        edges,
+        ImmutableSet.of(
+            "  A -> B;",
+            "  B -> C;",
+            "  B -> D;",
+            "  A [style=filled,color=\"#C1C1C0\"];",
+            "  B [style=filled,color=\"#C2C1C0\"];",
+            "  C [style=filled,color=\"#C3C1C0\"];",
+            "  D [style=filled,color=\"#C4C1C0\"];"));
+
+    assertEquals("}", lines.get(lines.size() - 1));
+  }
+
+  @Test
   public void testGenerateDotOutputWithColors() throws IOException {
     MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
     mutableGraph.addEdge("A", "B");
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot<String> dot =
-        new Dot<String>(
-            graph,
-            "the_graph",
-            Functions.identity(),
-            name -> name.equals("A") ? "android_library" : "java_library",
-            output);
-    dot.writeOutput();
+    Dot.getInstance(graph, "the_graph")
+        .setNodeToName(Functions.identity())
+        .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
+        .writeOutput(output);
 
     String dotGraph = output.toString();
     List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
@@ -111,14 +149,10 @@ public class DotTest {
 
     StringBuilder output = new StringBuilder();
 
-    Dot<String> dot =
-        new Dot<>(
-            new DirectedAcyclicGraph<>(mutableGraph),
-            "the_graph",
-            Functions.identity(),
-            name -> name.equals("A") ? "android_library" : "java_library",
-            output);
-    dot.writeOutput();
+    Dot.getInstance(new DirectedAcyclicGraph<>(mutableGraph), "the_graph")
+        .setNodeToName(Functions.identity())
+        .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
+        .writeOutput(output);
 
     String dotGraph = output.toString();
     List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));

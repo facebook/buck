@@ -470,19 +470,16 @@ public class TargetsCommand extends AbstractCommand {
             ruleFinder);
 
     // it is time to construct DOT output
-    Dot<BuildRule> dot =
-        new Dot<>(
-            new DirectedAcyclicGraph<>(actionGraphMutable),
-            "action_graph",
+    Dot.getInstance(new DirectedAcyclicGraph<>(actionGraphMutable), "action_graph")
+        .setNodeToName(
             node ->
                 node.getFullyQualifiedName()
                     + " "
                     + node.getType()
                     + " "
-                    + ruleKeyFactory.build(node).toString(),
-            node -> node.getType(),
-            params.getConsole().getStdOut());
-    dot.writeOutput();
+                    + ruleKeyFactory.build(node).toString())
+        .setNodeToTypeName(node -> node.getType())
+        .writeOutput(params.getConsole().getStdOut());
 
     return 0;
   }

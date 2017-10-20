@@ -17,6 +17,7 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -28,9 +29,10 @@ public class Dot<T> {
 
   private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
-  private final Function<T, String> nodeToName;
-  private final Function<T, String> nodeToTypeName;
-  private final Appendable output;
+  private Function<T, String> nodeToName;
+  private Function<T, String> nodeToTypeName;
+  private boolean bfsSorted;
+  private Optional<ImmutableSet<T>> nodesToFilter;
   private static final Map<String, String> typeColors;
 
   static {
@@ -47,53 +49,41 @@ public class Dot<T> {
         }.build();
   }
 
-  public Dot(
-      DirectedAcyclicGraph<T> graph,
-      String graphName,
-      Function<T, String> nodeToName,
-      Function<T, String> nodeToTypeName,
-      Appendable output) {
+  public static <T> Dot<T> getInstance(DirectedAcyclicGraph<T> graph, String graphName) {
+    return new Dot<>(graph, graphName);
+  }
+
+  private Dot(DirectedAcyclicGraph<T> graph, String graphName) {
     this.graph = graph;
     this.graphName = graphName;
-    this.nodeToName = nodeToName;
-    this.nodeToTypeName = nodeToTypeName;
-    this.output = output;
+    nodeToName = Object::toString;
+    nodeToTypeName = Object::toString;
+    bfsSorted = false;
+    nodesToFilter = Optional.absent();
   }
 
-  public void writeOutput() throws IOException {
-    output.append("digraph " + graphName + " {\n");
-
-    new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
-
-      @Override
-      public void visit(T node) {
-        try {
-          output.append(printNode(node, nodeToName, nodeToTypeName));
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-        for (T sink : graph.getOutgoingNodesFor(node)) {
-          try {
-            output.append(printEdge(node, sink, nodeToName));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }
-    }.traverse();
-
-    output.append("}\n");
+  public Dot<T> setNodeToName(Function<T, String> func) {
+    nodeToName = func;
+    return this;
   }
 
-  public static <T> void writeSubgraphOutput(
-      final DirectedAcyclicGraph<T> graph,
-      final String graphName,
-      final ImmutableSet<T> nodesToFilter,
-      final Function<T, String> nodeToName,
-      final Function<T, String> nodeToTypeName,
-      final Appendable output,
-      final boolean bfsSorted)
-      throws IOException {
+  public Dot<T> setNodeToTypeName(Function<T, String> func) {
+    nodeToTypeName = func;
+    return this;
+  }
+
+  public Dot<T> setBfsSorted(boolean sorted) {
+    bfsSorted = sorted;
+    return this;
+  }
+
+  public Dot<T> setNodesToFilter(ImmutableSet<T> toFilter) {
+    nodesToFilter = Optional.of(toFilter);
+    return this;
+  }
+
+  /** Writes out the graph in dot format to the given output */
+  public void writeOutput(Appendable output) throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
     final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     output.append("digraph " + graphName + " {\n");
@@ -104,13 +94,15 @@ public class Dot<T> {
 
           @Override
           public Iterable<T> visit(T node) {
-            if (!nodesToFilter.contains(node)) {
+            if (nodesToFilter.isPresent() && !nodesToFilter.get().contains(node)) {
               return ImmutableSet.<T>of();
             }
             builder.add(printNode(node, nodeToName, nodeToTypeName));
             ImmutableSortedSet<T> nodes =
                 ImmutableSortedSet.copyOf(
-                    Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains));
+                    Sets.filter(
+                        graph.getOutgoingNodesFor(node),
+                        n -> !nodesToFilter.isPresent() || nodesToFilter.get().contains(n)));
             for (T sink : nodes) {
               builder.add(printEdge(node, sink, nodeToName));
             }
@@ -124,11 +116,14 @@ public class Dot<T> {
 
         @Override
         public void visit(T node) {
-          if (!nodesToFilter.contains(node)) {
+          if (nodesToFilter.isPresent() && !nodesToFilter.get().contains(node)) {
             return;
           }
           sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName));
-          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
+          for (T sink :
+              Sets.filter(
+                  graph.getOutgoingNodesFor(node),
+                  n -> !nodesToFilter.isPresent() || nodesToFilter.get().contains(n))) {
             sortedSetBuilder.add(printEdge(node, sink, nodeToName));
           }
         }
