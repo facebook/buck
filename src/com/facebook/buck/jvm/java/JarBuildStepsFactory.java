@@ -199,7 +199,7 @@ public class JarBuildStepsFactory
         .setClasspathEntriesSourcePaths(
             compileTimeClasspathSourcePaths, context.getSourcePathResolver())
         .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
-        .setStandardPaths(buildTarget, projectFilesystem)
+        .setScratchPaths(buildTarget, projectFilesystem)
         .setShouldTrackClassUsage(trackClassUsage)
         .setAbiGenerationMode(abiGenerationMode)
         .setSourceOnlyAbiRuleInfo(ruleInfo)

@@ -92,7 +92,7 @@ abstract class AbstractCompilerParameters {
   }
 
   public abstract static class Builder {
-    public CompilerParameters.Builder setStandardPaths(
+    public CompilerParameters.Builder setScratchPaths(
         BuildTarget target, ProjectFilesystem projectFilesystem) {
       CompilerParameters.Builder builder = (CompilerParameters.Builder) this;
 

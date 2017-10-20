@@ -183,7 +183,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
-            .setStandardPaths(getBuildTarget(), getProjectFilesystem())
+            .setScratchPaths(getBuildTarget(), getProjectFilesystem())
             .setOutputDirectory(fatJarDir)
             .build();
 
