@@ -220,6 +220,8 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
             "--config",
             "java.source_level=8",
             "--config",
+            "java.target_level=8",
+            "--config",
             String.format("java.bootclasspath-8=clowntown.jar:%s", systemBootclasspath),
             "-v",
             "5");

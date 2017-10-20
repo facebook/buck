@@ -20,6 +20,7 @@ import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.abi.source.api.StopCompilation;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
@@ -34,7 +35,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -74,7 +74,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
   @Nullable private BuckJavacTaskProxy javacTask;
-  private boolean frontendRunAttempted = false;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
 
   public Jsr199JavacInvocation(
@@ -119,25 +118,25 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       context.getEventSink());
               stubGenerator.generate(topLevelTypes);
               jarBuilder.createJarFile(sourceAbiJar);
+              throw new StopCompilation();
             } catch (IOException e) {
               throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
             }
           });
 
       try {
-        javacTask.parse();
-        // JavacTask.call would stop between these phases if there were an error, so we do too.
-        if (buildSuccessful()) {
-          javacTask.enter();
-        }
+        javacTask.call();
       } catch (RuntimeException e) {
-        throw new HumanReadableException(
-            e,
-            String.format(
-                "The compiler crashed when run without dependencies. There is probably an error in the source code. Try building %s to reveal it.",
-                invokingRule.getUnflavoredBuildTarget().toString()));
+        if (!(e.getCause() instanceof StopCompilation)) {
+          throw new HumanReadableException(
+              e,
+              String.format(
+                  "The compiler crashed when run without dependencies. There is probably an error in the source code. Try building %s to reveal it.",
+                  invokingRule.getUnflavoredBuildTarget().toString()));
+        }
+
+        // StopCompilation is what we use to break out of compile early when generating the ABI jar
       }
-      frontendRunAttempted = true;
 
       debugLogDiagnostics();
       if (!buildSuccessful()) {
@@ -182,7 +181,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     try {
-      invokeCompiler();
+      // Invoke the compilation and inspect the result.
+      BuckJavacTaskProxy javacTask = getJavacTask();
+      javacTask.call();
 
       debugLogDiagnostics();
 
@@ -213,51 +214,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
       // be using it.
       BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
-    }
-  }
-
-  public void invokeCompiler() throws IOException {
-    try {
-      // Invoke the compilation and inspect the result.
-      BuckJavacTaskProxy javacTask = getJavacTask();
-      if (!frontendRunAttempted) {
-        javacTask.parse();
-        // JavacTask.call would stop between these phases if there were an error, so we do too.
-        if (buildSuccessful()) {
-          javacTask.enter();
-        }
-      }
-      // JavacTask.generate will still try to run analyze even if enter failed, and in some cases
-      // that can actually crash the compiler, so we make sure that it doesn't happen.
-      if (buildSuccessful()) {
-        javacTask.generate();
-      }
-    } catch (Throwable t) {
-      // When invoking JavacTask.compile, javac itself catches all exceptions. (See the catch
-      // blocks beginning at
-      // http://hg.openjdk.java.net/jdk8u/jdk8u/langtools/file/9986bf97a48d/src/share/classes/com/sun/tools/javac/main/Main.java#l539)
-      // This replicates some of that logic.
-      switch (t.getClass().getName()) {
-        case "java.io.IOException":
-        case "java.lang.OutOfMemoryError":
-        case "java.lang.StackOverflowError":
-        case "com.sun.tools.javac.util.FatalError":
-          Throwables.propagateIfPossible(t, IOException.class);
-          throw new AssertionError("Should never get here.");
-        case "com.sun.tools.javac.processing.AnnotationProcessingError":
-        case "com.sun.tools.javac.util.ClientCodeException":
-        case "com.sun.tools.javac.util.PropagatedException":
-          Throwables.propagateIfPossible(t.getCause(), IOException.class);
-          throw new RuntimeException(t.getCause());
-        default:
-          if (buildSuccessful()) {
-            Throwables.propagateIfPossible(t, IOException.class);
-            throw new RuntimeException(t);
-          }
-
-          // An error was already reported, so we need not do anything.
-          return;
-      }
     }
   }
 
@@ -445,8 +401,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
         boolean hasZipFileBeenUsed = false;
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            entries.hasMoreElements();
-            ) {
+            entries.hasMoreElements(); ) {
           ZipEntry entry = entries.nextElement();
           if (!entry.getName().endsWith(".java")) {
             continue;
