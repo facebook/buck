@@ -224,7 +224,11 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
               },
               executorService);
 
-      fileMaterializationFuturesByFileHashEntry.put(fileHashEntry, materializationFuture);
+      ListenableFuture<?> prevValue =
+          fileMaterializationFuturesByFileHashEntry.put(fileHashEntry, materializationFuture);
+
+      Preconditions.checkState(prevValue == null, "must not override prev value");
+
       return materializationFuture;
     }
   }
