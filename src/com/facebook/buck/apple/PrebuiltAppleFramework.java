@@ -114,6 +114,16 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
+  public boolean isCacheable() {
+    // Frameworks on macOS include symbolic links which are not preserved when cached.
+    // When the prebuilt framework target gets fetched from the cache, it includes
+    // duplicate resources which means that the bundle cannot be signed anymore due
+    // failing internal checks in Apple's `codesign` tool. Since prebuilt frameworks
+    // are already built, not caching them is okay.
+    return false;
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     // This file is copied rather than symlinked so that when it is included in an archive zip and
