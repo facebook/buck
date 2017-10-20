@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
@@ -39,12 +40,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
+  private static final Path METADATA_DIR = Paths.get("META-INF");
+
   private final ProjectFilesystem projectFilesystem;
   private final SourcePathRuleFinder ruleFinder;
   private final BuildTarget libraryTarget;
@@ -135,6 +139,21 @@ public class JarBuildStepsFactory
     // a hash set is intentionally used to achieve constant time look-up
     return abiClasspath.getArchiveMembers(pathResolver).collect(MoreCollectors.toImmutableSet())
         ::contains;
+  }
+
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+    // Annotation processors might enumerate all files under a certain path and then generate
+    // code based on that list (without actually reading the files), making the list of files
+    // itself a used dependency that must be part of the dependency-based key. We don't
+    // currently have the instrumentation to detect such enumeration perfectly, but annotation
+    // processors are most commonly looking for files under META-INF, so as a stopgap we add
+    // the listing of META-INF to the rule key.
+    return (SourcePath path) ->
+        (path instanceof ArchiveMemberSourcePath)
+            && pathResolver
+                .getRelativeArchiveMemberPath(path)
+                .getMemberPath()
+                .startsWith(METADATA_DIR);
   }
 
   public ImmutableList<Step> getBuildStepsForAbiJar(

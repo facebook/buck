@@ -12,6 +12,7 @@ java_library(
     name = "lib",
     srcs = [
         "Lib.java",
+        "Lib2.java",
     ],
     plugins = [
         ":ap",

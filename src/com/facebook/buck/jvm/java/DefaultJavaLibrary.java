@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -91,8 +90,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         SupportsDependencyFileRuleKey,
         SupportsPipelining<JavacPipelineState>,
         JavaLibraryWithTests {
-
-  private static final Path METADATA_DIR = Paths.get("META-INF");
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   @AddToRuleKey private final Optional<String> mavenCoords;
@@ -398,18 +395,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    // Annotation processors might enumerate all files under a certain path and then generate
-    // code based on that list (without actually reading the files), making the list of files
-    // itself a used dependency that must be part of the dependency-based key. We don't
-    // currently have the instrumentation to detect such enumeration perfectly, but annotation
-    // processors are most commonly looking for files under META-INF, so as a stopgap we add
-    // the listing of META-INF to the rule key.
-    return (SourcePath path) ->
-        (path instanceof ArchiveMemberSourcePath)
-            && pathResolver
-                .getRelativeArchiveMemberPath(path)
-                .getMemberPath()
-                .startsWith(METADATA_DIR);
+    return jarBuildStepsFactory.getExistenceOfInterestPredicate(pathResolver);
   }
 
   @Override
