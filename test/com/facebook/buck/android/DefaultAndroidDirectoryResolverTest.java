@@ -47,10 +47,7 @@ public class DefaultAndroidDirectoryResolverTest {
   public void getAbsentSdkNdk() {
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of(),
-            Optional.empty(),
-            Optional.empty());
+            tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(Optional.empty(), resolver.getSdkOrAbsent());
     assertEquals(Optional.empty(), resolver.getNdkOrAbsent());
@@ -60,10 +57,7 @@ public class DefaultAndroidDirectoryResolverTest {
   public void throwAtAbsentSdk() {
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of(),
-            Optional.empty(),
-            Optional.empty());
+            tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(DefaultAndroidDirectoryResolver.SDK_NOT_FOUND_MESSAGE);
@@ -74,10 +68,7 @@ public class DefaultAndroidDirectoryResolverTest {
   public void throwAtAbsentBuildTools() {
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of(),
-            Optional.empty(),
-            Optional.empty());
+            tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(DefaultAndroidDirectoryResolver.TOOLS_NEED_SDK_MESSAGE);
@@ -88,10 +79,7 @@ public class DefaultAndroidDirectoryResolverTest {
   public void throwAtAbsentNdk() {
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of(),
-            Optional.empty(),
-            Optional.empty());
+            tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(DefaultAndroidDirectoryResolver.NDK_NOT_FOUND_MESSAGE);
@@ -105,14 +93,14 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", file.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
-        "Environment variable 'ANDROID_SDK' points to a path that is not a directory: '"
-            + file
-            + "'.");
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ANDROID_SDK",
+            file));
     resolver.getSdkOrThrow();
   }
 
@@ -123,14 +111,14 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", file.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
-        "Environment variable 'ANDROID_NDK' points to a path that is not a directory: '"
-            + file
-            + "'.");
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ANDROID_NDK",
+            file));
     resolver.getNdkOrThrow();
   }
 
@@ -141,8 +129,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -159,8 +146,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.of("r9e"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r9e").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -177,8 +163,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of(""));
+            FakeAndroidBuckConfig.builder().setNdkVersion(" ").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(NDK_TARGET_VERSION_IS_EMPTY_MESSAGE);
@@ -192,8 +177,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of(""));
+            FakeAndroidBuckConfig.builder().setNdkVersion(" ").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -208,8 +192,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.of("r9d"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r9d").build());
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
 
@@ -223,8 +206,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.of("11.2"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("11.2").build());
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
   }
@@ -236,8 +218,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.of("r9"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r9").build());
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
 
@@ -250,8 +231,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.of("11"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("11").build());
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
   }
@@ -263,8 +243,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
 
@@ -277,8 +256,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
   }
@@ -290,17 +268,13 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(ndkDir, resolver.getNdkOrAbsent().get());
 
     resolver =
         new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of(),
-            Optional.empty(),
-            Optional.empty());
+            tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(Optional.empty(), resolver.getNdkOrAbsent());
   }
@@ -320,8 +294,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of("r9b"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r9b").build());
 
     assertEquals(expectedPath, resolver.getNdkOrThrow());
   }
@@ -340,8 +313,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of("r42z"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r42z").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -365,8 +337,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of("13"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("13").build());
 
     assertEquals(expectedPath, resolver.getNdkOrThrow());
   }
@@ -386,8 +357,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(expectedPath, resolver.getNdkOrThrow());
   }
@@ -399,8 +369,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            Optional.empty(),
-            Optional.of("r9e"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r9e").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -419,14 +388,12 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of("r9a"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r9a").build());
     DefaultAndroidDirectoryResolver resolver2 =
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of("r9b"));
+            FakeAndroidBuckConfig.builder().setNdkVersion("r9b").build());
 
     assertNotEquals(resolver1, resolver2);
   }
@@ -438,8 +405,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            Optional.empty(),
-            Optional.of(""));
+            FakeAndroidBuckConfig.builder().setNdkVersion(" ").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(NDK_TARGET_VERSION_IS_EMPTY_MESSAGE);
@@ -454,8 +420,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
     assertThat(resolver.getBuildToolsOrThrow().getFileName().toString(), equalTo("platform-tools"));
   }
 
@@ -467,8 +432,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertThat(resolver.getBuildToolsOrThrow().getFileName().toString(), equalTo("android-4.2.2"));
   }
@@ -481,8 +445,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(), equalTo("build-tools-17.2.2"));
@@ -496,8 +459,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("foobar-17.2.2");
@@ -514,8 +476,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -535,8 +496,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertThat(resolver.getBuildToolsOrThrow().getFileName().toString(), equalTo("23.0.0_rc1"));
   }
@@ -549,8 +509,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertThat(resolver.getBuildToolsOrThrow().getFileName().toString(), equalTo("23.0.0_rc1"));
   }
@@ -570,8 +529,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertThat(resolver.getBuildToolsOrThrow().getFileName().toString(), equalTo("17.0.0"));
   }
@@ -585,8 +543,7 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.of("17.0.0"),
-            Optional.empty());
+            FakeAndroidBuckConfig.builder().setBuildToolsVersion("17.0.0").build());
 
     assertThat(resolver.getBuildToolsOrThrow().getFileName().toString(), equalTo("17.0.0"));
   }
@@ -599,12 +556,121 @@ public class DefaultAndroidDirectoryResolverTest {
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-            Optional.of("2.0.0"),
-            Optional.empty());
+            FakeAndroidBuckConfig.builder().setBuildToolsVersion("2.0.0").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("2.0.0");
     resolver.getBuildToolsOrThrow();
+  }
+
+  @Test
+  public void testGetSdkFromBuckconfig() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of(),
+            FakeAndroidBuckConfig.builder().setSdkPath(sdkDir.toString()).build());
+
+    assertEquals(sdkDir, resolver.getSdkOrThrow());
+  }
+
+  @Test
+  public void testSdkFromEnvironmentSupercedesBuckconfig() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_SDK", sdkDir.resolve("also-wrong").toString()),
+            FakeAndroidBuckConfig.builder().setSdkPath(sdkDir.toString()).build());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ANDROID_SDK",
+            sdkDir.resolve("also-wrong")));
+    resolver.getSdkOrThrow();
+  }
+
+  @Test
+  public void testGetNdkFromBuckconfig() throws IOException {
+    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of(),
+            FakeAndroidBuckConfig.builder()
+                .setNdkVersion("r9d")
+                .setNdkPath(ndkDir.toString())
+                .build());
+
+    assertEquals(ndkDir, resolver.getNdkOrThrow());
+
+    resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of(),
+            FakeAndroidBuckConfig.builder()
+                .setNdkVersion("r9d")
+                .setNdkRepositoryPath(tmpDir.getRoot().toString())
+                .build());
+    assertEquals(ndkDir, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void testErrorMessageFromBuckconfigNdk() throws IOException {
+    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of(),
+            FakeAndroidBuckConfig.builder()
+                .setNdkVersion("r9d")
+                .setNdkPath(ndkDir.resolve("wrong").toString())
+                .build());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ndk.ndk_path",
+            ndkDir.resolve("wrong")));
+    resolver.getNdkOrThrow();
+
+    resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of(),
+            FakeAndroidBuckConfig.builder()
+                .setNdkVersion("r9d")
+                .setNdkRepositoryPath(ndkDir.resolve("also-wrong").toString())
+                .build());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ndk.ndk_repository_path",
+            ndkDir.resolve("also-wrong")));
+    resolver.getNdkOrThrow();
+  }
+
+  @Test
+  public void testEnvironmentVariableOverridesNdkConfig() throws IOException {
+    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK", ndkDir.resolve("really-wrong").toString()),
+            FakeAndroidBuckConfig.builder()
+                .setNdkVersion("r9d")
+                .setNdkPath(ndkDir.toString())
+                .build());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ANDROID_NDK",
+            ndkDir.resolve("really-wrong")));
+    resolver.getNdkOrThrow();
   }
 
   private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)

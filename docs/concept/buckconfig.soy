@@ -230,6 +230,19 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'android' /}
+  {param name: 'sdk_path' /}
+  {param example_value: '/Library/Android/sdk' /}
+  {param description}
+    This specifies the absolute path to the Android SDK that all Android code in the project should
+    be built against.  This is equivalent to setting the environment variable
+    <code>ANDROID_SDK=/Library/Android/sdk</code>. The environment variables
+    <code>ANDROID_SDK</code> and <code>ANDROID_HOME</code> both supercede the buckconfig setting.
+    The default is empty.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'android' /}
   {param name: 'target' /}
   {param example_value: 'Google Inc.:Google APIs:21' /}
   {param description}
@@ -2495,6 +2508,30 @@ your <code>.buckjavaargs</code> file</a>:
     Pkg.Desc = Android NDK
     Pkg.Revision = 13.1.3345770</pre>{/literal}
     <p>You need to put "13.1.3345770" in <code>ndk_version</code>.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'ndk_path' /}
+  {param example_value: '/Library/Android/ndk/r10c' /}
+  {param description}
+    This specifies the absolute path to the Android NDK. This is equivalent to setting the
+    environment variable <code>ANDROID_NDK=/Library/Android/ndk/r10c</code>. The environment
+    variables <code>ANDROID_NDK</code> and <code>NDK_HOME</code> both supercede the buckconfig
+    setting. The default is empty.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'ndk_repository_path' /}
+  {param example_value: '/Library/Android/ndk' /}
+  {param description}
+    This specifies the absolute path to a directory containing versions of the Android NDK. This is
+    equivalent to setting the environment variable
+    <code>ANDROID_NDK_REPOSITORY=/Library/Android/ndk</code>. The environment variable supercedes
+    the buckconfig setting. The default is empty.
   {/param}
 {/call}
 

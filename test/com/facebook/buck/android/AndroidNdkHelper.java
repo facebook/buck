@@ -61,8 +61,7 @@ public class AndroidNdkHelper {
         new DefaultAndroidDirectoryResolver(
             workspace.asCell().getRoot().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
-            Optional.empty(),
-            Optional.empty());
+            DEFAULT_CONFIG);
 
     Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
     assertTrue(ndkPath.isPresent());

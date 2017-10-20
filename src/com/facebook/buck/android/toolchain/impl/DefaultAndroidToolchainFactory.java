@@ -39,10 +39,7 @@ public class DefaultAndroidToolchainFactory implements ToolchainFactory<AndroidT
 
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(),
-            environment,
-            androidBuckConfig.getBuildToolsVersion(),
-            androidBuckConfig.getNdkVersion());
+            filesystem.getRootPath().getFileSystem(), environment, androidBuckConfig);
     return createToolchain(androidBuckConfig, androidDirectoryResolver);
   }
 

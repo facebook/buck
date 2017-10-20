@@ -324,12 +324,12 @@ For some distros, the default packages may be older than what you would like. In
 </blockquote>
 </p>
 
-<span><block class="windows linux android" /></span>
+<span><block class="mac linux windows android" /></span>
 
-<h3>Environment Variables</h3>
+<h3>Android SDK and NDK</h3>
 
 <p>
-  You will need to tell Buck where to find our SDK and NDK.  Buck will look at the value of the <code>ANDROID_HOME</code> environment variable to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code> to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> to find an appropriate NDK from a directory containing multiple NDK versions.
+  You will need to tell Buck where to find our SDK and NDK.  Buck will look at the value of the <code>ANDROID_SDK</code>, <code>ANDROID_HOME</code>, or {call buckconfig.android_sdk_path /} to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code>, <code>NDK_HOME</code>, or {call buckconfig.ndk_ndk_path /} to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> or {call buckconfig.ndk_ndk_repository_path /} to find an appropriate NDK from a directory containing multiple NDK versions.
 </p>
 
 <span><block class="windows linux android other" /></span>
@@ -545,7 +545,7 @@ ANDROID_SDK=&lt;path-to-sdk&gt;
 {/literal}
 
 <p>
-  Set the missing variables to the locations of Android SDK and Android NDK.
+  Set the missing variables to the locations of Android SDK and Android NDK or set the paths in your {call buck.concept_buckconfig /} file.
 </p>
 
 <p>

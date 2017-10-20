@@ -44,8 +44,20 @@ public class AndroidBuckConfig {
     return delegate.getValue("android", "build_tools_version");
   }
 
+  public Optional<String> getSdkPath() {
+    return delegate.getValue("android", "sdk_path");
+  }
+
   public Optional<String> getNdkVersion() {
     return delegate.getValue("ndk", "ndk_version");
+  }
+
+  public Optional<String> getNdkPath() {
+    return delegate.getValue("ndk", "ndk_path");
+  }
+
+  public Optional<String> getNdkRepositoryPath() {
+    return delegate.getValue("ndk", "ndk_repository_path");
   }
 
   public Optional<String> getNdkAppPlatform() {

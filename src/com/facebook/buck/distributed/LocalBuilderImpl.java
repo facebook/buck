@@ -107,8 +107,7 @@ public class LocalBuilderImpl implements LocalBuilder {
         new DefaultAndroidDirectoryResolver(
             args.getRootCell().getFilesystem().getRootPath().getFileSystem(),
             args.getRemoteRootCellConfig().getEnvironment(),
-            androidConfig.getBuildToolsVersion(),
-            androidConfig.getNdkVersion());
+            androidConfig);
     return new AndroidPlatformTargetSupplier(dirResolver, androidConfig);
   }
 

@@ -61,8 +61,7 @@ public class NdkLibraryTest {
         new DefaultAndroidDirectoryResolver(
             projectFilesystem.getRootPath().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.getDefaultPlatformTarget(

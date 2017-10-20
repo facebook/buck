@@ -642,10 +642,7 @@ public final class Main {
       AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
       AndroidDirectoryResolver androidDirectoryResolver =
           new DefaultAndroidDirectoryResolver(
-              filesystem.getRootPath().getFileSystem(),
-              clientEnvironment,
-              androidBuckConfig.getBuildToolsVersion(),
-              androidBuckConfig.getNdkVersion());
+              filesystem.getRootPath().getFileSystem(), clientEnvironment, androidBuckConfig);
 
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 

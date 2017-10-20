@@ -61,8 +61,7 @@ public class BadAndroidConfigIntegrationTest {
         processResult.getStderr(),
         allOf(
             containsString("Build failed:"),
-            containsString(
-                "Environment variable 'ANDROID_SDK' points to a path that is not a directory:"),
+            containsString("'ANDROID_SDK'"),
             anyOf(
                 containsString("'/this/directory/does/not/exist'"),
                 containsString("'\\this\\directory\\does\\not\\exist'"))));

@@ -21,7 +21,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class AssumeAndroidPlatform {
 
@@ -42,7 +41,6 @@ public class AssumeAndroidPlatform {
     return new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.empty(),
-        Optional.empty());
+        AndroidNdkHelper.DEFAULT_CONFIG);
   }
 }
