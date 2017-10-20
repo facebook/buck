@@ -891,8 +891,7 @@ public class ParserTest {
                 "[buildfile]",
                 "includes = //java/com/facebook/defaultIncludeFile",
                 "[project]",
-                "check_package_boundary = false",
-                "temp_files = ''")
+                "check_package_boundary = false")
             .build();
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
