@@ -28,10 +28,6 @@
 # bootstrapper test is run in the source tree
 /test/com/facebook/buck/cli/bootstrapper/testdata/old_guava/buck-out/
 
-# Eclipse
-/.settings/
-/.apt_generated/
-
 # IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
 /.idea/ant.xml
 /.idea/dictionaries
