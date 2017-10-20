@@ -60,6 +60,7 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
@@ -78,6 +79,9 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
             javaSourceFilePaths.stream().map(Path::toString).collect(Collectors.toList()),
             pathToSrcsList.toString(),
             workingDirectory.toString(),
+            libraryJarParameters != null
+                ? JarParametersSerializer.serialize(libraryJarParameters)
+                : null,
             pluginFields
                 .stream()
                 .map(JavacPluginJsr199FieldsSerializer::serialize)

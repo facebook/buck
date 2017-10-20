@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -57,7 +56,4 @@ abstract class AbstractJavacExecutionContext {
   public abstract ProcessExecutor getProcessExecutor();
 
   public abstract ImmutableList<Path> getAbsolutePathsForInputs();
-
-  /** Setting this to non-absent value enables direct to jar output. */
-  public abstract Optional<JarParameters> getDirectToJarParameters();
 }

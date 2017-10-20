@@ -118,8 +118,7 @@ public class JavacStep implements Step {
               usedClassesFileWriter,
               firstOrderContext.getEnvironment(),
               firstOrderContext.getProcessExecutor(),
-              getAbsolutePathsForJavacInputs(getJavac()),
-              jarParameters);
+              getAbsolutePathsForJavacInputs(getJavac()));
       ImmutableList<JavacPluginJsr199Fields> pluginFields =
           ImmutableList.copyOf(
               javacOptions
@@ -142,6 +141,7 @@ public class JavacStep implements Step {
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
+                  jarParameters.orElse(null),
                   compilerParameters.getAbiGenerationMode(),
                   compilerParameters.getSourceOnlyAbiRuleInfo())) {
         if (abiJar != null) {

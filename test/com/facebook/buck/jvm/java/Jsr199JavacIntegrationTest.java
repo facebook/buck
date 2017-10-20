@@ -130,8 +130,7 @@ public class Jsr199JavacIntegrationTest {
             NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            ImmutableList.of(),
-            Optional.empty());
+            ImmutableList.of());
 
     int exitCode =
         javac
@@ -143,6 +142,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                null,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -183,8 +183,7 @@ public class Jsr199JavacIntegrationTest {
             NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            ImmutableList.of(),
-            Optional.empty());
+            ImmutableList.of());
 
     int exitCode =
         javac
@@ -196,6 +195,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                null,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -283,8 +283,7 @@ public class Jsr199JavacIntegrationTest {
             NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            ImmutableList.of(fakeJavacJar),
-            Optional.empty());
+            ImmutableList.of(fakeJavacJar));
 
     boolean caught = false;
 
@@ -298,6 +297,7 @@ public class Jsr199JavacIntegrationTest {
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
+              null,
               AbiGenerationMode.CLASS,
               null)
           .buildClasses();

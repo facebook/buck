@@ -183,8 +183,10 @@ public class ExternalJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
+    Preconditions.checkArgument(libraryJarParameters == null);
     return new Invocation() {
       @Override
       public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {

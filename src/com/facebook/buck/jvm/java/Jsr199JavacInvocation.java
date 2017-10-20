@@ -69,6 +69,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
+  @Nullable private final JarParameters libraryJarParameters;
   @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
   private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
@@ -84,6 +85,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
+      @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     this.compilerConstructor = compilerConstructor;
@@ -93,6 +95,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
+    this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
     this.ruleInfo = ruleInfo;
   }
@@ -108,7 +111,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
             try {
-              JarBuilder jarBuilder = newJarBuilder().setShouldHashEntries(true);
+              JarBuilder jarBuilder =
+                  newJarBuilder(Preconditions.checkNotNull(libraryJarParameters))
+                      .setShouldHashEntries(true);
               StubGenerator stubGenerator =
                   new StubGenerator(
                       getTargetVersion(options),
@@ -196,17 +201,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         return 1;
       }
 
-      if (!context.getDirectToJarParameters().isPresent()) {
+      if (libraryJarParameters == null) {
         return 0;
       }
 
-      return newJarBuilder()
+      return newJarBuilder(libraryJarParameters)
           .createJarFile(
               Preconditions.checkNotNull(
                   context
                       .getProjectFilesystem()
-                      .getPathForRelativePath(
-                          context.getDirectToJarParameters().get().getJarPath())));
+                      .getPathForRelativePath(libraryJarParameters.getJarPath())));
     } catch (IOException e) {
       LOG.error(e);
       throw new HumanReadableException("IOException during compilation: ", e.getMessage());
@@ -271,16 +275,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       addCloseable(standardFileManager);
 
       StandardJavaFileManager fileManager;
-      if (context.getDirectToJarParameters().isPresent()) {
+      if (libraryJarParameters != null) {
         Path directToJarPath =
             context
                 .getProjectFilesystem()
-                .getPathForRelativePath(context.getDirectToJarParameters().get().getJarPath());
+                .getPathForRelativePath(libraryJarParameters.getJarPath());
         inMemoryFileManager =
             new JavaInMemoryFileManager(
                 standardFileManager,
                 directToJarPath,
-                context.getDirectToJarParameters().get().getRemoveEntryPredicate());
+                libraryJarParameters.getRemoveEntryPredicate());
         addCloseable(inMemoryFileManager);
         fileManager = inMemoryFileManager;
       } else {
@@ -353,23 +357,17 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     return javacTask;
   }
 
-  private JarBuilder newJarBuilder() throws IOException {
+  private JarBuilder newJarBuilder(JarParameters jarParameters) throws IOException {
     JarBuilder jarBuilder = new JarBuilder();
     Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
     return jarBuilder
         .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
         .setEntriesToJar(
-            context
-                .getDirectToJarParameters()
-                .get()
-                .getEntriesToJar()
-                .stream()
-                .map(context.getProjectFilesystem()::resolve))
-        .setMainClass(context.getDirectToJarParameters().get().getMainClass().orElse(null))
-        .setManifestFile(context.getDirectToJarParameters().get().getManifestFile().orElse(null))
+            jarParameters.getEntriesToJar().stream().map(context.getProjectFilesystem()::resolve))
+        .setMainClass(jarParameters.getMainClass().orElse(null))
+        .setManifestFile(jarParameters.getManifestFile().orElse(null))
         .setShouldMergeManifests(true)
-        .setRemoveEntryPredicate(
-            context.getDirectToJarParameters().get().getRemoveEntryPredicate());
+        .setRemoveEntryPredicate(jarParameters.getRemoveEntryPredicate());
   }
 
   @Override

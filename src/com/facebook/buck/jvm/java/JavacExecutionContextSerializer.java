@@ -34,7 +34,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class JavacExecutionContextSerializer {
 
@@ -48,7 +47,6 @@ public class JavacExecutionContextSerializer {
   private static final String ENVIRONMENT = "env";
   private static final String PROCESS_EXECUTOR = "process_executor";
   private static final String ABSOLUTE_PATHS_FOR_INPUTS = "absolute_paths_for_inputs";
-  private static final String DIRECT_TO_JAR_PARAMETERS = "direct_to_jar_parameters";
 
   public static ImmutableMap<String, Object> serialize(JavacExecutionContext context) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
@@ -69,11 +67,6 @@ public class JavacExecutionContextSerializer {
         ABSOLUTE_PATHS_FOR_INPUTS,
         ImmutableList.copyOf(
             context.getAbsolutePathsForInputs().stream().map(Path::toString).iterator()));
-    if (context.getDirectToJarParameters().isPresent()) {
-      builder.put(
-          DIRECT_TO_JAR_PARAMETERS,
-          JarParametersSerializer.serialize(context.getDirectToJarParameters().get()));
-    }
 
     return builder.build();
   }
@@ -118,15 +111,6 @@ public class JavacExecutionContextSerializer {
                 .map(s -> Paths.get(s))
                 .iterator());
 
-    Optional<JarParameters> directToJarParameters = Optional.empty();
-    if (data.containsKey(DIRECT_TO_JAR_PARAMETERS)) {
-      directToJarParameters =
-          Optional.of(
-              JarParametersSerializer.deserialize(
-                  (Map<String, Object>)
-                      Preconditions.checkNotNull(data.get(DIRECT_TO_JAR_PARAMETERS))));
-    }
-
     return JavacExecutionContext.of(
         eventSink,
         stdErr,
@@ -142,7 +126,6 @@ public class JavacExecutionContextSerializer {
                 data.get(ENVIRONMENT),
                 "Missing environment when deserializing JavacExectionContext"),
         processExecutor,
-        absolutePathsForInputs,
-        directToJarParameters);
+        absolutePathsForInputs);
   }
 }

@@ -19,6 +19,8 @@ package com.facebook.buck.oop_javac;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.AbiGenerationMode;
 import com.facebook.buck.jvm.java.JarBackedJavac;
+import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.JarParametersSerializer;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacExecutionContext;
 import com.facebook.buck.jvm.java.JavacExecutionContextSerializer;
@@ -90,6 +92,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
       @Nullable String workingDirectoryAsString,
+      @Nullable Map<String, Object> serializedLibraryJarParameters,
       List<Map<String, Object>> pluginFields,
       String abiGenerationModeAsString) {
 
@@ -127,6 +130,11 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
     Path pathToSrcsList = Paths.get(pathToSrcsListAsString);
     Path workingDirectory = Paths.get(workingDirectoryAsString);
 
+    JarParameters libraryJarParameters =
+        serializedLibraryJarParameters != null
+            ? JarParametersSerializer.deserialize(serializedLibraryJarParameters)
+            : null;
+
     List<JavacPluginJsr199Fields> deserializedFields =
         pluginFields
             .stream()
@@ -143,6 +151,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
             javaSourceFilePaths,
             pathToSrcsList,
             workingDirectory,
+            libraryJarParameters,
             AbiGenerationMode.valueOf(abiGenerationModeAsString),
             null);
     int invocationId = nextInvocationId.getAndIncrement();
