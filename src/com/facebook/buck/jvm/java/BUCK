@@ -193,7 +193,6 @@ java_immutables_library(
         "LoggingJarBuilderObserver.java",
         "MavenPublishable.java",
         "MaybeRequiredForSourceOnlyAbi.java",
-        "NoOpClassUsageFileWriter.java",
         "OptionsConsumer.java",
         "OutOfProcessConnectionFactory.java",
         "OutOfProcessJarBackedJavac.java",

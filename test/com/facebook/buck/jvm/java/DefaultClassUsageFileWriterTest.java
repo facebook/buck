@@ -67,24 +67,26 @@ public class DefaultClassUsageFileWriterTest {
       fakeFileManager.addFile(testTwoJarPath, fileName, JavaFileObject.Kind.CLASS);
     }
 
-    DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter(outputOne);
+    DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter();
+    ClassUsageTracker trackerOne = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = writerOne.wrapFileManager(fakeFileManager);
+      StandardJavaFileManager wrappedFileManager = trackerOne.wrapFileManager(fakeFileManager);
       for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
         javaFileObject.openInputStream();
       }
     }
-    writerOne.writeFile(filesystem, cellPathResolver);
+    writerOne.writeFile(trackerOne, outputOne, filesystem, cellPathResolver);
 
-    DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter(outputTwo);
+    DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter();
+    ClassUsageTracker trackerTwo = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = writerTwo.wrapFileManager(fakeFileManager);
+      StandardJavaFileManager wrappedFileManager = trackerTwo.wrapFileManager(fakeFileManager);
       Iterable<JavaFileObject> fileObjects = wrappedFileManager.list(null, null, null, false);
       for (JavaFileObject javaFileObject : FluentIterable.from(fileObjects).toList().reverse()) {
         javaFileObject.openInputStream();
       }
     }
-    writerTwo.writeFile(filesystem, cellPathResolver);
+    writerTwo.writeFile(trackerTwo, outputTwo, filesystem, cellPathResolver);
 
     assertEquals(
         new String(Files.readAllBytes(outputOne)), new String(Files.readAllBytes(outputTwo)));
@@ -110,14 +112,15 @@ public class DefaultClassUsageFileWriterTest {
     fakeFileManager.addFile(testTwoJarPath, "AwayCellClass", JavaFileObject.Kind.CLASS);
     fakeFileManager.addFile(externalJarPath, "ExternalClass", JavaFileObject.Kind.CLASS);
 
-    DefaultClassUsageFileWriter writer = new DefaultClassUsageFileWriter(outputOne);
+    DefaultClassUsageFileWriter writer = new DefaultClassUsageFileWriter();
+    ClassUsageTracker trackerOne = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = writer.wrapFileManager(fakeFileManager);
+      StandardJavaFileManager wrappedFileManager = trackerOne.wrapFileManager(fakeFileManager);
       for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
         javaFileObject.openInputStream();
       }
     }
-    writer.writeFile(homeFs, cellPathResolver);
+    writer.writeFile(trackerOne, outputOne, homeFs, cellPathResolver);
 
     // The xcell file should appear relative to the "home" filesystem, and the external class
     // which is not under any cell in the project should not appear at all.

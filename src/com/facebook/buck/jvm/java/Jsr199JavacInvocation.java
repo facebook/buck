@@ -76,7 +76,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
   @Nullable private BuckJavacTaskProxy javacTask;
-  private final ClassUsageFileWriter classUsageFileWriter;
+  @Nullable private ClassUsageTracker classUsageTracker;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
 
   public Jsr199JavacInvocation(
@@ -99,11 +99,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
-    this.classUsageFileWriter =
-        trackClassUsage
-            ? new DefaultClassUsageFileWriter(
-                CompilerParameters.getDepFilePath(invokingRule, context.getProjectFilesystem()))
-            : NoOpClassUsageFileWriter.instance();
+    classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
     this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
@@ -205,8 +201,14 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       debugLogDiagnostics();
 
       if (buildSuccessful()) {
-        classUsageFileWriter.writeFile(
-            context.getProjectFilesystem(), context.getCellPathResolver());
+        if (classUsageTracker != null) {
+          new DefaultClassUsageFileWriter()
+              .writeFile(
+                  classUsageTracker,
+                  CompilerParameters.getDepFilePath(invokingRule, context.getProjectFilesystem()),
+                  context.getProjectFilesystem(),
+                  context.getCellPathResolver());
+        }
       } else {
         reportDiagnosticsToUser();
         return 1;
@@ -319,12 +321,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       PluginClassLoaderFactory loaderFactory =
           PluginLoader.newFactory(context.getClassLoaderCache());
 
+      StandardJavaFileManager wrappedFileManager = fileManager;
+      if (classUsageTracker != null) {
+        wrappedFileManager = classUsageTracker.wrapFileManager(fileManager);
+      }
       javacTask =
           BuckJavacTaskProxy.getTask(
               loaderFactory,
               compiler,
               compilerOutputWriter,
-              classUsageFileWriter.wrapFileManager(fileManager),
+              wrappedFileManager,
               diagnostics,
               options,
               classNamesForAnnotationProcessing,
