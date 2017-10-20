@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -58,8 +59,15 @@ class BuildRulePipelinesRunner {
     pipelineStage.setRuleStepRunnerFactory(ruleStepRunnerFactory);
   }
 
+  /**
+   * Removes a rule from pipeline eligibility. If a pipeline is already running the rule, waits for
+   * it to complete before returning.
+   */
   public void removeRule(SupportsPipelining<?> rule) {
-    rules.remove(rule);
+    BuildRulePipelineStage<? extends RulePipelineState> pipelineStage = rules.remove(rule);
+    if (pipelineStage != null && pipelineStage.pipelineBuilt()) {
+      pipelineStage.cancelAndWait();
+    }
   }
 
   public boolean runningPipelinesContainRule(SupportsPipelining<?> rule) {
@@ -208,6 +216,17 @@ class BuildRulePipelinesRunner {
 
     public boolean pipelineBuilt() {
       return pipelineState != null;
+    }
+
+    public void cancelAndWait() {
+      // For now there's no cancel (cuz it's not hooked up at all), but we can at least wait
+      try {
+        getFuture().get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (ExecutionException e) { // NOPMD
+        // Ignore; the future is hooked up elsewhere and that location will handle the exceptions
+      }
     }
 
     @Nullable
