@@ -32,7 +32,6 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -141,13 +140,16 @@ public class JavacStep implements Step {
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
+                  jarParameters
+                      .map(
+                          libraryParameters ->
+                              abiJar != null ? libraryParameters.withJarPath(abiJar) : null)
+                      .orElse(null),
                   jarParameters.orElse(null),
                   compilerParameters.getAbiGenerationMode(),
                   compilerParameters.getSourceOnlyAbiRuleInfo())) {
         if (abiJar != null) {
-          declaredDepsBuildResult =
-              invocation.buildSourceAbiJar(
-                  this.filesystem.resolve(Preconditions.checkNotNull(abiJar)));
+          declaredDepsBuildResult = invocation.buildSourceAbiJar();
         } else {
           declaredDepsBuildResult = invocation.buildClasses();
         }

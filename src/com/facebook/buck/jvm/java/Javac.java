@@ -46,6 +46,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo);
@@ -74,8 +75,8 @@ public interface Javac extends RuleKeyAppendable, Tool {
   }
 
   interface Invocation extends AutoCloseable {
-    /** Produces a source ABI jar at the given path. Must be called before {@link #buildClasses} */
-    int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException;
+    /** Produces a source ABI jar. Must be called before {@link #buildClasses} */
+    int buildSourceAbiJar() throws InterruptedException;
 
     int buildClasses() throws InterruptedException;
 

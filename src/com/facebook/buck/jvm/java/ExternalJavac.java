@@ -183,13 +183,16 @@ public class ExternalJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      @Nullable JarParameters abiJarParaameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
+    Preconditions.checkArgument(abiJarParaameters == null);
     Preconditions.checkArgument(libraryJarParameters == null);
+
     return new Invocation() {
       @Override
-      public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
+      public int buildSourceAbiJar() throws InterruptedException {
         throw new UnsupportedOperationException("Cannot build source ABI jar with external javac.");
       }
 

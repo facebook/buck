@@ -143,6 +143,7 @@ public class Jsr199JavacIntegrationTest {
                 pathToSrcsList,
                 Paths.get("working"),
                 null,
+                null,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -195,6 +196,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                null,
                 null,
                 AbiGenerationMode.CLASS,
                 null)
@@ -297,6 +299,7 @@ public class Jsr199JavacIntegrationTest {
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
+              null,
               null,
               AbiGenerationMode.CLASS,
               null)

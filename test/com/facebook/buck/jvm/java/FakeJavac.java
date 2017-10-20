@@ -73,12 +73,13 @@ public class FakeJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     return new Invocation() {
       @Override
-      public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
+      public int buildSourceAbiJar() throws InterruptedException {
         throw new UnsupportedOperationException();
       }
 

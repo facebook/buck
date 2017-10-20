@@ -92,6 +92,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
       @Nullable String workingDirectoryAsString,
+      @Nullable Map<String, Object> serializedAbiJarParameters,
       @Nullable Map<String, Object> serializedLibraryJarParameters,
       List<Map<String, Object>> pluginFields,
       String abiGenerationModeAsString) {
@@ -130,6 +131,11 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
     Path pathToSrcsList = Paths.get(pathToSrcsListAsString);
     Path workingDirectory = Paths.get(workingDirectoryAsString);
 
+    JarParameters abiJarParameters =
+        serializedAbiJarParameters != null
+            ? JarParametersSerializer.deserialize(serializedAbiJarParameters)
+            : null;
+
     JarParameters libraryJarParameters =
         serializedLibraryJarParameters != null
             ? JarParametersSerializer.deserialize(serializedLibraryJarParameters)
@@ -151,6 +157,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
             javaSourceFilePaths,
             pathToSrcsList,
             workingDirectory,
+            abiJarParameters,
             libraryJarParameters,
             AbiGenerationMode.valueOf(abiGenerationModeAsString),
             null);
@@ -161,9 +168,9 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
   }
 
   @Override
-  public int buildSourceAbiJar(int invocationId, String abiJarPath) {
+  public int buildSourceAbiJar(int invocationId) {
     try {
-      return getInvocation(invocationId).buildSourceAbiJar(Paths.get(abiJarPath));
+      return getInvocation(invocationId).buildSourceAbiJar();
     } catch (InterruptedException e) {
       return INTERRUPTED_EXIT_CODE;
     }

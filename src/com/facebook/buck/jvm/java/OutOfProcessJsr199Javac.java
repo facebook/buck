@@ -75,8 +75,8 @@ public abstract class OutOfProcessJsr199Javac implements Javac {
       OutOfProcessJavacConnectionInterface proxy, int interfaceId) {
     return new Invocation() {
       @Override
-      public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
-        return proxy.buildSourceAbiJar(interfaceId, sourceAbiJar.toString());
+      public int buildSourceAbiJar() throws InterruptedException {
+        return proxy.buildSourceAbiJar(interfaceId);
       }
 
       @Override

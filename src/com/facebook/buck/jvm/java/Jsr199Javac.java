@@ -76,6 +76,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
@@ -87,6 +88,7 @@ public abstract class Jsr199Javac implements Javac {
         pluginFields,
         javaSourceFilePaths,
         pathToSrcsList,
+        abiJarParameters,
         libraryJarParameters,
         abiGenerationMode,
         ruleInfo);

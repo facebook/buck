@@ -69,6 +69,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
+  @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
   @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
   private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
@@ -85,6 +86,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
@@ -95,25 +97,25 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
+    this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
     this.ruleInfo = ruleInfo;
   }
 
   @Override
-  public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
+  public int buildSourceAbiJar() throws InterruptedException {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     try {
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
 
+      JarParameters jarParameters = Preconditions.checkNotNull(abiJarParameters);
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
             try {
-              JarBuilder jarBuilder =
-                  newJarBuilder(Preconditions.checkNotNull(libraryJarParameters))
-                      .setShouldHashEntries(true);
+              JarBuilder jarBuilder = newJarBuilder(jarParameters).setShouldHashEntries(true);
               StubGenerator stubGenerator =
                   new StubGenerator(
                       getTargetVersion(options),
@@ -122,7 +124,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       jarBuilder,
                       context.getEventSink());
               stubGenerator.generate(topLevelTypes);
-              jarBuilder.createJarFile(sourceAbiJar);
+              jarBuilder.createJarFile(
+                  context
+                      .getProjectFilesystem()
+                      .getPathForRelativePath(jarParameters.getJarPath()));
               throw new StopCompilation();
             } catch (IOException e) {
               throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
