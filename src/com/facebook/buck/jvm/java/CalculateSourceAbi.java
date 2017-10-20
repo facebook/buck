@@ -124,8 +124,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
-    // TODO: Save javac for later rules in pipeline
-    return getBuildSteps(context, buildableContext);
+    return jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(context, buildableContext, state);
   }
 
   @Override

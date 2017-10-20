@@ -181,6 +181,15 @@ public class JarBuildStepsFactory
     return steps.build();
   }
 
+  public ImmutableList<Step> getPipelinedBuildStepsForAbiJar(
+      BuildContext context,
+      BuildableContext buildableContext,
+      @SuppressWarnings("unused") JavacPipelineState state) {
+    // TODO: Actually use the pipeline
+    return getBuildStepsForAbiJar(
+        context, buildableContext, HasJavaAbi.getSourceAbiJar(libraryTarget));
+  }
+
   public ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
@@ -210,6 +219,14 @@ public class JarBuildStepsFactory
         steps);
 
     return steps.build();
+  }
+
+  public ImmutableList<Step> getPipelinedBuildStepsForLibraryJar(
+      BuildContext context,
+      BuildableContext buildableContext,
+      @SuppressWarnings("unused") JavacPipelineState state) {
+    // TODO: actually use the pipeline
+    return getBuildStepsForLibraryJar(context, buildableContext, libraryTarget);
   }
 
   protected CompilerParameters getCompilerParameters(

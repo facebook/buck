@@ -424,7 +424,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
-    // TODO: Reuse the javac
-    return getBuildSteps(context, buildableContext);
+    return jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
+        context, buildableContext, state);
   }
 }
