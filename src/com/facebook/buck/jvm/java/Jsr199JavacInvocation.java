@@ -152,7 +152,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       }
 
       debugLogDiagnostics();
-      if (!buildSuccessful()) {
+      if (buildSuccessful()) {
+        if (classUsageTracker != null) {
+          new DefaultClassUsageFileWriter()
+              .writeFile(
+                  classUsageTracker,
+                  CompilerParameters.getDepFilePath(invokingRule, context.getProjectFilesystem()),
+                  context.getProjectFilesystem(),
+                  context.getCellPathResolver());
+        }
+      } else {
         reportDiagnosticsToUser();
         return 1;
       }

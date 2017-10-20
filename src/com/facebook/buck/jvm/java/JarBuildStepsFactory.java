@@ -143,16 +143,7 @@ public class JarBuildStepsFactory
     Preconditions.checkArgument(buildTarget.equals(HasJavaAbi.getSourceAbiJar(libraryTarget)));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    CompilerParameters compilerParameters =
-        CompilerParameters.builder()
-            .setClasspathEntriesSourcePaths(
-                compileTimeClasspathSourcePaths, context.getSourcePathResolver())
-            .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
-            .setStandardPaths(buildTarget, projectFilesystem)
-            .setShouldTrackClassUsage(false)
-            .setAbiGenerationMode(abiGenerationMode)
-            .setSourceOnlyAbiRuleInfo(ruleInfo)
-            .build();
+    CompilerParameters compilerParameters = getCompilerParameters(context, buildTarget);
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
@@ -176,17 +167,7 @@ public class JarBuildStepsFactory
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    CompilerParameters compilerParameters =
-        CompilerParameters.builder()
-            .setClasspathEntriesSourcePaths(
-                compileTimeClasspathSourcePaths, context.getSourcePathResolver())
-            .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
-            .setStandardPaths(buildTarget, projectFilesystem)
-            .setShouldTrackClassUsage(trackClassUsage)
-            .setAbiGenerationMode(abiGenerationMode)
-            .setSourceOnlyAbiRuleInfo(ruleInfo)
-            .build();
-
+    CompilerParameters compilerParameters = getCompilerParameters(context, buildTarget);
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
@@ -210,6 +191,19 @@ public class JarBuildStepsFactory
         steps);
 
     return steps.build();
+  }
+
+  protected CompilerParameters getCompilerParameters(
+      BuildContext context, BuildTarget buildTarget) {
+    return CompilerParameters.builder()
+        .setClasspathEntriesSourcePaths(
+            compileTimeClasspathSourcePaths, context.getSourcePathResolver())
+        .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
+        .setStandardPaths(buildTarget, projectFilesystem)
+        .setShouldTrackClassUsage(trackClassUsage)
+        .setAbiGenerationMode(abiGenerationMode)
+        .setSourceOnlyAbiRuleInfo(ruleInfo)
+        .build();
   }
 
   protected ResourcesParameters getResourcesParameters() {
