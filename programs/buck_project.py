@@ -44,11 +44,11 @@ class BuckProject:
     def __init__(self, root):
         self.root = root
         self._buck_out = os.path.join(root, "buck-out")
-        self._buck_out_tmp = os.path.join(self._buck_out, "tmp")
-        makedirs(self._buck_out_tmp)
+        buck_out_tmp = os.path.join(self._buck_out, "tmp")
+        makedirs(buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
         makedirs(self._buck_out_log)
-        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=self._buck_out_tmp)
+        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=buck_out_tmp)
 
         # Only created if buckd is used.
         self.buckd_tmp_dir = None
@@ -93,8 +93,7 @@ class BuckProject:
     def create_buckd_tmp_dir(self):
         if self.buckd_tmp_dir is not None:
             return self.buckd_tmp_dir
-        makedirs(self.buckd_dir)
-        tmp_dir_parent = os.path.join(self._buck_out_tmp, "buckd")
+        tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
         makedirs(tmp_dir_parent)
         self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.",
                                               dir=tmp_dir_parent)
