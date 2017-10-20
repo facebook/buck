@@ -49,8 +49,6 @@ abstract class AbstractJavacExecutionContext {
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
-  public abstract ClassUsageFileWriter getUsedClassesFileWriter();
-
   public abstract ImmutableMap<String, String> getEnvironment();
 
   public abstract ProcessExecutor getProcessExecutor();

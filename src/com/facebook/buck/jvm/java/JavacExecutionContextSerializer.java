@@ -43,7 +43,6 @@ public class JavacExecutionContextSerializer {
   private static final String CELL_PATH_RESOLVER = "cell_path_resolver";
   private static final String JAVA_PACKAGE_FINDER = "java_package_finder";
   private static final String PROJECT_FILE_SYSTEM_ROOT = "project_file_system_root";
-  private static final String CLASS_USAGE_FILE_WRITER = "class_usage_file_writer";
   private static final String ENVIRONMENT = "env";
   private static final String PROCESS_EXECUTOR = "process_executor";
   private static final String ABSOLUTE_PATHS_FOR_INPUTS = "absolute_paths_for_inputs";
@@ -57,9 +56,6 @@ public class JavacExecutionContextSerializer {
     builder.put(
         JAVA_PACKAGE_FINDER, JavaPackageFinderSerializer.serialize(context.getJavaPackageFinder()));
     builder.put(PROJECT_FILE_SYSTEM_ROOT, context.getProjectFilesystem().getRootPath().toString());
-    builder.put(
-        CLASS_USAGE_FILE_WRITER,
-        ClassUsageFileWriterSerializer.serialize(context.getUsedClassesFileWriter()));
     builder.put(ENVIRONMENT, context.getEnvironment());
     builder.put(
         PROCESS_EXECUTOR, ProcessExecutorSerializer.serialize(context.getProcessExecutor()));
@@ -96,10 +92,6 @@ public class JavacExecutionContextSerializer {
         projectFilesystemFactory.createProjectFilesystem(
             Paths.get((String) Preconditions.checkNotNull(data.get(PROJECT_FILE_SYSTEM_ROOT))));
 
-    ClassUsageFileWriter classUsageFileWriter =
-        ClassUsageFileWriterSerializer.deserialize(
-            (Map<String, Object>) Preconditions.checkNotNull(data.get(CLASS_USAGE_FILE_WRITER)));
-
     ProcessExecutor processExecutor =
         ProcessExecutorSerializer.deserialize(
             (Map<String, Object>) Preconditions.checkNotNull(data.get(PROCESS_EXECUTOR)), console);
@@ -120,7 +112,6 @@ public class JavacExecutionContextSerializer {
         javaPackageFinder,
         projectFilesystem,
         projectFilesystemFactory,
-        classUsageFileWriter,
         (Map<String, String>)
             Preconditions.checkNotNull(
                 data.get(ENVIRONMENT),

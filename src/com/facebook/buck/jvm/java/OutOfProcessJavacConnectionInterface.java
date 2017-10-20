@@ -45,6 +45,7 @@ public interface OutOfProcessJavacConnectionInterface {
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
       @Nullable String workingDirectory,
+      boolean trackClassUsage,
       @Nullable Map<String, Object> serializedAbiJarParameters,
       @Nullable Map<String, Object> serializedLibraryJarParameters,
       List<Map<String, Object>> pluginFields,

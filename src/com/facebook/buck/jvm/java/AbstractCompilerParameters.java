@@ -50,8 +50,6 @@ abstract class AbstractCompilerParameters {
 
   public abstract Path getWorkingDirectory();
 
-  public abstract Path getDepFilePath();
-
   public abstract Path getPathToSourcesList();
 
   @Value.Default
@@ -66,6 +64,10 @@ abstract class AbstractCompilerParameters {
 
   @Nullable
   public abstract SourceOnlyAbiRuleInfo getSourceOnlyAbiRuleInfo();
+
+  public static Path getDepFilePath(BuildTarget target, ProjectFilesystem filesystem) {
+    return getOutputJarDirPath(target, filesystem).resolve("used-classes.json");
+  }
 
   public static Path getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes");
@@ -98,8 +100,6 @@ abstract class AbstractCompilerParameters {
           .setWorkingDirectory(
               BuildTargets.getGenPath(projectFilesystem, target, "lib__%s____working_directory"))
           .setGeneratedCodeDirectory(getAnnotationPath(projectFilesystem, target).get())
-          .setDepFilePath(
-              getOutputJarDirPath(target, projectFilesystem).resolve("used-classes.json"))
           .setPathToSourcesList(BuildTargets.getGenPath(projectFilesystem, target, "__%s__srcs"))
           .setOutputDirectory(getClassesDir(target, projectFilesystem));
     }

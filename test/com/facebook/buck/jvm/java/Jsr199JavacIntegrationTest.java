@@ -127,7 +127,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
             ImmutableList.of());
@@ -142,6 +141,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                false,
                 null,
                 null,
                 AbiGenerationMode.CLASS,
@@ -181,7 +181,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
             ImmutableList.of());
@@ -196,6 +195,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                false,
                 null,
                 null,
                 AbiGenerationMode.CLASS,
@@ -282,7 +282,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
             ImmutableList.of(fakeJavacJar));
@@ -299,6 +298,7 @@ public class Jsr199JavacIntegrationTest {
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
+              false,
               null,
               null,
               AbiGenerationMode.CLASS,

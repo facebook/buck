@@ -49,8 +49,6 @@ public class JavacStep implements Step {
 
   private final CompilerParameters compilerParameters;
 
-  private final ClassUsageFileWriter usedClassesFileWriter;
-
   private final JavacOptions javacOptions;
 
   private final BuildTarget invokingRule;
@@ -68,7 +66,6 @@ public class JavacStep implements Step {
   @Nullable private final JarParameters abiJarParameters;
 
   public JavacStep(
-      ClassUsageFileWriter usedClassesFileWriter,
       Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
@@ -78,7 +75,6 @@ public class JavacStep implements Step {
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters) {
-    this.usedClassesFileWriter = usedClassesFileWriter;
     this.javacOptions = javacOptions;
     this.javac = javac;
     this.invokingRule = invokingRule;
@@ -114,7 +110,6 @@ public class JavacStep implements Step {
               firstOrderContext.getJavaPackageFinder(),
               filesystem,
               context.getProjectFilesystemFactory(),
-              usedClassesFileWriter,
               firstOrderContext.getEnvironment(),
               firstOrderContext.getProcessExecutor(),
               getAbsolutePathsForJavacInputs(getJavac()));
@@ -140,6 +135,7 @@ public class JavacStep implements Step {
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
+                  compilerParameters.shouldTrackClassUsage(),
                   abiJarParameters,
                   libraryJarParameters,
                   compilerParameters.getAbiGenerationMode(),

@@ -52,6 +52,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      boolean trackClassUsage,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
@@ -73,6 +74,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
             javaSourceFilePaths.stream().map(Path::toString).collect(Collectors.toList()),
             pathToSrcsList.toString(),
             workingDirectory.toString(),
+            trackClassUsage,
             abiJarParameters != null ? JarParametersSerializer.serialize(abiJarParameters) : null,
             libraryJarParameters != null
                 ? JarParametersSerializer.serialize(libraryJarParameters)

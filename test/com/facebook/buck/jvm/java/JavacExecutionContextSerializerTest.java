@@ -61,7 +61,6 @@ public class JavacExecutionContextSerializerTest {
         new DefaultJavaPackageFinder(
             ImmutableSortedSet.of("paths", "from", "root"), ImmutableSet.of("path", "elements"));
     ProjectFilesystem projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp);
-    NoOpClassUsageFileWriter classUsageFileWriter = NoOpClassUsageFileWriter.instance();
     ImmutableMap<String, String> environment = ImmutableMap.of("k1", "v1", "k2", "v2");
     ImmutableMap<String, String> processExecutorContext =
         ImmutableMap.of("pek1", "pev1", "pek2", "pev2");
@@ -82,7 +81,6 @@ public class JavacExecutionContextSerializerTest {
             javaPackageFinder,
             projectFilesystem,
             projectFilesystemFactory,
-            classUsageFileWriter,
             environment,
             processExecutor,
             pathToInputs);
@@ -123,9 +121,6 @@ public class JavacExecutionContextSerializerTest {
     assertThat(
         output.getProjectFilesystem().getRootPath(),
         Matchers.equalToObject(projectFilesystem.getRootPath()));
-
-    assertThat(
-        output.getUsedClassesFileWriter(), Matchers.instanceOf(NoOpClassUsageFileWriter.class));
 
     assertThat(output.getEnvironment(), Matchers.equalToObject(environment));
 

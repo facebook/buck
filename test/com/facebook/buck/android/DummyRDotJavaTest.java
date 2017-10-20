@@ -29,7 +29,6 @@ import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -147,7 +146,6 @@ public class DummyRDotJavaTest {
             .add(String.format("mkdir -p %s", genFolder))
             .add(
                 new JavacStep(
-                        NoOpClassUsageFileWriter.instance(),
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
@@ -160,7 +158,6 @@ public class DummyRDotJavaTest {
                             .setOutputDirectory(rDotJavaBinFolder)
                             .setGeneratedCodeDirectory(Paths.get("generated"))
                             .setWorkingDirectory(Paths.get("working"))
-                            .setDepFilePath(Paths.get("depFile"))
                             .setSourceFilePaths(javaSourceFiles)
                             .setPathToSourcesList(
                                 BuildTargets.getGenPath(

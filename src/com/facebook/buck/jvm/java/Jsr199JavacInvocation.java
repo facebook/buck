@@ -76,6 +76,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
   @Nullable private BuckJavacTaskProxy javacTask;
+  private final ClassUsageFileWriter classUsageFileWriter;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
 
   public Jsr199JavacInvocation(
@@ -86,6 +87,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
+      boolean trackClassUsage,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
@@ -97,6 +99,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
+    this.classUsageFileWriter =
+        trackClassUsage
+            ? new DefaultClassUsageFileWriter(
+                CompilerParameters.getDepFilePath(invokingRule, context.getProjectFilesystem()))
+            : NoOpClassUsageFileWriter.instance();
     this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
@@ -198,9 +205,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       debugLogDiagnostics();
 
       if (buildSuccessful()) {
-        context
-            .getUsedClassesFileWriter()
-            .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
+        classUsageFileWriter.writeFile(
+            context.getProjectFilesystem(), context.getCellPathResolver());
       } else {
         reportDiagnosticsToUser();
         return 1;
@@ -318,7 +324,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
               loaderFactory,
               compiler,
               compilerOutputWriter,
-              context.getUsedClassesFileWriter().wrapFileManager(fileManager),
+              classUsageFileWriter.wrapFileManager(fileManager),
               diagnostics,
               options,
               classNamesForAnnotationProcessing,

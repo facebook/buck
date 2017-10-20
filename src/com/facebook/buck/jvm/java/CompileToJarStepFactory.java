@@ -99,7 +99,8 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       if (compilerParameters.shouldTrackClassUsage()) {
-        buildableContext.recordArtifact(compilerParameters.getDepFilePath());
+        buildableContext.recordArtifact(
+            CompilerParameters.getDepFilePath(target, projectFilesystem));
       }
 
       // This adds the javac command, along with any supporting commands.

@@ -83,13 +83,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
           context);
     }
 
-    final ClassUsageFileWriter usedClassesFileWriter =
-        parameters.shouldTrackClassUsage()
-            ? new DefaultClassUsageFileWriter(parameters.getDepFilePath())
-            : NoOpClassUsageFileWriter.instance();
     steps.add(
         new JavacStep(
-            usedClassesFileWriter,
             javac,
             buildTimeOptions,
             invokingRule,
@@ -171,13 +166,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             context);
       }
 
-      final ClassUsageFileWriter usedClassesFileWriter =
-          compilerParameters.shouldTrackClassUsage()
-              ? new DefaultClassUsageFileWriter(compilerParameters.getDepFilePath())
-              : NoOpClassUsageFileWriter.instance();
       steps.add(
           new JavacStep(
-              usedClassesFileWriter,
               javac,
               buildTimeOptions,
               invokingRule,
