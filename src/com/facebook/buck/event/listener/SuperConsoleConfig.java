@@ -73,6 +73,10 @@ public class SuperConsoleConfig {
     return delegate.getBooleanValue(SECTION_NAME, "show_slow_rules_in_console", false);
   }
 
+  public boolean isLongRunningTaskHeartBeatEnabled() {
+    return delegate.getBooleanValue(SECTION_NAME, "long_running_task_heartbeat_enabled", false);
+  }
+
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {
     Optional<Long> optional = delegate.getLong(sectionName, propertyName);
     if (!optional.isPresent()) {

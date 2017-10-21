@@ -1577,6 +1577,7 @@ public final class Main {
             config.getHideSucceededRulesInLogMode(),
             config.getNumberOfSlowRulesToShow(),
             config.shouldShowSlowRulesInConsole(),
+            config.isLongRunningTaskHeartBeatEnabled(),
             locale,
             testLogPath,
             executionEnvironment,
