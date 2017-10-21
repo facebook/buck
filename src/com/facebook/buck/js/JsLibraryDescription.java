@@ -175,7 +175,7 @@ public class JsLibraryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractJsLibraryDescriptionArg extends CommonDescriptionArg, HasDepsQuery, HasTests {
     Optional<String> getExtraArgs();
 

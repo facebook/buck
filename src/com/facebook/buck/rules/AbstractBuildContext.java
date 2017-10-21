@@ -24,7 +24,7 @@ import com.google.common.base.Supplier;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractBuildContext {
 

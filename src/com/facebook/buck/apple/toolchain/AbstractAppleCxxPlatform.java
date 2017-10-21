@@ -29,7 +29,7 @@ import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Adds Apple-specific tools to {@link CxxPlatform}. */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
 

@@ -289,7 +289,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractAndroidAarDescriptionArg extends AndroidLibraryDescription.CoreArg {
     SourcePath getManifestSkeleton();
 

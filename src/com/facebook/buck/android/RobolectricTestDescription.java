@@ -235,7 +235,7 @@ public class RobolectricTestDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractRobolectricTestDescriptionArg
       extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
 

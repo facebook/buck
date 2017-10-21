@@ -23,7 +23,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 interface AbstractPythonPlatform extends FlavorConvertible {
 

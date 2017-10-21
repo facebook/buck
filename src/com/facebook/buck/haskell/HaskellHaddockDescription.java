@@ -142,7 +142,7 @@ public class HaskellHaddockDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractHaskellHaddockDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
     Optional<Flavor> getPlatform();
 

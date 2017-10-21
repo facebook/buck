@@ -393,6 +393,6 @@ public class CxxBinaryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractCxxBinaryDescriptionArg extends CxxBinaryDescription.CommonArg {}
 }

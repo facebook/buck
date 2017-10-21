@@ -30,7 +30,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 @JsonDeserialize(as = InvocationInfo.class)
 abstract class AbstractInvocationInfo {

@@ -340,7 +340,7 @@ public class HaskellBinaryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractHaskellBinaryDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
 
     @Value.Default

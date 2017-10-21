@@ -340,7 +340,7 @@ public class HaskellGhciDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractHaskellGhciDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
     @Value.Default
     default SourceList getSrcs() {

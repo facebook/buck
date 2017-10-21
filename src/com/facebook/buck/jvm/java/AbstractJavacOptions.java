@@ -45,7 +45,7 @@ import org.immutables.value.Value;
  * Represents the command line options that should be passed to javac. Note that the options do not
  * include either the classpath or the directory for storing class files.
  */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractJavacOptions implements AddsToRuleKey {
 

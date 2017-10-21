@@ -50,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractExecutionContext implements Closeable {
 

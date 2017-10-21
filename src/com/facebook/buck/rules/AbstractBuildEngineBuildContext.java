@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 /** Per-build context used by {@link BuildEngine}. */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractBuildEngineBuildContext {
   /**

@@ -546,7 +546,7 @@ class NativeLibraryMergeEnhancer {
     }
   }
 
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   @BuckStyleImmutable
   abstract static class AbstractNativeLibraryMergeEnhancementResult {
     public abstract ImmutableMultimap<APKModule, NativeLinkable> getMergedLinkables();

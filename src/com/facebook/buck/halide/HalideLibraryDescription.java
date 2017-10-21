@@ -370,7 +370,7 @@ public class HalideLibraryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractHalideLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getCompilerDeps();

@@ -410,7 +410,7 @@ public class CxxTestDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractCxxTestDescriptionArg
       extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
     Optional<CxxTestType> getFramework();

@@ -30,7 +30,7 @@ import org.immutables.value.Value;
  * a top-level native linkable rule (e.g. C++ binary) can use this to contribute components to the
  * final link.
  */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractNativeLinkableInput {
 

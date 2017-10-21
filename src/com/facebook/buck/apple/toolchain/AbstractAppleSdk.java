@@ -22,7 +22,7 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 /** Metadata about an Apple SDK. */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 interface AbstractAppleSdk {
   /** The full name of the SDK. For example: {@code iphonesimulator8.0}. */

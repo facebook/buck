@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractCacheResult {
 

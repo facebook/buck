@@ -18,7 +18,7 @@ package com.facebook.buck.util.concurrent;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractResourceAmounts {
   @Value.Parameter

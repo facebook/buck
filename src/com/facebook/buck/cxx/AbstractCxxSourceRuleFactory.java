@@ -737,10 +737,14 @@ abstract class AbstractCxxSourceRuleFactory {
             .computeIfAbsent(
                 BuildTarget.of(templateTarget, flavors),
                 target -> {
-                  // Give the PCH a filename that looks like a header file with .gch appended to it, GCC-style.
-                  // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends ".gch" to
-                  // automagically use the precompiled header in place of the original header.  Of course in
-                  // our case we'll only have the ".gch" file, which is alright; the ".h" isn't truly needed.
+                  // Give the PCH a filename that looks like a header file with .gch appended to it,
+                  // GCC-style.
+                  // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends
+                  // ".gch" to
+                  // automagically use the precompiled header in place of the original header.  Of
+                  // course in
+                  // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
+                  // truly needed.
                   Path output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
 
                   CompilerDelegate compilerDelegate =
@@ -835,7 +839,7 @@ abstract class AbstractCxxSourceRuleFactory {
       ExplicitBuildTargetSourcePath path =
           ExplicitBuildTargetSourcePath.of(
               sandboxTree.getBuildTarget(), sandboxPath.resolve(sourcePath));
-      source = CxxSource.copyOf(source).withPath(path);
+      source = source.withPath(path);
     }
     return source;
   }

@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import org.immutables.value.Value;
 
-@Value.Immutable()
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 public interface AbstractCommandRunnerParams {
   Console getConsole();

@@ -30,7 +30,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Interface describing a C/C++ toolchain and platform to build for. */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 interface AbstractCxxPlatform extends FlavorConvertible {
 

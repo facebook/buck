@@ -36,7 +36,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
