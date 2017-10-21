@@ -28,7 +28,7 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return eventName;
   }
 

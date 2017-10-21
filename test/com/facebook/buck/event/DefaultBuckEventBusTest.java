@@ -124,7 +124,7 @@ public class DefaultBuckEventBusTest {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return null;
     }
 
@@ -148,7 +148,7 @@ public class DefaultBuckEventBusTest {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return "Test event, please ignore.";
     }
 

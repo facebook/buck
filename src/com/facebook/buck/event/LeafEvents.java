@@ -51,7 +51,7 @@ public class LeafEvents {
       }
 
       @Override
-      public String getValueString() {
+      protected String getValueString() {
         return "Finished";
       }
     }
@@ -62,7 +62,7 @@ public class LeafEvents {
       }
 
       @Override
-      public String getValueString() {
+      protected String getValueString() {
         return "Started";
       }
     }

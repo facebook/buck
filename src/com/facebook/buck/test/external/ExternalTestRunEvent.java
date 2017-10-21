@@ -82,7 +82,7 @@ public abstract class ExternalTestRunEvent extends AbstractBuckEvent implements 
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return String.format("%d test targets", targetNames.size());
     }
 
@@ -114,7 +114,7 @@ public abstract class ExternalTestRunEvent extends AbstractBuckEvent implements 
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return String.valueOf(exitCode);
     }
 

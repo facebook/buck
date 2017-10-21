@@ -46,7 +46,7 @@ public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return "";
     }
   }
@@ -69,7 +69,7 @@ public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return "";
     }
   }

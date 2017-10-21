@@ -37,7 +37,7 @@ public class LoadBalancerPingEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return getEventName();
   }
 

@@ -66,7 +66,7 @@ public abstract class TestStatusMessageEvent extends AbstractBuckEvent
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return String.format(
           "%s: %s", getTestStatusMessage().getLevel(), getTestStatusMessage().getMessage());
     }
@@ -92,7 +92,7 @@ public abstract class TestStatusMessageEvent extends AbstractBuckEvent
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return String.format(
           "%s: %s (%d ms)",
           getTestStatusMessage().getLevel(),

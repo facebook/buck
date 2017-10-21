@@ -36,7 +36,7 @@ public class FastVersionControlStatsEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return versionControlStats.toString();
   }
 

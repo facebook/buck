@@ -39,7 +39,7 @@ public abstract class ProgressEvent extends AbstractBuckEvent implements Progres
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return "progress=" + String.valueOf(progressValue);
   }
 

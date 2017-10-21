@@ -66,7 +66,7 @@ public interface RuleKeyCalculationEvent extends LeafEvent, WorkAdvanceEvent {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return type.toString();
     }
   }

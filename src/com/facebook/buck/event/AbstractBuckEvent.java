@@ -112,7 +112,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   @JsonIgnore
-  public abstract String getValueString();
+  protected abstract String getValueString();
 
   @Override
   public String toString() {

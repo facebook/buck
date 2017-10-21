@@ -27,7 +27,7 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return "";
   }
 

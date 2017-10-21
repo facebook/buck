@@ -37,7 +37,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return packageName;
   }
 

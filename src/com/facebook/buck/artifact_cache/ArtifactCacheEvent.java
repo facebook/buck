@@ -75,7 +75,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return getEventName() + getEventKey().toString();
   }
 

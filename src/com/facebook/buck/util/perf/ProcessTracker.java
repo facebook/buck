@@ -299,7 +299,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return "";
     }
 

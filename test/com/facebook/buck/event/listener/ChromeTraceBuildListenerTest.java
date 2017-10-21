@@ -756,7 +756,7 @@ public class ChromeTraceBuildListenerTest {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return "fake";
     }
   }

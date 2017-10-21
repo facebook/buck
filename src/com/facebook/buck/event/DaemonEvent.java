@@ -25,7 +25,7 @@ public abstract class DaemonEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return eventName;
   }
 

@@ -83,7 +83,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent implements WorkAdva
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return String.format("%d test targets", targetNames.size());
     }
 
@@ -112,7 +112,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent implements WorkAdva
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return completedResults.toString();
     }
 

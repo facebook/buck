@@ -40,7 +40,7 @@ public abstract class InstallEvent extends AbstractBuckEvent
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return buildTarget.getFullyQualifiedName();
   }
 

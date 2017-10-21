@@ -37,7 +37,7 @@ public class DownloadProgressEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return String.format("%s -> %d/%s", uri, downloadedSoFar, size);
   }
 

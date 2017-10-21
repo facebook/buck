@@ -71,7 +71,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return Joiner.on(", ").join(buildArgs);
     }
 
@@ -105,7 +105,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return String.format("exit code: %d", exitCode);
     }
 
@@ -137,7 +137,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return "";
     }
   }
@@ -161,7 +161,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return String.format("exit code: %d", exitCode);
     }
 
@@ -206,7 +206,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return Joiner.on(", ").join(buildRules);
     }
 
@@ -245,7 +245,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return Integer.toString(numRules);
     }
 

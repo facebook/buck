@@ -109,7 +109,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return "";
     }
 

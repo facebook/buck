@@ -125,7 +125,7 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return buildTarget.toString();
   }
 

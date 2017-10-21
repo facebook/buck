@@ -533,7 +533,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return Joiner.on(',').withKeyValueSeparator(":").join(info);
     }
 

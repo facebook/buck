@@ -36,7 +36,7 @@ public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return eventName;
   }
 

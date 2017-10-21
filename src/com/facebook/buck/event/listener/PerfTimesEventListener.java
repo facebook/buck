@@ -184,7 +184,7 @@ public class PerfTimesEventListener implements BuckEventListener {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return perfTimesStats.toString();
     }
 

@@ -62,7 +62,7 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return String.format("%s, isDaemon: %b", commandName, isDaemon);
   }
 

@@ -41,7 +41,7 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return getEventName();
   }
 

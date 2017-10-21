@@ -28,7 +28,7 @@ public class DistBuildClientCacheResultEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return getEventName();
   }
 

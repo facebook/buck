@@ -158,7 +158,7 @@ public class CacheRateStatsKeeper {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return MoreObjects.toStringHelper("")
           .add("ruleCount", ruleCount)
           .add("updated", updated)

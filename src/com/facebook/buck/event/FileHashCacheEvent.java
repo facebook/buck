@@ -65,7 +65,7 @@ public class FileHashCacheEvent extends AbstractBuckEvent implements LeafEvent {
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return getEventName() + getEventKey().toString();
   }
 

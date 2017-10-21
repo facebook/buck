@@ -20,12 +20,9 @@ import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildRunEvent;
-import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.ActionGraphEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
@@ -39,20 +36,13 @@ import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
@@ -60,20 +50,12 @@ import java.util.logging.Level;
  * Implementation of {@code AbstractConsoleEventBusListener} for terminals that don't support ansi.
  */
 public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListener {
-
-  private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
-
-  /** Wait this long (at least) before printing that a task is still running. */
-  private static final long LONG_RUNNING_TASK_HEARTBEAT = TimeUnit.SECONDS.toMillis(15);
-
   private final Locale locale;
   private final AtomicLong parseTime;
   private final TestResultFormatter testFormatter;
   private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
       ImmutableList.builder();
   private final boolean hideSucceededRules;
-  private final ScheduledExecutorService renderScheduler;
-  private final Set<RunningTarget> runningTasks = new HashSet<>();
 
   public SimpleConsoleEventBusListener(
       Console console,
@@ -109,11 +91,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     if (buildId.isPresent()) {
       printLines(ImmutableList.<String>builder().add(getBuildLogLine(buildId.get())));
     }
-
-    this.renderScheduler =
-        Executors.newScheduledThreadPool(
-            1,
-            new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
   }
 
   public static String getBuildLogLine(BuildId buildId) {
@@ -128,20 +105,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             "StampedeId=[%s] BuildSlaveRunId=[%s]",
             event.getStampedeId().id, event.getBuildSlaveRunId().id);
     printLines(ImmutableList.<String>builder().add(line));
-  }
-
-  public void startRenderScheduler(long renderInterval, TimeUnit timeUnit) {
-    LOG.debug("Starting render scheduler (interval %d ms)", timeUnit.toMillis(renderInterval));
-    renderScheduler.scheduleAtFixedRate(
-        SimpleConsoleEventBusListener.this::render, renderInterval, renderInterval, timeUnit);
-  }
-
-  @Override
-  public void parseStarted(ParseEvent.Started started) {
-    super.parseStarted(started);
-    synchronized (runningTasks) {
-      runningTasks.clear(); // We can only have one thing running, right?
-    }
   }
 
   @Override
@@ -277,8 +240,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         event.getTargetNames(),
         TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
     printLines(lines);
-
-    addRunningTarget(new RunningTarget(event, "Still running"));
   }
 
   @Subscribe
@@ -295,18 +256,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     printLines(lines);
   }
 
-  private void addRunningTarget(RunningTarget task) {
-    synchronized (runningTasks) {
-      runningTasks.add(task);
-    }
-  }
-
-  private void removeRunningTarget(BuckEvent event) {
-    synchronized (runningTasks) {
-      runningTasks.removeIf(task -> task.isPairedWith(event));
-    }
-  }
-
   @Subscribe
   public void testResultsAvailable(IndividualTestEvent.Finished event) {
     if (console.getVerbosity().isSilent()) {
@@ -318,40 +267,9 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   }
 
   @Override
-  public void buildRuleStarted(final BuildRuleEvent.Started started) {
-    addRunningTarget(new RunningTarget(started, "Still building"));
-    super.buildRuleStarted(started);
-  }
-
-  @Override
-  public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    super.buildRuleResumed(resumed);
-    synchronized (runningTasks) {
-      for (RunningTarget task : runningTasks) {
-        if (task.isPairedWith(resumed)) {
-          task.resume(resumed.getTimestamp());
-        }
-      }
-    }
-  }
-
-  @Override
-  public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    super.buildRuleSuspended(suspended);
-    synchronized (runningTasks) {
-      for (RunningTarget task : runningTasks) {
-        if (task.isPairedWith(suspended)) {
-          task.suspend();
-        }
-      }
-    }
-  }
-
-  @Override
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     super.buildRuleFinished(finished);
-    removeRunningTarget(finished);
 
     if (finished.getStatus() != BuildRuleStatus.SUCCESS || console.getVerbosity().isSilent()) {
       return;
@@ -425,90 +343,5 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     console.getStdErr().println(Joiner.on("\n").join(stringList));
-  }
-
-  @VisibleForTesting
-  synchronized void render() {
-    if (console.getVerbosity().isSilent()) {
-      return;
-    }
-
-    long now = System.currentTimeMillis();
-    ImmutableList.Builder<String> lines = ImmutableList.builder();
-    synchronized (runningTasks) {
-      runningTasks.forEach(task -> task.render(now, LONG_RUNNING_TASK_HEARTBEAT, lines));
-    }
-
-    String output = Joiner.on('\n').join(lines.build());
-
-    if (output.isEmpty()) {
-      return;
-    }
-
-    // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
-    // We don't log immediately so we avoid locking the console handler to avoid deadlocks.
-    synchronized (console.getStdOut()) {
-      synchronized (console.getStdErr()) {
-        console.getStdErr().getRawStream().println(output);
-      }
-    }
-  }
-
-  private class RunningTarget {
-    private final AbstractBuckEvent startEvent;
-    private final String message;
-    private final long startTime;
-    private long lastRenderedTime;
-
-    protected RunningTarget(AbstractBuckEvent startEvent, String message) {
-      this.startEvent = startEvent;
-      this.message = message;
-      this.startTime = startEvent.getTimestamp();
-      this.lastRenderedTime = this.startTime;
-    }
-
-    public void render(long now, long quiescentDuration, ImmutableList.Builder<String> lines) {
-      if (now < lastRenderedTime + quiescentDuration) {
-        return;
-      }
-
-      lastRenderedTime = now;
-
-      String jobsInfo = "";
-      if (ruleCount.isPresent()) {
-        jobsInfo = String.format(locale, "%d/%d jobs", numRulesCompleted.get(), ruleCount.get());
-      }
-      lines.add(
-          String.format(
-              locale,
-              "%s %s %s %s",
-              message,
-              jobsInfo,
-              formatElapsedTime(now - startTime),
-              startEvent.getValueString()));
-    }
-
-    public boolean isPairedWith(BuckEvent other) {
-      return startEvent.isRelatedTo(other);
-    }
-
-    public void resume(long timestamp) {
-      // So we don't overflow when calculating durations.
-      lastRenderedTime = timestamp;
-    }
-
-    public void suspend() {
-      lastRenderedTime = Long.MAX_VALUE - TimeUnit.DAYS.toMillis(1);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return obj == this;
-    }
-
-    @Override
-    public int hashCode() {
-      return startEvent.hashCode();
-    }
   }
 }

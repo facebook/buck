@@ -41,7 +41,7 @@ public final class NetworkInfo {
     }
 
     @Override
-    public String getValueString() {
+    protected String getValueString() {
       return network.toString();
     }
   }

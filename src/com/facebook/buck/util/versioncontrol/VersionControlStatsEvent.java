@@ -37,7 +37,7 @@ public class VersionControlStatsEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public String getValueString() {
+  protected String getValueString() {
     return versionControlStats.toString();
   }
 
