@@ -43,15 +43,13 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.versions.VersionException;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -161,11 +159,12 @@ public class DistBuildSlaveExecutor {
     }
 
     DistBuildTargetGraphCodec codec = createGraphCodec();
+    ImmutableMap<Integer, Cell> cells = args.getState().getCells();
     TargetGraphAndBuildTargets targetGraphAndBuildTargets =
         Preconditions.checkNotNull(
             codec.createTargetGraph(
                 args.getState().getRemoteState().getTargetGraph(),
-                Functions.forMap(args.getState().getCells())));
+                key -> Preconditions.checkNotNull(cells.get(key))));
 
     try {
       if (args.getRemoteRootCellConfig().getBuildVersions()) {
@@ -280,29 +279,22 @@ public class DistBuildSlaveExecutor {
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
 
-    DistBuildTargetGraphCodec targetGraphCodec =
-        new DistBuildTargetGraphCodec(
-            parserTargetNodeFactory,
-            new Function<TargetNode<?, ?>, Map<String, Object>>() {
-              @Nullable
-              @Override
-              public Map<String, Object> apply(TargetNode<?, ?> input) {
-                try {
-                  return args.getParser()
-                      .getRawTargetNode(
-                          args.getBuckEventBus(),
-                          args.getRootCell().getCell(input.getBuildTarget()),
-                          /* enableProfiling */ false,
-                          args.getExecutorService(),
-                          input);
-                } catch (BuildFileParseException e) {
-                  throw new RuntimeException(e);
-                }
-              }
-            },
-            new HashSet<>(args.getState().getRemoteState().getTopLevelTargets()));
-
-    return targetGraphCodec;
+    return new DistBuildTargetGraphCodec(
+        parserTargetNodeFactory,
+        input -> {
+          try {
+            return args.getParser()
+                .getRawTargetNode(
+                    args.getBuckEventBus(),
+                    args.getRootCell().getCell(input.getBuildTarget()),
+                    /* enableProfiling */ false,
+                    args.getExecutorService(),
+                    input);
+          } catch (BuildFileParseException e) {
+            throw new RuntimeException(e);
+          }
+        },
+        new HashSet<>(args.getState().getRemoteState().getTopLevelTargets()));
   }
 
   public static int getFreePortForCoordinator() throws IOException {

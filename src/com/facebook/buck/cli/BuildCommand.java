@@ -101,7 +101,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.VersionException;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -656,22 +655,18 @@ public class BuildCommand extends AbstractCommand {
     DistBuildTargetGraphCodec targetGraphCodec =
         new DistBuildTargetGraphCodec(
             parserTargetNodeFactory,
-            new Function<TargetNode<?, ?>, Map<String, Object>>() {
-              @Nullable
-              @Override
-              public Map<String, Object> apply(TargetNode<?, ?> input) {
-                try {
-                  return params
-                      .getParser()
-                      .getRawTargetNode(
-                          params.getBuckEventBus(),
-                          params.getCell().getCell(input.getBuildTarget()),
-                          false /* enableProfiling */,
-                          executorService,
-                          input);
-                } catch (BuildFileParseException e) {
-                  throw new RuntimeException(e);
-                }
+            input -> {
+              try {
+                return params
+                    .getParser()
+                    .getRawTargetNode(
+                        params.getBuckEventBus(),
+                        params.getCell().getCell(input.getBuildTarget()),
+                        false /* enableProfiling */,
+                        executorService,
+                        input);
+              } catch (BuildFileParseException e) {
+                throw new RuntimeException(e);
               }
             },
             targetGraphAndBuildTargets

@@ -38,7 +38,6 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
@@ -195,7 +194,8 @@ public class DistBuildState {
 
   public TargetGraphAndBuildTargets createTargetGraph(DistBuildTargetGraphCodec codec)
       throws IOException {
-    return codec.createTargetGraph(remoteState.getTargetGraph(), Functions.forMap(cells));
+    return codec.createTargetGraph(
+        remoteState.getTargetGraph(), key -> Preconditions.checkNotNull(cells.get(key)));
   }
 
   public ProjectFileHashCache createRemoteFileHashCache(ProjectFileHashCache decoratedCache) {

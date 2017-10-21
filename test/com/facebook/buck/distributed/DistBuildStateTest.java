@@ -78,8 +78,6 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -92,6 +90,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -415,24 +414,22 @@ public class DistBuildStateTest {
     Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
     if (parser.isPresent()) {
       nodeToRawNode =
-          (Function<TargetNode<?, ?>, Map<String, Object>>)
-              input -> {
-                try {
-                  return parser
-                      .get()
-                      .getRawTargetNode(
-                          eventBus,
-                          cell.getCell(input.getBuildTarget()),
-                          /* enableProfiling */ false,
-                          MoreExecutors.listeningDecorator(
-                              MoreExecutors.newDirectExecutorService()),
-                          input);
-                } catch (BuildFileParseException e) {
-                  throw new RuntimeException(e);
-                }
-              };
+          input -> {
+            try {
+              return parser
+                  .get()
+                  .getRawTargetNode(
+                      eventBus,
+                      cell.getCell(input.getBuildTarget()),
+                      /* enableProfiling */ false,
+                      MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
+                      input);
+            } catch (BuildFileParseException e) {
+              throw new RuntimeException(e);
+            }
+          };
     } else {
-      nodeToRawNode = Functions.constant(ImmutableMap.<String, Object>of());
+      nodeToRawNode = ignored -> ImmutableMap.of();
     }
 
     TypeCoercerFactory typeCoercerFactory =
