@@ -63,6 +63,7 @@ java_library(
     ],
     source = "1.8",
     target = "1.8",
+    visibility = ["//tools/ideabuck/..."],
     deps = [
         ":bundle_generated_lib",
         "//src/com/facebook/buck/event/external:external_lib",
@@ -112,28 +113,11 @@ java_library(
         excludes = TEST_SRC,
     ),
     target = "1.8",
+    visibility = ["//tools/ideabuck/tests/..."],
     deps = [
         ":ideabuck-lib",
         "//src/com/facebook/buck/test/result/type:type",
         "//third-party/java/guava:guava",
-    ],
-)
-
-java_test(
-    name = "tests",
-    srcs = glob(TEST_SRC),
-    target = "1.8",
-    deps = [
-        ":ideabuck-lib",
-        ":resources",
-        ":tests-lib",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/test/result/type:type",
-        "//third-party/java/easymock:easymock",
-        "//third-party/java/guava:guava",
-        "//third-party/java/intellij:intellij-plugin-sdk",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/junit:junit",
     ],
 )
 

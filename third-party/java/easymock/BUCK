@@ -5,7 +5,7 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//tools/ideabuck:tests",
+        "//tools/ideabuck/tests/...",
         "//test/...",
     ],
     deps = [
