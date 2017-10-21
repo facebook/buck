@@ -1,4 +1,4 @@
-load("//:DEFS", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 CONSTANT_SRCS = [
     "BuckConstant.java",

@@ -1,4 +1,4 @@
-load("//:DEFS", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 # This test is huge, so we run it by itself.
 PARSER_TEST_SRCS = [
@@ -328,7 +328,6 @@ java_test(
     srcs = glob(["*IntegrationTest.java"]),
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src-gen:thrift",

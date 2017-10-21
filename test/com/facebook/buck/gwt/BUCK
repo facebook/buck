@@ -1,9 +1,10 @@
-load("//:DEFS", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 standard_java_test(
     name = "gwt",
     run_test_separately = True,
     vm_args = ["-Xmx512m"],
+    with_test_data = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",

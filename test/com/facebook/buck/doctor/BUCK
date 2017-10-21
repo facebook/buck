@@ -1,4 +1,4 @@
-load("//:DEFS", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 java_library(
     name = "testutil",
@@ -131,6 +131,7 @@ java_library(
 
 standard_java_test(
     name = "doctor",
+    with_test_data = True,
     deps = [
         ":testutil",
         "//src-gen:thrift",

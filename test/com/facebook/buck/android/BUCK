@@ -1,4 +1,4 @@
-load("//:DEFS", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
 
 STANDARD_TEST_SRCS = [
     "*Test.java",
@@ -556,10 +556,7 @@ ANDROID_AAR_INTEGRATION_TEST_SRCS = [
 java_test(
     name = "aar-integration",
     srcs = glob(ANDROID_AAR_INTEGRATION_TEST_SRCS),
-    resources = glob(
-        ["testdata/**"],
-        include_dotfiles = True,
-    ),
+    resources = glob(["testdata/**"]),
     deps = [
         ":utils",
         "//src-gen:thrift",
@@ -722,10 +719,7 @@ java_test(
     name = "binary-integration",
     srcs = glob(ANDROID_BINARY_INTEGRATION_TEST_SRCS),
     labels = ["long_running"],
-    resources = glob(
-        ["testdata/**"],
-        include_dotfiles = True,
-    ),
+    resources = glob(["testdata/**"]),
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:config",
@@ -887,7 +881,6 @@ java_test(
     srcs = glob(ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS),
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src-gen:thrift",
@@ -1042,7 +1035,6 @@ java_test(
     srcs = glob(ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS),
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src-gen:thrift",
@@ -1217,7 +1209,6 @@ java_test(
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src-gen:thrift",
@@ -1396,7 +1387,6 @@ java_test(
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src-gen:thrift",

@@ -100,7 +100,7 @@ def java_test(
     ] + (vm_args or []),
     env=env,
     run_test_separately=run_test_separately,
-    labels = labels + extra_labels,
+    labels = (labels or []) + extra_labels,
     **kwargs
   )
 
@@ -110,7 +110,7 @@ def standard_java_test(
     vm_args = None,
     fork_mode = 'none',
     labels = None,
-    with_test_data = True,
+    with_test_data = False,
     **kwargs
 ):
     if vm_args == None:
@@ -122,7 +122,7 @@ def standard_java_test(
         java_test(
           name = name,
           srcs = test_srcs,
-          resources = native.glob(['testdata/**']) if with_test_data else [],
+          resources = native.glob(['testdata/**'], exclude_directories=True) if with_test_data else [],
           vm_args = vm_args,
           run_test_separately = run_test_separately,
           fork_mode = fork_mode,

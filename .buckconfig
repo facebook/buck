@@ -70,3 +70,4 @@
   build_rule_minimum_duration_millis=500
 [parser]
   polyglot_parsing_enabled=true
+  default_build_file_syntax=skylark

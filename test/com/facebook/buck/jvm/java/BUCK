@@ -1,4 +1,4 @@
-load("//:DEFS", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_library(
     name = "testutil",
@@ -281,7 +281,6 @@ java_test(
     srcs = SLOW_INTEGRATION_TESTS,
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     run_test_separately = True,
     deps = [
@@ -431,7 +430,6 @@ java_test(
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src-gen:thrift",

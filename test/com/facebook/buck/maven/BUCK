@@ -1,4 +1,4 @@
-load("//:DEFS", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_library(
     name = "testutil",
@@ -152,7 +152,6 @@ java_test(
     srcs = glob(["*Test.java"]),
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//test/com/facebook/buck/config:FakeBuckConfig",

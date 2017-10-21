@@ -1,4 +1,4 @@
-load("//:DEFS", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "scala",
@@ -6,7 +6,6 @@ java_test(
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     # Unfortunately the scala compiler is _really_ slow.
     run_test_separately = True,

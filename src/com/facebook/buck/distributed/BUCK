@@ -1,4 +1,4 @@
-load("//:DEFS", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 COMMON_FILES = (
     "AbstractDistBuildClientStats.java",
@@ -15,7 +15,10 @@ COMMON_FILES = (
 
 java_immutables_library(
     name = "distributed",
-    srcs = set(glob(["*.java"])) - set(COMMON_FILES),
+    srcs = glob(
+        ["*.java"],
+        excludes = COMMON_FILES,
+    ),
     tests = [
         "//test/com/facebook/buck/distributed:distributed",
     ],

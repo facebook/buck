@@ -1,4 +1,4 @@
-load("//:DEFS", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 java_library(
     name = "testutil",
@@ -35,6 +35,7 @@ standard_java_test(
     visibility = [
         "PUBLIC",
     ],
+    with_test_data = True,
     deps = [
         ":testutil",
         "//src/com/facebook/buck/config:config",

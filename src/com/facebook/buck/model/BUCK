@@ -1,4 +1,4 @@
-load("//:DEFS", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 BUILD_ID_SRCS = ["BuildId.java"]
 
@@ -11,13 +11,6 @@ java_library(
         "//third-party/java/jackson:jackson-databind",
     ],
 )
-
-MACRO_SRCS = [
-    "AbstractMacroMatchResult.java",
-    "MacroFinder.java",
-    "MacroReplacer.java",
-    "MacroException.java",
-]
 
 SIMPLE_TYPES_SRCS = [
     "Either.java",
@@ -38,7 +31,7 @@ java_immutables_library(
     name = "model",
     srcs = glob(
         ["*.java"],
-        excludes = BUILD_ID_SRCS + MACRO_SRCS + SIMPLE_TYPES_SRCS,
+        excludes = BUILD_ID_SRCS + SIMPLE_TYPES_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/model:model",

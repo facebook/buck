@@ -1,3 +1,5 @@
+# BUILD FILE SYNTAX: PYTHON_DSL
+
 python_library(
     name = "subprocutils",
     srcs = [

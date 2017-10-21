@@ -1,4 +1,4 @@
-load("//:DEFS", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 java_library(
     name = "testutil",
@@ -129,6 +129,7 @@ java_library(
 
 standard_java_test(
     name = "kotlin",
+    with_test_data = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",

@@ -1,3 +1,5 @@
+# BUILD FILE SYNTAX: PYTHON_DSL
+
 load("//:DEFS", "java_test")
 
 java_test(

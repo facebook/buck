@@ -1,4 +1,4 @@
-load("//:DEFS", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 STANDARD_TEST_SRCS = [
     "*Test.java",
@@ -181,7 +181,6 @@ java_test(
     srcs = APPLE_INTEGRATION_TEST_SRCS,
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     # We run this test separately, since the Apple simulator tends to time out
     # when the system is under load.
@@ -335,7 +334,6 @@ java_test(
     labels = ["long_running"],
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src-gen:thrift",

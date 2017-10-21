@@ -1,4 +1,4 @@
-load("//:DEFS", "java_immutables_library", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "standard_java_test")
 
 java_immutables_library(
     name = "testutil",
@@ -132,6 +132,7 @@ java_immutables_library(
 standard_java_test(
     name = "shell",
     labels = ["long_running"],
+    with_test_data = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",

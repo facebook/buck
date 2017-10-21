@@ -1,8 +1,9 @@
-load("//:DEFS", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 standard_java_test(
     name = "distributed",
     visibility = ["//test/..."],
+    with_test_data = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
