@@ -72,7 +72,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
       ImmutableList.builder();
   private final boolean hideSucceededRules;
-  private final boolean longRunningTaskHeartBeatEnabled;
   private final ScheduledExecutorService renderScheduler;
   private final Set<RunningTarget> runningTasks = new HashSet<>();
 
@@ -83,7 +82,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       boolean hideSucceededRules,
       int numberOfSlowRulesToShow,
       boolean showSlowRulesInConsole,
-      boolean longRunningTaskHeartBeatEnabled,
       Locale locale,
       Path testLogPath,
       ExecutionEnvironment executionEnvironment,
@@ -99,7 +97,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
     this.hideSucceededRules = hideSucceededRules;
-    this.longRunningTaskHeartBeatEnabled = longRunningTaskHeartBeatEnabled;
 
     this.testFormatter =
         new TestResultFormatter(
@@ -438,10 +435,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     long now = System.currentTimeMillis();
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    if (longRunningTaskHeartBeatEnabled) {
-      synchronized (runningTasks) {
-        runningTasks.forEach(task -> task.render(now, LONG_RUNNING_TASK_HEARTBEAT, lines));
-      }
+    synchronized (runningTasks) {
+      runningTasks.forEach(task -> task.render(now, LONG_RUNNING_TASK_HEARTBEAT, lines));
     }
 
     String output = Joiner.on('\n').join(lines.build());

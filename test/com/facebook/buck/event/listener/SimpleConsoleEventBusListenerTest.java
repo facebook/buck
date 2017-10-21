@@ -374,8 +374,7 @@ public class SimpleConsoleEventBusListenerTest {
             TestResultSummaryVerbosity.of(false, false),
             hideSucceededRules,
             /* numberOfSlowRulesToShow */ 0,
-            /* showSlowRulesInConsole */ false,
-            /* longRunningTaskHeartBeatEnabled */ false,
+            false,
             Locale.US,
             logPath,
             new DefaultExecutionEnvironment(
