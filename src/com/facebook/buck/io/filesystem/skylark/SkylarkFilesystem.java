@@ -32,6 +32,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 /**
  * {@link FileSystem} implementation that uses underlying {@link ProjectFilesystem} to resolve
@@ -130,9 +131,12 @@ public class SkylarkFilesystem extends AbstractFileSystemWithCustomStat {
 
   @Override
   protected Collection<Path> getDirectoryEntries(Path path) throws IOException {
-    return Files.list(toJavaPath(path))
-        .map(p -> getPath(p.toString()))
-        .collect(MoreCollectors.toImmutableList());
+    // close directory entries steam as soon as possible to avoid "Too many open files" error
+    try (Stream<java.nio.file.Path> entriesStream = Files.list(toJavaPath(path))) {
+      return entriesStream
+          .map(p -> getPath(p.toString()))
+          .collect(MoreCollectors.toImmutableList());
+    }
   }
 
   /** @return The {@link java.nio.file.Path} that corresponds to {@code path}. */
