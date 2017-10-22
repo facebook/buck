@@ -426,12 +426,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildTarget annotationProcessorTarget = validJavaLibrary.createTarget();
     BuildTarget annotationProcessorAbiTarget = validJavaLibraryAbi.createTarget();
 
-    BuildRule annotationProcessorRule = validJavaLibrary.createRule(annotationProcessorTarget);
+    validJavaLibrary.createRule(annotationProcessorTarget);
     BuildRule annotationProcessorAbiRule =
         validJavaLibraryAbi.createRule(annotationProcessorAbiTarget);
-
-    ruleResolver.addToIndex(annotationProcessorRule);
-    ruleResolver.addToIndex(annotationProcessorAbiRule);
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libone");
 

@@ -151,6 +151,12 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   public BuildRule buildAbi() {
+    // To guarantee that all rules in a source-ABI pipeline are working off of the same settings,
+    // we want to create them all from the same instance of this builder. To ensure this, we force
+    // the library rule to be created first. This should already be the case in most cases; only
+    // when flavors are explicitly specified on the command line might it be different.
+    getLibraryRule();
+
     BuildRule result = getCompareAbisRule();
     if (result == null) {
       result = getClassAbiRule();
@@ -172,12 +178,12 @@ public abstract class DefaultJavaLibraryRules {
         getBuildRuleResolver()
             .computeIfAbsent(
                 HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget()),
-                target -> {
+                compareAbisTarget -> {
                   CalculateClassAbi classAbi = Preconditions.checkNotNull(getClassAbiRule());
                   CalculateSourceAbi sourceAbi = Preconditions.checkNotNull(getSourceAbiRule());
 
                   return new CompareAbis(
-                      getInitialBuildTarget(),
+                      compareAbisTarget,
                       getProjectFilesystem(),
                       getInitialParams()
                           .withDeclaredDeps(ImmutableSortedSet.of(classAbi, sourceAbi))
@@ -250,7 +256,7 @@ public abstract class DefaultJavaLibraryRules {
         getBuildRuleResolver()
             .computeIfAbsent(
                 getLibraryTarget(),
-                target -> {
+                libraryTarget -> {
                   ImmutableSortedSet.Builder<BuildRule> buildDepsBuilder =
                       ImmutableSortedSet.naturalOrder();
 
@@ -263,7 +269,7 @@ public abstract class DefaultJavaLibraryRules {
                   DefaultJavaLibrary libraryRule =
                       getConstructor()
                           .newInstance(
-                              getInitialBuildTarget(),
+                              libraryTarget,
                               getProjectFilesystem(),
                               buildDepsBuilder.build(),
                               getSourcePathResolver(),
@@ -304,9 +310,9 @@ public abstract class DefaultJavaLibraryRules {
         getBuildRuleResolver()
             .computeIfAbsent(
                 HasJavaAbi.getSourceAbiJar(getLibraryTarget()),
-                abiTarget ->
+                sourceAbiTarget ->
                     new CalculateSourceAbi(
-                        abiTarget,
+                        sourceAbiTarget,
                         getProjectFilesystem(),
                         getFinalBuildDeps(),
                         getSourcePathRuleFinder(),
@@ -323,9 +329,9 @@ public abstract class DefaultJavaLibraryRules {
         getBuildRuleResolver()
             .computeIfAbsent(
                 HasJavaAbi.getClassAbiJar(getLibraryTarget()),
-                abiTarget ->
+                classAbiTarget ->
                     CalculateClassAbi.of(
-                        abiTarget,
+                        classAbiTarget,
                         getSourcePathRuleFinder(),
                         getProjectFilesystem(),
                         getInitialParams(),
