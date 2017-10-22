@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -65,7 +66,7 @@ public class ProjectBuildFileParserPoolTest {
       int expectedCreateCount)
       throws Exception {
     final AtomicInteger createCount = new AtomicInteger(0);
-    Cell cell = EasyMock.createMock(Cell.class);
+    Cell cell = new TestCellBuilder().build();
 
     final CountDownLatch createParserLatch = new CountDownLatch(expectedCreateCount);
     try (ProjectBuildFileParserPool parserPool =
@@ -119,7 +120,7 @@ public class ProjectBuildFileParserPoolTest {
   public void closesCreatedParsers() throws Exception {
     final int parsersCount = 4;
     final AtomicInteger parserCount = new AtomicInteger(0);
-    Cell cell = EasyMock.createMock(Cell.class);
+    Cell cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(parsersCount));
 
@@ -181,7 +182,7 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void fuzzForConcurrentAccess() throws Exception {
     final int parsersCount = 3;
-    Cell cell = EasyMock.createMock(Cell.class);
+    Cell cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
 
@@ -211,7 +212,7 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void ignoresCancellation() throws Exception {
-    Cell cell = EasyMock.createMock(Cell.class);
+    Cell cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
@@ -245,7 +246,7 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void closeWhenRunningJobs() throws Exception {
-    Cell cell = EasyMock.createMock(Cell.class);
+    Cell cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
@@ -297,7 +298,7 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void workThatThrows() throws Exception {
-    Cell cell = EasyMock.createMock(Cell.class);
+    Cell cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 

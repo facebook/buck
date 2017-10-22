@@ -168,7 +168,7 @@ public final class CellProvider {
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
-                return new Cell(
+                return Cell.of(
                     getKnownRoots(cellPathResolver),
                     cellPathResolver.getCanonicalCellName(normalizedCellPath),
                     cellFilesystem,
@@ -185,7 +185,7 @@ public final class CellProvider {
                   .getCanonicalCellName(rootFilesystem.getRootPath())
                   .isPresent(),
               "Root cell should be nameless");
-          return new Cell(
+          return Cell.of(
               getKnownRoots(rootCellCellPathResolver),
               Optional.empty(),
               rootFilesystem,
@@ -207,10 +207,10 @@ public final class CellProvider {
                 cellPath -> {
                   DistBuildCellParams cellParam =
                       Preconditions.checkNotNull(cellParams.get(cellPath));
-                  return new Cell(
+                  return Cell.of(
                       cellParams.keySet(),
-                      // Distributed builds don't care about cell names, use a sentinel value that will
-                      // show up if it actually does care about them.
+                      // Distributed builds don't care about cell names, use a sentinel value that
+                      // will show up if it actually does care about them.
                       cellParam.getCanonicalName(),
                       cellParam.getFilesystem(),
                       Watchman.NULL_WATCHMAN,
