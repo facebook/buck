@@ -32,14 +32,22 @@ import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
@@ -48,6 +56,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
@@ -59,7 +69,11 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
 class Jsr199JavacInvocation implements Javac.Invocation {
+
   private static final Logger LOG = Logger.get(Jsr199JavacInvocation.class);
+  private static final ListeningExecutorService threadPool =
+      MoreExecutors.listeningDecorator(
+          Executors.newCachedThreadPool(new NamedThreadFactory("javac")));
 
   private final Function<JavacExecutionContext, JavaCompiler> compilerConstructor;
   private final JavacExecutionContext context;
@@ -72,12 +86,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
   @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
-  private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-  private final List<AutoCloseable> closeables = new ArrayList<>();
 
-  @Nullable private BuckJavacTaskProxy javacTask;
   @Nullable private ClassUsageTracker classUsageTracker;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
+  @Nullable private CompilerWorker worker;
 
   public Jsr199JavacInvocation(
       Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
@@ -108,73 +120,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
   @Override
   public int buildSourceAbiJar() throws InterruptedException {
-    BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
-        new Jsr199TracingBridge(context.getEventSink(), invokingRule));
-    try {
-      // Invoke the compilation and inspect the result.
-      BuckJavacTaskProxy javacTask = getJavacTask();
-
-      JarParameters jarParameters = Preconditions.checkNotNull(abiJarParameters);
-      javacTask.addPostEnterCallback(
-          topLevelTypes -> {
-            try {
-              JarBuilder jarBuilder = newJarBuilder(jarParameters).setShouldHashEntries(true);
-              StubGenerator stubGenerator =
-                  new StubGenerator(
-                      getTargetVersion(options),
-                      javacTask.getElements(),
-                      javacTask.getMessager(),
-                      jarBuilder,
-                      context.getEventSink());
-              stubGenerator.generate(topLevelTypes);
-              jarBuilder.createJarFile(
-                  context
-                      .getProjectFilesystem()
-                      .getPathForRelativePath(jarParameters.getJarPath()));
-              throw new StopCompilation();
-            } catch (IOException e) {
-              throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());
-            }
-          });
-
-      try {
-        javacTask.call();
-      } catch (RuntimeException e) {
-        if (!(e.getCause() instanceof StopCompilation)) {
-          throw new HumanReadableException(
-              e,
-              String.format(
-                  "The compiler crashed when run without dependencies. There is probably an error in the source code. Try building %s to reveal it.",
-                  invokingRule.getUnflavoredBuildTarget().toString()));
-        }
-
-        // StopCompilation is what we use to break out of compile early when generating the ABI jar
-      }
-
-      debugLogDiagnostics();
-      if (buildSuccessful()) {
-        if (classUsageTracker != null) {
-          new DefaultClassUsageFileWriter()
-              .writeFile(
-                  classUsageTracker,
-                  CompilerParameters.getDepFilePath(invokingRule, context.getProjectFilesystem()),
-                  context.getProjectFilesystem(),
-                  context.getCellPathResolver());
-        }
-      } else {
-        reportDiagnosticsToUser();
-        return 1;
-      }
-
-      return 0;
-    } catch (IOException e) {
-      LOG.error(e);
-      throw new HumanReadableException("IOException during abi generation: ", e.getMessage());
-    } finally {
-      // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
-      // be using it.
-      BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
-    }
+    return getWorker().buildSourceAbiJar();
   }
 
   @Override
@@ -200,96 +146,280 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       return 1;
     }
 
-    BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
-        new Jsr199TracingBridge(context.getEventSink(), invokingRule));
-    try {
-      // Invoke the compilation and inspect the result.
-      BuckJavacTaskProxy javacTask = getJavacTask();
-      javacTask.call();
+    return getWorker().buildClasses();
+  }
 
-      debugLogDiagnostics();
+  private CompilerWorker getWorker() {
+    if (worker == null) {
+      worker = new CompilerWorker(threadPool);
+    }
 
-      if (buildSuccessful()) {
-        if (classUsageTracker != null) {
-          new DefaultClassUsageFileWriter()
-              .writeFile(
-                  classUsageTracker,
-                  CompilerParameters.getDepFilePath(invokingRule, context.getProjectFilesystem()),
-                  context.getProjectFilesystem(),
-                  context.getCellPathResolver());
-        }
-      } else {
-        reportDiagnosticsToUser();
-        return 1;
+    return worker;
+  }
+
+  @Override
+  public void close() {
+    // Must close the worker first so that the compiler has a chance to exit.
+    if (worker != null) {
+      worker.close();
+    }
+  }
+
+  private class CompilerWorker implements AutoCloseable {
+    private final ListeningExecutorService executor;
+    private final BuckJavacTaskProxy javacTask;
+
+    private final SettableFuture<Integer> compilerResult = SettableFuture.create();
+    private final SettableFuture<Boolean> shouldCompileFullJar = SettableFuture.create();
+    private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+    private final List<AutoCloseable> closeables = new ArrayList<>();
+
+    /** A perf event that's used to show, on the background thread, what rule is being built. */
+    @Nullable private JavacEventSinkScopedSimplePerfEvent targetEvent;
+
+    @Nullable private String compilerThreadName;
+
+    private CompilerWorker(ListeningExecutorService executor) {
+      this.executor = executor;
+
+      try {
+        javacTask = newJavacTask();
+      } catch (IOException e) {
+        LOG.error(e);
+        throw new HumanReadableException("IOException during compilation: ", e.getMessage());
       }
+    }
 
-      if (libraryJarParameters == null) {
-        return 0;
-      }
+    public int buildSourceAbiJar() throws InterruptedException {
+      SettableFuture<Integer> abiResult = SettableFuture.create();
+      Futures.addCallback(
+          compilerResult,
+          new FutureCallback<Integer>() {
+            @Override
+            public void onSuccess(@Nullable Integer result) {
+              abiResult.set(result);
+            }
 
-      return newJarBuilder(libraryJarParameters)
-          .createJarFile(
-              Preconditions.checkNotNull(
+            @Override
+            public void onFailure(Throwable t) {
+              // Propagate failure
+              abiResult.setException(t);
+            }
+          });
+
+      JarParameters jarParameters = Preconditions.checkNotNull(abiJarParameters);
+      javacTask.addPostEnterCallback(
+          topLevelTypes -> {
+            try {
+              JarBuilder jarBuilder = newJarBuilder(jarParameters).setShouldHashEntries(true);
+              StubGenerator stubGenerator =
+                  new StubGenerator(
+                      getTargetVersion(options),
+                      javacTask.getElements(),
+                      javacTask.getMessager(),
+                      jarBuilder,
+                      context.getEventSink());
+              stubGenerator.generate(topLevelTypes);
+              jarBuilder.createJarFile(
                   context
                       .getProjectFilesystem()
-                      .getPathForRelativePath(libraryJarParameters.getJarPath())));
-    } catch (IOException e) {
-      LOG.error(e);
-      throw new HumanReadableException("IOException during compilation: ", e.getMessage());
-    } finally {
-      // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
-      // be using it.
-      BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
+                      .getPathForRelativePath(jarParameters.getJarPath()));
+
+              debugLogDiagnostics();
+              if (buildSuccessful()) {
+                if (classUsageTracker != null) {
+                  new DefaultClassUsageFileWriter()
+                      .writeFile(
+                          classUsageTracker,
+                          CompilerParameters.getDepFilePath(
+                              invokingRule, context.getProjectFilesystem()),
+                          context.getProjectFilesystem(),
+                          context.getCellPathResolver());
+                }
+                abiResult.set(0);
+              } else {
+                reportDiagnosticsToUser();
+                abiResult.set(1);
+              }
+
+              targetEvent.close();
+
+              // Make a new event to capture the time spent waiting for the next stage in the
+              // pipeline (or for the pipeline to realize it's done)
+              targetEvent =
+                  new JavacEventSinkScopedSimplePerfEvent(
+                      context.getEventSink(), "Waiting for pipeline");
+              if (!shouldCompileFullJar.get()) {
+                // targetEvent will be closed in startCompiler
+                throw new StopCompilation();
+              }
+              targetEvent.close();
+
+              // Now start tracking the full jar
+              targetEvent =
+                  new JavacEventSinkScopedSimplePerfEvent(
+                      context.getEventSink(), HasJavaAbi.getLibraryTarget(invokingRule).toString());
+            } catch (IOException e) {
+              abiResult.setException(e);
+            } catch (InterruptedException | ExecutionException e) {
+              // These come from the get on shouldCompileFullJar, which should never throw
+              throw new AssertionError(e);
+            }
+          });
+
+      try {
+        String threadName = startCompiler();
+        try (JavacEventSinkScopedSimplePerfEvent event =
+            new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), threadName)) {
+          return abiResult.get();
+        }
+      } catch (ExecutionException e) {
+        Throwables.throwIfUnchecked(e.getCause());
+        throw new HumanReadableException("Failed to generate abi: %s", e.getCause().getMessage());
+      }
     }
-  }
 
-  private void debugLogDiagnostics() {
-    for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-      LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
+    public int buildClasses() throws InterruptedException {
+      shouldCompileFullJar.set(true);
+      try {
+        String threadName = startCompiler();
+        try (JavacEventSinkScopedSimplePerfEvent event =
+            new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), threadName)) {
+          return compilerResult.get();
+        }
+      } catch (ExecutionException e) {
+        Throwables.throwIfUnchecked(e.getCause());
+        throw new HumanReadableException("Failed to compile: %s", e.getCause().getMessage());
+      }
     }
-  }
 
-  private void reportDiagnosticsToUser() {
-    if (context.getVerbosity().shouldPrintStandardInformation()) {
-      List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
-          DiagnosticCleaner.clean(diagnostics.getDiagnostics());
+    private void debugLogDiagnostics() {
+      for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+        LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
+      }
+    }
 
-      int numErrors = 0;
-      int numWarnings = 0;
-      for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
-        Diagnostic.Kind kind = diagnostic.getKind();
-        if (kind == Diagnostic.Kind.ERROR) {
-          ++numErrors;
-        } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
-          ++numWarnings;
+    private void reportDiagnosticsToUser() {
+      if (context.getVerbosity().shouldPrintStandardInformation()) {
+        List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
+            DiagnosticCleaner.clean(diagnostics.getDiagnostics());
+
+        int numErrors = 0;
+        int numWarnings = 0;
+        for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
+          Diagnostic.Kind kind = diagnostic.getKind();
+          if (kind == Diagnostic.Kind.ERROR) {
+            ++numErrors;
+          } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
+            ++numWarnings;
+          }
+
+          context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
         }
 
-        context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
-      }
-
-      if (numErrors > 0 || numWarnings > 0) {
-        context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
+        if (numErrors > 0 || numWarnings > 0) {
+          context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
+        }
       }
     }
-  }
 
-  private boolean buildSuccessful() {
-    return diagnostics
-            .getDiagnostics()
-            .stream()
-            .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
-            .count()
-        == 0;
-  }
-
-  private void addCloseable(Object maybeCloseable) {
-    if (maybeCloseable instanceof AutoCloseable) {
-      closeables.add((AutoCloseable) maybeCloseable);
+    private boolean buildSuccessful() {
+      return diagnostics
+              .getDiagnostics()
+              .stream()
+              .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
+              .count()
+          == 0;
     }
-  }
 
-  private BuckJavacTaskProxy getJavacTask() throws IOException {
-    if (javacTask == null) {
+    private void addCloseable(Object maybeCloseable) {
+      if (maybeCloseable instanceof AutoCloseable) {
+        closeables.add((AutoCloseable) maybeCloseable);
+      }
+    }
+
+    @Override
+    public void close() {
+      if (!compilerResult.isDone()) {
+        shouldCompileFullJar.set(false);
+        try {
+          compilerResult.get();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+          throw new AssertionError(e);
+        }
+      }
+    }
+
+    private String startCompiler() throws ExecutionException, InterruptedException {
+      if (compilerThreadName == null) {
+        final SettableFuture<String> threadName = SettableFuture.create();
+        compilerResult.setFuture(
+            executor.submit(
+                () -> {
+                  threadName.set(Thread.currentThread().getName());
+                  BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
+                      new Jsr199TracingBridge(context.getEventSink(), invokingRule));
+                  targetEvent =
+                      new JavacEventSinkScopedSimplePerfEvent(
+                          context.getEventSink(), invokingRule.toString());
+                  try {
+                    javacTask.call();
+
+                    debugLogDiagnostics();
+
+                    if (buildSuccessful()) {
+                      if (classUsageTracker != null) {
+                        new DefaultClassUsageFileWriter()
+                            .writeFile(
+                                classUsageTracker,
+                                CompilerParameters.getDepFilePath(
+                                    invokingRule, context.getProjectFilesystem()),
+                                context.getProjectFilesystem(),
+                                context.getCellPathResolver());
+                      }
+                    } else {
+                      reportDiagnosticsToUser();
+                      return 1;
+                    }
+
+                    if (libraryJarParameters == null) {
+                      return 0;
+                    }
+
+                    return newJarBuilder(libraryJarParameters)
+                        .createJarFile(
+                            Preconditions.checkNotNull(
+                                context
+                                    .getProjectFilesystem()
+                                    .getPathForRelativePath(libraryJarParameters.getJarPath())));
+                  } catch (RuntimeException e) {
+                    if (e.getCause() instanceof StopCompilation) {
+                      return 0;
+                    } else {
+                      throw new BuckUncheckedExecutionException(
+                          e.getCause() != null ? e.getCause() : e, "When running javac");
+                    }
+                  } finally {
+                    for (AutoCloseable closeable : Lists.reverse(closeables)) {
+                      try {
+                        closeable.close();
+                      } catch (Exception e) {
+                        LOG.warn(e, "Unable to close %s; we may be leaking memory.", closeable);
+                      }
+                    }
+                    targetEvent.close();
+                  }
+                }));
+
+        compilerThreadName = threadName.get();
+      }
+
+      return compilerThreadName;
+    }
+
+    private BuckJavacTaskProxy newJavacTask() throws IOException {
       JavaCompiler compiler = compilerConstructor.apply(context);
 
       StandardJavaFileManager standardFileManager =
@@ -334,7 +464,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       if (classUsageTracker != null) {
         wrappedFileManager = classUsageTracker.wrapFileManager(fileManager);
       }
-      javacTask =
+      BuckJavacTaskProxy javacTask =
           BuckJavacTaskProxy.getTask(
               loaderFactory,
               compiler,
@@ -379,68 +509,57 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
       javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
       javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+      return javacTask;
     }
-    return javacTask;
-  }
 
-  private JarBuilder newJarBuilder(JarParameters jarParameters) throws IOException {
-    JarBuilder jarBuilder = new JarBuilder();
-    Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
-    return jarBuilder
-        .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
-        .setEntriesToJar(
-            jarParameters.getEntriesToJar().stream().map(context.getProjectFilesystem()::resolve))
-        .setMainClass(jarParameters.getMainClass().orElse(null))
-        .setManifestFile(jarParameters.getManifestFile().orElse(null))
-        .setShouldMergeManifests(true)
-        .setRemoveEntryPredicate(jarParameters.getRemoveEntryPredicate());
-  }
-
-  @Override
-  public void close() {
-    for (AutoCloseable closeable : Lists.reverse(closeables)) {
-      try {
-        closeable.close();
-      } catch (Exception e) {
-        LOG.warn(e, "Unable to close %s; we may be leaking memory.", closeable);
-      }
+    private JarBuilder newJarBuilder(JarParameters jarParameters) throws IOException {
+      JarBuilder jarBuilder = new JarBuilder();
+      Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
+      return jarBuilder
+          .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
+          .setEntriesToJar(
+              jarParameters.getEntriesToJar().stream().map(context.getProjectFilesystem()::resolve))
+          .setMainClass(jarParameters.getMainClass().orElse(null))
+          .setManifestFile(jarParameters.getManifestFile().orElse(null))
+          .setShouldMergeManifests(true)
+          .setRemoveEntryPredicate(jarParameters.getRemoveEntryPredicate());
     }
-  }
 
-  private Iterable<? extends JavaFileObject> createCompilationUnits(
-      StandardJavaFileManager fileManager,
-      Function<Path, Path> absolutifier,
-      Set<Path> javaSourceFilePaths)
-      throws IOException {
-    List<JavaFileObject> compilationUnits = new ArrayList<>();
-    for (Path path : javaSourceFilePaths) {
-      String pathString = path.toString();
-      if (pathString.endsWith(".java")) {
-        // For an ordinary .java file, create a corresponding JavaFileObject.
-        Iterable<? extends JavaFileObject> javaFileObjects =
-            fileManager.getJavaFileObjects(absolutifier.apply(path).toFile());
-        compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-      } else if (pathString.endsWith(Javac.SRC_ZIP) || pathString.endsWith(Javac.SRC_JAR)) {
-        // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
-        boolean hasZipFileBeenUsed = false;
-        for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            entries.hasMoreElements(); ) {
-          ZipEntry entry = entries.nextElement();
-          if (!entry.getName().endsWith(".java")) {
-            continue;
+    private Iterable<? extends JavaFileObject> createCompilationUnits(
+        StandardJavaFileManager fileManager,
+        Function<Path, Path> absolutifier,
+        Set<Path> javaSourceFilePaths)
+        throws IOException {
+      List<JavaFileObject> compilationUnits = new ArrayList<>();
+      for (Path path : javaSourceFilePaths) {
+        String pathString = path.toString();
+        if (pathString.endsWith(".java")) {
+          // For an ordinary .java file, create a corresponding JavaFileObject.
+          Iterable<? extends JavaFileObject> javaFileObjects =
+              fileManager.getJavaFileObjects(absolutifier.apply(path).toFile());
+          compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
+        } else if (pathString.endsWith(Javac.SRC_ZIP) || pathString.endsWith(Javac.SRC_JAR)) {
+          // For a Zip of .java files, create a JavaFileObject for each .java entry.
+          ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
+          boolean hasZipFileBeenUsed = false;
+          for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
+              entries.hasMoreElements(); ) {
+            ZipEntry entry = entries.nextElement();
+            if (!entry.getName().endsWith(".java")) {
+              continue;
+            }
+
+            hasZipFileBeenUsed = true;
+            compilationUnits.add(new ZipEntryJavaFileObject(zipFile, entry));
           }
 
-          hasZipFileBeenUsed = true;
-          compilationUnits.add(new ZipEntryJavaFileObject(zipFile, entry));
-        }
-
-        if (!hasZipFileBeenUsed) {
-          zipFile.close();
+          if (!hasZipFileBeenUsed) {
+            zipFile.close();
+          }
         }
       }
+      return compilationUnits;
     }
-    return compilationUnits;
   }
 
   private static SourceVersion getTargetVersion(Iterable<String> options) {
