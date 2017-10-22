@@ -17,6 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.string.AsciiBoxStringBuilder;
+import com.google.common.base.Throwables;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -52,6 +57,8 @@ class TracingProcessorWrapper implements Processor {
         begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS);
     try {
       return innerProcessor.getSupportedOptions();
+    } catch (RuntimeException e) {
+      throw wrapAnnotationProcessorCrashException(e);
     } finally {
       end(started);
     }
@@ -63,6 +70,8 @@ class TracingProcessorWrapper implements Processor {
         begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES);
     try {
       return innerProcessor.getSupportedAnnotationTypes();
+    } catch (RuntimeException e) {
+      throw wrapAnnotationProcessorCrashException(e);
     } finally {
       end(started);
     }
@@ -74,6 +83,8 @@ class TracingProcessorWrapper implements Processor {
         begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION);
     try {
       return innerProcessor.getSupportedSourceVersion();
+    } catch (RuntimeException e) {
+      throw wrapAnnotationProcessorCrashException(e);
     } finally {
       end(started);
     }
@@ -84,6 +95,8 @@ class TracingProcessorWrapper implements Processor {
     AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.INIT);
     try {
       innerProcessor.init(processingEnv);
+    } catch (RuntimeException e) {
+      throw wrapAnnotationProcessorCrashException(e);
     } finally {
       end(started);
     }
@@ -96,9 +109,55 @@ class TracingProcessorWrapper implements Processor {
     AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.PROCESS);
     try {
       return innerProcessor.process(annotations, roundEnv);
+    } catch (RuntimeException e) {
+      throw wrapAnnotationProcessorCrashException(e);
     } finally {
       end(started);
     }
+  }
+
+  private HumanReadableException wrapAnnotationProcessorCrashException(RuntimeException e) {
+    List<String> filteredStackTraceLines = getStackTraceEndingAtAnnotationProcessor(e);
+
+    int maxLineLength = filteredStackTraceLines.stream().mapToInt(String::length).max().orElse(75);
+
+    AsciiBoxStringBuilder messageBuilder =
+        new AsciiBoxStringBuilder(maxLineLength)
+            .writeLine("The annotation processor %s has crashed.\n", annotationProcessorName)
+            .writeLine(
+                "This is likely a bug in the annotation processor itself, though there may be changes you can make to your code to work around it. Examine the exception stack trace below and consult the annotation processor's troubleshooting guide.\n");
+
+    filteredStackTraceLines.forEach(messageBuilder::writeLine);
+
+    return new HumanReadableException(e, "\n" + messageBuilder.toString());
+  }
+
+  private List<String> getStackTraceEndingAtAnnotationProcessor(RuntimeException e) {
+    String[] stackTraceLines = Throwables.getStackTraceAsString(e).split("\n");
+    List<String> filteredStackTraceLines = new ArrayList<>();
+
+    boolean skippingBuckFrames = false;
+    int numFramesSkipped = 0;
+    for (String stackTraceLine : stackTraceLines) {
+      if (stackTraceLine.contains(TracingProcessorWrapper.class.getSimpleName())) {
+        skippingBuckFrames = true;
+        numFramesSkipped = 0;
+      } else if (stackTraceLine.contains("Caused by:")) {
+        skippingBuckFrames = false;
+        if (numFramesSkipped > 0) {
+          // Mimic the skipped frames logic of inner exceptions for the frames we've skipped
+          filteredStackTraceLines.add(String.format("\t... %d more", numFramesSkipped));
+        }
+      }
+
+      if (skippingBuckFrames) {
+        numFramesSkipped += 1;
+        continue;
+      }
+
+      filteredStackTraceLines.add(stackTraceLine);
+    }
+    return filteredStackTraceLines;
   }
 
   @Override

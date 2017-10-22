@@ -976,12 +976,15 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("ap_crashes");
 
     ProcessResult result = workspace.runBuckBuild("//:main");
-    // TODO(cjhopman): These shouldn't be reported as internal errors.
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "Buck encountered an internal error",
-            "java.lang.RuntimeException: Test crash!",
+            "Build failed:",
+            "The annotation processor com.example.buck.AnnotationProcessor has crashed.",
+            "java.lang.RuntimeException: java.lang.IllegalArgumentException: Test crash!   |\n|  at com.example.buck.AnnotationProcessor.process(AnnotationProcessor.java:22) |\n|  ...", // Buck frames have been stripped properly
+            "Caused by: java.lang.IllegalArgumentException: Test crash!", // Without then stripping
+            // out the caused
+            // exception!
             "    When running <javac>.",
             "    When building rule //:main."));
   }
