@@ -53,6 +53,11 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
+  public boolean shouldGenerateSourceOnlyAbi() {
+    return shouldGenerateSourceAbi() && !javaBuckConfig.getAbiGenerationMode().usesDependencies();
+  }
+
+  @Override
   public ConfiguredCompiler configure(
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,

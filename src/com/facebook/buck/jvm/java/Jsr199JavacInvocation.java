@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
+import com.facebook.buck.jvm.java.abi.source.api.FrontendOnlyJavacTaskProxy;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.abi.source.api.StopCompilation;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
@@ -192,7 +193,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       this.executor = executor;
 
       try {
-        javacTask = newJavacTask();
+        boolean generatingSourceOnlyAbi =
+            HasJavaAbi.isSourceAbiTarget(invokingRule) && !abiGenerationMode.usesDependencies();
+        javacTask = newJavacTask(generatingSourceOnlyAbi);
       } catch (IOException e) {
         LOG.error(e);
         throw new HumanReadableException("IOException during compilation: ", e.getMessage());
@@ -434,7 +437,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       return compilerThreadName;
     }
 
-    private BuckJavacTaskProxy newJavacTask() throws IOException {
+    private BuckJavacTaskProxy newJavacTask(boolean generatingSourceOnlyAbi) throws IOException {
       JavaCompiler compiler = compilerConstructor.apply(context);
 
       StandardJavaFileManager standardFileManager =
@@ -479,21 +482,37 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       if (classUsageTracker != null) {
         wrappedFileManager = classUsageTracker.wrapFileManager(fileManager);
       }
-      BuckJavacTaskProxy javacTask =
-          BuckJavacTaskProxy.getTask(
-              loaderFactory,
-              compiler,
-              compilerOutputWriter,
-              wrappedFileManager,
-              diagnostics,
-              options,
-              classNamesForAnnotationProcessing,
-              compilationUnits);
+      BuckJavacTaskProxy javacTask;
+      if (generatingSourceOnlyAbi) {
+        javacTask =
+            FrontendOnlyJavacTaskProxy.getTask(
+                loaderFactory,
+                compiler,
+                compilerOutputWriter,
+                wrappedFileManager,
+                diagnostics,
+                options,
+                classNamesForAnnotationProcessing,
+                compilationUnits);
+      } else {
+        javacTask =
+            BuckJavacTaskProxy.getTask(
+                loaderFactory,
+                compiler,
+                compilerOutputWriter,
+                wrappedFileManager,
+                diagnostics,
+                options,
+                classNamesForAnnotationProcessing,
+                compilationUnits);
+      }
 
       PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
       BuckJavacTaskListener taskListener = null;
-      if (abiGenerationMode.checkForSourceOnlyAbiCompatibility() && ruleInfo != null) {
+      if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()
+          && !generatingSourceOnlyAbi
+          && ruleInfo != null) {
         ruleInfo.setFileManager(fileManager);
         taskListener =
             SourceBasedAbiStubber.newValidatingTaskListener(

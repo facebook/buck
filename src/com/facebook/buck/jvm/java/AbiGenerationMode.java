@@ -51,4 +51,10 @@ public enum AbiGenerationMode {
   public boolean isSourceAbi() {
     return this != CLASS;
   }
+
+  public boolean usesDependencies() {
+    // MOE: begin_strip
+    return this != SOURCE_ONLY;
+    // MOE: end_strip_and_replace return true;
+  }
 }

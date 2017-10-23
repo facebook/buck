@@ -51,6 +51,10 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  public boolean shouldGenerateSourceOnlyAbi() {
+    return false;
+  }
+
   public void addTargetDeps(
       @SuppressWarnings("unused") ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       @SuppressWarnings("unused")

@@ -159,7 +159,7 @@ public class JarBuildStepsFactory
   public boolean useRulePipelining() {
     return configuredCompiler instanceof JavacToJarStepFactory
         && abiGenerationMode.isSourceAbi()
-        && abiGenerationMode != AbiGenerationMode.SOURCE_ONLY;
+        && abiGenerationMode.usesDependencies();
   }
 
   public ImmutableList<Step> getBuildStepsForAbiJar(

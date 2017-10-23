@@ -164,7 +164,9 @@ public class JavacStep implements Step {
   public String getShortName() {
     String name;
     if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
-      name = "source_abi";
+      return pipeline.getCompilerParameters().getAbiGenerationMode().usesDependencies()
+          ? "source_abi"
+          : "source_only_abi";
     } else if (pipeline.getLibraryJarParameters().isPresent()) {
       name = "javac_jar";
     } else {
