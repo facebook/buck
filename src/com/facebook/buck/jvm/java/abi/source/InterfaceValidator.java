@@ -86,7 +86,8 @@ class InterfaceValidator {
       new InterfaceScanner(
               trees,
               new InterfaceScanner.Listener() {
-                private final Set<Element> importedTypes = new HashSet<>();
+                private final Set<TypeElement> importedTypes = new HashSet<>();
+                private final Set<QualifiedNameable> importedOwners = new HashSet<>();
 
                 @Override
                 public void onTypeDeclared(TypeElement type, TreePath path) {
@@ -173,7 +174,9 @@ class InterfaceValidator {
                 }
 
                 @Override
-                public void onMembersImported(QualifiedNameable typeOrPackage) {}
+                public void onMembersImported(QualifiedNameable typeOrPackage) {
+                  importedOwners.add(typeOrPackage);
+                }
 
                 @Override
                 public void onTypeReferenceFound(
@@ -190,7 +193,7 @@ class InterfaceValidator {
                         Preconditions.checkNotNull((TypeElement) trees.getElement(path));
                   }
 
-                  if (typeWillBeAvailable(referencedType)
+                  if (isCompiledInCurrentRun(referencedType)
                       || referenceIsLegalForMissingTypes(path, enclosingPackage, referencedType)) {
                     // All good!
                     return;
@@ -272,13 +275,18 @@ class InterfaceValidator {
                     TreePath path,
                     PackageElement enclosingPackage,
                     TypeElement referencedTypeElement) {
-                  return isImported(referencedTypeElement)
-                      || isTopLevelTypeInPackage(referencedTypeElement, enclosingPackage)
+                  return isImported(referencedTypeElement, enclosingPackage)
                       || isFullyQualified(path, referencedTypeElement);
                 }
 
-                private boolean isImported(TypeElement referencedTypeElement) {
-                  return importedTypes.contains(referencedTypeElement);
+                private boolean isImported(
+                    TypeElement referencedTypeElement, PackageElement enclosingPackage) {
+                  PackageElement referencedPackage = getPackageElement(referencedTypeElement);
+                  return isTopLevelTypeInPackage(referencedTypeElement, enclosingPackage)
+                      || importedTypes.contains(referencedTypeElement)
+                      || referencedPackage.getQualifiedName().contentEquals("java.lang")
+                      || (importedOwners.contains(referencedTypeElement.getEnclosingElement())
+                          && typeWillBeAvailable(referencedTypeElement));
                 }
 
                 private boolean isTopLevelTypeInPackage(

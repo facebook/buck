@@ -238,7 +238,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testStarImportedTypeFromBootClasspathFails() throws IOException {
+  public void testStarImportedTypeFromBootClasspathSucceeds() throws IOException {
     this.compileWithValidation(
         Joiner.on('\n')
             .join("import java.util.*;", "public abstract class Foo implements List<String> { }"));
