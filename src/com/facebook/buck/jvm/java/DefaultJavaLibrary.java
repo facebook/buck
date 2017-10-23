@@ -407,7 +407,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public boolean useRulePipelining() {
-    return true;
+    return jarBuildStepsFactory.useRulePipelining();
   }
 
   @Override

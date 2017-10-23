@@ -150,7 +150,7 @@ public class DummyRDotJavaTest {
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
                             .build(),
-                        null,
+                        dummyRDotJava.getBuildTarget(),
                         pathResolver,
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),

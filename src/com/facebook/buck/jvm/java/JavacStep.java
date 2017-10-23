@@ -20,50 +20,29 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.message_ipc.Connection;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public class JavacStep implements Step {
 
-  private final CompilerParameters compilerParameters;
-
-  private final JavacOptions javacOptions;
+  private final JavacPipelineState pipeline;
 
   private final BuildTarget invokingRule;
 
-  private final SourcePathResolver resolver;
-
-  private final ProjectFilesystem filesystem;
-
-  private final Javac javac;
-
-  private final ClasspathChecker classpathChecker;
-
-  @Nullable private final JarParameters libraryJarParameters;
-
-  @Nullable private final JarParameters abiJarParameters;
+  private final boolean ownsPipelineObject;
 
   public JavacStep(
       Javac javac,
@@ -75,87 +54,60 @@ public class JavacStep implements Step {
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters) {
-    this.javacOptions = javacOptions;
-    this.javac = javac;
+    this(
+        new JavacPipelineState(
+            javac,
+            javacOptions,
+            invokingRule,
+            resolver,
+            filesystem,
+            classpathChecker,
+            compilerParameters,
+            abiJarParameters,
+            libraryJarParameters),
+        invokingRule,
+        true);
+  }
+
+  public JavacStep(JavacPipelineState pipeline, BuildTarget invokingRule) {
+    this(pipeline, invokingRule, false);
+  }
+
+  private JavacStep(
+      JavacPipelineState pipeline, BuildTarget invokingRule, boolean ownsPipelineObject) {
+    this.pipeline = pipeline;
     this.invokingRule = invokingRule;
-    this.resolver = resolver;
-    this.filesystem = filesystem;
-    this.classpathChecker = classpathChecker;
-    this.compilerParameters = compilerParameters;
-    this.abiJarParameters = abiJarParameters;
-    this.libraryJarParameters = libraryJarParameters;
+    this.ownsPipelineObject = ownsPipelineObject;
   }
 
   @Override
   public final StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    javacOptions.validateOptions(classpathChecker::validateClasspath);
-
-    Verbosity verbosity =
-        context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
-    try (CapturingPrintStream stdout = new CapturingPrintStream();
-        CapturingPrintStream stderr = new CapturingPrintStream();
-        ExecutionContext firstOrderContext =
-            context.createSubContext(stdout, stderr, Optional.of(verbosity));
-        Connection<OutOfProcessJavacConnectionInterface> connection =
-            OutOfProcessConnectionFactory.connectionForOutOfProcessBuild(
-                context, filesystem, getJavac(), invokingRule)) {
-      JavacExecutionContext javacExecutionContext =
-          JavacExecutionContext.of(
-              new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
-              stderr,
-              firstOrderContext.getClassLoaderCache(),
-              verbosity,
-              firstOrderContext.getCellPathResolver(),
-              firstOrderContext.getJavaPackageFinder(),
-              filesystem,
-              context.getProjectFilesystemFactory(),
-              firstOrderContext.getEnvironment(),
-              firstOrderContext.getProcessExecutor(),
-              getAbsolutePathsForJavacInputs(getJavac()));
-      ImmutableList<JavacPluginJsr199Fields> pluginFields =
-          ImmutableList.copyOf(
-              javacOptions
-                  .getAnnotationProcessingParams()
-                  .getAnnotationProcessors(this.filesystem, resolver)
-                  .stream()
-                  .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
-                  .collect(Collectors.toList()));
-      int declaredDepsBuildResult;
-      String firstOrderStdout;
-      String firstOrderStderr;
-      Optional<String> returnedStderr;
-      try (Javac.Invocation invocation =
-          getJavac()
-              .newBuildInvocation(
-                  javacExecutionContext,
-                  invokingRule,
-                  getOptions(context, compilerParameters.getClasspathEntries()),
-                  pluginFields,
-                  compilerParameters.getSourceFilePaths(),
-                  compilerParameters.getPathToSourcesList(),
-                  compilerParameters.getWorkingDirectory(),
-                  compilerParameters.shouldTrackClassUsage(),
-                  abiJarParameters,
-                  libraryJarParameters,
-                  compilerParameters.getAbiGenerationMode(),
-                  compilerParameters.getSourceOnlyAbiRuleInfo())) {
-        if (abiJarParameters != null) {
-          declaredDepsBuildResult = invocation.buildSourceAbiJar();
-        } else {
-          declaredDepsBuildResult = invocation.buildClasses();
-        }
-      }
-      firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
-      firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
-      if (declaredDepsBuildResult != 0) {
-        returnedStderr =
-            processBuildFailure(context.getBuckEventBus(), firstOrderStdout, firstOrderStderr);
+    int declaredDepsBuildResult;
+    String firstOrderStdout;
+    String firstOrderStderr;
+    Optional<String> returnedStderr;
+    try {
+      Javac.Invocation invocation = pipeline.getJavacInvocation(context);
+      if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
+        declaredDepsBuildResult = invocation.buildSourceAbiJar();
       } else {
-        returnedStderr = Optional.empty();
+        declaredDepsBuildResult = invocation.buildClasses();
       }
-      return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
+      firstOrderStdout = pipeline.getStdoutContents();
+      firstOrderStderr = pipeline.getStderrContents();
+    } finally {
+      if (ownsPipelineObject) {
+        pipeline.close();
+      }
     }
+    if (declaredDepsBuildResult != 0) {
+      returnedStderr =
+          processBuildFailure(context.getBuckEventBus(), firstOrderStdout, firstOrderStderr);
+    } else {
+      returnedStderr = Optional.empty();
+    }
+    return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
   }
 
   private Optional<String> processBuildFailure(
@@ -175,17 +127,9 @@ public class JavacStep implements Step {
     return Optional.of(Joiner.on("\n").join(errorMessage.build()));
   }
 
-  private ImmutableList<Path> getAbsolutePathsForJavacInputs(Javac javac) {
-    return javac
-        .getInputs()
-        .stream()
-        .map(resolver::getAbsolutePath)
-        .collect(MoreCollectors.toImmutableList());
-  }
-
   @VisibleForTesting
   Javac getJavac() {
-    return javac;
+    return pipeline.getJavac();
   }
 
   @Override
@@ -194,19 +138,21 @@ public class JavacStep implements Step {
         getJavac()
             .getDescription(
                 getOptions(context, getClasspathEntries()),
-                compilerParameters.getSourceFilePaths(),
-                compilerParameters.getPathToSourcesList());
+                pipeline.getCompilerParameters().getSourceFilePaths(),
+                pipeline.getCompilerParameters().getPathToSourcesList());
 
-    if (libraryJarParameters != null) {
-      Optional<Path> manifestFile = libraryJarParameters.getManifestFile();
-      ImmutableSortedSet<Path> entriesToJar = libraryJarParameters.getEntriesToJar();
+    if (HasJavaAbi.isLibraryTarget(invokingRule)
+        && pipeline.getLibraryJarParameters().isPresent()) {
+      JarParameters jarParameters = pipeline.getLibraryJarParameters().get();
+      Optional<Path> manifestFile = jarParameters.getManifestFile();
+      ImmutableSortedSet<Path> entriesToJar = jarParameters.getEntriesToJar();
       description =
           description
               + "; "
               + String.format(
                   "jar %s %s %s %s",
                   manifestFile.isPresent() ? "cfm" : "cf",
-                  libraryJarParameters.getJarPath(),
+                  jarParameters.getJarPath(),
                   manifestFile.isPresent() ? manifestFile.get() : "",
                   Joiner.on(' ').join(entriesToJar));
     }
@@ -217,15 +163,15 @@ public class JavacStep implements Step {
   @Override
   public String getShortName() {
     String name;
-    if (abiJarParameters != null) {
+    if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
       name = "source_abi";
-    } else if (libraryJarParameters != null) {
+    } else if (pipeline.getLibraryJarParameters().isPresent()) {
       name = "javac_jar";
     } else {
       name = getJavac().getShortName();
     }
 
-    if (javac instanceof OutOfProcessJsr199Javac) {
+    if (getJavac() instanceof OutOfProcessJsr199Javac) {
       name += "(oop)";
     }
 
@@ -242,86 +188,17 @@ public class JavacStep implements Step {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
-    return getOptions(
-        javacOptions,
-        filesystem,
-        resolver,
-        compilerParameters.getOutputDirectory(),
-        compilerParameters.getGeneratedCodeDirectory(),
-        context,
-        buildClasspathEntries);
-  }
-
-  public static ImmutableList<String> getOptions(
-      JavacOptions javacOptions,
-      ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
-      Path outputDirectory,
-      Path generatedCodeDirectory,
-      ExecutionContext context,
-      ImmutableSortedSet<Path> buildClasspathEntries) {
-    final ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    javacOptions.appendOptionsTo(
-        new OptionsConsumer() {
-          @Override
-          public void addOptionValue(String option, String value) {
-            if (option.equals("bootclasspath")) {
-              builder
-                  .add("-bootclasspath")
-                  .add(
-                      Arrays.stream(value.split(File.pathSeparator))
-                          .map(path -> filesystem.resolve(path).toString())
-                          .collect(Collectors.joining(File.pathSeparator)));
-            } else {
-              builder.add("-" + option).add(value);
-            }
-          }
-
-          @Override
-          public void addFlag(String flagName) {
-            builder.add("-" + flagName);
-          }
-
-          @Override
-          public void addExtras(Collection<String> extras) {
-            builder.addAll(extras);
-          }
-        },
-        pathResolver,
-        filesystem);
-
-    // verbose flag, if appropriate.
-    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
-      builder.add("-verbose");
-    }
-
-    // Specify the output directory.
-    builder.add("-d").add(filesystem.resolve(outputDirectory).toString());
-
-    if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
-      builder.add("-s").add(filesystem.resolve(generatedCodeDirectory).toString());
-    }
-
-    // Build up and set the classpath.
-    if (!buildClasspathEntries.isEmpty()) {
-      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
-      builder.add("-classpath", classpath);
-    } else {
-      builder.add("-classpath", "''");
-    }
-
-    return builder.build();
+    return pipeline.getOptions(context, buildClasspathEntries);
   }
 
   /** @return The classpath entries used to invoke javac. */
   @VisibleForTesting
   ImmutableSortedSet<Path> getClasspathEntries() {
-    return compilerParameters.getClasspathEntries();
+    return pipeline.getCompilerParameters().getClasspathEntries();
   }
 
   @VisibleForTesting
   ImmutableSortedSet<Path> getSrcs() {
-    return compilerParameters.getSourceFilePaths();
+    return pipeline.getCompilerParameters().getSourceFilePaths();
   }
 }

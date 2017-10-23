@@ -83,20 +83,21 @@ class BuildRulePipelinesRunner {
 
   public <T extends RulePipelineState>
       ListenableFuture<Optional<BuildResult>> runPipelineStartingAt(
-          SupportsPipelining<T> rootRule, ExecutorService executor) {
-    RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(rootRule);
+          BuildContext context, SupportsPipelining<T> rootRule, ExecutorService executor) {
+    RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(context, rootRule);
     executor.execute(runner);
     return runner.getFuture();
   }
 
   private <T extends RulePipelineState> RunnableWithFuture<Optional<BuildResult>> newPipelineRunner(
-      SupportsPipelining<T> rootRule) {
+      BuildContext context, SupportsPipelining<T> rootRule) {
     BuildRulePipelineStage<T> rootPipelineStage = getPipelineStage(rootRule);
     Preconditions.checkState(!rootPipelineStage.pipelineBuilt());
 
     BuildRulePipeline<T> pipeline =
         new BuildRulePipeline<>(
-            rootPipelineStage, rootRule.getPipelineStateFactory().newInstance());
+            rootPipelineStage,
+            rootRule.getPipelineStateFactory().newInstance(context, rootRule.getBuildTarget()));
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
       public ListenableFuture<Optional<BuildResult>> getFuture() {

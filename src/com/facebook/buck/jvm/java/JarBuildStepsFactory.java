@@ -156,6 +156,10 @@ public class JarBuildStepsFactory
                 .startsWith(METADATA_DIR);
   }
 
+  public boolean useRulePipelining() {
+    return configuredCompiler instanceof JavacToJarStepFactory;
+  }
+
   public ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
@@ -321,7 +325,14 @@ public class JarBuildStepsFactory
   }
 
   @Override
-  public JavacPipelineState newInstance() {
-    return new JavacPipelineState();
+  public JavacPipelineState newInstance(BuildContext context, BuildTarget firstRule) {
+    JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
+    CompilerParameters compilerParameters = getCompilerParameters(context, firstRule);
+    return javacToJarStepFactory.createPipelineState(
+        context,
+        firstRule,
+        compilerParameters,
+        getAbiJarParameters(context, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, compilerParameters).orElse(null));
   }
 }

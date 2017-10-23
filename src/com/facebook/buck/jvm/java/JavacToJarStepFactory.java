@@ -61,6 +61,27 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
   }
 
+  public JavacPipelineState createPipelineState(
+      BuildContext context,
+      BuildTarget invokingRule,
+      CompilerParameters compilerParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters) {
+    final JavacOptions buildTimeOptions =
+        javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+
+    return new JavacPipelineState(
+        javac,
+        buildTimeOptions,
+        invokingRule,
+        resolver,
+        projectFilesystem,
+        new ClasspathChecker(),
+        compilerParameters,
+        abiJarParameters,
+        libraryJarParameters);
+  }
+
   @Override
   public void createCompileStep(
       BuildContext context,
