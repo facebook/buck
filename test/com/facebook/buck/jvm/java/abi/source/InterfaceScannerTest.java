@@ -130,6 +130,15 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testReportsLeafmostTypeReference() throws IOException {
+    findTypeReferences("import java.util.Map;", "class Foo {", "  Map.Entry entry;", "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.util.Map.Entry", 3, 3)));
+  }
+
+  @Test
   public void testIgnoresTypeVariableTypeReferences() throws IOException {
     findTypeReferences("class Foo<T extends Runnable & CharSequence> {", "  T t;", "}");
 
@@ -313,7 +322,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testFindsReferencesInConstants() throws IOException {
+  public void testIgnoresReferencesInInitializers() throws IOException {
     findTypeReferences(
         "class Foo {",
         "  public static final String s = Constants.CONSTANT;",
@@ -326,7 +335,6 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         typeReferences,
         Matchers.containsInAnyOrder(
             createSymbolicReference("java.lang.String", 2, 23),
-            createSymbolicReference("Constants", 2, 34),
             createSymbolicReference("java.lang.String", 5, 23)));
   }
 
@@ -363,7 +371,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testFindsReferencesInMethodDefaultValues() throws IOException {
+  public void testIgnoresReferencesInMethodDefaultValuePrimitiveConstants() throws IOException {
     findTypeReferences(
         "@interface Foo {",
         "  String value() default Constants.CONSTANT;",
@@ -376,12 +384,47 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         typeReferences,
         Matchers.containsInAnyOrder(
             createSymbolicReference("java.lang.String", 2, 3),
-            createSymbolicReference("Constants", 2, 26),
             createSymbolicReference("java.lang.String", 5, 23)));
   }
 
   @Test
-  public void testFindsReferencesInAnnotationValues() throws IOException {
+  public void testFindsReferencesInMethodDefaultValueClassLiterals() throws IOException {
+    findTypeReferences(
+        "@interface Foo {",
+        "  Class value() default Constants.class;",
+        "}",
+        "class Constants {",
+        "  public static final String CONSTANT = \"Hello\";",
+        "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.Class", 2, 3),
+            createSymbolicReference("Constants", 2, 25),
+            createSymbolicReference("java.lang.String", 5, 23)));
+  }
+
+  @Test
+  public void testFindsReferencesInMethodDefaultValueEnumConstants() throws IOException {
+    findTypeReferences(
+        "@interface Foo {",
+        "  Constants value() default Constants.CONSTANT;",
+        "}",
+        "enum Constants {",
+        "  CONSTANT;",
+        "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Constants", 2, 3),
+            createSymbolicReference("Constants", 2, 29),
+            createSymbolicReference("Constants", 5, 3)));
+  }
+
+  @Test
+  public void testIgnoresReferencesInAnnotationValuePrimitiveConstants() throws IOException {
     findTypeReferences(
         "@SuppressWarnings(Constants.CONSTANT)",
         "class Foo {",
@@ -394,8 +437,39 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         typeReferences,
         Matchers.containsInAnyOrder(
             createSymbolicReference("java.lang.SuppressWarnings", 1, 2),
-            createSymbolicReference("Constants", 1, 19),
             createSymbolicReference("java.lang.String", 5, 23)));
+  }
+
+  @Test
+  public void testFindsReferencesInAnnotationValueEnumConstants() throws IOException {
+    findTypeReferences(
+        "import java.lang.annotation.*;", "@Target(ElementType.TYPE)", "@interface Foo {", "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.annotation.Target", 2, 2),
+            createSymbolicReference("java.lang.annotation.ElementType", 2, 9)));
+  }
+
+  @Test
+  public void testFindsReferencesInAnnotationValueClassLiterals() throws IOException {
+    findTypeReferences(
+        "@Anno(Bar.class)",
+        "class Foo {",
+        "}",
+        "class Bar {",
+        "}",
+        "@interface Anno {",
+        "  Class<?> value();",
+        " }");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Anno", 1, 2),
+            createSymbolicReference("Bar", 1, 7),
+            createSymbolicReference("java.lang.Class", 7, 3)));
   }
 
   @Test

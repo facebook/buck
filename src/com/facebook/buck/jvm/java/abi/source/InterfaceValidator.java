@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MemberSelectTree;
@@ -34,6 +35,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
@@ -174,6 +176,16 @@ class InterfaceValidator {
                 public void onTypeReferenceFound(
                     TypeElement referencedType, TreePath path, Element enclosingElement) {
                   PackageElement enclosingPackage = getPackageElement(enclosingElement);
+
+                  // TODO(jkeljo): Temporary fix to adapt to InterfaceScanner's new behavior of
+                  // returning only the leafmost type. This will go away shortly as I make some
+                  // corrections to type reference validation.
+                  while (path.getLeaf().getKind() != Tree.Kind.IDENTIFIER
+                      && referencedType.getNestingKind() != NestingKind.TOP_LEVEL) {
+                    path = new TreePath(path, ((MemberSelectTree) path.getLeaf()).getExpression());
+                    referencedType =
+                        Preconditions.checkNotNull((TypeElement) trees.getElement(path));
+                  }
 
                   if (typeWillBeAvailable(referencedType)
                       || referenceIsLegalForMissingTypes(path, enclosingPackage, referencedType)) {

@@ -70,6 +70,8 @@ class InterfaceScanner {
     // Scan the non-private interface portions of the tree, and report any references to types
     // or constants that are found.
     new TreeContextScanner<Void, Void>(trees) {
+      private boolean inInitializer = false;
+
       /** Reports types that are imported via single-type imports */
       @Override
       public Void visitImport(ImportTree node, Void aVoid) {
@@ -156,7 +158,12 @@ class InterfaceScanner {
           return null;
         }
 
-        scan(node.getInitializer(), aVoid);
+        inInitializer = true;
+        try {
+          scan(node.getInitializer(), aVoid);
+        } finally {
+          inInitializer = false;
+        }
 
         return null;
       }
@@ -185,27 +192,21 @@ class InterfaceScanner {
         // reference or constant reference that we need to report
         ElementKind kind = currentElement.getKind();
         if (kind.isClass() || kind.isInterface()) {
-          TypeElement typeElement = (TypeElement) currentElement;
-          if (typeElement.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
-            // This is a fully-qualified name
-            reportType();
-            return null; // Stop; we don't need to report the package reference
-          }
-
-          // If it's not a package member, keep going; we want to report the outermost type
-          // that is actually named in the source, since that's the thing that might be imported
+          reportType();
         } else {
           // If it's not a class reference, it could be a reference to a constant field, either
           // as part of initializing a constant field or as a parameter to an annotation
           VariableElement variableElement = (VariableElement) currentElement;
           if (variableElement.getConstantValue() != null) {
             reportConstant();
-            // Keep going; there can also be a type reference that needs reporting
+          } else {
+            // Could be an enum constant, which is not considered a compile-time constant. Keep
+            // looking for the type reference.
+            return super.visitMemberSelect(node, aVoid);
           }
         }
 
-        // Look at the root of this member select; it might be a top-level type
-        return super.visitMemberSelect(node, aVoid);
+        return null;
       }
 
       /**
@@ -238,6 +239,10 @@ class InterfaceScanner {
       }
 
       private void reportType() {
+        if (inInitializer) {
+          return;
+        }
+
         TypeMirror currentType = Preconditions.checkNotNull(getCurrentType());
         if (currentType.getKind() != TypeKind.DECLARED) {
           return;
