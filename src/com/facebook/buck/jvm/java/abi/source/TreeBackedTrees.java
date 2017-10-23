@@ -17,12 +17,14 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.tree.AnnotatedTypeTree;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Scope;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.SimpleTreeVisitor;
@@ -213,8 +215,8 @@ class TreeBackedTrees extends Trees {
   }
 
   /**
-   * Takes a {@link MemberSelectTree} or {@link IdentifierTree} and returns the name it represents
-   * as a {@link CharSequence}.
+   * Takes a type reference expression and returns the base name of the type it represents (without
+   * any type arguments or annotations).
    */
   /* package */
   static CharSequence treeToName(Tree tree) {
@@ -227,6 +229,16 @@ class TreeBackedTrees extends Trees {
           @Override
           protected CharSequence defaultAction(Tree node, Void aVoid) {
             throw new AssertionError(String.format("Unexpected tree of kind: %s", node.getKind()));
+          }
+
+          @Override
+          public CharSequence visitAnnotatedType(AnnotatedTypeTree node, Void aVoid) {
+            return node.getUnderlyingType().accept(this, aVoid);
+          }
+
+          @Override
+          public CharSequence visitParameterizedType(ParameterizedTypeTree node, Void aVoid) {
+            return node.getType().accept(this, aVoid);
           }
 
           @Override
