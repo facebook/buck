@@ -43,7 +43,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   private List<String> typeReferences;
   private List<String> constantReferences;
   private List<TypeElement> importedTypes;
-  private List<TypeElement> annotationTypesFound = new ArrayList<>();
+  private List<TypeElement> declaredTypes;
 
   @Test
   public void testFindsVariableTypeReference() throws IOException {
@@ -553,7 +553,20 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     findTypeReferences("@interface Foo {", "  @interface Inner { }", "}", "@interface Bar { }");
 
     assertThat(
-        annotationTypesFound
+        declaredTypes
+            .stream()
+            .map(TypeElement::getQualifiedName)
+            .map(Name::toString)
+            .collect(Collectors.toList()),
+        Matchers.contains("Foo", "Foo.Inner", "Bar"));
+  }
+
+  @Test
+  public void testFindsClassDefinitions() throws IOException {
+    findTypeReferences("public class Foo {", "  private class Inner { }", "}", "class Bar { }");
+
+    assertThat(
+        declaredTypes
             .stream()
             .map(TypeElement::getQualifiedName)
             .map(Name::toString)
@@ -573,6 +586,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     constantReferences = new ArrayList<>();
     typeReferences = new ArrayList<>();
     importedTypes = new ArrayList<>();
+    declaredTypes = new ArrayList<>();
 
     testCompiler.setAllowCompilationErrors(errorsOK);
     compile(
@@ -626,9 +640,10 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   private class FinderListener implements InterfaceScanner.Listener {
+
     @Override
-    public void onAnnotationTypeFound(TypeElement type, TreePath path) {
-      annotationTypesFound.add(type);
+    public void onTypeDeclared(TypeElement type, TreePath path) {
+      declaredTypes.add(type);
     }
 
     @Override

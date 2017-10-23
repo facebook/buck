@@ -44,7 +44,7 @@ import javax.lang.model.util.ElementFilter;
  */
 class InterfaceScanner {
   public interface Listener {
-    void onAnnotationTypeFound(TypeElement type, TreePath path);
+    void onTypeDeclared(TypeElement type, TreePath path);
 
     void onTypeImported(TypeElement type);
 
@@ -112,9 +112,7 @@ class InterfaceScanner {
       public Void visitClass(ClassTree node, Void aVoid) {
         Element element = getEnclosingElement();
 
-        if (element.getKind() == ElementKind.ANNOTATION_TYPE) {
-          listener.onAnnotationTypeFound((TypeElement) element, getCurrentPath());
-        }
+        listener.onTypeDeclared((TypeElement) element, getCurrentPath());
 
         // Skip private since they're not part of the interface
         if (!element.getKind().isClass() && isPrivate(element)) {

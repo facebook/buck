@@ -78,8 +78,9 @@ class InterfaceValidator {
                 private final Set<Element> importedTypes = new HashSet<>();
 
                 @Override
-                public void onAnnotationTypeFound(TypeElement type, TreePath path) {
-                  if (!ruleInfo.ruleIsRequiredForSourceOnlyAbi()) {
+                public void onTypeDeclared(TypeElement type, TreePath path) {
+                  if (type.getKind() == ElementKind.ANNOTATION_TYPE
+                      && !ruleInfo.ruleIsRequiredForSourceOnlyAbi()) {
                     trees.printMessage(
                         messageKind,
                         String.format(
