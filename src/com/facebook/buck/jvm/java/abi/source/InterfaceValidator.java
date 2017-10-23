@@ -130,11 +130,15 @@ class InterfaceValidator {
                     return;
                   }
 
-                  // TODO(jkeljo): Clearer message
+                  String owningTarget = ruleInfo.getOwningTarget(elements, constant);
                   trees.printMessage(
                       messageKind,
                       String.format(
-                          "Must inline the constant value: %s", constant.getConstantValue()),
+                          "This constant will not be available during source-only ABI generation.\n"
+                              + "For a quick fix, add required_for_source_only_abi = True to %s.\n"
+                              + "A better fix is to move %s to a new rule that contains only\n"
+                              + "constants, and mark that rule required_for_source_only_abi.\n",
+                          owningTarget, constant.getEnclosingElement().getSimpleName()),
                       path.getLeaf(),
                       path.getCompilationUnit());
                 }

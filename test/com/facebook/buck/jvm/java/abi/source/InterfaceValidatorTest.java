@@ -338,13 +338,14 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testConstantFromClasspathFails() throws IOException {
+  public void testConstantFromUnavailableTargetFails() throws IOException {
     withClasspath(
         ImmutableMap.of(
             "Constants.java",
             Joiner.on('\n')
                 .join(
-                    "class Constants {",
+                    "package com.facebook.constants;",
+                    "public class Constants {",
                     "  public static final int CONSTANT = 3 + 5;",
                     "  public static final int CONST2 = 3;",
                     "}")));
@@ -354,6 +355,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             "Foo.java",
             Joiner.on('\n')
                 .join(
+                    "import com.facebook.constants.Constants;",
                     "class Foo {",
                     "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
                     "}")));
@@ -361,14 +363,46 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertErrors(
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Must inline the constant value: 8",
+                "Foo.java:3: error: This constant will not be available during source-only ABI generation.",
                 "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
-                "                                              ^"),
+                "                                              ^",
+                "  For a quick fix, add required_for_source_only_abi = True to //com/facebook/constants:constants.",
+                "  A better fix is to move Constants to a new rule that contains only",
+                "  constants, and mark that rule required_for_source_only_abi."),
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Must inline the constant value: 3",
+                "Foo.java:3: error: This constant will not be available during source-only ABI generation.",
                 "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
-                "                                                                       ^"));
+                "                                                                       ^",
+                "  For a quick fix, add required_for_source_only_abi = True to //com/facebook/constants:constants.",
+                "  A better fix is to move Constants to a new rule that contains only",
+                "  constants, and mark that rule required_for_source_only_abi."));
+  }
+
+  @Test
+  public void testConstantFromAvailableTargetFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "Constants.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.constants;",
+                    "public class Constants {",
+                    "  public static final int CONSTANT = 3 + 5;",
+                    "  public static final int CONST2 = 3;",
+                    "}")));
+    taskListenerFactory.addTargetAvailableForSourceOnlyAbi("//com/facebook/constants:constants");
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "import com.facebook.constants.Constants;",
+                    "class Foo {",
+                    "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
+                    "}")));
+
+    assertNoErrors();
   }
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(String source)
