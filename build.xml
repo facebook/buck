@@ -811,7 +811,7 @@
     </forbiddenapis>
   </target>
 
-  <target name="missing-test-files-check">
+  <target name="missing-test-files-check" depends="default">
     <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
       <arg line="verify-test-files.py" />
     </exec>
