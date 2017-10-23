@@ -440,6 +440,60 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testQualifiedNestedGenericSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar<T> {",
+                    "  public class Inner<U> { }",
+                    "}")));
+
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "public class Foo {",
+                    "  com.facebook.bar.Bar<Integer>.Inner<String> i;",
+                    "}")));
+
+    assertNoErrors();
+  }
+
+  @Test
+  public void testQualifiedAnnotatedTypeSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar {",
+                    "  public class Inner { }",
+                    "}")));
+
+    taskListenerFactory.setRuleIsRequiredForSourceAbi(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import java.lang.annotation.*;",
+                    "public class Foo {",
+                    "  com.facebook.bar.@Anno Bar.Inner i;",
+                    "}",
+                    "@Target(ElementType.TYPE_USE)",
+                    "@interface Anno { }")));
+
+    assertNoErrors();
+  }
+
+  @Test
   public void testConstantCompiledTogetherSucceeds() throws IOException {
     compileWithValidation(
         ImmutableMap.of(
