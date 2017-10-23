@@ -72,6 +72,70 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testMissingGrandSuperFailsButMissingSuperDoesNot() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "import com.facebook.iface2.Interface2;",
+                    "public class Bar extends Baz implements Interface2 { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n').join("package com.facebook.baz;", "public class Baz { }"),
+            "com/facebook/iface/Interface.java",
+            Joiner.on('\n').join("package com.facebook.iface;", "public interface Interface { }"),
+            "com/facebook/iface2/Interface2.java",
+            Joiner.on('\n')
+                .join("package com.facebook.iface2;", "public interface Interface2 { }")));
+    taskListenerFactory.addTargetAvailableForSourceOnlyAbi("//com/facebook/bar:bar");
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/foo/Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import com.facebook.bar.Bar;",
+                    "import com.facebook.iface.Interface;",
+                    "public class Foo extends Bar implements Interface { }")));
+
+    assertError(
+        "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
+            + "public class Foo extends Bar implements Interface { }\n"
+            + "                         ^\n"
+            + "  To fix, add the following rules to source_only_abi_deps: //com/facebook/baz:baz, //com/facebook/iface2:iface2");
+  }
+
+  @Test
+  public void testMissingSuperSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Bar extends Baz { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n').join("package com.facebook.baz;", "public class Baz { }"),
+            "com/facebook/iface/Interface.java",
+            Joiner.on('\n').join("package com.facebook.iface;", "public interface Interface { }")));
+    compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/foo/Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import com.facebook.bar.Bar;",
+                    "import com.facebook.iface.Interface;",
+                    "public class Foo extends Bar implements Interface { }")));
+
+    assertNoErrors();
+  }
+
+  @Test
   public void testFullyQualifiedNameFromBootClasspathSucceeds() throws IOException {
     compileWithValidation("abstract class Foo implements java.util.List { }");
 
