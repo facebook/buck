@@ -17,37 +17,34 @@
 package com.facebook.buck.android;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.Set;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class GenerateStringSourceMapIntegrationTest {
+public class GenerateStringResourcesIntegrationTest {
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
 
-  private static final String AAPT1_BUILD_TARGET = "//apps/sample:app_with_string_source_map";
+  private static final String AAPT1_BUILD_TARGET = "//apps/sample:app_with_string_resources";
   private static final String AAPT2_BUILD_TARGET =
-      "//apps/sample:app_with_string_source_map_and_aapt2";
-
-  private static final String STRINGS_XML_PATH_ATTR = "stringsXmlPath";
-  private static final String STRINGS_JSON_FILE_NAME = "strings.json";
+      "//apps/sample:app_with_string_resources_and_aapt2";
 
   @Before
   public void setUp() throws InterruptedException, IOException {
@@ -63,14 +60,17 @@ public class GenerateStringSourceMapIntegrationTest {
         String.format(
             "%s#%s",
             AAPT1_BUILD_TARGET,
-            AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_SOURCE_MAP_FLAVOR);
+            AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.enableDirCache();
     workspace.runBuckBuild(buildTarget).assertSuccess();
     workspace.runBuckCommand("clean").assertSuccess();
     Path output = workspace.buildAndReturnOutput(buildTarget);
     workspace.getBuildLog().assertTargetWasFetchedFromCache(buildTarget);
-    verifyOutput(output);
+    verifyOutput(
+        output,
+        ImmutableSet.of(
+            "0000/values/strings.xml", "0001/values/strings.xml", "0002/values/strings.xml"));
   }
 
   @Test
@@ -85,33 +85,22 @@ public class GenerateStringSourceMapIntegrationTest {
         String.format(
             "%s#%s",
             AAPT2_BUILD_TARGET,
-            AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_SOURCE_MAP_FLAVOR);
+            AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.enableDirCache();
     Path output = workspace.buildAndReturnOutput(buildTarget);
-    verifyOutput(output);
+    verifyOutput(output, ImmutableSet.of("0000/values/strings.xml", "0001/values/strings.xml"));
   }
 
-  private void verifyOutput(Path output) throws IOException {
+  private void verifyOutput(Path output, Set<String> expectedFilePaths) throws IOException {
+    // verify <output_dir>/<hex_res_dir>/values/strings.xml files
     assertTrue(filesystem.exists(output));
-    Path stringsJsonFile = output.resolve(STRINGS_JSON_FILE_NAME);
-    assertThat(filesystem.exists(stringsJsonFile), is(true));
-    String stringsJsonContent = workspace.getFileContents(stringsJsonFile);
-    Map<String, Map<String, Map<String, String>>> resourcesInfo =
-        new ObjectMapper()
-            .readValue(
-                stringsJsonContent,
-                new TypeReference<Map<String, Map<String, Map<String, String>>>>() {});
-    resourcesInfo
-        .values()
-        .stream()
-        .flatMap(resources -> resources.values().stream())
-        .forEach(
-            resourceInfo -> {
-              String stringsXmlPath = resourceInfo.get(STRINGS_XML_PATH_ATTR);
-              assertNotNull(stringsXmlPath);
-              assertThat(stringsXmlPath.isEmpty(), is(false));
-              assertThat(filesystem.exists(workspace.resolve(stringsXmlPath)), is(true));
-            });
+    assertThat(
+        filesystem
+            .getFilesUnderPath(filesystem.relativize(output))
+            .stream()
+            .map(path -> MorePaths.relativize(filesystem.relativize(output), path).toString())
+            .collect(MoreCollectors.toImmutableSortedSet()),
+        is(expectedFilePaths));
   }
 }

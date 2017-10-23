@@ -27,33 +27,45 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public class GenerateStringSourceMap extends AbstractBuildRule implements HasRuntimeDeps {
-  @AddToRuleKey private final SourcePath pathToRDotTxtFile;
-  @AddToRuleKey private final ImmutableList<SourcePath> filteredResources;
+/**
+ * Copy filtered string resources (values/strings.xml) files to output directory. These will be used
+ * by i18n to map resource_id to fbt_hash with resource_name as the intermediary
+ */
+public class GenerateStringResources extends AbstractBuildRule {
+  @SuppressWarnings("unused")
+  @AddToRuleKey
+  private final ImmutableList<SourcePath> filteredResources;
+
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final SourcePathRuleFinder ruleFinder;
 
-  protected GenerateStringSourceMap(
+  private static final String VALUES = "values";
+  private static final String STRINGS_XML = "strings.xml";
+  private static final String NEW_RES_DIR_FORMAT = "%04x";
+  // "4 digit hex" => 65536 files
+  // we currently have around 1000 "values/strings.xml" files in fb4a
+
+  protected GenerateStringResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      SourcePath pathToRDotTxtFile,
       FilteredResourcesProvider filteredResourcesProvider) {
     super(buildTarget, projectFilesystem);
     this.ruleFinder = ruleFinder;
-    this.pathToRDotTxtFile = pathToRDotTxtFile;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.filteredResources = filteredResourcesProvider.getResDirectories();
   }
@@ -68,43 +80,50 @@ public class GenerateStringSourceMap extends AbstractBuildRule implements HasRun
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    // Make sure we have an output directory
-    Path outputDirPath = getPathForNativeStringInfoDirectory();
+    // Make sure we have a clean output directory
+    Path outputDirPath = getPathForStringResourcesDirectory();
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), getProjectFilesystem(), outputDirPath)));
-    // Add the step that parses R.txt and all the strings.xml files, and
-    // produces a JSON with android resource id's and xml paths for each string resource.
-    GenStringSourceMapStep genNativeStringInfo =
-        new GenStringSourceMapStep(
-            getProjectFilesystem(),
-            buildContext.getSourcePathResolver().getAbsolutePath(pathToRDotTxtFile),
-            filteredResourcesProvider.getRelativeResDirectories(
-                getProjectFilesystem(), buildContext.getSourcePathResolver()),
-            outputDirPath);
-    steps.add(genNativeStringInfo);
-    // Cache the generated strings.json file, it will be stored inside outputDirPath
+    // Copy `values/strings.xml` files from resource directories to hex-enumerated resource
+    // directories under output directory, retaining the input order
+    steps.add(
+        new AbstractExecutionStep("copy_string_resources") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
+            ProjectFilesystem fileSystem = getProjectFilesystem();
+            int i = 0;
+            for (Path resDir :
+                filteredResourcesProvider.getRelativeResDirectories(
+                    fileSystem, buildContext.getSourcePathResolver())) {
+              Path stringsFilePath = resDir.resolve(VALUES).resolve(STRINGS_XML);
+              if (fileSystem.exists(stringsFilePath)) {
+                // create <output_dir>/<new_res_dir>/values
+                Path newStringsFileDir =
+                    outputDirPath.resolve(String.format(NEW_RES_DIR_FORMAT, i++)).resolve(VALUES);
+                fileSystem.mkdirs(newStringsFileDir);
+                // copy <res_dir>/values/strings.xml ->
+                // <output_dir>/<new_res_dir>/values/strings.xml
+                fileSystem.copyFile(stringsFilePath, newStringsFileDir.resolve(STRINGS_XML));
+              }
+            }
+            return StepExecutionResult.SUCCESS;
+          }
+        });
+    // Cache the outputDirPath with all the required string resources
     buildableContext.recordArtifact(outputDirPath);
     return steps.build();
   }
 
-  private Path getPathForNativeStringInfoDirectory() {
+  private Path getPathForStringResourcesDirectory() {
     return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "__%s__");
   }
 
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(
-        getBuildTarget(), getPathForNativeStringInfoDirectory());
-  }
-
-  @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder
-        .filterBuildRuleInputs(filteredResources)
-        .stream()
-        .map(BuildRule::getBuildTarget);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathForStringResourcesDirectory());
   }
 }

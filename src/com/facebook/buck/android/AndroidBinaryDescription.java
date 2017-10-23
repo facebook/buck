@@ -123,7 +123,7 @@ public class AndroidBinaryDescription
           PACKAGE_STRING_ASSETS_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR,
           AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
-          AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_SOURCE_MAP_FLAVOR);
+          AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;

@@ -52,8 +52,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
   static final Flavor GENERATE_RDOT_JAVA_FLAVOR = InternalFlavor.of("generate_rdot_java");
   private static final Flavor SPLIT_RESOURCES_FLAVOR = InternalFlavor.of("split_resources");
-  static final Flavor GENERATE_STRING_SOURCE_MAP_FLAVOR =
-      InternalFlavor.of("generate_string_source_map");
+  static final Flavor GENERATE_STRING_RESOURCES_FLAVOR =
+      InternalFlavor.of("generate_string_resources");
   private static final Flavor MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR =
       InternalFlavor.of("merge_third_party_jar_resources");
   private static final Flavor WRITE_EXO_RESOURCES_HASH_FLAVOR =
@@ -275,8 +275,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ruleResolver.addToIndex(generateRDotJava.get());
 
       if (shouldBuildStringSourceMap) {
-        ruleResolver.addToIndex(
-            createGenerateStringSourceMap(pathToRDotTxt, filteredResourcesProvider));
+        ruleResolver.addToIndex(createGenerateStringResources(filteredResourcesProvider));
       }
     }
 
@@ -378,13 +377,12 @@ class AndroidBinaryResourcesGraphEnhancer {
         resourcesProvider);
   }
 
-  private GenerateStringSourceMap createGenerateStringSourceMap(
-      SourcePath pathToRDotTxtFile, FilteredResourcesProvider filteredResourcesProvider) {
-    return new GenerateStringSourceMap(
-        buildTarget.withAppendedFlavors(GENERATE_STRING_SOURCE_MAP_FLAVOR),
+  private GenerateStringResources createGenerateStringResources(
+      FilteredResourcesProvider filteredResourcesProvider) {
+    return new GenerateStringResources(
+        buildTarget.withAppendedFlavors(GENERATE_STRING_RESOURCES_FLAVOR),
         projectFilesystem,
         ruleFinder,
-        pathToRDotTxtFile,
         filteredResourcesProvider);
   }
 
