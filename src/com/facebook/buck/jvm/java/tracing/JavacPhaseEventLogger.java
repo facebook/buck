@@ -26,12 +26,16 @@ import javax.annotation.Nullable;
 public class JavacPhaseEventLogger {
   private static final ImmutableMap<String, String> EMPTY_MAP = ImmutableMap.of();
 
-  private final BuildTarget buildTarget;
+  private BuildTarget buildTarget;
   private final JavacEventSink eventSink;
 
   public JavacPhaseEventLogger(BuildTarget buildTarget, JavacEventSink eventSink) {
     this.buildTarget = buildTarget;
     this.eventSink = eventSink;
+  }
+
+  public void setBuildTarget(BuildTarget buildTarget) {
+    this.buildTarget = buildTarget;
   }
 
   public void beginParse(@Nullable String filename) {

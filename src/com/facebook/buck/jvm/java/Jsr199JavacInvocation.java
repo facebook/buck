@@ -78,6 +78,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final Function<JavacExecutionContext, JavaCompiler> compilerConstructor;
   private final JavacExecutionContext context;
   private final BuildTarget invokingRule;
+  private final BuildTarget libraryTarget;
+  private final BuildTarget abiTarget;
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -90,6 +92,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   @Nullable private ClassUsageTracker classUsageTracker;
   @Nullable private JavaInMemoryFileManager inMemoryFileManager;
   @Nullable private CompilerWorker worker;
+  private Jsr199TracingBridge tracingBridge;
 
   public Jsr199JavacInvocation(
       Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
@@ -107,6 +110,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
     this.invokingRule = invokingRule;
+    this.libraryTarget =
+        HasJavaAbi.isLibraryTarget(invokingRule)
+            ? invokingRule
+            : HasJavaAbi.getLibraryTarget(invokingRule);
+    this.abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
     this.options = options;
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
@@ -178,6 +186,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     @Nullable private JavacEventSinkScopedSimplePerfEvent targetEvent;
 
     @Nullable private String compilerThreadName;
+    @Nullable private JavacPhaseEventLogger phaseEventLogger;
 
     private CompilerWorker(ListeningExecutorService executor) {
       this.executor = executor;
@@ -232,7 +241,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       .writeFile(
                           classUsageTracker,
                           CompilerParameters.getDepFilePath(
-                              invokingRule, context.getProjectFilesystem()),
+                              abiTarget, context.getProjectFilesystem()),
                           context.getProjectFilesystem(),
                           context.getCellPathResolver());
                 }
@@ -242,23 +251,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                 abiResult.set(1);
               }
 
-              targetEvent.close();
-
-              // Make a new event to capture the time spent waiting for the next stage in the
-              // pipeline (or for the pipeline to realize it's done)
-              targetEvent =
-                  new JavacEventSinkScopedSimplePerfEvent(
-                      context.getEventSink(), "Waiting for pipeline");
-              if (!shouldCompileFullJar.get()) {
-                // targetEvent will be closed in startCompiler
-                throw new StopCompilation();
+              if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
+                switchToFullJarIfRequested();
               }
-              targetEvent.close();
-
-              // Now start tracking the full jar
-              targetEvent =
-                  new JavacEventSinkScopedSimplePerfEvent(
-                      context.getEventSink(), HasJavaAbi.getLibraryTarget(invokingRule).toString());
             } catch (IOException e) {
               abiResult.setException(e);
             } catch (InterruptedException | ExecutionException e) {
@@ -277,6 +272,26 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         Throwables.throwIfUnchecked(e.getCause());
         throw new HumanReadableException("Failed to generate abi: %s", e.getCause().getMessage());
       }
+    }
+
+    private void switchToFullJarIfRequested() throws InterruptedException, ExecutionException {
+      Preconditions.checkNotNull(targetEvent).close();
+
+      // Make a new event to capture the time spent waiting for the next stage in the
+      // pipeline (or for the pipeline to realize it's done)
+      targetEvent =
+          new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), "Waiting for pipeline");
+      if (!shouldCompileFullJar.get()) {
+        // targetEvent will be closed in startCompiler
+        throw new StopCompilation();
+      }
+      targetEvent.close();
+
+      // Now start tracking the full jar
+      tracingBridge.setBuildTarget(libraryTarget);
+      Preconditions.checkNotNull(phaseEventLogger).setBuildTarget(libraryTarget);
+      targetEvent =
+          new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), libraryTarget.toString());
     }
 
     public int buildClasses() throws InterruptedException {
@@ -359,8 +374,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             executor.submit(
                 () -> {
                   threadName.set(Thread.currentThread().getName());
-                  BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
-                      new Jsr199TracingBridge(context.getEventSink(), invokingRule));
+                  tracingBridge = new Jsr199TracingBridge(context.getEventSink(), invokingRule);
+                  BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(tracingBridge);
                   targetEvent =
                       new JavacEventSinkScopedSimplePerfEvent(
                           context.getEventSink(), invokingRule.toString());
@@ -375,7 +390,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                             .writeFile(
                                 classUsageTracker,
                                 CompilerParameters.getDepFilePath(
-                                    invokingRule, context.getProjectFilesystem()),
+                                    libraryTarget, context.getProjectFilesystem()),
                                 context.getProjectFilesystem(),
                                 context.getCellPathResolver());
                       }
@@ -488,9 +503,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                 abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
       }
 
-      TranslatingJavacPhaseTracer tracer =
-          new TranslatingJavacPhaseTracer(
-              new JavacPhaseEventLogger(invokingRule, context.getEventSink()));
+      phaseEventLogger = new JavacPhaseEventLogger(invokingRule, context.getEventSink());
+      TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(phaseEventLogger);
       // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
       // in some unusual situations
       addCloseable(tracer);
