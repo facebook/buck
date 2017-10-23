@@ -5,7 +5,7 @@ import sys
 
 from tracing import Tracing
 from buck_tool import BuckTool, platform_path
-from subprocutils import check_output, which
+from subprocutils import which
 import buck_version
 
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
@@ -59,15 +59,6 @@ class BuckRepo(BuckTool):
     def _join_buck_dir(self, relative_path):
         return os.path.join(self.buck_dir, *(relative_path.split('/')))
 
-    def _has_local_changes(self):
-        if not self.is_git:
-            return False
-
-        output = check_output(
-            ['git', 'ls-files', '-m'],
-            cwd=self.buck_dir)
-        return bool(output.strip())
-
     def get_git_revision(self):
         if not self.is_git:
             return 'N/A'
@@ -104,9 +95,6 @@ class BuckRepo(BuckTool):
                 return clean_version
 
             return buck_version.get_dirty_buck_version(self.buck_dir)
-
-    def _is_buck_production(self):
-        return False
 
     def _get_extra_java_args(self):
         with Tracing('BuckRepo._get_extra_java_args'):

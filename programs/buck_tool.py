@@ -25,10 +25,6 @@ GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
 
-# While waiting for the daemon to terminate, print a message at most
-# every DAEMON_BUSY_MESSAGE_SECONDS seconds.
-DAEMON_BUSY_MESSAGE_SECONDS = 1.0
-
 
 class Resource(object):
     """Describes a resource used by this driver.
@@ -187,9 +183,6 @@ class BuckTool(object):
     def _get_java_classpath(self):
         raise NotImplementedError()
 
-    def _is_buck_production(self):
-        raise NotImplementedError()
-
     def _get_extra_java_args(self):
         return []
 
@@ -239,7 +232,6 @@ class BuckTool(object):
                     cwd=self._buck_project.root)
                 if exit_code == 2:
                     env['BUCK_BUILD_ID'] = str(uuid.uuid4())
-                    now = time.time()
                     if not busy_diagnostic_displayed:
                         logging.info("Buck daemon is busy with another command. " +
                                      "Waiting for it to become free...\n" +
@@ -568,17 +560,6 @@ def platform_path(path):
     if sys.platform != 'cygwin':
         return path
     return check_output(['cygpath', '-w', path]).strip()
-
-
-def truncate_logs_pretty(logs):
-    NUMBER_OF_LINES_BEFORE = 100
-    NUMBER_OF_LINES_AFTER = 100
-    if len(logs) <= NUMBER_OF_LINES_BEFORE + NUMBER_OF_LINES_AFTER:
-        return logs
-    new_logs = logs[:NUMBER_OF_LINES_BEFORE]
-    new_logs.append('...<truncated>...')
-    new_logs.extend(logs[-NUMBER_OF_LINES_AFTER:])
-    return new_logs
 
 
 def setup_watchman_watch():

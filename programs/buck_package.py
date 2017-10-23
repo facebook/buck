@@ -136,10 +136,6 @@ class BuckPackage(BuckTool):
                 outf.close()
                 shutil.copy(outf.name, resource_path)
 
-    def _is_buck_production(self):
-        build_type = pkg_resources.resource_string(__name__, 'buck_build_type_info').strip()
-        return build_type == 'RELEASE_PEX'
-
     def _get_extra_java_args(self):
         return [
             "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
