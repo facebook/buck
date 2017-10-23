@@ -35,7 +35,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 
 /**
  * Examines the non-private interfaces of types defined in one or more {@link CompilationUnitTree}s
@@ -58,9 +58,11 @@ class InterfaceScanner {
   }
 
   private final Listener listener;
+  private final Elements elements;
   private final Trees trees;
 
-  public InterfaceScanner(Trees trees, Listener listener) {
+  public InterfaceScanner(Elements elements, Trees trees, Listener listener) {
+    this.elements = elements;
     this.trees = trees;
     this.listener = listener;
   }
@@ -101,16 +103,12 @@ class InterfaceScanner {
           // give us an Element for the full import expression like it does for a single-type
           // import. We must scan the enclosing type to see if there's any nested class of
           // the given name.
-          TreePath enclosingTypePath = new TreePath(importedTypePath, typeNameTree.getExpression());
-          Element enclosingType = Preconditions.checkNotNull(trees.getElement(enclosingTypePath));
-          for (TypeElement nestedType :
-              ElementFilter.typesIn(enclosingType.getEnclosedElements())) {
-            if (nestedType.getSimpleName().equals(typeNameTree.getIdentifier())) {
-              if (trees.isAccessible(trees.getScope(getCurrentPath()), nestedType)) {
-                listener.onTypeImported(nestedType);
-              }
-              break;
-            }
+          TypeElement nestedType =
+              elements.getTypeElement(TreeBackedTrees.treeToName(typeNameTree));
+          if (nestedType != null
+              && nestedType.getModifiers().contains(Modifier.STATIC)
+              && trees.isAccessible(trees.getScope(getCurrentPath()), nestedType)) {
+            listener.onTypeImported(nestedType);
           }
         }
         return null;

@@ -84,6 +84,7 @@ class InterfaceValidator {
   public void validate(List<? extends CompilationUnitTree> compilationUnits) {
     try (BuckTracing.TraceSection trace = BUCK_TRACING.traceSection("buck.abi.validate")) {
       new InterfaceScanner(
+              elements,
               trees,
               new InterfaceScanner.Listener() {
                 private final Set<TypeElement> importedTypes = new HashSet<>();

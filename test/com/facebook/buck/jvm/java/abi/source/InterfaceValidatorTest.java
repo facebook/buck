@@ -247,6 +247,65 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testCanonicallyStaticImportedTypeSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Bar extends Baz { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.baz;",
+                    "public class Baz { public static class Inner { } }")));
+
+    this.compileWithValidation(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.foo;",
+                "import static com.facebook.baz.Baz.Inner;",
+                "public class Foo {",
+                "  Inner i;",
+                "}"));
+
+    assertNoErrors();
+  }
+
+  @Test
+  public void testNonCanonicallyStaticImportedTypeFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Bar extends Baz { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.baz;",
+                    "public class Baz { public static class Inner { } }")));
+    testCompiler.setAllowCompilationErrors(true);
+    this.compileWithValidation(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.foo;",
+                "import static com.facebook.bar.Bar.Inner;",
+                "public class Foo {",
+                "  Inner i;",
+                "}"));
+
+    assertError(
+        "Foo.java:4: error: Must qualify the name: com.facebook.baz.Baz.Inner\n"
+            + "  Inner i;\n"
+            + "  ^");
+  }
+
+  @Test
   public void testOwnMemberTypeSucceeds() throws IOException {
     compileWithValidation(
         Joiner.on('\n')

@@ -548,6 +548,24 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testIgnoresStaticImportsOfNonStaticTypes() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar {",
+                    "  public class Inner { }",
+                    "  public static void Inner() {}",
+                    "}")));
+
+    findTypeReferences("import static com.facebook.bar.Bar.Inner;", "class Foo { }");
+
+    assertThat(importedTypes, Matchers.empty());
+  }
+
+  @Test
   public void testDoesNotFindInaccessibleStaticImportsOfNestedTypes() throws IOException {
     withClasspath(
         ImmutableMap.of(
@@ -693,7 +711,8 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
             return new PostEnterCallback() {
               @Override
               protected void enterComplete(List<CompilationUnitTree> compilationUnits) {
-                InterfaceScanner finder = new InterfaceScanner(trees, new FinderListener());
+                InterfaceScanner finder =
+                    new InterfaceScanner(elements, trees, new FinderListener());
                 finder.findReferences(compilationUnits);
               }
             };
