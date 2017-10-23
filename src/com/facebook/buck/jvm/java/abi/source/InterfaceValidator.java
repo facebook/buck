@@ -27,8 +27,8 @@ import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
+import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -212,23 +212,13 @@ class InterfaceValidator {
     @Override
     public void onTypeReferenceFound(
         TypeElement canonicalTypeElement, TreePath path, Element referencingElement) {
-      if (isCompiledInCurrentRun(canonicalTypeElement)
-          || isFullyQualifiedOrImportedCanonicalName(
-              canonicalTypeElement, path, referencingElement)) {
-        // All good!
+      if (isCompiledInCurrentRun(canonicalTypeElement)) {
+        // Any reference to a type compiled in the current run will be resolved without
+        // issue by the compiler.
         return;
       }
 
-      PackageElement referencingPackage = getPackageElement(referencingElement);
-      String minimalQualifiedName =
-          findMinimalQualifiedName(canonicalTypeElement, referencingPackage);
-
-      // TODO(jkeljo): Clearer message
-      trees.printMessage(
-          messageKind,
-          String.format("Must qualify the name: %s", minimalQualifiedName),
-          path.getLeaf(),
-          path.getCompilationUnit());
+      new TypeReferenceScanner(canonicalTypeElement, path, referencingElement).scan();
     }
 
     @Override
@@ -290,96 +280,137 @@ class InterfaceValidator {
       return trees.getTree(typeElement) != null;
     }
 
-    private boolean isImported(TypeElement referencedTypeElement, PackageElement enclosingPackage) {
-      PackageElement referencedPackage = getPackageElement(referencedTypeElement);
-      return isTopLevelTypeInPackage(referencedTypeElement, enclosingPackage)
-          || importedTypes.contains(referencedTypeElement)
-          || referencedPackage.getQualifiedName().contentEquals("java.lang")
-          || (importedOwners.contains(referencedTypeElement.getEnclosingElement())
-              && typeWillBeAvailable(referencedTypeElement));
-    }
+    private class TypeReferenceScanner {
+      private final TypeElement canonicalTypeElement;
+      private final TreePath referenceTreePath;
+      private final Element referencingElement;
+      private boolean isCanonicalReference = true;
 
-    private boolean isTopLevelTypeInPackage(
-        TypeElement referencedTypeElement, PackageElement enclosingPackage) {
-      return enclosingPackage == referencedTypeElement.getEnclosingElement();
-    }
-
-    private boolean isFullyQualifiedOrImportedCanonicalName(
-        TypeElement canonicalTypeElement, TreePath path, Element referencingElement) {
-      return path.getLeaf()
-          .accept(
-              new SimpleTreeVisitor<Boolean, Void>() {
-                @Override
-                public Boolean visitIdentifier(IdentifierTree node, Void aVoid) {
-                  // Single-type imports must be canonical by definition.
-                  return isImported(canonicalTypeElement, getPackageElement(referencingElement));
-                }
-
-                @Override
-                public Boolean visitMemberSelect(MemberSelectTree node, Void aVoid) {
-                  TypeElement referencedTypeElement =
-                      Preconditions.checkNotNull((TypeElement) trees.getElement(path));
-                  if (referencedTypeElement.getNestingKind() == NestingKind.TOP_LEVEL) {
-                    // The rest of the member select must be the package name, making this
-                    // a fully-qualified and canonical name.
-                    return true;
-                  }
-
-                  return canonicalTypeElement == referencedTypeElement
-                      && isFullyQualifiedOrImportedCanonicalName(
-                          (TypeElement) canonicalTypeElement.getEnclosingElement(),
-                          new TreePath(path, node.getExpression()),
-                          referencingElement);
-                }
-
-                @Override
-                public Boolean visitParameterizedType(ParameterizedTypeTree node, Void aVoid) {
-                  return isFullyQualifiedOrImportedCanonicalName(
-                      canonicalTypeElement, new TreePath(path, node.getType()), referencingElement);
-                }
-
-                @Override
-                public Boolean visitAnnotatedType(AnnotatedTypeTree node, Void aVoid) {
-                  return isFullyQualifiedOrImportedCanonicalName(
-                      canonicalTypeElement,
-                      new TreePath(path, node.getUnderlyingType()),
-                      referencingElement);
-                }
-
-                @Override
-                protected Boolean defaultAction(Tree node, Void aVoid) {
-                  throw new IllegalArgumentException(
-                      String.format("Unexpected tree of kind %s: %s", node.getKind(), node));
-                }
-              },
-              null);
-    }
-
-    private String findMinimalQualifiedName(
-        TypeElement canonicalTypeElement, PackageElement referencingPackage) {
-      List<QualifiedNameable> enclosingElements = new ArrayList<>();
-      QualifiedNameable walker = canonicalTypeElement;
-      while (walker != null) {
-        enclosingElements.add(walker);
-        if (walker.getKind() != ElementKind.PACKAGE) {
-          TypeElement walkerType = (TypeElement) walker;
-          if (isImported(walkerType, referencingPackage)) {
-            break;
-          }
-        }
-        walker = (QualifiedNameable) walker.getEnclosingElement();
+      public TypeReferenceScanner(
+          TypeElement canonicalTypeElement,
+          TreePath referenceTreePath,
+          Element referencingElement) {
+        this.canonicalTypeElement = canonicalTypeElement;
+        this.referenceTreePath = referenceTreePath;
+        this.referencingElement = referencingElement;
       }
 
-      Collections.reverse(enclosingElements);
+      public void scan() {
+        PackageElement referencingPackage = getPackageElement(referencingElement);
 
-      return enclosingElements
-          .stream()
-          .map(
-              element ->
-                  element.getKind() == ElementKind.PACKAGE
-                      ? element.getQualifiedName()
-                      : element.getSimpleName())
-          .collect(Collectors.joining("."));
+        new TreePathScanner<Void, TypeElement>() {
+          @Override
+          public Void scan(Tree tree, TypeElement canonicalTypeElement) {
+            switch (tree.getKind()) {
+              case IDENTIFIER:
+              case MEMBER_SELECT:
+              case PARAMETERIZED_TYPE:
+              case ANNOTATED_TYPE:
+                return super.scan(tree, canonicalTypeElement);
+                // $CASES-OMITTED$
+              default:
+                throw new IllegalArgumentException(
+                    String.format("Unexpected tree of kind %s: %s", tree.getKind(), tree));
+            }
+          }
+
+          @Override
+          public Void visitAnnotatedType(AnnotatedTypeTree node, TypeElement canonicalTypeElement) {
+            // Just skip over the annotation; the type reference in it will get its own scanner.
+            // The annotation doesn't affect the TypeElement so we can just pass through the same
+            // one.
+            return super.scan(node.getUnderlyingType(), canonicalTypeElement);
+          }
+
+          @Override
+          public Void visitParameterizedType(
+              ParameterizedTypeTree node, TypeElement canonicalTypeElement) {
+            // Skip the type args; they'll each get their own scan. Type args don't affect the
+            // element, so we can just pass through the same one.
+            return super.scan(node.getType(), canonicalTypeElement);
+          }
+
+          @Override
+          public Void visitMemberSelect(MemberSelectTree node, TypeElement canonicalTypeElement) {
+            TypeElement referencedTypeElement =
+                Preconditions.checkNotNull((TypeElement) trees.getElement(getCurrentPath()));
+            if (referencedTypeElement.getNestingKind() == NestingKind.TOP_LEVEL) {
+              // The rest of the member select must be the package name, so this is a
+              // fully-qualified
+              // name of a top-level type. We can stop; such names resolve fine.
+              return null;
+            }
+
+            isCanonicalReference =
+                isCanonicalReference && referencedTypeElement == canonicalTypeElement;
+
+            return super.scan(
+                node.getExpression(), (TypeElement) canonicalTypeElement.getEnclosingElement());
+          }
+
+          @Override
+          public Void visitIdentifier(IdentifierTree node, TypeElement canonicalTypeElement) {
+            // Single-type imports must be canonical by definition.
+            isCanonicalReference = isImported(canonicalTypeElement, referencingPackage);
+
+            return null;
+          }
+        }.scan(referenceTreePath, canonicalTypeElement);
+
+        if (!isCanonicalReference) {
+          String minimalQualifiedName =
+              findMinimalQualifiedName(canonicalTypeElement, referencingPackage);
+
+          // TODO(jkeljo): Clearer message
+          trees.printMessage(
+              messageKind,
+              String.format("Must qualify the name: %s", minimalQualifiedName),
+              referenceTreePath.getLeaf(),
+              referenceTreePath.getCompilationUnit());
+        }
+      }
+
+      private boolean isImported(
+          TypeElement referencedTypeElement, PackageElement enclosingPackage) {
+        PackageElement referencedPackage = getPackageElement(referencedTypeElement);
+        return isTopLevelTypeInPackage(referencedTypeElement, enclosingPackage)
+            || importedTypes.contains(referencedTypeElement)
+            || referencedPackage.getQualifiedName().contentEquals("java.lang")
+            || (importedOwners.contains(referencedTypeElement.getEnclosingElement())
+                && typeWillBeAvailable(referencedTypeElement));
+      }
+
+      private boolean isTopLevelTypeInPackage(
+          TypeElement referencedTypeElement, PackageElement enclosingPackage) {
+        return enclosingPackage == referencedTypeElement.getEnclosingElement();
+      }
+
+      private String findMinimalQualifiedName(
+          TypeElement canonicalTypeElement, PackageElement referencingPackage) {
+        List<QualifiedNameable> enclosingElements = new ArrayList<>();
+        QualifiedNameable walker = canonicalTypeElement;
+        while (walker != null) {
+          enclosingElements.add(walker);
+          if (walker.getKind() != ElementKind.PACKAGE) {
+            TypeElement walkerType = (TypeElement) walker;
+            if (isImported(walkerType, referencingPackage)) {
+              break;
+            }
+          }
+          walker = (QualifiedNameable) walker.getEnclosingElement();
+        }
+
+        Collections.reverse(enclosingElements);
+
+        return enclosingElements
+            .stream()
+            .map(
+                element ->
+                    element.getKind() == ElementKind.PACKAGE
+                        ? element.getQualifiedName()
+                        : element.getSimpleName())
+            .collect(Collectors.joining("."));
+      }
     }
   }
 }
