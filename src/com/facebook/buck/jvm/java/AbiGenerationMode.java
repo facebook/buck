@@ -53,8 +53,6 @@ public enum AbiGenerationMode {
   }
 
   public boolean usesDependencies() {
-    // MOE: begin_strip
-    return this != SOURCE_ONLY;
-    // MOE: end_strip_and_replace return true;
+    return true;
   }
 }
