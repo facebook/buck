@@ -31,6 +31,7 @@ import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -218,9 +219,9 @@ class InterfaceValidator {
         return;
       }
 
-      PackageElement enclosingPackage = getPackageElement(referencingElement);
+      PackageElement referencingPackage = getPackageElement(referencingElement);
       String minimalQualifiedName =
-          findMinimalQualifiedName(path, enclosingPackage, canonicalTypeElement);
+          findMinimalQualifiedName(canonicalTypeElement, referencingPackage);
 
       // TODO(jkeljo): Clearer message
       trees.printMessage(
@@ -355,33 +356,30 @@ class InterfaceValidator {
     }
 
     private String findMinimalQualifiedName(
-        TreePath path, PackageElement enclosingPackage, TypeElement typeElement) {
+        TypeElement canonicalTypeElement, PackageElement referencingPackage) {
       List<QualifiedNameable> enclosingElements = new ArrayList<>();
-      QualifiedNameable walker = typeElement;
-
-      while (walker.getKind() != ElementKind.PACKAGE
-          && !isFullyQualifiedOrImportedCanonicalName(
-              (TypeElement) walker, path, enclosingPackage)) {
+      QualifiedNameable walker = canonicalTypeElement;
+      while (walker != null) {
         enclosingElements.add(walker);
+        if (walker.getKind() != ElementKind.PACKAGE) {
+          TypeElement walkerType = (TypeElement) walker;
+          if (isImported(walkerType, referencingPackage)) {
+            break;
+          }
+        }
         walker = (QualifiedNameable) walker.getEnclosingElement();
       }
-      enclosingElements.add(walker);
 
-      StringBuilder resultBuilder = new StringBuilder();
-      for (int i = enclosingElements.size() - 1; i >= 0; i--) {
-        QualifiedNameable element = enclosingElements.get(i);
-        if (element.getKind() == ElementKind.PACKAGE) {
-          resultBuilder.append(element.getQualifiedName());
-        } else {
-          resultBuilder.append(element.getSimpleName());
-        }
+      Collections.reverse(enclosingElements);
 
-        if (i > 0) {
-          resultBuilder.append(".");
-        }
-      }
-
-      return resultBuilder.toString();
+      return enclosingElements
+          .stream()
+          .map(
+              element ->
+                  element.getKind() == ElementKind.PACKAGE
+                      ? element.getQualifiedName()
+                      : element.getSimpleName())
+          .collect(Collectors.joining("."));
     }
   }
 }
