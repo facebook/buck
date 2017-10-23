@@ -80,7 +80,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final ImmutableSet<FrameworkPath> frameworks;
 
   private final boolean enableObjcInterop;
-  private final Optional<SourcePath> bridgingHeader;
+  @AddToRuleKey private final Optional<SourcePath> bridgingHeader;
 
   @SuppressWarnings("unused")
   private final SwiftBuckConfig swiftBuckConfig;
@@ -210,6 +210,19 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
         projectFilesystem.getRootPath(), ImmutableMap.of(), compilerCommand.build());
+  }
+
+  @Override
+  public boolean isCacheable() {
+    // .swiftmodule artifacts are not cacheable because they can contain machine-specific
+    // headers. More specifically, all files included in a bridging header will be
+    // literally included in the .swiftmodule file. When the Swift compiler encounters
+    // `import Module`, it will include the headers from the .swiftmodule and those
+    // headers are referenced via an absolute path stored in the .swiftmodule. This
+    // means that Obj-C headers can be included multiple times if the machines which
+    // populated the cache and the machine which is building have placed the source
+    // repository at different paths (usually the case with CI and developer machines).
+    return !bridgingHeader.isPresent() || swiftBuckConfig.getCompileForceCache();
   }
 
   @Override
