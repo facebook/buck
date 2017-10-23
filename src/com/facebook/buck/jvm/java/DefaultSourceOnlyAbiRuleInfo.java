@@ -16,22 +16,35 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.java.abi.MoreElements;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
 class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
+  private final ImmutableList<HasJavaAbi> fullJarClasspathRules;
+  private final ImmutableList<HasJavaAbi> abiJarClasspathRules;
+  private final ImmutableSet<String> targetsRequiredForSourceOnlyAbi;
   private final BuildTarget buildTarget;
   private final boolean ruleIsRequiredForSourceOnlyAbi;
   private final Map<String, Set<String>> packagesContents = new HashMap<>();
@@ -39,9 +52,44 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
   @Nullable private JavaFileManager fileManager;
 
   public DefaultSourceOnlyAbiRuleInfo(
-      BuildTarget buildTarget, boolean ruleIsRequiredForSourceOnlyAbi) {
+      SourcePathRuleFinder ruleFinder,
+      BuildTarget buildTarget,
+      boolean ruleIsRequiredForSourceOnlyAbi,
+      DefaultJavaLibraryClasspaths classpaths,
+      DefaultJavaLibraryClasspaths sourceOnlyAbiClasspaths) {
     this.buildTarget = buildTarget;
     this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
+    fullJarClasspathRules =
+        classpaths
+            .getCompileTimeClasspathSourcePaths()
+            .stream()
+            .map(ruleFinder::getRule)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(rule -> rule instanceof HasJavaAbi)
+            .map(rule -> (HasJavaAbi) rule)
+            .collect(MoreCollectors.toImmutableList());
+
+    targetsRequiredForSourceOnlyAbi =
+        sourceOnlyAbiClasspaths
+            .getCompileTimeClasspathSourcePaths()
+            .stream()
+            .map(ruleFinder::getRule)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(BuildRule::getBuildTarget)
+            .map(BuildTarget::getUnflavoredBuildTarget)
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableSet());
+
+    abiJarClasspathRules =
+        fullJarClasspathRules
+            .stream()
+            .filter(
+                rule ->
+                    targetsRequiredForSourceOnlyAbi.contains(
+                        rule.getBuildTarget().getUnflavoredBuildTarget().toString()))
+            .collect(MoreCollectors.toImmutableList());
   }
 
   @Override
@@ -64,13 +112,46 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
   }
 
   @Override
-  public boolean classIsOnBootClasspath(String binaryName) {
+  @Nullable
+  public String getOwningTarget(Elements elements, Element element) {
+    return getOwningTarget(elements, element, this.fullJarClasspathRules);
+  }
+
+  @Nullable
+  private String getOwningTargetIfAvailableForSourceOnlyAbi(Elements elements, Element element) {
+    return getOwningTarget(elements, element, this.abiJarClasspathRules);
+  }
+
+  @Nullable
+  private String getOwningTarget(
+      Elements elements, Element element, ImmutableList<HasJavaAbi> classpath) {
+    TypeElement enclosingType = MoreElements.getTypeElement(element);
+    String classFilePath =
+        elements.getBinaryName(enclosingType).toString().replace('.', '/') + ".class";
+
+    for (HasJavaAbi classpathRule : classpath) {
+      if (classpathRule.jarContains(classFilePath)) {
+        return classpathRule.getBuildTarget().getUnflavoredBuildTarget().toString();
+      }
+    }
+
+    return null;
+  }
+
+  @Override
+  public boolean elementIsAvailableForSourceOnlyAbi(Elements elements, Element element) {
+    return getOwningTargetIfAvailableForSourceOnlyAbi(elements, element) != null
+        || classIsOnBootClasspath(elements, element);
+  }
+
+  private boolean classIsOnBootClasspath(Elements elements, Element element) {
+    String binaryName = elements.getBinaryName(MoreElements.getTypeElement(element)).toString();
     String packageName = getPackageName(binaryName);
-    Set<String> packageContents = getPackageContents(packageName);
+    Set<String> packageContents = getBootclasspathPackageContents(packageName);
     return packageContents.contains(binaryName);
   }
 
-  private Set<String> getPackageContents(String packageName) {
+  private Set<String> getBootclasspathPackageContents(String packageName) {
     Set<String> packageContents = packagesContents.get(packageName);
     if (packageContents == null) {
       packageContents = new HashSet<>();

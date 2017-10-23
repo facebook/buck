@@ -140,16 +140,12 @@ class InterfaceValidator {
                 }
 
                 private boolean typeWillBeAvailable(TypeElement type) {
-                  return isCompiledInCurrentRun(type) || isOnBootClasspath(type);
+                  return isCompiledInCurrentRun(type)
+                      || ruleInfo.elementIsAvailableForSourceOnlyAbi(elements, type);
                 }
 
                 private boolean isCompiledInCurrentRun(TypeElement typeElement) {
                   return trees.getTree(typeElement) != null;
-                }
-
-                private boolean isOnBootClasspath(TypeElement typeElement) {
-                  return ruleInfo.classIsOnBootClasspath(
-                      elements.getBinaryName(typeElement).toString());
                 }
 
                 private boolean referenceIsLegalForMissingTypes(

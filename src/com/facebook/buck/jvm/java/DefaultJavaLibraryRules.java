@@ -326,7 +326,12 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   SourceOnlyAbiRuleInfo getSourceOnlyAbiRuleInfo() {
-    return new DefaultSourceOnlyAbiRuleInfo(getLibraryTarget(), getRequiredForSourceOnlyAbi());
+    return new DefaultSourceOnlyAbiRuleInfo(
+        getSourcePathRuleFinder(),
+        getLibraryTarget(),
+        getRequiredForSourceOnlyAbi(),
+        getClasspaths(),
+        getClasspathsForSourceOnlyAbi());
   }
 
   @Nullable

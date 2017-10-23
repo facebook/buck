@@ -39,6 +39,8 @@ java_library(
         "//third-party/java/jdk:compiler-tree-api",
     ],
     deps = [
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/jvm/java/abi:abi",
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
@@ -46,6 +48,7 @@ java_library(
         "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
         "//third-party/java/asm:asm",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
 )

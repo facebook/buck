@@ -8,9 +8,10 @@ java_library(
         "//test/com/facebook/buck/jvm/java/abi:abi",
     ],
     visibility = [
+        "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
-        "//test/com/facebook/buck/jvm/java/abi:abi",
+        "//test/com/facebook/buck/jvm/java/abi/...",
     ],
     deps = [
         "//src/com/facebook/buck/event:event",

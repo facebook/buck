@@ -23,11 +23,19 @@ import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
 import java.io.IOException;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class InterfaceValidatorTest extends CompilerTreeApiTest {
+  private ValidatingTaskListenerFactory taskListenerFactory;
+
+  @Before
+  public void setUp() {
+    taskListenerFactory = new ValidatingTaskListenerFactory("//:rule");
+  }
+
   @Test
   public void testSimpleClassPasses() throws IOException {
     compileWithValidation("public class Foo { }");
@@ -37,6 +45,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
   @Test
   public void testImplicitAnnotationSuperclassSucceeds() throws IOException {
+    taskListenerFactory.setRuleIsRequiredForSourceAbi(true);
     compileWithValidation("@interface Foo { };");
 
     assertNoErrors();
@@ -45,8 +54,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   @Test
   public void testAnnotationInNonRequiredRuleFails() throws IOException {
     testCompiler.setAllowCompilationErrors(true);
-    compileWithValidation(
-        ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"), false);
+    compileWithValidation(ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"));
 
     assertErrors(
         "Foo.java:1: error: Annotation definitions must be in rules with required_for_source_only_abi = True.\n"
@@ -365,20 +373,11 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(String source)
       throws IOException {
-    return compileWithValidation(ImmutableMap.of("Foo.java", source), true);
+    return compileWithValidation(ImmutableMap.of("Foo.java", source));
   }
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(
       Map<String, String> sources) throws IOException {
-    return compileWithValidation(sources, true);
-  }
-
-  protected Iterable<? extends CompilationUnitTree> compileWithValidation(
-      Map<String, String> sources, boolean requiredForSourceAbi) throws IOException {
-    return compile(
-        sources,
-        // A side effect of our hacky test class loader appears to be that this only works if
-        // it's NOT a lambda. LoL.
-        new ValidatingTaskListenerFactory("//:rule", requiredForSourceAbi));
+    return compile(sources, taskListenerFactory);
   }
 }

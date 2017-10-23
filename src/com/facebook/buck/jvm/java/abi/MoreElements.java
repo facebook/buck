@@ -22,9 +22,11 @@ import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -33,8 +35,28 @@ import javax.lang.model.type.DeclaredType;
  * More utility functions for working with {@link Element}s, along the lines of those found on
  * {@link javax.lang.model.util.Elements}.
  */
-final class MoreElements {
+public final class MoreElements {
   private MoreElements() {}
+
+  public static TypeElement getTypeElement(Element element) {
+    Preconditions.checkArgument(element.getKind() != ElementKind.PACKAGE);
+
+    Element walker = element;
+    while (!walker.getKind().isClass() && !walker.getKind().isInterface()) {
+      walker = Preconditions.checkNotNull(walker.getEnclosingElement());
+    }
+
+    return (TypeElement) walker;
+  }
+
+  public static PackageElement getPackageElement(Element element) {
+    Element walker = element;
+    while (walker.getKind() != ElementKind.PACKAGE) {
+      walker = Preconditions.checkNotNull(walker.getEnclosingElement());
+    }
+
+    return (PackageElement) walker;
+  }
 
   public static boolean isInnerClassConstructor(ExecutableElement e) {
     return isConstructor(e) && isInnerClass((TypeElement) e.getEnclosingElement());
