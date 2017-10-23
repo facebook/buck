@@ -30,6 +30,7 @@ import com.sun.source.util.Trees;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -47,6 +48,8 @@ class InterfaceScanner {
     void onTypeDeclared(TypeElement type, TreePath path);
 
     void onTypeImported(TypeElement type);
+
+    void onMembersImported(QualifiedNameable typeOrPackage);
 
     void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement);
 
@@ -76,12 +79,16 @@ class InterfaceScanner {
       @Override
       public Void visitImport(ImportTree node, Void aVoid) {
         MemberSelectTree typeNameTree = (MemberSelectTree) node.getQualifiedIdentifier();
+        TreePath importedTypePath = new TreePath(getCurrentPath(), typeNameTree);
         if (typeNameTree.getIdentifier().contentEquals("*")) {
-          // Star import; caller doesn't care
+          TreePath importedContainerPath =
+              new TreePath(importedTypePath, typeNameTree.getExpression());
+
+          listener.onMembersImported(
+              (QualifiedNameable)
+                  Preconditions.checkNotNull(trees.getElement(importedContainerPath)));
           return null;
         }
-
-        TreePath importedTypePath = new TreePath(getCurrentPath(), typeNameTree);
 
         if (!node.isStatic()) {
           // Single-type import; report to listener

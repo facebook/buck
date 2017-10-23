@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import org.hamcrest.Matchers;
@@ -44,6 +45,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   private List<String> constantReferences;
   private List<TypeElement> importedTypes;
   private List<TypeElement> declaredTypes;
+  private List<QualifiedNameable> starImportedElements;
 
   @Test
   public void testFindsVariableTypeReference() throws IOException {
@@ -520,6 +522,23 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testFindsStarImportedPackages() throws IOException {
+    findTypeReferences("import java.util.*;", "class Foo { }");
+
+    assertThat(
+        starImportedElements, Matchers.containsInAnyOrder(elements.getPackageElement("java.util")));
+  }
+
+  @Test
+  public void testFindsStarImportedTypes() throws IOException {
+    findTypeReferences("import java.util.HashMap.*;", "class Foo { }");
+
+    assertThat(
+        starImportedElements,
+        Matchers.containsInAnyOrder(elements.getTypeElement("java.util.HashMap")));
+  }
+
+  @Test
   public void testFindsStaticImportsOfNestedTypes() throws IOException {
     findTypeReferences("import static java.text.DateFormat.Field;", "class Foo { }");
 
@@ -660,6 +679,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     constantReferences = new ArrayList<>();
     typeReferences = new ArrayList<>();
     importedTypes = new ArrayList<>();
+    starImportedElements = new ArrayList<>();
     declaredTypes = new ArrayList<>();
 
     testCompiler.setAllowCompilationErrors(errorsOK);
@@ -723,6 +743,11 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     @Override
     public void onTypeImported(TypeElement type) {
       importedTypes.add(type);
+    }
+
+    @Override
+    public void onMembersImported(QualifiedNameable typeOrPackage) {
+      starImportedElements.add(typeOrPackage);
     }
 
     @Override

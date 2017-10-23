@@ -173,6 +173,9 @@ class InterfaceValidator {
                 }
 
                 @Override
+                public void onMembersImported(QualifiedNameable typeOrPackage) {}
+
+                @Override
                 public void onTypeReferenceFound(
                     TypeElement referencedType, TreePath path, Element enclosingElement) {
                   PackageElement enclosingPackage = getPackageElement(enclosingElement);
