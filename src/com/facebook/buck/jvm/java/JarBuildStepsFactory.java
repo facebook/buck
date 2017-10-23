@@ -157,7 +157,9 @@ public class JarBuildStepsFactory
   }
 
   public boolean useRulePipelining() {
-    return configuredCompiler instanceof JavacToJarStepFactory;
+    return configuredCompiler instanceof JavacToJarStepFactory
+        && abiGenerationMode.isSourceAbi()
+        && abiGenerationMode != AbiGenerationMode.SOURCE_ONLY;
   }
 
   public ImmutableList<Step> getBuildStepsForAbiJar(
@@ -189,9 +191,17 @@ public class JarBuildStepsFactory
       BuildContext context,
       BuildableContext buildableContext,
       @SuppressWarnings("unused") JavacPipelineState state) {
-    // TODO: Actually use the pipeline
-    return getBuildStepsForAbiJar(
-        context, buildableContext, HasJavaAbi.getSourceAbiJar(libraryTarget));
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ((JavacToJarStepFactory) configuredCompiler)
+        .createPipelinedCompileToJarStep(
+            context,
+            HasJavaAbi.getSourceAbiJar(libraryTarget),
+            state,
+            getResourcesParameters(),
+            postprocessClassesCommands,
+            steps,
+            buildableContext);
+    return steps.build();
   }
 
   public ImmutableList<Step> getBuildStepsForLibraryJar(
@@ -229,8 +239,26 @@ public class JarBuildStepsFactory
       BuildContext context,
       BuildableContext buildableContext,
       @SuppressWarnings("unused") JavacPipelineState state) {
-    // TODO: actually use the pipeline
-    return getBuildStepsForLibraryJar(context, buildableContext, libraryTarget);
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ((JavacToJarStepFactory) configuredCompiler)
+        .createPipelinedCompileToJarStep(
+            context,
+            libraryTarget,
+            state,
+            getResourcesParameters(),
+            postprocessClassesCommands,
+            steps,
+            buildableContext);
+
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        libraryTarget,
+        projectFilesystem,
+        getSourcePathToOutput(libraryTarget),
+        buildableContext,
+        context,
+        steps);
+
+    return steps.build();
   }
 
   protected CompilerParameters getCompilerParameters(

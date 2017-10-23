@@ -101,7 +101,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
           projectFilesystem,
           steps,
           buildableContext,
-          context);
+          context,
+          null);
     }
 
     steps.add(
@@ -136,6 +137,44 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     return Iterables.concat(
         super.getExtraDeps(ruleFinder),
         ruleFinder.filterBuildRuleInputs(javacOptions.getAnnotationProcessingParams().getInputs()));
+  }
+
+  public final void createPipelinedCompileToJarStep(
+      BuildContext context,
+      BuildTarget target,
+      JavacPipelineState pipeline,
+      ResourcesParameters resourcesParameters,
+      ImmutableList<String> postprocessClassesCommands,
+      Builder<Step> steps,
+      BuildableContext buildableContext) {
+    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
+    CompilerParameters compilerParameters = pipeline.getCompilerParameters();
+
+    if (!pipeline.isRunning()) {
+      addCompilerSetupSteps(context, target, compilerParameters, resourcesParameters, steps);
+    }
+
+    Optional<JarParameters> jarParameters =
+        HasJavaAbi.isLibraryTarget(target)
+            ? pipeline.getLibraryJarParameters()
+            : pipeline.getAbiJarParameters();
+
+    if (jarParameters.isPresent()) {
+      addJarSetupSteps(context, jarParameters.get(), steps);
+    }
+
+    // Only run javac if there are .java files to compile or we need to shovel the manifest file
+    // into the built jar.
+    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
+      recordDepFileIfNecessary(target, compilerParameters, buildableContext);
+
+      // This adds the javac command, along with any supporting commands.
+      createPipelinedCompileStep(context, pipeline, target, steps, buildableContext);
+    }
+
+    if (jarParameters.isPresent()) {
+      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters.get());
+    }
   }
 
   @Override
@@ -184,7 +223,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             projectFilesystem,
             steps,
             buildableContext,
-            context);
+            context,
+            null);
       }
 
       steps.add(
@@ -204,23 +244,48 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
           invokingRule,
           compilerParameters,
           postprocessClassesCommands,
-          abiJarParameters,
+          null,
           libraryJarParameters,
           steps,
           buildableContext);
     }
   }
 
+  public void createPipelinedCompileStep(
+      BuildContext context,
+      JavacPipelineState pipeline,
+      BuildTarget invokingRule,
+      Builder<Step> steps,
+      BuildableContext buildableContext) {
+    CompilerParameters parameters = pipeline.getCompilerParameters();
+    boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
+    if (generatingCode) {
+      // Javac requires that the root directory for generated sources already exist.
+      addAnnotationGenFolderStep(
+          parameters.getGeneratedCodeDirectory(),
+          projectFilesystem,
+          steps,
+          buildableContext,
+          context,
+          pipeline);
+    }
+
+    steps.add(new JavacStep(pipeline, invokingRule));
+  }
+
   private static void addAnnotationGenFolderStep(
       Path annotationGenFolder,
       ProjectFilesystem filesystem,
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext,
-      BuildContext buildContext) {
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder)));
+      BuildContext buildContext,
+      @Nullable JavacPipelineState pipeline) {
+    if (pipeline == null || !pipeline.isRunning()) {
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder)));
+    }
     buildableContext.recordArtifact(annotationGenFolder);
   }
 

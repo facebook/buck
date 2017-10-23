@@ -69,6 +69,43 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
       Builder<Step> steps,
       BuildableContext buildableContext) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
+
+    addCompilerSetupSteps(context, target, compilerParameters, resourcesParameters, steps);
+
+    JarParameters jarParameters =
+        abiJarParameters != null ? abiJarParameters : libraryJarParameters;
+    if (jarParameters != null) {
+      addJarSetupSteps(context, jarParameters, steps);
+    }
+
+    // Only run javac if there are .java files to compile or we need to shovel the manifest file
+    // into the built jar.
+    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
+      recordDepFileIfNecessary(target, compilerParameters, buildableContext);
+
+      // This adds the javac command, along with any supporting commands.
+      createCompileToJarStepImpl(
+          context,
+          target,
+          compilerParameters,
+          postprocessClassesCommands,
+          abiJarParameters,
+          libraryJarParameters,
+          steps,
+          buildableContext);
+    }
+
+    if (jarParameters != null) {
+      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters);
+    }
+  }
+
+  protected void addCompilerSetupSteps(
+      BuildContext context,
+      BuildTarget target,
+      CompilerParameters compilerParameters,
+      ResourcesParameters resourcesParameters,
+      Builder<Step> steps) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     steps.addAll(
@@ -88,22 +125,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
             resourcesParameters,
             compilerParameters.getOutputDirectory()));
 
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                CompilerParameters.getOutputJarDirPath(target, projectFilesystem))));
-
-    // Only run javac if there are .java files to compile or we need to shovel the manifest file
-    // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      if (compilerParameters.shouldTrackClassUsage()) {
-        buildableContext.recordArtifact(
-            CompilerParameters.getDepFilePath(target, projectFilesystem));
-      }
-
-      // This adds the javac command, along with any supporting commands.
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -117,29 +139,38 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
                   context.getBuildCellRootPath(),
                   projectFilesystem,
                   compilerParameters.getWorkingDirectory())));
+    }
+  }
 
-      createCompileToJarStepImpl(
-          context,
-          target,
-          compilerParameters,
-          postprocessClassesCommands,
-          abiJarParameters,
-          libraryJarParameters,
-          steps,
-          buildableContext);
-    }
+  protected void addJarSetupSteps(
+      BuildContext context, JarParameters jarParameters, Builder<Step> steps) {
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                projectFilesystem,
+                jarParameters.getJarPath().getParent())));
+  }
 
-    JarParameters jarParameters = abiJarParameters;
-    if (jarParameters == null) {
-      jarParameters = libraryJarParameters;
+  protected void recordDepFileIfNecessary(
+      BuildTarget target,
+      CompilerParameters compilerParameters,
+      BuildableContext buildableContext) {
+    if (compilerParameters.shouldTrackClassUsage()) {
+      buildableContext.recordArtifact(CompilerParameters.getDepFilePath(target, projectFilesystem));
     }
-    if (jarParameters != null) {
-      // No source files, only resources
-      if (compilerParameters.getSourceFilePaths().isEmpty()) {
-        createJarStep(jarParameters, steps);
-      }
-      buildableContext.recordArtifact(jarParameters.getJarPath());
+  }
+
+  protected void addJarCreationSteps(
+      CompilerParameters compilerParameters,
+      Builder<Step> steps,
+      BuildableContext buildableContext,
+      JarParameters jarParameters) {
+    // No source files, only resources
+    if (compilerParameters.getSourceFilePaths().isEmpty()) {
+      createJarStep(jarParameters, steps);
     }
+    buildableContext.recordArtifact(jarParameters.getJarPath());
   }
 
   protected void createCompileToJarStepImpl(

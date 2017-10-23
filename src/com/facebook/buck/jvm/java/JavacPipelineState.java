@@ -85,6 +85,10 @@ public class JavacPipelineState implements RulePipelineState {
     this.libraryJarParameters = libraryJarParameters;
   }
 
+  public boolean isRunning() {
+    return invocation != null;
+  }
+
   public Javac.Invocation getJavacInvocation(ExecutionContext context)
       throws IOException, InterruptedException {
     if (invocation == null) {
