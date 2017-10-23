@@ -770,13 +770,13 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     }
 
     @Override
-    public void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement) {
+    public void onTypeReferenceFound(TypeElement type, TreePath path, Element referencingElement) {
       typeReferences.add(createSymbolicReference(type.getQualifiedName().toString(), path));
     }
 
     @Override
     public void onConstantReferenceFound(
-        VariableElement constant, TreePath path, Element enclosingElement) {
+        VariableElement constant, TreePath path, Element referencingElement) {
       constantReferences.add(createSymbolicReference(constant.getConstantValue().toString(), path));
     }
   }

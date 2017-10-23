@@ -185,17 +185,17 @@ class InterfaceValidator {
 
                 @Override
                 public void onTypeReferenceFound(
-                    TypeElement referencedType, TreePath path, Element enclosingElement) {
-                  if (isCompiledInCurrentRun(referencedType)
+                    TypeElement canonicalTypeElement, TreePath path, Element referencingElement) {
+                  if (isCompiledInCurrentRun(canonicalTypeElement)
                       || isFullyQualifiedOrImportedCanonicalName(
-                          referencedType, path, enclosingElement)) {
+                          canonicalTypeElement, path, referencingElement)) {
                     // All good!
                     return;
                   }
 
-                  PackageElement enclosingPackage = getPackageElement(enclosingElement);
+                  PackageElement enclosingPackage = getPackageElement(referencingElement);
                   String minimalQualifiedName =
-                      findMinimalQualifiedName(path, enclosingPackage, referencedType);
+                      findMinimalQualifiedName(path, enclosingPackage, canonicalTypeElement);
 
                   // TODO(jkeljo): Clearer message
                   trees.printMessage(
@@ -207,7 +207,7 @@ class InterfaceValidator {
 
                 @Override
                 public void onConstantReferenceFound(
-                    VariableElement constant, TreePath path, Element enclosingElement) {
+                    VariableElement constant, TreePath path, Element referencingElement) {
                   TypeElement constantEnclosingType = (TypeElement) constant.getEnclosingElement();
 
                   if (typeWillBeAvailable(constantEnclosingType)) {

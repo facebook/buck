@@ -51,10 +51,10 @@ class InterfaceScanner {
 
     void onMembersImported(QualifiedNameable typeOrPackage);
 
-    void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement);
+    void onTypeReferenceFound(TypeElement type, TreePath path, Element referencingElement);
 
     void onConstantReferenceFound(
-        VariableElement constant, TreePath path, Element enclosingElement);
+        VariableElement constant, TreePath path, Element referencingElement);
   }
 
   private final Listener listener;
