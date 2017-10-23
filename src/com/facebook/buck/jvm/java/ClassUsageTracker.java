@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaFileManager;
@@ -53,8 +52,6 @@ class ClassUsageTracker {
   private final ImmutableSetMultimap.Builder<Path, Path> resultBuilder =
       ImmutableSetMultimap.builder();
 
-  @Nullable private ImmutableSetMultimap<Path, Path> result;
-
   /**
    * Returns a {@link JavaFileManager} that tracks which files are opened. Provide this to {@code
    * JavaCompiler.getTask} anytime file usage tracking is desired.
@@ -68,16 +65,10 @@ class ClassUsageTracker {
    * that were used.
    */
   public ImmutableSetMultimap<Path, Path> getClassUsageMap() {
-    if (result == null) {
-      result = resultBuilder.build();
-    }
-
-    return result;
+    return resultBuilder.build();
   }
 
   private void addReadFile(FileObject fileObject) {
-    Preconditions.checkState(result == null); // Can't add after having built
-
     if (!(fileObject instanceof JavaFileObject)) {
       return;
     }
