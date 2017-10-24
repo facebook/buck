@@ -15,11 +15,7 @@
  */
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.AndroidPlatformTargetSupplier;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
@@ -38,7 +34,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
@@ -124,19 +119,6 @@ public class LocalBuilderImpl implements LocalBuilder {
             args.getState().getRootCell().getCellPathResolver(), targetsToBuild));
   }
 
-  private static Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier(
-      DistBuildExecutorArgs args) {
-    AndroidBuckConfig androidConfig =
-        new AndroidBuckConfig(args.getRemoteRootCellConfig(), args.getPlatform());
-
-    AndroidDirectoryResolver dirResolver =
-        new DefaultAndroidDirectoryResolver(
-            args.getRootCell().getFilesystem().getRootPath().getFileSystem(),
-            args.getRemoteRootCellConfig().getEnvironment(),
-            androidConfig);
-    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig);
-  }
-
   private CachingBuildEngine createCachingBuildEngine() {
     return new CachingBuildEngine(
         Preconditions.checkNotNull(cachingBuildEngineDelegate),
@@ -170,9 +152,14 @@ public class LocalBuilderImpl implements LocalBuilder {
     final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
     final ConcurrencyLimit concurrencyLimit =
         distBuildConfig.getView(ResourcesConfig.class).getConcurrencyLimit();
+    final AndroidPlatformTargetSupplier androidSupplier =
+        AndroidPlatformTargetSupplier.create(
+            args.getRootCell().getFilesystem(),
+            args.getRootCell().getBuckConfig(),
+            args.getPlatform());
     return ExecutionContext.builder()
         .setConsole(args.getConsole())
-        .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
+        .setAndroidPlatformTargetSupplier(androidSupplier)
         .setTargetDevice(Optional.empty())
         .setDefaultTestTimeoutMillis(1000)
         .setCodeCoverageEnabled(false)
