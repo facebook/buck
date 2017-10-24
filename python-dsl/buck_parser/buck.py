@@ -60,7 +60,7 @@ BUILD_FUNCTIONS = []
 
 # Wait this many seconds on recv() or send() in the pywatchman client
 # if not otherwise specified in .buckconfig
-DEFAULT_WATCHMAN_QUERY_TIMEOUT = 5.0
+DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 
 ORIGINAL_IMPORT = __builtin__.__import__
 

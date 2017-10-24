@@ -2829,10 +2829,10 @@ your <code>.buckjavaargs</code> file</a>:
 {call buckconfig.entry}
   {param section: 'project' /}
   {param name: 'watchman_query_timeout_ms' /}
-  {param example_value: '1000' /}
+  {param example_value: '60000' /}
   {param description}
     When communicating with <a href="https://facebook.github.io/watchman/">Watchman</a>, Buck will
-    wait this long for a response.  The defaut is <code>1000</code> ms.
+    wait this long for a response.  The defaut is <code>60000</code> ms.
   {/param}
 {/call}
 
