@@ -52,9 +52,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
         new CoordinatorAndMinionModeRunner(coordinator, minion);
     int exitCode = jointRunner.runAndReturnExitCode();
     Assert.assertEquals(0, exitCode);
-    Assert.assertEquals(3, localBuilder.getCallArguments().size());
-    Assert.assertEquals(
-        BuildTargetsQueueTest.TARGET_NAME,
-        localBuilder.getCallArguments().get(2).iterator().next());
+    Assert.assertEquals(4, localBuilder.getBuildTargets().size());
+    Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));
   }
 }

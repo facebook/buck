@@ -16,10 +16,17 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildEngineResult;
+import com.facebook.buck.rules.BuildResult;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,11 +82,8 @@ public class MinionModeRunnerIntegrationTest {
               checker);
       int exitCode = minion.runAndReturnExitCode();
       Assert.assertEquals(0, exitCode);
-      Assert.assertEquals(3, localBuilder.getCallArguments().size());
-      int lastBuildIndex = localBuilder.getCallArguments().size() - 1;
-      Assert.assertEquals(
-          BuildTargetsQueueTest.TARGET_NAME,
-          localBuilder.getCallArguments().get(lastBuildIndex).get(0));
+      Assert.assertEquals(4, localBuilder.getBuildTargets().size());
+      Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));
     }
   }
 
@@ -90,20 +94,51 @@ public class MinionModeRunnerIntegrationTest {
 
   public static class LocalBuilderImpl implements LocalBuilder {
 
-    private final List<List<String>> callArguments;
+    private final List<String> buildTargets;
 
     public LocalBuilderImpl() {
-      callArguments = new ArrayList<>();
+      buildTargets = new ArrayList<>();
     }
 
-    public List<List<String>> getCallArguments() {
-      return callArguments;
+    public List<String> getBuildTargets() {
+      return buildTargets;
     }
 
     @Override
     public int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
         throws IOException, InterruptedException {
-      callArguments.add(ImmutableList.copyOf(targetsToBuild));
+      buildTargets.addAll(ImmutableList.copyOf((targetsToBuild)));
+      return 0;
+    }
+
+    @Override
+    public List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild)
+        throws IOException {
+
+      buildTargets.addAll(ImmutableList.copyOf((targetsToBuild)));
+
+      List<BuildEngineResult> results = new ArrayList<>();
+      for (String target : targetsToBuild) {
+        BuildRule fakeBuildRule = new FakeBuildRule(target);
+        BuildResult buildResult =
+            BuildResult.success(
+                fakeBuildRule,
+                BuildRuleSuccessType.BUILT_LOCALLY,
+                CacheResult.miss(),
+                Futures.immediateFuture(null));
+
+        BuildEngineResult buildEngineResult =
+            BuildEngineResult.builder().setResult(Futures.immediateFuture(buildResult)).build();
+
+        results.add(buildEngineResult);
+      }
+
+      return results;
+    }
+
+    @Override
+    public int waitForBuildToFinish(
+        Iterable<String> targetsToBuild, List<BuildEngineResult> resultFutures) {
       return 0;
     }
 

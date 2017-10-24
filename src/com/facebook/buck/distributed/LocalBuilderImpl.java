@@ -26,6 +26,8 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.BuildEngineResult;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
@@ -37,7 +39,9 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 /** * Used by Stampede to build a given set of targets on the local machine. */
@@ -55,7 +59,7 @@ public class LocalBuilderImpl implements LocalBuilder {
   private final ExecutionContext executionContext;
   private final Build build;
 
-  private boolean isShutdown = false;
+  private volatile boolean isShutdown = false;
 
   public LocalBuilderImpl(
       DistBuildExecutorArgs args,
@@ -76,10 +80,28 @@ public class LocalBuilderImpl implements LocalBuilder {
   public int buildLocallyAndReturnExitCode(Iterable<String> targetToBuildStrings)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!isShutdown);
-
-    return build.executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
+    return build.executeAndPrintFailuresToEventBus(
         DistBuildUtil.fullyQualifiedNameToBuildTarget(
             args.getState().getRootCell().getCellPathResolver(), targetToBuildStrings),
+        args.getBuckEventBus(),
+        args.getConsole(),
+        Optional.empty());
+  }
+
+  @Override
+  public List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild)
+      throws IOException {
+    Preconditions.checkArgument(!isShutdown);
+    return build.initializeBuild(getRulesToBuild(targetsToBuild));
+  }
+
+  @Override
+  public int waitForBuildToFinish(
+      Iterable<String> targetsToBuild, List<BuildEngineResult> resultFutures) {
+    Preconditions.checkArgument(!isShutdown);
+    return build.waitForBuildToFinishAndPrintFailuresToEventBus(
+        getRulesToBuild(targetsToBuild),
+        resultFutures,
         args.getBuckEventBus(),
         args.getConsole(),
         Optional.empty());
@@ -96,6 +118,12 @@ public class LocalBuilderImpl implements LocalBuilder {
     build.close();
     executionContext.close();
     cachingBuildEngine.close();
+  }
+
+  private ImmutableList<BuildRule> getRulesToBuild(Iterable<String> targetsToBuild) {
+    return build.getRulesToBuild(
+        DistBuildUtil.fullyQualifiedNameToBuildTarget(
+            args.getState().getRootCell().getCellPathResolver(), targetsToBuild));
   }
 
   private static Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier(

@@ -88,4 +88,6 @@ abstract class AbstractDistBuildExecutorArgs {
   public abstract DistBuildConfig getDistBuildConfig();
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
+
+  public abstract int getBuildThreadCount();
 }

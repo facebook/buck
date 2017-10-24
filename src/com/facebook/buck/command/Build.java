@@ -161,32 +161,6 @@ public class Build implements Closeable {
     return exitCode;
   }
 
-  // This method is thread-safe
-  public int executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
-      Iterable<BuildTarget> targetsish,
-      BuckEventBus eventBus,
-      Console console,
-      Optional<Path> pathToBuildReport)
-      throws InterruptedException {
-    int exitCode;
-
-    ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
-
-    try {
-      List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
-      exitCode =
-          waitForBuildToFinishAndPrintFailuresToEventBus(
-              rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
-
-      waitForAllUploadsToFinish(resultFutures);
-    } catch (Exception e) {
-      reportExceptionToUser(eventBus, e);
-      exitCode = 1;
-    }
-
-    return exitCode;
-  }
-
   /**
    * When the user overrides the configured buck-out directory via the `.buckconfig` and also sets
    * the `project.buck_out_compat_link` setting to `true`, we symlink the original output path
@@ -225,7 +199,13 @@ public class Build implements Closeable {
     symlinksCreated = true;
   }
 
-  private ImmutableList<BuildRule> getRulesToBuild(Iterable<? extends BuildTarget> targetish) {
+  /**
+   * * Converts given BuildTargets into BuildRules
+   *
+   * @param targetish
+   * @return
+   */
+  public ImmutableList<BuildRule> getRulesToBuild(Iterable<? extends BuildTarget> targetish) {
     // It is important to use this logic to determine the set of rules to build rather than
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
@@ -304,7 +284,14 @@ public class Build implements Closeable {
         .build();
   }
 
-  private List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
+  /**
+   * Starts building the given BuildRules asynchronously.
+   *
+   * @param rulesToBuild
+   * @return Futures that will complete once the rules have finished building
+   * @throws IOException
+   */
+  public List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
       throws IOException {
     // Setup symlinks required when configuring the output path.
     createConfiguredBuckOutSymlinks();
@@ -400,7 +387,18 @@ public class Build implements Closeable {
     return exitCode;
   }
 
-  private int waitForBuildToFinishAndPrintFailuresToEventBus(
+  /**
+   * * Waits for the given BuildRules to finish building (as tracked by the corresponding Futures).
+   * Prints all failures to the event bus.
+   *
+   * @param rulesToBuild
+   * @param resultFutures
+   * @param eventBus
+   * @param console
+   * @param pathToBuildReport
+   * @return
+   */
+  public int waitForBuildToFinishAndPrintFailuresToEventBus(
       ImmutableList<BuildRule> rulesToBuild,
       List<BuildEngineResult> resultFutures,
       BuckEventBus eventBus,
@@ -425,25 +423,6 @@ public class Build implements Closeable {
     }
 
     return exitCode;
-  }
-
-  private static void waitForAllUploadsToFinish(List<BuildEngineResult> resultFutures)
-      throws InterruptedException, ExecutionException {
-    ListenableFuture<List<BuildResult>> buildFuture =
-        Futures.allAsList(
-            resultFutures.stream().map(BuildEngineResult::getResult).collect(Collectors.toList()));
-
-    List<BuildResult> buildResults = buildFuture.get();
-
-    ListenableFuture<List<Void>> uploadCompleteFutures =
-        Futures.allAsList(
-            buildResults
-                .stream()
-                .map(br -> br.getUploadCompleteFuture())
-                .collect(Collectors.toList()));
-
-    // Wait for uploads to finish
-    uploadCompleteFutures.get();
   }
 
   private void reportExceptionToUser(BuckEventBus eventBus, Exception e) {

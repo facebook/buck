@@ -62,9 +62,6 @@ public class DistBuildConfig {
 
   private static final String MINION_QUEUE = "minion_queue";
 
-  private static final String MAX_BUILD_NODES_PER_MINION = "max_build_nodes_per_minion";
-  private static final int DEFAULT_MAX_BUILD_NODES_PER_MINION = 28;
-
   private static final String SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS =
       "source_file_multi_fetch_buffer_period_ms";
   private static final String SOURCE_FILE_MULTI_FETCH_MAX_BUFFER_SIZE =
@@ -159,12 +156,6 @@ public class DistBuildConfig {
 
   public Optional<String> getMinionQueue() {
     return buckConfig.getValue(STAMPEDE_SECTION, MINION_QUEUE);
-  }
-
-  public int getMaxBuildNodesPerMinion() {
-    return buckConfig
-        .getInteger(STAMPEDE_SECTION, MAX_BUILD_NODES_PER_MINION)
-        .orElse(DEFAULT_MAX_BUILD_NODES_PER_MINION);
   }
 
   public String getRepository() {

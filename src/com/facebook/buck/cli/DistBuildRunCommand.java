@@ -39,6 +39,7 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -151,9 +152,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 params.getProjectFilesystemFactory());
         timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
 
+        ConcurrencyLimit concurrencyLimit =
+            getConcurrencyLimit(state.getRootCell().getBuckConfig());
+
         try (CommandThreadManager pool =
-            new CommandThreadManager(
-                getClass().getName(), getConcurrencyLimit(state.getRootCell().getBuckConfig()))) {
+            new CommandThreadManager(getClass().getName(), concurrencyLimit)) {
           DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
 
           // Note that we cannot use the same pool of build threads for file materialization
@@ -179,7 +182,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   coordinatorAddress,
                   stampedeId,
                   multiSourceFileContentsProvider,
-                  distBuildConfig);
+                  distBuildConfig,
+                  concurrencyLimit.threadLimit);
 
           distBuildExecutor.createBuildEngineDelegate(timeStatsTracker);
           timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);

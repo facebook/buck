@@ -128,7 +128,7 @@ public class DistBuildSlaveExecutor {
         coordinatorPort,
         localBuilder,
         args.getStampedeId(),
-        args.getDistBuildConfig().getMaxBuildNodesPerMinion(),
+        args.getBuildThreadCount(),
         checker);
   }
 

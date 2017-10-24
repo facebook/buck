@@ -16,13 +16,37 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.rules.BuildEngineResult;
 import java.io.IOException;
+import java.util.List;
 
 public interface LocalBuilder {
   int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
       throws IOException, InterruptedException;
 
-  // Destroy any resources associated with this builder. Call this once only, when all
-  // buildLocallyAndReturnExitCode calls have finished.
+  /**
+   * Starts building the given targets, but does not wait for them to finish
+   *
+   * @param targetsToBuild
+   * @return Futures representing the targets that are building.
+   * @throws IOException
+   */
+  List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild) throws IOException;
+
+  /**
+   * Waits for all targets contained in resultFutures to finish.
+   *
+   * @param targetsToBuild - same as passed to initializeBuild call
+   * @param resultFutures - result from initializeBuild call
+   * @return exit code
+   */
+  int waitForBuildToFinish(Iterable<String> targetsToBuild, List<BuildEngineResult> resultFutures);
+
+  /**
+   * Destroy any resources associated with this builder. Call this once only, when all
+   * buildLocallyAndReturnExitCode calls have finished.
+   *
+   * @throws IOException
+   */
   void shutdown() throws IOException;
 }
