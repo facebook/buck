@@ -60,7 +60,7 @@ class BuckPackage(BuckTool):
         return self._package_info['timestamp']
 
     def _get_buck_git_commit(self):
-        raise self._get_buck_version_uid()
+        return self._get_buck_version_uid()
 
     def _get_buck_repo_dirty(self):
         return self._package_info['is_dirty']
