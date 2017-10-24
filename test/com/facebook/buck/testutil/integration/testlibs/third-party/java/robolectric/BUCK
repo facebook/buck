@@ -1,0 +1,89 @@
+prebuilt_jar(
+    name = "robolectric-jar",
+    binary_jar = "robolectric-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "shadows-core",
+    binary_jar = "shadows-core-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "shadow-api",
+    binary_jar = "shadow-api-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "junit",
+    binary_jar = "robolectric-junit-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "sandbox",
+    binary_jar = "robolectric-sandbox-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "annotations",
+    binary_jar = "robolectric-annotations-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "resources",
+    binary_jar = "robolectric-resources-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "utils",
+    binary_jar = "robolectric-utils-3.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+prebuilt_jar(
+    name = "android",
+    binary_jar = "android-all-4.1.2_r1-robolectric-0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+)
+
+android_library(
+    name = "robolectric",
+    exported_deps = [
+        ":android",
+        ":annotations",
+        ":junit",
+        ":resources",
+        ":robolectric-jar",
+        ":sandbox",
+        ":shadow-api",
+        ":shadows-core",
+        ":utils",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

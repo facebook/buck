@@ -1,0 +1,10 @@
+prebuilt_jar(
+    name = "bcprov",
+    binary_jar = "bcprov-jdk15on-158.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

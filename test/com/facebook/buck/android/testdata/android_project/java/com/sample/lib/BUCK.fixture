@@ -100,8 +100,16 @@ robolectric_test(
     '//res/com/sample/title:title',
     '//res/com/sample/top:top',
     '//res/com/sample/asset_only:asset_only',
+    'buck//third-party/java/guava:guava',
+    'buck//third-party/java/junit:junit',
+    'buck//third-party/java/robolectric:robolectric',
+    'buck//third-party/java/bouncycastle:bcprov',
+    'buck//third-party/java/asm:asm',
   ],
   visibility = [
     'PUBLIC',
+  ],
+  vm_args = [
+    "-Drobolectric.dependency.dir=" + read_config("test", "robolectric_location", "") + "/third-party/java/robolectric",
   ],
 )

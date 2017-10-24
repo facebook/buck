@@ -1,0 +1,68 @@
+java_library(
+    name = "asm",
+    exported_deps = [
+        ":asm-jar",
+        ":asm-analysis",
+        ":asm-commons",
+        ":asm-tree",
+        ":asm-util",
+        ":asm-xml",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "asm-jar",
+    binary_jar = "asm-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-analysis",
+    binary_jar = "asm-analysis-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-commons",
+    binary_jar = "asm-commons-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-tree",
+    binary_jar = "asm-tree-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-util",
+    binary_jar = "asm-util-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)
+
+prebuilt_jar(
+    name = "asm-xml",
+    binary_jar = "asm-xml-6.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "asm-6.0-src.zip",
+)

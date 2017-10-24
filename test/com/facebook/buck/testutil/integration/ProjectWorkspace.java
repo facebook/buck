@@ -152,7 +152,7 @@ public class ProjectWorkspace {
         }
       };
 
-  private static final String TEST_CELL_LOCATION =
+  public static final String TEST_CELL_LOCATION =
       "test/com/facebook/buck/testutil/integration/testlibs";
 
   private boolean isSetUp = false;
@@ -333,6 +333,13 @@ public class ProjectWorkspace {
   public ProcessResult runBuckBuild(String... args) throws IOException {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "build";
+    System.arraycopy(args, 0, totalArgs, 1, args.length);
+    return runBuckCommand(totalArgs);
+  }
+
+  public ProcessResult runBuckTest(String... args) throws IOException {
+    String[] totalArgs = new String[args.length + 1];
+    totalArgs[0] = "test";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
     return runBuckCommand(totalArgs);
   }
