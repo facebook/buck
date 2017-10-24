@@ -182,8 +182,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   coordinatorAddress,
                   stampedeId,
                   multiSourceFileContentsProvider,
-                  distBuildConfig,
-                  concurrencyLimit.threadLimit);
+                  distBuildConfig);
 
           distBuildExecutor.createBuildEngineDelegate(timeStatsTracker);
           timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);

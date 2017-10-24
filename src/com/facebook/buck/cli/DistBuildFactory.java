@@ -102,8 +102,7 @@ public abstract class DistBuildFactory {
       String coordinatorAddress,
       Optional<StampedeId> stampedeId,
       FileContentsProvider fileContentsProvider,
-      DistBuildConfig distBuildConfig,
-      int buildThreadCount) {
+      DistBuildConfig distBuildConfig) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
@@ -137,7 +136,6 @@ public abstract class DistBuildFactory {
                 .setDistBuildService(service)
                 .setDistBuildConfig(distBuildConfig)
                 .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
-                .setBuildThreadCount(buildThreadCount)
                 .build());
     return executor;
   }

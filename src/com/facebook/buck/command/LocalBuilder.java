@@ -268,4 +268,8 @@ abstract class AbstractBuilderArgs {
   public BuckConfig getBuckConfig() {
     return getRootCell().getBuckConfig();
   }
+
+  public int getBuildThreadCount() {
+    return getBuckConfig().getView(ResourcesConfig.class).getConcurrencyLimit().threadLimit;
+  }
 }
