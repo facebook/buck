@@ -14,14 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildInfoStore;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.Threads;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;

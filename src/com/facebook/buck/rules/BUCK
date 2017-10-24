@@ -74,6 +74,7 @@ java_immutables_library(
         "CellProvider.java",
         "KnownBuildRuleTypes.java",
         "KnownBuildRuleTypesFactory.java",
+        "MetadataChecker.java",
     ],
     tests = [
         "//test/com/facebook/buck/rules:rules",
@@ -89,6 +90,7 @@ java_immutables_library(
         ":rules",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
+        "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/toolchain:toolchain",

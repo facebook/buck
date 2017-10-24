@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
