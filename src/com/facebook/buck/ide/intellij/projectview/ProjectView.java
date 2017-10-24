@@ -552,18 +552,22 @@ public class ProjectView {
 
   // region .idea folder
 
+  private static final String BIN = "bin";
   private static final String BUCK_OUT = "buck-out";
   private static final String COMPONENT = "component";
   private static final String CONTENT = "content";
   private static final String EXCLUDE_FOLDER = "excludeFolder";
+  private static final String GEN = "gen";
   private static final String IS_TEST_SOURCE = "isTestSource";
   private static final String LIBRARY = "library";
+  private static final String LOG = "log";
   private static final String MODULES = "modules";
   private static final String NAME = "name";
   private static final String OPTION = "option";
   private static final String ORDER_ENTRY = "orderEntry";
   private static final String ROOT_IML = SharedConstants.ROOT_MODULE_NAME + ".iml";
   private static final String SOURCE_FOLDER = "sourceFolder";
+  private static final String TRASH = ".trash";
   private static final String TYPE = "type";
   private static final String URL = "url";
   private static final String VALUE = "value";
@@ -880,7 +884,7 @@ public class ProjectView {
 
     Element configuration = addElement(facet, "configuration");
 
-    String genFolder = fileJoin(File.separator, BUCK_OUT, "gen");
+    String genFolder = fileJoin(File.separator, BUCK_OUT, GEN);
     addElement(
         configuration,
         OPTION,
@@ -1012,6 +1016,11 @@ public class ProjectView {
                   return !sourceFolders.stream().anyMatch(source -> source.startsWith(probe));
                 })
             .collect(Collectors.toSet());
+
+    // Add buck-out directories besides gen and annotation
+    rootFolders.add(fileJoin(BUCK_OUT, BIN));
+    rootFolders.add(fileJoin(BUCK_OUT, LOG));
+    rootFolders.add(fileJoin(BUCK_OUT, TRASH));
 
     return rootFolders;
   }
