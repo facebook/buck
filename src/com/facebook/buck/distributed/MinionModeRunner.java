@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.command.Builder;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +50,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   private final String coordinatorAddress;
   private final int coordinatorPort;
-  private final LocalBuilder builder;
+  private final Builder builder;
   private final StampedeId stampedeId;
 
   private final BuildCompletionChecker buildCompletionChecker;
@@ -76,7 +78,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   public MinionModeRunner(
       String coordinatorAddress,
       int coordinatorPort,
-      LocalBuilder builder,
+      Builder builder,
       StampedeId stampedeId,
       int availableWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker) {
@@ -95,7 +97,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   public MinionModeRunner(
       String coordinatorAddress,
       int coordinatorPort,
-      LocalBuilder builder,
+      Builder builder,
       StampedeId stampedeId,
       int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
@@ -208,7 +210,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
     }
 
     // Wait for the targets to finish building and get the exit code.
-    int lastExitCode = builder.waitForBuildToFinish(targetsToBuild, resultFutures);
+    int lastExitCode =
+        builder.waitForBuildToFinish(targetsToBuild, resultFutures, Optional.empty());
 
     LOG.info(String.format("Minion [%s] finished with exit code [%d].", minionId, lastExitCode));
 

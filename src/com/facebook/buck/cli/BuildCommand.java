@@ -26,6 +26,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.command.LocalBuilder;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
@@ -50,7 +51,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildClientEventListener;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildTarget;
@@ -67,11 +67,8 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
-import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
-import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -86,9 +83,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
-import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.HumanReadableException;
@@ -966,75 +961,40 @@ public class BuildCommand extends AbstractCommand {
       artifactCache = new NoopArtifactCache();
     }
 
-    return executeBuild(
-        params,
-        actionGraphAndResolver,
-        executor,
-        artifactCache,
-        new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
-        params.getBuckConfig(),
-        buildTargets,
-        ruleKeyLogger);
+    try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+        getDefaultRuleKeyCacheScope(params, actionGraphAndResolver)) {
+      LocalBuilder builder =
+          new LocalBuilder(
+              params.createBuilderArgs(),
+              getExecutionContext(),
+              actionGraphAndResolver,
+              new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+              artifactCache,
+              executor,
+              isKeepGoing(),
+              Optional.of(ruleKeyCacheScope),
+              getBuildEngineMode(),
+              ruleKeyLogger);
+      lastBuild = builder.getBuild();
+      List<String> targetStrings =
+          FluentIterable.from(buildTargets)
+              .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
+              .transform(target -> target.getFullyQualifiedName())
+              .toList();
+      int exitCode =
+          builder.buildLocallyAndReturnExitCode(
+              targetStrings, getPathToBuildReport(params.getBuckConfig()));
+      builder.shutdown();
+      return exitCode;
+    }
   }
 
-  private int executeBuild(
-      CommandRunnerParams params,
-      ActionGraphAndResolver actionGraphAndResolver,
-      WeightedListeningExecutorService executor,
-      ArtifactCache artifactCache,
-      CachingBuildEngineDelegate cachingBuildEngineDelegate,
-      BuckConfig rootCellBuckConfig,
-      Iterable<BuildTarget> targetsToBuild,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
-      throws IOException, InterruptedException {
-    MetadataChecker.checkAndCleanIfNeeded(params.getCell());
-    CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
-        rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
-    try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
-            getDefaultRuleKeyCacheScope(
-                params,
-                new RuleKeyCacheRecycler.SettingsAffectingCache(
-                    rootCellBuckConfig.getKeySeed(), actionGraphAndResolver.getActionGraph()));
-        CachingBuildEngine buildEngine =
-            new CachingBuildEngine(
-                cachingBuildEngineDelegate,
-                executor,
-                new DefaultStepRunner(),
-                getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
-                cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
-                cachingBuildEngineBuckConfig.getBuildDepFiles(),
-                cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-                cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-                actionGraphAndResolver.getResolver(),
-                params.getBuildInfoStoreManager(),
-                cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
-                cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
-                RuleKeyFactories.of(
-                    rootCellBuckConfig.getKeySeed(),
-                    cachingBuildEngineDelegate.getFileHashCache(),
-                    actionGraphAndResolver.getResolver(),
-                    cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                    ruleKeyCacheScope.getCache(),
-                    ruleKeyLogger),
-                rootCellBuckConfig.getFileHashCacheMode());
-        Build build =
-            new Build(
-                actionGraphAndResolver.getResolver(),
-                params.getCell(),
-                buildEngine,
-                artifactCache,
-                rootCellBuckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
-                params.getClock(),
-                getExecutionContext(),
-                isKeepGoing())) {
-      lastBuild = build;
-      return build.executeAndPrintFailuresToEventBus(
-          FluentIterable.from(targetsToBuild)
-              .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver())),
-          params.getBuckEventBus(),
-          params.getConsole(),
-          getPathToBuildReport(rootCellBuckConfig));
-    }
+  RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(
+      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver) {
+    return getDefaultRuleKeyCacheScope(
+        params,
+        new RuleKeyCacheRecycler.SettingsAffectingCache(
+            params.getBuckConfig().getKeySeed(), actionGraphAndResolver.getActionGraph()));
   }
 
   @Override

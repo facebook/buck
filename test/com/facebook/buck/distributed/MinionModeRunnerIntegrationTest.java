@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.command.Builder;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildEngineResult;
@@ -28,8 +29,10 @@ import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,7 +45,7 @@ public class MinionModeRunnerIntegrationTest {
   public void testMinionWithoutServerAndWithUnfinishedBuild()
       throws IOException, InterruptedException {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
-    LocalBuilderImpl localBuilder = new LocalBuilderImpl();
+    FakeBuilderImpl localBuilder = new FakeBuilderImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
             "localhost", 42, localBuilder, STAMPEDE_ID, MAX_PARALLEL_WORK_UNITS, checker);
@@ -55,7 +58,7 @@ public class MinionModeRunnerIntegrationTest {
   public void testMinionWithoutServerAndWithFinishedBuild()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     MinionModeRunner.BuildCompletionChecker checker = () -> true;
-    LocalBuilderImpl localBuilder = new LocalBuilderImpl();
+    FakeBuilderImpl localBuilder = new FakeBuilderImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
             "localhost", 42, localBuilder, STAMPEDE_ID, MAX_PARALLEL_WORK_UNITS, checker);
@@ -71,7 +74,7 @@ public class MinionModeRunnerIntegrationTest {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
     try (ThriftCoordinatorServer server = createServer()) {
       server.start();
-      LocalBuilderImpl localBuilder = new LocalBuilderImpl();
+      FakeBuilderImpl localBuilder = new FakeBuilderImpl();
       MinionModeRunner minion =
           new MinionModeRunner(
               "localhost",
@@ -92,11 +95,11 @@ public class MinionModeRunnerIntegrationTest {
     return ThriftCoordinatorServerIntegrationTest.createServerOnRandomPort(queue);
   }
 
-  public static class LocalBuilderImpl implements LocalBuilder {
+  public static class FakeBuilderImpl implements Builder {
 
     private final List<String> buildTargets;
 
-    public LocalBuilderImpl() {
+    public FakeBuilderImpl() {
       buildTargets = new ArrayList<>();
     }
 
@@ -105,7 +108,8 @@ public class MinionModeRunnerIntegrationTest {
     }
 
     @Override
-    public int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
+    public int buildLocallyAndReturnExitCode(
+        Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport)
         throws IOException, InterruptedException {
       buildTargets.addAll(ImmutableList.copyOf((targetsToBuild)));
       return 0;
@@ -138,7 +142,9 @@ public class MinionModeRunnerIntegrationTest {
 
     @Override
     public int waitForBuildToFinish(
-        Iterable<String> targetsToBuild, List<BuildEngineResult> resultFutures) {
+        Iterable<String> targetsToBuild,
+        List<BuildEngineResult> resultFutures,
+        Optional<Path> pathToBuildReport) {
       return 0;
     }
 

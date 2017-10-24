@@ -16,6 +16,9 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.command.Builder;
+import com.facebook.buck.command.BuilderArgs;
+import com.facebook.buck.command.LocalBuilder;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker.SlaveEvents;
@@ -41,6 +44,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -61,6 +65,7 @@ import javax.annotation.Nullable;
 public class DistBuildSlaveExecutor {
   private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
   private static final String LOCALHOST_ADDRESS = "localhost";
+  private static final boolean KEEP_GOING = true;
 
   private final DistBuildExecutorArgs args;
 
@@ -75,53 +80,66 @@ public class DistBuildSlaveExecutor {
   }
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
-    LocalBuilder localBuilder =
-        new LocalBuilderImpl(
-            Preconditions.checkNotNull(args),
-            Preconditions.checkNotNull(cachingBuildEngineDelegate),
-            Preconditions.checkNotNull(actionGraphAndResolver));
+    BuilderArgs builderArgs = args.createBuilderArgs();
+    try (ExecutionContext executionContext = LocalBuilder.createExecutionContext(builderArgs)) {
+      Builder localBuilder =
+          new LocalBuilder(
+              builderArgs,
+              executionContext,
+              Preconditions.checkNotNull(actionGraphAndResolver),
+              Preconditions.checkNotNull(cachingBuildEngineDelegate),
+              args.getArtifactCache(),
+              args.getExecutorService(),
+              KEEP_GOING,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
 
-    DistBuildModeRunner runner = null;
-    switch (args.getDistBuildMode()) {
-      case REMOTE_BUILD:
-        runner =
-            new RemoteBuildModeRunner(
-                localBuilder,
-                args.getState().getRemoteState().getTopLevelTargets(),
-                exitCode ->
-                    args.getDistBuildService()
-                        .setFinalBuildStatus(
-                            args.getStampedeId(), BuildStatusUtil.exitCodeToBuildStatus(exitCode)));
-        break;
+      DistBuildModeRunner runner = null;
+      switch (args.getDistBuildMode()) {
+        case REMOTE_BUILD:
+          runner =
+              new RemoteBuildModeRunner(
+                  localBuilder,
+                  args.getState().getRemoteState().getTopLevelTargets(),
+                  exitCode ->
+                      args.getDistBuildService()
+                          .setFinalBuildStatus(
+                              args.getStampedeId(),
+                              BuildStatusUtil.exitCodeToBuildStatus(exitCode)));
+          break;
 
-      case COORDINATOR:
-        runner = newCoordinatorMode(getFreePortForCoordinator(), false);
-        break;
+        case COORDINATOR:
+          runner = newCoordinatorMode(getFreePortForCoordinator(), false);
+          break;
 
-      case MINION:
-        runner =
-            newMinionMode(
-                localBuilder, args.getRemoteCoordinatorAddress(), args.getRemoteCoordinatorPort());
-        break;
+        case MINION:
+          runner =
+              newMinionMode(
+                  localBuilder,
+                  args.getRemoteCoordinatorAddress(),
+                  args.getRemoteCoordinatorPort());
+          break;
 
-      case COORDINATOR_AND_MINION:
-        int localCoordinatorPort = getFreePortForCoordinator();
-        runner =
-            new CoordinatorAndMinionModeRunner(
-                newCoordinatorMode(localCoordinatorPort, true),
-                newMinionMode(localBuilder, LOCALHOST_ADDRESS, localCoordinatorPort));
-        break;
+        case COORDINATOR_AND_MINION:
+          int localCoordinatorPort = getFreePortForCoordinator();
+          runner =
+              new CoordinatorAndMinionModeRunner(
+                  newCoordinatorMode(localCoordinatorPort, true),
+                  newMinionMode(localBuilder, LOCALHOST_ADDRESS, localCoordinatorPort));
+          break;
 
-      default:
-        LOG.error("Unknown distributed build mode [%s].", args.getDistBuildMode().toString());
-        return -1;
+        default:
+          LOG.error("Unknown distributed build mode [%s].", args.getDistBuildMode().toString());
+          return -1;
+      }
+
+      return runner.runAndReturnExitCode();
     }
-
-    return runner.runAndReturnExitCode();
   }
 
   private MinionModeRunner newMinionMode(
-      LocalBuilder localBuilder, String coordinatorAddress, int coordinatorPort) {
+      Builder localBuilder, String coordinatorAddress, int coordinatorPort) {
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
@@ -154,7 +172,7 @@ public class DistBuildSlaveExecutor {
     Preconditions.checkArgument(
         minionQueue.isPresent(),
         "Minion queue name is missing to be able to run in Coordinator mode.");
-    CoordinatorEventListener listener =
+    ThriftCoordinatorServer.EventListener listener =
         new CoordinatorEventListener(
             args.getDistBuildService(),
             args.getStampedeId(),

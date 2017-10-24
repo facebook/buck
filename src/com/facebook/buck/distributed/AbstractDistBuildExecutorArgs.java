@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.command.BuilderArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
@@ -90,4 +91,22 @@ abstract class AbstractDistBuildExecutorArgs {
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
   public abstract int getBuildThreadCount();
+
+  /**
+   * Create {@link BuilderArgs} using {@link DistBuildExecutorArgs}.
+   *
+   * @return New instance of {@link BuilderArgs}.
+   */
+  public BuilderArgs createBuilderArgs() {
+    return BuilderArgs.builder()
+        .setConsole(getConsole())
+        .setBuckEventBus(getBuckEventBus())
+        .setPlatform(getPlatform())
+        .setClock(getClock())
+        .setRootCell(getRootCell())
+        .setExecutors(getExecutors())
+        .setProjectFilesystemFactory(getProjectFilesystemFactory())
+        .setBuildInfoStoreManager(getBuildInfoStoreManager())
+        .build();
+  }
 }

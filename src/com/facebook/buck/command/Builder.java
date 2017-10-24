@@ -14,14 +14,27 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.command;
 
 import com.facebook.buck.rules.BuildEngineResult;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
-public interface LocalBuilder {
-  int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
+/** Interface to be followed by local/distributed builders. */
+public interface Builder {
+
+  /**
+   * Builds the given targets synchronously. Failures are printed to the EventBus.
+   *
+   * @param targetsToBuild
+   * @return exit code.
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  int buildLocallyAndReturnExitCode(
+      Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport)
       throws IOException, InterruptedException;
 
   /**
@@ -40,7 +53,10 @@ public interface LocalBuilder {
    * @param resultFutures - result from initializeBuild call
    * @return exit code
    */
-  int waitForBuildToFinish(Iterable<String> targetsToBuild, List<BuildEngineResult> resultFutures);
+  int waitForBuildToFinish(
+      Iterable<String> targetsToBuild,
+      List<BuildEngineResult> resultFutures,
+      Optional<Path> pathToBuildReport);
 
   /**
    * Destroy any resources associated with this builder. Call this once only, when all

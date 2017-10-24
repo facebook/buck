@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.MinionModeRunnerIntegrationTest.FakeBuilderImpl;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import java.io.IOException;
@@ -38,8 +39,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     CoordinatorModeRunner coordinator =
         new CoordinatorModeRunner(
             port, BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID, eventListener);
-    MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
-        new MinionModeRunnerIntegrationTest.LocalBuilderImpl();
+    FakeBuilderImpl localBuilder = new FakeBuilderImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
             "localhost",
