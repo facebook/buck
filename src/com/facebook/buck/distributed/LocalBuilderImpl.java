@@ -20,6 +20,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngineResult;
 import com.facebook.buck.rules.BuildRule;
@@ -35,6 +36,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -74,8 +76,11 @@ public class LocalBuilderImpl implements LocalBuilder {
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!isShutdown);
     return build.executeAndPrintFailuresToEventBus(
-        DistBuildUtil.fullyQualifiedNameToBuildTarget(
-            args.getState().getRootCell().getCellPathResolver(), targetToBuildStrings),
+        Iterables.transform(
+            targetToBuildStrings,
+            targetName ->
+                BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                    args.getState().getRootCell().getCellPathResolver(), targetName)),
         args.getBuckEventBus(),
         args.getConsole(),
         Optional.empty());
@@ -115,8 +120,11 @@ public class LocalBuilderImpl implements LocalBuilder {
 
   private ImmutableList<BuildRule> getRulesToBuild(Iterable<String> targetsToBuild) {
     return build.getRulesToBuild(
-        DistBuildUtil.fullyQualifiedNameToBuildTarget(
-            args.getState().getRootCell().getCellPathResolver(), targetsToBuild));
+        Iterables.transform(
+            targetsToBuild,
+            targetName ->
+                BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                    args.getState().getRootCell().getCellPathResolver(), targetName)));
   }
 
   private CachingBuildEngine createCachingBuildEngine() {

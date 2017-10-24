@@ -21,12 +21,15 @@ import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -50,7 +53,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class DistBuildSlaveExecutor {
@@ -134,12 +139,17 @@ public class DistBuildSlaveExecutor {
 
   private CoordinatorModeRunner newCoordinatorMode(
       int coordinatorPort, boolean isLocalMinionAlsoRunning) {
+    final CellPathResolver cellNames = args.getState().getRootCell().getCellPathResolver();
+    List<BuildTarget> targets =
+        args.getState()
+            .getRemoteState()
+            .getTopLevelTargets()
+            .stream()
+            .map(target -> BuildTargetParser.fullyQualifiedNameToBuildTarget(cellNames, target))
+            .collect(Collectors.toList());
     BuildTargetsQueue queue =
         BuildTargetsQueue.newQueue(
-            Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
-            DistBuildUtil.fullyQualifiedNameToBuildTarget(
-                args.getState().getRootCell().getCellPathResolver(),
-                args.getState().getRemoteState().getTopLevelTargets()));
+            Preconditions.checkNotNull(actionGraphAndResolver).getResolver(), targets);
     Optional<String> minionQueue = args.getDistBuildConfig().getMinionQueue();
     Preconditions.checkArgument(
         minionQueue.isPresent(),
