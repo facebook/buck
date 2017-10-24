@@ -74,7 +74,7 @@ public class PostBuildPhaseTest {
     distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
     postBuildPhase =
         new PostBuildPhase(
-            mockDistBuildService, distBuildClientStatsTracker, mockLogStateTracker, 0);
+            mockDistBuildService, distBuildClientStatsTracker, mockLogStateTracker, 0, false);
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     mockEventBus = EasyMock.createMock(BuckEventBus.class);

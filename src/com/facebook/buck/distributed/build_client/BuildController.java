@@ -58,7 +58,8 @@ public class BuildController {
       ClientStatsTracker distBuildClientStats,
       ScheduledExecutorService scheduler,
       long maxTimeoutWaitingForLogsMillis,
-      int statusPollIntervalMillis) {
+      int statusPollIntervalMillis,
+      boolean logMaterializationEnabled) {
     this.preBuildPhase =
         new PreBuildPhase(
             distBuildService,
@@ -78,7 +79,8 @@ public class BuildController {
             distBuildService,
             distBuildClientStats,
             distBuildLogStateTracker,
-            maxTimeoutWaitingForLogsMillis);
+            maxTimeoutWaitingForLogsMillis,
+            logMaterializationEnabled);
   }
 
   public BuildController(
@@ -89,7 +91,8 @@ public class BuildController {
       BuckVersion buckVersion,
       ClientStatsTracker distBuildClientStats,
       ScheduledExecutorService scheduler,
-      long maxTimeoutWaitingForLogsMillis) {
+      long maxTimeoutWaitingForLogsMillis,
+      boolean logMaterializationEnabled) {
     this(
         buildJobState,
         distBuildCellIndexer,
@@ -99,7 +102,8 @@ public class BuildController {
         distBuildClientStats,
         scheduler,
         maxTimeoutWaitingForLogsMillis,
-        DEFAULT_STATUS_POLL_INTERVAL_MILLIS);
+        DEFAULT_STATUS_POLL_INTERVAL_MILLIS,
+        logMaterializationEnabled);
   }
 
   /** Executes the tbuild and prints failures to the event bus. */

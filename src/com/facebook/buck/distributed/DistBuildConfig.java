@@ -75,6 +75,9 @@ public class DistBuildConfig {
   private static final long DEFAULT_MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS =
       TimeUnit.MINUTES.toMillis(5);
 
+  private static final String LOG_MATERIALIZATION_ENABLED = "log_materialization_enabled";
+  private static final boolean DEFAULT_LOG_MATERIALIZATION_ENABLED = false;
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private final SlbBuckConfig frontendConfig;
@@ -174,6 +177,12 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS)
         .orElse(DEFAULT_MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS);
+  }
+
+  public boolean getLogMaterializationEnabled() {
+    return buckConfig
+        .getBoolean(STAMPEDE_SECTION, LOG_MATERIALIZATION_ENABLED)
+        .orElse(DEFAULT_LOG_MATERIALIZATION_ENABLED);
   }
 
   /**

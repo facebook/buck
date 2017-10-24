@@ -55,16 +55,19 @@ public class PostBuildPhase {
   private final ClientStatsTracker distBuildClientStats;
   private final LogStateTracker distBuildLogStateTracker;
   private final long maxTimeoutWaitingForLogsMillis;
+  private final boolean logMaterializationEnabled;
 
   public PostBuildPhase(
       DistBuildService distBuildService,
       ClientStatsTracker distBuildClientStats,
       LogStateTracker distBuildLogStateTracker,
-      long maxTimeoutWaitingForLogsMillis) {
+      long maxTimeoutWaitingForLogsMillis,
+      boolean logMaterializationEnabled) {
     this.distBuildService = distBuildService;
     this.distBuildClientStats = distBuildClientStats;
     this.distBuildLogStateTracker = distBuildLogStateTracker;
     this.maxTimeoutWaitingForLogsMillis = maxTimeoutWaitingForLogsMillis;
+    this.logMaterializationEnabled = logMaterializationEnabled;
   }
 
   /** Run all the local steps required after the build. */
@@ -90,7 +93,11 @@ public class PostBuildPhase {
             });
 
     eventSender.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
-    materializeSlaveLogDirs(finalJob);
+
+    if (logMaterializationEnabled) {
+      materializeSlaveLogDirs(finalJob);
+    }
+
     try {
       slaveFinishedStatsFuture.get();
     } catch (ExecutionException e) {

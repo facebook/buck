@@ -756,7 +756,8 @@ public class BuildCommand extends AbstractCommand {
                 buckVersion,
                 distBuildClientStats,
                 params.getScheduledExecutor(),
-                distBuildConfig.getMaxWaitForRemoteLogsToBeAvailableMillis());
+                distBuildConfig.getMaxWaitForRemoteLogsToBeAvailableMillis(),
+                distBuildConfig.getLogMaterializationEnabled());
         distBuildResult =
             build.executeAndPrintFailuresToEventBus(
                 executorService,

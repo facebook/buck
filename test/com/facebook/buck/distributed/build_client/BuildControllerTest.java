@@ -101,7 +101,8 @@ public class BuildControllerTest {
             distBuildClientStatsTracker,
             scheduler,
             0,
-            1);
+            1,
+            true);
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     fakeProjectFilesystem = new FakeProjectFilesystem();
