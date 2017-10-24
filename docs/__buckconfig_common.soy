@@ -295,10 +295,34 @@
 {/template}
 
 /***/
+{template .android_sdk_path}
+{call .entry_link}
+    {param section: 'android' /}
+    {param entry: 'sdk_path' /}
+{/call}
+{/template}
+
+/***/
 {template .ndk_version}
 {call .entry_link}
     {param section: 'ndk' /}
     {param entry: 'ndk_version' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_path}
+{call .entry_link}
+    {param section: 'ndk' /}
+    {param entry: 'ndk_path' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_repository_path}
+{call .entry_link}
+    {param section: 'ndk' /}
+    {param entry: 'ndk_repository_path' /}
 {/call}
 {/template}
 
