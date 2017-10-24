@@ -18,7 +18,6 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildEngineResult;
@@ -28,16 +27,13 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -55,18 +51,10 @@ public class MinionModeRunner implements DistBuildModeRunner {
   private final LocalBuilder builder;
   private final StampedeId stampedeId;
 
-  // I.e. the number of CPU cores that are currently free at this minion.
-  // Each work unit takes up one core.
-  private final AtomicInteger availableWorkUnitBuildCapacity;
   private final BuildCompletionChecker buildCompletionChecker;
   private final ExecutorService buildExecutorService;
 
-  // All nodes that have finished build (and been uploaded) that need to be signalled
-  // back to the coordinator.
-  private final Set<String> finishedTargetsToSignal = new HashSet<>();
-
-  // These are the targets at the end of work unit, when complete the corresponding core is free.
-  private final Set<String> workUnitTerminalTargets = new HashSet<>();
+  private final MinionLocalBuildStateTracker buildTracker;
 
   // Signals to the main loop that it can stop requesting new work.
   private final AtomicBoolean finished = new AtomicBoolean(false);
@@ -109,7 +97,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
       int coordinatorPort,
       LocalBuilder builder,
       StampedeId stampedeId,
-      int availableWorkUnitBuildCapacity,
+      int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
       ExecutorService buildExecutorService) {
     this.builder = builder;
@@ -118,16 +106,15 @@ public class MinionModeRunner implements DistBuildModeRunner {
         coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.coordinatorAddress = coordinatorAddress;
     this.coordinatorPort = coordinatorPort;
-    this.availableWorkUnitBuildCapacity = new AtomicInteger(availableWorkUnitBuildCapacity);
 
     this.buildCompletionChecker = buildCompletionChecker;
-
     this.buildExecutorService = buildExecutorService;
+    this.buildTracker = new MinionLocalBuildStateTracker(maxWorkUnitBuildCapacity);
 
     LOG.info(
         String.format(
             "Started new minion that can build [%d] work units in parallel",
-            availableWorkUnitBuildCapacity));
+            maxWorkUnitBuildCapacity));
   }
 
   @Override
@@ -157,15 +144,12 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   private void signalFinishedTargetsAndFetchMoreWork(
       String minionId, ThriftCoordinatorClient client) throws IOException, InterruptedException {
-    List<String> targetsToSignal = getLatestFinishedTargetsToSignal();
+    List<String> targetsToSignal = buildTracker.getTargetsToSignal();
 
-    if (availableWorkUnitBuildCapacity.get() == 0
-        && exitCode.get() == 0
-        && targetsToSignal.size() == 0) {
+    if (!buildTracker.capacityAvailable() && exitCode.get() == 0 && targetsToSignal.size() == 0) {
       return; // Making a request will not move the build forward, so wait a while and try again.
     }
 
-    final List<WorkUnit> workUnitsToBuild = Lists.newArrayList();
     LOG.info(
         String.format(
             "Minion [%s] fetching work. Signalling [%d] finished targets",
@@ -174,30 +158,26 @@ public class MinionModeRunner implements DistBuildModeRunner {
     try {
       GetWorkResponse response =
           client.getWork(
-              minionId, exitCode.get(), targetsToSignal, availableWorkUnitBuildCapacity.get());
+              minionId, exitCode.get(), targetsToSignal, buildTracker.getAvailableCapacity());
       if (!response.isContinueBuilding()) {
         LOG.info(String.format("Minion [%s] told to stop building.", minionId));
         finished.set(true);
       }
 
-      workUnitsToBuild.addAll(response.getWorkUnits());
+      buildTracker.enqueueWorkUnitsForBuilding(response.getWorkUnits());
     } catch (ThriftException ex) {
       handleThriftException(ex);
       return;
     }
 
-    if (workUnitsToBuild.size() == 0) {
+    if (!buildTracker.outstandingWorkUnitsToBuild()) {
       return; // Nothing new to build
     }
-
-    // Each fetched work unit is going to occupy one core, mark the core as busy until the
-    // work unit has finished.
-    availableWorkUnitBuildCapacity.addAndGet(Math.negateExact(workUnitsToBuild.size()));
 
     buildExecutorService.execute(
         () -> {
           try {
-            performBuildOfWorkUnits(minionId, workUnitsToBuild);
+            performBuildOfWorkUnits(minionId);
           } catch (IOException e) {
             LOG.error(e, "Failed whilst building targets. Terminating build. ");
             exitCode.set(-1);
@@ -206,33 +186,16 @@ public class MinionModeRunner implements DistBuildModeRunner {
         });
   }
 
-  private List<String> getLatestFinishedTargetsToSignal() {
-    // Make a copy of the finished targets set
-    synchronized (finishedTargetsToSignal) {
-      List<String> targets = Lists.newArrayList(finishedTargetsToSignal);
-      finishedTargetsToSignal.clear();
-      return targets;
-    }
-  }
+  private void performBuildOfWorkUnits(String minionId) throws IOException {
+    List<String> targetsToBuild = buildTracker.getTargetsToBuild();
 
-  private void performBuildOfWorkUnits(String minionId, List<WorkUnit> workUnitsToBuild)
-      throws IOException {
-    // Each work unit consists of one of more build targets. Aggregate them all together
-    // and feed them to the build engine as a batch.
-    List<String> targetsToBuild = Lists.newArrayList();
-    for (WorkUnit workUnit : workUnitsToBuild) {
-      List<String> buildTargetsInWorkUnit = workUnit.getBuildTargets();
-      Preconditions.checkArgument(buildTargetsInWorkUnit.size() > 0);
-
-      targetsToBuild.addAll(buildTargetsInWorkUnit);
-      recordTerminalTarget(buildTargetsInWorkUnit);
+    if (targetsToBuild.size() == 0) {
+      return; // All outstanding targets have already been picked up by an earlier build thread.
     }
 
     LOG.info(
         String.format(
-            "Minion [%s] is about to build [%d] targets as part of [%d] work units",
-            minionId, targetsToBuild.size(), workUnitsToBuild.size()));
-
+            "Minion [%s] is about to build [%d] targets", minionId, targetsToBuild.size()));
     LOG.debug(String.format("Targets: [%s]", Joiner.on(", ").join(targetsToBuild)));
 
     // Start the build, and get futures representing the results.
@@ -254,14 +217,6 @@ public class MinionModeRunner implements DistBuildModeRunner {
     }
   }
 
-  // Keep a record of the last target in a work unit, as we need to wait for this to finish
-  // before the corresponding core can be freed.
-  private void recordTerminalTarget(List<String> buildTargetsInWorkUnit) {
-    synchronized (workUnitTerminalTargets) {
-      workUnitTerminalTargets.add(buildTargetsInWorkUnit.get(buildTargetsInWorkUnit.size() - 1));
-    }
-  }
-
   private void registerBuildRuleCompletionHandler(BuildEngineResult resultFuture) {
     Futures.addCallback(
         resultFuture.getResult(),
@@ -280,7 +235,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
               LOG.info(String.format("Building of target [%s] completed.", fullyQualifiedName));
             }
 
-            attemptToFreeUpCore(fullyQualifiedName);
+            buildTracker.recordFinishedTarget(fullyQualifiedName);
             registerUploadCompletionHandler(Preconditions.checkNotNull(result));
           }
 
@@ -292,19 +247,6 @@ public class MinionModeRunner implements DistBuildModeRunner {
         });
   }
 
-  // If a target that just finished was the terminal node in a work unit, then that core
-  // is now available for further work.
-  private void attemptToFreeUpCore(String finishedTarget) {
-    synchronized (workUnitTerminalTargets) {
-      if (!workUnitTerminalTargets.contains(finishedTarget)) {
-        return;
-      }
-
-      availableWorkUnitBuildCapacity.incrementAndGet();
-      workUnitTerminalTargets.remove(finishedTarget);
-    }
-  }
-
   private void registerUploadCompletionHandler(final BuildResult buildResult) {
     final String fullyQualifiedName = buildResult.getRule().getFullyQualifiedName();
     Futures.addCallback(
@@ -312,7 +254,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
         new FutureCallback<Void>() {
           @Override
           public void onSuccess(@Nullable Void result) {
-            recordUploadedTarget(fullyQualifiedName);
+            buildTracker.recordUploadedTarget(fullyQualifiedName);
           }
 
           @Override
@@ -322,14 +264,6 @@ public class MinionModeRunner implements DistBuildModeRunner {
             exitCode.set(1); // Fail the Stampede build, and ensure it doesn't deadlock.
           }
         });
-  }
-
-  // Once a target has been built and uploaded to the cache, it is now safe to signal
-  // to the coordinator that the target is finished.
-  private void recordUploadedTarget(String target) {
-    synchronized (finishedTargetsToSignal) {
-      finishedTargetsToSignal.add(target);
-    }
   }
 
   private void completionCheckingThriftCall(ThriftCall thriftCall) throws IOException {

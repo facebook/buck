@@ -1,0 +1,139 @@
+/*
+ * Copyright 2017-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.facebook.buck.distributed;
+
+import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.log.Logger;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/** * Keeps track of everything that is being built by the local minion */
+public class MinionLocalBuildStateTracker {
+  private static final Logger LOG = Logger.get(MinionLocalBuildStateTracker.class);
+
+  // I.e. the number of CPU cores that are currently free at this minion.
+  // Each work unit takes up one core.
+  private int availableWorkUnitCapacity;
+
+  // All nodes that have finished build (and been uploaded) that need to be signalled
+  // back to the coordinator.
+  private final Set<String> finishedTargetsToSignal = new HashSet<>();
+
+  // These are the targets at the end of work unit, when complete the corresponding core is free.
+  private final Set<String> workUnitTerminalTargets = new HashSet<>();
+
+  // Targets for which build hasn't started yet
+  private final List<WorkUnit> workUnitsToBuild = new ArrayList<>();
+
+  public MinionLocalBuildStateTracker(int maxWorkUnitBuildCapacity) {
+    availableWorkUnitCapacity = maxWorkUnitBuildCapacity;
+  }
+
+  /** @return True if this minion has free capacity to build more targets */
+  public synchronized boolean capacityAvailable() {
+    return availableWorkUnitCapacity != 0;
+  }
+
+  /** @return Number of additional work units this minion can build */
+  public synchronized int getAvailableCapacity() {
+    return availableWorkUnitCapacity;
+  }
+
+  /**
+   * @return Targets that have finished building at minion that need to be signalled to coordinator.
+   */
+  public synchronized List<String> getTargetsToSignal() {
+    // Make a copy of the finished targets set
+    List<String> targets = Lists.newArrayList(finishedTargetsToSignal);
+    finishedTargetsToSignal.clear();
+    return targets;
+  }
+
+  /** @param newWorkUnits Work Units that have just been fetched from the coordinator */
+  public synchronized void enqueueWorkUnitsForBuilding(List<WorkUnit> newWorkUnits) {
+    for (WorkUnit workUnit : newWorkUnits) {
+      List<String> buildTargetsInWorkUnit = workUnit.getBuildTargets();
+      Preconditions.checkArgument(buildTargetsInWorkUnit.size() > 0);
+      recordTerminalTarget(buildTargetsInWorkUnit);
+      workUnitsToBuild.add(workUnit);
+    }
+
+    LOG.info(String.format("Queued [%d] work units for building", newWorkUnits.size()));
+  }
+
+  /** @return True if there are queued work units that haven't been build yet */
+  public synchronized boolean outstandingWorkUnitsToBuild() {
+    return workUnitsToBuild.size() > 0;
+  }
+
+  /** @return Targets that minion should build, extracted from queued work units. */
+  public synchronized List<String> getTargetsToBuild() {
+    // Each work unit consists of one of more build targets. Aggregate them all together
+    // and feed them to the build engine as a batch.
+    List<String> targetsToBuild = Lists.newArrayList();
+    for (WorkUnit workUnit : workUnitsToBuild) {
+      targetsToBuild.addAll(workUnit.getBuildTargets());
+    }
+
+    LOG.debug(
+        String.format(
+            "Returning [%d] targets from [%d] work units for building",
+            targetsToBuild.size(), workUnitsToBuild.size()));
+
+    // Each fetched work unit is going to occupy one core, mark the core as busy until the
+    // work unit has finished.
+    availableWorkUnitCapacity -= workUnitsToBuild.size();
+    workUnitsToBuild.clear();
+
+    return targetsToBuild;
+  }
+
+  /**
+   * Increases available capacity if the given target was at the end of a work unit.
+   *
+   * @param target
+   */
+  public synchronized void recordFinishedTarget(String target) {
+    // If a target that just finished was the terminal node in a work unit, then that core
+    // is now available for further work.
+    if (!workUnitTerminalTargets.contains(target)) {
+      return;
+    }
+
+    availableWorkUnitCapacity++;
+    workUnitTerminalTargets.remove(target);
+  }
+
+  /**
+   * Once a target has been built and uploaded to the cache, it is now safe to signal to the
+   * coordinator that the target is finished.
+   *
+   * @param target
+   */
+  public synchronized void recordUploadedTarget(String target) {
+    finishedTargetsToSignal.add(target);
+  }
+
+  // Keep a record of the last target in a work unit, as we need to wait for this to finish
+  // before the corresponding core can be freed.
+  private void recordTerminalTarget(List<String> buildTargetsInWorkUnit) {
+    workUnitTerminalTargets.add(buildTargetsInWorkUnit.get(buildTargetsInWorkUnit.size() - 1));
+  }
+}
