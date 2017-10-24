@@ -42,14 +42,18 @@ public class StubJar {
    * @param targetVersion the class file version to output, expressed as the corresponding Java
    *     source version
    * @param messager
+   * @param includeParameterMetadata
    */
   public StubJar(
       SourceVersion targetVersion,
       Elements elements,
       Messager messager,
-      Iterable<Element> topLevelElements) {
+      Iterable<Element> topLevelElements,
+      boolean includeParameterMetadata) {
     libraryReaderSupplier =
-        () -> LibraryReader.of(targetVersion, elements, messager, topLevelElements);
+        () ->
+            LibraryReader.of(
+                targetVersion, elements, messager, topLevelElements, includeParameterMetadata);
   }
 
   /**

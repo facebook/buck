@@ -230,7 +230,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       javacTask.getElements(),
                       javacTask.getMessager(),
                       jarBuilder,
-                      context.getEventSink());
+                      context.getEventSink(),
+                      options.contains("-parameters"));
               stubGenerator.generate(topLevelTypes);
               jarBuilder.createJarFile(
                   context

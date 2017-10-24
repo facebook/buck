@@ -87,6 +87,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   private final StandardJavaFileManager fileManager =
       javaCompiler.getStandardFileManager(diagnosticCollector, null, null);
   private final List<JavaFileObject> sourceFiles = new ArrayList<>();
+  private final List<String> additionalOptions = new ArrayList<>();
 
   private TestCompiler classpathCompiler;
   private BuckJavacTask javacTask;
@@ -182,6 +183,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     task.addPlugin(plugin, args);
   }
 
+  public void addCompilerOptions(List<String> options) {
+    additionalOptions.addAll(options);
+  }
+
   public void setProcessors(List<Processor> processors) {
     getJavacTask().setProcessors(processors);
   }
@@ -271,6 +276,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       compileClasspath();
 
       List<String> options = new ArrayList<>();
+      options.addAll(additionalOptions);
       options.add("-d");
       options.add(outputFolder.getRoot().toString());
       if (!classpath.isEmpty()) {

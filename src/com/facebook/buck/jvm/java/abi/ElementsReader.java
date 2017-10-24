@@ -43,12 +43,14 @@ class ElementsReader implements LibraryReader {
   private final Elements elements;
   private final Messager messager;
   private final Supplier<Map<Path, Element>> allElements;
+  private final boolean includeParameterMetadata;
 
   ElementsReader(
       SourceVersion targetVersion,
       Elements elements,
       Messager messager,
-      Iterable<Element> topLevelElements) {
+      Iterable<Element> topLevelElements,
+      boolean includeParameterMetadata) {
     this.targetVersion = targetVersion;
     this.elements = elements;
     this.messager = messager;
@@ -59,6 +61,7 @@ class ElementsReader implements LibraryReader {
               topLevelElements.forEach(element -> addAllElements(element, allElements));
               return allElements;
             });
+    this.includeParameterMetadata = includeParameterMetadata;
   }
 
   @Override
@@ -74,7 +77,8 @@ class ElementsReader implements LibraryReader {
   @Override
   public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
     Element element = Preconditions.checkNotNull(allElements.get().get(relativePath));
-    new ClassVisitorDriverFromElement(targetVersion, elements, messager).driveVisitor(element, cv);
+    new ClassVisitorDriverFromElement(targetVersion, elements, messager, includeParameterMetadata)
+        .driveVisitor(element, cv);
   }
 
   @Override

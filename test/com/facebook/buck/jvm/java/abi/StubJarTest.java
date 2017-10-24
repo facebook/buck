@@ -983,6 +983,37 @@ public class StubJarTest {
   }
 
   @Test
+  public void preservesParameterNameMetadata() throws IOException {
+    // TODO(jkeljo): We should not be preserving parameter metadata. The parameter metadata is not
+    // technically part of the ABI, but the class ABI logic has historically not stripped it out and
+    // some projects (Litho) have taken a dependency on it being there.
+
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public void foo(String aString) { }",
+            "}")
+        .addCompilerOptions("-parameters")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public foo(Ljava/lang/String;)V",
+            "    // parameter  aString",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void preservesAnnotationsOnParameters() throws IOException {
     notYetImplementedForMissingClasspath();
 
@@ -2185,7 +2216,8 @@ public class StubJarTest {
             "// access flags 0x20",
             "class com/example/buck/A$Inner {",
             "",
-            // An innerclass entry is present for B$C and B$C$D even though they're not inner classes
+            // An innerclass entry is present for B$C and B$C$D even though they're not inner
+            // classes
             // of A, so that the compiler and runtime know how to interpret the name B$C or B$C$D.
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/B$C com/example/buck/B C",
@@ -2301,7 +2333,8 @@ public class StubJarTest {
             "// access flags 0x20",
             "class com/example/buck/A$Inner {",
             "",
-            // An innerclass entry is present for B$C and B$C$D even though they're not inner classes
+            // An innerclass entry is present for B$C and B$C$D even though they're not inner
+            // classes
             // of A, so that the compiler and runtime know how to interpret the name B$C or B$C$D.
             "  // access flags 0x9",
             "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
@@ -2417,7 +2450,8 @@ public class StubJarTest {
             "// access flags 0x20",
             "class com/example/buck/A$Inner {",
             "",
-            // An innerclass entry is present for B$C and B$C$D even though they're not inner classes
+            // An innerclass entry is present for B$C and B$C$D even though they're not inner
+            // classes
             // of A, so that the compiler and runtime know how to interpret the name B$C or B$C$D.
             "  // access flags 0x9",
             "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
@@ -3830,6 +3864,7 @@ public class StubJarTest {
         compileToJar(
             EMPTY_CLASSPATH,
             Collections.emptyList(),
+            Collections.emptyList(),
             null,
             "A.java",
             Joiner.on("\n")
@@ -4241,6 +4276,7 @@ public class StubJarTest {
   private Path compileToJar(
       SortedSet<Path> classpath,
       List<Processor> processors,
+      List<String> additionalOptions,
       DeterministicManifest manifest,
       String fileName,
       String source,
@@ -4248,6 +4284,7 @@ public class StubJarTest {
       throws IOException {
     try (TestCompiler compiler = new TestCompiler()) {
       compiler.init();
+      compiler.addCompilerOptions(additionalOptions);
       if (manifest != null) {
         compiler.setManifest(manifest);
       }
@@ -4303,6 +4340,7 @@ public class StubJarTest {
     private final Map<String, List<String>> expectedStubs = new HashMap<>();
     private final Map<String, List<String>> actualStubs = new HashMap<>();
     private final List<String> expectedCompileErrors = new ArrayList<>();
+    private final List<String> additionalOptions = new ArrayList<>();
     private DeterministicManifest manifest;
     private List<String> expectedStubManifest;
     private List<String> actualStubManifest;
@@ -4345,6 +4383,11 @@ public class StubJarTest {
     public Tester setSourceFile(String fileName, String... lines) {
       sourceFileName = fileName;
       sourceFileContents = Joiner.on('\n').join(lines);
+      return this;
+    }
+
+    public Tester addCompilerOptions(String... options) {
+      additionalOptions.addAll(Arrays.asList(options));
       return this;
     }
 
@@ -4437,6 +4480,7 @@ public class StubJarTest {
 
         try (TestCompiler testCompiler = new TestCompiler()) {
           testCompiler.init();
+          testCompiler.addCompilerOptions(additionalOptions);
           if (manifest != null) {
             testCompiler.setManifest(manifest);
           }
@@ -4474,7 +4518,8 @@ public class StubJarTest {
                   testCompiler.getMessager(),
                   jarBuilder,
                   new JavacEventSinkToBuckEventBusBridge(
-                      new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId())));
+                      new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId())),
+                  additionalOptions.contains("-parameters"));
 
           testCompiler.addPostEnterCallback(generator::generate);
           testCompiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());
@@ -4514,6 +4559,7 @@ public class StubJarTest {
                   .addAll(universalClasspath)
                   .build(),
               Collections.emptyList(),
+              additionalOptions,
               manifest,
               sourceFileName,
               sourceFileContents,
@@ -4549,6 +4595,7 @@ public class StubJarTest {
       File outputDir = temp.newFolder();
       try (TestCompiler compiler = new TestCompiler()) {
         compiler.init();
+        compiler.addCompilerOptions(additionalOptions);
         compiler.addSourceFileContents(sourceFileName, sourceFileContents);
         compiler.addClasspath(universalClasspath);
         compiler.addClasspath(classpath);

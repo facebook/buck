@@ -41,8 +41,10 @@ interface LibraryReader extends AutoCloseable {
       SourceVersion targetVersion,
       Elements elements,
       Messager messager,
-      Iterable<Element> topLevelElements) {
-    return new ElementsReader(targetVersion, elements, messager, topLevelElements);
+      Iterable<Element> topLevelElements,
+      boolean includeParameterMetadata) {
+    return new ElementsReader(
+        targetVersion, elements, messager, topLevelElements, includeParameterMetadata);
   }
 
   List<Path> getRelativePaths() throws IOException;
