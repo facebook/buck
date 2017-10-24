@@ -52,6 +52,7 @@ import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -186,8 +187,23 @@ public class ProjectView {
     buildAllDirectoriesAndSymlinks();
 
     stderr("\nSuccess.\n");
+    showAnyWarnings();
 
     return 0;
+  }
+
+  private void showAnyWarnings() {
+    int warnings = nameCollisions.size(); // We don't count "Can't handle" messages as warnings
+    if (warnings == 0) {
+      return;
+    }
+
+    String pluralMarker = warnings == 1 ? "" : "s";
+    stderr(
+        "%,d warning%s.%s\n",
+        warnings,
+        pluralMarker,
+        verbose() ? "" : String.format(" (Use -v 2 to see the warning message%s.)", pluralMarker));
   }
 
   // region getTestTargets
@@ -224,7 +240,7 @@ public class ProjectView {
 
     return inputs
         .stream()
-        //ignore non-english strings
+        // ignore non-english strings
         .filter(input -> !(input.contains("/res/values-") && input.endsWith("strings.xml")))
         .collect(Collectors.toList());
   }
@@ -317,7 +333,7 @@ public class ProjectView {
       return;
     }
 
-    if (input.contains(".") && verbosity.compareTo(Verbosity.STANDARD_INFORMATION) > 0) {
+    if (input.contains(".") && veryVerbose()) {
       stderr("Can't handle %s\n", input);
     }
   }
@@ -1116,6 +1132,8 @@ public class ProjectView {
   /** basefile -> link */
   private final Map<Path, Path> symlinksToCreate = new HashMap<>();
 
+  private final Set<Path> nameCollisions = new HashSet<>();
+
   private void scanExistingView() {
     Path root = Paths.get(viewPath);
     if (!Files.exists(root)) {
@@ -1290,11 +1308,59 @@ public class ProjectView {
 
     try {
       Files.createSymbolicLink(newPath, oldPath);
+    } catch (FileAlreadyExistsException e) {
+      int assetsIndex = indexOf(oldPath, "assets");
+      if (assetsIndex >= 0) {
+        Path tail = oldPath.subpath(assetsIndex, oldPath.getNameCount());
+
+        if (nameCollisions.contains(tail)) {
+          return; // It's already been reported
+        }
+        nameCollisions.add(tail);
+
+        if (!verbose()) {
+          return; // suppress the warning
+        }
+
+        stderr("\nWarning: Name collision in the Android 'assets' directory!\n");
+        targetGraph
+            .getNodes()
+            .stream()
+            .filter(node -> node.getInputs().stream().anyMatch(input -> input.endsWith(tail)))
+            .forEach(target -> stderr("\t%s brings in %s\n", target, tail));
+        try {
+          Path linked = Files.readSymbolicLink(newPath);
+          Path shortLink =
+              linked.subpath(Paths.get(repository).getNameCount(), linked.getNameCount());
+          stderr("Your Project View includes %s\n", shortLink);
+        } catch (IOException shouldBeImpossible) {
+          stderr("\nSomehow we got %s reading an existing symlink?\n", shouldBeImpossible);
+        }
+      } else {
+        unexpectedExceptionInCreateSymbolicLink(oldPath, newPath, e);
+      }
     } catch (IOException e) {
-      stderr(
-          "createSymbolicLink(%s, %s)\n%s:\n%s\n\n",
-          oldPath, newPath, e.getClass().getSimpleName(), e.getMessage());
+      unexpectedExceptionInCreateSymbolicLink(oldPath, newPath, e);
     }
+  }
+
+  private void unexpectedExceptionInCreateSymbolicLink(Path oldPath, Path newPath, IOException e) {
+    stderr(
+        "createSymbolicLink(%s, %s)\n%s:\n%s\n\n",
+        oldPath, newPath, e.getClass().getSimpleName(), e.getMessage());
+  }
+
+  private static int indexOf(Path path, String component) {
+    return indexOf(path, Paths.get(component));
+  }
+
+  private static int indexOf(Path path, Path component) {
+    for (int index = 0, count = path.getNameCount(); index < count; ++index) {
+      if (component.equals(path.getName(index))) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   private void deleteAll(Path root) {
@@ -1328,6 +1394,14 @@ public class ProjectView {
 
   private void stderr(String pattern, Object... parameters) {
     stdErr.format(pattern, parameters);
+  }
+
+  private boolean verbose() {
+    return verbosity.ordinal() > Verbosity.STANDARD_INFORMATION.ordinal();
+  }
+
+  private boolean veryVerbose() {
+    return verbosity.ordinal() > Verbosity.BINARY_OUTPUTS.ordinal();
   }
 
   // endregion Console IO
