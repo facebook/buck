@@ -89,7 +89,8 @@ class BuckRepo(BuckTool):
             if self._fake_buck_version:
                 return self._fake_buck_version
 
-            with open(BUCK_BINARY_HASH_LOCATION) as buck_binary_hash_file:
+            with open(os.path.join(self.buck_dir,
+                                   BUCK_BINARY_HASH_LOCATION)) as buck_binary_hash_file:
                 return buck_binary_hash_file.read().strip()
 
     def _get_buck_git_commit(self):
