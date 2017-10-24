@@ -7,7 +7,6 @@ prebuilt_jar(
     ],
     source_jar = "junit-4.12-sources.jar",
     visibility = [
-        "//src/com/facebook/buck/intellij/...",
         "//src/com/facebook/buck/testrunner:junit",
         "//test/...",
         "//third-party/java/aosp/...",
