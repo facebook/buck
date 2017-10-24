@@ -53,6 +53,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -76,6 +77,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final Path modulePath;
   private final Path objectPath;
+  private final Optional<Path> swiftFileListPath;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final Optional<String> version;
@@ -88,7 +90,6 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final boolean enableObjcInterop;
   @AddToRuleKey private final Optional<SourcePath> bridgingHeader;
 
-  @SuppressWarnings("unused")
   private final SwiftBuckConfig swiftBuckConfig;
 
   @AddToRuleKey private final Preprocessor cPreprocessor;
@@ -124,6 +125,15 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.moduleName = escapedModuleName;
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
+    this.swiftFileListPath =
+        swiftBuckConfig.getUseFileList()
+            ? Optional.of(
+                getProjectFilesystem()
+                    .getRootPath()
+                    .resolve(
+                        BuildTargets.getScratchPath(
+                            getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt")))
+            : Optional.empty();
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.version = version;
@@ -149,7 +159,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
-  private SwiftCompileStep makeCompileStep(SourcePathResolver resolver, Path swiftFileListPath) {
+  private SwiftCompileStep makeCompileStep(SourcePathResolver resolver) {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(resolver));
 
@@ -209,7 +219,13 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         });
 
     compilerCommand.addAll(Arg.stringify(compilerFlags, resolver));
-    compilerCommand.add("-filelist", swiftFileListPath.toString());
+    if (swiftFileListPath.isPresent()) {
+      compilerCommand.add("-filelist", swiftFileListPath.get().toString());
+    } else {
+      for (SourcePath sourcePath : srcs) {
+        compilerCommand.add(resolver.getRelativePath(sourcePath).toString());
+      }
+    }
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
@@ -234,19 +250,15 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
 
-    Path swiftFileListPath =
-        getProjectFilesystem()
-            .getRootPath()
-            .resolve(
-                BuildTargets.getScratchPath(
-                    getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
-
-    return ImmutableList.of(
+    Builder<Step> steps = ImmutableList.builder();
+    steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
-        makeFileListStep(context.getSourcePathResolver(), swiftFileListPath),
-        makeCompileStep(context.getSourcePathResolver(), swiftFileListPath));
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)));
+    swiftFileListPath.map(
+        path -> steps.add(makeFileListStep(context.getSourcePathResolver(), path)));
+    steps.add(makeCompileStep(context.getSourcePathResolver()));
+    return steps.build();
   }
 
   private Step makeFileListStep(SourcePathResolver resolver, Path swiftFileListPath) {
