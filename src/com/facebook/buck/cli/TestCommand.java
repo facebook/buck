@@ -21,6 +21,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -591,13 +592,15 @@ public class TestCommand extends BuildCommand {
                         ruleKeyCacheScope.getCache()),
                     params.getBuckConfig().getFileHashCacheMode());
             Build build =
-                createBuild(
-                    params.getBuckConfig(),
+                new Build(
                     actionGraphAndResolver.getResolver(),
                     params.getCell(),
                     cachingBuildEngine,
                     params.getArtifactCacheFactory().newInstance(),
-                    params.getConsole(),
+                    params
+                        .getBuckConfig()
+                        .getView(JavaBuckConfig.class)
+                        .createDefaultJavaPackageFinder(),
                     params.getClock(),
                     getExecutionContext(),
                     isKeepGoing())) {

@@ -63,14 +63,12 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.MetadataChecker;
@@ -93,12 +91,9 @@ import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.VersionException;
@@ -331,30 +326,6 @@ public class BuildCommand extends AbstractCommand {
   public Optional<Path> getPathToBuildReport(BuckConfig buckConfig) {
     return Optional.ofNullable(
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(buildReport));
-  }
-
-  Build createBuild(
-      BuckConfig buckConfig,
-      BuildRuleResolver ruleResolver,
-      Cell rootCell,
-      BuildEngine buildEngine,
-      ArtifactCache artifactCache,
-      Console console,
-      Clock clock,
-      ExecutionContext executionContext,
-      boolean isKeepGoing) {
-    if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().printf("Creating a build with %d threads.\n", buckConfig.getNumThreads());
-    }
-    return new Build(
-        ruleResolver,
-        rootCell,
-        buildEngine,
-        artifactCache,
-        buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
-        clock,
-        executionContext,
-        isKeepGoing);
   }
 
   @Nullable private Build lastBuild;
@@ -1047,13 +1018,12 @@ public class BuildCommand extends AbstractCommand {
                     ruleKeyLogger),
                 rootCellBuckConfig.getFileHashCacheMode());
         Build build =
-            createBuild(
-                rootCellBuckConfig,
+            new Build(
                 actionGraphAndResolver.getResolver(),
                 params.getCell(),
                 buildEngine,
                 artifactCache,
-                params.getConsole(),
+                rootCellBuckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
                 params.getClock(),
                 getExecutionContext(),
                 isKeepGoing())) {

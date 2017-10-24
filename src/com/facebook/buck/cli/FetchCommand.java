@@ -21,6 +21,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.StackedDownloader;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
@@ -134,13 +135,15 @@ public class FetchCommand extends BuildCommand {
                       ruleKeyCacheScope.getCache()),
                   params.getBuckConfig().getFileHashCacheMode());
           Build build =
-              createBuild(
-                  params.getBuckConfig(),
+              new Build(
                   actionGraphAndResolver.getResolver(),
                   params.getCell(),
                   buildEngine,
                   params.getArtifactCacheFactory().newInstance(),
-                  params.getConsole(),
+                  params
+                      .getBuckConfig()
+                      .getView(JavaBuckConfig.class)
+                      .createDefaultJavaPackageFinder(),
                   params.getClock(),
                   getExecutionContext(),
                   isKeepGoing())) {
