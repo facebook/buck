@@ -27,6 +27,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -108,6 +109,9 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
+  // TODO(ttsugrii): test expects a failure due to multiple filter arguments, but it actually
+  // fails because bar/BUCK file does not exist :(
+  @Ignore(value = "This is is broken since the assert succeeds for a completely unrelated reason.")
   public void shouldFailWithMultipleStringsGivenToFilter() throws IOException {
     String[] goodArgs = {"test", "--filter", "QQ", "//test/com/example/clown:clown"};
     String goodMessage = "Should pass, because the target is real and no test matches the filter.";

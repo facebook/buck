@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -77,27 +78,11 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     }
     try {
       workspace.runBuckCommand("targets", "//simple/....");
+      fail("Should not reach this");
     } catch (HumanReadableException e) {
       assertThat(
           e.getMessage(),
-          Matchers.containsString(
-              "No build file at simple/..../BUCK when resolving target //simple/....:....."));
-    }
-    try {
-      workspace.runBuckCommand("targets", "//simple/.....");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "No build file at simple/...../BUCK when resolving target //simple/.....:......"));
-    }
-    try {
-      workspace.runBuckCommand("targets", "//simple/......");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "No build file at simple/....../BUCK when resolving target //simple/......:......."));
+          Matchers.containsString("//simple/.... references non-existent directory simple"));
     }
   }
 

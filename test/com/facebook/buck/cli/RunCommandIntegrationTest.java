@@ -24,14 +24,17 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RunCommandIntegrationTest extends EasyMockSupport {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
@@ -47,18 +50,28 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
   }
 
   @Test
+  public void testRunCommandWithNonExistentDirectory() throws IOException, InterruptedException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("//does/not/exist:exist references non-existent directory does/not/exist");
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("run", "//does/not/exist");
+  }
+
+  @Test
   public void testRunCommandWithNonExistentTarget() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("run", "//does/not/exist");
+    ProcessResult result = workspace.runBuckCommand("run", "//:does_not_exist");
 
     result.assertFailure();
     assertThat(
         result.getStderr(),
-        containsString(
-            "No build file at does/not/exist/BUCK when resolving target //does/not/exist:exist."));
+        containsString("No build file at BUCK when resolving target //:does_not_exist."));
   }
 
   @Test
