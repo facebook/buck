@@ -240,13 +240,18 @@ public class ProjectView {
 
     return inputs
         .stream()
-        // ignore non-english strings
-        .filter(input -> !(input.contains("/res/values-") && input.endsWith("strings.xml")))
+        // Ignore non-english strings, and localized /res/raw files
+        .filter(
+            input ->
+                !((input.contains("/res/values-") && input.endsWith("strings.xml"))
+                    || input.contains("/res/raw-")))
         .collect(Collectors.toList());
   }
 
   private List<String> pruneInputs(Collection<String> allInputs) {
-    Pattern resource = Pattern.compile("/res/(?!(?:values(?:-[^/]+)?)/)");
+    // We'll use this to group all the resources that are alternative versions of the same content,
+    // like drawables of different resolutions
+    Pattern resource = Pattern.compile("/res/(?!(?:values(?:-[^/]+)?|raw)/)");
 
     List<String> result = new ArrayList<>();
     Map<String, List<String>> resources = new HashMap<>();
@@ -1309,9 +1314,9 @@ public class ProjectView {
     try {
       Files.createSymbolicLink(newPath, oldPath);
     } catch (FileAlreadyExistsException e) {
-      int assetsIndex = indexOf(oldPath, "assets");
-      if (assetsIndex >= 0) {
-        Path tail = oldPath.subpath(assetsIndex, oldPath.getNameCount());
+      int locationIndex = indexOf(oldPath, "assets", "raw");
+      if (locationIndex >= 0) {
+        Path tail = oldPath.subpath(locationIndex, oldPath.getNameCount());
 
         if (nameCollisions.contains(tail)) {
           return; // It's already been reported
@@ -1322,7 +1327,9 @@ public class ProjectView {
           return; // suppress the warning
         }
 
-        stderr("\nWarning: Name collision in the Android 'assets' directory!\n");
+        stderr(
+            "\nWarning: Name collision in the Android '%s' directory!\n",
+            oldPath.getName(locationIndex));
         targetGraph
             .getNodes()
             .stream()
@@ -1348,6 +1355,22 @@ public class ProjectView {
     stderr(
         "createSymbolicLink(%s, %s)\n%s:\n%s\n\n",
         oldPath, newPath, e.getClass().getSimpleName(), e.getMessage());
+  }
+
+  /**
+   * Returns the index of the first element of {@code components} that is contained in the {@code
+   * path}, or -1 if none are. Only makes sense if the {@code path} will contain one (or none) of
+   * the {@code components}, or perhaps if sometimes you have (say) {@code .../foo/bar...} and other
+   * times you have {@code .../bar/foo/...}
+   */
+  private static int indexOf(Path path, String... components) {
+    for (String component : components) {
+      int index = indexOf(path, component);
+      if (index >= 0) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   private static int indexOf(Path path, String component) {
