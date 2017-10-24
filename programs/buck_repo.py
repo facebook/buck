@@ -100,7 +100,7 @@ class BuckRepo(BuckTool):
             return buck_version.get_git_revision(self.buck_dir)
 
     def _get_buck_repo_dirty(self):
-        raise buck_version.is_dirty(self.buck_dir)
+        return buck_version.is_dirty(self.buck_dir)
 
     def _get_extra_java_args(self):
         with Tracing('BuckRepo._get_extra_java_args'):
