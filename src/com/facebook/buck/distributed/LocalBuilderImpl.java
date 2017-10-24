@@ -50,7 +50,6 @@ public class LocalBuilderImpl implements LocalBuilder {
 
   private final BuckConfig distBuildConfig;
   private final CachingBuildEngineBuckConfig engineConfig;
-  private final ResourcesConfig resourcesConfig;
   private final DistBuildExecutorArgs args;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final ActionGraphAndResolver actionGraphAndResolver;
@@ -70,7 +69,6 @@ public class LocalBuilderImpl implements LocalBuilder {
     this.actionGraphAndResolver = actionGraphAndResolver;
     this.distBuildConfig = args.getRemoteRootCellConfig();
     this.engineConfig = distBuildConfig.getView(CachingBuildEngineBuckConfig.class);
-    this.resourcesConfig = distBuildConfig.getView(ResourcesConfig.class);
     this.cachingBuildEngine = createCachingBuildEngine();
     this.executionContext = createExecutionContext();
     this.build = createBuild();
@@ -171,12 +169,7 @@ public class LocalBuilderImpl implements LocalBuilder {
 
     final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
     final ConcurrencyLimit concurrencyLimit =
-        new ConcurrencyLimit(
-            4,
-            resourcesConfig.getResourceAllocationFairness(),
-            4,
-            resourcesConfig.getDefaultResourceAmounts(),
-            resourcesConfig.getMaximumResourceAmounts().withCpu(4));
+        distBuildConfig.getView(ResourcesConfig.class).getConcurrencyLimit();
     return ExecutionContext.builder()
         .setConsole(args.getConsole())
         .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))

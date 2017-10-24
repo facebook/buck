@@ -18,6 +18,7 @@ package com.facebook.buck.config.resources;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
@@ -116,5 +117,19 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
         getDelegate()
             .getInteger(RESOURCES_SECTION_HEADER, "max_network_io_resource")
             .orElse(estimated.getNetworkIO()));
+  }
+
+  /**
+   * Construct a default ConcurrencyLimit instance from this config.
+   *
+   * @return New instance of ConcurrencyLimit.
+   */
+  public ConcurrencyLimit getConcurrencyLimit() {
+    return new ConcurrencyLimit(
+        getDelegate().getNumThreads(),
+        getResourceAllocationFairness(),
+        getManagedThreadCount(),
+        getDefaultResourceAmounts(),
+        getMaximumResourceAmounts());
   }
 }

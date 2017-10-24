@@ -314,13 +314,7 @@ public abstract class AbstractCommand implements Command {
   }
 
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
-    ResourcesConfig resourcesConfig = buckConfig.getView(ResourcesConfig.class);
-    return new ConcurrencyLimit(
-        buckConfig.getNumThreads(),
-        resourcesConfig.getResourceAllocationFairness(),
-        resourcesConfig.getManagedThreadCount(),
-        resourcesConfig.getDefaultResourceAmounts(),
-        resourcesConfig.getMaximumResourceAmounts());
+    return buckConfig.getView(ResourcesConfig.class).getConcurrencyLimit();
   }
 
   @Override
