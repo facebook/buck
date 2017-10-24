@@ -659,17 +659,21 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of("ANDROID_NDK", ndkDir.resolve("really-wrong").toString()),
+            ImmutableMap.of(
+                "ANDROID_NDK_REPOSITORY", ndkDir.resolve("env1").toString(),
+                "ANDROID_NDK", ndkDir.resolve("env2").toString(),
+                "NDK_HOME", ndkDir.resolve("env3").toString()),
             FakeAndroidBuckConfig.builder()
                 .setNdkVersion("r9d")
-                .setNdkPath(ndkDir.toString())
+                .setNdkRepositoryPath(ndkDir.resolve("config1").toString())
+                .setNdkPath(ndkDir.resolve("config2").toString())
                 .build());
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         String.format(
             DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
-            "ANDROID_NDK",
-            ndkDir.resolve("really-wrong")));
+            "ndk.ndk_path",
+            ndkDir.resolve("config2")));
     resolver.getNdkOrThrow();
   }
 

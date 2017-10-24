@@ -278,9 +278,28 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private Optional<Path> findNdk(AndroidBuckConfig config) {
     try {
       Optional<Path> ndkRepositoryPath =
+          findFirstDirectory(ImmutableList.of(getEnvironmentVariable("ANDROID_NDK_REPOSITORY")));
+      if (ndkRepositoryPath.isPresent()) {
+        return findNdkFromRepository(ndkRepositoryPath.get());
+      }
+    } catch (RuntimeException e) {
+      ndkErrorMessage = Optional.of(e.getMessage());
+    }
+    try {
+      Optional<Path> ndkDirectoryPath =
           findFirstDirectory(
               ImmutableList.of(
-                  getEnvironmentVariable("ANDROID_NDK_REPOSITORY"),
+                  getEnvironmentVariable("ANDROID_NDK"), getEnvironmentVariable("NDK_HOME")));
+      if (ndkDirectoryPath.isPresent()) {
+        return findNdkFromDirectory(ndkDirectoryPath.get());
+      }
+    } catch (RuntimeException e) {
+      ndkErrorMessage = Optional.of(e.getMessage());
+    }
+    try {
+      Optional<Path> ndkRepositoryPath =
+          findFirstDirectory(
+              ImmutableList.of(
                   new Pair<String, Optional<String>>(
                       "ndk.ndk_repository_path", config.getNdkRepositoryPath())));
       if (ndkRepositoryPath.isPresent()) {
@@ -293,8 +312,6 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       Optional<Path> ndkDirectoryPath =
           findFirstDirectory(
               ImmutableList.of(
-                  getEnvironmentVariable("ANDROID_NDK"),
-                  getEnvironmentVariable("NDK_HOME"),
                   new Pair<String, Optional<String>>("ndk.ndk_path", config.getNdkPath())));
       if (ndkDirectoryPath.isPresent()) {
         return findNdkFromDirectory(ndkDirectoryPath.get());
@@ -302,6 +319,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     } catch (RuntimeException e) {
       ndkErrorMessage = Optional.of(e.getMessage());
     }
+
     if (!ndkErrorMessage.isPresent()) {
       ndkErrorMessage = Optional.of(NDK_NOT_FOUND_MESSAGE);
     }
