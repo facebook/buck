@@ -1,6 +1,7 @@
 from __future__ import print_function
 import logging
 import os
+import os.path
 import sys
 
 from tracing import Tracing
@@ -31,6 +32,8 @@ RESOURCES = {
     "path_to_typing": "third-party/py/typing/python2",
     "path_to_python_dsl": "python-dsl",
 }
+
+BUCK_BINARY_HASH_LOCATION = os.path.join("build", "classes", "META-INF", "buck-binary-hash.txt")
 
 
 class BuckRepo(BuckTool):
@@ -86,15 +89,17 @@ class BuckRepo(BuckTool):
             if self._fake_buck_version:
                 return self._fake_buck_version
 
+            with open(BUCK_BINARY_HASH_LOCATION) as buck_binary_hash_file:
+                return buck_binary_hash_file.read().strip()
+
+    def _get_buck_git_commit(self):
+        with Tracing('BuckRepo._get_buck_git_commit'):
             # First try to get the "clean" buck version.  If it succeeds,
             # return it.
-            clean_version = buck_version.get_clean_buck_version(
-                self.buck_dir,
-                allow_dirty=self._is_buck_repo_dirty_override == "1")
-            if clean_version is not None:
-                return clean_version
+            return buck_version.get_git_revision(self.buck_dir)
 
-            return buck_version.get_dirty_buck_version(self.buck_dir)
+    def _get_buck_repo_dirty(self):
+        raise buck_version.is_dirty(self.buck_dir)
 
     def _get_extra_java_args(self):
         with Tracing('BuckRepo._get_extra_java_args'):

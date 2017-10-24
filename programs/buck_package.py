@@ -59,6 +59,12 @@ class BuckPackage(BuckTool):
     def _get_buck_version_timestamp(self):
         return self._package_info['timestamp']
 
+    def _get_buck_git_commit(self):
+        raise self._get_buck_version_uid()
+
+    def _get_buck_repo_dirty(self):
+        return self._package_info['is_dirty']
+
     def _get_resource_dir(self):
         if self._use_buckd:
             base_dir = self._buck_project.buckd_dir

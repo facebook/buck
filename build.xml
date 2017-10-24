@@ -15,7 +15,6 @@
   <property name="tracing-api.src.dir" value="com/facebook/buck/event/api/" />
   <property name="tracing-api.classes.dir" value="${build.dir}/tracing-api/classes" />
   <property name="tracing-api.jar" value="${build.dir}/tracing-api/tracing-api.jar"/>
-  <property name="javac-tracing.src.dir" value="com/facebook/buck/jvm/java/tracing" />
   <property name="javac-plugin.classes.dir" value="${build.dir}/javac-plugin/classes" />
   <property name="javac-plugin.jar" value="${build.dir}/javac-plugin/javac-plugin.jar" />
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/make_pex.py" />
@@ -61,6 +60,9 @@
   <property name="aosp.gensrc.dir" value="${build.dir}/aosp-gen" />
 
   <property name="devbuild" value="0" />
+
+  <property name="buck.hash.dir" value="${build.dir}/classes/META-INF"/>
+  <property name="buck.hash.file" value="${buck.hash.dir}/buck-binary-hash.txt"/>
 
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
   <available property="jdk1.8" classname="java.util.stream.Stream"/>
@@ -218,7 +220,7 @@
        do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
-  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, mark-successful-build" />
+  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -846,6 +848,25 @@
       <map from="${basedir}/" to=""/>
     </pathconvert>
     <echo file="${build.dir}/classpath/classpaths">${classpaths}</echo>
+  </target>
+
+  <target name="create-classpath-hash" depends="copy-resources, compile, dx, javac-plugin, report-generator-jar, create-classpath">
+    <delete file="${buck.hash.file}"/>
+    <checksum todir="${build.dir}/checksums" totalproperty="buck.hash.value">
+      <fileset dir="${basedir}">
+        <include name="${classes.dir}/*" />
+        <include name="${manual.gensrc.classes.dir}/*" />
+        <include name="${aosp.classes.dir}/*" />
+        <include name="${dx.classes.dir}/*" />
+        <include name="${tracing-api.classes.dir}/*" />
+        <include name="${bootstrapper.classes.dir}/*" />
+        <include name="${javac-plugin.classes.dir}/*" />
+      </fileset>
+      <fileset refid="buck.jars"/>
+      <fileset refid="third-party.jars"/>
+    </checksum>
+    <echo file="${buck.hash.file}">${buck.hash.value}</echo>
+    <echo>Generated Buck hash: ${buck.hash.value}</echo>
   </target>
 
   <target name="lint" depends="pmd, missing-test-files-check" />

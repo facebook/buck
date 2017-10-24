@@ -177,6 +177,12 @@ class BuckTool(object):
     def _get_buck_version_timestamp(self):
         raise NotImplementedError()
 
+    def _get_buck_git_commit(self):
+        raise NotImplementedError()
+
+    def _get_buck_repo_dirty(self):
+        raise NotImplementedError()
+
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()
 
@@ -336,7 +342,9 @@ class BuckTool(object):
         traits = {
             "severity": "SEVERE",
             "logger": "com.facebook.buck.python.buck_tool.py",
-            "buckGitCommit": self._get_buck_version_uid(),
+            "buckGitCommit": self._get_buck_git_commit(),
+            "buckVersion": self._get_buck_version_uid(),
+            "isBuckRepoDirty": self._get_buck_repo_dirty(),
             "os": platform.system(),
             "osVersion": platform.release(),
             "user": getpass.getuser(),
