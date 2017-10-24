@@ -127,7 +127,7 @@ public class BuildTargetsQueue {
           new EnqueuedTarget(
               target,
               ImmutableList.copyOf(currentRevDeps),
-              allForwardDeps.get(target).size(),
+              Preconditions.checkNotNull(allForwardDeps.get(target)).size(),
               ImmutableSet.copyOf(allForwardDeps.get(target)));
       allEnqueuedTargets.put(target, enqueuedTarget);
 
