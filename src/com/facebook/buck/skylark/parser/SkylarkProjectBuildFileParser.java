@@ -38,7 +38,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
@@ -208,8 +207,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       LOG.verbose("Got rules: %s", rules);
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
       return ParseResult.builder()
-          .addAllRawRules(rules)
-          .setLoadedPaths(parseContext.getLoadedpaths())
+          .setRawRules(rules)
+          .setLoadedPaths(parseContext.getLoadedPaths())
           .build();
     }
   }
@@ -430,46 +429,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public void close() throws BuildFileParseException, InterruptedException, IOException {
     // nothing to do
-  }
-
-  /**
-   * Tracks parse context.
-   *
-   * <p>This class provides API to record information retrieved while parsing a build file like
-   * parsed rules.
-   */
-  private static class ParseContext {
-    private final ImmutableList.Builder<Map<String, Object>> rawRuleBuilder;
-    private final ImmutableSortedSet.Builder<com.google.devtools.build.lib.vfs.Path>
-        loadedPathsBuilder;
-
-    private ParseContext() {
-      rawRuleBuilder = ImmutableList.builder();
-      loadedPathsBuilder = ImmutableSortedSet.naturalOrder();
-    }
-
-    /** Records the parsed {@code rawRule}. */
-    private void recordRule(Map<String, Object> rawRule) {
-      rawRuleBuilder.add(rawRule);
-    }
-
-    /** Records usage of {@code path}. */
-    private void recordLoadedPath(com.google.devtools.build.lib.vfs.Path path) {
-      loadedPathsBuilder.add(path);
-    }
-
-    /**
-     * @return The list of raw build rules discovered in parsed build file. Raw rule is presented as
-     *     a map with attributes as keys and parameters as values.
-     */
-    ImmutableList<Map<String, Object>> getRecordedRules() {
-      return rawRuleBuilder.build();
-    }
-
-    /** @return The set of build files and extensions loaded while parsing requested build file. */
-    ImmutableSortedSet<com.google.devtools.build.lib.vfs.Path> getLoadedpaths() {
-      return loadedPathsBuilder.build();
-    }
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */
