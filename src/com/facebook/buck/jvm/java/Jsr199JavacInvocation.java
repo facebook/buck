@@ -384,11 +384,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       new JavacEventSinkScopedSimplePerfEvent(
                           context.getEventSink(), invokingRule.toString());
                   try {
-                    javacTask.call();
+                    boolean success = javacTask.call();
 
                     debugLogDiagnostics();
 
-                    if (buildSuccessful()) {
+                    if (success && buildSuccessful()) {
                       if (classUsageTracker != null) {
                         new DefaultClassUsageFileWriter()
                             .writeFile(
