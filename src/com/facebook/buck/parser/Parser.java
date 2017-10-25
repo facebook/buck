@@ -196,7 +196,12 @@ public class Parser {
     return null;
   }
 
+  /**
+   * @deprecated Prefer {@link #getRawTargetNode(PerBuildState, Cell, TargetNode)} and reusing a
+   *     PerBuildState instance, especially when calling in a loop.
+   */
   @Nullable
+  @Deprecated
   public SortedMap<String, Object> getRawTargetNode(
       BuckEventBus eventBus,
       Cell cell,

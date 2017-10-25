@@ -36,6 +36,8 @@ import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildState.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraph;
@@ -789,54 +791,60 @@ public class TargetsCommand extends AbstractCommand {
 
     Iterator<TargetNode<?, ?>> targetNodeIterator = targetNodes.iterator();
 
-    while (targetNodeIterator.hasNext()) {
-      TargetNode<?, ?> targetNode = targetNodeIterator.next();
-      Map<String, Object> rawTargetNode =
+    try (PerBuildState state =
+        new PerBuildState(
+            params.getParser(),
+            params.getBuckEventBus(),
+            executor,
+            params.getCell(),
+            getEnableParserProfiling(),
+            SpeculativeParsing.DISABLED)) {
+
+      while (targetNodeIterator.hasNext()) {
+        TargetNode<?, ?> targetNode = targetNodeIterator.next();
+        Map<String, Object> rawTargetNode =
+            params.getParser().getRawTargetNode(state, params.getCell(), targetNode);
+        if (rawTargetNode == null) {
           params
-              .getParser()
-              .getRawTargetNode(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  getEnableParserProfiling(),
-                  executor,
-                  targetNode);
-      if (rawTargetNode == null) {
-        params
-            .getConsole()
-            .printErrorText(
-                "unable to find rule for target "
-                    + targetNode.getBuildTarget().getFullyQualifiedName());
-        continue;
-      }
-
-      TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
-      if (targetResult != null) {
-        for (TargetResultFieldName field : TargetResultFieldName.values()) {
-          field.getter.apply(targetResult).ifPresent(value -> rawTargetNode.put(field.name, value));
+              .getConsole()
+              .printErrorText(
+                  "unable to find rule for target "
+                      + targetNode.getBuildTarget().getFullyQualifiedName());
+          continue;
         }
-      }
-      rawTargetNode.put(
-          "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
-      if (isShowCellPath()) {
-        rawTargetNode.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
-      }
 
-      // Print the build rule information as JSON.
-      StringWriter stringWriter = new StringWriter();
-      try {
-        ObjectMappers.WRITER
-            .withDefaultPrettyPrinter()
-            .writeValue(
-                stringWriter, attributesPatternsMatcher.filterMatchingMapKeys(rawTargetNode));
-      } catch (IOException e) {
-        // Shouldn't be possible while writing to a StringWriter...
-        throw new RuntimeException(e);
+        TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
+        if (targetResult != null) {
+          for (TargetResultFieldName field : TargetResultFieldName.values()) {
+            field
+                .getter
+                .apply(targetResult)
+                .ifPresent(value -> rawTargetNode.put(field.name, value));
+          }
+        }
+        rawTargetNode.put(
+            "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
+        if (isShowCellPath()) {
+          rawTargetNode.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
+        }
+
+        // Print the build rule information as JSON.
+        StringWriter stringWriter = new StringWriter();
+        try {
+          ObjectMappers.WRITER
+              .withDefaultPrettyPrinter()
+              .writeValue(
+                  stringWriter, attributesPatternsMatcher.filterMatchingMapKeys(rawTargetNode));
+        } catch (IOException e) {
+          // Shouldn't be possible while writing to a StringWriter...
+          throw new RuntimeException(e);
+        }
+        params.getConsole().getStdOut().print(stringWriter.getBuffer().toString());
+        if (targetNodeIterator.hasNext()) {
+          params.getConsole().getStdOut().print(',');
+        }
+        params.getConsole().getStdOut().println();
       }
-      params.getConsole().getStdOut().print(stringWriter.getBuffer().toString());
-      if (targetNodeIterator.hasNext()) {
-        params.getConsole().getStdOut().print(',');
-      }
-      params.getConsole().getStdOut().println();
     }
 
     params.getConsole().getStdOut().println("]");
