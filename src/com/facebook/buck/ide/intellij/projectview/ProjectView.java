@@ -26,6 +26,7 @@ import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
 import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -47,6 +48,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -133,6 +135,9 @@ public class ProjectView {
 
   private final String repository;
 
+  private final Path configuredBuckOut;
+  private final Path configuredBuckOutGen;
+
   private ProjectView(
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
@@ -162,6 +167,17 @@ public class ProjectView {
         getIntellijSectionValue(OUTPUT_FONTS_FOLDER_KEY, OUTPUT_FONTS_FOLDER_DEFAULT);
     OUTPUT_RESOURCE_FOLDER =
         getIntellijSectionValue(OUTPUT_RESOURCE_FOLDER_KEY, OUTPUT_RESOURCE_FOLDER_DEFAULT);
+
+    BuildRule buildRule = Iterables.getFirst(actionGraph.getActionGraph().getNodes(), null);
+    if (buildRule == null) {
+      // If somehow there are no rules, we'll just use the default paths
+      configuredBuckOut = Paths.get(BUCK_OUT);
+      configuredBuckOutGen = configuredBuckOut.resolve("gen");
+    } else {
+      BuckPaths buckPaths = buildRule.getProjectFilesystem().getBuckPaths();
+      configuredBuckOut = buckPaths.getBuckOut();
+      configuredBuckOutGen = buckPaths.getGenDir();
+    }
   }
 
   private int run() {
@@ -557,7 +573,6 @@ public class ProjectView {
   private static final String COMPONENT = "component";
   private static final String CONTENT = "content";
   private static final String EXCLUDE_FOLDER = "excludeFolder";
-  private static final String GEN = "gen";
   private static final String IS_TEST_SOURCE = "isTestSource";
   private static final String LIBRARY = "library";
   private static final String LOG = "log";
@@ -856,8 +871,9 @@ public class ProjectView {
 
   private void writeRootDotIml(
       List<String> sourceFiles, Set<String> roots, List<String> libraries) {
-    String buckOut = fileJoin(viewPath, BUCK_OUT);
-    symlink(fileJoin(repository, BUCK_OUT), buckOut);
+    final String configuredBuckOutAsString = configuredBuckOut.toString();
+    String buckOut = fileJoin(viewPath, configuredBuckOutAsString);
+    symlink(fileJoin(repository, configuredBuckOutAsString), buckOut);
 
     String apkPath = null;
     Map<BuildTarget, String> outputs = getOutputs();
@@ -884,7 +900,7 @@ public class ProjectView {
 
     Element configuration = addElement(facet, "configuration");
 
-    String genFolder = fileJoin(File.separator, BUCK_OUT, GEN);
+    String genFolder = fileJoin(File.separator, configuredBuckOutGen.toString());
     addElement(
         configuration,
         OPTION,
@@ -1081,7 +1097,8 @@ public class ProjectView {
     getAnnotationFolders(folders);
     getGeneratedFolders(folders);
 
-    return folders.stream().sorted().collect(Collectors.toList());
+    return pruneListOfAnnotationAndGeneratedFolders(
+        folders.stream().sorted().collect(Collectors.toList()));
   }
 
   private void getAnnotationFolders(Collection<String> folders) {
@@ -1127,6 +1144,25 @@ public class ProjectView {
           }
           return targetGraph.getAll(buildDeps);
         });
+  }
+
+  private Collection<String> pruneListOfAnnotationAndGeneratedFolders(List<String> folders) {
+    final int buckOutNameCount = configuredBuckOut.getNameCount();
+    Set<String> prunedPaths = new HashSet<>();
+
+    for (String folder : folders) {
+      Path path = Paths.get(folder);
+      if (!path.startsWith(configuredBuckOut) || path.equals(configuredBuckOut)) {
+        // The folder is not under the configured buck-out or *is* the configured buck-out.
+        // Likely, neither will never happen, but we don't want to blow up if either does
+        prunedPaths.add(folder);
+      } else {
+        Path nextName = path.getName(buckOutNameCount);
+        prunedPaths.add(configuredBuckOut.resolve(nextName).toString());
+      }
+    }
+
+    return prunedPaths;
   }
 
   // endregion .idea folder
