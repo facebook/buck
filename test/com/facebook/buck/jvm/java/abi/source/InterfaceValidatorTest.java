@@ -29,6 +29,36 @@ import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class InterfaceValidatorTest extends CompilerTreeApiTest {
+  ImmutableMap<String, String> CLASSPATH_WITH_COMPLEX_MEMBER_TYPES =
+      ImmutableMap.of(
+          "com/facebook/bar/Bar.java",
+          Joiner.on('\n')
+              .join(
+                  "package com.facebook.bar;",
+                  "import com.facebook.baz.Baz;",
+                  "public class Bar extends Baz {",
+                  "  public static class StaticMember extends SuperStaticMember{",
+                  "    public static class StaticMemberer extends SuperStaticMemberer {",
+                  "    }",
+                  "  }",
+                  "  public class Inner extends Baz.Inner { }",
+                  "}"),
+          "com/facebook/baz/Baz.java",
+          Joiner.on('\n')
+              .join(
+                  "package com.facebook.baz;",
+                  "public class Baz {",
+                  "  public static class SuperStaticMember {",
+                  "    public static class SuperStaticMemberer {",
+                  "      public static class StaticMemberest {",
+                  "      }",
+                  "    }",
+                  "  }",
+                  "  public class Inner {",
+                  "    public class Innerer { }",
+                  "  }",
+                  "}"));
+
   private ValidatingTaskListenerFactory taskListenerFactory;
 
   @Before
@@ -443,6 +473,35 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                 "Foo.java:3: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Bar.Inner\" here instead of \"Inner\".",
                 "  Inner i;",
                 "  ^"));
+  }
+
+  @Test
+  public void testNonCanonicalUnqualifiedPackageMemberInnerTypeFromClasspathFails()
+      throws IOException {
+    withClasspath(CLASSPATH_WITH_COMPLEX_MEMBER_TYPES);
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "FooBar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.baz;",
+                    "import com.facebook.bar.Bar;",
+                    "class FooBar extends Bar {",
+                    "  StaticMember.StaticMemberer.StaticMemberest i;",
+                    "}")));
+
+    assertErrors(
+        Joiner.on('\n')
+            .join(
+                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Baz.SuperStaticMember\" here instead of \"StaticMember\".",
+                "  StaticMember.StaticMemberer.StaticMemberest i;",
+                "  ^"),
+        Joiner.on('\n')
+            .join(
+                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"SuperStaticMemberer\" here instead of \"StaticMemberer\".",
+                "  StaticMember.StaticMemberer.StaticMemberest i;",
+                "              ^"));
   }
 
   @Test
