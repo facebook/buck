@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
+import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
+import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -217,8 +219,15 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   AbiGenerationMode getAbiGenerationMode() {
-    AbiGenerationMode result =
-        Preconditions.checkNotNull(getJavaBuckConfig()).getAbiGenerationMode();
+    AbiGenerationMode result = null;
+
+    CoreArg args = getArgs();
+    if (args != null) {
+      result = args.getAbiGenerationMode().orElse(null);
+    }
+    if (result == null) {
+      result = Preconditions.checkNotNull(getJavaBuckConfig()).getAbiGenerationMode();
+    }
 
     if (result == AbiGenerationMode.CLASS) {
       return result;
@@ -238,6 +247,25 @@ public abstract class DefaultJavaLibraryRules {
     return result;
   }
 
+  @Value.Lazy
+  SourceAbiVerificationMode getSourceAbiVerificationMode() {
+    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
+    CoreArg args = getArgs();
+    SourceAbiVerificationMode result = null;
+
+    if (args != null) {
+      result = args.getSourceAbiVerificationMode().orElse(null);
+    }
+    if (result == null) {
+      result =
+          javaBuckConfig != null
+              ? javaBuckConfig.getSourceAbiVerificationMode()
+              : SourceAbiVerificationMode.OFF;
+    }
+
+    return result;
+  }
+
   private boolean willProduceSourceAbi() {
     return willProduceAbiJar() && getAbiGenerationMode().isSourceAbi();
   }
@@ -252,9 +280,7 @@ public abstract class DefaultJavaLibraryRules {
 
   private boolean willProduceCompareAbis() {
     return willProduceSourceAbi()
-        && getJavaBuckConfig() != null
-        && getJavaBuckConfig().getSourceAbiVerificationMode()
-            != JavaBuckConfig.SourceAbiVerificationMode.OFF;
+        && getSourceAbiVerificationMode() != JavaBuckConfig.SourceAbiVerificationMode.OFF;
   }
 
   private boolean shouldBuildSourceAbi() {
@@ -542,10 +568,6 @@ public abstract class DefaultJavaLibraryRules {
       this.buildRuleResolver = buildRuleResolver;
 
       if (args != null) {
-        if (args.getGenerateSourceOnlyAbi().isPresent()) {
-          setSourceOnlyAbisAllowed(args.getGenerateSourceOnlyAbi().get());
-        }
-
         setSrcs(args.getSrcs())
             .setResources(args.getResources())
             .setResourcesRoot(args.getResourcesRoot())
