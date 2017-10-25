@@ -19,11 +19,13 @@ package com.facebook.buck.httpserver;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.template.soy.data.SoyMapData;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.io.PrintWriter; // NOPMD required by API
 import java.io.StringWriter;
+import java.net.URL;
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,18 +40,19 @@ public class TemplateHandlerTest extends EasyMockSupport {
     TemplateHandlerDelegate delegate =
         new TemplateHandlerDelegate() {
           @Override
-          public ImmutableSet<String> getTemplates() {
-            return ImmutableSet.of("example.soy");
+          public URL getTemplateGroup() {
+            return Resources.getResource(TemplateHandlerTest.class, "example.stg");
           }
 
           @Override
           public String getTemplateForRequest(Request baseRequest) {
-            return "example.hello";
+            return "hello";
           }
 
           @Override
-          public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
-            return new SoyMapData("name", "Michael");
+          public ImmutableMap<String, Object> getDataForRequest(Request baseRequest)
+              throws IOException {
+            return ImmutableMap.of("name", "Michael");
           }
         };
 
@@ -80,17 +83,19 @@ public class TemplateHandlerTest extends EasyMockSupport {
     TemplateHandlerDelegate delegate =
         new TemplateHandlerDelegate() {
           @Override
-          public ImmutableSet<String> getTemplates() {
-            return ImmutableSet.of("example.soy");
+          public URL getTemplateGroup() {
+            return Resources.getResource(TemplateHandlerTest.class, "example.stg");
           }
 
           @Override
           public String getTemplateForRequest(Request baseRequest) {
-            return "example.hello";
+            return "hello";
           }
 
+          @Nullable
           @Override
-          public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
+          public ImmutableMap<String, Object> getDataForRequest(Request baseRequest)
+              throws IOException {
             // Returning null should cause a 500 to be returned.
             return null;
           }

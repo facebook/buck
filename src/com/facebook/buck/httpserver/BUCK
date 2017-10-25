@@ -33,7 +33,7 @@ java_library(
         excludes = CACHE_HANDLER_SRCS + UTIL_SRCS,
     ),
     resources = glob([
-        "*.soy",
+        "*.stg",
         "resources/static/*.*",
     ]),
     tests = [
@@ -64,10 +64,10 @@ java_library(
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/trace:trace",
-        "//third-party/java/closure-templates:closure-templates",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jetty:jetty",
         "//third-party/java/jsr:jsr305",
+        "//third-party/java/stringtemplate:stringtemplate",
     ],
 )
 

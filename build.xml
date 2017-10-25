@@ -541,7 +541,7 @@
       <fileset dir="${src.dir}">
         <include name="com/facebook/buck/apple/project_generator/*.st"/>
         <include name="com/facebook/buck/go/testmaingen.go"/>
-        <include name="com/facebook/buck/httpserver/*.soy"/>
+        <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/ide/intellij/templates/*"/>
         <include name="com/facebook/buck/lua/*.in"/>
