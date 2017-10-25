@@ -249,7 +249,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertErrors(
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"com.facebook.bar.Bar\" here instead of \"Bar\".",
+                "Foo.java:2: error: Source-only ABI generation requires that this type be explicitly imported. Add an import for com.facebook.bar.Bar.",
                 "public abstract class Foo extends Bar { }",
                 "                                  ^"));
   }

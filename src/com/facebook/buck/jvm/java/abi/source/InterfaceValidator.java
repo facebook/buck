@@ -372,7 +372,21 @@ class InterfaceValidator {
 
             isCanonicalReference =
                 isCanonicalReference && canonicalTypeElement == referencedTypeElement;
-            if (!isCanonicalReference || !isImported(referencedTypeElement, referencingPackage)) {
+            if (isCanonicalReference && isImported(referencedTypeElement, referencingPackage)) {
+              // A canonical reference starting from an imported type will always resolve properly
+              // under source-only ABI rules, so nothing to do here.
+              return null;
+            } else if (isCanonicalReference
+                && importedOwners.contains(canonicalTypeElement.getEnclosingElement())) {
+              // Star import that's not available at source ABI time
+              trees.printMessage(
+                  messageKind,
+                  String.format(
+                      "Source-only ABI generation requires that this type be explicitly imported. Add an import for %s.",
+                      canonicalTypeElement.getQualifiedName()),
+                  node,
+                  referenceTreePath.getCompilationUnit());
+            } else {
               suggestQualifiedName(canonicalTypeElement, referencingPackage, getCurrentPath());
             }
 
