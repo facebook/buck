@@ -33,9 +33,7 @@ import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -51,6 +49,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 /**
@@ -77,6 +76,7 @@ class InterfaceValidator {
 
   private final Elements elements;
   private final Diagnostic.Kind messageKind;
+  private final Types types;
   private final Trees trees;
   private final SourceOnlyAbiRuleInfo ruleInfo;
 
@@ -84,6 +84,7 @@ class InterfaceValidator {
       Diagnostic.Kind messageKind, BuckJavacTask task, SourceOnlyAbiRuleInfo ruleInfo) {
     this.messageKind = messageKind;
     trees = task.getTrees();
+    types = task.getTypes();
     elements = task.getElements();
     this.ruleInfo = ruleInfo;
   }
@@ -93,7 +94,8 @@ class InterfaceValidator {
       InterfaceScanner interfaceScanner = new InterfaceScanner(elements, trees);
       for (CompilationUnitTree compilationUnit : compilationUnits) {
         interfaceScanner.findReferences(
-            compilationUnit, new ValidatingListener(messageKind, elements, trees, ruleInfo));
+            compilationUnit,
+            new ValidatingListener(messageKind, elements, types, trees, ruleInfo, compilationUnit));
       }
     }
   }
@@ -108,22 +110,29 @@ class InterfaceValidator {
   }
 
   private static class ValidatingListener implements InterfaceScanner.Listener {
-    private final Set<TypeElement> importedTypes = new HashSet<>();
-    private final Set<QualifiedNameable> importedOwners = new HashSet<>();
     private final Diagnostic.Kind messageKind;
     private final Elements elements;
     private final Trees trees;
     private final SourceOnlyAbiRuleInfo ruleInfo;
+    private final ImportsTracker imports;
 
     public ValidatingListener(
         Diagnostic.Kind messageKind,
         Elements elements,
+        Types types,
         Trees trees,
-        SourceOnlyAbiRuleInfo ruleInfo) {
+        SourceOnlyAbiRuleInfo ruleInfo,
+        CompilationUnitTree compilationUnit) {
       this.messageKind = messageKind;
       this.elements = elements;
       this.trees = trees;
       this.ruleInfo = ruleInfo;
+      imports =
+          new ImportsTracker(
+              elements,
+              types,
+              (PackageElement)
+                  Preconditions.checkNotNull(trees.getElement(new TreePath(compilationUnit))));
     }
 
     @Override
@@ -212,9 +221,9 @@ class InterfaceValidator {
         @Nullable Name memberName) {
       if (!isStatic) {
         if (!isStarImport) {
-          importedTypes.add((TypeElement) leafmostElement);
+          imports.importType((TypeElement) leafmostElement, leafmostElementPath);
         } else {
-          importedOwners.add(leafmostElement);
+          imports.importMembers(leafmostElement, leafmostElementPath);
         }
       }
     }
@@ -385,8 +394,7 @@ class InterfaceValidator {
               // A canonical reference starting from an imported type will always resolve properly
               // under source-only ABI rules, so nothing to do here.
               return null;
-            } else if (isCanonicalReference
-                && importedOwners.contains(canonicalTypeElement.getEnclosingElement())) {
+            } else if (isCanonicalReference && imports.isOnDemandImported(canonicalTypeElement)) {
               // Star import that's not available at source ABI time
               trees.printMessage(
                   messageKind,
@@ -408,9 +416,9 @@ class InterfaceValidator {
           TypeElement referencedTypeElement, PackageElement enclosingPackage) {
         PackageElement referencedPackage = getPackageElement(referencedTypeElement);
         return isTopLevelTypeInPackage(referencedTypeElement, enclosingPackage)
-            || importedTypes.contains(referencedTypeElement)
+            || imports.isSingleTypeImported(referencedTypeElement)
             || referencedPackage.getQualifiedName().contentEquals("java.lang")
-            || (importedOwners.contains(referencedTypeElement.getEnclosingElement())
+            || (imports.isOnDemandImported(referencedTypeElement)
                 && typeWillBeAvailable(referencedTypeElement));
       }
 
