@@ -171,6 +171,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     // Must close the worker first so that the compiler has a chance to exit.
     if (worker != null) {
       worker.close();
+      worker = null;
     }
   }
 

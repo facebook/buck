@@ -129,7 +129,7 @@ class BuildRulePipelinesRunner {
    * state.
    */
   private static class BuildRulePipeline<T extends RulePipelineState> implements Runnable {
-    private final T state;
+    @Nullable private T state;
     private final List<BuildRulePipelineStage<T>> rules = new ArrayList<>();
 
     public BuildRulePipeline(BuildRulePipelineStage<T> rootRule, T state) {
@@ -149,7 +149,7 @@ class BuildRulePipelinesRunner {
     }
 
     public T getState() {
-      return state;
+      return Preconditions.checkNotNull(state);
     }
 
     @Override
@@ -172,7 +172,8 @@ class BuildRulePipelinesRunner {
           Preconditions.checkState(rule.getFuture().isDone() || rule.getFuture().isCancelled());
         }
       } finally {
-        state.close();
+        Preconditions.checkNotNull(state).close();
+        state = null;
       }
     }
   }
@@ -187,7 +188,7 @@ class BuildRulePipelinesRunner {
     @Nullable private BuildRulePipelineStage<T> nextStage;
     @Nullable private Throwable error = null;
     @Nullable private Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
-    @Nullable private T pipelineState;
+    @Nullable private BuildRulePipeline<T> pipeline;
     @Nullable private RunnableWithFuture<Optional<BuildResult>> runner;
 
     private BuildRulePipelineStage() {
@@ -201,8 +202,8 @@ class BuildRulePipelinesRunner {
     }
 
     public void setPipeline(BuildRulePipeline<T> pipeline) {
-      Preconditions.checkState(this.pipelineState == null);
-      this.pipelineState = pipeline.getState();
+      Preconditions.checkState(this.pipeline == null);
+      this.pipeline = pipeline;
     }
 
     public void setNextStage(BuildRulePipelineStage<T> nextStage) {
@@ -216,7 +217,7 @@ class BuildRulePipelinesRunner {
     }
 
     public boolean pipelineBuilt() {
-      return pipelineState != null;
+      return pipeline != null;
     }
 
     public void cancelAndWait() {
@@ -242,10 +243,10 @@ class BuildRulePipelinesRunner {
 
     @Override
     public void run() {
-      Preconditions.checkNotNull(pipelineState);
+      Preconditions.checkNotNull(pipeline);
       Preconditions.checkNotNull(ruleStepRunnerFactory);
 
-      runner = ruleStepRunnerFactory.apply(pipelineState);
+      runner = ruleStepRunnerFactory.apply(pipeline.getState());
       future.setFuture(runner.getFuture());
       runner.run();
     }
