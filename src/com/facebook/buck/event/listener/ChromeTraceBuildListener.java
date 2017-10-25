@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.ChromeTraceEvent.Phase;
+import com.facebook.buck.event.ChromeTraceWriter;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -53,7 +54,6 @@ import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.Threads;
@@ -62,7 +62,6 @@ import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
@@ -118,7 +117,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final ThreadLocal<SimpleDateFormat> dateFormat;
   private final Path tracePath;
   private final OutputStream traceStream;
-  private final JsonGenerator jsonGenerator;
+  private final ChromeTraceWriter chromeTraceWriter;
   private final Path logDirectoryPath;
   private final ChromeTraceBuckConfig config;
   private final Set<Long> threadNamesRecorded = new HashSet<>();
@@ -171,9 +170,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo.getBuildId());
     this.tracePath = tracePathAndStream.getPath();
     this.traceStream = tracePathAndStream.getStream();
-    this.jsonGenerator = ObjectMappers.createGenerator(this.traceStream);
-
-    this.jsonGenerator.writeStartArray();
+    this.chromeTraceWriter = new ChromeTraceWriter(this.traceStream);
+    this.chromeTraceWriter.writeStart();
     addProcessMetadataEvent(invocationInfo);
     addProjectFilesystemDelegateMetadataEvent(projectFilesystem);
   }
@@ -263,8 +261,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         Threads.interruptCurrentThread();
       }
 
-      jsonGenerator.writeEndArray();
-      jsonGenerator.close();
+      chromeTraceWriter.writeEnd();
+      chromeTraceWriter.close();
       traceStream.close();
       uploadTraceIfConfigured(buildId);
 
@@ -927,7 +925,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         outputExecutor.submit(
             () -> {
               try {
-                ObjectMappers.WRITER.writeValue(jsonGenerator, chromeTraceEvent);
+                chromeTraceWriter.writeEvent(chromeTraceEvent);
               } catch (IOException e) {
                 // Swallow any failures to write.
               }
