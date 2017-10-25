@@ -77,7 +77,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
@@ -126,7 +126,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
@@ -182,7 +182,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
@@ -236,7 +236,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,

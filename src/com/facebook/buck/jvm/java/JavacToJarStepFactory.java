@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -97,7 +98,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
       addAnnotationGenFolderStep(
-          parameters.getGeneratedCodeDirectory(),
+          CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
           projectFilesystem,
           steps,
           buildableContext,
@@ -219,7 +220,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       if (generatingCode) {
         // Javac requires that the root directory for generated sources already exists.
         addAnnotationGenFolderStep(
-            compilerParameters.getGeneratedCodeDirectory(),
+            CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
             projectFilesystem,
             steps,
             buildableContext,
@@ -257,17 +258,26 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       BuildTarget invokingRule,
       Builder<Step> steps,
       BuildableContext buildableContext) {
-    CompilerParameters parameters = pipeline.getCompilerParameters();
     boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
     if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
       addAnnotationGenFolderStep(
-          parameters.getGeneratedCodeDirectory(),
+          CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
           projectFilesystem,
           steps,
           buildableContext,
           context,
           pipeline);
+
+      if (pipeline.isRunning()) {
+        steps.add(
+            SymlinkFileStep.of(
+                projectFilesystem,
+                CompilerParameters.getAnnotationPath(
+                        projectFilesystem, HasJavaAbi.getSourceAbiJar(invokingRule))
+                    .get(),
+                CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get()));
+      }
     }
 
     steps.add(new JavacStep(pipeline, invokingRule));

@@ -204,7 +204,7 @@ public class JavacPipelineState implements RulePipelineState {
         filesystem,
         resolver,
         compilerParameters.getOutputDirectory(),
-        compilerParameters.getGeneratedCodeDirectory(),
+        CompilerParameters.getAnnotationPath(filesystem, invokingRule).get(),
         context,
         buildClasspathEntries);
   }
