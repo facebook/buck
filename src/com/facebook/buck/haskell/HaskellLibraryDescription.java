@@ -19,6 +19,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -66,6 +67,8 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -758,9 +761,51 @@ public class HaskellLibraryDescription
       }
 
       @Override
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+        CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+
+        Optional<Linker.LinkableDepType> depType =
+            platforms.getValue(cxxPlatform.getFlavor()).getLinkStyleForStubHeader();
+        if (depType.isPresent()) {
+          HaskellCompileRule compileRule =
+              requireCompileRule(
+                  buildTarget,
+                  projectFilesystem,
+                  params,
+                  resolver,
+                  pathResolver,
+                  ruleFinder,
+                  platforms.getValue(cxxPlatform.getFlavor()),
+                  args,
+                  allDeps.get(resolver, cxxPlatform),
+                  depType.get(),
+                  args.isEnableProfiling());
+          builder.addIncludes(
+              CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, compileRule.getStubsDir()));
+        }
+
+        return builder.build();
+      }
+
+      @Override
+      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+        return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
+      }
+
+      @Override
+      public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+          CxxPlatform cxxPlatform) {
+        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+      }
+
+      @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
         return ImmutableList.of();
       }
+
+      private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+          transitiveCxxPreprocessorInputCache =
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(

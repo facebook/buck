@@ -416,6 +416,10 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getObjectDir());
   }
 
+  public SourcePath getStubsDir() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getStubDir());
+  }
+
   @VisibleForTesting
   protected ImmutableList<String> getFlags() {
     return flags;

@@ -19,6 +19,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
@@ -92,6 +93,8 @@ public class HaskellBuckConfig {
         .setGhciCxx(() -> delegate.getRequiredPath(section, "ghci_cxx_path"))
         .setGhciCc(() -> delegate.getRequiredPath(section, "ghci_cc_path"))
         .setGhciCpp(() -> delegate.getRequiredPath(section, "ghci_cpp_path"))
+        .setLinkStyleForStubHeader(
+            delegate.getEnum(section, "link_style_for_stub_header", Linker.LinkableDepType.class))
         .setCxxPlatform(cxxPlatform)
         .build();
   }
