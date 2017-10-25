@@ -344,30 +344,31 @@ class InterfaceValidator {
             isCanonicalReference =
                 isCanonicalReference && referencedTypeElement == canonicalTypeElement;
 
-            return super.scan(
+            super.scan(
                 node.getExpression(), (TypeElement) canonicalTypeElement.getEnclosingElement());
+
+            if (!isCanonicalReference) {
+              trees.printMessage(
+                  messageKind,
+                  String.format(
+                      "Source-only ABI generation requires that this type be referred to by its canonical name. Use \"%s\" here instead of \"%s\".",
+                      canonicalTypeElement.getSimpleName(), node.getIdentifier()),
+                  node,
+                  getCurrentPath().getCompilationUnit());
+            }
+
+            return null;
           }
 
           @Override
           public Void visitIdentifier(IdentifierTree node, TypeElement canonicalTypeElement) {
-            // Single-type imports must be canonical by definition.
-            isCanonicalReference = isImported(canonicalTypeElement, referencingPackage);
+            if (!isImported(canonicalTypeElement, referencingPackage)) {
+              suggestQualifiedName(canonicalTypeElement, referencingPackage, getCurrentPath());
+            }
 
             return null;
           }
         }.scan(referenceTreePath, canonicalTypeElement);
-
-        if (!isCanonicalReference) {
-          String minimalQualifiedName =
-              findMinimalQualifiedName(canonicalTypeElement, referencingPackage);
-
-          // TODO(jkeljo): Clearer message
-          trees.printMessage(
-              messageKind,
-              String.format("Must qualify the name: %s", minimalQualifiedName),
-              referenceTreePath.getLeaf(),
-              referenceTreePath.getCompilationUnit());
-        }
       }
 
       private boolean isImported(
@@ -385,8 +386,11 @@ class InterfaceValidator {
         return enclosingPackage == referencedTypeElement.getEnclosingElement();
       }
 
-      private String findMinimalQualifiedName(
-          TypeElement canonicalTypeElement, PackageElement referencingPackage) {
+      private void suggestQualifiedName(
+          TypeElement canonicalTypeElement,
+          PackageElement referencingPackage,
+          TreePath referencingPath) {
+        IdentifierTree identifierTree = (IdentifierTree) referencingPath.getLeaf();
         List<QualifiedNameable> enclosingElements = new ArrayList<>();
         QualifiedNameable walker = canonicalTypeElement;
         while (walker != null) {
@@ -402,14 +406,23 @@ class InterfaceValidator {
 
         Collections.reverse(enclosingElements);
 
-        return enclosingElements
-            .stream()
-            .map(
-                element ->
-                    element.getKind() == ElementKind.PACKAGE
-                        ? element.getQualifiedName()
-                        : element.getSimpleName())
-            .collect(Collectors.joining("."));
+        String qualifiedName =
+            enclosingElements
+                .stream()
+                .map(
+                    element ->
+                        element.getKind() == ElementKind.PACKAGE
+                            ? element.getQualifiedName()
+                            : element.getSimpleName())
+                .collect(Collectors.joining("."));
+
+        trees.printMessage(
+            messageKind,
+            String.format(
+                "Source-only ABI generation requires that this type be referred to by its canonical name. Use \"%s\" here instead of \"%s\".",
+                qualifiedName, identifierTree.getName()),
+            identifierTree,
+            referencingPath.getCompilationUnit());
       }
     }
   }

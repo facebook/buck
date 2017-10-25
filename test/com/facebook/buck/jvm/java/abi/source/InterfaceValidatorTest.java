@@ -219,7 +219,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertErrors(
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Must qualify the name: com.facebook.bar.Bar",
+                "Foo.java:2: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"com.facebook.bar.Bar\" here instead of \"Bar\".",
                 "public abstract class Foo extends Bar { }",
                 "                                  ^"));
   }
@@ -300,7 +300,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                 "}"));
 
     assertError(
-        "Foo.java:4: error: Must qualify the name: com.facebook.baz.Baz.Inner\n"
+        "Foo.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"com.facebook.baz.Baz.Inner\" here instead of \"Inner\".\n"
             + "  Inner i;\n"
             + "  ^");
   }
@@ -347,7 +347,10 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
     assertError(
         Joiner.on('\n')
-            .join("Foo.java:4: error: Must qualify the name: Baz.Inner", "  Inner i;", "  ^"));
+            .join(
+                "Foo.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Baz.Inner\" here instead of \"Inner\".",
+                "  Inner i;",
+                "  ^"));
   }
 
   @Test
@@ -436,7 +439,10 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
     assertError(
         Joiner.on('\n')
-            .join("Foo.java:3: error: Must qualify the name: Bar.Inner", "  Inner i;", "  ^"));
+            .join(
+                "Foo.java:3: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Bar.Inner\" here instead of \"Inner\".",
+                "  Inner i;",
+                "  ^"));
   }
 
   @Test
