@@ -89,9 +89,11 @@ class InterfaceValidator {
 
   public void validate(List<? extends CompilationUnitTree> compilationUnits) {
     try (BuckTracing.TraceSection trace = BUCK_TRACING.traceSection("buck.abi.validate")) {
-      new InterfaceScanner(
-              elements, trees, new ValidatingListener(messageKind, elements, trees, ruleInfo))
-          .findReferences(compilationUnits);
+      InterfaceScanner interfaceScanner = new InterfaceScanner(elements, trees);
+      for (CompilationUnitTree compilationUnit : compilationUnits) {
+        interfaceScanner.findReferences(
+            compilationUnit, new ValidatingListener(messageKind, elements, trees, ruleInfo));
+      }
     }
   }
 

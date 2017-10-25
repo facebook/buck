@@ -57,21 +57,15 @@ class InterfaceScanner {
         VariableElement constant, TreePath path, Element referencingElement);
   }
 
-  private final Listener listener;
   private final Elements elements;
   private final Trees trees;
 
-  public InterfaceScanner(Elements elements, Trees trees, Listener listener) {
+  public InterfaceScanner(Elements elements, Trees trees) {
     this.elements = elements;
     this.trees = trees;
-    this.listener = listener;
   }
 
-  public void findReferences(Iterable<? extends CompilationUnitTree> files) {
-    files.forEach(file -> findReferencesInSingleFile(file));
-  }
-
-  private void findReferencesInSingleFile(CompilationUnitTree file) {
+  public void findReferences(CompilationUnitTree file, Listener listener) {
     // Scan the non-private interface portions of the tree, and report any references to types
     // or constants that are found.
     new TreeContextScanner<Void, Void>(trees) {

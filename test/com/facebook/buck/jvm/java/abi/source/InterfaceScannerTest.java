@@ -711,9 +711,11 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
             return new PostEnterCallback() {
               @Override
               protected void enterComplete(List<CompilationUnitTree> compilationUnits) {
-                InterfaceScanner finder =
-                    new InterfaceScanner(elements, trees, new FinderListener());
-                finder.findReferences(compilationUnits);
+                FinderListener listener = new FinderListener();
+                InterfaceScanner finder = new InterfaceScanner(elements, trees);
+                for (CompilationUnitTree compilationUnit : compilationUnits) {
+                  finder.findReferences(compilationUnit, listener);
+                }
               }
             };
           }
