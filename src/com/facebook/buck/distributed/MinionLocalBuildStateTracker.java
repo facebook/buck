@@ -32,12 +32,21 @@ public class MinionLocalBuildStateTracker {
   // Each work unit takes up one core.
   private int availableWorkUnitCapacity;
 
-  // All nodes that have finished build (and been uploaded) that need to be signalled
+  // All targets that have finished build (and been uploaded) that need to be signalled
   // back to the coordinator.
-  private final Set<String> finishedTargetsToSignal = new HashSet<>();
+  private final Set<String> uploadedTargetsToSignal = new HashSet<>();
 
   // These are the targets at the end of work unit, when complete the corresponding core is free.
   private final Set<String> workUnitTerminalTargets = new HashSet<>();
+
+  // All targets that were actually scheduled at this minion by a coordinator
+  private final Set<String> knownTargets = new HashSet<>();
+
+  // All targets that have finished building
+  private final Set<String> finishedTargets = new HashSet<>();
+
+  // All targets that have finished uploading
+  private final Set<String> uploadedTargets = new HashSet<>();
 
   // Targets for which build hasn't started yet
   private final List<WorkUnit> workUnitsToBuild = new ArrayList<>();
@@ -61,13 +70,16 @@ public class MinionLocalBuildStateTracker {
    */
   public synchronized List<String> getTargetsToSignal() {
     // Make a copy of the finished targets set
-    List<String> targets = Lists.newArrayList(finishedTargetsToSignal);
-    finishedTargetsToSignal.clear();
+    List<String> targets = Lists.newArrayList(uploadedTargetsToSignal);
+    uploadedTargetsToSignal.clear();
     return targets;
   }
 
   /** @param newWorkUnits Work Units that have just been fetched from the coordinator */
   public synchronized void enqueueWorkUnitsForBuilding(List<WorkUnit> newWorkUnits) {
+    if (newWorkUnits.size() == 0) {
+      return;
+    }
     for (WorkUnit workUnit : newWorkUnits) {
       List<String> buildTargetsInWorkUnit = workUnit.getBuildTargets();
       Preconditions.checkArgument(buildTargetsInWorkUnit.size() > 0);
@@ -75,7 +87,16 @@ public class MinionLocalBuildStateTracker {
       workUnitsToBuild.add(workUnit);
     }
 
-    LOG.info(String.format("Queued [%d] work units for building", newWorkUnits.size()));
+    // Each fetched work unit is going to occupy one core, mark the core as busy until the
+    // work unit has finished.
+    // Note: we should do this immediately so that the next GetWork call doesn't attempt
+    // to use the old availableWorkUnitCapacity value.
+    availableWorkUnitCapacity -= newWorkUnits.size();
+
+    LOG.info(
+        String.format(
+            "Queued [%d] work units for building. New available capacity [%d]",
+            newWorkUnits.size(), availableWorkUnitCapacity));
   }
 
   /** @return True if there are queued work units that haven't been build yet */
@@ -92,14 +113,13 @@ public class MinionLocalBuildStateTracker {
       targetsToBuild.addAll(workUnit.getBuildTargets());
     }
 
+    knownTargets.addAll(targetsToBuild);
+
     LOG.debug(
         String.format(
             "Returning [%d] targets from [%d] work units for building",
             targetsToBuild.size(), workUnitsToBuild.size()));
 
-    // Each fetched work unit is going to occupy one core, mark the core as busy until the
-    // work unit has finished.
-    availableWorkUnitCapacity -= workUnitsToBuild.size();
     workUnitsToBuild.clear();
 
     return targetsToBuild;
@@ -111,6 +131,10 @@ public class MinionLocalBuildStateTracker {
    * @param target
    */
   public synchronized void recordFinishedTarget(String target) {
+    Preconditions.checkArgument(knownTargets.contains(target));
+    Preconditions.checkArgument(!finishedTargets.contains(target));
+    finishedTargets.add(target);
+
     // If a target that just finished was the terminal node in a work unit, then that core
     // is now available for further work.
     if (!workUnitTerminalTargets.contains(target)) {
@@ -128,7 +152,11 @@ public class MinionLocalBuildStateTracker {
    * @param target
    */
   public synchronized void recordUploadedTarget(String target) {
-    finishedTargetsToSignal.add(target);
+    Preconditions.checkArgument(knownTargets.contains(target));
+    Preconditions.checkArgument(!uploadedTargets.contains(target));
+    uploadedTargets.add(target);
+
+    uploadedTargetsToSignal.add(target);
   }
 
   // Keep a record of the last target in a work unit, as we need to wait for this to finish

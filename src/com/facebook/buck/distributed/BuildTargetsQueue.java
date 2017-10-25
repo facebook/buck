@@ -145,6 +145,8 @@ public class BuildTargetsQueue {
 
   /** Returns nodes that have all their dependencies satisfied. */
   public List<WorkUnit> dequeueZeroDependencyNodes(List<String> finishedNodes, int maxUnitsOfWork) {
+    Preconditions.checkArgument(maxUnitsOfWork >= 0);
+
     LOG.info(
         String.format(
             "Received update with [%s] finished nodes and [%s] requested work units",
@@ -213,7 +215,7 @@ public class BuildTargetsQueue {
   private void createWorkUnitsStartingAtNodes(
       Set<EnqueuedTarget> nodes, List<WorkUnit> newUnitsOfWork, int maxUnitsOfWork) {
     for (EnqueuedTarget node : nodes) {
-      if (newUnitsOfWork.size() == maxUnitsOfWork) {
+      if (newUnitsOfWork.size() >= maxUnitsOfWork) {
         return;
       }
 
