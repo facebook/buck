@@ -49,6 +49,7 @@ public class ThriftCoordinatorServer implements Closeable {
   }
 
   public static final int UNEXPECTED_STOP_EXIT_CODE = 42;
+  public static final int GET_WORK_FAILED_EXIT_CODE = 43;
 
   private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
 
@@ -147,6 +148,19 @@ public class ThriftCoordinatorServer implements Closeable {
   private class CoordinatorServiceHandler implements CoordinatorService.Iface {
     @Override
     public GetWorkResponse getWork(GetWorkRequest request) {
+      try {
+        return getWorkUnsafe(request);
+      } catch (Throwable e) {
+        LOG.error(
+            "getWork failed, but it shouldn't;"
+                + " internal state may be corrupted, so exiting coordinator",
+            e);
+        exitCodeFuture.complete(GET_WORK_FAILED_EXIT_CODE);
+        throw e;
+      }
+    }
+
+    private GetWorkResponse getWorkUnsafe(GetWorkRequest request) {
       LOG.info(
           String.format(
               "Got GetWorkRequest from minion [%s]. [%s] targets finished. [%s] units requested",

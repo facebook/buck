@@ -129,4 +129,29 @@ public class ThriftCoordinatorServerIntegrationTest {
       int port, BuildTargetsQueue queue, ThriftCoordinatorServer.EventListener eventListener) {
     return new ThriftCoordinatorServer(port, queue, STAMPEDE_ID, eventListener);
   }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testTerminateOnException() throws Exception {
+    int port = findRandomOpenPortOnAllLocalInterfaces();
+    StampedeId wrongStampedeId = new StampedeId().setId("not-" + STAMPEDE_ID.id);
+
+    try (ThriftCoordinatorServer server =
+            createCoordinatorServer(port, BuildTargetsQueue.newEmptyQueue());
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", port, wrongStampedeId)) {
+      server.start();
+      client.start();
+      try {
+        client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
+        Assert.fail("expecting exception, because stampede id mismatches");
+      } catch (Exception e) {
+        // expected
+      }
+
+      Assert.assertEquals(
+          ThriftCoordinatorServer.GET_WORK_FAILED_EXIT_CODE,
+          server.waitUntilBuildCompletesAndReturnExitCode());
+    }
+  }
 }
