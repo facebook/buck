@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.apple.AppleAssetCatalog.validateAssetCatalogs;
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
+import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
@@ -675,12 +676,14 @@ public class AppleDescriptions {
 
     // TODO(beng): Sort through the changes needed to make project generation work with
     // binary being optional.
+    ImmutableSortedSet<Flavor> flavoredBinaryRuleFlavors =
+        buildTargetWithoutBundleSpecificFlavors.getFlavors();
     BuildRule flavoredBinaryRule =
         getFlavoredBinaryRule(
             cxxPlatformFlavorDomain,
             defaultCxxFlavor,
             targetGraph,
-            buildTargetWithoutBundleSpecificFlavors.getFlavors(),
+            flavoredBinaryRuleFlavors,
             resolver,
             binary);
 
@@ -729,6 +732,17 @@ public class AppleDescriptions {
       appleDsym = Optional.empty();
     }
 
+    ImmutableSet<BuildRule> extraBinaries =
+        collectFirstLevelExtraBinariesFromDeps(
+            appleCxxPlatform.getAppleSdk().getApplePlatform().getType(),
+            deps,
+            binary,
+            cxxPlatformFlavorDomain,
+            defaultCxxFlavor,
+            targetGraph,
+            flavoredBinaryRuleFlavors,
+            resolver);
+
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
         getBundleParamsWithUpdatedDeps(
             params,
@@ -748,6 +762,7 @@ public class AppleDescriptions {
                             .map(BuildTargetSourcePath::getTarget)
                             .collect(MoreCollectors.toImmutableSet())))
                 .addAll(Optionals.toStream(appleDsym).iterator())
+                .addAll(extraBinaries)
                 .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths =
@@ -764,6 +779,7 @@ public class AppleDescriptions {
         infoPlistSubstitutions,
         Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)),
         appleDsym,
+        extraBinaries,
         destinations,
         collectedResources,
         extensionBundlePaths,
@@ -919,6 +935,50 @@ public class AppleDescriptions {
     }
 
     return extensionBundlePaths.build();
+  }
+
+  private static ImmutableSet<BuildRule> collectFirstLevelExtraBinariesFromDeps(
+      ApplePlatformType platformType,
+      ImmutableSortedSet<BuildTarget> depBuildTargets,
+      BuildTarget primaryBinaryTarget,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      Flavor defaultCxxFlavor,
+      TargetGraph targetGraph,
+      ImmutableSet<Flavor> flavors,
+      BuildRuleResolver resolver) {
+    if (platformType != ApplePlatformType.MAC) {
+      // Multiple binaries are only supported on macOS
+      return ImmutableSet.of();
+    }
+
+    ImmutableSet.Builder<BuildRule> flavoredBinariesBuilder = ImmutableSet.builder();
+
+    for (BuildTarget dep : depBuildTargets) {
+      if (dep.equals(primaryBinaryTarget)) {
+        continue;
+      }
+
+      Optional<TargetNode<?, ?>> depTargetNode = targetGraph.getOptional(dep);
+      Optional<TargetNode<AppleBinaryDescriptionArg, ?>> binaryDepNode =
+          depTargetNode.flatMap(n -> n.castArg(AppleBinaryDescriptionArg.class));
+      if (!binaryDepNode.isPresent()) {
+        // Skip any deps which are not apple_binary
+        continue;
+      }
+
+      BuildRule flavoredBinary =
+          getFlavoredBinaryRule(
+              cxxPlatformFlavorDomain,
+              defaultCxxFlavor,
+              targetGraph,
+              flavors,
+              resolver,
+              binaryDepNode.get().getBuildTarget());
+
+      flavoredBinariesBuilder.add(getBinaryFromBuildRuleWithBinary(flavoredBinary));
+    }
+
+    return flavoredBinariesBuilder.build();
   }
 
   /**

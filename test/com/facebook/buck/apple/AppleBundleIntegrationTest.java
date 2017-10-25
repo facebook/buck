@@ -1098,6 +1098,35 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void macAppWithExtraBinary() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_osx_app_with_extra_binary", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug");
+    ProjectWorkspace.ProcessResult buildResult =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    buildResult.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        AppleDebugFormat.NONE.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+    Path AppBinaryPath = appPath.resolve("Contents/MacOS/App");
+    Path WorkerBinaryPath = appPath.resolve("Contents/MacOS/Worker");
+    assertTrue(Files.exists(AppBinaryPath));
+    assertTrue(Files.exists(WorkerBinaryPath));
+  }
+
+  @Test
   public void resourcesFromOtherCellsCanBeProperlyIncluded() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

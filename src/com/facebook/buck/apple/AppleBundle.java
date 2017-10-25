@@ -110,6 +110,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final Optional<AppleDsym> appleDsym;
 
+  @AddToRuleKey private final ImmutableSet<BuildRule> extraBinaries;
+
   @AddToRuleKey private final AppleBundleDestinations destinations;
 
   @AddToRuleKey private final AppleBundleResources resources;
@@ -171,6 +173,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
       Optional<AppleDsym> appleDsym,
+      ImmutableSet<BuildRule> extraBinaries,
       AppleBundleDestinations destinations,
       AppleBundleResources resources,
       ImmutableMap<SourcePath, String> extensionBundlePaths,
@@ -193,6 +196,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
     this.appleDsym = appleDsym;
+    this.extraBinaries = extraBinaries;
     this.destinations = destinations;
     this.resources = resources;
     this.extensionBundlePaths = extensionBundlePaths;
@@ -595,6 +599,11 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
           stepsBuilder,
           false /* is for packaging? */);
 
+      for (BuildRule extraBinary : extraBinaries) {
+        Path outputPath = getBundleBinaryPathForBuildRule(extraBinary);
+        codeSignOnCopyPathsBuilder.add(outputPath);
+      }
+
       for (Path codeSignOnCopyPath : codeSignOnCopyPathsBuilder.build()) {
         stepsBuilder.add(
             new CodeSignStep(
@@ -649,9 +658,25 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .getSourcePathResolver()
             .getRelativePath(Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
 
-    copyBinariesIntoBundle(
-        stepsBuilder, context, ImmutableMap.of(bundleBinaryPath, binaryOutputPath));
+    ImmutableMap.Builder<Path, Path> binariesBuilder = ImmutableMap.builder();
+    binariesBuilder.put(bundleBinaryPath, binaryOutputPath);
+
+    for (BuildRule extraBinary : extraBinaries) {
+      Path outputPath =
+          context.getSourcePathResolver().getRelativePath(extraBinary.getSourcePathToOutput());
+      Path bundlePath = getBundleBinaryPathForBuildRule(extraBinary);
+      binariesBuilder.put(bundlePath, outputPath);
+    }
+
+    copyBinariesIntoBundle(stepsBuilder, context, binariesBuilder.build());
     copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryOutputPath);
+  }
+
+  private Path getBundleBinaryPathForBuildRule(BuildRule buildRule) {
+    BuildTarget unflavoredTarget = buildRule.getBuildTarget().withFlavors();
+    String binaryName = getBinaryName(unflavoredTarget, Optional.empty());
+    Path pathRelativeToBundleRoot = destinations.getExecutablesPath().resolve(binaryName);
+    return bundleRoot.resolve(pathRelativeToBundleRoot);
   }
 
   /**
