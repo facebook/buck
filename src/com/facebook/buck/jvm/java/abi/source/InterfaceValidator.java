@@ -367,7 +367,12 @@ class InterfaceValidator {
 
           @Override
           public Void visitIdentifier(IdentifierTree node, TypeElement canonicalTypeElement) {
-            if (!isImported(canonicalTypeElement, referencingPackage)) {
+            TypeElement referencedTypeElement =
+                Preconditions.checkNotNull((TypeElement) trees.getElement(getCurrentPath()));
+
+            isCanonicalReference =
+                isCanonicalReference && canonicalTypeElement == referencedTypeElement;
+            if (!isCanonicalReference || !isImported(referencedTypeElement, referencingPackage)) {
               suggestQualifiedName(canonicalTypeElement, referencingPackage, getCurrentPath());
             }
 

@@ -505,6 +505,30 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testNonCanonicalInnerTypeErrorMessageWhenCanonicalOuterIsImported()
+      throws IOException {
+    withClasspath(CLASSPATH_WITH_COMPLEX_MEMBER_TYPES);
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import com.facebook.bar.Bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Foo {",
+                    "  Baz b;",
+                    "  Bar.SuperStaticMember m;",
+                    "}")));
+
+    assertError(
+        "Foo.java:6: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Baz\" here instead of \"Bar\".\n"
+            + "  Bar.SuperStaticMember m;\n"
+            + "  ^");
+  }
+
+  @Test
   public void testQualifiedNestedGenericSucceeds() throws IOException {
     withClasspath(
         ImmutableMap.of(
