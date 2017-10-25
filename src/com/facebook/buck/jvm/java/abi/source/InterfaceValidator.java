@@ -114,6 +114,7 @@ class InterfaceValidator {
     private final Elements elements;
     private final Trees trees;
     private final SourceOnlyAbiRuleInfo ruleInfo;
+    private final FileManagerSimulator fileManager;
     private final ImportsTracker imports;
 
     public ValidatingListener(
@@ -127,6 +128,7 @@ class InterfaceValidator {
       this.elements = elements;
       this.trees = trees;
       this.ruleInfo = ruleInfo;
+      fileManager = new FileManagerSimulator(elements, trees, ruleInfo);
       imports =
           new ImportsTracker(
               elements,
@@ -180,7 +182,7 @@ class InterfaceValidator {
       DeclaredType declaredType = (DeclaredType) typeMirror;
       TypeElement typeElement = (TypeElement) declaredType.asElement();
 
-      if (!typeWillBeAvailable(typeElement)) {
+      if (!fileManager.typeWillBeAvailable(typeElement)) {
         return;
       }
 
@@ -231,7 +233,7 @@ class InterfaceValidator {
     @Override
     public void onTypeReferenceFound(
         TypeElement canonicalTypeElement, TreePath path, Element referencingElement) {
-      if (isCompiledInCurrentRun(canonicalTypeElement)) {
+      if (fileManager.isCompiledInCurrentRun(canonicalTypeElement)) {
         // Any reference to a type compiled in the current run will be resolved without
         // issue by the compiler.
         return;
@@ -245,12 +247,12 @@ class InterfaceValidator {
         VariableElement constant, TreePath path, Element referencingElement) {
       TypeElement constantEnclosingType = (TypeElement) constant.getEnclosingElement();
 
-      if (typeWillBeAvailable(constantEnclosingType)) {
+      if (fileManager.typeWillBeAvailable(constantEnclosingType)) {
         // All good!
         return;
       }
 
-      String owningTarget = ruleInfo.getOwningTarget(elements, constant);
+      String owningTarget = fileManager.getOwningTarget(constant);
       trees.printMessage(
           messageKind,
           String.format(
@@ -270,7 +272,7 @@ class InterfaceValidator {
     }
 
     private void findMissingDependenciesImpl(TypeElement type, SortedSet<String> builder) {
-      if (!typeWillBeAvailable(type)) {
+      if (!fileManager.typeWillBeAvailable(type)) {
         builder.add(ruleInfo.getOwningTarget(elements, type));
       }
 
@@ -288,15 +290,6 @@ class InterfaceValidator {
       DeclaredType declaredType = (DeclaredType) type;
       TypeElement typeElement = (TypeElement) declaredType.asElement();
       findMissingDependenciesImpl(typeElement, builder);
-    }
-
-    private boolean typeWillBeAvailable(TypeElement type) {
-      return isCompiledInCurrentRun(type)
-          || ruleInfo.elementIsAvailableForSourceOnlyAbi(elements, type);
-    }
-
-    private boolean isCompiledInCurrentRun(TypeElement typeElement) {
-      return trees.getTree(typeElement) != null;
     }
 
     private class TypeReferenceScanner {
@@ -419,7 +412,7 @@ class InterfaceValidator {
             || imports.isSingleTypeImported(referencedTypeElement)
             || referencedPackage.getQualifiedName().contentEquals("java.lang")
             || (imports.isOnDemandImported(referencedTypeElement)
-                && typeWillBeAvailable(referencedTypeElement));
+                && fileManager.typeWillBeAvailable(referencedTypeElement));
       }
 
       private boolean isTopLevelTypeInPackage(
