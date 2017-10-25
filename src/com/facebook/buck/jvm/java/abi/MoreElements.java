@@ -49,6 +49,18 @@ public final class MoreElements {
     return (TypeElement) walker;
   }
 
+  public static TypeElement getTopLevelTypeElement(Element element) {
+    Preconditions.checkArgument(element.getKind() != ElementKind.PACKAGE);
+
+    Element walker = element;
+    while (walker.getEnclosingElement() != null
+        && walker.getEnclosingElement().getKind() != ElementKind.PACKAGE) {
+      walker = Preconditions.checkNotNull(walker.getEnclosingElement());
+    }
+
+    return (TypeElement) walker;
+  }
+
   public static PackageElement getPackageElement(Element element) {
     Element walker = element;
     while (walker.getKind() != ElementKind.PACKAGE) {
