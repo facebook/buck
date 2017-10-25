@@ -117,7 +117,9 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   public ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
     Iterable<BuildRule> classpathFullDeps = getCompileTimeClasspathFullDeps();
     if (shouldCreateSourceOnlyAbi()) {
-      classpathFullDeps = rulesRequiredForSourceOnlyAbi(classpathFullDeps);
+      classpathFullDeps =
+          Iterables.concat(
+              rulesRequiredForSourceOnlyAbi(classpathFullDeps), getDeps().getSourceOnlyAbiDeps());
     }
 
     return JavaLibraryRules.getAbiRules(getBuildRuleResolver(), classpathFullDeps);
