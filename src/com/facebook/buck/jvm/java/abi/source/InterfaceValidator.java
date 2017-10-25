@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotatedTypeTree;
 import com.sun.source.tree.ClassTree;
@@ -203,13 +204,19 @@ class InterfaceValidator {
     }
 
     @Override
-    public void onTypeImported(TypeElement type) {
-      importedTypes.add(type);
-    }
-
-    @Override
-    public void onMembersImported(QualifiedNameable typeOrPackage) {
-      importedOwners.add(typeOrPackage);
+    public void onImport(
+        boolean isStatic,
+        boolean isStarImport,
+        TreePath leafmostElementPath,
+        QualifiedNameable leafmostElement,
+        @Nullable Name memberName) {
+      if (!isStatic) {
+        if (!isStarImport) {
+          importedTypes.add((TypeElement) leafmostElement);
+        } else {
+          importedOwners.add(leafmostElement);
+        }
+      }
     }
 
     @Override

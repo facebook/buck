@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
@@ -30,6 +31,7 @@ import com.sun.source.util.Trees;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -47,9 +49,25 @@ class InterfaceScanner {
   public interface Listener {
     void onTypeDeclared(TypeElement type, TreePath path);
 
-    void onTypeImported(TypeElement type);
-
-    void onMembersImported(QualifiedNameable typeOrPackage);
+    /**
+     * An import statement was encountered.
+     *
+     * @param isStatic true for static imports
+     * @param isStarImport true for star imports
+     * @param leafmostElementPath the path of the leafmost known element in the imported type
+     *     expression
+     * @param leafmostElement the leafmost known element in the imported type expression. For
+     *     single-type imports, this is the imported type. For the rest, this is the type or package
+     *     enclosing the imported element(s).
+     * @param memberName for named static imports, the name of the static members to import.
+     *     Otherwise null.
+     */
+    void onImport(
+        boolean isStatic,
+        boolean isStarImport,
+        TreePath leafmostElementPath,
+        QualifiedNameable leafmostElement,
+        @Nullable Name memberName);
 
     void onTypeReferenceFound(TypeElement type, TreePath path, Element referencingElement);
 
@@ -73,38 +91,41 @@ class InterfaceScanner {
 
       /** Reports types that are imported via single-type imports */
       @Override
-      public Void visitImport(ImportTree node, Void aVoid) {
-        MemberSelectTree typeNameTree = (MemberSelectTree) node.getQualifiedIdentifier();
-        TreePath importedTypePath = new TreePath(getCurrentPath(), typeNameTree);
-        if (typeNameTree.getIdentifier().contentEquals("*")) {
-          TreePath importedContainerPath =
-              new TreePath(importedTypePath, typeNameTree.getExpression());
+      public Void visitImport(ImportTree importTree, Void aVoid) {
+        TreePath importTreePath = getCurrentPath();
+        MemberSelectTree importedExpression =
+            (MemberSelectTree) importTree.getQualifiedIdentifier();
+        TreePath importedExpressionPath = new TreePath(importTreePath, importedExpression);
+        Name simpleName = importedExpression.getIdentifier();
 
-          listener.onMembersImported(
-              (QualifiedNameable)
-                  Preconditions.checkNotNull(trees.getElement(importedContainerPath)));
-          return null;
+        boolean isStatic = importTree.isStatic();
+        boolean isStarImport = simpleName.contentEquals("*");
+
+        TreePath leafmostElementPath = importedExpressionPath;
+        if (isStarImport || isStatic) {
+          leafmostElementPath =
+              new TreePath(importedExpressionPath, importedExpression.getExpression());
         }
+        QualifiedNameable leafmostElement =
+            (QualifiedNameable) Preconditions.checkNotNull(trees.getElement(leafmostElementPath));
 
-        if (!node.isStatic()) {
-          // Single-type import; report to listener
-          Element importedElement = Preconditions.checkNotNull(trees.getElement(importedTypePath));
-          if (importedElement.getKind().isClass() || importedElement.getKind().isInterface()) {
-            listener.onTypeImported((TypeElement) importedElement);
-          }
-        } else {
-          // Static imports import all accessible elements of a given mame, so javac doesn't
-          // give us an Element for the full import expression like it does for a single-type
-          // import. We must scan the enclosing type to see if there's any nested class of
-          // the given name.
+        if (isStatic && !isStarImport) {
+          // Treat static imports of types by their canonical names as single-type imports
           TypeElement nestedType =
-              elements.getTypeElement(TreeBackedTrees.treeToName(typeNameTree));
+              elements.getTypeElement(TreeBackedTrees.treeToName(importedExpression));
           if (nestedType != null
               && nestedType.getModifiers().contains(Modifier.STATIC)
               && trees.isAccessible(trees.getScope(getCurrentPath()), nestedType)) {
-            listener.onTypeImported(nestedType);
+
+            isStatic = false;
+            leafmostElement = nestedType;
+            leafmostElementPath = importedExpressionPath;
+            simpleName = null;
           }
         }
+
+        listener.onImport(isStatic, isStarImport, leafmostElementPath, leafmostElement, simpleName);
+
         return null;
       }
 

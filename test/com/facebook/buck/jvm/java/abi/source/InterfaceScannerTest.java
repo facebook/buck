@@ -762,13 +762,19 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     }
 
     @Override
-    public void onTypeImported(TypeElement type) {
-      importedTypes.add(type);
-    }
-
-    @Override
-    public void onMembersImported(QualifiedNameable typeOrPackage) {
-      starImportedElements.add(typeOrPackage);
+    public void onImport(
+        boolean isStatic,
+        boolean isStarImport,
+        TreePath leafmostElementPath,
+        QualifiedNameable leafmostElement,
+        Name memberName) {
+      if (!isStatic) {
+        if (!isStarImport) {
+          importedTypes.add((TypeElement) leafmostElement);
+        } else {
+          starImportedElements.add(leafmostElement);
+        }
+      }
     }
 
     @Override
