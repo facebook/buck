@@ -649,19 +649,31 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .getSourcePathResolver()
             .getRelativePath(Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
 
-    copyBinaryIntoBundle(stepsBuilder, context, binaryOutputPath);
+    copyBinariesIntoBundle(
+        stepsBuilder, context, ImmutableMap.of(bundleBinaryPath, binaryOutputPath));
     copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryOutputPath);
   }
 
-  private void copyBinaryIntoBundle(
-      ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
+  /**
+   * @param binariesMap A map from destination to source. Destination is deliberately used as a key
+   *     prevent multiple sources overwriting the same destination.
+   */
+  private void copyBinariesIntoBundle(
+      ImmutableList.Builder<Step> stepsBuilder,
+      BuildContext context,
+      ImmutableMap<Path, Path> binariesMap) {
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 bundleRoot.resolve(this.destinations.getExecutablesPath()))));
-    stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), binaryOutputPath, bundleBinaryPath));
+
+    binariesMap.forEach(
+        (binaryBundlePath, binaryOutputPath) -> {
+          stepsBuilder.add(
+              CopyStep.forFile(getProjectFilesystem(), binaryOutputPath, binaryBundlePath));
+        });
   }
 
   private void copyAnotherCopyOfWatchKitStub(
