@@ -930,6 +930,8 @@ public class AppleDescriptions {
             .toFileExtension()
             .equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getFrameworksPath().toString());
+        } else if (AppleBundleExtension.XPC.toFileExtension().equals(appleBundle.getExtension())) {
+          extensionBundlePaths.put(sourcePath, destinations.getXPCServicesPath().toString());
         }
       }
     }

@@ -366,13 +366,19 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), metadataPath)),
-        // TODO(bhamiltoncx): This is only appropriate for .app bundles.
-        new WriteFileStep(
-            getProjectFilesystem(),
-            "APPLWRUN",
-            metadataPath.resolve("PkgInfo"),
-            /* executable */ false),
+                context.getBuildCellRootPath(), getProjectFilesystem(), metadataPath)));
+
+    if (needsPkgInfoFile()) {
+      // TODO(bhamiltoncx): This is only appropriate for .app bundles.
+      stepsBuilder.add(
+          new WriteFileStep(
+              getProjectFilesystem(),
+              "APPLWRUN",
+              metadataPath.resolve("PkgInfo"),
+              /* executable */ false));
+    }
+
+    stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
@@ -649,6 +655,14 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return stepsBuilder.build();
   }
 
+  private boolean needsPkgInfoFile() {
+    if (extension.equals(AppleBundleExtension.XPC.toFileExtension())) {
+      return false;
+    }
+
+    return true;
+  }
+
   private void appendCopyBinarySteps(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
     Preconditions.checkArgument(hasBinary);
@@ -805,11 +819,17 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return builder.build();
   }
 
+  private boolean needsLSRequiresIPhoneOSInfoPlistKeyOnMac() {
+    return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
+  }
+
   private ImmutableMap<String, NSObject> getInfoPlistOverrideKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
 
     if (platform.getType() == ApplePlatformType.MAC) {
-      keys.put("LSRequiresIPhoneOS", new NSNumber(false));
+      if (needsLSRequiresIPhoneOSInfoPlistKeyOnMac()) {
+        keys.put("LSRequiresIPhoneOS", new NSNumber(false));
+      }
     } else if (!platform.getType().isWatch() && !isLegacyWatchApp()) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(true));
     }
@@ -817,13 +837,25 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return keys.build();
   }
 
+  private boolean needsAppInfoPlistKeysOnMac() {
+    if (extension.equals(AppleBundleExtension.XPC.toFileExtension())) {
+      // XPC bundles on macOS don't require app-specific keys
+      // (which also confuses Finder in displaying the XPC bundles as apps)
+      return false;
+    }
+
+    return true;
+  }
+
   private ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
 
     switch (platform.getType()) {
       case MAC:
-        keys.put("NSHighResolutionCapable", new NSNumber(true));
-        keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
+        if (needsAppInfoPlistKeysOnMac()) {
+          keys.put("NSHighResolutionCapable", new NSNumber(true));
+          keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
+        }
         keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("MacOSX")));
         break;
       case IOS_DEVICE:
