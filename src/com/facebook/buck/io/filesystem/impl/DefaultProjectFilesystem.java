@@ -171,7 +171,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                   }
                   return Iterables.getOnlyElement(filtered);
                 })
-            // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
+            // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
+            // we
             // really don't end up ignoring it in reality (see extractIgnorePaths).
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
             .transform(PathOrGlobMatcher::new)
@@ -826,7 +827,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public void createSymLink(Path symLink, Path realFile, boolean force) throws IOException {
     symLink = resolve(symLink);
     if (force) {
-      Files.deleteIfExists(symLink);
+      MoreFiles.deleteRecursivelyIfExists(symLink);
     }
     if (Platform.detect() == Platform.WINDOWS) {
       if (windowsSymlinks) {

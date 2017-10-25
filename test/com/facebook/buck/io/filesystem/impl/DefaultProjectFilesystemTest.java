@@ -68,8 +68,10 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -132,6 +134,21 @@ public class DefaultProjectFilesystemTest {
     Files.createSymbolicLink(
         tmp.getRoot().resolve("symlinked_dir"), filesystem.getPath("real_dir"));
     filesystem.mkdirs(filesystem.getPath("symlinked_dir"));
+  }
+
+  @Test
+  public void testSymlinkForceCanDeleteDirectory() throws IOException {
+    Path realFileDir = Files.createDirectory(tmp.getRoot().resolve("realfile"));
+    Files.createFile(realFileDir.resolve("file"));
+    Files.createFile(realFileDir.resolve("file2"));
+    Path symlinkDir = Files.createDirectory(tmp.getRoot().resolve("symlink"));
+    Files.createFile(symlinkDir.resolve("junk"));
+
+    filesystem.createSymLink(symlinkDir, realFileDir, true);
+
+    List<Path> filesFound = Files.list(symlinkDir).collect(Collectors.toList());
+    assertThat(
+        filesFound, containsInAnyOrder(symlinkDir.resolve("file"), symlinkDir.resolve("file2")));
   }
 
   @Test
