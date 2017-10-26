@@ -238,9 +238,17 @@ public abstract class DefaultJavaLibraryRules {
     }
 
     if (result != AbiGenerationMode.SOURCE
-        && (!getConfiguredCompilerFactory().shouldGenerateSourceOnlyAbi()
-            || !getSourceOnlyAbisAllowed()
-            || !pluginsSupportSourceOnlyAbis())) {
+        && (!getSourceOnlyAbisAllowed() || !pluginsSupportSourceOnlyAbis())) {
+      return AbiGenerationMode.SOURCE;
+    }
+
+    if (result == AbiGenerationMode.MIGRATING_TO_SOURCE_ONLY
+        && !getConfiguredCompilerFactory().shouldMigrateToSourceOnlyAbi()) {
+      return AbiGenerationMode.SOURCE;
+    }
+
+    if (result == AbiGenerationMode.SOURCE_ONLY
+        && !getConfiguredCompilerFactory().shouldGenerateSourceOnlyAbi()) {
       return AbiGenerationMode.SOURCE;
     }
 

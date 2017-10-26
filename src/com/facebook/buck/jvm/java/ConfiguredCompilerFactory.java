@@ -55,6 +55,10 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  public boolean shouldMigrateToSourceOnlyAbi() {
+    return false;
+  }
+
   public void addTargetDeps(
       @SuppressWarnings("unused") ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       @SuppressWarnings("unused")
