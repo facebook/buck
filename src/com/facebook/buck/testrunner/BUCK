@@ -51,6 +51,7 @@ java_library(
         "InstrumentationMain.java",
         "InstrumentationTestRunner.java",
     ],
+    required_for_source_only_abi = True,
     tests = [
         "//test/com/facebook/buck/testrunner:testrunner",
     ],

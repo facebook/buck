@@ -37,7 +37,7 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
 
   @Nullable
   @Override
-  public Info getInfo(PsiElement psiElement) {
+  public RunLineMarkerContributor.Info getInfo(PsiElement psiElement) {
     if (psiElement instanceof PsiKeyword) {
       PsiElement parent = psiElement.getParent();
       if (parent instanceof PsiClass) {

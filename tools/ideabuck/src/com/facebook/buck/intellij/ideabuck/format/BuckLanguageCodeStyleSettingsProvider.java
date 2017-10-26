@@ -54,7 +54,7 @@ public class BuckLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSett
   }
 
   @Override
-  public String getCodeSample(SettingsType settingsType) {
+  public String getCodeSample(LanguageCodeStyleSettingsProvider.SettingsType settingsType) {
     return BuckFileUtil.getSampleBuckFile();
   }
 }

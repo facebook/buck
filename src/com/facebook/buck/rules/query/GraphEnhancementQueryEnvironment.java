@@ -190,7 +190,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()));
   }
 
-  public static final Iterable<QueryFunction> QUERY_FUNCTIONS =
+  public static final Iterable<QueryEnvironment.QueryFunction> QUERY_FUNCTIONS =
       ImmutableList.of(
           new AttrFilterFunction(),
           new ClasspathFunction(),
@@ -202,7 +202,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
           new InputsFunction());
 
   @Override
-  public Iterable<QueryFunction> getFunctions() {
+  public Iterable<QueryEnvironment.QueryFunction> getFunctions() {
     return QUERY_FUNCTIONS;
   }
 
@@ -237,7 +237,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     }
 
     @Override
-    public Type getType() {
+    public QueryEnvironment.TargetEvaluator.Type getType() {
       return Type.IMMEDIATE;
     }
   }

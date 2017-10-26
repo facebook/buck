@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
+import com.facebook.buck.android.AndroidBinaryDescription.AbstractAndroidBinaryDescriptionArg;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
@@ -133,7 +134,7 @@ public class AndroidBinaryBuilder
   }
 
   public AndroidBinaryBuilder setDuplicateResourceBehavior(
-      AndroidBinaryDescriptionArg.DuplicateResourceBehaviour value) {
+      AbstractAndroidBinaryDescriptionArg.DuplicateResourceBehaviour value) {
     getArgForPopulating().setDuplicateResourceBehavior(value);
     return this;
   }

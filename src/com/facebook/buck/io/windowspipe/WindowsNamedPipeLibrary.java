@@ -32,34 +32,37 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
       Native.loadLibrary("kernel32", WindowsNamedPipeLibrary.class, W32APIOptions.UNICODE_OPTIONS);
 
   boolean GetOverlappedResult(
-      HANDLE hFile, Pointer lpOverlapped, IntByReference lpNumberOfBytesTransferred, boolean wait);
+      WinNT.HANDLE hFile,
+      Pointer lpOverlapped,
+      IntByReference lpNumberOfBytesTransferred,
+      boolean wait);
 
   boolean ReadFile(
-      HANDLE hFile,
+      WinNT.HANDLE hFile,
       Memory pointer,
       int nNumberOfBytesToRead,
       IntByReference lpNumberOfBytesRead,
       Pointer lpOverlapped);
 
-  HANDLE CreateFile(
+  WinNT.HANDLE CreateFile(
       String lpFileName,
       int dwDesiredAccess,
       int dwShareMode,
       WinBase.SECURITY_ATTRIBUTES lpSecurityAttributes,
       int dwCreationDisposition,
       int dwFlagsAndAttributes,
-      HANDLE hTemplateFile);
+      WinNT.HANDLE hTemplateFile);
 
-  HANDLE CreateEvent(
+  WinNT.HANDLE CreateEvent(
       WinBase.SECURITY_ATTRIBUTES lpEventAttributes,
       boolean bManualReset,
       boolean bInitialState,
       String lpName);
 
-  boolean CloseHandle(HANDLE hObject);
+  boolean CloseHandle(WinNT.HANDLE hObject);
 
   boolean WriteFile(
-      HANDLE hFile,
+      WinNT.HANDLE hFile,
       ByteBuffer lpBuffer,
       int nNumberOfBytesToWrite,
       IntByReference lpNumberOfBytesWritten,

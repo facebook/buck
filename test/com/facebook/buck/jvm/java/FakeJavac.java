@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
-/** Fake implementation of {@link Javac} for tests. */
+/** Fake implementation of {@link com.facebook.buck.jvm.java.Javac} for tests. */
 public class FakeJavac implements Javac {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
@@ -65,7 +65,7 @@ public class FakeJavac implements Javac {
   }
 
   @Override
-  public Invocation newBuildInvocation(
+  public Javac.Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,

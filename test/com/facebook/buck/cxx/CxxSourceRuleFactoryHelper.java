@@ -62,7 +62,7 @@ public class CxxSourceRuleFactoryHelper {
       Path cellRoot,
       BuildTarget target,
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType) {
+      AbstractCxxSourceRuleFactory.PicType picType) {
     return of(cellRoot, target, cxxPlatform, CxxPlatformUtils.DEFAULT_CONFIG, picType);
   }
 
@@ -71,7 +71,7 @@ public class CxxSourceRuleFactoryHelper {
       BuildTarget target,
       CxxPlatform cxxPlatform,
       CxxBuckConfig cxxBuckConfig,
-      CxxSourceRuleFactory.PicType picType) {
+      AbstractCxxSourceRuleFactory.PicType picType) {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

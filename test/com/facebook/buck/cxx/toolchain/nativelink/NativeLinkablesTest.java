@@ -79,7 +79,7 @@ public class NativeLinkablesTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<LanguageExtensions> languageExtensions) {
+        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
       return nativeLinkableInput;
     }
 

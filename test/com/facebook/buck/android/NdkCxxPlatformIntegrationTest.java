@@ -69,7 +69,7 @@ public class NdkCxxPlatformIntegrationTest {
     return data;
   }
 
-  @Parameterized.Parameter public NdkCxxPlatformCompiler.Type compiler;
+  @Parameterized.Parameter public AbstractNdkCxxPlatformCompiler.Type compiler;
 
   @Parameterized.Parameter(value = 1)
   public NdkCxxRuntime cxxRuntime;

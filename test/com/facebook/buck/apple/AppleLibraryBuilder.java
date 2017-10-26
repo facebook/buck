@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.AbstractCxxSource;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -74,7 +74,7 @@ public class AppleLibraryBuilder
   }
 
   public AppleLibraryBuilder setLangPreprocessorFlags(
-      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
+      ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     getArgForPopulating()
         .setLangPreprocessorFlags(
             Maps.transformValues(

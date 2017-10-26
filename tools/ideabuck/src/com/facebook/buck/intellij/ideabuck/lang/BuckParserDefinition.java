@@ -70,7 +70,8 @@ public class BuckParserDefinition implements ParserDefinition {
     return new BuckFile(viewProvider);
   }
 
-  public SpaceRequirements spaceExistanceTypeBetweenTokens(ASTNode left, ASTNode right) {
+  public ParserDefinition.SpaceRequirements spaceExistanceTypeBetweenTokens(
+      ASTNode left, ASTNode right) {
     return SpaceRequirements.MAY;
   }
 
