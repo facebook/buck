@@ -18,10 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.DistBuildExecutorArgs;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.DistBuildSlaveExecutorArgs;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
@@ -116,7 +116,7 @@ public abstract class DistBuildFactory {
 
     DistBuildSlaveExecutor executor =
         new DistBuildSlaveExecutor(
-            DistBuildExecutorArgs.builder()
+            DistBuildSlaveExecutorArgs.builder()
                 .setBuckEventBus(params.getBuckEventBus())
                 .setPlatform(params.getPlatform())
                 .setClock(params.getClock())

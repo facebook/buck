@@ -41,7 +41,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractDistBuildExecutorArgs {
+abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract DistBuildState getState();
 
   public Cell getRootCell() {

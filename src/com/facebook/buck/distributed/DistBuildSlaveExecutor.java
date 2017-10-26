@@ -67,7 +67,7 @@ public class DistBuildSlaveExecutor {
   private static final String LOCALHOST_ADDRESS = "localhost";
   private static final boolean KEEP_GOING = true;
 
-  private final DistBuildExecutorArgs args;
+  private final DistBuildSlaveExecutorArgs args;
 
   @Nullable private TargetGraph targetGraph;
 
@@ -75,7 +75,7 @@ public class DistBuildSlaveExecutor {
 
   @Nullable private CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
-  public DistBuildSlaveExecutor(DistBuildExecutorArgs args) {
+  public DistBuildSlaveExecutor(DistBuildSlaveExecutorArgs args) {
     this.args = args;
   }
 
