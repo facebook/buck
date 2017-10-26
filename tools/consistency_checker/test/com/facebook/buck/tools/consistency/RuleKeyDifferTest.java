@@ -57,21 +57,26 @@ public class RuleKeyDifferTest {
 
   private TestPrintStream stream = TestPrintStream.create();
   private RuleKeyDiffPrinter printer;
+  private DiffPrinter diffPrinter;
   private RuleKeyDifferState differState;
   private RuleKeyDiffer differ;
 
   private TestPrintStream expectedStream = TestPrintStream.create();
+  private DiffPrinter expectedDiffPrinter;
   private RuleKeyDifferState expectedDifferState;
   private RuleKeyDiffPrinter expectedPrinter;
 
   @Before
   public void setUp() {
     differState = new RuleKeyDifferState(RuleKeyDifferState.INFINITE_DIFFERENCES);
-    printer = new RuleKeyDiffPrinter(stream, false, differState);
-    differ = new RuleKeyDiffer(printer);
+    diffPrinter = new DiffPrinter(stream, false);
+    printer = new RuleKeyDiffPrinter(diffPrinter, differState);
 
     expectedDifferState = new RuleKeyDifferState(RuleKeyDifferState.INFINITE_DIFFERENCES);
-    expectedPrinter = new RuleKeyDiffPrinter(expectedStream, false, expectedDifferState);
+    expectedDiffPrinter = new DiffPrinter(expectedStream, false);
+    expectedPrinter = new RuleKeyDiffPrinter(expectedDiffPrinter, expectedDifferState);
+
+    differ = new RuleKeyDiffer(printer);
   }
 
   private Map<String, Value> generateSampleValues(long id, long valueSeed) {

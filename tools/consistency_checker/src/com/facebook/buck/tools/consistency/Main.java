@@ -145,10 +145,10 @@ public class Main {
       originalFile = Optional.of(originalFileFuture.get());
       newFile = Optional.of(newFileFuture.get());
 
+      DiffPrinter diffPrinter = new DiffPrinter(System.out, args.useColor);
       RuleKeyDifferState differState = new RuleKeyDifferState(args.maxDifferences);
-      RuleKeyDiffPrinter diffPrinter =
-          new RuleKeyDiffPrinter(System.out, args.useColor, differState);
-      RuleKeyDiffer differ = new RuleKeyDiffer(diffPrinter);
+      RuleKeyDiffPrinter ruleKeyDiffPrinter = new RuleKeyDiffPrinter(diffPrinter, differState);
+      RuleKeyDiffer differ = new RuleKeyDiffer(ruleKeyDiffPrinter);
       differ.printDiff(originalFile.get(), newFile.get());
 
       if (differState.getFoundDifferences() == 0) {

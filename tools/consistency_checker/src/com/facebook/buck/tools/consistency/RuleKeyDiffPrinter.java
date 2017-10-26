@@ -22,7 +22,6 @@ import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,13 +34,8 @@ import java.util.stream.Collectors;
  * properties of a RuleKey
  */
 public class RuleKeyDiffPrinter {
+  private final DiffPrinter diffPrinter;
   private final RuleKeyDifferState differState;
-  private final PrintStream outStream;
-
-  private final String greenColor;
-  private final String redColor;
-  private final String resetColors;
-  private final String boldColor;
 
   /**
    * The scope for printing information about a target. Helps ensure that target information is
@@ -68,8 +62,7 @@ public class RuleKeyDiffPrinter {
     private void printHeader() {
       if (!printedTarget) {
         printedTarget = true;
-        outStream.println(
-            String.format("%s%s%s (%s vs %s)", boldColor, target, resetColors, origKey, newKey));
+        diffPrinter.printHeader(target, String.format(" (%s vs %s)", origKey, newKey));
       }
     }
 
@@ -118,23 +111,15 @@ public class RuleKeyDiffPrinter {
       }
 
       private void printAdd(ParsedRuleKeyFile file, Value value) {
-        outStream.println(
+        diffPrinter.printAdd(
             String.format(
-                "%s+ %s: %s%s",
-                greenColor,
-                String.join("/", pathComponents),
-                valueAsReadableString(file, value),
-                resetColors));
+                "%s: %s", String.join("/", pathComponents), valueAsReadableString(file, value)));
       }
 
       private void printRemove(ParsedRuleKeyFile file, Value value) {
-        outStream.println(
+        diffPrinter.printRemove(
             String.format(
-                "%s- %s: %s%s",
-                redColor,
-                String.join("/", pathComponents),
-                valueAsReadableString(file, value),
-                resetColors));
+                "%s: %s", String.join("/", pathComponents), valueAsReadableString(file, value)));
       }
 
       /**
@@ -203,25 +188,12 @@ public class RuleKeyDiffPrinter {
   /**
    * Creates an instance of {@link RuleKeyDiffPrinter}
    *
-   * @param outStream Where to print the diff to
-   * @param showColor Whether or not to color the output
-   * @param differState
+   * @param diffPrinter An object that prints additions/removals
+   * @param differState The state of the actual diffing
    */
-  public RuleKeyDiffPrinter(
-      PrintStream outStream, boolean showColor, RuleKeyDifferState differState) {
-    this.outStream = outStream;
+  public RuleKeyDiffPrinter(DiffPrinter diffPrinter, RuleKeyDifferState differState) {
+    this.diffPrinter = diffPrinter;
     this.differState = differState;
-    if (showColor) {
-      greenColor = "\u001B[32m";
-      redColor = "\u001B[31m";
-      resetColors = "\u001B[0m";
-      boldColor = "\033[1;37m";
-    } else {
-      greenColor = "";
-      redColor = "";
-      resetColors = "";
-      boldColor = "";
-    }
   }
 
   /**

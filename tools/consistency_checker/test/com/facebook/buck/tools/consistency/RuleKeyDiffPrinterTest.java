@@ -52,13 +52,15 @@ public class RuleKeyDiffPrinterTest {
 
   private ParsedRuleKeyFile sampleParsedFile;
   private TestPrintStream stream = TestPrintStream.create();
+  private DiffPrinter diffPrinter;
   private RuleKeyDiffPrinter printer;
 
   @Before
   public void setUp() {
+    this.diffPrinter = new DiffPrinter(stream, false);
     this.printer =
         new RuleKeyDiffPrinter(
-            stream, false, new RuleKeyDifferState(RuleKeyDifferState.INFINITE_DIFFERENCES));
+            diffPrinter, new RuleKeyDifferState(RuleKeyDifferState.INFINITE_DIFFERENCES));
 
     RuleKeyNode ruleKey1 =
         new RuleKeyNode(
@@ -149,7 +151,7 @@ public class RuleKeyDiffPrinterTest {
 
   @Test
   public void doesNotThrowExceptionWhenAddingAfterHittingExactlyMaxDiffs() throws Exception {
-    printer = new RuleKeyDiffPrinter(stream, false, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -169,7 +171,7 @@ public class RuleKeyDiffPrinterTest {
 
   @Test
   public void doesNotThrowExceptionWhenRemovingAfterHittingExactlyMaxDiffs() throws Exception {
-    printer = new RuleKeyDiffPrinter(stream, false, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -189,7 +191,7 @@ public class RuleKeyDiffPrinterTest {
 
   @Test
   public void doesNotThrowExceptionWhenChangingAfterHittingExactlyMaxDiffs() throws Exception {
-    printer = new RuleKeyDiffPrinter(stream, false, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -214,7 +216,7 @@ public class RuleKeyDiffPrinterTest {
   public void throwsExceptionWhenAddingAfterHittingMaxDiffs() throws Exception {
     expectedThrownException.expect(MaxDifferencesException.class);
     expectedThrownException.expectMessage("Stopping after finding 2 differences");
-    printer = new RuleKeyDiffPrinter(stream, false, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -233,7 +235,7 @@ public class RuleKeyDiffPrinterTest {
   public void throwsExceptionWhenRemovingAfterHittingMaxDiffs() throws Exception {
     expectedThrownException.expect(MaxDifferencesException.class);
     expectedThrownException.expectMessage("Stopping after finding 2 differences");
-    printer = new RuleKeyDiffPrinter(stream, false, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -253,7 +255,7 @@ public class RuleKeyDiffPrinterTest {
 
     expectedThrownException.expect(MaxDifferencesException.class);
     expectedThrownException.expectMessage("Stopping after finding 2 differences");
-    printer = new RuleKeyDiffPrinter(stream, false, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
