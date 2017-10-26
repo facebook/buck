@@ -121,7 +121,33 @@ public class TreeBackedTypeResolutionSimulatorTest extends CompilerTreeApiTest {
         "com.example.buck",
         null,
         "com.example.buck.someclass",
-        "Source-only ABI generation requires class names to start with a capital letter.\nTo fix: \nRename \"someclass\" to \"Someclass\".\n");
+        "Source-only ABI generation requires top-level class names to start with a capital letter.\nTo fix: \nRename \"someclass\" to \"Someclass\".\n");
+  }
+
+  @Test
+  public void testCanonicalReferenceWithBadMemberClassCasingSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/example/buck/Someclass.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.example.buck;",
+                    "public class Someclass { public class inner { } }")));
+
+    compile(
+        Joiner.on('\n')
+            .join("public class Foo {", "  public com.example.buck.Someclass.inner field;", "}"));
+    assertResolutionResults(
+        "com",
+        null,
+        "com.example",
+        null,
+        "com.example.buck",
+        null,
+        "com.example.buck.Someclass",
+        null,
+        "com.example.buck.Someclass.inner",
+        null);
   }
 
   @Test

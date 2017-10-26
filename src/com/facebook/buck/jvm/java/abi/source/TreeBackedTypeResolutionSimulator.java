@@ -29,6 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
@@ -140,7 +141,7 @@ class TreeBackedTypeResolutionSimulator {
                     remediations.add(
                         new RenameRemediation(
                             e.getSimpleName(), fixNameCase(e, Character::toUpperCase)));
-                    return "Source-only ABI generation requires class names to start with a capital letter.";
+                    return "Source-only ABI generation requires top-level class names to start with a capital letter.";
                   }
 
                   @Override
@@ -212,7 +213,8 @@ class TreeBackedTypeResolutionSimulator {
           new SimpleElementVisitor8<Boolean, Void>() {
             @Override
             public Boolean visitType(TypeElement e, Void aVoid) {
-              return Character.isUpperCase(e.getSimpleName().toString().charAt(0));
+              return e.getNestingKind() != NestingKind.TOP_LEVEL
+                  || Character.isUpperCase(e.getSimpleName().toString().charAt(0));
             }
 
             @Override
