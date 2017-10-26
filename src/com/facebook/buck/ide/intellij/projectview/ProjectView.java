@@ -1015,16 +1015,16 @@ public class ProjectView {
   }
 
   private Set<String> getExcludedFolders(Set<String> sourceFolders, Set<String> roots) {
-    Set<String> rootFolders = allFoldersUnder(roots);
+    Set<String> candidates = allFoldersUnder(roots);
 
     // Remove any folder that's explicitly a source folder
-    rootFolders.removeAll(sourceFolders);
+    candidates.removeAll(sourceFolders);
 
     // Remove any folder that's the parent of a source folder. (IntelliJ can handle a sourceFolder
     // under an excludeFolder; Android Studio can not.) This is a quadratic operation, but in
     // practice only adds a couple of seconds on a large project
-    rootFolders =
-        rootFolders
+    Set<String> excludes =
+        candidates
             .stream()
             .filter(
                 root -> {
@@ -1034,11 +1034,13 @@ public class ProjectView {
             .collect(Collectors.toSet());
 
     // Add buck-out directories besides gen and annotation
-    rootFolders.add(fileJoin(BUCK_OUT, BIN));
-    rootFolders.add(fileJoin(BUCK_OUT, LOG));
-    rootFolders.add(fileJoin(BUCK_OUT, TRASH));
+    // FIXME(shemitz) This is too hard-coded: This really should get the 'non-excludes' from
+    // pruneListOfAnnotationAndGeneratedFolders(), and look at the actual directories under buck-out
+    excludes.add(fileJoin(BUCK_OUT, BIN));
+    excludes.add(fileJoin(BUCK_OUT, LOG));
+    excludes.add(fileJoin(BUCK_OUT, TRASH));
 
-    return rootFolders;
+    return excludes;
   }
 
   private static Set<String> allFoldersUnder(Set<String> roots) {
