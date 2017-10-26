@@ -618,7 +618,7 @@ public class ProjectView {
     try (Writer writer = new FileWriter(filename)) {
       outputter.output(document, writer);
     } catch (IOException e) {
-      e.printStackTrace();
+      stderr("%s exception writing %s\n", e.getClass().getSimpleName(), filename);
     }
   }
 
@@ -1225,10 +1225,12 @@ public class ProjectView {
 
   private void buildAllDirectoriesAndSymlinks() {
     Set<Path> deletedDirectories = new HashSet<>();
+    Set<Path> absoluteDirectoriesToMake =
+        directoriesToMake.stream().map(Path::toAbsolutePath).collect(Collectors.toSet());
 
     // Delete any directories that should no longer exist
     for (Path path : existingDirectories) {
-      if (!directoriesToMake.contains(path)) {
+      if (!absoluteDirectoriesToMake.contains(path)) {
         if (dryRun) {
           stderr("rm -rf %s\n", path);
         } else {
@@ -1251,7 +1253,7 @@ public class ProjectView {
                 Files.delete(linkPath);
               } catch (IOException e) {
                 if (!linkInDeletedDirectories(deletedDirectories, linkPath)) {
-                  stderr("'%s' deleting symlink %s\n", e.getMessage(), linkPath);
+                  stderr("%s deleting symlink %s\n", e.getClass().getSimpleName(), linkPath);
                 }
               }
             }
