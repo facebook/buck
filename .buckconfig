@@ -9,7 +9,7 @@
     # There is some nondeterminism with the Immutables processor that causes verification to
     # fail intermittently at the moment. Once we're generating source ABIs as part of compilation
     # (instead of as a separate step), this can become an error again:
-    source_abi_verification_mode = log
+    source_abi_verification_mode = fail
     compile_against_abis = True
 [alias]
     buck = //programs:buck
