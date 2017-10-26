@@ -249,9 +249,11 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertErrors(
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Source-only ABI generation requires that this type be explicitly imported. Add an import for com.facebook.bar.Bar.",
+                "Foo.java:2: error: Source-only ABI generation requires that this type be explicitly imported (star imports are not accepted).",
                 "public abstract class Foo extends Bar { }",
-                "                                  ^"));
+                "                                  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.bar.Bar\""));
   }
 
   @Test
@@ -330,9 +332,12 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                 "}"));
 
     assertError(
-        "Foo.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"com.facebook.baz.Baz.Inner\" here instead of \"Inner\".\n"
+        "Foo.java:4: error: Source-only ABI generation requires that this member type reference be more explicit.\n"
             + "  Inner i;\n"
-            + "  ^");
+            + "  ^\n"
+            + "  To fix: \n"
+            + "  Add an import for \"com.facebook.baz.Baz\"\n"
+            + "  Use \"Baz.Inner\" here instead of \"Inner\".");
   }
 
   @Test
@@ -378,9 +383,12 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertError(
         Joiner.on('\n')
             .join(
-                "Foo.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Baz.Inner\" here instead of \"Inner\".",
+                "Foo.java:4: error: Source-only ABI generation requires that this member type reference be more explicit.",
                 "  Inner i;",
-                "  ^"));
+                "  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.foo.Baz\"",
+                "  Use \"Baz.Inner\" here instead of \"Inner\"."));
   }
 
   @Test
@@ -470,9 +478,12 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertError(
         Joiner.on('\n')
             .join(
-                "Foo.java:3: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Bar.Inner\" here instead of \"Inner\".",
+                "Foo.java:3: error: Source-only ABI generation requires that this member type reference be more explicit.",
                 "  Inner i;",
-                "  ^"));
+                "  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.foo.Bar\"",
+                "  Use \"Bar.Inner\" here instead of \"Inner\"."));
   }
 
   @Test
@@ -494,14 +505,19 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertErrors(
         Joiner.on('\n')
             .join(
-                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Baz.SuperStaticMember\" here instead of \"StaticMember\".",
+                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name.",
                 "  StaticMember.StaticMemberer.StaticMemberest i;",
-                "  ^"),
+                "  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.baz.Baz.SuperStaticMember\"",
+                "  Use \"SuperStaticMember\" here instead of \"StaticMember\"."),
         Joiner.on('\n')
             .join(
-                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"SuperStaticMemberer\" here instead of \"StaticMemberer\".",
+                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name.",
                 "  StaticMember.StaticMemberer.StaticMemberest i;",
-                "              ^"));
+                "              ^",
+                "  To fix: ",
+                "  Use \"SuperStaticMemberer\" here instead of \"StaticMemberer\"."));
   }
 
   @Test
@@ -523,9 +539,12 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                     "}")));
 
     assertError(
-        "Foo.java:6: error: Source-only ABI generation requires that this type be referred to by its canonical name. Use \"Baz\" here instead of \"Bar\".\n"
+        "Foo.java:6: error: Source-only ABI generation requires that this type be referred to by its canonical name.\n"
             + "  Bar.SuperStaticMember m;\n"
-            + "  ^");
+            + "  ^\n"
+            + "  To fix: \n"
+            + "  Add an import for \"com.facebook.baz.Baz\"\n"
+            + "  Use \"Baz\" here instead of \"Bar\".");
   }
 
   @Test

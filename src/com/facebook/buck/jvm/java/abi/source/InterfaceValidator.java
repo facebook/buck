@@ -17,22 +17,17 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.jvm.java.abi.source.TreeBackedTypeResolutionSimulator.TreeBackedResolvedType;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
-import com.sun.source.tree.AnnotatedTypeTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
-import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -40,7 +35,6 @@ import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
-import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
@@ -112,20 +106,12 @@ class InterfaceValidator {
     }
   }
 
-  private static PackageElement getPackageElement(Element element) {
-    Element walker = element;
-    while (walker.getEnclosingElement() != null) {
-      walker = walker.getEnclosingElement();
-    }
-
-    return (PackageElement) walker;
-  }
-
   private static class ValidatingListener implements InterfaceScanner.Listener {
     private final Diagnostic.Kind messageKind;
     private final Elements elements;
     private final Trees trees;
     private final SourceOnlyAbiRuleInfo ruleInfo;
+    private final TreeBackedTypeResolutionSimulator treeBackedResolver;
     private final FileManagerSimulator fileManager;
     private final CompilerTypeResolutionSimulator compilerResolver;
     private final ImportsTracker imports;
@@ -151,6 +137,7 @@ class InterfaceValidator {
               types,
               (PackageElement)
                   Preconditions.checkNotNull(trees.getElement(new TreePath(compilationUnit))));
+      treeBackedResolver = new TreeBackedTypeResolutionSimulator(elements, trees, compilationUnit);
     }
 
     @Override
@@ -250,11 +237,19 @@ class InterfaceValidator {
     public void onTypeReferenceFound(
         TypeElement canonicalTypeElement, TreePath path, Element referencingElement) {
       compilerResolver.setImports(imports);
-      ResolvedType resolvedType = compilerResolver.resolve(path);
-      if (resolvedType.kind == ResolvedTypeKind.ERROR_TYPE) {
-        new TypeReferenceScanner(canonicalTypeElement, path, referencingElement).scan();
-      } else if (resolvedType.kind == ResolvedTypeKind.CRASH) {
-        suggestAddingOrRemovingDependencies(path, new TreeSet<>(resolvedType.missingDependencies));
+      treeBackedResolver.setImports(imports);
+      ResolvedType compilerResolvedType = compilerResolver.resolve(path);
+
+      if (compilerResolvedType.kind != ResolvedTypeKind.RESOLVED_TYPE) {
+        TreeBackedResolvedType treeBackedResolvedType = treeBackedResolver.resolve(path);
+        if (!treeBackedResolvedType.isCorrect()) {
+          if (treeBackedResolvedType.isCorrectable()) {
+            treeBackedResolvedType.reportErrors(messageKind);
+          } else {
+            suggestAddingOrRemovingDependencies(
+                path, new TreeSet<>(compilerResolvedType.missingDependencies));
+          }
+        }
       }
     }
 
@@ -306,172 +301,6 @@ class InterfaceValidator {
       DeclaredType declaredType = (DeclaredType) type;
       TypeElement typeElement = (TypeElement) declaredType.asElement();
       findMissingDependenciesImpl(typeElement, builder);
-    }
-
-    private class TypeReferenceScanner {
-      private final TypeElement canonicalTypeElement;
-      private final TreePath referenceTreePath;
-      private final Element referencingElement;
-      private boolean isCanonicalReference = true;
-
-      public TypeReferenceScanner(
-          TypeElement canonicalTypeElement,
-          TreePath referenceTreePath,
-          Element referencingElement) {
-        this.canonicalTypeElement = canonicalTypeElement;
-        this.referenceTreePath = referenceTreePath;
-        this.referencingElement = referencingElement;
-      }
-
-      public void scan() {
-        PackageElement referencingPackage = getPackageElement(referencingElement);
-
-        new TreePathScanner<Void, TypeElement>() {
-          @Override
-          public Void scan(Tree tree, TypeElement canonicalTypeElement) {
-            switch (tree.getKind()) {
-              case IDENTIFIER:
-              case MEMBER_SELECT:
-              case PARAMETERIZED_TYPE:
-              case ANNOTATED_TYPE:
-                return super.scan(tree, canonicalTypeElement);
-                // $CASES-OMITTED$
-              default:
-                throw new IllegalArgumentException(
-                    String.format("Unexpected tree of kind %s: %s", tree.getKind(), tree));
-            }
-          }
-
-          @Override
-          public Void visitAnnotatedType(AnnotatedTypeTree node, TypeElement canonicalTypeElement) {
-            // Just skip over the annotation; the type reference in it will get its own scanner.
-            // The annotation doesn't affect the TypeElement so we can just pass through the same
-            // one.
-            return super.scan(node.getUnderlyingType(), canonicalTypeElement);
-          }
-
-          @Override
-          public Void visitParameterizedType(
-              ParameterizedTypeTree node, TypeElement canonicalTypeElement) {
-            // Skip the type args; they'll each get their own scan. Type args don't affect the
-            // element, so we can just pass through the same one.
-            return super.scan(node.getType(), canonicalTypeElement);
-          }
-
-          @Override
-          public Void visitMemberSelect(MemberSelectTree node, TypeElement canonicalTypeElement) {
-            TypeElement referencedTypeElement =
-                Preconditions.checkNotNull((TypeElement) trees.getElement(getCurrentPath()));
-            if (referencedTypeElement.getNestingKind() == NestingKind.TOP_LEVEL) {
-              // The rest of the member select must be the package name, so this is a
-              // fully-qualified
-              // name of a top-level type. We can stop; such names resolve fine.
-              return null;
-            }
-
-            isCanonicalReference =
-                isCanonicalReference && referencedTypeElement == canonicalTypeElement;
-
-            super.scan(
-                node.getExpression(), (TypeElement) canonicalTypeElement.getEnclosingElement());
-
-            Name canonicalSimpleName = canonicalTypeElement.getSimpleName();
-            Name referencedSimpleName = node.getIdentifier();
-            if (canonicalSimpleName != referencedSimpleName) {
-              trees.printMessage(
-                  messageKind,
-                  String.format(
-                      "Source-only ABI generation requires that this type be referred to by its canonical name. Use \"%s\" here instead of \"%s\".",
-                      canonicalSimpleName, referencedSimpleName),
-                  node,
-                  getCurrentPath().getCompilationUnit());
-            }
-
-            return null;
-          }
-
-          @Override
-          public Void visitIdentifier(IdentifierTree node, TypeElement canonicalTypeElement) {
-            TypeElement referencedTypeElement =
-                Preconditions.checkNotNull((TypeElement) trees.getElement(getCurrentPath()));
-
-            isCanonicalReference =
-                isCanonicalReference && canonicalTypeElement == referencedTypeElement;
-            if (isCanonicalReference && isImported(referencedTypeElement, referencingPackage)) {
-              // A canonical reference starting from an imported type will always resolve properly
-              // under source-only ABI rules, so nothing to do here.
-              return null;
-            } else if (isCanonicalReference && imports.isOnDemandImported(canonicalTypeElement)) {
-              // Star import that's not available at source ABI time
-              trees.printMessage(
-                  messageKind,
-                  String.format(
-                      "Source-only ABI generation requires that this type be explicitly imported. Add an import for %s.",
-                      canonicalTypeElement.getQualifiedName()),
-                  node,
-                  referenceTreePath.getCompilationUnit());
-            } else {
-              suggestQualifiedName(canonicalTypeElement, referencingPackage, getCurrentPath());
-            }
-
-            return null;
-          }
-        }.scan(referenceTreePath, canonicalTypeElement);
-      }
-
-      private boolean isImported(
-          TypeElement referencedTypeElement, PackageElement enclosingPackage) {
-        PackageElement referencedPackage = getPackageElement(referencedTypeElement);
-        return isTopLevelTypeInPackage(referencedTypeElement, enclosingPackage)
-            || imports.isSingleTypeImported(referencedTypeElement)
-            || referencedPackage.getQualifiedName().contentEquals("java.lang")
-            || (imports.isOnDemandImported(referencedTypeElement)
-                && fileManager.typeWillBeAvailable(referencedTypeElement));
-      }
-
-      private boolean isTopLevelTypeInPackage(
-          TypeElement referencedTypeElement, PackageElement enclosingPackage) {
-        return enclosingPackage == referencedTypeElement.getEnclosingElement();
-      }
-
-      private void suggestQualifiedName(
-          TypeElement canonicalTypeElement,
-          PackageElement referencingPackage,
-          TreePath referencingPath) {
-        IdentifierTree identifierTree = (IdentifierTree) referencingPath.getLeaf();
-        List<QualifiedNameable> enclosingElements = new ArrayList<>();
-        QualifiedNameable walker = canonicalTypeElement;
-        while (walker != null) {
-          enclosingElements.add(walker);
-          if (walker.getKind() != ElementKind.PACKAGE) {
-            TypeElement walkerType = (TypeElement) walker;
-            if (isImported(walkerType, referencingPackage)) {
-              break;
-            }
-          }
-          walker = (QualifiedNameable) walker.getEnclosingElement();
-        }
-
-        Collections.reverse(enclosingElements);
-
-        String qualifiedName =
-            enclosingElements
-                .stream()
-                .map(
-                    element ->
-                        element.getKind() == ElementKind.PACKAGE
-                            ? element.getQualifiedName()
-                            : element.getSimpleName())
-                .collect(Collectors.joining("."));
-
-        trees.printMessage(
-            messageKind,
-            String.format(
-                "Source-only ABI generation requires that this type be referred to by its canonical name. Use \"%s\" here instead of \"%s\".",
-                qualifiedName, identifierTree),
-            referencingPath.getLeaf(),
-            referencingPath.getCompilationUnit());
-      }
     }
   }
 }

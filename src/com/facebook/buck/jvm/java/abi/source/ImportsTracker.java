@@ -77,6 +77,10 @@ class ImportsTracker {
     return getStaticImportContainer(element) != null;
   }
 
+  public boolean nameIsStaticImported(Name name) {
+    return staticImports.containsKey(name);
+  }
+
   @Nullable
   public TypeElement getStaticImportContainer(TypeElement element) {
     if (!element.getModifiers().contains(Modifier.STATIC)) {
