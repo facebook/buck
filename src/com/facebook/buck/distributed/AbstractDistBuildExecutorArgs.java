@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.command.BuilderArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -74,6 +75,8 @@ abstract class AbstractDistBuildExecutorArgs {
   public abstract int getRemoteCoordinatorPort();
 
   public abstract StampedeId getStampedeId();
+
+  public abstract BuildSlaveRunId getBuildSlaveRunId();
 
   public abstract String getRemoteCoordinatorAddress();
 

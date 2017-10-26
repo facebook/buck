@@ -29,6 +29,7 @@ import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.ServerContentsProvider;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -101,6 +102,7 @@ public abstract class DistBuildFactory {
       int coordinatorPort,
       String coordinatorAddress,
       Optional<StampedeId> stampedeId,
+      BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
       DistBuildConfig distBuildConfig) {
     Preconditions.checkArgument(state.getCells().size() > 0);
@@ -131,6 +133,7 @@ public abstract class DistBuildFactory {
                 .setRemoteCoordinatorPort(coordinatorPort)
                 .setRemoteCoordinatorAddress(coordinatorAddress)
                 .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
+                .setBuildSlaveRunId(buildSlaveRunId)
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
                 .setDistBuildService(service)

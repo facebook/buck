@@ -151,6 +151,7 @@ public class DistBuildSlaveExecutor {
         coordinatorPort,
         localBuilder,
         args.getStampedeId(),
+        args.getBuildSlaveRunId(),
         args.getBuildThreadCount(),
         checker);
   }

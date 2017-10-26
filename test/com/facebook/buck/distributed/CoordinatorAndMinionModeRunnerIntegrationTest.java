@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.MinionModeRunnerIntegrationTest.FakeBuilderImpl;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             port,
             localBuilder,
             STAMPEDE_ID,
+            new BuildSlaveRunId().setId("sl7"),
             MAX_PARALLEL_WORK_UNITS,
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class));
     CoordinatorAndMinionModeRunner jointRunner =

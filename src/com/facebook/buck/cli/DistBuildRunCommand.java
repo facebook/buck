@@ -181,6 +181,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   coordinatorPort,
                   coordinatorAddress,
                   stampedeId,
+                  getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
                   distBuildConfig);
 

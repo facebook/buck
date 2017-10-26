@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.Builder;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildEngineResult;
@@ -48,7 +49,13 @@ public class MinionModeRunnerIntegrationTest {
     FakeBuilderImpl localBuilder = new FakeBuilderImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
-            "localhost", 42, localBuilder, STAMPEDE_ID, MAX_PARALLEL_WORK_UNITS, checker);
+            "localhost",
+            42,
+            localBuilder,
+            STAMPEDE_ID,
+            new BuildSlaveRunId().setId("sl1"),
+            MAX_PARALLEL_WORK_UNITS,
+            checker);
 
     minion.runAndReturnExitCode();
     Assert.fail("The previous line should've thrown an exception.");
@@ -61,7 +68,13 @@ public class MinionModeRunnerIntegrationTest {
     FakeBuilderImpl localBuilder = new FakeBuilderImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
-            "localhost", 42, localBuilder, STAMPEDE_ID, MAX_PARALLEL_WORK_UNITS, checker);
+            "localhost",
+            42,
+            localBuilder,
+            STAMPEDE_ID,
+            new BuildSlaveRunId().setId("sl2"),
+            MAX_PARALLEL_WORK_UNITS,
+            checker);
 
     int exitCode = minion.runAndReturnExitCode();
     // Server does not exit because the build has already been marked as finished.
@@ -81,6 +94,7 @@ public class MinionModeRunnerIntegrationTest {
               server.getPort(),
               localBuilder,
               STAMPEDE_ID,
+              new BuildSlaveRunId().setId("sl3"),
               MAX_PARALLEL_WORK_UNITS,
               checker);
       int exitCode = minion.runAndReturnExitCode();

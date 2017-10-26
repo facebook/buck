@@ -58,7 +58,11 @@ public class DistBuildIntegrationTest {
     destinationWorkspace.setUp();
 
     runDistBuildWithFakeFrontend(
-            destinationWorkspace, "--build-state-file", stateFilePath.toString())
+            destinationWorkspace,
+            "--build-state-file",
+            stateFilePath.toString(),
+            "--buildslave-run-id",
+            "sl1")
         .assertSuccess();
   }
 
@@ -92,7 +96,11 @@ public class DistBuildIntegrationTest {
     destinationWorkspace.setUp();
 
     runDistBuildWithFakeFrontend(
-            destinationWorkspace, "--build-state-file", stateFilePath.toString())
+            destinationWorkspace,
+            "--build-state-file",
+            stateFilePath.toString(),
+            "--buildslave-run-id",
+            "sl1")
         .assertSuccess();
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.command.Builder;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -35,7 +36,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,6 +52,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   private final int coordinatorPort;
   private final Builder builder;
   private final StampedeId stampedeId;
+  private final BuildSlaveRunId buildSlaveRunId;
 
   private final BuildCompletionChecker buildCompletionChecker;
   private final ExecutorService buildExecutorService;
@@ -80,6 +81,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
       int coordinatorPort,
       Builder builder,
       StampedeId stampedeId,
+      BuildSlaveRunId buildSlaveRunId,
       int availableWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker) {
     this(
@@ -87,6 +89,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
         coordinatorPort,
         builder,
         stampedeId,
+        buildSlaveRunId,
         availableWorkUnitBuildCapacity,
         buildCompletionChecker,
         MostExecutors.newMultiThreadExecutor(
@@ -99,11 +102,13 @@ public class MinionModeRunner implements DistBuildModeRunner {
       int coordinatorPort,
       Builder builder,
       StampedeId stampedeId,
+      BuildSlaveRunId buildSlaveRunId,
       int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
       ExecutorService buildExecutorService) {
     this.builder = builder;
     this.stampedeId = stampedeId;
+    this.buildSlaveRunId = buildSlaveRunId;
     Preconditions.checkArgument(
         coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.coordinatorAddress = coordinatorAddress;
@@ -125,7 +130,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
         new ThriftCoordinatorClient(coordinatorAddress, coordinatorPort, stampedeId)) {
       completionCheckingThriftCall(() -> client.start());
 
-      final String minionId = generateNewMinionId();
+      final String minionId = generateMinionId(buildSlaveRunId);
 
       while (!finished.get()) {
         signalFinishedTargetsAndFetchMoreWork(minionId, client);
@@ -293,7 +298,9 @@ public class MinionModeRunner implements DistBuildModeRunner {
     }
   }
 
-  private static String generateNewMinionId() {
+  private static String generateMinionId(BuildSlaveRunId buildSlaveRunId) {
+    Preconditions.checkState(!buildSlaveRunId.getId().isEmpty());
+
     String hostname = "Unknown";
     try {
       InetAddress addr;
@@ -303,6 +310,6 @@ public class MinionModeRunner implements DistBuildModeRunner {
       System.out.println("Hostname can not be resolved");
     }
 
-    return String.format("minion:%s:%d", hostname, new Random().nextInt(Integer.MAX_VALUE));
+    return String.format("minion:%s:%s", hostname, buildSlaveRunId);
   }
 }
