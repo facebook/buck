@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.jvm.java.abi.source.CompletionSimulator.CompletedType;
 import com.facebook.buck.jvm.java.abi.source.TreeBackedTypeResolutionSimulator.TreeBackedResolvedType;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
@@ -24,13 +25,10 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -108,11 +106,11 @@ class InterfaceValidator {
 
   private static class ValidatingListener implements InterfaceScanner.Listener {
     private final Diagnostic.Kind messageKind;
-    private final Elements elements;
     private final Trees trees;
     private final SourceOnlyAbiRuleInfo ruleInfo;
     private final TreeBackedTypeResolutionSimulator treeBackedResolver;
     private final FileManagerSimulator fileManager;
+    private final CompletionSimulator completer;
     private final CompilerTypeResolutionSimulator compilerResolver;
     private final ImportsTracker imports;
 
@@ -126,11 +124,11 @@ class InterfaceValidator {
         CompilerTypeResolutionSimulator compilerResolver,
         CompilationUnitTree compilationUnit) {
       this.messageKind = messageKind;
-      this.elements = elements;
       this.trees = trees;
       this.ruleInfo = ruleInfo;
       this.fileManager = fileManager;
       this.compilerResolver = compilerResolver;
+      completer = new CompletionSimulator(fileManager);
       imports =
           new ImportsTracker(
               elements,
@@ -184,37 +182,41 @@ class InterfaceValidator {
 
       DeclaredType declaredType = (DeclaredType) typeMirror;
       TypeElement typeElement = (TypeElement) declaredType.asElement();
+      CompletedType completedType = Preconditions.checkNotNull(completer.complete(typeElement));
 
-      if (!fileManager.typeWillBeAvailable(typeElement)) {
-        return;
+      switch (completedType.kind) {
+        case COMPLETED_TYPE:
+        case PARTIALLY_COMPLETED_TYPE:
+        case ERROR_TYPE:
+          // These are all fine
+          break;
+        case CRASH:
+          reportMissingDeps(completedType, path);
+          break;
       }
-
-      SortedSet<String> missingDependencies = findMissingDependencies(typeElement);
-      if (missingDependencies.isEmpty()) {
-        return;
-      }
-
-      suggestAddingOrRemovingDependencies(path, missingDependencies);
     }
 
-    private void suggestAddingOrRemovingDependencies(
-        TreePath path, SortedSet<String> missingDependencies) {
+    public void reportMissingDeps(CompletedType type, TreePath path) {
+      // TODO: Different message based on kind.
       trees.printMessage(
           messageKind,
           String.format(
               "Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
                   + "To fix, add the following rules to source_only_abi_deps: %s",
-              missingDependencies.stream().collect(Collectors.joining(", "))),
-          getStartOfTypeExpression(path.getLeaf()),
+              type.getMissingDependencies().stream().sorted().collect(Collectors.joining(", "))),
+          path.getLeaf(),
           path.getCompilationUnit());
     }
 
-    private Tree getStartOfTypeExpression(Tree leaf) {
-      Tree startOfTypeExpression = leaf;
-      while (startOfTypeExpression.getKind() == Tree.Kind.MEMBER_SELECT) {
-        startOfTypeExpression = ((MemberSelectTree) startOfTypeExpression).getExpression();
-      }
-      return startOfTypeExpression;
+    public void reportMissingDeps(ResolvedType type, TreePath path) {
+      trees.printMessage(
+          messageKind,
+          String.format(
+              "Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
+                  + "To fix, add the following rules to source_only_abi_deps: %s",
+              type.missingDependencies.stream().sorted().collect(Collectors.joining(", "))),
+          path.getLeaf(),
+          path.getCompilationUnit());
     }
 
     @Override
@@ -246,8 +248,7 @@ class InterfaceValidator {
           if (treeBackedResolvedType.isCorrectable()) {
             treeBackedResolvedType.reportErrors(messageKind);
           } else {
-            suggestAddingOrRemovingDependencies(
-                path, new TreeSet<>(compilerResolvedType.missingDependencies));
+            reportMissingDeps(compilerResolvedType, path);
           }
         }
       }
@@ -274,33 +275,6 @@ class InterfaceValidator {
               owningTarget, constant.getEnclosingElement().getSimpleName()),
           path.getLeaf(),
           path.getCompilationUnit());
-    }
-
-    private SortedSet<String> findMissingDependencies(TypeElement type) {
-      SortedSet<String> result = new TreeSet<>();
-      findMissingDependenciesImpl(type, result);
-      return result;
-    }
-
-    private void findMissingDependenciesImpl(TypeElement type, SortedSet<String> builder) {
-      if (!fileManager.typeWillBeAvailable(type)) {
-        builder.add(ruleInfo.getOwningTarget(elements, type));
-      }
-
-      findMissingDependenciesImpl(type.getSuperclass(), builder);
-      for (TypeMirror interfaceType : type.getInterfaces()) {
-        findMissingDependenciesImpl(interfaceType, builder);
-      }
-    }
-
-    private void findMissingDependenciesImpl(TypeMirror type, SortedSet<String> builder) {
-      if (type.getKind() != TypeKind.DECLARED) {
-        return;
-      }
-
-      DeclaredType declaredType = (DeclaredType) type;
-      TypeElement typeElement = (TypeElement) declaredType.asElement();
-      findMissingDependenciesImpl(typeElement, builder);
     }
   }
 }
