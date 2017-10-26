@@ -55,7 +55,25 @@ public class CliArgs extends CliCommand {
       usage = "If specified, stop printing after this many rules have been printed",
       required = false
     )
-    long limit = Long.MAX_VALUE;
+    int limit = Integer.MAX_VALUE;
+
+    @Option(
+      name = "--name-filter",
+      usage =
+          "If specified, only print rules whose names match this regular expression. Mutually exclusive with --key-filter",
+      required = false,
+      forbids = "--key-filter"
+    )
+    String nameFilter = null;
+
+    @Option(
+      name = "--key-filter",
+      usage =
+          "If specified, only print rules whose keys match this regular expression. Mutually exclusive with --name-filter",
+      required = false,
+      forbids = "--name-filter"
+    )
+    String keysFilter = null;
   }
 
   /** The list of options used to do a diff of two rule key files */

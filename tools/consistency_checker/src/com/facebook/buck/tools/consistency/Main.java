@@ -19,6 +19,7 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.util.Arrays;
@@ -28,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -112,7 +114,19 @@ public class Main {
   }
 
   private static ReturnCode handlePrintCommand(CliArgs.PrintCliCommand args) {
-    return ReturnCode.NO_ERROR;
+    RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
+    Optional<Pattern> nameFilter = Optional.ofNullable(args.nameFilter).map(Pattern::compile);
+    Optional<String> keysFilter = Optional.ofNullable(args.keysFilter);
+    RuleKeyLogFilePrinter printer =
+        new RuleKeyLogFilePrinter(System.out, reader, nameFilter, keysFilter, args.limit);
+
+    try {
+      printer.printFile(args.logFile);
+      return ReturnCode.NO_ERROR;
+    } catch (ParseException e) {
+      System.err.println(String.format("Error parsing %s: %s", args.logFile, e.getMessage()));
+      return ReturnCode.RULE_KEY_PARSE_ERROR;
+    }
   }
 
   private static ReturnCode handleRuleKeyDiffCommand(CliArgs.RuleKeyDiffCommand args) {
