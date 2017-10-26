@@ -17,16 +17,21 @@
 package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
-import java.io.FileInputStream;
-import java.nio.ByteBuffer;
+import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
-import org.apache.thrift.TDeserializer;
-import org.apache.thrift.protocol.TCompactProtocol;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** A class that can parse out length prefixed, thrift compact encoded rule keys. */
 public class RuleKeyFileParser {
+
+  private final RuleKeyLogFileReader reader;
+
+  public RuleKeyFileParser(RuleKeyLogFileReader reader) {
+    this.reader = reader;
+  }
 
   /**
    * A node in the set of all rule keys. When parsing, it tracks whether the node has been visited
@@ -59,21 +64,6 @@ public class RuleKeyFileParser {
     }
   }
 
-  /**
-   * Represents an error that occurred when parsing the log file. Wraps any internal exceptions such
-   * as IO exceptions and thrift errors.
-   */
-  public class ParseException extends Exception {
-
-    public ParseException(String formatString, Object... formatArgs) {
-      super(String.format(formatString, formatArgs));
-    }
-
-    public ParseException(Throwable originalException, String formatString, Object... formatArgs) {
-      super(String.format(formatString, formatArgs), originalException);
-    }
-  }
-
   /** Arbitrary estimate of an average rule key size when serialized */
   public final int THRIFT_STRUCT_SIZE = 300;
 
@@ -89,48 +79,34 @@ public class RuleKeyFileParser {
    */
   public ParsedFile parseFile(String filename, String targetName) throws ParseException {
     long startNanos = System.nanoTime();
-
-    HashMap<String, RuleKeyNode> ret = null;
-    RuleKeyNode rootNode = null;
-
-    ByteBuffer lengthBuf = ByteBuffer.allocate(4);
-    try (FileInputStream fileInputStream = new FileInputStream(filename)) {
-      ret = new HashMap<>(fileInputStream.available() / THRIFT_STRUCT_SIZE);
-
-      while (fileInputStream.available() >= 4) {
-        fileInputStream.read(lengthBuf.array());
-        int length = lengthBuf.getInt();
-        lengthBuf.rewind();
-
-        byte[] serialized = new byte[length];
-        int bytesRead = fileInputStream.read(serialized);
-        if (bytesRead != length) {
-          throw new ParseException(
-              "Invalid length specified. Expected %s bytes, only got %s", length, bytesRead);
-        }
-        TDeserializer deserializer = new TDeserializer(new TCompactProtocol.Factory());
-        FullRuleKey ruleKey = new FullRuleKey();
-        deserializer.deserialize(ruleKey, serialized);
-        // The thrift deserializer doesn't blow up on invalid data, it just sets all fields to
-        // null. 'key' is required, so if it's null, we failed to deserialize. Yes, deserialize()
-        // /should/ throw a TException, but it doesn't.
-        if (ruleKey.key == null) {
-          throw new ParseException("Could not deserialize array of size %s", serialized.length);
-        }
-        RuleKeyNode newNode = new RuleKeyNode(ruleKey);
-        if ("DEFAULT".equals(ruleKey.type) && targetName.equals(ruleKey.name)) {
-          rootNode = newNode;
-        }
-        ret.put(ruleKey.key, newNode);
-      }
-    } catch (Exception e) {
-      throw new ParseException(e, "Error reading %s: %s", filename, e.getMessage());
+    int initialSize;
+    try {
+      initialSize = Math.toIntExact(new File(filename).length() / THRIFT_STRUCT_SIZE);
+    } catch (ArithmeticException e) {
+      throw new ParseException(
+          e, "File size is too large (>2.1 billion objects would be deserialized");
     }
-    if (rootNode == null) {
+
+    final ImmutableMap.Builder<String, RuleKeyNode> rules = ImmutableMap.builder();
+    // Made into an array so we can mutate from the inside of the visitor
+    final AtomicReference<RuleKeyNode> rootNode = new AtomicReference<>(null);
+
+    reader.readFile(
+        filename,
+        ruleKey -> {
+          RuleKeyNode newNode = new RuleKeyNode(ruleKey);
+          if ("DEFAULT".equals(ruleKey.type) && targetName.equals(ruleKey.name)) {
+            rootNode.set(newNode);
+          }
+          rules.put(ruleKey.key, newNode);
+          return false;
+        });
+
+    if (rootNode.get() == null) {
       throw new ParseException("Could not find %s in %s", targetName, filename);
     }
-    Duration runtime = Duration.ofNanos(System.nanoTime() - startNanos);
 
-    return new ParsedFile(filename, rootNode, ret, runtime);
+    Duration runtime = Duration.ofNanos(System.nanoTime() - startNanos);
+    return new ParsedFile(filename, rootNode.get(), rules.build(), runtime);
   }
 }

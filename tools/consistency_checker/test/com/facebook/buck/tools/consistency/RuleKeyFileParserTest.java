@@ -19,8 +19,8 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParseException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.collect.ImmutableMap;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
@@ -39,6 +39,7 @@ public class RuleKeyFileParserTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private String logPath;
+  private RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
 
   @Before
   public void setUp() throws InterruptedException, IOException {
@@ -56,7 +57,7 @@ public class RuleKeyFileParserTest {
       logger.write(ruleKey3);
     }
 
-    RuleKeyFileParser parser = new RuleKeyFileParser();
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     ParsedFile parsedFile = parser.parseFile(logPath, "//:name1");
 
     Assert.assertEquals("key1", parsedFile.rootNode.ruleKey.key);
@@ -78,7 +79,7 @@ public class RuleKeyFileParserTest {
       logger.write(ruleKey1);
     }
 
-    RuleKeyFileParser parser = new RuleKeyFileParser();
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     parser.parseFile(logPath, "//:invalid_name");
   }
 
@@ -98,7 +99,7 @@ public class RuleKeyFileParserTest {
       outputStream.flush();
     }
 
-    RuleKeyFileParser parser = new RuleKeyFileParser();
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     parser.parseFile(logPath, "//:name1");
   }
 
@@ -119,7 +120,7 @@ public class RuleKeyFileParserTest {
       outputStream.flush();
     }
 
-    RuleKeyFileParser parser = new RuleKeyFileParser();
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     parser.parseFile(logPath, "//:name1");
   }
 }

@@ -116,7 +116,8 @@ public class Main {
   }
 
   private static ReturnCode handleRuleKeyDiffCommand(CliArgs.RuleKeyDiffCommand args) {
-    RuleKeyFileParser fileParser = new RuleKeyFileParser();
+    RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
+    RuleKeyFileParser fileParser = new RuleKeyFileParser(reader);
     Optional<ParsedFile> originalFile = Optional.empty();
     Optional<ParsedFile> newFile = Optional.empty();
     ExecutorService service = Executors.newFixedThreadPool(4);
