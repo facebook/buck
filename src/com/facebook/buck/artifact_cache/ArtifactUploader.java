@@ -37,6 +37,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.SortedSet;
 
@@ -83,7 +84,11 @@ public class ArtifactUploader {
 
           private void onCompletion() {
             try {
-              zip.close();
+              // The zip file may have been borrowed when storing to the cache so only close it if
+              // it still exists.
+              if (Files.exists(zip.get())) {
+                zip.close();
+              }
             } catch (IOException e) {
               throw new BuckUncheckedExecutionException(
                   e, "When deleting temporary zip %s.", zip.get());

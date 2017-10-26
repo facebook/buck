@@ -79,6 +79,9 @@ public class InMemoryArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     try (InputStream inputStream = Files.newInputStream(output.getPath())) {
       store(info, ByteStreams.toByteArray(inputStream));
+      if (output.canBorrow()) {
+        Files.delete(output.getPath());
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
