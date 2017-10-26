@@ -87,7 +87,7 @@ class InterfaceValidator {
 
   public void validate(List<? extends CompilationUnitTree> compilationUnits) {
     try (BuckTracing.TraceSection trace = BUCK_TRACING.traceSection("buck.abi.validate")) {
-      InterfaceScanner interfaceScanner = new InterfaceScanner(elements, trees);
+      InterfaceScanner interfaceScanner = new InterfaceScanner(trees);
       for (CompilationUnitTree compilationUnit : compilationUnits) {
         interfaceScanner.findReferences(
             compilationUnit,
@@ -232,6 +232,10 @@ class InterfaceValidator {
         } else {
           imports.importMembers(leafmostElement, leafmostElementPath);
         }
+      } else if (!isStarImport) {
+        imports.importStatic((TypeElement) leafmostElement, Preconditions.checkNotNull(memberName));
+      } else {
+        imports.importStaticMembers((TypeElement) leafmostElement);
       }
     }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
@@ -28,7 +29,9 @@ import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePath;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
@@ -46,6 +49,8 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   private List<TypeElement> importedTypes;
   private List<TypeElement> declaredTypes;
   private List<QualifiedNameable> starImportedElements;
+  private Map<String, TypeElement> staticImportOwners;
+  private List<TypeElement> staticStarImports;
 
   @Test
   public void testFindsVariableTypeReference() throws IOException {
@@ -542,9 +547,18 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   public void testFindsStaticImportsOfNestedTypes() throws IOException {
     findTypeReferences("import static java.text.DateFormat.Field;", "class Foo { }");
 
+    assertSame(
+        staticImportOwners.get("Field"),
+        elements.getTypeElement("java.text.DateFormat.Field").getEnclosingElement());
+  }
+
+  @Test
+  public void testFindsStaticOnDemandImports() throws IOException {
+    findTypeReferences("import static java.text.DateFormat.*;", "class Foo { }");
+
     assertThat(
-        importedTypes,
-        Matchers.containsInAnyOrder(elements.getTypeElement("java.text.DateFormat.Field")));
+        staticStarImports,
+        Matchers.containsInAnyOrder(elements.getTypeElement("java.text.DateFormat")));
   }
 
   @Test
@@ -699,6 +713,8 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     importedTypes = new ArrayList<>();
     starImportedElements = new ArrayList<>();
     declaredTypes = new ArrayList<>();
+    staticImportOwners = new HashMap<>();
+    staticStarImports = new ArrayList<>();
 
     testCompiler.setAllowCompilationErrors(errorsOK);
     compile(
@@ -712,7 +728,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
               @Override
               protected void enterComplete(List<CompilationUnitTree> compilationUnits) {
                 FinderListener listener = new FinderListener();
-                InterfaceScanner finder = new InterfaceScanner(elements, trees);
+                InterfaceScanner finder = new InterfaceScanner(trees);
                 for (CompilationUnitTree compilationUnit : compilationUnits) {
                   finder.findReferences(compilationUnit, listener);
                 }
@@ -769,11 +785,15 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         QualifiedNameable leafmostElement,
         Name memberName) {
       if (!isStatic) {
-        if (!isStarImport) {
-          importedTypes.add((TypeElement) leafmostElement);
-        } else {
+        if (isStarImport) {
           starImportedElements.add(leafmostElement);
+        } else {
+          importedTypes.add((TypeElement) leafmostElement);
         }
+      } else if (!isStarImport) {
+        staticImportOwners.put(memberName.toString(), (TypeElement) leafmostElement);
+      } else {
+        staticStarImports.add((TypeElement) leafmostElement);
       }
     }
 

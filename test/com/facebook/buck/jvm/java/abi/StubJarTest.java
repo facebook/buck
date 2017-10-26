@@ -2598,6 +2598,8 @@ public class StubJarTest {
 
   @Test
   public void stubsStaticImportedReferencesToInnerClassesOfOtherTypes() throws IOException {
+    notYetImplementedForMissingClasspath();
+
     tester
         .setSourceFile(
             "Imported.java",

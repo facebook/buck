@@ -37,7 +37,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 
 /**
  * Examines the non-private interfaces of types defined in one or more {@link CompilationUnitTree}s
@@ -75,11 +74,9 @@ class InterfaceScanner {
         VariableElement constant, TreePath path, Element referencingElement);
   }
 
-  private final Elements elements;
   private final Trees trees;
 
-  public InterfaceScanner(Elements elements, Trees trees) {
-    this.elements = elements;
+  public InterfaceScanner(Trees trees) {
     this.trees = trees;
   }
 
@@ -108,21 +105,6 @@ class InterfaceScanner {
         }
         QualifiedNameable leafmostElement =
             (QualifiedNameable) Preconditions.checkNotNull(trees.getElement(leafmostElementPath));
-
-        if (isStatic && !isStarImport) {
-          // Treat static imports of types by their canonical names as single-type imports
-          TypeElement nestedType =
-              elements.getTypeElement(TreeBackedTrees.treeToName(importedExpression));
-          if (nestedType != null
-              && nestedType.getModifiers().contains(Modifier.STATIC)
-              && trees.isAccessible(trees.getScope(getCurrentPath()), nestedType)) {
-
-            isStatic = false;
-            leafmostElement = nestedType;
-            leafmostElementPath = importedExpressionPath;
-            simpleName = null;
-          }
-        }
 
         listener.onImport(isStatic, isStarImport, leafmostElementPath, leafmostElement, simpleName);
 

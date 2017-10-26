@@ -435,6 +435,10 @@ class PostEnterCanonicalizer {
               Map<Name, TreePath> result = new HashMap<>();
               TreePath rootPath = new TreePath(compilationUnitTree);
               for (ImportTree importTree : compilationUnitTree.getImports()) {
+                if (importTree.isStatic()) {
+                  continue;
+                }
+
                 MemberSelectTree importedIdentifierTree =
                     (MemberSelectTree) importTree.getQualifiedIdentifier();
                 if (importedIdentifierTree.getIdentifier().contentEquals("*")) {

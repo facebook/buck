@@ -279,7 +279,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testCanonicallyStaticImportedTypeSucceeds() throws IOException {
+  public void testCanonicallyStaticImportedTypeFails() throws IOException {
     withClasspath(
         ImmutableMap.of(
             "com/facebook/bar/Bar.java",
@@ -294,6 +294,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                     "package com.facebook.baz;",
                     "public class Baz { public static class Inner { } }")));
 
+    testCompiler.setAllowCompilationErrors(true);
     this.compileWithValidation(
         Joiner.on('\n')
             .join(
@@ -303,7 +304,11 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                 "  Inner i;",
                 "}"));
 
-    assertNoErrors();
+    assertError(
+        "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
+            + "  Inner i;\n"
+            + "  ^\n"
+            + "  To fix, add the following rules to source_only_abi_deps: //com/facebook/baz:baz");
   }
 
   @Test
@@ -332,12 +337,10 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                 "}"));
 
     assertError(
-        "Foo.java:4: error: Source-only ABI generation requires that this member type reference be more explicit.\n"
+        "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
             + "  Inner i;\n"
             + "  ^\n"
-            + "  To fix: \n"
-            + "  Add an import for \"com.facebook.baz.Baz\"\n"
-            + "  Use \"Baz.Inner\" here instead of \"Inner\".");
+            + "  To fix, add the following rules to source_only_abi_deps: //com/facebook/bar:bar, //com/facebook/baz:baz");
   }
 
   @Test
