@@ -116,5 +116,22 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .build();
   }
 
+  /** Create the arguments for a new instance of DelegateAndGraphsInitiazer. */
+  public DelegateAndGraphsInitializerArgs createDelegateAndGraphsInitiazerArgs() {
+    return DelegateAndGraphsInitializerArgs.builder()
+        .setState(this.getState())
+        .setTimingStatsTracker(this.getTimingStatsTracker())
+        .setVersionedTargetGraphCache(this.getVersionedTargetGraphCache())
+        .setActionGraphCache(this.getActionGraphCache())
+        .setParser(this.getParser())
+        .setBuckEventBus(this.getBuckEventBus())
+        .setCacheKeySeed(this.getCacheKeySeed())
+        .setProjectFilesystemFactory(this.getProjectFilesystemFactory())
+        .setExecutorService(this.getExecutorService())
+        .setExecutors(this.getExecutors())
+        .setProvider(this.getProvider())
+        .build();
+  }
+
   public abstract BuildSlaveTimingStatsTracker getTimingStatsTracker();
 }
