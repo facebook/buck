@@ -678,6 +678,12 @@ public class RealAndroidDevice implements AndroidDevice {
       throw shellException;
     }
 
+    chmod644(targetDevicePath);
+  }
+
+  private void chmod644(Path targetDevicePath)
+      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+          IOException {
     // The standard Java libraries on Android always create new files un-readable by other users.
     // We use the shell user or root to create these files, so we need to explicitly set the mode
     // to allow the app to read them.  Ideally, the agent would do this automatically, but
