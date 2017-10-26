@@ -78,7 +78,10 @@ public class BuildTargetParser {
     if (buildTargetName.contains(BUILD_RULE_PREFIX)
         && !buildTargetName.startsWith(BUILD_RULE_PREFIX)) {
       int slashIndex = buildTargetName.indexOf(BUILD_RULE_PREFIX);
-      givenCellName = Optional.of(buildTargetName.substring(0, slashIndex));
+      // in order to support Skylark way of referencing repositories but also preserve backwards
+      // compatibility, the '@' is simply ignored if it's present
+      int repoNameStartIndex = (buildTargetName.charAt(0) == '@') ? 1 : 0;
+      givenCellName = Optional.of(buildTargetName.substring(repoNameStartIndex, slashIndex));
       targetAfterCell = buildTargetName.substring(slashIndex);
     }
 

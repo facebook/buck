@@ -195,6 +195,20 @@ public class BuildTargetParserTest {
     assertEquals(localRepoRoot, buildTarget.getCellPath());
   }
 
+  @Test
+  public void atPrefixOfCellsIsSupportedAndIgnored() {
+    Path localRepoRoot = Paths.get("/opt/local/repo");
+    CellPathResolver cellRoots =
+        DefaultCellPathResolver.of(
+            Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
+    String targetStr = "@localreponame//foo/bar:baz";
+
+    BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser, cellRoots);
+    assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
+    assertTrue(buildTarget.getCell().isPresent());
+    assertEquals(localRepoRoot, buildTarget.getCellPath());
+  }
+
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
 
