@@ -643,7 +643,7 @@ public class RealAndroidDevice implements AndroidDevice {
             + Files.size(source)
             + " "
             + targetFileName
-            + " ; echo -n :$?";
+            + ECHO_COMMAND_SUFFIX;
     LOG.debug("Executing %s", command);
 
     // If we fail to execute the command, stash the exception.  My experience during development
