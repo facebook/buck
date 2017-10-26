@@ -53,7 +53,7 @@ cat >.buckconfig <<EOF
   cpu_abis = armv7, x86
 EOF
 cat >.bucklogging.properties <<EOF
-com.facebook.buck.android.exopackage.ExopackageInstaller.level=FINER
+com.facebook.buck.android.exopackage.level=FINER
 EOF
 export NO_BUCKD=1
 
