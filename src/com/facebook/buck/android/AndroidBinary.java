@@ -402,15 +402,8 @@ public class AndroidBinary extends AbstractBuildRule
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    Stream.Builder<BuildTarget> deps = Stream.builder();
-    RichStream.from(moduleVerification).map(BuildRule::getBuildTarget).forEach(deps);
-    exopackageInfo.ifPresent(
-        info ->
-            ruleFinder
-                .filterBuildRuleInputs(info.getRequiredPaths()::iterator)
-                .stream()
-                .map(BuildRule::getBuildTarget)
-                .forEach(deps));
-    return deps.build();
+    return RichStream.from(moduleVerification)
+        .map(BuildRule::getBuildTarget)
+        .concat(HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, ruleFinder));
   }
 }

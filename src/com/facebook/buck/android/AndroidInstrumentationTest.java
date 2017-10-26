@@ -381,11 +381,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildTarget> builder = Stream.builder();
     builder.add(apk.getBuildTarget());
-
-    if (apk instanceof ApkGenrule) {
-      builder.add(ApkGenruleDescription.getUnderlyingApk(apk).getBuildTarget());
-    }
-
     return builder.build();
   }
 }

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -32,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A specialization of a genrule that specifically allows the modification of apks. This is useful
@@ -50,7 +52,7 @@ import java.util.Optional;
  * )
  * </pre>
  */
-public class ApkGenrule extends Genrule implements HasInstallableApk {
+public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntimeDeps {
 
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
@@ -78,7 +80,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
         cmdExe,
         type,
         /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk");
-
+    // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
     BuildRule rule = ruleFinder.getRule(this.apk);
@@ -114,5 +116,10 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
     String apkAbsolutePath =
         pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toString();
     environmentVariablesBuilder.put("APK", apkAbsolutePath);
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, ruleFinder);
   }
 }

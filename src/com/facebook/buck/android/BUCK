@@ -285,6 +285,7 @@ HELPERS_SRCS = [
     "DexFilesInfo.java",
     "NativeFilesInfo.java",
     "ResourceFilesInfo.java",
+    "HasInstallableApkSupport.java",
     "exopackage/AndroidDevicesHelperFactory.java",
     "exopackage/DexExoHelper.java",
     "exopackage/ExopackageAgent.java",
