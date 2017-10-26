@@ -16,8 +16,18 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
+import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
+import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import java.io.PrintStream;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -26,27 +36,145 @@ import org.kohsuke.args4j.CmdLineParser;
  * target graphs, and can ensure that the target graph is deterministic.
  */
 public class Main {
-  /** Main entry into consistency checker */
-  public static void main(String[] args) {
-    CliArgs parsedArgs = new CliArgs();
-    CmdLineParser argParser = new CmdLineParser(parsedArgs);
-    try {
-      argParser.parseArgument(args);
-      if (parsedArgs.showHelp || (parsedArgs.cmd != null && parsedArgs.cmd.showHelp)) {
-        CliArgs.printUsage(Optional.empty(), Arrays.asList(args), System.err);
-        System.exit(1);
-      }
-    } catch (CmdLineException e) {
-      CliArgs.printUsage(Optional.of(e), Arrays.asList(args), System.err);
-      System.exit(1);
-    }
 
-    if (parsedArgs.cmd instanceof CliArgs.PrintCliCommand) {
-      System.exit(handlePrintCommand((CliArgs.PrintCliCommand) parsedArgs.cmd));
+  /** All of the valid return codes that we can have */
+  public enum ReturnCode {
+    NO_ERROR(0),
+    HELP_REQUESTED(2),
+    UNKNOWN_ARGUMENTS(3),
+    UNHANDLED_SUBCOMMAND(4),
+    THREADING_ERROR(5),
+    RULE_KEY_PARSE_ERROR(10),
+    RULE_KEY_TRAVERSAL_ERROR(11),
+    RULE_KEY_MAX_DIFFERENCES_FOUND(12),
+    RULE_KEY_DIFFERENCES_DETECTED(13);
+
+    public final int value;
+
+    ReturnCode(int value) {
+      this.value = value;
     }
   }
 
-  private static int handlePrintCommand(CliArgs.PrintCliCommand args) {
-    return 0;
+  /** A simple scope that prints out how long anything inside the scope took to run to stderr */
+  static class CommandTimer implements AutoCloseable {
+    private final long startTime;
+    private final PrintStream outStream;
+
+    CommandTimer(PrintStream outStream) {
+      this.outStream = outStream;
+      this.startTime = System.nanoTime();
+    }
+
+    @Override
+    public void close() {
+      Duration runTime = Duration.ofNanos(System.nanoTime() - startTime);
+      outStream.println(String.format("Total runtime: %s ms", runTime.toMillis()));
+    }
+  }
+
+  /** Main entry into consistency checker */
+  public static void main(String[] args) {
+    System.exit(run(args).value);
+  }
+
+  private static ReturnCode run(String[] args) {
+
+    CliArgs parsedArgs = new CliArgs();
+    CmdLineParser argParser = new CmdLineParser(parsedArgs);
+    List<String> argsList = Arrays.asList(args);
+
+    try {
+      argParser.parseArgument(args);
+      if (parsedArgs.wasHelpRequested(argsList)) {
+        CliArgs.printUsage(Optional.empty(), argsList, System.err);
+        return ReturnCode.HELP_REQUESTED;
+      }
+    } catch (CmdLineException e) {
+      if (parsedArgs.wasHelpRequested(argsList)) {
+        CliArgs.printUsage(Optional.empty(), argsList, System.err);
+        return ReturnCode.HELP_REQUESTED;
+      } else {
+        CliArgs.printUsage(Optional.of(e), Arrays.asList(args), System.err);
+        return ReturnCode.UNKNOWN_ARGUMENTS;
+      }
+    }
+
+    try (CommandTimer ignored = new CommandTimer(System.err)) {
+      if (parsedArgs.cmd instanceof CliArgs.PrintCliCommand) {
+        return handlePrintCommand((CliArgs.PrintCliCommand) parsedArgs.cmd);
+      } else if (parsedArgs.cmd instanceof CliArgs.RuleKeyDiffCommand) {
+        return handleRuleKeyDiffCommand((CliArgs.RuleKeyDiffCommand) parsedArgs.cmd);
+      } else {
+        return ReturnCode.UNHANDLED_SUBCOMMAND;
+      }
+    }
+  }
+
+  private static ReturnCode handlePrintCommand(CliArgs.PrintCliCommand args) {
+    return ReturnCode.NO_ERROR;
+  }
+
+  private static ReturnCode handleRuleKeyDiffCommand(CliArgs.RuleKeyDiffCommand args) {
+    RuleKeyFileParser fileParser = new RuleKeyFileParser();
+    Optional<ParsedFile> originalFile = Optional.empty();
+    Optional<ParsedFile> newFile = Optional.empty();
+    ExecutorService service = Executors.newFixedThreadPool(4);
+
+    Future<ParsedFile> originalFileFuture =
+        service.submit(() -> fileParser.parseFile(args.originalLogFile, args.targetName));
+    Future<ParsedFile> newFileFuture =
+        service.submit(() -> fileParser.parseFile(args.newLogFile, args.targetName));
+
+    try {
+      originalFile = Optional.of(originalFileFuture.get());
+      newFile = Optional.of(newFileFuture.get());
+
+      RuleKeyDifferState differState = new RuleKeyDifferState(args.maxDifferences);
+      RuleKeyDiffPrinter diffPrinter =
+          new RuleKeyDiffPrinter(System.out, args.useColor, differState);
+      RuleKeyDiffer differ = new RuleKeyDiffer(diffPrinter);
+      differ.printDiff(originalFile.get(), newFile.get());
+
+      if (differState.getFoundDifferences() == 0) {
+        return ReturnCode.NO_ERROR;
+      } else {
+        return ReturnCode.RULE_KEY_DIFFERENCES_DETECTED;
+      }
+    } catch (ExecutionException e) {
+      if (!originalFile.isPresent()) {
+        System.err.println(
+            String.format("Error parsing %s: %s", args.originalLogFile, e.getCause().getMessage()));
+      } else {
+        System.err.println(
+            String.format("Error parsing %s: %s", args.newLogFile, e.getCause().getMessage()));
+      }
+      return ReturnCode.RULE_KEY_PARSE_ERROR;
+    } catch (GraphTraversalException e) {
+      System.err.println(
+          String.format(
+              "Error traversing rule key graph. One or more file may be incorrectly formatted: %s",
+              e.getMessage()));
+      return ReturnCode.RULE_KEY_TRAVERSAL_ERROR;
+    } catch (MaxDifferencesException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.RULE_KEY_MAX_DIFFERENCES_FOUND;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      return ReturnCode.THREADING_ERROR;
+    } finally {
+      System.err.println();
+      if (originalFile.isPresent()) {
+        System.err.println(
+            String.format(
+                "Parsed %s in %s ms",
+                args.originalLogFile, originalFile.get().parseTime.toMillis()));
+      }
+      if (newFile.isPresent()) {
+        System.err.println(
+            String.format(
+                "Parsed %s in %s ms", args.newLogFile, newFile.get().parseTime.toMillis()));
+      }
+    }
   }
 }

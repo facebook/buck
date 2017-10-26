@@ -31,7 +31,7 @@ public class CliCommand {
     this.description = description;
   }
 
-  @Option(name = "--showHelp", usage = "Show this showHelp")
+  @Option(name = "--help", usage = "Show this help")
   boolean showHelp = false;
 
   String getDescription() {

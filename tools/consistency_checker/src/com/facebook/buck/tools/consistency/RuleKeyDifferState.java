@@ -48,4 +48,8 @@ public class RuleKeyDifferState {
       throw new MaxDifferencesException();
     }
   }
+
+  public int getFoundDifferences() {
+    return foundDifferences.get();
+  }
 }

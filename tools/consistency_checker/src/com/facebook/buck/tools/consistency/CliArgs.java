@@ -23,18 +23,21 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.ExplicitBooleanOptionHandler;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommandHandler;
 import org.kohsuke.args4j.spi.SubCommands;
 
 /** The common set of command line arguments for the consistency checker */
 public class CliArgs extends CliCommand {
+
   public CliArgs() {
     super("");
   }
 
   /** The command line arguments for the 'print' command */
   public static class PrintCliCommand extends CliCommand {
+
     public PrintCliCommand() {
       super("Print human readable representations of rule keys");
     }
@@ -55,13 +58,63 @@ public class CliArgs extends CliCommand {
     long limit = Long.MAX_VALUE;
   }
 
+  /** The list of options used to do a diff of two rule key files */
+  public static class RuleKeyDiffCommand extends CliCommand {
+
+    public RuleKeyDiffCommand() {
+      super("Print out the differences between two files with serialized rule keys");
+    }
+
+    @Argument(
+      metaVar = "original log file",
+      usage = "The original log file containing thrift serialized rulekeys",
+      required = true,
+      index = 0
+    )
+    String originalLogFile;
+
+    @Argument(
+      metaVar = "new log file",
+      usage = "The new log file containing thrift serialized rulekeys after a change has been made",
+      required = true,
+      index = 1
+    )
+    String newLogFile;
+
+    @Argument(
+      metaVar = "target name",
+      usage = "The root target to traverse from in each file",
+      required = true,
+      index = 2
+    )
+    String targetName;
+
+    @Option(
+      name = "--color",
+      handler = ExplicitBooleanOptionHandler.class,
+      usage = "Color the output"
+    )
+    boolean useColor = true;
+
+    @Option(
+      name = "--max-differences",
+      usage =
+          "The maximum number of differences to print. Any more will "
+              + "result in a non-zero exit code"
+    )
+    int maxDifferences = RuleKeyDifferState.INFINITE_DIFFERENCES;
+  }
+
   @Argument(
     handler = SubCommandHandler.class,
     required = true,
     metaVar = "subcommand",
     usage = "The subcommand to run"
   )
-  @SubCommands({@SubCommand(name = "print", impl = PrintCliCommand.class)})
+  @SubCommands({
+    @SubCommand(name = "print", impl = PrintCliCommand.class),
+    @SubCommand(name = "rule_key_diff", impl = RuleKeyDiffCommand.class)
+  })
   CliCommand cmd;
 
   /**
@@ -70,19 +123,33 @@ public class CliArgs extends CliCommand {
    * @param exception The parse exception that caused us to need to print usage info, or empty if no
    *     error message needs to be printed
    * @param args The original list of command line arguments
-   * @param out The stream to write showHelp information to
+   * @param out The stream to write help information to
    */
   public static void printUsage(
       Optional<CmdLineException> exception, List<String> args, PrintStream out) {
     out.println("A tool for finding various types of inconsistency in buck\n");
-    if (!args.contains("--showHelp") && exception.isPresent()) {
+    if (exception.isPresent()) {
       out.println(exception.get().getMessage());
     }
-    if (args.size() > 0 && args.get(0).equals("print")) {
-      printUsage(PrintCliCommand.class, out);
-      return;
+    if (!printSubcommandUsage(args, out)) {
+      printUsage(CliArgs.class, out);
     }
-    printUsage(CliArgs.class, out);
+  }
+
+  private static boolean printSubcommandUsage(List<String> args, PrintStream out) {
+    if (args.size() > 0) {
+      switch (args.get(0)) {
+        case ("print"):
+          printUsage(PrintCliCommand.class, out);
+          return true;
+        case ("rule_key_diff"):
+          printUsage(RuleKeyDiffCommand.class, out);
+          return true;
+        default:
+          break;
+      }
+    }
+    return false;
   }
 
   private static void printUsage(Class<? extends CliCommand> clazz, PrintStream out) {
@@ -91,9 +158,20 @@ public class CliArgs extends CliCommand {
       out.println(instance.getDescription());
       new CmdLineParser(instance).printUsage(out);
     } catch (IllegalAccessException e) {
-      out.println(String.format("Could not get showHelp message: %s", e.getMessage()));
+      out.println(String.format("Could not get help message: %s", e.getMessage()));
     } catch (InstantiationException e) {
-      out.println(String.format("Could not get showHelp message: %s", e.getMessage()));
+      out.println(String.format("Could not get help message: %s", e.getMessage()));
     }
+  }
+
+  /**
+   * Determines whether something went wrong, or whether we are just showing the help message as
+   * requested
+   *
+   * @param args The argv for the program
+   * @return Whether the help argument was in the arguments or the parsed arguments object
+   */
+  public boolean wasHelpRequested(List<String> args) {
+    return this.showHelp || (this.cmd != null && this.cmd.showHelp) || args.contains("--help");
   }
 }

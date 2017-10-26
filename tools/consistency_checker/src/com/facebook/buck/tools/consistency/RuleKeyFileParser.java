@@ -124,7 +124,7 @@ public class RuleKeyFileParser {
         ret.put(ruleKey.key, newNode);
       }
     } catch (Exception e) {
-      throw new ParseException(e, "Error reading %s: %s", filename, e);
+      throw new ParseException(e, "Error reading %s: %s", filename, e.getMessage());
     }
     if (rootNode == null) {
       throw new ParseException("Could not find %s in %s", targetName, filename);
