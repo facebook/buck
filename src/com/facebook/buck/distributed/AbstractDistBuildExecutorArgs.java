@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.command.BuilderArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
@@ -118,4 +119,6 @@ abstract class AbstractDistBuildExecutorArgs {
         .setBuildInfoStoreManager(getBuildInfoStoreManager())
         .build();
   }
+
+  public abstract BuildSlaveTimingStatsTracker getTimingStatsTracker();
 }

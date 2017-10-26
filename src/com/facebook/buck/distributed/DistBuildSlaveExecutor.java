@@ -20,7 +20,6 @@ import com.facebook.buck.command.Builder;
 import com.facebook.buck.command.BuilderArgs;
 import com.facebook.buck.command.LocalBuilder;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
-import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.log.Logger;
@@ -63,6 +62,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class DistBuildSlaveExecutor {
+
   private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
   private static final String LOCALHOST_ADDRESS = "localhost";
   private static final boolean KEEP_GOING = true;
@@ -216,17 +216,18 @@ public class DistBuildSlaveExecutor {
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver(BuildSlaveTimingStatsTracker tracker)
+  // TODO(ruibm): This thing is time consuming and should execute in the background.
+  private ActionGraphAndResolver createActionGraphAndResolver()
       throws IOException, InterruptedException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
 
-    tracker.startTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
+    args.getTimingStatsTracker().startTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
     createTargetGraph();
-    tracker.stopTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
+    args.getTimingStatsTracker().stopTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
 
-    tracker.startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
+    args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     actionGraphAndResolver =
         args.getActionGraphCache()
             .getActionGraph(
@@ -237,21 +238,21 @@ public class DistBuildSlaveExecutor {
                 args.getCacheKeySeed(),
                 ActionGraphParallelizationMode.DISABLED,
                 Optional.empty());
-    tracker.stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
+    args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     return actionGraphAndResolver;
   }
 
   /** Creates the delegate for the distributed build. */
-  public CachingBuildEngineDelegate createBuildEngineDelegate(BuildSlaveTimingStatsTracker tracker)
+  public CachingBuildEngineDelegate createBuildEngineDelegate()
       throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }
 
-    tracker.startTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
+    args.getTimingStatsTracker().startTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
     StackedFileHashCaches caches = createStackedFileHashesAndPreload();
-    tracker.stopTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
-    createActionGraphAndResolver(tracker);
+    args.getTimingStatsTracker().stopTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
+    createActionGraphAndResolver();
 
     DistBuildConfig remoteConfig = new DistBuildConfig(args.getRemoteRootCellConfig());
     if (remoteConfig.materializeSourceFilesOnDemand()) {
@@ -334,6 +335,7 @@ public class DistBuildSlaveExecutor {
   }
 
   private static class StackedFileHashCaches {
+
     public final StackedFileHashCache remoteStateCache;
     public final StackedFileHashCache materializingCache;
 

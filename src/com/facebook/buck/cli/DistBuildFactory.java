@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.ServerContentsProvider;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -104,7 +105,8 @@ public abstract class DistBuildFactory {
       Optional<StampedeId> stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
-      DistBuildConfig distBuildConfig) {
+      DistBuildConfig distBuildConfig,
+      BuildSlaveTimingStatsTracker timingStatsTracker) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
@@ -139,6 +141,7 @@ public abstract class DistBuildFactory {
                 .setDistBuildService(service)
                 .setDistBuildConfig(distBuildConfig)
                 .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
+                .setTimingStatsTracker(timingStatsTracker)
                 .build());
     return executor;
   }

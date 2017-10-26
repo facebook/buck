@@ -183,9 +183,10 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   stampedeId,
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
-                  distBuildConfig);
+                  distBuildConfig,
+                  timeStatsTracker);
 
-          distBuildExecutor.createBuildEngineDelegate(timeStatsTracker);
+          distBuildExecutor.createBuildEngineDelegate();
           timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
 
           // All preparation work is done, so start building.
