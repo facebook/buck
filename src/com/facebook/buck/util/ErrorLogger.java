@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
+import com.facebook.buck.util.exceptions.BuckExecutionException;
 import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.exceptions.WrapsException;
 import com.google.common.annotations.VisibleForTesting;
@@ -52,6 +53,16 @@ public class ErrorLogger {
   }
 
   private final LogImpl logger;
+
+  public static void logGeneric(
+      EventDispatcher dispatcher, Throwable e, String format, Object... args) {
+    String context = args.length == 0 ? format : String.format(format, args);
+    logGeneric(dispatcher, new BuckExecutionException(e, context));
+  }
+
+  public static void logGeneric(EventDispatcher dispatcher, Throwable e) {
+    new ErrorLogger(dispatcher, "Error occurred: ", "Error occured: ").logException(e);
+  }
 
   public ErrorLogger(EventDispatcher dispatcher, String userPrefix, String verboseMessage) {
     this(
