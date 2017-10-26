@@ -78,7 +78,7 @@ public class ArtifactUploader {
             LOG.info(t, "Failed storing RuleKeys %s to the cache.", ruleKeys);
             eventBus.post(
                 ConsoleEvent.severe(
-                    "Failed storing an artifact to the cache," + "see log for details."));
+                    "Failed storing an artifact to the cache, see log for details."));
           }
 
           private void onCompletion() {
