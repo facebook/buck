@@ -202,7 +202,8 @@ class InterfaceValidator {
           messageKind,
           String.format(
               "Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
-                  + "To fix, add the following rules to source_only_abi_deps: %s",
+                  + "To fix, add the following rules to source_only_abi_deps in %s: %s",
+              ruleInfo.getRuleName(),
               type.getMissingDependencies().stream().sorted().collect(Collectors.joining(", "))),
           path.getLeaf(),
           path.getCompilationUnit());
@@ -213,7 +214,8 @@ class InterfaceValidator {
           messageKind,
           String.format(
               "Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
-                  + "To fix, add the following rules to source_only_abi_deps: %s",
+                  + "To fix, add the following rules to source_only_abi_deps in %s: %s",
+              ruleInfo.getRuleName(),
               type.missingDependencies.stream().sorted().collect(Collectors.joining(", "))),
           path.getLeaf(),
           path.getCompilationUnit());
