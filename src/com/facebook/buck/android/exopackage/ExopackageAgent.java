@@ -46,7 +46,7 @@ class ExopackageAgent {
   private static boolean determineBestAgent(AndroidDevice device) throws Exception {
     String value = device.getProperty("ro.build.version.sdk");
     try {
-      if (Integer.valueOf(value.trim()) > 19) {
+      if (Integer.valueOf(value) > 19) {
         return false;
       }
     } catch (NumberFormatException exn) {
