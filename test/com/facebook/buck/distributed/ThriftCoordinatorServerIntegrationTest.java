@@ -103,6 +103,17 @@ public class ThriftCoordinatorServerIntegrationTest {
 
       Assert.assertEquals(responseFour.getWorkUnitsSize(), 0);
       Assert.assertFalse(responseFour.isContinueBuilding());
+
+      // Ensure that subsequent invocations of GetWork do not crash.
+      GetWorkResponse responseFive =
+          client.getWork(
+              MINION_ID,
+              0,
+              ImmutableList.of(BuildTargetsQueueTest.TARGET_NAME),
+              MAX_WORK_UNITS_TO_FETCH);
+
+      Assert.assertEquals(responseFive.getWorkUnitsSize(), 0);
+      Assert.assertFalse(responseFive.isContinueBuilding());
     }
 
     EasyMock.verify(eventListener);

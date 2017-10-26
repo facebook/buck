@@ -178,8 +178,13 @@ public class ThriftCoordinatorServer implements Closeable {
       response.setWorkUnits(new ArrayList<>());
 
       synchronized (lock) {
-        // There should be no more requests after the coordinator has started shutting down.
-        Preconditions.checkArgument(!exitCodeFuture.isDone());
+        if (exitCodeFuture.isDone()) {
+          // Tell any remaining minions that the build is finished and that they should shutdown.
+          // Note: we cannot assume that when exitCodeFuture was set the first time the
+          // coordinator server will shutdown immediately.
+          response.setContinueBuilding(false);
+          return response;
+        }
 
         // If the minion died, then kill the whole build.
         if (request.getLastExitCode() != 0) {
