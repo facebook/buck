@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true. */
@@ -290,18 +291,17 @@ public class ExopackageInstaller {
                   throw new RuntimeException(e);
                 }
               });
+      // Plan the installation.
+      Map<Path, Path> installPaths =
+          filesToInstall
+              .entrySet()
+              .stream()
+              .collect(
+                  Collectors.toMap(
+                      entry -> dataRoot.resolve(entry.getKey()),
+                      entry -> projectFilesystem.resolve(entry.getValue())));
       // Install the files.
-      filesToInstall.forEach(
-          (devicePath, hostPath) -> {
-            Path destination = dataRoot.resolve(devicePath);
-            Path source = projectFilesystem.resolve(hostPath);
-            try (SimplePerfEvent.Scope ignored2 =
-                SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-              device.installFile(destination, source);
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
-          });
+      device.installFiles(filesType, installPaths);
     }
   }
 

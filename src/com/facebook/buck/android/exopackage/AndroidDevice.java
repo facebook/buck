@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface AndroidDevice {
@@ -46,6 +47,13 @@ public interface AndroidDevice {
   AutoCloseable createForward() throws Exception;
 
   void installFile(Path targetDevicePath, Path source) throws Exception;
+
+  @SuppressWarnings("unused")
+  default void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      installFile(entry.getKey(), entry.getValue());
+    }
+  }
 
   void mkDirP(String dirpath) throws Exception;
 

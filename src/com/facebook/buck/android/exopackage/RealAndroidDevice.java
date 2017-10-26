@@ -28,6 +28,7 @@ import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,6 +52,7 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -624,6 +626,16 @@ public class RealAndroidDevice implements AndroidDevice {
                 agentPort));
       }
     };
+  }
+
+  @Override
+  public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      try (SimplePerfEvent.Scope ignored2 =
+          SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+        installFile(entry.getKey(), entry.getValue());
+      }
+    }
   }
 
   @Override
