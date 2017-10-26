@@ -19,7 +19,7 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Value;
-import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
+import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 public class RuleKeyDiffPrinter {
   private final DiffPrinter diffPrinter;
-  private final RuleKeyDifferState differState;
+  private final DifferState differState;
 
   /**
    * The scope for printing information about a target. Helps ensure that target information is
@@ -191,7 +191,7 @@ public class RuleKeyDiffPrinter {
    * @param diffPrinter An object that prints additions/removals
    * @param differState The state of the actual diffing
    */
-  public RuleKeyDiffPrinter(DiffPrinter diffPrinter, RuleKeyDifferState differState) {
+  public RuleKeyDiffPrinter(DiffPrinter diffPrinter, DifferState differState) {
     this.diffPrinter = diffPrinter;
     this.differState = differState;
   }

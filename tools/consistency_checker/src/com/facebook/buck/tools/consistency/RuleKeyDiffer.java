@@ -17,9 +17,9 @@
 package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.log.thrift.rulekeys.Value;
+import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.PropertyScope;
-import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.Sets;

@@ -31,7 +31,6 @@ public class TargetHashFileParser {
 
   /** Simple information from parsing the targets file */
   static class ParsedTargetsFile {
-
     public final String filename;
     public final BiMap<String, String> targetsToHash;
     public final Duration parseTime;

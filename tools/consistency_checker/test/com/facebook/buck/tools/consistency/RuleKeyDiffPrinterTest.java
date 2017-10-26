@@ -31,9 +31,9 @@ import com.facebook.buck.log.thrift.rulekeys.SourceRoot;
 import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
+import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.PropertyScope;
-import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.ImmutableList;
@@ -59,8 +59,7 @@ public class RuleKeyDiffPrinterTest {
   public void setUp() {
     this.diffPrinter = new DiffPrinter(stream, false);
     this.printer =
-        new RuleKeyDiffPrinter(
-            diffPrinter, new RuleKeyDifferState(RuleKeyDifferState.INFINITE_DIFFERENCES));
+        new RuleKeyDiffPrinter(diffPrinter, new DifferState(DifferState.INFINITE_DIFFERENCES));
 
     RuleKeyNode ruleKey1 =
         new RuleKeyNode(
@@ -151,7 +150,7 @@ public class RuleKeyDiffPrinterTest {
 
   @Test
   public void doesNotThrowExceptionWhenAddingAfterHittingExactlyMaxDiffs() throws Exception {
-    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new DifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -171,7 +170,7 @@ public class RuleKeyDiffPrinterTest {
 
   @Test
   public void doesNotThrowExceptionWhenRemovingAfterHittingExactlyMaxDiffs() throws Exception {
-    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new DifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -191,7 +190,7 @@ public class RuleKeyDiffPrinterTest {
 
   @Test
   public void doesNotThrowExceptionWhenChangingAfterHittingExactlyMaxDiffs() throws Exception {
-    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new DifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -216,7 +215,7 @@ public class RuleKeyDiffPrinterTest {
   public void throwsExceptionWhenAddingAfterHittingMaxDiffs() throws Exception {
     expectedThrownException.expect(MaxDifferencesException.class);
     expectedThrownException.expectMessage("Stopping after finding 2 differences");
-    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new DifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -235,7 +234,7 @@ public class RuleKeyDiffPrinterTest {
   public void throwsExceptionWhenRemovingAfterHittingMaxDiffs() throws Exception {
     expectedThrownException.expect(MaxDifferencesException.class);
     expectedThrownException.expectMessage("Stopping after finding 2 differences");
-    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new DifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {
@@ -255,7 +254,7 @@ public class RuleKeyDiffPrinterTest {
 
     expectedThrownException.expect(MaxDifferencesException.class);
     expectedThrownException.expectMessage("Stopping after finding 2 differences");
-    printer = new RuleKeyDiffPrinter(diffPrinter, new RuleKeyDifferState(2));
+    printer = new RuleKeyDiffPrinter(diffPrinter, new DifferState(2));
 
     try (TargetScope ts = printer.addTarget("//:target1", "old hash", "new hash")) {
       try (PropertyScope ps2 = ts.addProperty("p1")) {

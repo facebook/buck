@@ -120,7 +120,7 @@ public class CliArgs extends CliCommand {
           "The maximum number of differences to print. Any more will "
               + "result in a non-zero exit code"
     )
-    int maxDifferences = RuleKeyDifferState.INFINITE_DIFFERENCES;
+    int maxDifferences = DifferState.INFINITE_DIFFERENCES;
   }
 
   @Argument(

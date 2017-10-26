@@ -19,7 +19,7 @@ package com.facebook.buck.tools.consistency;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Keeps track of the number of differences that the rule key differ has encountered so far */
-public class RuleKeyDifferState {
+public class DifferState {
   /** The maximum number of differences have been found */
   public class MaxDifferencesException extends Exception {
     MaxDifferencesException() {
@@ -32,7 +32,7 @@ public class RuleKeyDifferState {
   private AtomicInteger foundDifferences;
   private final int maxDifferences;
 
-  public RuleKeyDifferState(int maxDifferences) {
+  public DifferState(int maxDifferences) {
     this.maxDifferences = maxDifferences;
     this.foundDifferences = new AtomicInteger(0);
   }

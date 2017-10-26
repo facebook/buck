@@ -30,10 +30,10 @@ import com.facebook.buck.log.thrift.rulekeys.SourceRoot;
 import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
+import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.PropertyScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
-import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.ImmutableList;
@@ -58,21 +58,21 @@ public class RuleKeyDifferTest {
   private TestPrintStream stream = TestPrintStream.create();
   private RuleKeyDiffPrinter printer;
   private DiffPrinter diffPrinter;
-  private RuleKeyDifferState differState;
+  private DifferState differState;
   private RuleKeyDiffer differ;
 
   private TestPrintStream expectedStream = TestPrintStream.create();
   private DiffPrinter expectedDiffPrinter;
-  private RuleKeyDifferState expectedDifferState;
+  private DifferState expectedDifferState;
   private RuleKeyDiffPrinter expectedPrinter;
 
   @Before
   public void setUp() {
-    differState = new RuleKeyDifferState(RuleKeyDifferState.INFINITE_DIFFERENCES);
+    differState = new DifferState(DifferState.INFINITE_DIFFERENCES);
     diffPrinter = new DiffPrinter(stream, false);
     printer = new RuleKeyDiffPrinter(diffPrinter, differState);
 
-    expectedDifferState = new RuleKeyDifferState(RuleKeyDifferState.INFINITE_DIFFERENCES);
+    expectedDifferState = new DifferState(DifferState.INFINITE_DIFFERENCES);
     expectedDiffPrinter = new DiffPrinter(expectedStream, false);
     expectedPrinter = new RuleKeyDiffPrinter(expectedDiffPrinter, expectedDifferState);
 

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
-import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import java.io.PrintStream;
@@ -146,7 +146,7 @@ public class Main {
       newFile = Optional.of(newFileFuture.get());
 
       DiffPrinter diffPrinter = new DiffPrinter(System.out, args.useColor);
-      RuleKeyDifferState differState = new RuleKeyDifferState(args.maxDifferences);
+      DifferState differState = new DifferState(args.maxDifferences);
       RuleKeyDiffPrinter ruleKeyDiffPrinter = new RuleKeyDiffPrinter(diffPrinter, differState);
       RuleKeyDiffer differ = new RuleKeyDiffer(ruleKeyDiffPrinter);
       differ.printDiff(originalFile.get(), newFile.get());
