@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
-import com.facebook.buck.jvm.java.abi.source.CompletionSimulator.CompletedType;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
@@ -81,7 +80,7 @@ class InterfaceValidator {
   private final Trees trees;
   private final SourceOnlyAbiRuleInfo ruleInfo;
   private final FileManagerSimulator fileManager;
-  private final CompletionSimulator completer;
+  private final CompilerTypeResolutionSimulator compilerResolver;
 
   public InterfaceValidator(
       Diagnostic.Kind messageKind, BuckJavacTask task, SourceOnlyAbiRuleInfo ruleInfo) {
@@ -91,7 +90,7 @@ class InterfaceValidator {
     elements = task.getElements();
     this.ruleInfo = ruleInfo;
     fileManager = new FileManagerSimulator(elements, trees, ruleInfo);
-    completer = new CompletionSimulator(fileManager);
+    compilerResolver = new CompilerTypeResolutionSimulator(trees, fileManager);
   }
 
   public void validate(List<? extends CompilationUnitTree> compilationUnits) {
@@ -107,7 +106,7 @@ class InterfaceValidator {
                 trees,
                 ruleInfo,
                 fileManager,
-                completer,
+                compilerResolver,
                 compilationUnit));
       }
     }
@@ -128,7 +127,7 @@ class InterfaceValidator {
     private final Trees trees;
     private final SourceOnlyAbiRuleInfo ruleInfo;
     private final FileManagerSimulator fileManager;
-    private final CompletionSimulator completer;
+    private final CompilerTypeResolutionSimulator compilerResolver;
     private final ImportsTracker imports;
 
     public ValidatingListener(
@@ -138,14 +137,14 @@ class InterfaceValidator {
         Trees trees,
         SourceOnlyAbiRuleInfo ruleInfo,
         FileManagerSimulator fileManager,
-        CompletionSimulator completer,
+        CompilerTypeResolutionSimulator compilerResolver,
         CompilationUnitTree compilationUnit) {
       this.messageKind = messageKind;
       this.elements = elements;
       this.trees = trees;
       this.ruleInfo = ruleInfo;
       this.fileManager = fileManager;
-      this.completer = completer;
+      this.compilerResolver = compilerResolver;
       imports =
           new ImportsTracker(
               elements,
@@ -250,7 +249,13 @@ class InterfaceValidator {
     @Override
     public void onTypeReferenceFound(
         TypeElement canonicalTypeElement, TreePath path, Element referencingElement) {
-      new TypeReferenceScanner(canonicalTypeElement, path, referencingElement).scan();
+      compilerResolver.setImports(imports);
+      ResolvedType resolvedType = compilerResolver.resolve(path);
+      if (resolvedType.kind == ResolvedTypeKind.ERROR_TYPE) {
+        new TypeReferenceScanner(canonicalTypeElement, path, referencingElement).scan();
+      } else if (resolvedType.kind == ResolvedTypeKind.CRASH) {
+        suggestAddingOrRemovingDependencies(path, new TreeSet<>(resolvedType.missingDependencies));
+      }
     }
 
     @Override
@@ -370,20 +375,16 @@ class InterfaceValidator {
             super.scan(
                 node.getExpression(), (TypeElement) canonicalTypeElement.getEnclosingElement());
 
-            CompletedType completedType = completer.complete(referencedTypeElement);
-            if (Preconditions.checkNotNull(completedType).kind == CompletedTypeKind.ERROR_TYPE
-                && !isCanonicalReference) {
-              Name canonicalSimpleName = canonicalTypeElement.getSimpleName();
-              Name referencedSimpleName = node.getIdentifier();
-              if (canonicalSimpleName != referencedSimpleName) {
-                trees.printMessage(
-                    messageKind,
-                    String.format(
-                        "Source-only ABI generation requires that this type be referred to by its canonical name. Use \"%s\" here instead of \"%s\".",
-                        canonicalSimpleName, referencedSimpleName),
-                    node,
-                    getCurrentPath().getCompilationUnit());
-              }
+            Name canonicalSimpleName = canonicalTypeElement.getSimpleName();
+            Name referencedSimpleName = node.getIdentifier();
+            if (canonicalSimpleName != referencedSimpleName) {
+              trees.printMessage(
+                  messageKind,
+                  String.format(
+                      "Source-only ABI generation requires that this type be referred to by its canonical name. Use \"%s\" here instead of \"%s\".",
+                      canonicalSimpleName, referencedSimpleName),
+                  node,
+                  getCurrentPath().getCompilationUnit());
             }
 
             return null;
@@ -394,26 +395,23 @@ class InterfaceValidator {
             TypeElement referencedTypeElement =
                 Preconditions.checkNotNull((TypeElement) trees.getElement(getCurrentPath()));
 
-            CompletedType completedType = completer.complete(referencedTypeElement);
-            if (Preconditions.checkNotNull(completedType).kind == CompletedTypeKind.ERROR_TYPE) {
-              isCanonicalReference =
-                  isCanonicalReference && canonicalTypeElement == referencedTypeElement;
-              if (isCanonicalReference && isImported(referencedTypeElement, referencingPackage)) {
-                // A canonical reference starting from an imported type will always resolve properly
-                // under source-only ABI rules, so nothing to do here.
-                return null;
-              } else if (isCanonicalReference && imports.isOnDemandImported(canonicalTypeElement)) {
-                // Star import that's not available at source ABI time
-                trees.printMessage(
-                    messageKind,
-                    String.format(
-                        "Source-only ABI generation requires that this type be explicitly imported. Add an import for %s.",
-                        canonicalTypeElement.getQualifiedName()),
-                    node,
-                    referenceTreePath.getCompilationUnit());
-              } else {
-                suggestQualifiedName(canonicalTypeElement, referencingPackage, getCurrentPath());
-              }
+            isCanonicalReference =
+                isCanonicalReference && canonicalTypeElement == referencedTypeElement;
+            if (isCanonicalReference && isImported(referencedTypeElement, referencingPackage)) {
+              // A canonical reference starting from an imported type will always resolve properly
+              // under source-only ABI rules, so nothing to do here.
+              return null;
+            } else if (isCanonicalReference && imports.isOnDemandImported(canonicalTypeElement)) {
+              // Star import that's not available at source ABI time
+              trees.printMessage(
+                  messageKind,
+                  String.format(
+                      "Source-only ABI generation requires that this type be explicitly imported. Add an import for %s.",
+                      canonicalTypeElement.getQualifiedName()),
+                  node,
+                  referenceTreePath.getCompilationUnit());
+            } else {
+              suggestQualifiedName(canonicalTypeElement, referencingPackage, getCurrentPath());
             }
 
             return null;
