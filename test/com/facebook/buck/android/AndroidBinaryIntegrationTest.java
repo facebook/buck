@@ -438,6 +438,11 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testSimpleD8App() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_with_d8").assertSuccess();
+  }
+
+  @Test
   public void testResourceOverrides() throws IOException {
     Path path = workspace.buildAndReturnOutput("//apps/sample:strings_dump_overrides");
     assertThat(
