@@ -360,7 +360,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return moduleName;
   }
 
-  /** @return {@link SourcePath} to the output object file (i.e., .o file) */
+  /** @return List of {@link SourcePath} to the output object file(s) (i.e., .o file) */
   public ImmutableList<SourcePath> getObjectPaths() {
     // Ensures that users of the object path can depend on this build target
     return objectPaths
