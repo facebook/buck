@@ -1,9 +1,12 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
+TEST_FILES_GLOB = ["*Test.java"]
+
 java_test(
     name = "consistency",
-    srcs = glob(["*Test.java"]),
+    srcs = glob(TEST_FILES_GLOB),
     deps = [
+        ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/log/thrift:thrift",
         "//test/com/facebook/buck/testutil/integration:util",
@@ -13,4 +16,12 @@ java_test(
         "//third-party/java/thrift:libthrift",
         "//tools/consistency_checker/src/com/facebook/buck/tools/consistency:consistency",
     ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = TEST_FILES_GLOB,
+    ),
 )
