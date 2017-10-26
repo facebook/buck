@@ -46,14 +46,14 @@ public class RuleKeyFileParser {
   static class ParsedFile {
 
     public final String filename;
-    public final String rootHash;
+    public final RuleKeyNode rootNode;
     public final Map<String, RuleKeyNode> rules;
     public final Duration parseTime;
 
     public ParsedFile(
-        String filename, String rootHash, Map<String, RuleKeyNode> rules, Duration parseTime) {
+        String filename, RuleKeyNode rootNode, Map<String, RuleKeyNode> rules, Duration parseTime) {
       this.filename = filename;
-      this.rootHash = rootHash;
+      this.rootNode = rootNode;
       this.rules = rules;
       this.parseTime = parseTime;
     }
@@ -91,7 +91,7 @@ public class RuleKeyFileParser {
     long startNanos = System.nanoTime();
 
     HashMap<String, RuleKeyNode> ret = null;
-    String rootHashKey = "";
+    RuleKeyNode rootNode = null;
 
     ByteBuffer lengthBuf = ByteBuffer.allocate(4);
     try (FileInputStream fileInputStream = new FileInputStream(filename)) {
@@ -117,19 +117,20 @@ public class RuleKeyFileParser {
         if (ruleKey.key == null) {
           throw new ParseException("Could not deserialize array of size %s", serialized.length);
         }
+        RuleKeyNode newNode = new RuleKeyNode(ruleKey);
         if ("DEFAULT".equals(ruleKey.type) && targetName.equals(ruleKey.name)) {
-          rootHashKey = ruleKey.key;
+          rootNode = newNode;
         }
-        ret.put(ruleKey.key, new RuleKeyNode(ruleKey));
+        ret.put(ruleKey.key, newNode);
       }
     } catch (Exception e) {
       throw new ParseException(e, "Error reading %s: %s", filename, e);
     }
-    if (rootHashKey.isEmpty()) {
+    if (rootNode == null) {
       throw new ParseException("Could not find %s in %s", targetName, filename);
     }
     Duration runtime = Duration.ofNanos(System.nanoTime() - startNanos);
 
-    return new ParsedFile(filename, rootHashKey, ret, runtime);
+    return new ParsedFile(filename, rootNode, ret, runtime);
   }
 }

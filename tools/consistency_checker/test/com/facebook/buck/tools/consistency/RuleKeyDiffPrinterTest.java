@@ -84,7 +84,7 @@ public class RuleKeyDiffPrinterTest {
     this.sampleParsedFile =
         new ParsedFile(
             "test.bin.out",
-            "fc3b3de4500fa30fd95007ff4bedcb9b4f92fecb",
+            ruleKey1,
             ImmutableMap.of(
                 "fc3b3de4500fa30fd95007ff4bedcb9b4f92fecb", ruleKey1,
                 "08b7aee0eb8b1fc333516b66194f512a146c3ccb", ruleKey2),

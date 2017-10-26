@@ -59,7 +59,7 @@ public class RuleKeyFileParserTest {
     RuleKeyFileParser parser = new RuleKeyFileParser();
     ParsedFile parsedFile = parser.parseFile(logPath, "//:name1");
 
-    Assert.assertEquals("key1", parsedFile.rootHash);
+    Assert.assertEquals("key1", parsedFile.rootNode.ruleKey.key);
     Assert.assertEquals(logPath, parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(3, parsedFile.rules.size());

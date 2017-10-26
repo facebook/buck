@@ -62,7 +62,7 @@ public class RuleKeyDiffPrinter {
     }
 
     @Override
-    public void close() throws Exception {}
+    public void close() {}
 
     /** Prints out the target name and old/new hash */
     private void printHeader() {
@@ -99,7 +99,7 @@ public class RuleKeyDiffPrinter {
 
       /** Pops the most recent property off of the stack of nested properties */
       @Override
-      public void close() throws Exception {
+      public void close() {
         pathComponents.remove(pathComponents.size() - 1);
       }
 
@@ -183,6 +183,16 @@ public class RuleKeyDiffPrinter {
         validateAndUpdateState();
         printRemove(originalFile, originalValue);
         printAdd(newFile, newValue);
+      }
+
+      /**
+       * Record a change that should not have an add/remove/chage line printed. This ensures that we
+       * count the difference and print the header, but don't force rule key differences to be
+       * printed right before we recurse
+       */
+      public void recordEmptyChange() throws MaxDifferencesException {
+        differState.incrementDifferenceCount();
+        printHeader();
       }
     }
   }
