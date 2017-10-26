@@ -16,9 +16,7 @@
 
 package com.facebook.buck.js;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
@@ -34,19 +32,18 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Preconditions;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 
 public class JsBundleWorkerJobArgsTest {
-  private static final Pattern OUT_FILE_PATTERN = Pattern.compile("--out\\s+(\\S+)");
   private JsTestScenario scenario;
   private BuildContext context;
   private FakeBuildableContext fakeBuildableContext;
@@ -61,22 +58,24 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testFileRamBundleFlavor() throws NoSuchBuildTargetException {
+  public void testFileRamBundleFlavor() throws NoSuchBuildTargetException, IOException {
     JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_FILES), ImmutableSortedSet.of());
 
-    assertThat(getJobArgs(bundle), startsWith("bundle --files-rambundle "));
+    JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
+    assertThat(args.get("ramBundle").asText(), equalTo("files"));
   }
 
   @Test
-  public void testIndexedRamBundleFlavor() throws NoSuchBuildTargetException {
+  public void testIndexedRamBundleFlavor() throws NoSuchBuildTargetException, IOException {
     JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_INDEXED),
             ImmutableSortedSet.of());
 
-    assertThat(getJobArgs(bundle), startsWith("bundle --indexed-rambundle "));
+    JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
+    assertThat(args.get("ramBundle").asText(), equalTo("indexed"));
   }
 
   @Test(expected = FlavorDomainException.class)
@@ -91,11 +90,11 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testBuildRootIsPassed() throws NoSuchBuildTargetException {
+  public void testBuildRootIsPassed() throws NoSuchBuildTargetException, IOException {
     JsBundle bundle = scenario.createBundle("//:arbitrary", ImmutableSortedSet.of());
+    JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
     assertThat(
-        getJobArgs(bundle),
-        containsString(String.format(" --root %s ", scenario.filesystem.getRootPath())));
+        args.get("rootPath").asText(), equalTo(scenario.filesystem.getRootPath().toString()));
   }
 
   @Test
@@ -154,9 +153,11 @@ public class JsBundleWorkerJobArgsTest {
 
   private String getOutFile(JsBundle bundle) {
     String jobArgs = getJobArgs(bundle);
-    Matcher matcher = OUT_FILE_PATTERN.matcher(jobArgs);
-    Preconditions.checkState(
-        matcher.find(), "worker job arguments don't contain `--out ...` (got `%s`)", jobArgs);
-    return Paths.get(matcher.group(1)).getFileName().toString();
+    try {
+      JsonNode args = ObjectMappers.readValue(jobArgs, JsonNode.class);
+      return Paths.get(args.get("bundlePath").asText()).getFileName().toString();
+    } catch (IOException error) {
+      throw new HumanReadableException(error, "Couldn't read bundle args as JSON");
+    }
   }
 }

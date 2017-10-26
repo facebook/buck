@@ -1,4 +1,4 @@
-bundle --platform ios --lib @/buck-out/gen/js/extras#ios.json --lib @/buck-out/gen/js/fruit#ios.json --root @ --sourcemap @/buck-out/gen/js/fruit-with-extras#ios/map/some-fruit-with-delicious-extras.js.map --assets @/buck-out/gen/js/fruit-with-extras#ios/res yoghurt banana apple
+{"assetsDirPath":"@/buck-out/gen/js/fruit-with-extras#ios/res","bundlePath":"@/buck-out/gen/js/fruit-with-extras#ios/js/some-fruit-with-delicious-extras.js","command":"bundle","entryPoints":["yoghurt","banana","apple"],"libraryGroups":[],"libraries":["@/buck-out/gen/js/extras#ios.json","@/buck-out/gen/js/fruit#ios.json"],"platform":"ios","release":false,"rootPath":"@","sourceMapPath":"@/buck-out/gen/js/fruit-with-extras#ios/map/some-fruit-with-delicious-extras.js.map"}
 library --platform ios --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
