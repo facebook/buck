@@ -633,7 +633,6 @@ public class RealAndroidDevice implements AndroidDevice {
     Closer closer = Closer.create();
     FileInstallReceiver receiver = new FileInstallReceiver(closer, source);
 
-    String targetFileName = targetDevicePath.toString();
     String command =
         "umask 022 && "
             + agent.get().getAgentCommand()
@@ -642,7 +641,7 @@ public class RealAndroidDevice implements AndroidDevice {
             + " "
             + Files.size(source)
             + " "
-            + targetFileName
+            + targetDevicePath
             + ECHO_COMMAND_SUFFIX;
     LOG.debug("Executing %s", command);
 
@@ -684,7 +683,7 @@ public class RealAndroidDevice implements AndroidDevice {
     // to allow the app to read them.  Ideally, the agent would do this automatically, but
     // there's no easy way to do this in Java.  We can drop this if we drop support for the
     // Java agent.
-    executeCommandWithErrorChecking("chmod 644 " + targetFileName);
+    executeCommandWithErrorChecking("chmod 644 " + targetDevicePath);
   }
 
   @Override
