@@ -226,6 +226,23 @@ class InterfaceValidator {
         TreePath leafmostElementPath,
         QualifiedNameable leafmostElement,
         @Nullable Name memberName) {
+      if (leafmostElement.getKind() != ElementKind.PACKAGE) {
+        ResolvedType compilerResolvedType = compilerResolver.resolve(leafmostElementPath);
+        if (compilerResolvedType != null && compilerResolvedType.kind == ResolvedTypeKind.CRASH) {
+          reportMissingDeps(compilerResolvedType, leafmostElementPath);
+        } else {
+          TreeBackedResolvedType treeBackedResolvedType =
+              treeBackedResolver.resolve(leafmostElementPath);
+          if (!treeBackedResolvedType.isCorrect()) {
+            if (treeBackedResolvedType.isCorrectable()) {
+              treeBackedResolvedType.reportErrors(messageKind);
+            } else {
+              reportMissingDeps(compilerResolvedType, leafmostElementPath);
+            }
+          }
+        }
+      }
+
       if (!isStatic) {
         if (!isStarImport) {
           imports.importType((TypeElement) leafmostElement, leafmostElementPath);

@@ -131,7 +131,11 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                     "import com.facebook.iface.Interface;",
                     "public class Foo extends Bar implements Interface { }")));
 
-    assertError(
+    assertErrors(
+        "Foo.java:2: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
+            + "import com.facebook.bar.Bar;\n"
+            + "                       ^\n"
+            + "  To fix, add the following rules to source_only_abi_deps: //com/facebook/baz:baz, //com/facebook/iface2:iface2",
         "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
             + "public class Foo extends Bar implements Interface { }\n"
             + "                         ^\n"
