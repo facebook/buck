@@ -71,3 +71,7 @@
 [parser]
   polyglot_parsing_enabled=true
   default_build_file_syntax=skylark
+[buildfile]
+  # following includes are ignored by Skylark parser and are only to support
+  # usage of Skylark extension files in `BUCK` files parsed by Python DSL parser
+  includes = //python-dsl/python_dsl_compat_defs

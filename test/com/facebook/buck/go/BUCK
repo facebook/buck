@@ -1,6 +1,6 @@
 # BUILD FILE SYNTAX: PYTHON_DSL
 
-load("//:DEFS", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "integration",

@@ -1,0 +1,16 @@
+class NativeModule(object):
+  """
+  Exposes a limited subset of Skylark's native API that can be used in Buck
+  build files and extensions parsed with Python DSL parser.
+
+  The API support is intentionally very limited to discourage people from
+  using more legacy Python DSL syntax and migrate to Skylark instead.
+  """
+  @property
+  def java_test(self):
+    """Exposes a native Buck java_test rule."""
+    return java_test
+
+# Makes native instance available to all build files and extensions that
+# imported this compatibility file.
+native = NativeModule()
