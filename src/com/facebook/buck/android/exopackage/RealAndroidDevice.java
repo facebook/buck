@@ -689,9 +689,6 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @Override
   public void mkDirP(String dirpath) throws Exception {
-    // Kind of a hack here.  The java agent can't force the proper permissions on the
-    // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
-    // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
     String mkdirCommand = agent.get().getMkDirCommand();
 
     executeCommandWithErrorChecking("umask 022 && " + mkdirCommand + " " + dirpath);
