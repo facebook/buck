@@ -80,6 +80,11 @@ public class DistBuildSlaveExecutor {
   }
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
+    if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
+      return newCoordinatorMode(getFreePortForCoordinator(), false).runAndReturnExitCode();
+    }
+
+    DistBuildModeRunner runner = null;
     BuilderArgs builderArgs = args.createBuilderArgs();
     try (ExecutionContext executionContext = LocalBuilder.createExecutionContext(builderArgs)) {
       Builder localBuilder =
@@ -95,7 +100,6 @@ public class DistBuildSlaveExecutor {
               Optional.empty(),
               Optional.empty());
 
-      DistBuildModeRunner runner = null;
       switch (args.getDistBuildMode()) {
         case REMOTE_BUILD:
           runner =
@@ -107,10 +111,6 @@ public class DistBuildSlaveExecutor {
                           .setFinalBuildStatus(
                               args.getStampedeId(),
                               BuildStatusUtil.exitCodeToBuildStatus(exitCode)));
-          break;
-
-        case COORDINATOR:
-          runner = newCoordinatorMode(getFreePortForCoordinator(), false);
           break;
 
         case MINION:
@@ -129,13 +129,15 @@ public class DistBuildSlaveExecutor {
                   newMinionMode(localBuilder, LOCALHOST_ADDRESS, localCoordinatorPort));
           break;
 
+        case COORDINATOR:
+          throw new IllegalStateException("COORDINATOR mode should have already been handled.");
+
         default:
           LOG.error("Unknown distributed build mode [%s].", args.getDistBuildMode().toString());
           return -1;
       }
-
-      return runner.runAndReturnExitCode();
     }
+    return runner.runAndReturnExitCode();
   }
 
   private MinionModeRunner newMinionMode(
