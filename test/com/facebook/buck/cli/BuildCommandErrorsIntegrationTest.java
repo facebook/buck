@@ -286,7 +286,7 @@ public class BuildCommandErrorsIntegrationTest {
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.lang.RuntimeException: failure message\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
         getError(getStderr(result)));
@@ -300,7 +300,7 @@ public class BuildCommandErrorsIntegrationTest {
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.lang.RuntimeException: failure message\n"
             + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
@@ -315,7 +315,7 @@ public class BuildCommandErrorsIntegrationTest {
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.io.IOException: failure message\n"
             + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
@@ -329,7 +329,7 @@ public class BuildCommandErrorsIntegrationTest {
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.io.IOException: failure message\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
         getError(getStderr(result)));

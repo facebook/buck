@@ -45,7 +45,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
@@ -59,10 +58,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -429,18 +426,8 @@ public class Build implements Closeable {
     if (e instanceof RuntimeException) {
       e = rootCauseOfBuildException(e);
     }
-    new ErrorLogger(eventBus, "Build failed: ", "Got an exception during the build.") {
-      @Override
-      protected String getMessageForRootCause(Throwable rootCause) {
-        if (rootCause instanceof HumanReadableException) {
-          return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
-        } else {
-          ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-          rootCause.printStackTrace(new PrintStream(outputStream));
-          return new String(outputStream.toByteArray());
-        }
-      }
-    }.logException(e);
+    new ErrorLogger(eventBus, "Build failed: ", "Got an exception during the build.")
+        .logException(e);
   }
 
   /**

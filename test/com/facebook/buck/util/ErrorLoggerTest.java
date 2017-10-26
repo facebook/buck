@@ -33,7 +33,7 @@ public class ErrorLoggerTest {
   public void testRuntimeException() {
     LoggedErrors errors = logException(new RuntimeException("message"));
     assertNull(errors.userVisible);
-    assertEquals("message", errors.userVisibleInternal);
+    assertEquals("java.lang.RuntimeException: message", errors.userVisibleInternal);
   }
 
   @Test
@@ -81,6 +81,7 @@ public class ErrorLoggerTest {
                 result.verbose = e;
               }
             })
+        .setSuppressStackTraces(true)
         .logException(e);
     assertTrue(result.userVisibleInternal == null ^ result.userVisible == null);
     assertNotNull(result.verbose);

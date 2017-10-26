@@ -116,6 +116,7 @@ public class BuildReport {
                         failureResult.getRule().getFullyQualifiedName());
                   }
                 })
+            .setSuppressStackTraces(true)
             .logException(failure);
       }
     }
