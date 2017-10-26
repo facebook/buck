@@ -34,7 +34,7 @@ import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.PropertyScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
-import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,7 +117,7 @@ public class RuleKeyDifferTest {
   }
 
   private List<String> generateExpectedStrings(
-      Collection<String> keys, ParsedFile originalFile, ParsedFile newFile)
+      Collection<String> keys, ParsedRuleKeyFile originalFile, ParsedRuleKeyFile newFile)
       throws MaxDifferencesException {
     FullRuleKey originalRuleKey = originalFile.rootNode.ruleKey;
     FullRuleKey newRuleKey = newFile.rootNode.ruleKey;
@@ -139,10 +139,10 @@ public class RuleKeyDifferTest {
     return Arrays.asList(expectedStream.getOutputLines());
   }
 
-  private ParsedFile createParsedFile(
+  private ParsedRuleKeyFile createParsedFile(
       String filename, FullRuleKey rootKey, FullRuleKey... otherKeys) {
     RuleKeyNode rootNode = new RuleKeyNode(rootKey);
-    return new ParsedFile(
+    return new ParsedRuleKeyFile(
         filename,
         rootNode,
         ImmutableMap.<String, RuleKeyNode>builder()
@@ -177,8 +177,8 @@ public class RuleKeyDifferTest {
 
     FullRuleKey newRuleKey = new FullRuleKey("new_hash", "//:target1", "rule_type", newValues);
 
-    ParsedFile originalFile = createParsedFile("file1", originalRuleKey);
-    ParsedFile newFile = createParsedFile("file2", newRuleKey);
+    ParsedRuleKeyFile originalFile = createParsedFile("file1", originalRuleKey);
+    ParsedRuleKeyFile newFile = createParsedFile("file2", newRuleKey);
 
     List<String> expectedLines =
         generateExpectedStrings(
@@ -222,8 +222,8 @@ public class RuleKeyDifferTest {
             "rule_type",
             ImmutableMap.of("map_1", Value.containerMap(newValues)));
 
-    ParsedFile originalFile = createParsedFile("file1", originalRuleKey);
-    ParsedFile newFile = createParsedFile("file2", newRuleKey);
+    ParsedRuleKeyFile originalFile = createParsedFile("file1", originalRuleKey);
+    ParsedRuleKeyFile newFile = createParsedFile("file2", newRuleKey);
 
     try (TargetScope ts =
         expectedPrinter.addTarget("//:target1", originalRuleKey.key, newRuleKey.key)) {
@@ -289,8 +289,8 @@ public class RuleKeyDifferTest {
 
     FullRuleKey newRuleKey = new FullRuleKey("hash_2", "//:target1", "rule_type", newValues);
 
-    ParsedFile originalFile = createParsedFile("file1", originalRuleKey);
-    ParsedFile newFile = createParsedFile("file2", newRuleKey);
+    ParsedRuleKeyFile originalFile = createParsedFile("file1", originalRuleKey);
+    ParsedRuleKeyFile newFile = createParsedFile("file2", newRuleKey);
 
     try (TargetScope ts =
         expectedPrinter.addTarget("//:target1", originalRuleKey.key, newRuleKey.key)) {
@@ -354,8 +354,8 @@ public class RuleKeyDifferTest {
             "rule_type",
             ImmutableMap.of("s1", Value.stringValue("string_2")));
 
-    ParsedFile originalFile = createParsedFile("file1", originalRuleKey, originalRuleKey2);
-    ParsedFile newFile = createParsedFile("file2", newRuleKey, newRuleKey2);
+    ParsedRuleKeyFile originalFile = createParsedFile("file1", originalRuleKey, originalRuleKey2);
+    ParsedRuleKeyFile newFile = createParsedFile("file2", newRuleKey, newRuleKey2);
 
     try (TargetScope ts =
         expectedPrinter.addTarget("//:target1", originalRuleKey.key, newRuleKey.key)) {
@@ -412,8 +412,8 @@ public class RuleKeyDifferTest {
             "rule_type",
             ImmutableMap.of("s1", Value.stringValue("string_1")));
 
-    ParsedFile originalFile = createParsedFile("file1", originalRuleKey, originalRuleKey2);
-    ParsedFile newFile = createParsedFile("file2", newRuleKey, newRuleKey2);
+    ParsedRuleKeyFile originalFile = createParsedFile("file1", originalRuleKey, originalRuleKey2);
+    ParsedRuleKeyFile newFile = createParsedFile("file2", newRuleKey, newRuleKey2);
 
     try (TargetScope ts =
         expectedPrinter.addTarget("//:target1", originalRuleKey.key, newRuleKey.key)) {
@@ -454,8 +454,8 @@ public class RuleKeyDifferTest {
             ImmutableMap.of(
                 "wrapper1", Value.wrapper(new Wrapper("type1", Value.stringValue("string2")))));
 
-    ParsedFile originalFile = createParsedFile("file1", originalRuleKey);
-    ParsedFile newFile = createParsedFile("file2", newRuleKey);
+    ParsedRuleKeyFile originalFile = createParsedFile("file1", originalRuleKey);
+    ParsedRuleKeyFile newFile = createParsedFile("file2", newRuleKey);
 
     try (TargetScope ts =
         expectedPrinter.addTarget("//:target1", originalRuleKey.key, newRuleKey.key)) {
@@ -498,8 +498,8 @@ public class RuleKeyDifferTest {
             ImmutableMap.of(
                 "wrapper1", Value.wrapper(new Wrapper("type2", Value.stringValue("string")))));
 
-    ParsedFile originalFile = createParsedFile("file1", originalRuleKey);
-    ParsedFile newFile = createParsedFile("file2", newRuleKey);
+    ParsedRuleKeyFile originalFile = createParsedFile("file1", originalRuleKey);
+    ParsedRuleKeyFile newFile = createParsedFile("file2", newRuleKey);
 
     try (TargetScope ts =
         expectedPrinter.addTarget("//:target1", originalRuleKey.key, newRuleKey.key)) {

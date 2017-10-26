@@ -20,7 +20,7 @@ import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
-import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -75,8 +75,8 @@ public class RuleKeyDiffPrinter {
 
     /**
      * Adds a new property to the target scope. If any changes are recorded on this object (e.g.
-     * with {@link #added(ParsedFile, Value) added}), the details of the target will be printed
-     * first.
+     * with {@link #added(ParsedRuleKeyFile, Value) added}), the details of the target will be
+     * printed first.
      *
      * @param propertyName The path to the property to print at the beginning of the line. e.g. '0'
      *     for the first element of an array, or 'target_name' for a property named 'target_name' in
@@ -117,7 +117,7 @@ public class RuleKeyDiffPrinter {
         printHeader();
       }
 
-      private void printAdd(ParsedFile file, Value value) {
+      private void printAdd(ParsedRuleKeyFile file, Value value) {
         outStream.println(
             String.format(
                 "%s+ %s: %s%s",
@@ -127,7 +127,7 @@ public class RuleKeyDiffPrinter {
                 resetColors));
       }
 
-      private void printRemove(ParsedFile file, Value value) {
+      private void printRemove(ParsedRuleKeyFile file, Value value) {
         outStream.println(
             String.format(
                 "%s- %s: %s%s",
@@ -145,7 +145,7 @@ public class RuleKeyDiffPrinter {
        * @throws MaxDifferencesException Thrown if the maximum number of differences was found
        *     before this removal was printed
        */
-      public void removed(ParsedFile file, Value value) throws MaxDifferencesException {
+      public void removed(ParsedRuleKeyFile file, Value value) throws MaxDifferencesException {
         validateAndUpdateState();
         printRemove(file, value);
       }
@@ -159,7 +159,7 @@ public class RuleKeyDiffPrinter {
        * @throws MaxDifferencesException Thrown if the maximum number of differences was found
        *     before this addition was printed
        */
-      public void added(ParsedFile file, Value value) throws MaxDifferencesException {
+      public void added(ParsedRuleKeyFile file, Value value) throws MaxDifferencesException {
         validateAndUpdateState();
         printAdd(file, value);
       }
@@ -178,7 +178,10 @@ public class RuleKeyDiffPrinter {
        *     before this change was printed
        */
       public void changed(
-          ParsedFile originalFile, Value originalValue, ParsedFile newFile, Value newValue)
+          ParsedRuleKeyFile originalFile,
+          Value originalValue,
+          ParsedRuleKeyFile newFile,
+          Value newValue)
           throws MaxDifferencesException {
         validateAndUpdateState();
         printRemove(originalFile, originalValue);
@@ -240,7 +243,7 @@ public class RuleKeyDiffPrinter {
    * @param value The value to convert to a string
    * @return A string suitable for printing in a diff
    */
-  public static String valueAsReadableString(ParsedFile file, Value value) {
+  public static String valueAsReadableString(ParsedRuleKeyFile file, Value value) {
     switch (value.getSetField()) {
       case STRING_VALUE:
         return value.getStringValue();
@@ -307,7 +310,7 @@ public class RuleKeyDiffPrinter {
    * @param ruleKey The rule key to get a name for
    * @return An appropriate rule key name, or "UNKNOWN NAME" if no name could be determined
    */
-  public static String getRuleKeyName(ParsedFile file, FullRuleKey ruleKey) {
+  public static String getRuleKeyName(ParsedRuleKeyFile file, FullRuleKey ruleKey) {
 
     String target = ruleKey.name;
     if (target != null && !target.isEmpty()) {
@@ -320,7 +323,7 @@ public class RuleKeyDiffPrinter {
     return "UNKNOWN NAME";
   }
 
-  private static String getRuleKeyName(ParsedFile file, Value value) {
+  private static String getRuleKeyName(ParsedRuleKeyFile file, Value value) {
     switch (value.getSetField()) {
       case STRING_VALUE:
         return value.getStringValue();

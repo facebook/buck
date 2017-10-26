@@ -18,7 +18,7 @@ package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
-import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import java.io.PrintStream;
 import java.time.Duration;
@@ -132,13 +132,13 @@ public class Main {
   private static ReturnCode handleRuleKeyDiffCommand(CliArgs.RuleKeyDiffCommand args) {
     RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
     RuleKeyFileParser fileParser = new RuleKeyFileParser(reader);
-    Optional<ParsedFile> originalFile = Optional.empty();
-    Optional<ParsedFile> newFile = Optional.empty();
+    Optional<ParsedRuleKeyFile> originalFile = Optional.empty();
+    Optional<ParsedRuleKeyFile> newFile = Optional.empty();
     ExecutorService service = Executors.newFixedThreadPool(4);
 
-    Future<ParsedFile> originalFileFuture =
+    Future<ParsedRuleKeyFile> originalFileFuture =
         service.submit(() -> fileParser.parseFile(args.originalLogFile, args.targetName));
-    Future<ParsedFile> newFileFuture =
+    Future<ParsedRuleKeyFile> newFileFuture =
         service.submit(() -> fileParser.parseFile(args.newLogFile, args.targetName));
 
     try {

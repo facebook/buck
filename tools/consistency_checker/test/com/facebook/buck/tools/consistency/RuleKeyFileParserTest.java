@@ -19,7 +19,7 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.collect.ImmutableMap;
 import java.io.DataOutputStream;
@@ -58,7 +58,7 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    ParsedFile parsedFile = parser.parseFile(logPath, "//:name1");
+    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, "//:name1");
 
     Assert.assertEquals("key1", parsedFile.rootNode.ruleKey.key);
     Assert.assertEquals(logPath, parsedFile.filename);

@@ -20,7 +20,7 @@ import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.PropertyScope;
 import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
-import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.Sets;
 import java.util.Set;
@@ -51,15 +51,15 @@ public class RuleKeyDiffer {
    * @param newFile The new file to use
    * @throws MaxDifferencesException Thrown if the maximum number of differences has been found
    */
-  public void printDiff(ParsedFile originalFile, ParsedFile newFile)
+  public void printDiff(ParsedRuleKeyFile originalFile, ParsedRuleKeyFile newFile)
       throws MaxDifferencesException, GraphTraversalException {
     printDiff(originalFile, originalFile.rootNode, newFile, newFile.rootNode);
   }
 
   private void printDiff(
-      ParsedFile originalFile,
+      ParsedRuleKeyFile originalFile,
       RuleKeyNode originalRuleKey,
-      ParsedFile newFile,
+      ParsedRuleKeyFile newFile,
       RuleKeyNode newRuleKey)
       throws MaxDifferencesException, GraphTraversalException {
     if (originalRuleKey.ruleKey.key.equals(newRuleKey.ruleKey.key)) {
@@ -115,9 +115,9 @@ public class RuleKeyDiffer {
 
   private void printDiff(
       PropertyScope propertiesSoFar,
-      ParsedFile originalFile,
+      ParsedRuleKeyFile originalFile,
       Value originalValue,
-      ParsedFile newFile,
+      ParsedRuleKeyFile newFile,
       Value newValue)
       throws MaxDifferencesException, GraphTraversalException {
     if (originalValue.equals(newValue)) {
@@ -170,9 +170,9 @@ public class RuleKeyDiffer {
 
   private void printContainerMapDiff(
       PropertyScope propertiesSoFar,
-      ParsedFile originalFile,
+      ParsedRuleKeyFile originalFile,
       Value originalValue,
-      ParsedFile newFile,
+      ParsedRuleKeyFile newFile,
       Value newValue)
       throws Exception {
     Set<String> originalKeyProperties = originalValue.getContainerMap().keySet();
@@ -204,9 +204,9 @@ public class RuleKeyDiffer {
 
   private void printContainerListDiff(
       PropertyScope propertiesSoFar,
-      ParsedFile originalFile,
+      ParsedRuleKeyFile originalFile,
       Value originalValue,
-      ParsedFile newFile,
+      ParsedRuleKeyFile newFile,
       Value newValue)
       throws Exception {
     int commonListLength =
@@ -235,9 +235,9 @@ public class RuleKeyDiffer {
 
   private void printRuleKeyHashDiff(
       PropertyScope propertiesSoFar,
-      ParsedFile originalFile,
+      ParsedRuleKeyFile originalFile,
       Value originalValue,
-      ParsedFile newFile,
+      ParsedRuleKeyFile newFile,
       Value newValue)
       throws MaxDifferencesException, GraphTraversalException {
     RuleKeyNode nextOriginalRuleKey = originalFile.rules.get(originalValue.getRuleKeyHash().sha1);
@@ -259,9 +259,9 @@ public class RuleKeyDiffer {
 
   private void printWrapperDiff(
       PropertyScope propertiesSoFar,
-      ParsedFile originalFile,
+      ParsedRuleKeyFile originalFile,
       Value originalValue,
-      ParsedFile newFile,
+      ParsedRuleKeyFile newFile,
       Value newValue)
       throws Exception {
     if (!originalValue.getWrapper().type.equals(newValue.getWrapper().type)) {

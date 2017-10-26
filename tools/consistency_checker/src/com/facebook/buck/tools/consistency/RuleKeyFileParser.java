@@ -48,14 +48,14 @@ public class RuleKeyFileParser {
   }
 
   /** A parsed rule key file with details of the parse, and all rules contained in the file. */
-  static class ParsedFile {
+  static class ParsedRuleKeyFile {
 
     public final String filename;
     public final RuleKeyNode rootNode;
     public final Map<String, RuleKeyNode> rules;
     public final Duration parseTime;
 
-    public ParsedFile(
+    public ParsedRuleKeyFile(
         String filename, RuleKeyNode rootNode, Map<String, RuleKeyNode> rules, Duration parseTime) {
       this.filename = filename;
       this.rootNode = rootNode;
@@ -72,12 +72,12 @@ public class RuleKeyFileParser {
    *
    * @param filename The name of the file
    * @param targetName The name of the target that should be found
-   * @return A {@link ParsedFile} object that all deserialized rules, and the rule key hash of the
-   *     specified target
+   * @return A {@link ParsedRuleKeyFile} object that all deserialized rules, and the rule key hash
+   *     of the specified target
    * @throws ParseException If an IO or serialization error occurs, or if the target could not be
    *     found in the file
    */
-  public ParsedFile parseFile(String filename, String targetName) throws ParseException {
+  public ParsedRuleKeyFile parseFile(String filename, String targetName) throws ParseException {
     long startNanos = System.nanoTime();
     int initialSize;
     try {
@@ -105,8 +105,7 @@ public class RuleKeyFileParser {
     if (rootNode.get() == null) {
       throw new ParseException("Could not find %s in %s", targetName, filename);
     }
-
     Duration runtime = Duration.ofNanos(System.nanoTime() - startNanos);
-    return new ParsedFile(filename, rootNode.get(), rules.build(), runtime);
+    return new ParsedRuleKeyFile(filename, rootNode.get(), rules.build(), runtime);
   }
 }

@@ -34,7 +34,7 @@ import com.facebook.buck.log.thrift.rulekeys.Wrapper;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.PropertyScope;
 import com.facebook.buck.tools.consistency.RuleKeyDifferState.MaxDifferencesException;
-import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedFile;
+import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,7 +50,7 @@ public class RuleKeyDiffPrinterTest {
 
   @Rule public ExpectedException expectedThrownException = ExpectedException.none();
 
-  private ParsedFile sampleParsedFile;
+  private ParsedRuleKeyFile sampleParsedFile;
   private TestPrintStream stream = TestPrintStream.create();
   private RuleKeyDiffPrinter printer;
 
@@ -82,7 +82,7 @@ public class RuleKeyDiffPrinterTest {
                 ImmutableMap.of("value1", Value.numberValue(1))));
 
     this.sampleParsedFile =
-        new ParsedFile(
+        new ParsedRuleKeyFile(
             "test.bin.out",
             ruleKey1,
             ImmutableMap.of(
