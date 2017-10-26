@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -99,5 +100,10 @@ public class AndroidInstrumentationApk extends AndroidBinary {
 
   public AndroidBinary getApkUnderTest() {
     return apkUnderTest;
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return RichStream.of(apkUnderTest.getBuildTarget()).concat(super.getRuntimeDeps(ruleFinder));
   }
 }
