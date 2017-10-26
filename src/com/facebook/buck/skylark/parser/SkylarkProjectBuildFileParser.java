@@ -235,6 +235,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     PackageContext packageContext =
         PackageContext.builder()
             .setGlobber(SimpleGlobber.create(fileSystem.getPath(buildFile.getParent().toString())))
+            .setRawConfig(options.getRawConfig())
             .build();
     env.setupDynamic(PackageFactory.PACKAGE_CONTEXT, packageContext);
     return env;

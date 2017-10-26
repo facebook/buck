@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.packages;
 
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 /** Exposes package information to Skylark functions. */
@@ -26,4 +27,10 @@ import org.immutables.value.Value;
 abstract class AbstractPackageContext {
   /** Returns a globber instance that can resolve paths relative to current package. */
   public abstract Globber getGlobber();
+
+  /**
+   * Returns a raw map of configuration options defined in {@code .buckconfig} file and passed
+   * through a {@code --config} command line option.
+   */
+  public abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 }
