@@ -18,7 +18,6 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.command.BuilderArgs;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -81,10 +80,6 @@ abstract class AbstractDistBuildExecutorArgs {
 
   public abstract String getRemoteCoordinatorAddress();
 
-  public BuckConfig getRemoteRootCellConfig() {
-    return getState().getRootCell().getBuckConfig();
-  }
-
   public abstract VersionedTargetGraphCache getVersionedTargetGraphCache();
 
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();
@@ -96,7 +91,8 @@ abstract class AbstractDistBuildExecutorArgs {
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
   public int getBuildThreadCount() {
-    return getRemoteRootCellConfig()
+    return getState()
+        .getRemoteRootCellConfig()
         .getView(ResourcesConfig.class)
         .getConcurrencyLimit()
         .threadLimit;

@@ -196,12 +196,12 @@ public class DistBuildSlaveExecutor {
                 key -> Preconditions.checkNotNull(cells.get(key))));
 
     try {
-      if (args.getRemoteRootCellConfig().getBuildVersions()) {
+      if (args.getState().getRemoteRootCellConfig().getBuildVersions()) {
         targetGraph =
             args.getVersionedTargetGraphCache()
                 .toVersionedTargetGraph(
                     args.getBuckEventBus(),
-                    args.getRemoteRootCellConfig(),
+                    args.getState().getRemoteRootCellConfig(),
                     new DefaultTypeCoercerFactory(
                         PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
                     targetGraphAndBuildTargets)
@@ -254,7 +254,7 @@ public class DistBuildSlaveExecutor {
     args.getTimingStatsTracker().stopTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
     createActionGraphAndResolver();
 
-    DistBuildConfig remoteConfig = new DistBuildConfig(args.getRemoteRootCellConfig());
+    DistBuildConfig remoteConfig = new DistBuildConfig(args.getState().getRemoteRootCellConfig());
     if (remoteConfig.materializeSourceFilesOnDemand()) {
       SourcePathRuleFinder ruleFinder =
           new SourcePathRuleFinder(

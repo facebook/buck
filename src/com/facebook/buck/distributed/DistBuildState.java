@@ -234,4 +234,9 @@ public class DistBuildState {
 
     return materializer;
   }
+
+  /** The RootCell of the Remote machine. */
+  public BuckConfig getRemoteRootCellConfig() {
+    return getRootCell().getBuckConfig();
+  }
 }
