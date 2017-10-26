@@ -123,6 +123,46 @@ public class CliArgs extends CliCommand {
     int maxDifferences = DifferState.INFINITE_DIFFERENCES;
   }
 
+  /** The list of options used to do a diff of two target hash files */
+  public static class TargetHashDiffCommand extends CliCommand {
+
+    public TargetHashDiffCommand() {
+      super(
+          "Print out the differences between two files with target names and hashes (e.g. from buck targets --show-target-hash)");
+    }
+
+    @Argument(
+      metaVar = "original log file",
+      usage = "The original log file containing target names and hashes",
+      required = true,
+      index = 0
+    )
+    String originalLogFile;
+
+    @Argument(
+      metaVar = "new log file",
+      usage = "The new log file containing target names and hashes",
+      required = true,
+      index = 1
+    )
+    String newLogFile;
+
+    @Option(
+      name = "--color",
+      handler = ExplicitBooleanOptionHandler.class,
+      usage = "Color the output"
+    )
+    boolean useColor = true;
+
+    @Option(
+      name = "--max-differences",
+      usage =
+          "The maximum number of differences to print. Any more will "
+              + "result in a non-zero exit code"
+    )
+    int maxDifferences = DifferState.INFINITE_DIFFERENCES;
+  }
+
   @Argument(
     handler = SubCommandHandler.class,
     required = true,
@@ -131,7 +171,8 @@ public class CliArgs extends CliCommand {
   )
   @SubCommands({
     @SubCommand(name = "print", impl = PrintCliCommand.class),
-    @SubCommand(name = "rule_key_diff", impl = RuleKeyDiffCommand.class)
+    @SubCommand(name = "rule_key_diff", impl = RuleKeyDiffCommand.class),
+    @SubCommand(name = "target_hash_diff", impl = TargetHashDiffCommand.class)
   })
   CliCommand cmd;
 
@@ -159,6 +200,9 @@ public class CliArgs extends CliCommand {
       switch (args.get(0)) {
         case ("print"):
           printUsage(PrintCliCommand.class, out);
+          return true;
+        case ("target_hash_diff"):
+          printUsage(TargetHashDiffCommand.class, out);
           return true;
         case ("rule_key_diff"):
           printUsage(RuleKeyDiffCommand.class, out);

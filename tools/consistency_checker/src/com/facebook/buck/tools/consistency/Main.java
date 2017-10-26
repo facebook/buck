@@ -16,10 +16,12 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.tools.consistency.CliArgs.TargetHashDiffCommand;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
+import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.util.Arrays;
@@ -49,7 +51,10 @@ public class Main {
     RULE_KEY_PARSE_ERROR(10),
     RULE_KEY_TRAVERSAL_ERROR(11),
     RULE_KEY_MAX_DIFFERENCES_FOUND(12),
-    RULE_KEY_DIFFERENCES_DETECTED(13);
+    RULE_KEY_DIFFERENCES_DETECTED(13),
+    TARGET_HASHES_PARSE_ERROR(20),
+    TARGET_HASHES_MAX_DIFFERENCES_FOUND(21),
+    TARGET_HASHES_DIFFERENCES_DETECTED(22);
 
     public final int value;
 
@@ -107,8 +112,65 @@ public class Main {
         return handlePrintCommand((CliArgs.PrintCliCommand) parsedArgs.cmd);
       } else if (parsedArgs.cmd instanceof CliArgs.RuleKeyDiffCommand) {
         return handleRuleKeyDiffCommand((CliArgs.RuleKeyDiffCommand) parsedArgs.cmd);
+      } else if (parsedArgs.cmd instanceof CliArgs.TargetHashDiffCommand) {
+        return handleTargetHashDiffCommand((CliArgs.TargetHashDiffCommand) parsedArgs.cmd);
       } else {
         return ReturnCode.UNHANDLED_SUBCOMMAND;
+      }
+    }
+  }
+
+  private static ReturnCode handleTargetHashDiffCommand(TargetHashDiffCommand args) {
+    TargetHashFileParser parser = new TargetHashFileParser();
+    ParsedTargetsFile originalFile = null;
+    ParsedTargetsFile newFile = null;
+    ExecutorService service = Executors.newFixedThreadPool(4);
+
+    Future<ParsedTargetsFile> originalFileFuture =
+        service.submit(() -> parser.parseFile(args.originalLogFile));
+    Future<ParsedTargetsFile> newFileFuture =
+        service.submit(() -> parser.parseFile(args.newLogFile));
+
+    try {
+      originalFile = originalFileFuture.get();
+      newFile = newFileFuture.get();
+
+      DifferState differState = new DifferState(args.maxDifferences);
+      DiffPrinter diffPrinter = new DiffPrinter(System.out, args.useColor);
+      TargetsDiffer targetsDiffer = new TargetsDiffer(diffPrinter, differState);
+
+      targetsDiffer.printDiff(originalFile, newFile);
+
+      if (differState.getFoundDifferences() == 0) {
+        return ReturnCode.NO_ERROR;
+      } else {
+        return ReturnCode.TARGET_HASHES_DIFFERENCES_DETECTED;
+      }
+    } catch (ExecutionException e) {
+      if (originalFile == null) {
+        System.err.println(
+            String.format("Error parsing %s: %s", args.originalLogFile, e.getCause().getMessage()));
+      } else {
+        System.err.println(
+            String.format("Error parsing %s: %s", args.newLogFile, e.getCause().getMessage()));
+      }
+      return ReturnCode.TARGET_HASHES_PARSE_ERROR;
+    } catch (MaxDifferencesException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.TARGET_HASHES_MAX_DIFFERENCES_FOUND;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      return ReturnCode.THREADING_ERROR;
+    } finally {
+      System.err.println();
+      if (originalFile != null) {
+        System.err.println(
+            String.format(
+                "Parsed %s in %s ms", args.originalLogFile, originalFile.parseTime.toMillis()));
+      }
+      if (newFile != null) {
+        System.err.println(
+            String.format("Parsed %s in %s ms", args.newLogFile, newFile.parseTime.toMillis()));
       }
     }
   }

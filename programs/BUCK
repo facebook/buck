@@ -104,6 +104,7 @@ python_binary(
     visibility = [
         "//scripts/packages/debian:debian",
         "//test/com/facebook/buck/testutil/integration:integration-py",
+        "//tools/...",
     ],
     deps = [
         ":bucklib",
