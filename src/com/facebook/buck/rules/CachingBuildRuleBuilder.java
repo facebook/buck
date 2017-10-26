@@ -717,7 +717,8 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
       final CacheResult cacheResult, final ListeningExecutorService service) {
-    if (SupportsPipelining.isSupported(rule)) {
+    if (SupportsPipelining.isSupported(rule)
+        && ((SupportsPipelining<?>) rule).useRulePipelining()) {
       return pipelinesRunner.runPipelineStartingAt(
           buildRuleBuildContext, (SupportsPipelining<?>) rule, service);
     } else {

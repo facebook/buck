@@ -386,6 +386,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                           context.getEventSink(), invokingRule.toString());
                   try {
                     boolean success = javacTask.call();
+                    if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
+                      return 0;
+                    }
 
                     debugLogDiagnostics();
 
