@@ -39,7 +39,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
@@ -224,29 +223,24 @@ abstract class AbstractExecutionContext implements Closeable {
             newStderr,
             this.getConsole().getAnsi());
 
-    // This should replace (or otherwise retain) all of the closeable parts of the context.
     return ExecutionContext.builder()
         .from(this)
         .setConsole(console)
         .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
         .setClassLoaderCache(getClassLoaderCache().addRef())
-        .setAndroidDevicesHelper(Optional.empty())
         .setWorkerProcessPools(new ConcurrentHashMap<String, WorkerProcessPool>())
         .build();
   }
 
   @Override
   public void close() throws IOException {
-    // Using a Closer makes it easy to ensure that exceptions from one of the closeables don't
-    // cancel the others.
-    try (Closer closer = Closer.create()) {
-      closer.register(getClassLoaderCache()::close);
-      getAndroidDevicesHelper().ifPresent(closer::register);
-      // The closer closes in reverse order, so do the clear first.
-      closer.register(getWorkerProcessPools()::clear);
+    getClassLoaderCache().close();
+    try {
       for (WorkerProcessPool pool : getWorkerProcessPools().values()) {
-        closer.register(pool);
+        pool.close();
       }
+    } finally {
+      getWorkerProcessPools().clear();
     }
   }
 }

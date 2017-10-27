@@ -21,7 +21,6 @@ import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import java.io.Closeable;
 import java.io.IOException;
 import javax.annotation.Nullable;
 
@@ -33,7 +32,7 @@ import javax.annotation.Nullable;
  * AndroidDevice making it easy to provide different implementations in tests.
  */
 @VisibleForTesting
-public interface AndroidDevicesHelper extends Closeable {
+public interface AndroidDevicesHelper {
   /**
    * This is basically the same as AdbHelper.AdbCallable except that it takes an AndroidDevice
    * instead of an IDevice.
