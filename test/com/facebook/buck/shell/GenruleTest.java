@@ -32,14 +32,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -69,12 +67,12 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -326,13 +324,7 @@ public class GenruleTest {
         WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
             .setExe(shBinaryRule.getBuildTarget())
             .build(resolver);
-    workerTool
-        .getBuildOutputInitializer()
-        .setBuildOutputForTests(
-            workerTool.initializeFromDisk(
-                new FakeOnDiskBuildInfo()
-                    .putMetadata(
-                        BuildInfo.MetadataKey.RULE_KEY, Hashing.sha1().hashLong(0).toString())));
+    workerTool.getBuildOutputInitializer().setBuildOutputForTests(UUID.randomUUID());
 
     return GenruleBuilder.newGenruleBuilder(
             BuildTargetFactory.newInstance("//:genrule_with_worker"))

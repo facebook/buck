@@ -88,7 +88,7 @@ genrule(
 
 genrule(
   name = 'test6',
-  srcs = [],
+  srcs = ['test6.input'],
   out = 'output.txt',
   cmd = '$(worker :worker3) $OUT',
 )

@@ -115,16 +115,17 @@ public class WorkerToolRuleIntegrationTest {
   public void testPersistentWorkerToolReusesProcess() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test6");
-    BuildTarget target2 = workspace.newBuildTarget("//:test7");
+    String fullyQualifiedName = target1.getFullyQualifiedName();
 
-    workspace.runBuckdCommand("build", target1.getFullyQualifiedName()).assertSuccess();
-
-    workspace.runBuckdCommand("build", target2.getFullyQualifiedName()).assertSuccess();
-
+    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
     String contents =
-        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"))
-            + workspace.getFileContents(
-                BuildTargets.getGenPath(filesystem, target2, "%s/output.txt"));
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
+    workspace.replaceFileContents("test6.input", "1", "2");
+    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
+    contents +=
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
+
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(1));
   }
@@ -133,21 +134,19 @@ public class WorkerToolRuleIntegrationTest {
   public void testPersistentWorkerToolReusesProcessOnlyIfUnchanged() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test6");
-    BuildTarget target2 = workspace.newBuildTarget("//:test7");
+    String fullyQualifiedName = target1.getFullyQualifiedName();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckdCommand("build", target1.getFullyQualifiedName());
-    result.assertSuccess();
-
+    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
+    String contents =
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
+    workspace.replaceFileContents("test6.input", "1", "2");
     workspace.replaceFileContents("concurrent_tool.sh", "sleep 1", "sleep 2");
 
-    result = workspace.runBuckdCommand("build", target2.getFullyQualifiedName());
-    result.assertSuccess();
+    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
+    contents +=
+        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
 
-    String contents =
-        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"))
-            + workspace.getFileContents(
-                BuildTargets.getGenPath(filesystem, target2, "%s/output.txt"));
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(2));
   }
