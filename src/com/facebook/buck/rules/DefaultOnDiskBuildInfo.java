@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.FileNotFoundException;
@@ -123,8 +124,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public Optional<ImmutableMap<String, String>> getBuildMap(String key) {
-    Optional<String> value = getBuildValue(key);
+  public Optional<ImmutableMap<String, String>> getMap(String key) {
+    Optional<String> value = getValue(key);
     if (!value.isPresent()) {
       return Optional.empty();
     }
@@ -210,18 +211,35 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void writeOutputHash(FileHashCache fileHashCache) throws IOException {
+  public void writeOutputHashes(FileHashCache fileHashCache) throws IOException {
+    ImmutableSortedSet<Path> pathsForArtifact = getPathsForArtifact();
+
+    // Grab and record the output hashes in the build metadata so that cache hits avoid re-hashing
+    // file contents.  Since we use output hashes for input-based rule keys and for detecting
+    // non-determinism, we would spend a lot of time re-hashing output paths -- potentially in
+    // serialized in a single step. So, do the hashing here to distribute the workload across
+    // several threads and cache the results.
+    ImmutableSortedMap.Builder<String, String> outputHashes = ImmutableSortedMap.naturalOrder();
     Hasher hasher = Hashing.sha1().newHasher();
-    for (Path path : getPathsForArtifact()) {
-      hasher.putBytes(path.toString().getBytes(Charsets.UTF_8));
-      hasher.putBytes(fileHashCache.get(projectFilesystem.resolve(path)).asBytes());
+    for (Path path : pathsForArtifact) {
+      String pathString = path.toString();
+      HashCode fileHash = fileHashCache.get(projectFilesystem.resolve(path));
+      hasher.putBytes(pathString.getBytes(Charsets.UTF_8));
+      hasher.putBytes(fileHash.asBytes());
+      outputHashes.put(pathString, fileHash.toString());
     }
+
+    projectFilesystem.writeContentsToPath(
+        ObjectMappers.WRITER.writeValueAsString(outputHashes.build()),
+        metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES));
+
     projectFilesystem.writeContentsToPath(
         hasher.hash().toString(), metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH));
   }
 
   @Override
   public void validateArtifact(ZipFile artifact) {
+    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
     validateArtifactHasKey(artifact, BuildInfo.MetadataKey.RECORDED_PATHS);
     validateArtifactHasKey(artifact, BuildInfo.MetadataKey.OUTPUT_SIZE);
     validateArtifactHasKey(artifact, BuildInfo.MetadataKey.OUTPUT_HASH);

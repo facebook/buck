@@ -195,8 +195,7 @@ public class LocalBuilder implements Builder {
             actionGraphAndResolver.getResolver(),
             engineConfig.getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.map(RuleKeyCacheScope::getCache).orElse(new DefaultRuleKeyCache<>()),
-            ruleKeyLogger),
-        args.getBuckConfig().getFileHashCacheMode());
+            ruleKeyLogger));
   }
 
   public Build getBuild() {

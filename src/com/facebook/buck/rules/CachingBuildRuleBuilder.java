@@ -59,9 +59,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.ProjectFileHashCache;
-import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -75,7 +72,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -126,7 +122,6 @@ class CachingBuildRuleBuilder {
   private final RuleKeyFactories ruleKeyFactories;
   private final WeightedListeningExecutorService service;
   private final StepRunner stepRunner;
-  private final FileHashCacheMode fileHashCacheMode;
   private final RuleDepsCache ruleDeps;
   private final BuildRule rule;
   private final ExecutionContext executionContext;
@@ -170,7 +165,6 @@ class CachingBuildRuleBuilder {
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       CachingBuildEngine.DepFiles depFiles,
       final FileHashCache fileHashCache,
-      FileHashCacheMode fileHashCacheMode,
       long maxDepFileCacheEntries,
       CachingBuildEngine.MetadataStorage metadataStorage,
       SourcePathResolver pathResolver,
@@ -195,7 +189,6 @@ class CachingBuildRuleBuilder {
     this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
     this.depFiles = depFiles;
     this.fileHashCache = fileHashCache;
-    this.fileHashCacheMode = fileHashCacheMode;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.metadataStorage = metadataStorage;
     this.pathResolver = pathResolver;
@@ -455,25 +448,15 @@ class CachingBuildRuleBuilder {
     }
 
     // If this rule was fetched from cache, seed the file hash cache with the recorded
-    // output hashes from the build metadata.  Since outputs which have been changed have
-    // already been invalidated above, this is purely a best-effort optimization -- if the
-    // the output hashes weren't recorded in the cache we do nothing.
+    // output hashes from the build metadata.
     Optional<ImmutableMap<String, String>> hashes =
-        onDiskBuildInfo.getBuildMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
-
-    // We only seed after first verifying the recorded path hashes.  This prevents the
-    // optimization, but is useful to keep in place for a while to verify this optimization
-    // is causing issues.
-    if (hashes.isPresent()
-        && verifyRecordedPathHashes(
-            rule.getBuildTarget(), rule.getProjectFilesystem(), hashes.get())) {
-
-      // Seed the cache with the hashes.
-      for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
-        Path path = rule.getProjectFilesystem().getPath(ent.getKey());
-        HashCode hashCode = HashCode.fromString(ent.getValue());
-        fileHashCache.set(rule.getProjectFilesystem().resolve(path), hashCode);
-      }
+        onDiskBuildInfo.getMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
+    Preconditions.checkState(hashes.isPresent());
+    // Seed the cache with the hashes.
+    for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
+      Path path = rule.getProjectFilesystem().getPath(ent.getKey());
+      HashCode hashCode = HashCode.fromString(ent.getValue());
+      fileHashCache.set(rule.getProjectFilesystem().resolve(path), hashCode);
     }
 
     switch (success) {
@@ -599,27 +582,6 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    // Grab and record the output hashes in the build metadata so that cache hits avoid re-hashing
-    // file contents.  Since we use output hashes for input-based rule keys and for detecting
-    // non-determinism, we would spend a lot of time re-hashing output paths -- potentially in
-    // serialized in a single step. So, do the hashing here to distribute the workload across
-    // several threads and cache the results.
-    //
-    // Also, since hashing outputs can potentially be expensive, we avoid doing this for
-    // rules that are marked as uncacheable.  The rationale here is that they are likely not
-    // cached due to the sheer size which would be costly to hash or builtin non-determinism
-    // in the rule which somewhat defeats the purpose of logging the hash.
-    if (shouldUploadToCache(success, Preconditions.checkNotNull(outputSize.get()))) {
-      ImmutableSortedMap.Builder<String, String> outputHashes = ImmutableSortedMap.naturalOrder();
-      for (Path path : getBuildInfoRecorder().getOutputPaths()) {
-        outputHashes.put(
-            path.toString(),
-            fileHashCache.get(rule.getProjectFilesystem().resolve(path)).toString());
-      }
-      getBuildInfoRecorder()
-          .addBuildMetadata(BuildInfo.MetadataKey.RECORDED_PATH_HASHES, outputHashes.build());
-    }
-
     // Make sure the origin field is filled in.
     getBuildInfoRecorder()
         .addBuildMetadata(BuildInfo.MetadataKey.ORIGIN_BUILD_ID, buildId.toString());
@@ -644,7 +606,7 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    onDiskBuildInfo.writeOutputHash(fileHashCache);
+    onDiskBuildInfo.writeOutputHashes(fileHashCache);
   }
 
   private BuildInfoRecorder getBuildInfoRecorder() {
@@ -993,32 +955,6 @@ class CachingBuildRuleBuilder {
     }
     depsAreAvailable = true;
     return Futures.immediateFuture(Optional.empty());
-  }
-
-  private boolean verifyRecordedPathHashes(
-      BuildTarget target,
-      ProjectFilesystem filesystem,
-      ImmutableMap<String, String> recordedPathHashes)
-      throws IOException {
-
-    // Create a new `DefaultFileHashCache` to prevent caching from interfering with verification.
-    ProjectFileHashCache fileHashCache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
-
-    // Verify each path from the recorded path hashes entry matches the actual on-disk version.
-    for (Map.Entry<String, String> ent : recordedPathHashes.entrySet()) {
-      Path path = filesystem.getPath(ent.getKey());
-      HashCode cachedHashCode = HashCode.fromString(ent.getValue());
-      HashCode realHashCode = fileHashCache.get(path);
-      if (!realHashCode.equals(cachedHashCode)) {
-        LOG.debug(
-            "%s: recorded hash for \"%s\" doesn't match actual hash: %s (cached) != %s (real).",
-            target, path, cachedHashCode, realHashCode);
-        return false;
-      }
-    }
-
-    return true;
   }
 
   private void recordFailureAndCleanUp(Throwable failure) {

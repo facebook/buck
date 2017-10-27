@@ -132,8 +132,7 @@ public class FetchCommand extends BuildCommand {
                       localCachingBuildEngineDelegate.getFileHashCache(),
                       actionGraphAndResolver.getResolver(),
                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                      ruleKeyCacheScope.getCache()),
-                  params.getBuckConfig().getFileHashCacheMode());
+                      ruleKeyCacheScope.getCache()));
           Build build =
               new Build(
                   actionGraphAndResolver.getResolver(),

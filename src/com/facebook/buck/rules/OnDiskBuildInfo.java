@@ -48,7 +48,7 @@ interface OnDiskBuildInfo {
    * @return the map of strings associated with the specified key in the "build" metadata, if it
    *     exists.
    */
-  Optional<ImmutableMap<String, String>> getBuildMap(String key);
+  Optional<ImmutableMap<String, String>> getMap(String key);
 
   /**
    * @return Assuming the "artifact" value associated with the specified key is a valid sha1 hash,
@@ -75,7 +75,7 @@ interface OnDiskBuildInfo {
   /** Deletes both "artifact" and "build" metadata. */
   void deleteExistingMetadata() throws IOException;
 
-  void writeOutputHash(FileHashCache fileHashCache) throws IOException;
+  void writeOutputHashes(FileHashCache fileHashCache) throws IOException;
 
   void validateArtifact(ZipFile artifact);
 

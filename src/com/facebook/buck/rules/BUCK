@@ -10,7 +10,9 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
-    deps = ["//third-party/java/guava:guava"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
 )
 
 java_library(
@@ -21,7 +23,9 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
-    deps = ["//third-party/java/guava:guava"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
 )
 
 java_immutables_library(

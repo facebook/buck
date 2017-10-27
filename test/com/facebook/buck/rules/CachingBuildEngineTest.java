@@ -480,6 +480,8 @@ public class CachingBuildEngineTest {
           ImmutableMap.of(
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
@@ -566,6 +568,8 @@ public class CachingBuildEngineTest {
           ImmutableMap.of(
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
               "123",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
@@ -1598,10 +1602,9 @@ public class CachingBuildEngineTest {
       // Prepopulate the recorded paths metadata.
       Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
+      Path outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
       filesystem.writeContentsToPath(
-          ObjectMappers.WRITER.writeValueAsString(
-              ImmutableList.of(
-                  pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
+          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
           metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Prepopulate the cache with an artifact indexed by the input-based rule key.
@@ -1610,14 +1613,15 @@ public class CachingBuildEngineTest {
           artifact,
           ImmutableMap.of(
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
               ObjectMappers.WRITER.writeValueAsString(
-                  ImmutableList.of(
-                      pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
+                  ImmutableMap.of(outputPath.toString(), HashCode.fromInt(123).toString())),
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
               "123",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
               HashCode.fromInt(123).toString(),
-              pathResolver.getRelativePath(rule.getSourcePathToOutput()),
+              outputPath,
               "stuff"),
           ImmutableList.of(metadataDirectory));
       cache.store(
@@ -2784,6 +2788,9 @@ public class CachingBuildEngineTest {
               "stuff",
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              ObjectMappers.WRITER.writeValueAsString(
+                  ImmutableMap.of(output.toString(), HashCode.fromInt(123).toString())),
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
               "123",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
