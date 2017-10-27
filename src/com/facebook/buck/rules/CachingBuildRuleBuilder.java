@@ -1127,10 +1127,17 @@ class CachingBuildRuleBuilder {
         });
   }
 
-  private void invalidateInitializeFromDiskState() {
+  /**
+   * onOutputsWillChange() should be called once we've determined that the outputs are going to
+   * change from their previous state (e.g. because we're about to build locally or unzip an
+   * artifact from the cache).
+   */
+  private void onOutputsWillChange() throws IOException {
     if (rule instanceof InitializableFromDisk) {
       ((InitializableFromDisk<?>) rule).getBuildOutputInitializer().invalidate();
     }
+    onDiskBuildInfo.deleteExistingMetadata();
+    // TODO(cjhopman): Delete old outputs.
   }
 
   private ListenableFuture<CacheResult> fetch(
@@ -1184,7 +1191,7 @@ class CachingBuildRuleBuilder {
       return cacheResult;
     }
 
-    invalidateInitializeFromDiskState();
+    onOutputsWillChange();
 
     Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
@@ -1212,13 +1219,6 @@ class CachingBuildRuleBuilder {
       // directory.
       BuildInfoStore buildInfoStore =
           buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
-      buildInfoStore.deleteMetadata(rule.getBuildTarget());
-
-      // Always remove the on-disk metadata dir, as some pieces of metadata are still stored here
-      // (e.g. `DEP_FILE`, manifest).
-      Path metadataDir =
-          BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget(), rule.getProjectFilesystem());
-      rule.getProjectFilesystem().deleteRecursivelyIfExists(metadataDir);
 
       Unzip.extractZipFile(
           zipPath.toAbsolutePath(),
@@ -1723,8 +1723,11 @@ class CachingBuildRuleBuilder {
      */
     private void executeCommandsNowThatDepsAreBuilt()
         throws InterruptedException, StepFailedException {
-
-      invalidateInitializeFromDiskState();
+      try {
+        onOutputsWillChange();
+      } catch (IOException e) {
+        throw new BuckUncheckedExecutionException(e);
+      }
 
       LOG.debug("Building locally: %s", rule);
       // Attempt to get an approximation of how long it takes to actually run the command.
