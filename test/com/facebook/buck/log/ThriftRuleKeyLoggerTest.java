@@ -21,7 +21,6 @@ import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -47,17 +46,17 @@ public class ThriftRuleKeyLoggerTest {
 
   @Test
   public void testWritesToGivenFileAndCreatesDirectories() throws Exception {
-    String logPath = logDir.resolve("logs").resolve("out.log").toAbsolutePath().toString();
+    Path logPath = logDir.resolve("logs").resolve("out.log").toAbsolutePath();
     try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
       Assert.assertNotNull(logger);
       logger.write(
           new FullRuleKey(
               "rule_key", "name", "rule_type", ImmutableMap.of("key", Value.stringValue("value"))));
     }
-    Assert.assertTrue(new File(logPath).exists());
+    Assert.assertTrue(logPath.toFile().exists());
 
     ByteBuffer lengthBuf = ByteBuffer.allocate(4);
-    try (FileInputStream logFileStream = new FileInputStream(logPath)) {
+    try (FileInputStream logFileStream = new FileInputStream(logPath.toFile())) {
       Assert.assertTrue(logFileStream.available() > 4);
 
       logFileStream.read(lengthBuf.array());

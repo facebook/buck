@@ -101,7 +101,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -527,11 +526,11 @@ public class BuildCommand extends AbstractCommand {
    * Create a {@link ThriftRuleKeyLogger} depending on whether {@link BuildCommand#ruleKeyLogPath}
    * is set or not
    */
-  private Optional<ThriftRuleKeyLogger> createRuleKeyLogger() throws FileNotFoundException {
+  private Optional<ThriftRuleKeyLogger> createRuleKeyLogger() throws IOException {
     if (ruleKeyLogPath == null) {
       return Optional.empty();
     } else {
-      return Optional.of(ThriftRuleKeyLogger.create(ruleKeyLogPath));
+      return Optional.of(ThriftRuleKeyLogger.create(Paths.get(ruleKeyLogPath)));
     }
   }
 

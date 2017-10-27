@@ -82,7 +82,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
@@ -861,11 +860,11 @@ public class TargetsCommand extends AbstractCommand {
    * Create a {@link ThriftRuleKeyLogger} depending on whether {@link TargetsCommand#ruleKeyLogPath}
    * is set or not
    */
-  private Optional<ThriftRuleKeyLogger> createRuleKeyLogger() throws FileNotFoundException {
+  private Optional<ThriftRuleKeyLogger> createRuleKeyLogger() throws IOException {
     if (ruleKeyLogPath == null) {
       return Optional.empty();
     } else {
-      return Optional.of(ThriftRuleKeyLogger.create(ruleKeyLogPath));
+      return Optional.of(ThriftRuleKeyLogger.create(Paths.get(ruleKeyLogPath)));
     }
   }
 

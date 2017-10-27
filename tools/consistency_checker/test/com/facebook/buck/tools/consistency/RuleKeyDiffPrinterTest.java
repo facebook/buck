@@ -38,6 +38,7 @@ import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.function.Function;
 import org.junit.Assert;
@@ -84,7 +85,7 @@ public class RuleKeyDiffPrinterTest {
 
     this.sampleParsedFile =
         new ParsedRuleKeyFile(
-            "test.bin.out",
+            Paths.get("test.bin.out"),
             ruleKey1,
             ImmutableMap.of(
                 "fc3b3de4500fa30fd95007ff4bedcb9b4f92fecb", ruleKey1,

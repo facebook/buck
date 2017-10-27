@@ -23,6 +23,7 @@ import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -127,9 +128,9 @@ public class Main {
     ExecutorService service = Executors.newFixedThreadPool(4);
 
     Future<ParsedTargetsFile> originalFileFuture =
-        service.submit(() -> parser.parseFile(args.originalLogFile));
+        service.submit(() -> parser.parseFile(Paths.get(args.originalLogFile)));
     Future<ParsedTargetsFile> newFileFuture =
-        service.submit(() -> parser.parseFile(args.newLogFile));
+        service.submit(() -> parser.parseFile(Paths.get(args.newLogFile)));
 
     try {
       originalFile = originalFileFuture.get();
@@ -183,7 +184,7 @@ public class Main {
         new RuleKeyLogFilePrinter(System.out, reader, nameFilter, keysFilter, args.limit);
 
     try {
-      printer.printFile(args.logFile);
+      printer.printFile(Paths.get(args.logFile));
       return ReturnCode.NO_ERROR;
     } catch (ParseException e) {
       System.err.println(String.format("Error parsing %s: %s", args.logFile, e.getMessage()));
@@ -199,9 +200,10 @@ public class Main {
     ExecutorService service = Executors.newFixedThreadPool(4);
 
     Future<ParsedRuleKeyFile> originalFileFuture =
-        service.submit(() -> fileParser.parseFile(args.originalLogFile, args.targetName));
+        service.submit(
+            () -> fileParser.parseFile(Paths.get(args.originalLogFile), args.targetName));
     Future<ParsedRuleKeyFile> newFileFuture =
-        service.submit(() -> fileParser.parseFile(args.newLogFile, args.targetName));
+        service.submit(() -> fileParser.parseFile(Paths.get(args.newLogFile), args.targetName));
 
     try {
       originalFile = Optional.of(originalFileFuture.get());

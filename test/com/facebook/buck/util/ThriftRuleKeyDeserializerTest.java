@@ -44,8 +44,7 @@ public class ThriftRuleKeyDeserializerTest {
 
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "name1", "type1", ImmutableMap.of());
     FullRuleKey ruleKey2 = new FullRuleKey("key2", "name2", "type2", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger =
-        ThriftRuleKeyLogger.create(logPath.toAbsolutePath().toString())) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.toAbsolutePath())) {
       logger.write(ruleKey1);
       logger.write(ruleKey2);
     }

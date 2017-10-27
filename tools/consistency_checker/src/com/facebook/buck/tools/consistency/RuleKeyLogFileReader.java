@@ -20,6 +20,7 @@ import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.function.Predicate;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.TException;
@@ -51,9 +52,9 @@ public class RuleKeyLogFileReader {
    *     deserialization should halt, or false if it should proceed
    * @throws ParseException There was an error reading data, or invalid data was found in the file
    */
-  public void readFile(String filename, Predicate<FullRuleKey> visitor) throws ParseException {
+  public void readFile(Path filename, Predicate<FullRuleKey> visitor) throws ParseException {
     ByteBuffer lengthBuf = ByteBuffer.allocate(4);
-    try (FileInputStream fileInputStream = new FileInputStream(filename)) {
+    try (FileInputStream fileInputStream = new FileInputStream(filename.toFile())) {
       while (fileInputStream.available() >= 4) {
         fileInputStream.read(lengthBuf.array());
         int length = lengthBuf.getInt();

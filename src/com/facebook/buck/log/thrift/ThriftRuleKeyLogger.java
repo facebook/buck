@@ -19,12 +19,12 @@ package com.facebook.buck.log.thrift;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TCompactProtocol;
@@ -94,10 +94,9 @@ public class ThriftRuleKeyLogger implements AutoCloseable {
    * @throws FileNotFoundException Thrown if the subdirectory containing the filename could not be
    *     created
    */
-  public static ThriftRuleKeyLogger create(String filename) throws FileNotFoundException {
-    File path = new File(filename);
-    path.getParentFile().mkdirs();
-    OutputStream writer = new BufferedOutputStream(new FileOutputStream(path));
+  public static ThriftRuleKeyLogger create(Path filename) throws IOException {
+    Files.createDirectories(filename.getParent());
+    OutputStream writer = new BufferedOutputStream(Files.newOutputStream(filename));
     return new ThriftRuleKeyLogger(writer);
   }
 }

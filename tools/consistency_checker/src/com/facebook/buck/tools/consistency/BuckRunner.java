@@ -18,11 +18,11 @@ package com.facebook.buck.tools.consistency;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 public class BuckRunner {
 
   private final List<String> fullCommand;
-  private final Optional<String> repositoryPath;
+  private final Optional<Path> repositoryPath;
   private final boolean randomizeEnvironment;
   private Logger LOG = Logger.getLogger(BuckRunner.class.toString());
 
@@ -51,7 +51,7 @@ public class BuckRunner {
       String buckSubcommand,
       List<String> extraBuckOptions,
       List<String> buckSubCommandOptions,
-      Optional<String> repositoryPath,
+      Optional<Path> repositoryPath,
       boolean randomizeEnvironment) {
     this.repositoryPath = repositoryPath;
     this.randomizeEnvironment = randomizeEnvironment;
@@ -77,7 +77,7 @@ public class BuckRunner {
       String buckSubcommand,
       List<String> extraBuckOptions,
       List<String> buckSubCommandOptions,
-      Optional<String> repositoryPath) {
+      Optional<Path> repositoryPath) {
     this("buck", buckSubcommand, extraBuckOptions, buckSubCommandOptions, repositoryPath, true);
   }
 
@@ -93,7 +93,7 @@ public class BuckRunner {
   public int run(OutputStream outputStream) throws IOException, InterruptedException {
     ProcessBuilder builder = new ProcessBuilder(fullCommand).redirectError(Redirect.INHERIT);
     if (repositoryPath.isPresent()) {
-      builder.directory(new File(repositoryPath.get()));
+      builder.directory(repositoryPath.get().toFile());
     }
     builder.environment().put("NO_BUCKD", "1");
     if (randomizeEnvironment) {

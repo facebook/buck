@@ -72,7 +72,7 @@ public class BuckRunnerTest {
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
             ImmutableList.of("//:main", "//:test"),
-            Optional.of(temporaryFolder.getRoot().toString()),
+            Optional.of(temporaryFolder.getRoot()),
             false);
     int ret = runner.run(stream);
 
@@ -99,7 +99,7 @@ public class BuckRunnerTest {
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
             ImmutableList.of("//:main", "//:test"),
-            Optional.of(temporaryFolder.getRoot().toString()),
+            Optional.of(temporaryFolder.getRoot()),
             false);
     int ret = runner.run(stream);
 

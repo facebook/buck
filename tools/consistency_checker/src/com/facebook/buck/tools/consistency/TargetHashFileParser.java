@@ -23,7 +23,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 
 /** Parses the output of `buck targets --show-target-hash` into something usable */
@@ -31,11 +30,11 @@ public class TargetHashFileParser {
 
   /** Simple information from parsing the targets file */
   static class ParsedTargetsFile {
-    public final String filename;
+    public final Path filename;
     public final BiMap<String, String> targetsToHash;
     public final Duration parseTime;
 
-    ParsedTargetsFile(String filename, BiMap<String, String> targetsToHash, Duration parseTime) {
+    ParsedTargetsFile(Path filename, BiMap<String, String> targetsToHash, Duration parseTime) {
       this.filename = filename;
       this.targetsToHash = targetsToHash;
       this.parseTime = parseTime;
@@ -50,11 +49,10 @@ public class TargetHashFileParser {
    * @throws ParseException If the file could not be read, is malformed, or has duplicate
    *     information within it
    */
-  public ParsedTargetsFile parseFile(String filename) throws ParseException {
+  public ParsedTargetsFile parseFile(Path filename) throws ParseException {
     long startNanos = System.nanoTime();
-    Path file = Paths.get(filename);
-    try (BufferedReader fileReader = Files.newBufferedReader(file)) {
-      int expectedSize = Math.toIntExact(Files.size(file) / 150);
+    try (BufferedReader fileReader = Files.newBufferedReader(filename)) {
+      int expectedSize = Math.toIntExact(Files.size(filename) / 150);
       HashBiMap<String, String> targetsToHash = HashBiMap.create(expectedSize);
       while (fileReader.ready()) {
         String line = fileReader.readLine();

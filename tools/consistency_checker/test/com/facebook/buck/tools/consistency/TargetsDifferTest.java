@@ -22,6 +22,7 @@ import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFil
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.Assert;
@@ -63,9 +64,11 @@ public class TargetsDifferTest {
             "//:target6", "43375a4d4b961d4ddc40e49b40d67ad368cd30ab",
             "//:target7", "686e426f0440da68d9ccd544427e415d0953113f");
     ParsedTargetsFile originalFile =
-        new ParsedTargetsFile("file1", HashBiMap.create(originalFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file1"), HashBiMap.create(originalFileContents), Duration.ofNanos(1));
     ParsedTargetsFile newFile =
-        new ParsedTargetsFile("file2", HashBiMap.create(newFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file2"), HashBiMap.create(newFileContents), Duration.ofNanos(1));
 
     DifferState differState = new DifferState(DifferState.INFINITE_DIFFERENCES);
     TargetsDiffer targetsDiffer = new TargetsDiffer(diffPrinter, differState);
@@ -99,9 +102,11 @@ public class TargetsDifferTest {
             "//:target4", "2e943f1a14f1190868391ae0e4d660d01457271b",
             "//:target5", "d48528295847c0bb6856e6f62c2872f9d8e44b9d");
     ParsedTargetsFile originalFile =
-        new ParsedTargetsFile("file1", HashBiMap.create(originalFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file1"), HashBiMap.create(originalFileContents), Duration.ofNanos(1));
     ParsedTargetsFile newFile =
-        new ParsedTargetsFile("file2", HashBiMap.create(newFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file2"), HashBiMap.create(newFileContents), Duration.ofNanos(1));
 
     DifferState differState = new DifferState(2);
     TargetsDiffer targetsDiffer = new TargetsDiffer(diffPrinter, differState);
@@ -126,9 +131,11 @@ public class TargetsDifferTest {
             "//:target4", "2e943f1a14f1190868391ae0e4d660d01457271b",
             "//:target5", "d48528295847c0bb6856e6f62c2872f9d8e44b9d");
     ParsedTargetsFile originalFile =
-        new ParsedTargetsFile("file1", HashBiMap.create(originalFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file1"), HashBiMap.create(originalFileContents), Duration.ofNanos(1));
     ParsedTargetsFile newFile =
-        new ParsedTargetsFile("file2", HashBiMap.create(newFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file2"), HashBiMap.create(newFileContents), Duration.ofNanos(1));
 
     DifferState differState = new DifferState(2);
     TargetsDiffer targetsDiffer = new TargetsDiffer(diffPrinter, differState);
@@ -152,9 +159,11 @@ public class TargetsDifferTest {
             "//:target2", "b1b4c9f27ee6624eff429517860287b0560cf43d",
             "//:target3", "d1031ce5571dc3a241223560a95d0f3bbb6fbd1d");
     ParsedTargetsFile originalFile =
-        new ParsedTargetsFile("file1", HashBiMap.create(originalFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file1"), HashBiMap.create(originalFileContents), Duration.ofNanos(1));
     ParsedTargetsFile newFile =
-        new ParsedTargetsFile("file2", HashBiMap.create(newFileContents), Duration.ofNanos(1));
+        new ParsedTargetsFile(
+            Paths.get("file2"), HashBiMap.create(newFileContents), Duration.ofNanos(1));
 
     DifferState differState = new DifferState(2);
     TargetsDiffer targetsDiffer = new TargetsDiffer(diffPrinter, differState);

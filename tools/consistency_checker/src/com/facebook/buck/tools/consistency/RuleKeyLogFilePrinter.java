@@ -19,6 +19,7 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -61,7 +62,7 @@ public class RuleKeyLogFilePrinter {
    * @param filename The file containing length prefixed thrift compact serialized rule keys
    * @throws ParseException The file could not be read or parsed
    */
-  public void printFile(String filename) throws ParseException {
+  public void printFile(Path filename) throws ParseException {
     final int[] linesVisited = {0};
     Consumer<FullRuleKey> filterLambda = ruleKey -> printRuleKey(linesVisited, ruleKey);
     if (namesFilter.isPresent()) {

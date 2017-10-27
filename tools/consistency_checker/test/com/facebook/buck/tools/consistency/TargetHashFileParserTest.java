@@ -19,8 +19,10 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
-import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,25 +35,25 @@ public class TargetHashFileParserTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private String logPath;
+  private Path logPath;
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath().toString();
+    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath();
   }
 
   private void writeLines(String... lines) throws IOException {
-    try (FileWriter writer = new FileWriter(logPath)) {
+    try (BufferedWriter writer = Files.newBufferedWriter(logPath)) {
       for (String line : lines) {
         writer.write(line);
-        writer.write('\n');
+        writer.newLine();
       }
     }
   }
 
   @Test
   public void failsIfFileDoesNotExist() throws IOException, ParseException {
-    String invalidLogPath = logPath + ".invalid_path";
+    Path invalidLogPath = logPath.resolveSibling("invalid_path");
     expectedException.expectMessage(String.format("Error reading file at %s", invalidLogPath));
     expectedException.expect(ParseException.class);
     TargetHashFileParser parser = new TargetHashFileParser();

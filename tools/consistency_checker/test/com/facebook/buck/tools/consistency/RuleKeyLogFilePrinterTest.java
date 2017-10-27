@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,14 +39,14 @@ public class RuleKeyLogFilePrinterTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private String logPath;
+  private Path logPath;
   private RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
   private List<FullRuleKey> ruleKeys = new ArrayList<>();
   private TestPrintStream stream = TestPrintStream.create();
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath().toString();
+    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath();
 
     ruleKeys.add(new FullRuleKey("hash1", "//this/is/a:test", "rule_type", ImmutableMap.of()));
     ruleKeys.add(

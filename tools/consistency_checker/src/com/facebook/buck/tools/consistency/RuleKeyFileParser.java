@@ -19,7 +19,7 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,13 +50,13 @@ public class RuleKeyFileParser {
   /** A parsed rule key file with details of the parse, and all rules contained in the file. */
   static class ParsedRuleKeyFile {
 
-    public final String filename;
+    public final Path filename;
     public final RuleKeyNode rootNode;
     public final Map<String, RuleKeyNode> rules;
     public final Duration parseTime;
 
     public ParsedRuleKeyFile(
-        String filename, RuleKeyNode rootNode, Map<String, RuleKeyNode> rules, Duration parseTime) {
+        Path filename, RuleKeyNode rootNode, Map<String, RuleKeyNode> rules, Duration parseTime) {
       this.filename = filename;
       this.rootNode = rootNode;
       this.rules = rules;
@@ -77,11 +77,11 @@ public class RuleKeyFileParser {
    * @throws ParseException If an IO or serialization error occurs, or if the target could not be
    *     found in the file
    */
-  public ParsedRuleKeyFile parseFile(String filename, String targetName) throws ParseException {
+  public ParsedRuleKeyFile parseFile(Path filename, String targetName) throws ParseException {
     long startNanos = System.nanoTime();
     int initialSize;
     try {
-      initialSize = Math.toIntExact(new File(filename).length() / THRIFT_STRUCT_SIZE);
+      initialSize = Math.toIntExact(filename.toFile().length() / THRIFT_STRUCT_SIZE);
     } catch (ArithmeticException e) {
       throw new ParseException(
           e, "File size is too large (>2.1 billion objects would be deserialized");

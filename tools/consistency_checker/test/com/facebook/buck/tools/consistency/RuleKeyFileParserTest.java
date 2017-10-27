@@ -23,9 +23,9 @@ import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.collect.ImmutableMap;
 import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,16 +38,16 @@ public class RuleKeyFileParserTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private String logPath;
+  private Path logPath;
   private RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath().toString();
+    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath();
   }
 
   @Test
-  public void parsesFileProperly() throws FileNotFoundException, ParseException {
+  public void parsesFileProperly() throws IOException, ParseException {
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
     FullRuleKey ruleKey2 = new FullRuleKey("key2", "//:name1", "other_type", ImmutableMap.of());
     FullRuleKey ruleKey3 = new FullRuleKey("key3", "//:name2", "OTHER", ImmutableMap.of());
@@ -70,7 +70,7 @@ public class RuleKeyFileParserTest {
   }
 
   @Test
-  public void throwsIfTargetNotFound() throws FileNotFoundException, ParseException {
+  public void throwsIfTargetNotFound() throws IOException, ParseException {
     expectedException.expectMessage("Could not find //:invalid_name in ");
     expectedException.expect(ParseException.class);
 
@@ -93,7 +93,7 @@ public class RuleKeyFileParserTest {
       logger.write(ruleKey1);
     }
     try (DataOutputStream outputStream =
-        new DataOutputStream(new FileOutputStream(logPath, true))) {
+        new DataOutputStream(new FileOutputStream(logPath.toFile(), true))) {
       outputStream.writeInt(1234);
       outputStream.writeInt(0); // Add an extra 4 bytes
       outputStream.flush();
@@ -113,7 +113,7 @@ public class RuleKeyFileParserTest {
       logger.write(ruleKey1);
     }
     try (DataOutputStream outputStream =
-        new DataOutputStream(new FileOutputStream(logPath, true))) {
+        new DataOutputStream(new FileOutputStream(logPath.toFile(), true))) {
       outputStream.writeInt(8);
       outputStream.writeInt(1234);
       outputStream.writeInt(2345);
