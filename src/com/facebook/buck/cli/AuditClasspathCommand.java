@@ -152,11 +152,12 @@ public class AuditClasspathCommand extends AbstractCommand {
   @VisibleForTesting
   int printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
     try {
-      Dot.getInstance(targetGraph, "target_graph")
+      Dot.builder(targetGraph, "target_graph")
           .setNodeToName(
               targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"")
           .setNodeToTypeName(
               targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
+          .build()
           .writeOutput(params.getConsole().getStdOut());
     } catch (IOException e) {
       return 1;

@@ -233,12 +233,13 @@ public class QueryCommand extends AbstractCommand {
   private void printDotOutput(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws IOException, QueryException {
-    Dot.getInstance(env.getTargetGraph(), "result_graph")
-        .setNodesToFilter(env.getNodesFromQueryTargets(queryResult))
+    Dot.builder(env.getTargetGraph(), "result_graph")
+        .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
         .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
         .setNodeToTypeName(
             targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
         .setBfsSorted(shouldGenerateBFSOutput())
+        .build()
         .writeOutput(params.getConsole().getStdOut());
   }
 

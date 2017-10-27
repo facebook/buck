@@ -17,7 +17,7 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,10 +29,10 @@ public class Dot<T> {
 
   private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
-  private Function<T, String> nodeToName;
-  private Function<T, String> nodeToTypeName;
-  private boolean bfsSorted;
-  private Optional<ImmutableSet<T>> nodesToFilter;
+  private final Function<T, String> nodeToName;
+  private final Function<T, String> nodeToTypeName;
+  private final boolean bfsSorted;
+  private final Predicate<T> shouldContainNode;
   private static final Map<String, String> typeColors;
 
   static {
@@ -49,37 +49,65 @@ public class Dot<T> {
         }.build();
   }
 
-  public static <T> Dot<T> getInstance(DirectedAcyclicGraph<T> graph, String graphName) {
-    return new Dot<>(graph, graphName);
+  public static <T> Builder<T> builder(DirectedAcyclicGraph<T> graph, String graphName) {
+    return new Builder<>(graph, graphName);
   }
 
-  private Dot(DirectedAcyclicGraph<T> graph, String graphName) {
-    this.graph = graph;
-    this.graphName = graphName;
-    nodeToName = Object::toString;
-    nodeToTypeName = Object::toString;
-    bfsSorted = false;
-    nodesToFilter = Optional.absent();
+  /**
+   * Builder class for Dot output
+   *
+   * @param <T>
+   */
+  public static class Builder<T> {
+
+    private final DirectedAcyclicGraph<T> graph;
+    private final String graphName;
+    private Function<T, String> nodeToName;
+    private Function<T, String> nodeToTypeName;
+    private boolean bfsSorted;
+    private Predicate<T> shouldContainNode;
+
+    private Builder(DirectedAcyclicGraph<T> graph, String graphName) {
+      this.graph = graph;
+      this.graphName = graphName;
+      nodeToName = Object::toString;
+      nodeToTypeName = Object::toString;
+      bfsSorted = false;
+      shouldContainNode = node -> true;
+    }
+
+    public Builder<T> setNodeToName(Function<T, String> func) {
+      nodeToName = func;
+      return this;
+    }
+
+    public Builder<T> setNodeToTypeName(Function<T, String> func) {
+      nodeToTypeName = func;
+      return this;
+    }
+
+    public Builder<T> setBfsSorted(boolean sorted) {
+      bfsSorted = sorted;
+      return this;
+    }
+
+    public Builder<T> setNodesToFilter(Predicate<T> pred) {
+      shouldContainNode = pred;
+      return this;
+    }
+
+    public Dot<T> build() {
+      return new Dot<>(this);
+    }
   }
 
-  public Dot<T> setNodeToName(Function<T, String> func) {
-    nodeToName = func;
-    return this;
-  }
-
-  public Dot<T> setNodeToTypeName(Function<T, String> func) {
-    nodeToTypeName = func;
-    return this;
-  }
-
-  public Dot<T> setBfsSorted(boolean sorted) {
-    bfsSorted = sorted;
-    return this;
-  }
-
-  public Dot<T> setNodesToFilter(ImmutableSet<T> toFilter) {
-    nodesToFilter = Optional.of(toFilter);
-    return this;
+  private Dot(Builder<T> builder) {
+    this.graph = builder.graph;
+    this.graphName = builder.graphName;
+    this.nodeToName = builder.nodeToName;
+    this.nodeToTypeName = builder.nodeToTypeName;
+    this.bfsSorted = builder.bfsSorted;
+    this.shouldContainNode = builder.shouldContainNode;
   }
 
   /** Writes out the graph in dot format to the given output */
@@ -94,15 +122,13 @@ public class Dot<T> {
 
           @Override
           public Iterable<T> visit(T node) {
-            if (nodesToFilter.isPresent() && !nodesToFilter.get().contains(node)) {
+            if (!shouldContainNode.apply(node)) {
               return ImmutableSet.<T>of();
             }
             builder.add(printNode(node, nodeToName, nodeToTypeName));
             ImmutableSortedSet<T> nodes =
                 ImmutableSortedSet.copyOf(
-                    Sets.filter(
-                        graph.getOutgoingNodesFor(node),
-                        n -> !nodesToFilter.isPresent() || nodesToFilter.get().contains(n)));
+                    Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode));
             for (T sink : nodes) {
               builder.add(printEdge(node, sink, nodeToName));
             }
@@ -116,14 +142,11 @@ public class Dot<T> {
 
         @Override
         public void visit(T node) {
-          if (nodesToFilter.isPresent() && !nodesToFilter.get().contains(node)) {
+          if (!shouldContainNode.apply(node)) {
             return;
           }
           sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName));
-          for (T sink :
-              Sets.filter(
-                  graph.getOutgoingNodesFor(node),
-                  n -> !nodesToFilter.isPresent() || nodesToFilter.get().contains(n))) {
+          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode)) {
             sortedSetBuilder.add(printEdge(node, sink, nodeToName));
           }
         }

@@ -42,9 +42,10 @@ public class DotTest {
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot.getInstance(graph, "the_graph")
+    Dot.builder(graph, "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(Functions.identity())
+        .build()
         .writeOutput(output);
 
     String dotGraph = output.toString();
@@ -89,10 +90,11 @@ public class DotTest {
         ImmutableSet.<String>builder().add("A").add("B").add("C").add("D").build();
 
     StringBuilder output = new StringBuilder();
-    Dot.getInstance(graph, "the_graph")
+    Dot.builder(graph, "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(Functions.identity())
-        .setNodesToFilter(filter)
+        .setNodesToFilter(filter::contains)
+        .build()
         .writeOutput(output);
 
     String dotGraph = output.toString();
@@ -118,9 +120,10 @@ public class DotTest {
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot.getInstance(graph, "the_graph")
+    Dot.builder(graph, "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
+        .build()
         .writeOutput(output);
 
     String dotGraph = output.toString();
@@ -148,9 +151,10 @@ public class DotTest {
 
     StringBuilder output = new StringBuilder();
 
-    Dot.getInstance(new DirectedAcyclicGraph<>(mutableGraph), "the_graph")
+    Dot.builder(new DirectedAcyclicGraph<>(mutableGraph), "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
+        .build()
         .writeOutput(output);
 
     String dotGraph = output.toString();
