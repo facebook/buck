@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.hash.HashCode;
@@ -89,7 +88,7 @@ public class DefaultWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public UUID initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public UUID initializeFromDisk() throws IOException {
     return UUID.randomUUID();
   }
 

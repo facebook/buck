@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -368,7 +367,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public String initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public String initializeFromDisk() {
     String rDotJavaPackageFromFile =
         getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
     if (rDotJavaPackageArgument != null

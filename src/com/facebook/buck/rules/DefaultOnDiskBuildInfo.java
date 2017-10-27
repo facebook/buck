@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -151,12 +150,6 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     } catch (IllegalArgumentException ignored) {
       return Optional.empty();
     }
-  }
-
-  @Override
-  public List<String> getOutputFileContentsByLine(Path pathRelativeToProjectRoot)
-      throws IOException {
-    return projectFilesystem.readLines(pathRelativeToProjectRoot);
   }
 
   @Override

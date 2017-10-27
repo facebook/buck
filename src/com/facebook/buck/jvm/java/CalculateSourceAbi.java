@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -99,7 +98,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
   }
 
   @Override
-  public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public Object initializeFromDisk() throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     outputJarContents.load();
     return new Object();

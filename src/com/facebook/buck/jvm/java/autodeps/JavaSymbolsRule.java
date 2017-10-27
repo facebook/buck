@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -79,7 +78,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
   }
 
   @Override
-  public Symbols initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public Symbols initializeFromDisk() throws IOException {
     List<String> lines = getProjectFilesystem().readLines(outputPath);
     Preconditions.checkArgument(lines.size() == 1, "Should be one line of JSON: %s", lines);
     return ObjectMappers.readValue(lines.get(0), Symbols.class);

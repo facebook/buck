@@ -41,7 +41,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -147,7 +146,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
         preDex.getBuildOutputInitializer();
-    outputInitializer.initializeFromDisk(new FakeOnDiskBuildInfo());
+    outputInitializer.initializeFromDisk();
     assertEquals(250, outputInitializer.getBuildOutput().weightEstimate);
   }
 

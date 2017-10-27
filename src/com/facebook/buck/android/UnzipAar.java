@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -147,7 +146,8 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             if (dirDoesNotExistOrIsEmpty) {
               filesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
             } else {
-              // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
+              // Glob all of the contents from classes.jar and the entries in libs/ into a single
+              // JAR.
               ImmutableSortedSet.Builder<Path> entriesToJarBuilder =
                   ImmutableSortedSet.naturalOrder();
               entriesToJarBuilder.add(classesJar);
@@ -187,7 +187,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public BuildOutput initializeFromDisk() throws IOException {
     String rDotJavaPackageFromFile =
         getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
     return new BuildOutput(rDotJavaPackageFromFile);

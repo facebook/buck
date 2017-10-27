@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -327,7 +326,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   /** Instructs this rule to report the ABI it has on disk as its current ABI. */
   @Override
-  public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public JavaLibrary.Data initializeFromDisk() throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     outputJarContentsSupplier.load();
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());

@@ -3881,7 +3881,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+    public Object initializeFromDisk() {
       return new Object();
     }
 

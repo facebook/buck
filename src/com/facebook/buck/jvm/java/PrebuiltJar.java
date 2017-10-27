@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -156,7 +155,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public JavaLibrary.Data initializeFromDisk() throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     binaryJarContentsSupplier.load();
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());

@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -143,8 +142,7 @@ public class AndroidResourceTest {
     projectFilesystem.writeContentsToPath(
         "com.example.android\n",
         resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
-    FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
-    androidResource.initializeFromDisk(onDiskBuildInfo);
+    androidResource.initializeFromDisk();
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
   }
 
@@ -177,8 +175,7 @@ public class AndroidResourceTest {
             /* hasWhitelistedStrings */ false);
     projectFilesystem.writeContentsToPath(
         "com.ex.pkg\n", resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
-    FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
-    androidResource.initializeFromDisk(onDiskBuildInfo);
+    androidResource.initializeFromDisk();
     assertEquals("com.ex.pkg", androidResource.getRDotJavaPackage());
   }
 

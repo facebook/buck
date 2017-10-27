@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -278,7 +277,7 @@ public class ModernBuildRule<T extends Buildable>
   }
 
   @Override
-  public final DataHolder initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public final DataHolder initializeFromDisk() throws IOException {
     // TODO(cjhopman): implement
     return new DataHolder();
   }
