@@ -17,6 +17,7 @@
 package com.facebook.buck.tools.consistency;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.kohsuke.args4j.Argument;
@@ -163,6 +164,59 @@ public class CliArgs extends CliCommand {
     int maxDifferences = DifferState.INFINITE_DIFFERENCES;
   }
 
+  /** Arguments to handle running stress runs comparing target hash outputs from buck targets */
+  public static class StressTargetHashRunCommand extends CliCommand {
+    public StressTargetHashRunCommand() {
+      super(
+          "Runs buck targets several times, and checks to see if the target hashes change at all");
+    }
+
+    @Option(name = "--parallelism", usage = "The number of buck targets commands to run at once")
+    int parallelism = 2;
+
+    @Option(name = "--runs", usage = "The number of runs to do in total")
+    int runCount = 5;
+
+    @Option(
+      name = "--buck-args",
+      usage = "A space delimited set of arguments to send to buck when invoked"
+    )
+    List<String> buckArgs = new ArrayList<>();
+
+    @Option(
+      name = "--max-differences",
+      usage = "After this number of differences, stop doing comparisons of the target graphs"
+    )
+    int maxDifferences = DifferState.INFINITE_DIFFERENCES;
+
+    @Option(
+      name = "--color",
+      handler = ExplicitBooleanOptionHandler.class,
+      usage = "Color the output"
+    )
+    boolean useColor = true;
+
+    @Option(
+      name = "--keep-temp-files",
+      handler = ExplicitBooleanOptionHandler.class,
+      usage = "If set, do not delete temp files after completion"
+    )
+    boolean keepTempFiles = false;
+
+    @Option(
+      name = "--repository-directory",
+      usage = "If given, run buck commands from this directory"
+    )
+    String repositoryDirectory = null;
+
+    @Argument(
+      metaVar = "target names",
+      usage = "The targets that should have their hash (and all dependencies' hashes) checked",
+      required = true
+    )
+    List<String> targets;
+  }
+
   @Argument(
     handler = SubCommandHandler.class,
     required = true,
@@ -172,7 +226,8 @@ public class CliArgs extends CliCommand {
   @SubCommands({
     @SubCommand(name = "print", impl = PrintCliCommand.class),
     @SubCommand(name = "rule_key_diff", impl = RuleKeyDiffCommand.class),
-    @SubCommand(name = "target_hash_diff", impl = TargetHashDiffCommand.class)
+    @SubCommand(name = "target_hash_diff", impl = TargetHashDiffCommand.class),
+    @SubCommand(name = "stress_target_hash_run", impl = StressTargetHashRunCommand.class)
   })
   CliCommand cmd;
 
@@ -206,6 +261,9 @@ public class CliArgs extends CliCommand {
           return true;
         case ("rule_key_diff"):
           printUsage(RuleKeyDiffCommand.class, out);
+          return true;
+        case ("stress_target_hash_run"):
+          printUsage(StressTargetHashRunCommand.class, out);
           return true;
         default:
           break;

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.tools.consistency.BuckStressRunner.StressorException;
+import com.facebook.buck.tools.consistency.CliArgs.StressTargetHashRunCommand;
 import com.facebook.buck.tools.consistency.CliArgs.TargetHashDiffCommand;
 import com.facebook.buck.tools.consistency.DifferState.DiffResult;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
@@ -23,12 +25,19 @@ import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
+import com.facebook.buck.tools.consistency.TargetsStressRunner.TargetsStressRunException;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -56,7 +65,12 @@ public class Main {
     RULE_KEY_DIFFERENCES_DETECTED(13),
     TARGET_HASHES_PARSE_ERROR(20),
     TARGET_HASHES_MAX_DIFFERENCES_FOUND(21),
-    TARGET_HASHES_DIFFERENCES_DETECTED(22);
+    TARGET_HASHES_DIFFERENCES_DETECTED(22),
+    TARGET_STRESS_DIR_CREATE_FAILED(30),
+    TARGET_STRESS_PARSE_EXCEPTION(31),
+    TARGET_STRESS_MAX_DIFFERENCES_FOUND(32),
+    TARGET_STRESS_ERROR_RUNNING_STRESSOR(33),
+    TARGET_STRESS_DIFFERENCES_FOUND(34);
 
     public final int value;
 
@@ -116,8 +130,74 @@ public class Main {
         return handleRuleKeyDiffCommand((CliArgs.RuleKeyDiffCommand) parsedArgs.cmd);
       } else if (parsedArgs.cmd instanceof CliArgs.TargetHashDiffCommand) {
         return handleTargetHashDiffCommand((CliArgs.TargetHashDiffCommand) parsedArgs.cmd);
+      } else if (parsedArgs.cmd instanceof CliArgs.StressTargetHashRunCommand) {
+        return handleStresstargetHashRunCommand(
+            (CliArgs.StressTargetHashRunCommand) parsedArgs.cmd);
       } else {
         return ReturnCode.UNHANDLED_SUBCOMMAND;
+      }
+    }
+  }
+
+  private static ReturnCode handleStresstargetHashRunCommand(StressTargetHashRunCommand args) {
+    Callable<TargetsDiffer> differFactory =
+        () -> {
+          DifferState differState = new DifferState(args.maxDifferences);
+          DiffPrinter diffPrinter = new DiffPrinter(System.out, args.useColor);
+          TargetsDiffer differ = new TargetsDiffer(diffPrinter, differState);
+          return differ;
+        };
+
+    BuckStressRunner stressRunner = new BuckStressRunner();
+    TargetsStressRunner targetsStressRunner =
+        new TargetsStressRunner(differFactory, "buck", args.buckArgs, args.targets);
+
+    Path tempDirectory = null;
+    try {
+      tempDirectory = Files.createTempDirectory("targets-stress-run");
+    } catch (IOException e) {
+      System.err.println(
+          String.format("Could not create temporary directory for stress run: %s", e.getMessage()));
+      return ReturnCode.TARGET_STRESS_DIR_CREATE_FAILED;
+    }
+    try {
+      Path targetsFile = tempDirectory.resolve("targets-list");
+      targetsStressRunner.writeTargetsListToFile(targetsFile);
+      List<BuckRunner> buckCommands =
+          targetsStressRunner.getBuckRunners(
+              args.runCount,
+              targetsFile,
+              Optional.ofNullable(args.repositoryDirectory).map(Paths::get));
+      List<Path> outputFiles = stressRunner.run(buckCommands, tempDirectory, args.parallelism);
+      targetsStressRunner.verifyNoChanges(
+          outputFiles.get(0), outputFiles.subList(1, outputFiles.size()));
+      return ReturnCode.NO_ERROR;
+    } catch (ParseException e) {
+      System.err.println(
+          String.format("Could not parse resulting targets files: %s", e.getMessage()));
+      return ReturnCode.TARGET_STRESS_PARSE_EXCEPTION;
+    } catch (MaxDifferencesException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.TARGET_STRESS_MAX_DIFFERENCES_FOUND;
+    } catch (StressorException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.TARGET_STRESS_ERROR_RUNNING_STRESSOR;
+    } catch (TargetsStressRunException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.TARGET_STRESS_DIFFERENCES_FOUND;
+    } finally {
+      if (args.keepTempFiles) {
+        System.err.println(String.format("Temporary files are kept at %s", tempDirectory));
+      } else {
+        try {
+          Files.walk(tempDirectory)
+              .sorted(Comparator.reverseOrder())
+              .map(Path::toFile)
+              .forEach(File::delete);
+        } catch (IOException e) {
+          System.err.println(
+              String.format("Could not clean up temp directory at %s", tempDirectory));
+        }
       }
     }
   }
