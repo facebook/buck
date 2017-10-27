@@ -20,6 +20,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Keeps track of the number of differences that the rule key differ has encountered so far */
 public class DifferState {
+  /** Whether or not changes have been found so far by the differ */
+  public enum DiffResult {
+    CHANGES_FOUND,
+    NO_CHANGES_FOUND,
+  }
+
   /** The maximum number of differences have been found */
   public class MaxDifferencesException extends Exception {
     MaxDifferencesException() {
@@ -49,7 +55,8 @@ public class DifferState {
     }
   }
 
-  public int getFoundDifferences() {
-    return foundDifferences.get();
+  /** Determine whether or not any changes have been made */
+  public DiffResult hasChanges() {
+    return foundDifferences.get() > 0 ? DiffResult.CHANGES_FOUND : DiffResult.NO_CHANGES_FOUND;
   }
 }

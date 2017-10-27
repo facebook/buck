@@ -19,6 +19,7 @@ package com.facebook.buck.tools.consistency;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Value;
+import com.facebook.buck.tools.consistency.DifferState.DiffResult;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
@@ -194,6 +195,15 @@ public class RuleKeyDiffPrinter {
   public RuleKeyDiffPrinter(DiffPrinter diffPrinter, DifferState differState) {
     this.diffPrinter = diffPrinter;
     this.differState = differState;
+  }
+
+  /**
+   * Determines whether any changes have been printed
+   *
+   * @return whether any changes have been printed
+   */
+  public DiffResult hasChanges() {
+    return differState.hasChanges();
   }
 
   /**

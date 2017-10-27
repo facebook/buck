@@ -17,6 +17,7 @@
 package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.tools.consistency.CliArgs.TargetHashDiffCommand;
+import com.facebook.buck.tools.consistency.DifferState.DiffResult;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
@@ -140,12 +141,11 @@ public class Main {
       DiffPrinter diffPrinter = new DiffPrinter(System.out, args.useColor);
       TargetsDiffer targetsDiffer = new TargetsDiffer(diffPrinter, differState);
 
-      targetsDiffer.printDiff(originalFile, newFile);
-
-      if (differState.getFoundDifferences() == 0) {
-        return ReturnCode.NO_ERROR;
-      } else {
+      DiffResult result = targetsDiffer.printDiff(originalFile, newFile);
+      if (result == DiffResult.CHANGES_FOUND) {
         return ReturnCode.TARGET_HASHES_DIFFERENCES_DETECTED;
+      } else {
+        return ReturnCode.NO_ERROR;
       }
     } catch (ExecutionException e) {
       if (originalFile == null) {
@@ -213,12 +213,12 @@ public class Main {
       DifferState differState = new DifferState(args.maxDifferences);
       RuleKeyDiffPrinter ruleKeyDiffPrinter = new RuleKeyDiffPrinter(diffPrinter, differState);
       RuleKeyDiffer differ = new RuleKeyDiffer(ruleKeyDiffPrinter);
-      differ.printDiff(originalFile.get(), newFile.get());
+      DiffResult result = differ.printDiff(originalFile.get(), newFile.get());
 
-      if (differState.getFoundDifferences() == 0) {
-        return ReturnCode.NO_ERROR;
-      } else {
+      if (result == DiffResult.CHANGES_FOUND) {
         return ReturnCode.RULE_KEY_DIFFERENCES_DETECTED;
+      } else {
+        return ReturnCode.NO_ERROR;
       }
     } catch (ExecutionException e) {
       if (!originalFile.isPresent()) {

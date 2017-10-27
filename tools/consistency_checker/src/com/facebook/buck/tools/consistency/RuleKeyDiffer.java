@@ -17,6 +17,7 @@
 package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.log.thrift.rulekeys.Value;
+import com.facebook.buck.tools.consistency.DifferState.DiffResult;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope;
 import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.PropertyScope;
@@ -51,9 +52,10 @@ public class RuleKeyDiffer {
    * @param newFile The new file to use
    * @throws MaxDifferencesException Thrown if the maximum number of differences has been found
    */
-  public void printDiff(ParsedRuleKeyFile originalFile, ParsedRuleKeyFile newFile)
+  public DiffResult printDiff(ParsedRuleKeyFile originalFile, ParsedRuleKeyFile newFile)
       throws MaxDifferencesException, GraphTraversalException {
     printDiff(originalFile, originalFile.rootNode, newFile, newFile.rootNode);
+    return printer.hasChanges();
   }
 
   private void printDiff(

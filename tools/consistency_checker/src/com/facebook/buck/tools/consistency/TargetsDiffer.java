@@ -45,8 +45,9 @@ public class TargetsDiffer {
    * @param newFile The new set of target / hash pairs
    * @throws MaxDifferencesException If the maximum number of differences (as specified by {@link
    *     #diffPrinter}) is reached
+   * @return true if the two targets are different false if they aren't
    */
-  public void printDiff(ParsedTargetsFile originalFile, ParsedTargetsFile newFile)
+  public DifferState.DiffResult printDiff(ParsedTargetsFile originalFile, ParsedTargetsFile newFile)
       throws MaxDifferencesException {
     Set<String> targetsInOriginal = originalFile.targetsToHash.keySet();
     Set<String> targetsInNew = newFile.targetsToHash.keySet();
@@ -57,6 +58,7 @@ public class TargetsDiffer {
     printRemoved(originalFile, targetsOnlyInOriginal);
     printAdded(newFile, targetsOnlyInNew);
     printChanged(originalFile, newFile, targetsInBoth);
+    return differState.hasChanges();
   }
 
   private void printChanged(
