@@ -18,12 +18,8 @@ package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,36 +31,17 @@ public class BuckRunnerTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private Path binPath;
   private TestPrintStream stream = TestPrintStream.create();
+  private TestBinWriter writer;
 
   @Before
   public void setUp() throws IOException {
     binPath = temporaryFolder.newFile("test.bin");
-  }
-
-  private void writeBinFile(int returnCode) throws IOException {
-    try (FileWriter output = new FileWriter(binPath.toAbsolutePath().toString())) {
-      output.write("#!/usr/bin/env python\n");
-      output.write("from __future__ import print_function\n");
-      output.write("import os\n");
-      output.write("import sys\n");
-      output.write("print(os.getcwd())\n");
-      output.write("for arg in sys.argv:\n");
-      output.write("    print(arg)\n");
-      output.write("if \"PYTHONHASHSEED\" in os.environ:\n");
-      output.write("    print(\"Random hashes configured\")\n");
-      output.write("sys.exit(" + Integer.toString(returnCode) + ")\n");
-    }
-    Files.setPosixFilePermissions(
-        binPath,
-        ImmutableSet.of(
-            PosixFilePermission.OWNER_READ,
-            PosixFilePermission.OWNER_WRITE,
-            PosixFilePermission.OWNER_EXECUTE));
+    writer = new TestBinWriter(binPath);
   }
 
   @Test
   public void sendsStdOutBack() throws IOException, InterruptedException {
-    writeBinFile(0);
+    writer.writeArgEchoer(0);
 
     BuckRunner runner =
         new BuckRunner(
@@ -91,7 +68,7 @@ public class BuckRunnerTest {
 
   @Test
   public void setsReturnCodePropertly() throws IOException, InterruptedException {
-    writeBinFile(97);
+    writer.writeArgEchoer(97);
 
     BuckRunner runner =
         new BuckRunner(
@@ -118,7 +95,7 @@ public class BuckRunnerTest {
 
   @Test
   public void runsInCwdIfRepositoryNotSpecified() throws IOException, InterruptedException {
-    writeBinFile(0);
+    writer.writeArgEchoer(0);
 
     BuckRunner runner =
         new BuckRunner(
@@ -145,7 +122,7 @@ public class BuckRunnerTest {
 
   @Test
   public void randomizesPythonSeedIfRandomizeIsTrue() throws IOException, InterruptedException {
-    writeBinFile(0);
+    writer.writeArgEchoer(0);
 
     BuckRunner runner =
         new BuckRunner(

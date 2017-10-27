@@ -24,4 +24,7 @@ java_library(
         ["*.java"],
         excludes = TEST_FILES_GLOB,
     ),
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
 )
