@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
@@ -38,6 +39,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -159,8 +161,16 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 // Note: in the case of a hit, we return fetchResult, rather than
                 // outputFileFetchResult,
                 // so that the client gets the correct metadata.
-
                 CacheResult finalResult = fetchResult.withTwoLevelContentHashKey(contentHashKey);
+
+                // The two level content hash was not part of the original metadata that was stored
+                // to the cache, don't include it in the result.
+                finalResult =
+                    finalResult.withMetadata(
+                        ImmutableMap.copyOf(
+                            RichStream.from(finalResult.getMetadata().entrySet())
+                                .filter(e -> !Objects.equals(e.getKey(), METADATA_KEY))
+                                .toOnceIterable()));
                 return Futures.immediateFuture(finalResult);
               },
               MoreExecutors.directExecutor());

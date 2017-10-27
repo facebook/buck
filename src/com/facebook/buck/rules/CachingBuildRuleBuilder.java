@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
+import com.facebook.buck.artifact_cache.ArtifactUploader;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
@@ -65,7 +66,6 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.Unzip;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -601,10 +601,6 @@ class CachingBuildRuleBuilder {
       Optional<RuleKey> calculatedRuleKey = inputBasedKey.get();
       Optional<RuleKey> onDiskRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-      Optional<RuleKey> metaDataRuleKey =
-          buildInfoRecorder
-              .getBuildMetadataFor(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)
-              .map(RuleKey::new);
       Preconditions.checkState(
           calculatedRuleKey.equals(onDiskRuleKey),
           "%s (%s): %s: invalid on-disk input-based rule key: %s != %s",
@@ -613,13 +609,6 @@ class CachingBuildRuleBuilder {
           success,
           calculatedRuleKey,
           onDiskRuleKey);
-      Preconditions.checkState(
-          calculatedRuleKey.equals(metaDataRuleKey),
-          "%s: %s: invalid meta-data input-based rule key: %s != %s",
-          rule.getBuildTarget(),
-          success,
-          calculatedRuleKey,
-          metaDataRuleKey);
       if (calculatedRuleKey.isPresent()) {
         ruleKeys.add(calculatedRuleKey.get());
       }
@@ -630,17 +619,6 @@ class CachingBuildRuleBuilder {
     if (useManifestCaching()) {
       Optional<RuleKey> onDiskRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-      Optional<RuleKey> metaDataRuleKey =
-          buildInfoRecorder
-              .getBuildMetadataFor(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY)
-              .map(RuleKey::new);
-      Preconditions.checkState(
-          onDiskRuleKey.equals(metaDataRuleKey),
-          "%s: %s: inconsistent meta-data and on-disk dep-file rule key: %s != %s",
-          rule.getBuildTarget(),
-          success,
-          onDiskRuleKey,
-          metaDataRuleKey);
       if (onDiskRuleKey.isPresent()) {
         ruleKeys.add(onDiskRuleKey.get());
       }
@@ -648,20 +626,16 @@ class CachingBuildRuleBuilder {
 
     // Do the actual upload.
     try {
-      // Verify that the recorded path hashes are accurate.
-      Optional<String> recordedPathHashes =
-          buildInfoRecorder.getBuildMetadataFor(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
-      if (recordedPathHashes.isPresent()
-          && !verifyRecordedPathHashes(
-              rule.getBuildTarget(), rule.getProjectFilesystem(), recordedPathHashes.get())) {
-        return;
-      }
-
       // Push to cache.
       uploadCompleteFuture =
-          buildInfoRecorder.performUploadToArtifactCache(
-              ImmutableSet.copyOf(ruleKeys), artifactCache, eventBus);
-
+          ArtifactUploader.performUploadToArtifactCache(
+              ImmutableSet.copyOf(ruleKeys),
+              artifactCache,
+              eventBus,
+              onDiskBuildInfo.getMetadataForArtifact(),
+              onDiskBuildInfo.getPathsForArtifact(),
+              rule.getBuildTarget(),
+              rule.getProjectFilesystem());
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
     }
@@ -1013,18 +987,6 @@ class CachingBuildRuleBuilder {
     }
 
     return true;
-  }
-
-  private boolean verifyRecordedPathHashes(
-      BuildTarget target, ProjectFilesystem filesystem, String recordedPathHashesBlob)
-      throws IOException {
-
-    // Extract the recorded path hashes map.
-    ImmutableMap<String, String> recordedPathHashes =
-        ObjectMappers.readValue(
-            recordedPathHashesBlob, new TypeReference<ImmutableMap<String, String>>() {});
-
-    return verifyRecordedPathHashes(target, filesystem, recordedPathHashes);
   }
 
   private void recordFailureAndCleanUp(Throwable failure) {

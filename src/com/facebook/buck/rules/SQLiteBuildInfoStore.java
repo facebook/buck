@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.sqlite.RetryBusyHandler;
 import com.facebook.buck.sqlite.SQLiteUtils;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -33,6 +34,7 @@ import org.sqlite.BusyHandler;
 public class SQLiteBuildInfoStore implements BuildInfoStore {
   private final Connection connection;
   private final PreparedStatement selectStmt;
+  private final PreparedStatement selectAllStmt;
   private final PreparedStatement updateStmt;
   private final PreparedStatement deleteStmt;
 
@@ -58,6 +60,9 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
                   + "WITHOUT ROWID");
       selectStmt =
           connection.prepareStatement("SELECT value FROM metadata WHERE target = ? AND key = ?");
+      selectAllStmt =
+          connection.prepareStatement("SELECT key, value FROM metadata WHERE target = ?");
+
       updateStmt =
           connection.prepareStatement(
               "INSERT OR REPLACE INTO metadata (target, key, value) VALUES (?, ?, ?)");
@@ -88,6 +93,23 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
         }
         String value = rs.getString(1);
         return Optional.of(value);
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public synchronized ImmutableMap<String, String> getAllMetadata(BuildTarget buildTarget)
+      throws IOException {
+    try {
+      selectAllStmt.setString(1, cellRelativeName(buildTarget));
+      try (ResultSet rs = selectAllStmt.executeQuery()) {
+        ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
+        while (rs.next()) {
+          result.put(rs.getString(1), rs.getString(2));
+        }
+        return result.build();
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);

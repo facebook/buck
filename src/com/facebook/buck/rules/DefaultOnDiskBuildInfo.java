@@ -20,13 +20,18 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 
@@ -142,6 +147,41 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       LOG.warn("DefaultOnDiskBuildInfo.getHash(%s): Hash not found", key);
       return Optional.empty();
     }
+  }
+
+  @Override
+  public ImmutableSortedSet<Path> getPathsForArtifact() throws IOException {
+    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+    for (Path path :
+        RichStream.from(getValues(BuildInfo.MetadataKey.RECORDED_PATHS).get())
+            .map(Paths::get)
+            .concat(RichStream.of(metadataDirectory))
+            .toOnceIterable()) {
+      paths.add(path);
+      projectFilesystem.walkFileTree(
+          path,
+          new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                throws IOException {
+              paths.add(projectFilesystem.relativize(dir));
+              return super.preVisitDirectory(dir, attrs);
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              paths.add(projectFilesystem.relativize(file));
+              return super.visitFile(file, attrs);
+            }
+          });
+    }
+    return paths.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getMetadataForArtifact() throws IOException {
+    return buildInfoStore.getAllMetadata(buildTarget);
   }
 
   @Override

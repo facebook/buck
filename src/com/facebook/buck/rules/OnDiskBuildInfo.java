@@ -19,7 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /** Provides access to the on-disk rule metadata (both "artifact" and "build"). */
@@ -58,6 +60,15 @@ interface OnDiskBuildInfo {
    * <p>This value would have been written the last time the rule was built successfully.
    */
   Optional<RuleKey> getRuleKey(String key);
+
+  /** Returns the recorded output paths of the rule for creating a cache artifact. */
+  ImmutableSortedSet<Path> getPathsForArtifact() throws IOException;
+
+  /**
+   * Returns the "build" metadata that is stored with a cache artifact ("artifact" metadata is
+   * stored within the artifact itself).
+   */
+  ImmutableMap<String, String> getMetadataForArtifact() throws IOException;
 
   /** Deletes both "artifact" and "build" metadata. */
   void deleteExistingMetadata() throws IOException;

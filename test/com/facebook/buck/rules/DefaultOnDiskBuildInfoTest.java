@@ -31,7 +31,6 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class DefaultOnDiskBuildInfoTest {
-
   @Test
   public void whenMetadataEmptyStringThenGetValueReturnsEmptyString() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

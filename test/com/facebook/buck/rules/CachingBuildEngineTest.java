@@ -78,7 +78,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
@@ -1605,7 +1604,8 @@ public class CachingBuildEngineTest {
                   ImmutableList.of(
                       pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
               pathResolver.getRelativePath(rule.getSourcePathToOutput()),
-              "stuff"));
+              "stuff"),
+          ImmutableList.of(metadataDirectory));
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(inputRuleKey)
@@ -1655,8 +1655,9 @@ public class CachingBuildEngineTest {
         assertEquals(
             new ZipInspector(artifact).getZipFileEntries(),
             new ZipInspector(fetchedArtifact).getZipFileEntries());
-
-        MoreAsserts.assertContentsEqual(artifact, fetchedArtifact);
+        new ZipInspector(fetchedArtifact)
+            .assertFileContents(
+                pathResolver.getRelativePath(rule.getSourcePathToOutput()), "stuff");
       }
     }
 
@@ -2765,7 +2766,8 @@ public class CachingBuildEngineTest {
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
               output,
-              "stuff"));
+              "stuff"),
+          ImmutableList.of());
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(depFileKey.getRuleKey())
@@ -3959,7 +3961,7 @@ public class CachingBuildEngineTest {
     @Override
     public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
       try {
-        writeEntriesToZip(output.get(), ImmutableMap.copyOf(desiredEntries));
+        writeEntriesToZip(output.get(), ImmutableMap.copyOf(desiredEntries), ImmutableList.of());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -4086,7 +4088,8 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static void writeEntriesToZip(Path file, ImmutableMap<Path, String> entries)
+  private static void writeEntriesToZip(
+      Path file, ImmutableMap<Path, String> entries, ImmutableList<Path> directories)
       throws IOException {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(file)) {
       for (Map.Entry<Path, String> mapEntry : entries.entrySet()) {
@@ -4098,6 +4101,16 @@ public class CachingBuildEngineTest {
         entry.setExternalAttributes(33188L << 16);
         zip.putNextEntry(entry);
         zip.write(mapEntry.getValue().getBytes());
+        zip.closeEntry();
+      }
+      for (Path dir : directories) {
+        CustomZipEntry entry = new CustomZipEntry(dir.toString() + "/");
+        // We want deterministic ZIPs, so avoid mtimes. -1 is timzeone independent, 0 is not.
+        entry.setTime(ZipConstants.getFakeTime());
+        // We set the external attributes to this magic value which seems to match the attributes
+        // of entries created by {@link InMemoryArtifactCache}.
+        entry.setExternalAttributes(33188L << 16);
+        zip.putNextEntry(entry);
         zip.closeEntry();
       }
     }
