@@ -7,6 +7,8 @@
   <property name="third-party.dir" value="${basedir}/third-party" />
   <property name="build.dir" value="${basedir}/build" />
   <property name="build.successful.file" value="${build.dir}/successful-build" />
+  <property name="classes.dir.name" value="classes" />
+  <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
   <property name="aosp.classes.dir.name" value="aosp/classes" />
   <property name="aosp.classes.dir" value="${build.dir}/${aosp.classes.dir.name}" />
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
@@ -20,14 +22,15 @@
   <property name="tracing-api.jar" value="${build.dir}/tracing-api/tracing-api.jar"/>
   <property name="javac-plugin.classes.dir.name" value="javac-plugin/classes" />
   <property name="javac-plugin.classes.dir" value="${build.dir}/${javac-plugin.classes.dir.name}" />
-  <property name="javac-plugin.jar" value="${build.dir}/javac-plugin/javac-plugin.jar" />
+  <property name="javac-plugin.jar.name" value="javac-plugin.jar" />
+  <property name="javac-plugin.jar" value="${build.dir}/javac-plugin/${javac-plugin.jar.name}" />
+  <property name="javac-plugin.location.dir.name" value="com/facebook/buck/jvm/java/plugin" />
+  <property name="javac-plugin.location.dir" value="${classes.dir}/${javac-plugin.location.dir.name}" />
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/make_pex.py" />
   <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
   <property name="buck.logging_config_file" value="${basedir}/config/logging.properties.st" />
   <property name="buck.test_logging_config_file" value="${basedir}/config/logging.test.properties" />
-  <property name="classes.dir.name" value="classes" />
-  <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
   <property name="testclasses.dir" value="${build.dir}/testclasses" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="javadoc-with-android.dir" value="${build.dir}/javadoc-with-android" />
@@ -357,7 +360,7 @@
 
     <!-- Put the tracing jar in resources so it can be dynamically loaded at runtime. See
      com.facebook.buck.jvm.java.plugin.Plugin -->
-    <copy file="${javac-plugin.jar}" todir="${classes.dir}/com/facebook/buck/jvm/java/plugin" />
+    <copy file="${javac-plugin.jar}" todir="${javac-plugin.location.dir}" />
   </target>
 
   <target name="compile-aosp" depends="checkversion">
@@ -868,6 +871,7 @@
         <include name="${tracing-api.classes.dir.name}/**"/>
         <include name="${bootstrapper.classes.dir.name}/**"/>
         <include name="${javac-plugin.classes.dir.name}/**"/>
+        <exclude name="${classes.dir.name}/${javac-plugin.location.dir.name}/${javac-plugin.jar.name}"/>
       </fileset>
       <fileset refid="buck.jars"/>
       <fileset refid="third-party.jars"/>
