@@ -51,6 +51,7 @@ public class RuleKeyDiffer {
    * @param originalFile The parsed original file
    * @param newFile The new file to use
    * @throws MaxDifferencesException Thrown if the maximum number of differences has been found
+   * @returns true if differences were found, false otherwise
    */
   public DiffResult printDiff(ParsedRuleKeyFile originalFile, ParsedRuleKeyFile newFile)
       throws MaxDifferencesException, GraphTraversalException {
