@@ -137,7 +137,7 @@ def apply_remediation(path, line, col, remediation):
             fn(path, line, col, **match.groupdict())
             return
 
-    raise NotImplementedError("NYI: %s:%s,%s: %s" % (path, line, col, remediation))
+    print("Manual: %s:%s,%s: %s" % (path, line, col, remediation))
 
 
 def add_import(path, line, col, type):
