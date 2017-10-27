@@ -148,7 +148,7 @@
     <include name="servlet-api/javax.servlet-api-3.1.0.jar" />
     <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
-    <include name="thrift/libthrift-0.10.0.jar" />
+    <include name="thrift/libthrift-0.10.0-patched.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
     <include name="bazel/skylark-lang_deploy.jar" />
     <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
