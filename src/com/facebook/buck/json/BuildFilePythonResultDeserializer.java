@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,7 @@ import javax.annotation.Nullable;
  * with {@link ImmutableMapWithNullValues} to allow {@code null} values in the maps.
  */
 final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFilePythonResult> {
+  private static final Interner<String> STRING_INTERNER = Interners.newWeakInterner();
 
   public BuildFilePythonResultDeserializer() {
     super(BuildFilePythonResult.class);
@@ -96,7 +99,7 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
         ImmutableMapWithNullValues.Builder.insertionOrder();
     String fieldName;
     while ((fieldName = jp.nextFieldName()) != null) {
-      builder.put(fieldName, deserializeRecursive(jp, jp.nextToken()));
+      builder.put(STRING_INTERNER.intern(fieldName), deserializeRecursive(jp, jp.nextToken()));
     }
     if (jp.getCurrentToken() != JsonToken.END_OBJECT) {
       throw new JsonParseException(jp, "Missing expected END_OBJECT");
@@ -136,7 +139,7 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
       case VALUE_NUMBER_INT:
         return jp.getLongValue();
       case VALUE_STRING:
-        return jp.getText();
+        return STRING_INTERNER.intern(jp.getText());
         // $CASES-OMITTED$
       default:
         throw new JsonParseException(jp, "Unexpected token: " + token.toString());
