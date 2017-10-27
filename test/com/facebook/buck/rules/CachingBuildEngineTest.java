@@ -475,7 +475,7 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString());
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
+              BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem)
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
@@ -556,7 +556,7 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString());
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
+              BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem)
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
@@ -1587,7 +1587,7 @@ public class CachingBuildEngineTest {
       resolver.addToIndex(rule);
 
       // Prepopulate the recorded paths metadata.
-      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
@@ -1696,7 +1696,7 @@ public class CachingBuildEngineTest {
           "stuff", pathResolver.getRelativePath(rule.getSourcePathToOutput()));
 
       // Prepopulate the recorded paths metadata.
-      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
@@ -1872,7 +1872,7 @@ public class CachingBuildEngineTest {
           equalTo(depFileRuleKey.toString()));
       ZipInspector inspector = new ZipInspector(fetchedArtifact);
       inspector.assertFileContents(
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
+          BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem)
               .resolve(BuildInfo.MetadataKey.DEP_FILE),
           ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(fileToDepFileEntryString(input))));
@@ -2086,7 +2086,7 @@ public class CachingBuildEngineTest {
       // Prepopulate the dep file rule key and dep file.
       RuleKey depFileRuleKey = depFileFactory.build(rule, ImmutableList.of()).getRuleKey();
 
-      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
@@ -2178,7 +2178,7 @@ public class CachingBuildEngineTest {
               .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
-      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
@@ -2269,7 +2269,7 @@ public class CachingBuildEngineTest {
               .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
-      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
@@ -2761,7 +2761,7 @@ public class CachingBuildEngineTest {
       writeEntriesToZip(
           artifact,
           ImmutableMap.of(
-              BuildInfo.getPathToMetadataDirectory(target, filesystem)
+              BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem)
                   .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
               output,

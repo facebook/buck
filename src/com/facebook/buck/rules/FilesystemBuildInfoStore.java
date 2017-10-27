@@ -55,6 +55,6 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
   public void close() {}
 
   private final Path pathToMetadata(BuildTarget target) {
-    return BuildInfo.getPathToMetadataDirectory(target, filesystem);
+    return BuildInfo.getPathToBuildMetadataDirectory(target, filesystem);
   }
 }

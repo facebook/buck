@@ -1207,7 +1207,6 @@ class CachingBuildRuleBuilder {
             ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey));
     eventBus.post(started);
     try {
-
       // First, clear out the pre-existing metadata directory.  We have to do this *before*
       // unpacking the zipped artifact, as it includes files that will be stored in the metadata
       // directory.
@@ -1368,7 +1367,8 @@ class CachingBuildRuleBuilder {
 
   @VisibleForTesting
   protected static Path getManifestPath(BuildRule rule) {
-    return BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget(), rule.getProjectFilesystem())
+    return BuildInfo.getPathToOtherMetadataDirectory(
+            rule.getBuildTarget(), rule.getProjectFilesystem())
         .resolve(BuildInfo.MANIFEST);
   }
 

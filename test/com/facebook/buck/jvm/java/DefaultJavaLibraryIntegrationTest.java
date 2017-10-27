@@ -275,17 +275,19 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     Path utilRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/RULE_KEY");
+        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/build/RULE_KEY");
     String utilRuleKey = getContents(utilRuleKeyPath);
     Path utilAbiRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+        BuildTargets.getScratchPath(
+            filesystem, utilTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
     String utilAbiRuleKey = getContents(utilAbiRuleKeyPath);
 
     Path bizRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/RULE_KEY");
+        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/build/RULE_KEY");
     String bizRuleKey = getContents(bizRuleKeyPath);
     Path bizAbiRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+        BuildTargets.getScratchPath(
+            filesystem, bizTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
     String bizAbiRuleKey = getContents(bizAbiRuleKeyPath);
 
     Path utilOutputPath =

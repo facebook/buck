@@ -106,4 +106,19 @@ public class BuildInfo {
   public static Path getPathToMetadataDirectory(BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargets.getScratchPath(filesystem, target, ".%s/metadata/");
   }
+
+  public static Path getPathToArtifactMetadataDirectory(
+      BuildTarget target, ProjectFilesystem filesystem) {
+    return getPathToMetadataDirectory(target, filesystem).resolve("artifact");
+  }
+
+  public static Path getPathToBuildMetadataDirectory(
+      BuildTarget target, ProjectFilesystem filesystem) {
+    return getPathToMetadataDirectory(target, filesystem).resolve("build");
+  }
+
+  public static Path getPathToOtherMetadataDirectory(
+      BuildTarget target, ProjectFilesystem filesystem) {
+    return getPathToMetadataDirectory(target, filesystem).resolve("other");
+  }
 }

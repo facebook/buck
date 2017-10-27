@@ -50,7 +50,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     this.buildTarget = target;
     this.projectFilesystem = projectFilesystem;
     this.buildInfoStore = buildInfoStore;
-    this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, projectFilesystem);
+    this.metadataDirectory =
+        BuildInfo.getPathToArtifactMetadataDirectory(target, projectFilesystem);
   }
 
   @Override
