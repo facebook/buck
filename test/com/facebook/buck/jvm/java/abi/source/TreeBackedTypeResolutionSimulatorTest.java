@@ -27,18 +27,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.ImportTree;
-import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
@@ -306,49 +300,9 @@ public class TreeBackedTypeResolutionSimulatorTest extends CompilerTreeApiTest {
     CompilationUnitTree compilationUnit = typeTreePath.getCompilationUnit();
     TreeBackedTypeResolutionSimulator resolver =
         new TreeBackedTypeResolutionSimulator(elements, trees, compilationUnit);
-    resolver.setImports(loadImports(compilationUnit));
+    resolver.setImports(
+        ImportsTrackerTestHelper.loadImports(elements, types, trees, compilationUnit));
 
     return resolver.resolve(typeTreePath);
-  }
-
-  private ImportsTracker loadImports(CompilationUnitTree compilationUnit) {
-    TreePath compilationUnitPath = new TreePath(compilationUnit);
-    ImportsTracker result =
-        new ImportsTracker(elements, types, (PackageElement) trees.getElement(compilationUnitPath));
-    for (ImportTree importTree : compilationUnit.getImports()) {
-      handleImport(result, new TreePath(compilationUnitPath, importTree));
-    }
-    return result;
-  }
-
-  public void handleImport(ImportsTracker imports, TreePath importTreePath) {
-    ImportTree importTree = (ImportTree) importTreePath.getLeaf();
-    MemberSelectTree importedExpression = (MemberSelectTree) importTree.getQualifiedIdentifier();
-    TreePath importedExpressionPath = new TreePath(importTreePath, importedExpression);
-    Name simpleName = importedExpression.getIdentifier();
-    boolean isStarImport = simpleName.contentEquals("*");
-
-    if (!isStarImport && !importTree.isStatic()) {
-      TypeElement importedType = (TypeElement) trees.getElement(importedExpressionPath);
-      imports.importType(importedType, importedExpressionPath);
-    } else {
-      ExpressionTree containingElementExpression = importedExpression.getExpression();
-      TreePath containingElementExpressionPath =
-          new TreePath(importedExpressionPath, containingElementExpression);
-      QualifiedNameable containingElement =
-          (QualifiedNameable) trees.getElement(containingElementExpressionPath);
-
-      if (importTree.isStatic()) {
-        TypeElement containingType = (TypeElement) containingElement;
-        if (isStarImport) {
-          imports.importStaticMembers((TypeElement) containingElement);
-        } else {
-          imports.importStatic(containingType, simpleName);
-        }
-      } else {
-        // Normal star import
-        imports.importMembers(containingElement, containingElementExpressionPath);
-      }
-    }
   }
 }
