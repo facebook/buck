@@ -54,7 +54,7 @@ public class TargetHashFileParserTest {
   @Test
   public void failsIfFileDoesNotExist() throws IOException, ParseException {
     Path invalidLogPath = logPath.resolveSibling("invalid_path");
-    expectedException.expectMessage(String.format("Error reading file at %s", invalidLogPath));
+    expectedException.expectMessage(String.format("%s: Error reading file:", invalidLogPath));
     expectedException.expect(ParseException.class);
     TargetHashFileParser parser = new TargetHashFileParser();
     parser.parseFile(invalidLogPath);

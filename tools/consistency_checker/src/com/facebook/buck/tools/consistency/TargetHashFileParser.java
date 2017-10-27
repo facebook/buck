@@ -58,22 +58,26 @@ public class TargetHashFileParser {
         String line = fileReader.readLine();
         String[] parts = line.split(" ");
         if (parts.length != 2) {
-          throw new ParseException("Lines must be of the format 'TARGET HASH'. Got %s", line);
+          throw new ParseException(
+              filename, "Lines must be of the format 'TARGET HASH'. Got %s", line);
         }
         if (targetsToHash.containsKey(parts[0])) {
-          throw new ParseException("Target %s has been seen multiple times", parts[0]);
+          throw new ParseException(filename, "Target %s has been seen multiple times", parts[0]);
         }
         if (targetsToHash.containsValue(parts[1])) {
           throw new ParseException(
+              filename,
               "Hash collision! Hash %s has been seen for both %s and %s!",
-              parts[1], targetsToHash.inverse().get(parts[1]), parts[0]);
+              parts[1],
+              targetsToHash.inverse().get(parts[1]),
+              parts[0]);
         }
         targetsToHash.put(parts[0], parts[1]);
       }
       Duration runtime = Duration.ofNanos(System.nanoTime() - startNanos);
       return new ParsedTargetsFile(filename, targetsToHash, runtime);
     } catch (IOException e) {
-      throw new ParseException(e, "Error reading file at %s: %s", filename, e.getMessage());
+      throw new ParseException(e, filename, "Error reading file: %s", e.getMessage());
     }
   }
 }

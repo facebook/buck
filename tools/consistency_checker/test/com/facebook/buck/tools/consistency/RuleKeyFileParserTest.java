@@ -18,6 +18,7 @@ package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
+import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
@@ -122,5 +123,40 @@ public class RuleKeyFileParserTest {
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     parser.parseFile(logPath, "//:name1");
+  }
+
+  @Test
+  public void doesNotThrowOnDuplicateKeyOfSameValue() throws ParseException, IOException {
+    FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+      logger.write(ruleKey1);
+    }
+
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
+    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, "//:name1");
+
+    Assert.assertEquals("key1", parsedFile.rootNode.ruleKey.key);
+    Assert.assertEquals(logPath, parsedFile.filename);
+    Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
+    Assert.assertEquals(1, parsedFile.rules.size());
+    Assert.assertEquals(ruleKey1, parsedFile.rules.get("key1").ruleKey);
+  }
+
+  @Test
+  public void throwsOnDuplicateKeyOfDifferentValue() throws ParseException, IOException {
+    expectedException.expect(ParseException.class);
+    expectedException.expectMessage("Found two rules with the same key, but different values");
+
+    FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
+    FullRuleKey ruleKey2 =
+        new FullRuleKey(
+            "key1", "//:name1", "DEFAULT", ImmutableMap.of("value", Value.stringValue("string")));
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+      logger.write(ruleKey1);
+      logger.write(ruleKey2);
+    }
+
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
+    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, "//:name1");
   }
 }

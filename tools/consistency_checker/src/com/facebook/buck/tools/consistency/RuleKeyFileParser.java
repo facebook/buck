@@ -18,9 +18,9 @@ package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -44,6 +44,10 @@ public class RuleKeyFileParser {
 
     public RuleKeyNode(FullRuleKey ruleKey) {
       this.ruleKey = ruleKey;
+    }
+
+    public String toString() {
+      return ruleKey.toString();
     }
   }
 
@@ -84,28 +88,44 @@ public class RuleKeyFileParser {
       initialSize = Math.toIntExact(filename.toFile().length() / THRIFT_STRUCT_SIZE);
     } catch (ArithmeticException e) {
       throw new ParseException(
-          e, "File size is too large (>2.1 billion objects would be deserialized");
+          e, filename, "File size is too large (>2.1 billion objects would be deserialized");
     }
 
-    final ImmutableMap.Builder<String, RuleKeyNode> rules = ImmutableMap.builder();
+    final Map<String, RuleKeyNode> rules = new HashMap<>();
     // Made into an array so we can mutate from the inside of the visitor
     final AtomicReference<RuleKeyNode> rootNode = new AtomicReference<>(null);
 
-    reader.readFile(
-        filename,
-        ruleKey -> {
-          RuleKeyNode newNode = new RuleKeyNode(ruleKey);
-          if ("DEFAULT".equals(ruleKey.type) && targetName.equals(ruleKey.name)) {
-            rootNode.set(newNode);
-          }
-          rules.put(ruleKey.key, newNode);
-          return false;
-        });
+    try {
+      reader.readFile(
+          filename,
+          ruleKey -> {
+            RuleKeyNode newNode = new RuleKeyNode(ruleKey);
+            if ("DEFAULT".equals(ruleKey.type) && targetName.equals(ruleKey.name)) {
+              rootNode.set(newNode);
+            }
+            RuleKeyNode oldValue = rules.put(ruleKey.key, newNode);
+            if (oldValue != null && !oldValue.ruleKey.equals(newNode.ruleKey)) {
+              throw new RuntimeException(
+                  new ParseException(
+                      filename,
+                      "Found two rules with the same key, but different values. Key: %s, first value: "
+                          + "%s, second value: %s",
+                      ruleKey.key,
+                      oldValue.ruleKey,
+                      newNode.ruleKey));
+            }
+            return false;
+          });
+    } catch (RuntimeException e) {
+      if (e.getCause() instanceof ParseException) {
+        throw (ParseException) e.getCause();
+      }
+    }
 
     if (rootNode.get() == null) {
-      throw new ParseException("Could not find %s in %s", targetName, filename);
+      throw new ParseException(filename, "Could not find %s in %s", targetName, filename);
     }
     Duration runtime = Duration.ofNanos(System.nanoTime() - startNanos);
-    return new ParsedRuleKeyFile(filename, rootNode.get(), rules.build(), runtime);
+    return new ParsedRuleKeyFile(filename, rootNode.get(), rules, runtime);
   }
 }

@@ -35,12 +35,15 @@ public class RuleKeyLogFileReader {
    */
   public static class ParseException extends Exception {
 
-    public ParseException(String formatString, Object... formatArgs) {
-      super(String.format(formatString, formatArgs));
+    public ParseException(Path filename, String formatString, Object... formatArgs) {
+      super(String.format("%s: %s", filename, String.format(formatString, formatArgs)));
     }
 
-    public ParseException(Throwable originalException, String formatString, Object... formatArgs) {
-      super(String.format(formatString, formatArgs), originalException);
+    public ParseException(
+        Throwable originalException, Path filename, String formatString, Object... formatArgs) {
+      super(
+          String.format("%s: %s", filename, String.format(formatString, formatArgs)),
+          originalException);
     }
   }
 
@@ -64,7 +67,10 @@ public class RuleKeyLogFileReader {
         int bytesRead = fileInputStream.read(serialized);
         if (bytesRead != length) {
           throw new ParseException(
-              "Invalid length specified. Expected %s bytes, only got %s", length, bytesRead);
+              filename,
+              "Invalid length specified. Expected %s bytes, only got %s",
+              length,
+              bytesRead);
         }
         TDeserializer deserializer = new TDeserializer(new TCompactProtocol.Factory());
         FullRuleKey ruleKey = new FullRuleKey();
@@ -73,14 +79,15 @@ public class RuleKeyLogFileReader {
         // null. 'key' is required, so if it's null, we failed to deserialize. Yes, deserialize()
         // /should/ throw a TException, but it doesn't.
         if (ruleKey.key == null) {
-          throw new ParseException("Could not deserialize array of size %s", serialized.length);
+          throw new ParseException(
+              filename, "Could not deserialize array of size %s", serialized.length);
         }
         if (visitor.test(ruleKey)) {
           return;
         }
       }
     } catch (TException | IOException e) {
-      throw new ParseException(e, "Error reading %s: %s", filename, e.getMessage());
+      throw new ParseException(e, filename, "Error reading file: %s", e.getMessage());
     }
   }
 }

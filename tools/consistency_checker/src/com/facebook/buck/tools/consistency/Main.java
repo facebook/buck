@@ -17,6 +17,7 @@
 package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.tools.consistency.BuckStressRunner.StressorException;
+import com.facebook.buck.tools.consistency.CliArgs.StressRuleKeyRunCommand;
 import com.facebook.buck.tools.consistency.CliArgs.StressTargetHashRunCommand;
 import com.facebook.buck.tools.consistency.CliArgs.TargetHashDiffCommand;
 import com.facebook.buck.tools.consistency.DifferState.DiffResult;
@@ -24,6 +25,7 @@ import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
+import com.facebook.buck.tools.consistency.RuleKeyStressRunner.RuleKeyStressRunException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
 import com.facebook.buck.tools.consistency.TargetsStressRunner.TargetsStressRunException;
 import java.io.File;
@@ -43,6 +45,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -70,7 +73,13 @@ public class Main {
     TARGET_STRESS_PARSE_EXCEPTION(31),
     TARGET_STRESS_MAX_DIFFERENCES_FOUND(32),
     TARGET_STRESS_ERROR_RUNNING_STRESSOR(33),
-    TARGET_STRESS_DIFFERENCES_FOUND(34);
+    TARGET_STRESS_DIFFERENCES_FOUND(34),
+    RULEKEY_STRESS_DIR_CREATE_FAILED(40),
+    RULE_KEY_STRESS_PARSE_EXCEPTION(41),
+    RULE_KEY_STRESS_MAX_DIFFERENCES_FOUND(42),
+    RULE_KEY_STRESS_ERROR_RUNNING_STRESSOR(43),
+    RULE_KEY_STRESS_TRAVERSAL_ERROR(44),
+    RULE_KEY_STRESS_DIFFERENCES_FOUND(45);
 
     public final int value;
 
@@ -131,15 +140,17 @@ public class Main {
       } else if (parsedArgs.cmd instanceof CliArgs.TargetHashDiffCommand) {
         return handleTargetHashDiffCommand((CliArgs.TargetHashDiffCommand) parsedArgs.cmd);
       } else if (parsedArgs.cmd instanceof CliArgs.StressTargetHashRunCommand) {
-        return handleStresstargetHashRunCommand(
+        return handleStressTargetHashRunCommand(
             (CliArgs.StressTargetHashRunCommand) parsedArgs.cmd);
+      } else if (parsedArgs.cmd instanceof CliArgs.StressRuleKeyRunCommand) {
+        return handleStressRuleKeyRunCommand((CliArgs.StressRuleKeyRunCommand) parsedArgs.cmd);
       } else {
         return ReturnCode.UNHANDLED_SUBCOMMAND;
       }
     }
   }
 
-  private static ReturnCode handleStresstargetHashRunCommand(StressTargetHashRunCommand args) {
+  private static ReturnCode handleStressTargetHashRunCommand(StressTargetHashRunCommand args) {
     Callable<TargetsDiffer> differFactory =
         () -> {
           DifferState differState = new DifferState(args.maxDifferences);
@@ -185,6 +196,80 @@ public class Main {
     } catch (TargetsStressRunException e) {
       System.err.println(e.getMessage());
       return ReturnCode.TARGET_STRESS_DIFFERENCES_FOUND;
+    } finally {
+      if (args.keepTempFiles) {
+        System.err.println(String.format("Temporary files are kept at %s", tempDirectory));
+      } else {
+        try {
+          Files.walk(tempDirectory)
+              .sorted(Comparator.reverseOrder())
+              .map(Path::toFile)
+              .forEach(File::delete);
+        } catch (IOException e) {
+          System.err.println(
+              String.format("Could not clean up temp directory at %s", tempDirectory));
+        }
+      }
+    }
+  }
+
+  private static ReturnCode handleStressRuleKeyRunCommand(StressRuleKeyRunCommand args) {
+    Callable<RuleKeyDiffer> differFactory =
+        () -> {
+          DifferState differState = new DifferState(args.maxDifferences);
+          DiffPrinter diffPrinter = new DiffPrinter(System.out, args.useColor);
+          RuleKeyDiffPrinter ruleKeyDiffPrinter = new RuleKeyDiffPrinter(diffPrinter, differState);
+          RuleKeyDiffer differ = new RuleKeyDiffer(ruleKeyDiffPrinter);
+          return differ;
+        };
+
+    BuckStressRunner stressRunner = new BuckStressRunner();
+    RuleKeyStressRunner ruleKeyStressRunner =
+        new RuleKeyStressRunner(differFactory, "buck", args.buckArgs, args.targets);
+
+    Path tempDirectory = null;
+    try {
+      tempDirectory = Files.createTempDirectory("rulekeys-stress-run");
+    } catch (IOException e) {
+      System.err.println(
+          String.format("Could not create temporary directory for stress run: %s", e.getMessage()));
+      return ReturnCode.RULEKEY_STRESS_DIR_CREATE_FAILED;
+    }
+    try {
+      List<BuckRunner> buckCommands =
+          ruleKeyStressRunner.getBuckRunners(
+              args.runCount,
+              tempDirectory,
+              Optional.ofNullable(args.repositoryDirectory).map(Paths::get));
+      System.out.println(String.format("Commands: %s", buckCommands));
+      List<Path> outputFiles =
+          stressRunner
+              .run(buckCommands, tempDirectory, args.parallelism)
+              .stream()
+              .map(
+                  stdout ->
+                      stdout.resolveSibling(
+                          stdout.getFileName().toString().replace(".log", ".bin.log")))
+              .collect(Collectors.toList());
+      ruleKeyStressRunner.verifyNoChanges(
+          outputFiles.get(0), outputFiles.subList(1, outputFiles.size()));
+      return ReturnCode.NO_ERROR;
+    } catch (ParseException e) {
+      System.err.println(
+          String.format("Could not parse resulting rule key files: %s", e.getMessage()));
+      return ReturnCode.RULE_KEY_STRESS_PARSE_EXCEPTION;
+    } catch (MaxDifferencesException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.RULE_KEY_STRESS_MAX_DIFFERENCES_FOUND;
+    } catch (StressorException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.RULE_KEY_STRESS_ERROR_RUNNING_STRESSOR;
+    } catch (GraphTraversalException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.RULE_KEY_STRESS_TRAVERSAL_ERROR;
+    } catch (RuleKeyStressRunException e) {
+      System.err.println(e.getMessage());
+      return ReturnCode.RULE_KEY_STRESS_DIFFERENCES_FOUND;
     } finally {
       if (args.keepTempFiles) {
         System.err.println(String.format("Temporary files are kept at %s", tempDirectory));

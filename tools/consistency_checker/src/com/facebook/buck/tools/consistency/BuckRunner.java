@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /** Runs buck with various commands and optional user configurations */
 public class BuckRunner {
@@ -61,6 +62,11 @@ public class BuckRunner {
             .addAll(extraBuckOptions)
             .addAll(buckSubCommandOptions)
             .build();
+  }
+
+  @Override
+  public String toString() {
+    return fullCommand.stream().collect(Collectors.joining(" "));
   }
 
   /**

@@ -179,7 +179,7 @@ public class CliArgs extends CliCommand {
 
     @Option(
       name = "--buck-args",
-      usage = "A space delimited set of arguments to send to buck when invoked"
+      usage = "Arguments to send to buck when invoked. Can be specified multiple times"
     )
     List<String> buckArgs = new ArrayList<>();
 
@@ -217,6 +217,59 @@ public class CliArgs extends CliCommand {
     List<String> targets;
   }
 
+  /** Arguments to handle running stress runs comparing target hash outputs from buck targets */
+  public static class StressRuleKeyRunCommand extends CliCommand {
+    public StressRuleKeyRunCommand() {
+      super("Runs buck targets several times, and checks to see if the rule keys change at all");
+    }
+
+    @Option(name = "--parallelism", usage = "The number of buck targets commands to run at once")
+    int parallelism = 2;
+
+    @Option(name = "--runs", usage = "The number of runs to do in total")
+    int runCount = 5;
+
+    @Option(
+      name = "--buck-args",
+      usage = "Arguments to send to buck when invoked. Can be specified multiple times"
+    )
+    List<String> buckArgs = new ArrayList<>();
+
+    @Option(
+      name = "--max-differences",
+      usage = "After this number of differences, stop doing comparisons of the action graphs"
+    )
+    int maxDifferences = DifferState.INFINITE_DIFFERENCES;
+
+    @Option(
+      name = "--color",
+      handler = ExplicitBooleanOptionHandler.class,
+      usage = "Color the output"
+    )
+    boolean useColor = true;
+
+    @Option(
+      name = "--keep-temp-files",
+      handler = ExplicitBooleanOptionHandler.class,
+      usage = "If set, do not delete temp files after completion"
+    )
+    boolean keepTempFiles = false;
+
+    @Option(
+      name = "--repository-directory",
+      usage = "If given, run buck commands from this directory"
+    )
+    String repositoryDirectory = null;
+
+    @Argument(
+      metaVar = "target names",
+      usage =
+          "The targets that should have their rule keys (and all dependencies' rule keys) checked",
+      required = true
+    )
+    List<String> targets;
+  }
+
   @Argument(
     handler = SubCommandHandler.class,
     required = true,
@@ -227,7 +280,8 @@ public class CliArgs extends CliCommand {
     @SubCommand(name = "print", impl = PrintCliCommand.class),
     @SubCommand(name = "rule_key_diff", impl = RuleKeyDiffCommand.class),
     @SubCommand(name = "target_hash_diff", impl = TargetHashDiffCommand.class),
-    @SubCommand(name = "stress_target_hash_run", impl = StressTargetHashRunCommand.class)
+    @SubCommand(name = "stress_target_hash_run", impl = StressTargetHashRunCommand.class),
+    @SubCommand(name = "stress_rulekey_run", impl = StressRuleKeyRunCommand.class)
   })
   CliCommand cmd;
 
@@ -265,6 +319,8 @@ public class CliArgs extends CliCommand {
         case ("stress_target_hash_run"):
           printUsage(StressTargetHashRunCommand.class, out);
           return true;
+        case ("stress_rulekey_run"):
+          printUsage(StressRuleKeyRunCommand.class, out);
         default:
           break;
       }
