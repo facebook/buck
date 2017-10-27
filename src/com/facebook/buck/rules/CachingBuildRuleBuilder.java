@@ -104,6 +104,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipFile;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -429,6 +430,7 @@ class CachingBuildRuleBuilder {
     // Try get the output size now that all outputs have been recorded.
     if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
       outputSize.set(buildInfoRecorder.getOutputSize());
+      buildInfoRecorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, outputSize.get().toString());
     }
 
     // If the success type means the rule has potentially changed it's outputs...
@@ -583,6 +585,10 @@ class CachingBuildRuleBuilder {
         throw new IOException(String.format("Failed to write metadata to disk for %s.", rule), e);
       }
     }
+
+    if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
+      onDiskBuildInfo.writeOutputHash(fileHashCache);
+    }
   }
 
   private void uploadToCache(BuildRuleSuccessType success) {
@@ -653,25 +659,14 @@ class CachingBuildRuleBuilder {
         successType = Optional.of(success);
 
         // Try get the output size.
-        if (success == BuildRuleSuccessType.BUILT_LOCALLY
-            || success.shouldUploadResultingArtifact()) {
-          try {
-            outputSize = Optional.of(buildInfoRecorder.getOutputSize());
-          } catch (IOException e) {
-            eventBus.post(
-                ThrowableConsoleEvent.create(e, "Error getting output size for %s.", rule));
-          }
-        }
-
-        // Compute it's output hash for logging/tracing purposes, as this artifact will
-        // be consumed by other builds.
-        if (outputSize.isPresent() && shouldHashOutputs(success, outputSize.get())) {
-          try {
-            outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
-          } catch (IOException e) {
-            eventBus.post(
-                ThrowableConsoleEvent.create(e, "Error getting output hash for %s.", rule));
-          }
+        if (success.shouldUploadResultingArtifact()) {
+          // All rules should have output_size/output_hash in their artifact metadata.
+          outputSize =
+              Optional.of(
+                  Long.parseLong(
+                      onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get()));
+          String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
+          outputHash = Optional.of(HashCode.fromString(hashString));
         }
 
         // Determine if this is rule is cacheable.
@@ -1152,9 +1147,9 @@ class CachingBuildRuleBuilder {
       LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
       return cacheResult;
     }
-
     onOutputsWillChange();
 
+    Preconditions.checkState(cacheResult.metadata().isPresent());
     Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
 
@@ -1181,6 +1176,10 @@ class CachingBuildRuleBuilder {
       // directory.
       BuildInfoStore buildInfoStore =
           buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
+
+      try (ZipFile artifact = new ZipFile(zipPath.toFile())) {
+        onDiskBuildInfo.validateArtifact(artifact);
+      }
 
       Unzip.extractZipFile(
           zipPath.toAbsolutePath(),
@@ -1255,22 +1254,6 @@ class CachingBuildRuleBuilder {
     }
 
     // If the rule's outputs are bigger than the preset size limit, don't cache it.
-    if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /** @return whether we should hash the outputs of the given rule. */
-  private boolean shouldHashOutputs(BuildRuleSuccessType successType, long outputSize) {
-
-    // If the success type would never cache the item, avoid calculating the hash.
-    if (!successType.shouldUploadResultingArtifact()) {
-      return false;
-    }
-
-    // If the rule's outputs are bigger than the preset size limit, don't hash it.
     if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
       return false;
     }

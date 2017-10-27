@@ -21,11 +21,16 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -34,6 +39,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
+import java.util.zip.ZipFile;
 
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
@@ -197,5 +203,30 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   public void deleteExistingMetadata() throws IOException {
     buildInfoStore.deleteMetadata(buildTarget);
     projectFilesystem.deleteRecursivelyIfExists(metadataDirectory);
+  }
+
+  @Override
+  public void writeOutputHash(FileHashCache fileHashCache) throws IOException {
+    Hasher hasher = Hashing.sha1().newHasher();
+    for (Path path : getPathsForArtifact()) {
+      hasher.putBytes(path.toString().getBytes(Charsets.UTF_8));
+      hasher.putBytes(fileHashCache.get(projectFilesystem.resolve(path)).asBytes());
+    }
+    projectFilesystem.writeContentsToPath(
+        hasher.hash().toString(), metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH));
+  }
+
+  @Override
+  public void validateArtifact(ZipFile artifact) {
+    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.RECORDED_PATHS);
+    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.OUTPUT_SIZE);
+    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.OUTPUT_HASH);
+  }
+
+  private void validateArtifactHasKey(ZipFile artifact, String key) {
+    Preconditions.checkState(
+        artifact.getEntry(metadataDirectory.resolve(key).toString()) != null,
+        "Artifact missing artifactMetadata for key %s",
+        key);
   }
 }

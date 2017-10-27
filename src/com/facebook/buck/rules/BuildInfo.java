@@ -66,6 +66,12 @@ public class BuildInfo {
 
     /** Key containing the ID of the build that previously built/cached this rule's outputs. */
     static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
+
+    /** Key for {@link OnDiskBuildInfo} to store the size of the output. */
+    static String OUTPUT_SIZE = "OUTPUT_SIZE";
+
+    /** Key for {@link OnDiskBuildInfo} to store the hash of the output. */
+    static String OUTPUT_HASH = "OUTPUT_HASH";
   }
 
   public static final ImmutableSet<String> METADATA_KEYS =

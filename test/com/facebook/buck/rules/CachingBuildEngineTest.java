@@ -54,6 +54,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
@@ -109,6 +110,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.AbstractListeningExecutorService;
 import com.google.common.util.concurrent.Futures;
@@ -472,13 +474,18 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString());
+      Path metadataDirectory =
+          BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem);
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem)
-                  .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
-              "Imagine this is the contents of a valid JAR file.");
+              "Imagine this is the contents of a valid JAR file.",
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
+              "123",
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
+              HashCode.fromInt(123).toString());
       expect(
               artifactCache.fetchAsync(
                   eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
@@ -553,11 +560,16 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString());
+      Path metadataDirectory =
+          BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem);
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem)
-                  .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
+              "123",
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
+              HashCode.fromInt(123).toString(),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.");
       expect(
@@ -1379,8 +1391,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
-              .setCachingBuildEngineDelegate(
-                  new LocalCachingBuildEngineDelegate(new DummyFileHashCache()))
+              .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache))
               .build()) {
         assertThat(cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)), equalTo(3));
       }
@@ -1403,8 +1414,7 @@ public class CachingBuildEngineTest {
       // rule.
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
-              .setCachingBuildEngineDelegate(
-                  new LocalCachingBuildEngineDelegate(new DummyFileHashCache()))
+              .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache))
               .setArtifactCacheSizeLimit(Optional.of(2L))
               .build()) {
         // Verify that after building successfully, nothing is cached.
@@ -1603,6 +1613,10 @@ public class CachingBuildEngineTest {
               ObjectMappers.WRITER.writeValueAsString(
                   ImmutableList.of(
                       pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
+              "123",
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
+              HashCode.fromInt(123).toString(),
               pathResolver.getRelativePath(rule.getSourcePathToOutput()),
               "stuff"),
           ImmutableList.of(metadataDirectory));
@@ -1653,7 +1667,9 @@ public class CachingBuildEngineTest {
                 .getType(),
             equalTo(CacheResultType.HIT));
         assertEquals(
-            new ZipInspector(artifact).getZipFileEntries(),
+            Sets.union(
+                ImmutableSet.of(metadataDirectory + "/"),
+                new ZipInspector(artifact).getZipFileEntries()),
             new ZipInspector(fetchedArtifact).getZipFileEntries());
         new ZipInspector(fetchedArtifact)
             .assertFileContents(
@@ -2687,7 +2703,7 @@ public class CachingBuildEngineTest {
       final SourcePath input =
           PathSourcePath.of(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
       filesystem.touch(pathResolver.getRelativePath(input));
-      final Path output = Paths.get("output");
+      final Path output = BuildTargets.getGenPath(filesystem, target, "%s/output");
       DepFileBuildRule rule =
           new DepFileBuildRule(target, filesystem, params) {
             @AddToRuleKey private final SourcePath path = input;
@@ -2695,6 +2711,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
+              buildableContext.recordArtifact(output);
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
@@ -2759,14 +2776,18 @@ public class CachingBuildEngineTest {
               .build(),
           byteArrayOutputStream.toByteArray());
       Path artifact = tmp.newFile("artifact.zip");
+      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       writeEntriesToZip(
           artifact,
           ImmutableMap.of(
-              BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem)
-                  .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
               output,
-              "stuff"),
+              "stuff",
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
+              "123",
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
+              HashCode.fromInt(123).toString()),
           ImmutableList.of());
       cache.store(
           ArtifactInfo.builder()

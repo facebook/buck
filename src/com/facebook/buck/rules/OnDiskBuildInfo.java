@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -23,6 +24,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.zip.ZipFile;
 
 /** Provides access to the on-disk rule metadata (both "artifact" and "build"). */
 interface OnDiskBuildInfo {
@@ -72,4 +74,8 @@ interface OnDiskBuildInfo {
 
   /** Deletes both "artifact" and "build" metadata. */
   void deleteExistingMetadata() throws IOException;
+
+  void writeOutputHash(FileHashCache fileHashCache) throws IOException;
+
+  void validateArtifact(ZipFile artifact);
 }
