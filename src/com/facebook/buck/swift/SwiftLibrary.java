@@ -173,7 +173,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
           FileListableLinkerInputArg.withSourcePathArg(
               SourcePathArg.of(swiftLinkRule.getSourcePathToOutput())));
     } else {
-      inputBuilder.addArgs(rule.getFileListLinkArg());
+      inputBuilder.addAllArgs(rule.getFileListLinkArg());
     }
     return inputBuilder.build();
   }
