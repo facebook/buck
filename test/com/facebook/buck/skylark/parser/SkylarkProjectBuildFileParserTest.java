@@ -164,6 +164,15 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void readConfigFunction() throws Exception {
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    projectFilesystem.writeContentsToPath(
+        "prebuilt_jar(name=read_config('app', 'name', 'guava'), binary_jar='foo.jar')", buildFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("guava"));
+  }
+
+  @Test
   public void testImportVariable() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);

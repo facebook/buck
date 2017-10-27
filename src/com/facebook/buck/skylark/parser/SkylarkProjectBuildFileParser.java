@@ -29,6 +29,7 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.NativeModule;
+import com.facebook.buck.skylark.function.ReadConfig;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
@@ -68,8 +69,8 @@ import javax.annotation.Nullable;
 /**
  * Parser for build files written using Skylark syntax.
  *
- * <p>NOTE: This parser is a work in progress and does not support many functions provided by Python
- * DSL parser like {@code read_config} and {@code include_defs}, so DO NOT USE it production.
+ * <p>NOTE: This parser is still a work in progress and does not support some functions provided by
+ * Python DSL parser like {@code include_defs}, so use in production at your own risk.
  */
 public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
@@ -93,6 +94,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
   private final Supplier<NativeModule> nativeModuleSupplier;
   private final Supplier<Environment.Frame> buckGlobalsSupplier;
+  private final BuiltinFunction readConfigFunction;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -113,6 +115,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         Suppliers.memoize(() -> new NativeModule(buckRuleFunctionsSupplier.get(), Glob.create()))
             ::get;
     this.buckGlobalsSupplier = Suppliers.memoize(this::getBuckGlobals)::get;
+    this.readConfigFunction = ReadConfig.create();
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -291,6 +294,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Environment globalEnv =
           Environment.builder(mutability).setGlobals(BazelLibrary.GLOBALS).build();
 
+      globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
       for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
         globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
       }
