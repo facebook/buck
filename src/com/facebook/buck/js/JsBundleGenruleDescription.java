@@ -72,7 +72,8 @@ public class JsBundleGenruleDescription
     if (flavors.contains(JsFlavors.SOURCE_MAP) || flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
       // SOURCE_MAP is a special flavor that allows accessing the written source map, typically
       // via export_file in reference mode
-      // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by the worker)
+      // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by
+      // the worker)
 
       SourcePath output =
           args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)
@@ -89,7 +90,7 @@ public class JsBundleGenruleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          params,
+          new SourcePathRuleFinder(resolver),
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
           output);
