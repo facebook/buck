@@ -387,7 +387,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   try {
                     boolean success = javacTask.call();
                     if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
-                      return 0;
+                      if (success) {
+                        return 0;
+                      } else {
+                        return 1;
+                      }
                     }
 
                     debugLogDiagnostics();
