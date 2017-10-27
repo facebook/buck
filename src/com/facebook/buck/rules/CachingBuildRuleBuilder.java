@@ -50,6 +50,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.ContextualProcessExecutor;
+import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
@@ -131,7 +132,7 @@ class CachingBuildRuleBuilder {
   private final BuildRule rule;
   private final ExecutionContext executionContext;
   private final OnDiskBuildInfo onDiskBuildInfo;
-  private final BuildInfoRecorder buildInfoRecorder;
+  private final Discardable<BuildInfoRecorder> buildInfoRecorder;
   private final BuildableContext buildableContext;
   private final BuildRulePipelinesRunner pipelinesRunner;
   private final BuckEventBus eventBus;
@@ -207,7 +208,7 @@ class CachingBuildRuleBuilder {
     this.rule = rule;
     this.executionContext = executionContext;
     this.onDiskBuildInfo = onDiskBuildInfo;
-    this.buildInfoRecorder = buildInfoRecorder;
+    this.buildInfoRecorder = new Discardable<>(buildInfoRecorder);
     this.buildableContext = buildableContext;
     this.pipelinesRunner = pipelinesRunner;
     this.eventBus = buildContext.getEventBus();
@@ -347,12 +348,14 @@ class CachingBuildRuleBuilder {
               .get()
               .ifPresent(
                   key ->
-                      buildInfoRecorder.addBuildMetadata(
-                          BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, key.toString()));
+                      getBuildInfoRecorder()
+                          .addBuildMetadata(
+                              BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, key.toString()));
         }
         // $FALL-THROUGH$
       case MATCHING_INPUT_BASED_RULE_KEY:
-        buildInfoRecorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, defaultKey.toString());
+        getBuildInfoRecorder()
+            .addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, defaultKey.toString());
         break;
 
       case BUILT_LOCALLY:
@@ -365,13 +368,14 @@ class CachingBuildRuleBuilder {
     // TODO(cjhopman): input-based/depfile each rewrite the matching key, that's unnecessary.
     // TODO(cjhopman): this writes the current build-id/timestamp/extra-data, that's probably
     // unnecessary.
-    buildInfoRecorder.assertOnlyHasKeys(
-        BuildInfo.MetadataKey.RULE_KEY,
-        BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
-        BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-        BuildInfo.MetadataKey.BUILD_ID);
+    getBuildInfoRecorder()
+        .assertOnlyHasKeys(
+            BuildInfo.MetadataKey.RULE_KEY,
+            BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
+            BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+            BuildInfo.MetadataKey.BUILD_ID);
     try {
-      buildInfoRecorder.updateBuildMetadata();
+      getBuildInfoRecorder().updateBuildMetadata();
     } catch (IOException e) {
       throw new IOException(String.format("Failed to write metadata to disk for %s.", rule), e);
     }
@@ -380,35 +384,41 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<BuildResult> finalizeBuildRule(
       BuildResult input, AtomicReference<Long> outputSize)
       throws StepFailedException, InterruptedException, IOException {
-    // If we weren't successful, exit now.
-    if (input.getStatus() != BuildRuleStatus.SUCCESS) {
-      return Futures.immediateFuture(input);
-    }
-
-    try (Scope ignored = LeafEvents.scope(eventBus, "finalizing_build_rule")) {
-      // We shouldn't see any build fail result at this point.
-      BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
-      if (success.isMatchingKey()) {
-        finalizeMatchingKey(success);
-      } else {
-        finalizeBuiltLocallyOrFetchedFromCache(success, outputSize);
-      }
-    } catch (Exception e) {
-      throw new BuckUncheckedExecutionException(e, "When finalizing rule.");
-    }
-
-    // Give the rule a chance to populate its internal data structures now that all of
-    // the files should be in a valid state.
     try {
-      if (rule instanceof InitializableFromDisk) {
-        doInitializeFromDisk((InitializableFromDisk<?>) rule);
+      // If we weren't successful, exit now.
+      if (input.getStatus() != BuildRuleStatus.SUCCESS) {
+        return Futures.immediateFuture(input);
       }
-    } catch (IOException e) {
-      throw new IOException(
-          String.format("Error initializing %s from disk: %s.", rule, e.getMessage()), e);
-    }
 
-    return Futures.immediateFuture(input);
+      try (Scope ignored = LeafEvents.scope(eventBus, "finalizing_build_rule")) {
+        // We shouldn't see any build fail result at this point.
+        BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
+        if (success.isMatchingKey()) {
+          finalizeMatchingKey(success);
+        } else {
+          finalizeBuiltLocallyOrFetchedFromCache(success, outputSize);
+        }
+      } catch (Exception e) {
+        throw new BuckUncheckedExecutionException(e, "When finalizing rule.");
+      }
+
+      // Give the rule a chance to populate its internal data structures now that all of
+      // the files should be in a valid state.
+      try {
+        if (rule instanceof InitializableFromDisk) {
+          doInitializeFromDisk((InitializableFromDisk<?>) rule);
+        }
+      } catch (IOException e) {
+        throw new IOException(
+            String.format("Error initializing %s from disk: %s.", rule, e.getMessage()), e);
+      }
+
+      return Futures.immediateFuture(input);
+    } finally {
+      // The BuildInfoRecorder should not be accessed after this point. It does not accurately
+      // reflect the state of the buildrule.
+      buildInfoRecorder.discard();
+    }
   }
 
   private void finalizeBuiltLocallyOrFetchedFromCache(
@@ -419,7 +429,7 @@ class CachingBuildRuleBuilder {
     if (success != BuildRuleSuccessType.BUILT_LOCALLY) {
       try {
         for (String str : onDiskBuildInfo.getValuesOrThrow(BuildInfo.MetadataKey.RECORDED_PATHS)) {
-          buildInfoRecorder.recordArtifact(Paths.get(str));
+          getBuildInfoRecorder().recordArtifact(Paths.get(str));
         }
       } catch (IOException e) {
         LOG.error(e, "Failed to read RECORDED_PATHS for %s", rule);
@@ -429,8 +439,9 @@ class CachingBuildRuleBuilder {
 
     // Try get the output size now that all outputs have been recorded.
     if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
-      outputSize.set(buildInfoRecorder.getOutputSize());
-      buildInfoRecorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, outputSize.get().toString());
+      outputSize.set(getBuildInfoRecorder().getOutputSize());
+      getBuildInfoRecorder()
+          .addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, outputSize.get().toString());
     }
 
     // If the success type means the rule has potentially changed it's outputs...
@@ -443,7 +454,7 @@ class CachingBuildRuleBuilder {
       }
 
       // Invalidate any cached hashes for the output paths, since we've updated them.
-      for (Path path : buildInfoRecorder.getRecordedPaths()) {
+      for (Path path : getBuildInfoRecorder().getRecordedPaths()) {
         fileHashCache.invalidate(rule.getProjectFilesystem().resolve(path));
       }
     }
@@ -454,12 +465,13 @@ class CachingBuildRuleBuilder {
     // during cache upload that try to ensure they are present.
     if (SupportsInputBasedRuleKey.isSupported(rule)
         && success == BuildRuleSuccessType.BUILT_LOCALLY
-        && !buildInfoRecorder
+        && !getBuildInfoRecorder()
             .getBuildMetadataFor(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)
             .isPresent()
         && inputBasedKey.get().isPresent()) {
-      buildInfoRecorder.addBuildMetadata(
-          BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputBasedKey.get().get().toString());
+      getBuildInfoRecorder()
+          .addBuildMetadata(
+              BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputBasedKey.get().get().toString());
     }
 
     // If this rule uses dep files and we built locally, make sure we store the new dep file
@@ -481,23 +493,24 @@ class CachingBuildRuleBuilder {
               .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
               .map(ObjectMappers.toJsonFunction())
               .collect(MoreCollectors.toImmutableList());
-      buildInfoRecorder.addMetadata(BuildInfo.MetadataKey.DEP_FILE, inputStrings);
+      getBuildInfoRecorder().addMetadata(BuildInfo.MetadataKey.DEP_FILE, inputStrings);
 
       // Re-calculate and store the depfile rule key for next time.
       Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
           calculateDepFileRuleKey(Optional.of(inputStrings), /* allowMissingInputs */ false);
       if (depFileRuleKeyAndInputs.isPresent()) {
         RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
-        buildInfoRecorder.addBuildMetadata(
-            BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
+        getBuildInfoRecorder()
+            .addBuildMetadata(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
 
         // Push an updated manifest to the cache.
         if (useManifestCaching()) {
           // TODO(cjhopman): This should be able to use manifestKeySupplier.
           Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(eventBus);
           if (manifestKey.isPresent()) {
-            buildInfoRecorder.addBuildMetadata(
-                BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
+            getBuildInfoRecorder()
+                .addBuildMetadata(
+                    BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
             updateAndStoreManifest(
                 depFileRuleKeyAndInputs.get().getRuleKey(),
                 depFileRuleKeyAndInputs.get().getInputs(),
@@ -522,13 +535,13 @@ class CachingBuildRuleBuilder {
     if (success == BuildRuleSuccessType.BUILT_LOCALLY
         && shouldUploadToCache(success, Preconditions.checkNotNull(outputSize.get()))) {
       ImmutableSortedMap.Builder<String, String> outputHashes = ImmutableSortedMap.naturalOrder();
-      for (Path path : buildInfoRecorder.getOutputPaths()) {
+      for (Path path : getBuildInfoRecorder().getOutputPaths()) {
         outputHashes.put(
             path.toString(),
             fileHashCache.get(rule.getProjectFilesystem().resolve(path)).toString());
       }
-      buildInfoRecorder.addBuildMetadata(
-          BuildInfo.MetadataKey.RECORDED_PATH_HASHES, outputHashes.build());
+      getBuildInfoRecorder()
+          .addBuildMetadata(BuildInfo.MetadataKey.RECORDED_PATH_HASHES, outputHashes.build());
     }
 
     // If this rule was fetched from cache, seed the file hash cache with the recorded
@@ -557,10 +570,13 @@ class CachingBuildRuleBuilder {
 
     // Make sure the origin field is filled in.
     if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
-      buildInfoRecorder.addBuildMetadata(BuildInfo.MetadataKey.ORIGIN_BUILD_ID, buildId.toString());
+      getBuildInfoRecorder()
+          .addBuildMetadata(BuildInfo.MetadataKey.ORIGIN_BUILD_ID, buildId.toString());
     } else if (success.outputsHaveChanged()) {
       Preconditions.checkState(
-          buildInfoRecorder.getBuildMetadataFor(BuildInfo.MetadataKey.ORIGIN_BUILD_ID).isPresent(),
+          getBuildInfoRecorder()
+              .getBuildMetadataFor(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
+              .isPresent(),
           "Cache hits must populate the %s field (%s)",
           BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
           success);
@@ -568,19 +584,20 @@ class CachingBuildRuleBuilder {
 
     // Make sure that all of the local files have the same values they would as if the
     // rule had been built locally.
-    buildInfoRecorder.addBuildMetadata(
-        BuildInfo.MetadataKey.TARGET, rule.getBuildTarget().toString());
-    buildInfoRecorder.addMetadata(
-        BuildInfo.MetadataKey.RECORDED_PATHS,
-        buildInfoRecorder
-            .getRecordedPaths()
-            .stream()
-            .map(Object::toString)
-            .collect(MoreCollectors.toImmutableList()));
+    getBuildInfoRecorder()
+        .addBuildMetadata(BuildInfo.MetadataKey.TARGET, rule.getBuildTarget().toString());
+    getBuildInfoRecorder()
+        .addMetadata(
+            BuildInfo.MetadataKey.RECORDED_PATHS,
+            getBuildInfoRecorder()
+                .getRecordedPaths()
+                .stream()
+                .map(Object::toString)
+                .collect(MoreCollectors.toImmutableList()));
     if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
       try {
         boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
-        buildInfoRecorder.writeMetadataToDisk(clearExistingMetadata);
+        getBuildInfoRecorder().writeMetadataToDisk(clearExistingMetadata);
       } catch (IOException e) {
         throw new IOException(String.format("Failed to write metadata to disk for %s.", rule), e);
       }
@@ -589,6 +606,10 @@ class CachingBuildRuleBuilder {
     if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
       onDiskBuildInfo.writeOutputHash(fileHashCache);
     }
+  }
+
+  private BuildInfoRecorder getBuildInfoRecorder() {
+    return buildInfoRecorder.get();
   }
 
   private void uploadToCache(BuildRuleSuccessType success) {
@@ -702,16 +723,18 @@ class CachingBuildRuleBuilder {
     for (String name : names) {
       String value = cacheResult.getMetadata().get(name);
       if (value != null) {
-        buildInfoRecorder.addBuildMetadata(name, value);
+        getBuildInfoRecorder().addBuildMetadata(name, value);
       }
     }
   }
 
   // Copy the fetched artifacts build ID to the current builds "origin" build ID.
   private void fillInOriginFromCache(CacheResult cacheResult) {
-    buildInfoRecorder.addBuildMetadata(
-        BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
-        Preconditions.checkNotNull(cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
+    getBuildInfoRecorder()
+        .addBuildMetadata(
+            BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
+            Preconditions.checkNotNull(
+                cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
@@ -720,8 +743,8 @@ class CachingBuildRuleBuilder {
     if (!manifestKey.isPresent()) {
       return Futures.immediateFuture(Optional.empty());
     }
-    buildInfoRecorder.addBuildMetadata(
-        BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().toString());
+    getBuildInfoRecorder()
+        .addBuildMetadata(BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().toString());
     try (Scope ignored = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
       return performManifestBasedCacheFetch(manifestKey.get());
     }
@@ -735,8 +758,8 @@ class CachingBuildRuleBuilder {
             /* allowMissingInputs */ true);
     if (depFileRuleKeyAndInputs.isPresent()) {
       RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
-      buildInfoRecorder.addBuildMetadata(
-          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
+      getBuildInfoRecorder()
+          .addBuildMetadata(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
 
       // Check the input-based rule key says we're already built.
       Optional<RuleKey> lastDepFileRuleKey =
@@ -1500,8 +1523,8 @@ class CachingBuildRuleBuilder {
       throws IOException {
     Preconditions.checkArgument(SupportsInputBasedRuleKey.isSupported(rule));
 
-    buildInfoRecorder.addBuildMetadata(
-        BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString());
+    getBuildInfoRecorder()
+        .addBuildMetadata(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString());
 
     // Check the input-based rule key says we're already built.
     if (checkMatchingInputBasedKey(inputRuleKey)) {

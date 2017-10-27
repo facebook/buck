@@ -28,9 +28,11 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -77,25 +79,22 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<ImmutableList<String>> getValues(String key) {
-    Optional<String> value = getValue(key);
-    if (!value.isPresent()) {
-      return Optional.empty();
-    }
     try {
-      ImmutableList<String> list =
-          ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
-      return Optional.of(list);
-    } catch (IOException ignored) {
+      return Optional.of(getValuesOrThrow(key));
+    } catch (IOException e) {
       return Optional.empty();
     }
   }
 
   @Override
   public ImmutableList<String> getValuesOrThrow(String key) throws IOException {
-    Optional<ImmutableList<String>> values = getValues(key);
-    if (values.isPresent()) {
-      return values.get();
-    } else {
+    Optional<String> value = getValue(key);
+    if (!value.isPresent()) {
+      throw new FileNotFoundException(metadataDirectory.resolve(key).toString());
+    }
+    try {
+      return ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
+    } catch (IOException ignored) {
       Path path = projectFilesystem.getPathForRelativePath(metadataDirectory.resolve(key));
       BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
       throw new IOException(
@@ -186,8 +185,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public ImmutableMap<String, String> getMetadataForArtifact() throws IOException {
-    return buildInfoStore.getAllMetadata(buildTarget);
+  public ImmutableSortedMap<String, String> getMetadataForArtifact() throws IOException {
+    return ImmutableSortedMap.copyOf(buildInfoStore.getAllMetadata(buildTarget));
   }
 
   @Override
