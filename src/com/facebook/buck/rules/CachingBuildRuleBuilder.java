@@ -94,7 +94,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -433,18 +432,16 @@ class CachingBuildRuleBuilder {
 
   private void finalizeFetchedFromCache(BuildRuleSuccessType success)
       throws StepFailedException, InterruptedException, IOException {
-    // If we didn't build the rule locally, reload the recorded paths from the build
-    // metadata.
-    if (success != BuildRuleSuccessType.BUILT_LOCALLY) {
-      try {
-        for (String str : onDiskBuildInfo.getValuesOrThrow(BuildInfo.MetadataKey.RECORDED_PATHS)) {
-          getBuildInfoRecorder().recordArtifact(Paths.get(str));
-        }
-      } catch (IOException e) {
-        LOG.error(e, "Failed to read RECORDED_PATHS for %s", rule);
-        throw e;
-      }
-    }
+    // For rules fetched from cache, we want to overwrite just the minimum set of things from the
+    // cache result. Ensure that nobody has accidentally added unnecessary information to the
+    // recorder.
+    getBuildInfoRecorder()
+        .assertOnlyHasKeys(
+            BuildInfo.MetadataKey.BUILD_ID,
+            BuildInfo.MetadataKey.RULE_KEY,
+            BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
+            BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+            BuildInfo.MetadataKey.MANIFEST_KEY);
 
     // The build has succeeded, whether we've fetched from cache, or built locally.
     // So run the post-build steps.
@@ -453,7 +450,7 @@ class CachingBuildRuleBuilder {
     }
 
     // Invalidate any cached hashes for the output paths, since we've updated them.
-    for (Path path : getBuildInfoRecorder().getRecordedPaths()) {
+    for (Path path : onDiskBuildInfo.getOutputPaths()) {
       fileHashCache.invalidate(rule.getProjectFilesystem().resolve(path));
     }
 
@@ -479,33 +476,48 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    Preconditions.checkState(
+    switch (success) {
+      case FETCHED_FROM_CACHE:
+        break;
+      case FETCHED_FROM_CACHE_MANIFEST_BASED:
+        if (SupportsInputBasedRuleKey.isSupported(rule)) {
+          // The input-based key should already be computed.
+          inputBasedKey
+              .get()
+              .ifPresent(
+                  key ->
+                      getBuildInfoRecorder()
+                          .addBuildMetadata(
+                              BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, key.toString()));
+        }
+        // $FALL-THROUGH$
+      case FETCHED_FROM_CACHE_INPUT_BASED:
         getBuildInfoRecorder()
-            .getBuildMetadataFor(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
-            .isPresent(),
-        "Cache hits must populate the %s field (%s)",
-        BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
-        success);
+            .addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, defaultKey.toString());
+        break;
 
-    // Make sure that all of the local files have the same values they would as if the
-    // rule had been built locally.
+      case BUILT_LOCALLY:
+
+      case MATCHING_RULE_KEY:
+      case MATCHING_INPUT_BASED_RULE_KEY:
+      case MATCHING_DEP_FILE_RULE_KEY:
+        throw new RuntimeException(String.format("Unexpected success type %s.", success));
+    }
+
+    // TODO(cjhopman): input-based/depfile each rewrite the matching key, that's unnecessary.
+    // TODO(cjhopman): this writes the current build-id/timestamp/extra-data, that's probably
+    // unnecessary.
     getBuildInfoRecorder()
-        .addBuildMetadata(BuildInfo.MetadataKey.TARGET, rule.getBuildTarget().toString());
-    getBuildInfoRecorder()
-        .addMetadata(
-            BuildInfo.MetadataKey.RECORDED_PATHS,
-            getBuildInfoRecorder()
-                .getRecordedPaths()
-                .stream()
-                .map(Object::toString)
-                .collect(MoreCollectors.toImmutableList()));
-    if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
-      try {
-        boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
-        getBuildInfoRecorder().writeMetadataToDisk(clearExistingMetadata);
-      } catch (IOException e) {
-        throw new IOException(String.format("Failed to write metadata to disk for %s.", rule), e);
-      }
+        .assertOnlyHasKeys(
+            BuildInfo.MetadataKey.RULE_KEY,
+            BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
+            BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+            BuildInfo.MetadataKey.MANIFEST_KEY,
+            BuildInfo.MetadataKey.BUILD_ID);
+    try {
+      getBuildInfoRecorder().updateBuildMetadata();
+    } catch (IOException e) {
+      throw new IOException(String.format("Failed to write metadata to disk for %s.", rule), e);
     }
   }
 
@@ -745,25 +757,6 @@ class CachingBuildRuleBuilder {
     }
   }
 
-  private void fillMissingBuildMetadataFromCache(CacheResult cacheResult, String... names) {
-    Preconditions.checkState(cacheResult.getType() == CacheResultType.HIT);
-    for (String name : names) {
-      String value = cacheResult.getMetadata().get(name);
-      if (value != null) {
-        getBuildInfoRecorder().addBuildMetadata(name, value);
-      }
-    }
-  }
-
-  // Copy the fetched artifacts build ID to the current builds "origin" build ID.
-  private void fillInOriginFromCache(CacheResult cacheResult) {
-    getBuildInfoRecorder()
-        .addBuildMetadata(
-            BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
-            Preconditions.checkNotNull(
-                cacheResult.getMetadata().get(BuildInfo.MetadataKey.BUILD_ID)));
-  }
-
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
     Optional<RuleKey> manifestKey =
         manifestBasedKeySupplier.get().map(RuleKeyAndInputs::getRuleKey);
@@ -984,12 +977,6 @@ class CachingBuildRuleBuilder {
     if (!cacheResult.getType().isSuccess()) {
       return Optional.empty();
     }
-    fillInOriginFromCache(cacheResult);
-    fillMissingBuildMetadataFromCache(
-        cacheResult,
-        BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
-        BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-        BuildInfo.MetadataKey.DEP_FILE);
     return Optional.of(
         BuildResult.success(
             rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult, uploadCompleteFuture));
@@ -1231,6 +1218,12 @@ class CachingBuildRuleBuilder {
         onDiskBuildInfo.validateArtifact(artifact);
       }
 
+      Preconditions.checkState(
+          cacheResult.getMetadata().containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),
+          "Cache artifact for rulekey %s is missing metadata %s.",
+          ruleKey,
+          BuildInfo.MetadataKey.ORIGIN_BUILD_ID);
+
       Unzip.extractZipFile(
           zipPath.toAbsolutePath(),
           filesystem,
@@ -1240,6 +1233,8 @@ class CachingBuildRuleBuilder {
       // around for debugging purposes.
       Files.delete(zipPath);
 
+      // TODO(cjhopman): This should probably record metadata with the buildInfoRecorder, not
+      // directly into the buildInfoStore.
       // Also write out the build metadata.
       buildInfoStore.updateMetadata(rule.getBuildTarget(), cacheResult.getMetadata());
     } finally {
@@ -1519,11 +1514,6 @@ class CachingBuildRuleBuilder {
                   rule.getProjectFilesystem()),
               cacheResult -> {
                 if (cacheResult.getType().isSuccess()) {
-                  fillInOriginFromCache(cacheResult);
-                  fillMissingBuildMetadataFromCache(
-                      cacheResult,
-                      BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-                      BuildInfo.MetadataKey.DEP_FILE);
                   return Optional.of(
                       BuildResult.success(
                           rule,
@@ -1574,11 +1564,6 @@ class CachingBuildRuleBuilder {
         cacheResult -> {
           if (cacheResult.getType().isSuccess()) {
             try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {
-              fillInOriginFromCache(cacheResult);
-              fillMissingBuildMetadataFromCache(
-                  cacheResult,
-                  BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-                  BuildInfo.MetadataKey.DEP_FILE);
               return Optional.of(
                   BuildResult.success(
                       rule,

@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -155,13 +156,17 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
+  public ImmutableSortedSet<Path> getOutputPaths() {
+    return RichStream.from(getValues(BuildInfo.MetadataKey.RECORDED_PATHS).get())
+        .map(Paths::get)
+        .concat(RichStream.of(metadataDirectory))
+        .collect(MoreCollectors.toImmutableSortedSet());
+  }
+
+  @Override
   public ImmutableSortedSet<Path> getPathsForArtifact() throws IOException {
     ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-    for (Path path :
-        RichStream.from(getValues(BuildInfo.MetadataKey.RECORDED_PATHS).get())
-            .map(Paths::get)
-            .concat(RichStream.of(metadataDirectory))
-            .toOnceIterable()) {
+    for (Path path : getOutputPaths()) {
       paths.add(path);
       projectFilesystem.walkFileTree(
           path,

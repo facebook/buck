@@ -78,4 +78,6 @@ interface OnDiskBuildInfo {
   void writeOutputHash(FileHashCache fileHashCache) throws IOException;
 
   void validateArtifact(ZipFile artifact);
+
+  ImmutableSortedSet<Path> getOutputPaths();
 }

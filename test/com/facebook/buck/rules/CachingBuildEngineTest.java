@@ -168,7 +168,7 @@ import org.junit.runners.Parameterized;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 @RunWith(Enclosed.class)
 public class CachingBuildEngineTest {
-
+  private static final boolean DEBUG = false;
   private static final BuildTarget BUILD_TARGET =
       BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
   private static final SourcePathRuleFinder DEFAULT_RULE_FINDER =
@@ -3749,6 +3749,9 @@ public class CachingBuildEngineTest {
                     buildRule)
                 .getResult()
                 .get();
+        if (DEBUG && result.getFailure() != null) {
+          result.getFailure().printStackTrace();
+        }
         lastSuccessType = result.getSuccess();
         return result;
       }
