@@ -330,8 +330,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     outputJarContentsSupplier.load();
-    return JavaLibraryRules.initializeFromDisk(
-        getBuildTarget(), getProjectFilesystem(), onDiskBuildInfo);
+    return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
   }
 
   @Override

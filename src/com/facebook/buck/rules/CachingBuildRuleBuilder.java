@@ -907,8 +907,7 @@ class CachingBuildRuleBuilder {
                     Preconditions.checkNotNull(rulekeyCacheResult.get()),
                     service
                         // This needs to adjust the default amounts even in the non-resource-aware
-                        // scheduling
-                        // case so that RuleScheduleInfo works correctly.
+                        // scheduling case so that RuleScheduleInfo works correctly.
                         .withDefaultAmounts(getRuleResourceAmounts())));
 
     if (SupportsPipelining.isSupported(rule)) {
@@ -1107,8 +1106,7 @@ class CachingBuildRuleBuilder {
         cacheResult -> {
           try (Scope ignored = buildRuleScope()) {
             // Verify that the rule key we used to fetch the artifact is one of the rule keys
-            // reported in
-            // it's metadata.
+            // reported in it's metadata.
             if (cacheResult.getType().isSuccess()) {
               ImmutableSet<RuleKey> ruleKeys =
                   RichStream.from(cacheResult.getMetadata().entrySet())

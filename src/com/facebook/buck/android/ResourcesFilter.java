@@ -371,8 +371,8 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     ImmutableList<Path> stringFiles =
-        onDiskBuildInfo
-            .getOutputFileContentsByLine(getStringFilesPath())
+        getProjectFilesystem()
+            .readLines(getStringFilesPath())
             .stream()
             .map(Paths::get)
             .collect(MoreCollectors.toImmutableList());

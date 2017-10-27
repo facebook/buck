@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
@@ -72,11 +71,9 @@ public class JavaLibraryRules {
     buildableContext.recordArtifact(pathToClassHashes);
   }
 
-  static JavaLibrary.Data initializeFromDisk(
-      BuildTarget buildTarget, ProjectFilesystem filesystem, OnDiskBuildInfo onDiskBuildInfo)
+  static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)
       throws IOException {
-    List<String> lines =
-        onDiskBuildInfo.getOutputFileContentsByLine(getPathToClassHashes(buildTarget, filesystem));
+    List<String> lines = filesystem.readLines(getPathToClassHashes(buildTarget, filesystem));
     ImmutableSortedMap<String, HashCode> classHashes =
         AccumulateClassNamesStep.parseClassHashes(lines);
 

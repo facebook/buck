@@ -172,8 +172,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                   return Iterables.getOnlyElement(filtered);
                 })
             // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
-            // we
-            // really don't end up ignoring it in reality (see extractIgnorePaths).
+            // we really don't end up ignoring it in reality (see extractIgnorePaths).
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
             .transform(PathOrGlobMatcher::new)
             .append(

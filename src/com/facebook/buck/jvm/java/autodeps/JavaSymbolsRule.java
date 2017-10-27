@@ -80,7 +80,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
 
   @Override
   public Symbols initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    List<String> lines = onDiskBuildInfo.getOutputFileContentsByLine(outputPath);
+    List<String> lines = getProjectFilesystem().readLines(outputPath);
     Preconditions.checkArgument(lines.size() == 1, "Should be one line of JSON: %s", lines);
     return ObjectMappers.readValue(lines.get(0), Symbols.class);
   }
