@@ -26,6 +26,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -127,7 +128,8 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
       Elements elements, Element element, ImmutableList<HasJavaAbi> classpath) {
     TypeElement enclosingType = MoreElements.getTypeElement(element);
     String classFilePath =
-        elements.getBinaryName(enclosingType).toString().replace('.', '/') + ".class";
+        elements.getBinaryName(enclosingType).toString().replace('.', File.separatorChar)
+            + ".class";
 
     for (HasJavaAbi classpathRule : classpath) {
       if (classpathRule.jarContains(classFilePath)) {
