@@ -34,6 +34,8 @@ class JavaFile:
         self.imports.add(type)
 
     def replace_name(self, line, col, old, new):
+        if self.lines[line - 1][col - 1] == '.':
+            col += 1
         self.replacements.add(Replacement(line, col, old, new))
 
     def write(self):
