@@ -1,5 +1,3 @@
-# BUILD FILE SYNTAX: PYTHON_DSL
-
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
