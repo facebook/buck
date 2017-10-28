@@ -21,6 +21,8 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -176,6 +178,7 @@ public class JsRulesIntegrationTest {
   @Test
   public void iOSApplicationContainsJsAndResources() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace.runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(Paths.get("ios_app.expected"), genPath);
@@ -215,6 +218,7 @@ public class JsRulesIntegrationTest {
   @Test
   public void appleBundleDependingOnJsBundleGenruleContainsBundleAndResources() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace
         .runBuckBuild("//ios:DemoAppWithJsBundleGenrule#iphonesimulator-x86_64,no-debug")

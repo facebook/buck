@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -52,6 +54,7 @@ public class IosReactNativeLibraryIntegrationTest {
 
   @Test
   public void testBundleOutputContainsJSAndResources() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     setupWorkspace("ios_rn");
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
@@ -64,6 +67,7 @@ public class IosReactNativeLibraryIntegrationTest {
 
   @Test
   public void testUnbundleOutputContainsJSAndResources() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     setupWorkspace("ios_rn");
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
@@ -77,6 +81,7 @@ public class IosReactNativeLibraryIntegrationTest {
   @Test
   public void testFlavoredBundleOutputDoesNotContainJSAndResources()
       throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     setupWorkspace("ios_rn");
     workspace
         .runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle,no-debug")
