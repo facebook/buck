@@ -20,29 +20,26 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.stream.Stream;
 
 /**
@@ -93,28 +90,25 @@ import java.util.stream.Stream;
  * As a rule of thumb, if the "out" parameter is missing, the "name" parameter is used as the name
  * of the file to be saved.
  */
-public class ExportFile extends AbstractBuildRule
-    implements HasOutputName, HasRuntimeDeps, SupportsInputBasedRuleKey {
+// TODO(simons): Extend to also allow exporting a rule.
+public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements HasOutputName, HasRuntimeDeps {
 
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ExportFileDescription.Mode mode;
   @AddToRuleKey private final SourcePath src;
 
-  private final ImmutableSortedSet<BuildRule> buildDeps;
-
   public ExportFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
+      BuildRuleParams buildRuleParams,
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
-    super(buildTarget, projectFilesystem);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.name = name;
     this.mode = mode;
     this.src = src;
-    this.buildDeps =
-        ruleFinder.getRule(src).map(ImmutableSortedSet::of).orElse(ImmutableSortedSet.of());
   }
 
   @VisibleForTesting
@@ -129,11 +123,6 @@ public class ExportFile extends AbstractBuildRule
         .getGenDir()
         .resolve(getBuildTarget().getBasePath())
         .resolve(name);
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps;
   }
 
   @Override
@@ -191,8 +180,8 @@ public class ExportFile extends AbstractBuildRule
     // When using reference mode, we need to make sure that any build rule that builds the source
     // is built when we are, so accomplish this by exporting it as a runtime dep.
     Optional<BuildRule> rule = ruleFinder.getRule(src);
-    return mode == ExportFileDescription.Mode.REFERENCE
-        ? RichStream.from(rule).map(BuildRule::getBuildTarget)
+    return mode == ExportFileDescription.Mode.REFERENCE && rule.isPresent()
+        ? Stream.of(rule.get().getBuildTarget())
         : Stream.empty();
   }
 }
