@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
@@ -25,10 +23,8 @@ import org.immutables.value.Value;
 /** Holds a path to a file and a path to a file containing the hash of the first. */
 @BuckStyleTuple
 @Value.Immutable
-interface AbstractExopackagePathAndHash extends AddsToRuleKey {
-  @AddToRuleKey
+interface AbstractExopackagePathAndHash {
   SourcePath getPath();
 
-  @AddToRuleKey
   SourcePath getHashPath();
 }
