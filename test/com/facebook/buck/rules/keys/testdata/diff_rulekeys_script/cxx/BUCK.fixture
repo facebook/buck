@@ -20,4 +20,5 @@ python_binary(
   name = 'cxx',
   main_module = 'cxx',
   deps = [ ':cxx_py_lib' ],
+  visibility = [ 'PUBLIC' ],
 )

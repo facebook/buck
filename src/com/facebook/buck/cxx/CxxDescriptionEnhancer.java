@@ -1305,6 +1305,8 @@ public class CxxDescriptionEnhancer {
     return StringWithMacrosArg.of(
         flag,
         ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform)),
+        Optional.of(
+            s -> cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()).apply(s)),
         target,
         cellPathResolver,
         resolver);

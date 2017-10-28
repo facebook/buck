@@ -924,6 +924,7 @@ public class ProjectGenerator {
       StringWithMacrosArg.of(
               flag,
               ImmutableList.of(locationMacroExpander),
+              Optional.empty(),
               node.getBuildTarget(),
               node.getCellNames(),
               emptyBuildRuleResolver)

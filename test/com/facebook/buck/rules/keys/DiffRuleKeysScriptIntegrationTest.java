@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
@@ -236,6 +237,24 @@ public class DiffRuleKeysScriptIntegrationTest {
                 + "  (srcs):\n"
                 + "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]\n"
                 + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]"));
+  }
+
+  @Test
+  public void testPreprocessorSanitization() throws Exception {
+    Assume.assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "diff_rulekeys_script", tmp);
+    workspace.setUp();
+
+    invokeBuckCommand(workspace, ImmutableList.of("//apple:cxx_bin"), "buck-0.log");
+
+    Path logPath = tmp.getRoot().resolve("buck-0.log");
+    String expectedFileContent = new String(Files.readAllBytes(logPath), UTF_8);
+    assertThat(
+        expectedFileContent,
+        Matchers.containsString(
+            "string(\"-I$SDKROOT/usr/include/libxml2\"):container(LIST,len=1):key(macros)::"));
   }
 
   private void writeBuckConfig(ProjectWorkspace projectWorkspace, String javaVersion)

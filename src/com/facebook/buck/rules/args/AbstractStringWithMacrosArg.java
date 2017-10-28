@@ -34,6 +34,8 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -49,6 +51,8 @@ abstract class AbstractStringWithMacrosArg implements Arg {
 
   abstract ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
       getExpanders();
+
+  abstract Optional<Function<String, String>> getSanitizer();
 
   abstract BuildTarget getBuildTarget();
 
@@ -143,6 +147,16 @@ abstract class AbstractStringWithMacrosArg implements Arg {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively(
-        "macros", getStringWithMacros().map(s -> s, this::extractRuleKeyAppendables));
+        "macros",
+        getStringWithMacros()
+            .map(
+                s -> {
+                  if (getSanitizer().isPresent()) {
+                    return getSanitizer().get().apply(s);
+                  } else {
+                    return s;
+                  }
+                },
+                this::extractRuleKeyAppendables));
   }
 }

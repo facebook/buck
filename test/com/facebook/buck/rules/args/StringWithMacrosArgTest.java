@@ -39,6 +39,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -72,6 +73,7 @@ public class StringWithMacrosArgTest {
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format("--test"),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -82,6 +84,7 @@ public class StringWithMacrosArgTest {
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format("--test=%s", LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -96,6 +99,7 @@ public class StringWithMacrosArgTest {
                 LocationMacro.of(rule2.getBuildTarget()),
                 LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -118,6 +122,7 @@ public class StringWithMacrosArgTest {
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format("--test"),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -128,6 +133,7 @@ public class StringWithMacrosArgTest {
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format("--test=%s", LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -142,6 +148,7 @@ public class StringWithMacrosArgTest {
                 LocationMacro.of(rule2.getBuildTarget()),
                 LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -172,6 +179,7 @@ public class StringWithMacrosArgTest {
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format("--test"),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -183,6 +191,7 @@ public class StringWithMacrosArgTest {
         StringWithMacrosArg.of(
             StringWithMacrosUtils.format("--test=%s", LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
@@ -202,6 +211,7 @@ public class StringWithMacrosArgTest {
                 LocationMacro.of(rule2.getBuildTarget()),
                 LocationMacro.of(rule1.getBuildTarget())),
             MACRO_EXPANDERS,
+            Optional.empty(),
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);

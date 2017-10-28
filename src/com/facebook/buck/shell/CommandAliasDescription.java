@@ -93,13 +93,15 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
 
     for (StringWithMacros x : args.getArgs()) {
       toolBuilder.addArg(
-          StringWithMacrosArg.of(x, MACRO_EXPANDERS, buildTarget, cellRoots, resolver));
+          StringWithMacrosArg.of(
+              x, MACRO_EXPANDERS, Optional.empty(), buildTarget, cellRoots, resolver));
     }
 
     for (Map.Entry<String, StringWithMacros> x : args.getEnv().entrySet()) {
       toolBuilder.addEnv(
           x.getKey(),
-          StringWithMacrosArg.of(x.getValue(), MACRO_EXPANDERS, buildTarget, cellRoots, resolver));
+          StringWithMacrosArg.of(
+              x.getValue(), MACRO_EXPANDERS, Optional.empty(), buildTarget, cellRoots, resolver));
     }
 
     CommandTool commandTool = toolBuilder.build();
