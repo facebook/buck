@@ -133,7 +133,6 @@ public class AndroidBinary extends AbstractBuildRule
 
   private final Optional<BuildRule> moduleVerification;
   private final Optional<ExopackageInfo> exopackageInfo;
-  private final SourcePath manifestPath;
 
   private final BuildRuleParams buildRuleParams;
 
@@ -192,7 +191,6 @@ public class AndroidBinary extends AbstractBuildRule
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
     this.moduleVerification = moduleVerification;
-    this.manifestPath = enhancementResult.getAndroidManifestPath();
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -327,7 +325,7 @@ public class AndroidBinary extends AbstractBuildRule
   public ApkInfo getApkInfo() {
     return ApkInfo.builder()
         .setApkPath(getSourcePathToOutput())
-        .setManifestPath(manifestPath)
+        .setManifestPath(getManifestPath())
         .setExopackageInfo(exopackageInfo)
         .build();
   }
@@ -365,6 +363,10 @@ public class AndroidBinary extends AbstractBuildRule
 
   public Keystore getKeystore() {
     return keystore;
+  }
+
+  private SourcePath getManifestPath() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getManifestPath());
   }
 
   public SortedSet<BuildRule> getClasspathDeps() {
