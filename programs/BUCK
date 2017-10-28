@@ -1,5 +1,3 @@
-# BUILD FILE SYNTAX: PYTHON_DSL
-
 python_library(
     name = "subprocutils",
     srcs = [
@@ -95,7 +93,7 @@ python_library(
     ],
 )
 
-load("//programs:macro_defs", "interpreter_override_args")
+load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
 
 python_binary(
     name = "buck",
