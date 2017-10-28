@@ -122,7 +122,14 @@ def add_source_only_abi_deps(message):
     rules = match.group("rules").split(", ")
 
     buck_target = buck.get_build_target(rule)
-    buck_target["source_only_abi_deps"] = "[ \"%s\" ]" % ("\", \"".join(rules))
+
+    if not "source_only_abi_deps" in buck_target:
+        buck_target["source_only_abi_deps"] = buck.EditableList()
+    source_only_abi_deps = buck_target["source_only_abi_deps"]
+
+    for dep in rules:
+        if not dep in source_only_abi_deps:
+            source_only_abi_deps.prepend(dep)
 
 
 def do_remediations(message):
