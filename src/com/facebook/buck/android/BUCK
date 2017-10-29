@@ -136,6 +136,7 @@ java_immutables_library(
         ":utils",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/keys:keys",
     ],
@@ -147,7 +148,8 @@ java_immutables_library(
     ],
     tests = [
         "//test/com/facebook/buck/android:aar-integration",
-        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:binary-integration-1",
+        "//test/com/facebook/buck/android:binary-integration-2",
         "//test/com/facebook/buck/android:build-config-integration",
         "//test/com/facebook/buck/android:instrumentation-integration",
         "//test/com/facebook/buck/android:integration1",
@@ -262,7 +264,8 @@ java_library(
     name = "split_dex",
     srcs = SPLIT_DEX_SRCS,
     tests = [
-        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:binary-integration-1",
+        "//test/com/facebook/buck/android:binary-integration-2",
         "//test/com/facebook/buck/android:instrumentation-integration",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -351,6 +354,9 @@ UTILS_SRCS = [
 java_immutables_library(
     name = "utils",
     srcs = UTILS_SRCS,
+    exported_deps = [
+        "//third-party/java/android:ddmlib",
+    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -369,7 +375,6 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/xml:xml",
-        "//third-party/java/android:ddmlib",
         "//third-party/java/guava:guava",
     ],
 )

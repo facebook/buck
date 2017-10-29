@@ -43,7 +43,7 @@ public class AndroidFullExopackageBinaryIntegrationTest {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryIntegrationTest(), "android_project", tmpFolder);
+            new AndroidFullExopackageBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
 
     Properties properties = System.getProperties();

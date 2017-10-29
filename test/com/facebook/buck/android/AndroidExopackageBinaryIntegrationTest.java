@@ -61,7 +61,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryIntegrationTest(), "android_project", tmpFolder);
+            new AndroidExopackageBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
 

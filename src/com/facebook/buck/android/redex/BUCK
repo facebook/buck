@@ -6,7 +6,8 @@ java_library(
         "ReDexStep.java",
     ],
     tests = [
-        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:binary-integration-1",
+        "//test/com/facebook/buck/android:binary-integration-2",
         "//test/com/facebook/buck/android/redex:redex",
     ],
     visibility = ["PUBLIC"],
