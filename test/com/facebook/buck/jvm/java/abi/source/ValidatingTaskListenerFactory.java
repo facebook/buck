@@ -86,6 +86,7 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
                 + packageElement.getSimpleName();
           }
         },
+        () -> false,
         Diagnostic.Kind.ERROR);
   }
 }

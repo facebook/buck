@@ -528,6 +528,13 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                 pluginLoader,
                 javacTask,
                 ruleInfo,
+                () ->
+                    diagnostics
+                            .getDiagnostics()
+                            .stream()
+                            .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
+                            .count()
+                        > 0,
                 abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
       }
 
