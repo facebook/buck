@@ -963,6 +963,16 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void missingDepsShouldNotCrashSourceOnlyVerifier() throws IOException {
+    setUpProjectWorkspaceForScenario("missing_deps");
+
+    ProcessResult result =
+        workspace.runBuckBuild("-c", "java.abi_generation_mode=source_only", "//:errors");
+    result.assertFailure();
+    assertThat(result.getStderr(), Matchers.not(Matchers.stringContainsInOrder("Exception")));
+  }
+
+  @Test
   public void badImportsShouldNotCrashBuck() throws IOException {
     setUpProjectWorkspaceForScenario("import_errors");
 
