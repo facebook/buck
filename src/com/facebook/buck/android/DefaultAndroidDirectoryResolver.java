@@ -82,6 +82,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private Optional<String> sdkErrorMessage;
   private Optional<String> buildToolsErrorMessage;
   private Optional<String> ndkErrorMessage;
+  private Optional<String> discoveredBuildToolsVersion;
   private final Optional<Path> sdk;
   private final Optional<Path> buildTools;
   private final Optional<Path> ndk;
@@ -103,6 +104,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     this.sdk = sdkPath;
     this.buildTools = buildToolsPath;
     this.ndk = ndkPath;
+
+    this.discoveredBuildToolsVersion = Optional.empty();
   }
 
   @Override
@@ -146,6 +149,16 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       return Optional.empty();
     }
     return findNdkVersion(ndkPath.get());
+  }
+
+  /**
+   * Returns Android SDK build tools version that was either discovered or provided during creation.
+   */
+  @VisibleForTesting
+  public Optional<String> getBuildToolsVersion() {
+    return discoveredBuildToolsVersion.isPresent()
+        ? discoveredBuildToolsVersion
+        : targetBuildToolsVersion;
   }
 
   private Pair<String, Optional<String>> getEnvironmentVariable(String key) {
@@ -263,6 +276,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
                     + ").");
         return Optional.empty();
       }
+      discoveredBuildToolsVersion = Optional.of(newestBuildDirVersion);
       return Optional.of(newestBuildDir.toPath());
     }
     if (targetBuildToolsVersion.isPresent()) {

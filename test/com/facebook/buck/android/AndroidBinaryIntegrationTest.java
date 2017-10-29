@@ -82,7 +82,6 @@ import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIn;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1133,11 +1132,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testSimpleAapt2App() throws IOException {
-    // TODO(dreiss): Remove this when aapt2 is everywhere.
-    ProjectWorkspace.ProcessResult foundAapt2 =
-        workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+  public void testSimpleAapt2App() throws Exception {
+    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
 
     ImmutableMap<String, Path> outputs =
         workspace.buildMultipleAndReturnOutputs(
@@ -1176,12 +1172,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testResourceOverridesAapt2() throws IOException {
-    // TODO(dreiss): Remove this when aapt2 is everywhere.
-    ProjectWorkspace.ProcessResult foundAapt2 =
-        workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
-
+  public void testResourceOverridesAapt2() throws Exception {
+    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
     workspace.replaceFileContents(
         "apps/sample/BUCK", "'aapt1',  # app_with_res_overrides", "'aapt2',");
 

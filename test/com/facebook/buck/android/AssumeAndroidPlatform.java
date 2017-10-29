@@ -16,11 +16,13 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assume.assumeNotNull;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AssumeAndroidPlatform {
 
@@ -34,7 +36,7 @@ public class AssumeAndroidPlatform {
     assumeNotNull(getAndroidDirectoryResolver().getSdkOrAbsent().orElse(null));
   }
 
-  private static AndroidDirectoryResolver getAndroidDirectoryResolver()
+  private static DefaultAndroidDirectoryResolver getAndroidDirectoryResolver()
       throws InterruptedException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
@@ -42,5 +44,70 @@ public class AssumeAndroidPlatform {
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
         AndroidNdkHelper.DEFAULT_CONFIG);
+  }
+
+  /**
+   * Checks that Android SDK has build tools with aapt that supports `--output-test-symbols`.
+   *
+   * <p>It seems that this option appeared in build-tools 26.0.2 and the check only verifies the
+   * version of build tools, it doesn't run aapt2 to verify it actually supports the option.
+   */
+  public static void assumeAapt2WithOutputTextSymbolsIsAvailable() throws InterruptedException {
+    DefaultAndroidDirectoryResolver androidDirectoryResolver = getAndroidDirectoryResolver();
+
+    assumeBuildToolsIsNewer(androidDirectoryResolver, "26.0.2");
+
+    assumeAapt2IsAvailable(androidDirectoryResolver);
+  }
+
+  private static void assumeAapt2IsAvailable(AndroidDirectoryResolver androidDirectoryResolver)
+      throws InterruptedException {
+    AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.getDefaultPlatformTarget(
+            androidDirectoryResolver, Optional.empty(), Optional.empty());
+
+    assumeTrue(androidPlatformTarget.getAapt2Executable().toFile().exists());
+  }
+
+  /**
+   * Checks that Android build tools have version that matches the provided or is newer.
+   *
+   * <p>Versions are expected to be in format like "25.0.2".
+   */
+  private static void assumeBuildToolsIsNewer(
+      DefaultAndroidDirectoryResolver androidDirectoryResolver, String expectedBuildToolsVersion) {
+    Optional<String> sdkBuildToolsVersion = androidDirectoryResolver.getBuildToolsVersion();
+
+    assumeTrue(sdkBuildToolsVersion.isPresent());
+
+    assumeVersionIsNewer(
+        sdkBuildToolsVersion.get(),
+        expectedBuildToolsVersion,
+        "Version "
+            + sdkBuildToolsVersion.get()
+            + " is less then requested version "
+            + expectedBuildToolsVersion);
+  }
+
+  private static void assumeVersionIsNewer(
+      String actualVersion, String expectedVersion, String message) {
+    String[] actualVersionParts = actualVersion.split("\\.");
+    String[] expectedVersionParts = expectedVersion.split("\\.");
+
+    int currentPart = 0;
+    while (currentPart < actualVersionParts.length || currentPart < expectedVersionParts.length) {
+      int actualVersionPart =
+          currentPart < actualVersionParts.length
+              ? Integer.parseInt(actualVersionParts[currentPart])
+              : 0;
+      int expectedVersionPart =
+          currentPart < expectedVersionParts.length
+              ? Integer.parseInt(expectedVersionParts[currentPart])
+              : 0;
+
+      assumeTrue(message, expectedVersionPart <= actualVersionPart);
+
+      currentPart++;
+    }
   }
 }

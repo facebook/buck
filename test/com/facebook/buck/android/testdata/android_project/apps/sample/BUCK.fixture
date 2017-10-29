@@ -624,13 +624,6 @@ android_binary(
   ],
 )
 
-genrule(
-  # Hackily check for the presence of aapt2 until all of our users have it.
-  name = 'check_for_aapt2',
-  bash = 'test -x `dirname $DX`/aapt2 > $OUT',
-  out = 'does-aapt2-exist',
-)
-
 android_binary(
   name = 'app_with_aapt2',
   aapt_mode = 'aapt2',
