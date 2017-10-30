@@ -758,6 +758,8 @@ public final class Main {
         TestConfig testConfig = new TestConfig(buckConfig);
         ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
+        SuperConsoleConfig superConsoleConfig = new SuperConsoleConfig(buckConfig);
+
         // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
         // when connecting. For now, we'll use the default from the server environment.
         Locale locale = Locale.getDefault();
@@ -765,7 +767,7 @@ public final class Main {
         InvocationInfo invocationInfo =
             InvocationInfo.of(
                 buildId,
-                isSuperConsoleEnabled(console),
+                superConsoleConfig.isEnabled(console, Platform.detect()),
                 daemon.isPresent(),
                 command.getSubCommandNameForLogging(),
                 args,
@@ -813,7 +815,7 @@ public final class Main {
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
                     clock,
-                    new SuperConsoleConfig(buckConfig),
+                    superConsoleConfig,
                     console,
                     testConfig.getResultSummaryVerbosity(),
                     executionEnvironment,
@@ -1552,7 +1554,7 @@ public final class Main {
       Locale locale,
       Path testLogPath,
       Optional<BuildId> buildId) {
-    if (isSuperConsoleEnabled(console)) {
+    if (config.isEnabled(console, Platform.detect())) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(
               config,
@@ -1580,13 +1582,6 @@ public final class Main {
         testLogPath,
         executionEnvironment,
         buildId);
-  }
-
-  private boolean isSuperConsoleEnabled(Console console) {
-    return Platform.WINDOWS != Platform.detect()
-        && console.getAnsi().isAnsiTerminal()
-        && !console.getVerbosity().shouldPrintCommand()
-        && console.getVerbosity().shouldPrintStandardInformation();
   }
 
   /**
