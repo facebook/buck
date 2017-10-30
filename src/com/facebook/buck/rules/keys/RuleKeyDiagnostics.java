@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.util.LinkedList;
@@ -33,7 +33,7 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
 
   private final Set<Object> computed = Sets.newConcurrentHashSet();
   private final Function<BuildRule, Result<RULE_KEY, DIAG_KEY>> ruleResultSupplier;
-  private final Function<RuleKeyAppendable, Result<RULE_KEY, DIAG_KEY>> appendableResultSupplier;
+  private final Function<AddsToRuleKey, Result<RULE_KEY, DIAG_KEY>> appendableResultSupplier;
 
   public static <RULE_KEY, DIAG_KEY> RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> nop() {
     return new RuleKeyDiagnostics<RULE_KEY, DIAG_KEY>(rulke -> null, appendable -> null) {
@@ -44,7 +44,7 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
 
   public RuleKeyDiagnostics(
       Function<BuildRule, Result<RULE_KEY, DIAG_KEY>> ruleResultSupplier,
-      Function<RuleKeyAppendable, Result<RULE_KEY, DIAG_KEY>> appendableResultSupplier) {
+      Function<AddsToRuleKey, Result<RULE_KEY, DIAG_KEY>> appendableResultSupplier) {
     this.ruleResultSupplier = ruleResultSupplier;
     this.appendableResultSupplier = appendableResultSupplier;
   }
@@ -59,12 +59,12 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
     if (!computed.add(rule)) {
       return;
     }
-    Queue<RuleKeyAppendable> appendableQueue = new LinkedList<>();
+    Queue<AddsToRuleKey> appendableQueue = new LinkedList<>();
     Result<RULE_KEY, DIAG_KEY> result = ruleResultSupplier.apply(rule);
     Iterables.addAll(appendableQueue, result.appendables);
     resultConsumer.accept(result);
     while (!appendableQueue.isEmpty()) {
-      RuleKeyAppendable appendable = appendableQueue.remove();
+      AddsToRuleKey appendable = appendableQueue.remove();
       if (computed.add(appendable)) {
         result = appendableResultSupplier.apply(appendable);
         Iterables.addAll(appendableQueue, result.appendables);
@@ -76,9 +76,9 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
   public static class Result<RULE_KEY, DIAG_KEY> {
     public final RULE_KEY ruleKey;
     public final DIAG_KEY diagKey;
-    final Iterable<RuleKeyAppendable> appendables;
+    final Iterable<AddsToRuleKey> appendables;
 
-    public Result(RULE_KEY ruleKey, DIAG_KEY diagKey, Iterable<RuleKeyAppendable> appendables) {
+    public Result(RULE_KEY ruleKey, DIAG_KEY diagKey, Iterable<AddsToRuleKey> appendables) {
       this.ruleKey = ruleKey;
       this.diagKey = diagKey;
       this.appendables = appendables;
@@ -86,7 +86,7 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
 
     public static <RULE_KEY, DIAG_KEY> Result<RULE_KEY, DIAG_KEY> of(
         RULE_KEY ruleKey, RuleKeyResult<DIAG_KEY> res) {
-      return new Result<>(ruleKey, res.result, Iterables.filter(res.deps, RuleKeyAppendable.class));
+      return new Result<>(ruleKey, res.result, Iterables.filter(res.deps, AddsToRuleKey.class));
     }
   }
 }
