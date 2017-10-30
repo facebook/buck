@@ -60,11 +60,11 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Used to build a given set of targets on the local machine. */
-public class LocalBuilder implements Builder {
+public class LocalBuildExecutor implements BuildExecutor {
   private final ActionGraphAndResolver actionGraphAndResolver;
   private final WeightedListeningExecutorService executorService;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
-  private final BuilderArgs args;
+  private final BuildExecutorArgs args;
   private final Optional<RuleKeyCacheScope<RuleKey>> ruleKeyCacheScope;
   private final Optional<CachingBuildEngine.BuildMode> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
@@ -74,8 +74,8 @@ public class LocalBuilder implements Builder {
 
   private volatile boolean isShutdown = false;
 
-  public LocalBuilder(
-      BuilderArgs args,
+  public LocalBuildExecutor(
+      BuildExecutorArgs args,
       ExecutionContext executionContext,
       ActionGraphAndResolver actionGraphAndResolver,
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
@@ -203,11 +203,11 @@ public class LocalBuilder implements Builder {
   }
 
   /**
-   * Create {@link ExecutionContext} using {@link BuilderArgs}.
+   * Create {@link ExecutionContext} using {@link BuildExecutorArgs}.
    *
-   * @param args - an instance {@link BuilderArgs}.
+   * @param args - an instance {@link BuildExecutorArgs}.
    */
-  public static ExecutionContext createExecutionContext(BuilderArgs args) {
+  public static ExecutionContext createExecutionContext(BuildExecutorArgs args) {
     // TODO(shivanker): Fix this for stampede to be able to build android.
     final ConcurrencyLimit concurrencyLimit =
         args.getBuckConfig().getView(ResourcesConfig.class).getConcurrencyLimit();
@@ -247,7 +247,7 @@ public class LocalBuilder implements Builder {
 /** Common arguments for running a build. */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractBuilderArgs {
+abstract class AbstractBuildExecutorArgs {
   public abstract Console getConsole();
 
   public abstract BuckEventBus getBuckEventBus();

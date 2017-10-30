@@ -17,7 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
-import com.facebook.buck.command.BuilderArgs;
+import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
@@ -119,12 +119,12 @@ public abstract class AbstractCommandRunnerParams {
   public abstract ToolchainProvider getToolchainProvider();
 
   /**
-   * Create {@link BuilderArgs} using this {@link CommandRunnerParams}.
+   * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.
    *
-   * @return New instance of {@link BuilderArgs}.
+   * @return New instance of {@link BuildExecutorArgs}.
    */
-  public BuilderArgs createBuilderArgs() {
-    return BuilderArgs.builder()
+  public BuildExecutorArgs createBuilderArgs() {
+    return BuildExecutorArgs.builder()
         .setConsole(getConsole())
         .setBuckEventBus(getBuckEventBus())
         .setPlatform(getPlatform())

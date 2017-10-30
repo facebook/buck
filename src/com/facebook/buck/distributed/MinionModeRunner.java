@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.command.Builder;
+import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -50,7 +50,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   private final String coordinatorAddress;
   private final int coordinatorPort;
-  private final Builder builder;
+  private final BuildExecutor buildExecutor;
   private final StampedeId stampedeId;
   private final BuildSlaveRunId buildSlaveRunId;
 
@@ -79,7 +79,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   public MinionModeRunner(
       String coordinatorAddress,
       int coordinatorPort,
-      Builder builder,
+      BuildExecutor buildExecutor,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       int availableWorkUnitBuildCapacity,
@@ -87,7 +87,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
     this(
         coordinatorAddress,
         coordinatorPort,
-        builder,
+        buildExecutor,
         stampedeId,
         buildSlaveRunId,
         availableWorkUnitBuildCapacity,
@@ -100,13 +100,13 @@ public class MinionModeRunner implements DistBuildModeRunner {
   public MinionModeRunner(
       String coordinatorAddress,
       int coordinatorPort,
-      Builder builder,
+      BuildExecutor buildExecutor,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
       ExecutorService buildExecutorService) {
-    this.builder = builder;
+    this.buildExecutor = buildExecutor;
     this.stampedeId = stampedeId;
     this.buildSlaveRunId = buildSlaveRunId;
     Preconditions.checkArgument(
@@ -144,7 +144,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
     buildExecutorService.shutdown();
     buildExecutorService.awaitTermination(30, TimeUnit.MINUTES);
 
-    builder.shutdown();
+    buildExecutor.shutdown();
 
     return exitCode.get();
   }
@@ -206,7 +206,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
     LOG.debug(String.format("Targets: [%s]", Joiner.on(", ").join(targetsToBuild)));
 
     // Start the build, and get futures representing the results.
-    List<BuildEngineResult> resultFutures = builder.initializeBuild(targetsToBuild);
+    List<BuildEngineResult> resultFutures = buildExecutor.initializeBuild(targetsToBuild);
 
     // Register handlers that will ensure we free up cores as soon as a work unit is complete,
     // and signal built targets as soon as they are uploaded to the cache.
@@ -216,7 +216,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
     // Wait for the targets to finish building and get the exit code.
     int lastExitCode =
-        builder.waitForBuildToFinish(targetsToBuild, resultFutures, Optional.empty());
+        buildExecutor.waitForBuildToFinish(targetsToBuild, resultFutures, Optional.empty());
 
     LOG.info(String.format("Minion [%s] finished with exit code [%d].", minionId, lastExitCode));
 

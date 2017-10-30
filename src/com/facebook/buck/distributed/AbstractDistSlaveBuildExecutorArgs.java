@@ -17,7 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.command.BuilderArgs;
+import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -99,12 +99,12 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   }
 
   /**
-   * Create {@link BuilderArgs} using {@link DistBuildExecutorArgs}.
+   * Create {@link BuildExecutorArgs} using {@link DistBuildExecutorArgs}.
    *
-   * @return New instance of {@link BuilderArgs}.
+   * @return New instance of {@link BuildExecutorArgs}.
    */
-  public BuilderArgs createBuilderArgs() {
-    return BuilderArgs.builder()
+  public BuildExecutorArgs createBuilderArgs() {
+    return BuildExecutorArgs.builder()
         .setConsole(getConsole())
         .setBuckEventBus(getBuckEventBus())
         .setPlatform(getPlatform())

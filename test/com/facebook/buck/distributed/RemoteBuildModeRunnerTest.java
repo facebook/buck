@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.command.Builder;
+import com.facebook.buck.command.BuildExecutor;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import org.easymock.EasyMock;
@@ -28,21 +28,22 @@ public class RemoteBuildModeRunnerTest {
   public void testFinalBuildStatusIsSet() throws IOException, InterruptedException {
     int expectedExitCode = 4221;
 
-    Builder builder = EasyMock.createMock(Builder.class);
+    BuildExecutor buildExecutor = EasyMock.createMock(BuildExecutor.class);
     EasyMock.expect(
-            builder.buildLocallyAndReturnExitCode(EasyMock.anyObject(), EasyMock.anyObject()))
+            buildExecutor.buildLocallyAndReturnExitCode(EasyMock.anyObject(), EasyMock.anyObject()))
         .andReturn(expectedExitCode)
         .once();
     RemoteBuildModeRunner.FinalBuildStatusSetter setter =
         EasyMock.createMock(RemoteBuildModeRunner.FinalBuildStatusSetter.class);
     setter.setFinalBuildStatus(EasyMock.eq(expectedExitCode));
     EasyMock.expectLastCall().once();
-    EasyMock.replay(builder, setter);
+    EasyMock.replay(buildExecutor, setter);
 
-    RemoteBuildModeRunner runner = new RemoteBuildModeRunner(builder, Lists.newArrayList(), setter);
+    RemoteBuildModeRunner runner =
+        new RemoteBuildModeRunner(buildExecutor, Lists.newArrayList(), setter);
     int actualExitCode = runner.runAndReturnExitCode();
     Assert.assertEquals(expectedExitCode, actualExitCode);
 
-    EasyMock.verify(builder, setter);
+    EasyMock.verify(buildExecutor, setter);
   }
 }

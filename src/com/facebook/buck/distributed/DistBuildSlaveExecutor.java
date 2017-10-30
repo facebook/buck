@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.command.Builder;
-import com.facebook.buck.command.BuilderArgs;
-import com.facebook.buck.command.LocalBuilder;
+import com.facebook.buck.command.BuildExecutor;
+import com.facebook.buck.command.BuildExecutorArgs;
+import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -53,10 +53,11 @@ public class DistBuildSlaveExecutor {
     }
 
     DistBuildModeRunner runner = null;
-    BuilderArgs builderArgs = args.createBuilderArgs();
-    try (ExecutionContext executionContext = LocalBuilder.createExecutionContext(builderArgs)) {
-      Builder localBuilder =
-          new LocalBuilder(
+    BuildExecutorArgs builderArgs = args.createBuilderArgs();
+    try (ExecutionContext executionContext =
+        LocalBuildExecutor.createExecutionContext(builderArgs)) {
+      BuildExecutor localBuildExecutor =
+          new LocalBuildExecutor(
               builderArgs,
               executionContext,
               initializer.getDelegateAndGraphs().getActionGraphAndResolver(),
@@ -72,7 +73,7 @@ public class DistBuildSlaveExecutor {
         case REMOTE_BUILD:
           runner =
               new RemoteBuildModeRunner(
-                  localBuilder,
+                  localBuildExecutor,
                   args.getState().getRemoteState().getTopLevelTargets(),
                   exitCode ->
                       args.getDistBuildService()
@@ -84,7 +85,7 @@ public class DistBuildSlaveExecutor {
         case MINION:
           runner =
               newMinionMode(
-                  localBuilder,
+                  localBuildExecutor,
                   args.getRemoteCoordinatorAddress(),
                   args.getRemoteCoordinatorPort());
           break;
@@ -94,7 +95,7 @@ public class DistBuildSlaveExecutor {
           runner =
               new CoordinatorAndMinionModeRunner(
                   newCoordinatorMode(localCoordinatorPort, true),
-                  newMinionMode(localBuilder, LOCALHOST_ADDRESS, localCoordinatorPort));
+                  newMinionMode(localBuildExecutor, LOCALHOST_ADDRESS, localCoordinatorPort));
           break;
 
         case COORDINATOR:
@@ -109,7 +110,7 @@ public class DistBuildSlaveExecutor {
   }
 
   private MinionModeRunner newMinionMode(
-      Builder localBuilder, String coordinatorAddress, int coordinatorPort) {
+      BuildExecutor localBuildExecutor, String coordinatorAddress, int coordinatorPort) {
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
@@ -119,7 +120,7 @@ public class DistBuildSlaveExecutor {
     return new MinionModeRunner(
         coordinatorAddress,
         coordinatorPort,
-        localBuilder,
+        localBuildExecutor,
         args.getStampedeId(),
         args.getBuildSlaveRunId(),
         args.getBuildThreadCount(),

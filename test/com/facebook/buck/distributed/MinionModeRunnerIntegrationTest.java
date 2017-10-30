@@ -17,7 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.command.Builder;
+import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -46,7 +46,7 @@ public class MinionModeRunnerIntegrationTest {
   public void testMinionWithoutServerAndWithUnfinishedBuild()
       throws IOException, InterruptedException {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
-    FakeBuilderImpl localBuilder = new FakeBuilderImpl();
+    FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
             "localhost",
@@ -65,7 +65,7 @@ public class MinionModeRunnerIntegrationTest {
   public void testMinionWithoutServerAndWithFinishedBuild()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     MinionModeRunner.BuildCompletionChecker checker = () -> true;
-    FakeBuilderImpl localBuilder = new FakeBuilderImpl();
+    FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
             "localhost",
@@ -87,7 +87,7 @@ public class MinionModeRunnerIntegrationTest {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
     try (ThriftCoordinatorServer server = createServer()) {
       server.start();
-      FakeBuilderImpl localBuilder = new FakeBuilderImpl();
+      FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
       MinionModeRunner minion =
           new MinionModeRunner(
               "localhost",
@@ -109,11 +109,11 @@ public class MinionModeRunnerIntegrationTest {
     return ThriftCoordinatorServerIntegrationTest.createServerOnRandomPort(queue);
   }
 
-  public static class FakeBuilderImpl implements Builder {
+  public static class FakeBuildExecutorImpl implements BuildExecutor {
 
     private final List<String> buildTargets;
 
-    public FakeBuilderImpl() {
+    public FakeBuildExecutorImpl() {
       buildTargets = new ArrayList<>();
     }
 

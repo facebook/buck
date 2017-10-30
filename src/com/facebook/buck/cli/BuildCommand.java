@@ -26,7 +26,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.command.LocalBuilder;
+import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
@@ -962,8 +962,8 @@ public class BuildCommand extends AbstractCommand {
 
     try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
         getDefaultRuleKeyCacheScope(params, actionGraphAndResolver)) {
-      LocalBuilder builder =
-          new LocalBuilder(
+      LocalBuildExecutor builder =
+          new LocalBuildExecutor(
               params.createBuilderArgs(),
               getExecutionContext(),
               actionGraphAndResolver,

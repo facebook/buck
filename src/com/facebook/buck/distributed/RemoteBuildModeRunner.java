@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.command.Builder;
+import com.facebook.buck.command.BuildExecutor;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -28,15 +28,15 @@ public class RemoteBuildModeRunner implements DistBuildModeRunner {
     void setFinalBuildStatus(int exitCode) throws IOException;
   }
 
-  private final Builder localBuilder;
+  private final BuildExecutor localBuildExecutor;
   private final Iterable<String> topLevelTargetsToBuild;
   private final FinalBuildStatusSetter setter;
 
   public RemoteBuildModeRunner(
-      Builder localBuilder,
+      BuildExecutor localBuildExecutor,
       Iterable<String> topLevelTargetsToBuild,
       FinalBuildStatusSetter setter) {
-    this.localBuilder = localBuilder;
+    this.localBuildExecutor = localBuildExecutor;
     this.topLevelTargetsToBuild = topLevelTargetsToBuild;
     this.setter = setter;
   }
@@ -44,7 +44,7 @@ public class RemoteBuildModeRunner implements DistBuildModeRunner {
   @Override
   public int runAndReturnExitCode() throws IOException, InterruptedException {
     int buildExitCode =
-        localBuilder.buildLocallyAndReturnExitCode(topLevelTargetsToBuild, Optional.empty());
+        localBuildExecutor.buildLocallyAndReturnExitCode(topLevelTargetsToBuild, Optional.empty());
     setter.setFinalBuildStatus(buildExitCode);
     return buildExitCode;
   }

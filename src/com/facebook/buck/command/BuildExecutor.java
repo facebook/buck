@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 /** Interface to be followed by local/distributed builders. */
-public interface Builder {
+public interface BuildExecutor {
 
   /**
    * Builds the given targets synchronously. Failures are printed to the EventBus.
