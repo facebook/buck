@@ -41,6 +41,7 @@ import javax.annotation.Nullable;
 
 /** Perform the "aapt2 compile" step of a single Android resource. */
 public class Aapt2Compile extends AbstractBuildRule {
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   // TODO(dreiss): Eliminate this and just make resDir our dep.
   private final ImmutableSortedSet<BuildRule> compileDeps;
   @AddToRuleKey private final SourcePath resDir;
@@ -48,9 +49,11 @@ public class Aapt2Compile extends AbstractBuildRule {
   public Aapt2Compile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       ImmutableSortedSet<BuildRule> compileDeps,
       SourcePath resDir) {
     super(buildTarget, projectFilesystem);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.compileDeps = compileDeps;
     this.resDir = resDir;
   }
@@ -75,6 +78,7 @@ public class Aapt2Compile extends AbstractBuildRule {
         new Aapt2CompileStep(
             getBuildTarget(),
             getProjectFilesystem().getRootPath(),
+            androidLegacyToolchain,
             context.getSourcePathResolver().getAbsolutePath(resDir),
             getOutputPath()));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getOutputPath())));
@@ -94,12 +98,18 @@ public class Aapt2Compile extends AbstractBuildRule {
   }
 
   static class Aapt2CompileStep extends ShellStep {
+    private final AndroidLegacyToolchain androidLegacyToolchain;
     private final Path resDirPath;
     private final Path outputPath;
 
     Aapt2CompileStep(
-        BuildTarget buildTarget, Path workingDirectory, Path resDirPath, Path outputPath) {
+        BuildTarget buildTarget,
+        Path workingDirectory,
+        AndroidLegacyToolchain androidLegacyToolchain,
+        Path resDirPath,
+        Path outputPath) {
       super(Optional.of(buildTarget), workingDirectory);
+      this.androidLegacyToolchain = androidLegacyToolchain;
       this.resDirPath = resDirPath;
       this.outputPath = outputPath;
     }
@@ -112,7 +122,8 @@ public class Aapt2Compile extends AbstractBuildRule {
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+      AndroidPlatformTarget androidPlatformTarget =
+          androidLegacyToolchain.getAndroidPlatformTarget();
 
       builder.add(androidPlatformTarget.getAapt2Executable().toString());
       builder.add("compile");

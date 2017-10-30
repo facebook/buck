@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -130,6 +131,7 @@ public class AndroidInstrumentationApkTest {
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
+                    new TestToolchainProvider(),
                     DEFAULT_JAVA_CONFIG,
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
                     DEFAULT_JAVAC_OPTIONS,

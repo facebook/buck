@@ -18,7 +18,7 @@ package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.toolchain.AndroidNdk;
 import com.facebook.buck.android.toolchain.AndroidSdk;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
@@ -37,12 +37,12 @@ public class DefaultAndroidToolchainFactory implements ToolchainFactory<AndroidT
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
       ProjectFilesystem filesystem) {
-    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
 
-    AndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(), environment, androidBuckConfig);
-    return createToolchain(androidBuckConfig, androidDirectoryResolver);
+    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    return createToolchain(androidBuckConfig, androidLegacyToolchain.getAndroidDirectoryResolver());
   }
 
   public Optional<AndroidToolchain> createToolchain(

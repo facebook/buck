@@ -43,6 +43,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -78,10 +79,15 @@ public class AndroidPrebuiltAarDescription
     return Sets.difference(flavors, KNOWN_FLAVORS).isEmpty();
   }
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions javacOptions;
 
-  public AndroidPrebuiltAarDescription(JavaBuckConfig javaBuckConfig, JavacOptions javacOptions) {
+  public AndroidPrebuiltAarDescription(
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaBuckConfig,
+      JavacOptions javacOptions) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javacOptions = javacOptions;
   }
@@ -168,9 +174,13 @@ public class AndroidPrebuiltAarDescription
     }
 
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      AndroidLegacyToolchain androidLegacyToolchain =
+          toolchainProvider.getByName(
+              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          androidLegacyToolchain,
           ImmutableSortedSet.of(unzipAarRule),
           unzipAar.getResDirectory());
     }

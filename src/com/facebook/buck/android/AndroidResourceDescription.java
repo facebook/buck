@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -69,6 +70,7 @@ public class AndroidResourceDescription
       ImmutableSet.of(
           ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
+  private final ToolchainProvider toolchainProvider;
   private final boolean isGrayscaleImageProcessingEnabled;
 
   @VisibleForTesting
@@ -82,7 +84,9 @@ public class AndroidResourceDescription
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
-  public AndroidResourceDescription(boolean enableGrayscaleImageProcessing) {
+  public AndroidResourceDescription(
+      ToolchainProvider toolchainProvider, boolean enableGrayscaleImageProcessing) {
+    this.toolchainProvider = toolchainProvider;
     isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;
   }
 
@@ -144,9 +148,13 @@ public class AndroidResourceDescription
           resDir.isPresent(),
           "Tried to require rule %s, but no resource dir is preset.",
           buildTarget);
+      AndroidLegacyToolchain androidLegacyToolchain =
+          toolchainProvider.getByName(
+              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          androidLegacyToolchain,
           ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())),
           resDir.get());
     }

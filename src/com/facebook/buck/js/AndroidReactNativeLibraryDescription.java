@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -28,6 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
@@ -44,10 +46,14 @@ public class AndroidReactNativeLibraryDescription
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
   private final Supplier<SourcePath> packager;
+  private final ToolchainProvider toolchainProvider;
 
-  public AndroidReactNativeLibraryDescription(final ReactNativeBuckConfig buckConfig) {
+  public AndroidReactNativeLibraryDescription(
+      ToolchainProvider toolchainProvider, final ReactNativeBuckConfig buckConfig) {
+
     this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
     this.packager = buckConfig::getPackagerSourcePath;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -64,7 +70,12 @@ public class AndroidReactNativeLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidReactNativeLibraryDescriptionArg args) {
-    return enhancer.enhanceForAndroid(buildTarget, projectFilesystem, params, resolver, args);
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
+    return enhancer.enhanceForAndroid(
+        buildTarget, projectFilesystem, androidLegacyToolchain, params, resolver, args);
   }
 
   @Override

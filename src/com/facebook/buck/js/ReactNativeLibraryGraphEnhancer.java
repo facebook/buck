@@ -17,6 +17,7 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.Aapt2Compile;
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -93,6 +94,7 @@ public class ReactNativeLibraryGraphEnhancer {
   public AndroidReactNativeLibrary enhanceForAndroid(
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AndroidReactNativeLibraryDescriptionArg args) {
@@ -141,6 +143,7 @@ public class ReactNativeLibraryGraphEnhancer {
               buildTargetForResource.withAppendedFlavors(
                   AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
               projectFilesystem,
+              androidLegacyToolchain,
               ImmutableSortedSet.of(bundle),
               resources);
       resolver.addToIndex(aapt2Compile);

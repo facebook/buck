@@ -59,6 +59,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor WRITE_EXO_RESOURCES_HASH_FLAVOR =
       InternalFlavor.of("write_exo_resources_hash");
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesSteps.ResourceFilter resourceFilter;
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
@@ -82,6 +83,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleResolver ruleResolver,
       BuildTarget originalBuildTarget,
       boolean exopackageForResources,
@@ -98,6 +100,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ManifestEntries manifestEntries,
       Optional<Arg> postFilterResourcesCmd,
       boolean noAutoVersionResources) {
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.ruleResolver = ruleResolver;
@@ -329,6 +332,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       Preconditions.checkState(
           resourceFilterRule.isPresent(),
           "Expected ResourceFilterRule to be present when filtered resources are present.");
+
       ImmutableSortedSet<BuildRule> compileDeps = ImmutableSortedSet.of(resourceFilterRule.get());
       int index = 0;
       for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
@@ -336,6 +340,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             new Aapt2Compile(
                 buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index)),
                 projectFilesystem,
+                androidLegacyToolchain,
                 compileDeps,
                 resDir);
         ruleResolver.addToIndex(compileRule);

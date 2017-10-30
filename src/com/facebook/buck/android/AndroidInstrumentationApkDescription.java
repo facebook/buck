@@ -44,6 +44,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -61,6 +62,7 @@ import org.immutables.value.Value;
 public class AndroidInstrumentationApkDescription
     implements Description<AndroidInstrumentationApkDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
@@ -70,6 +72,7 @@ public class AndroidInstrumentationApkDescription
   private final DxConfig dxConfig;
 
   public AndroidInstrumentationApkDescription(
+      ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
@@ -77,6 +80,7 @@ public class AndroidInstrumentationApkDescription
       ListeningExecutorService dxExecutorService,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
@@ -152,10 +156,15 @@ public class AndroidInstrumentationApkDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             buildTarget,
             projectFilesystem,
+            androidLegacyToolchain,
             params,
             resolver,
             AndroidBinary.AaptMode.AAPT1,

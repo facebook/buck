@@ -29,6 +29,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,6 +47,7 @@ public class AndroidBinaryBuilder
   private AndroidBinaryBuilder(BuildTarget target) {
     super(
         new AndroidBinaryDescription(
+            createToolchainProvider(),
             DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
@@ -55,6 +58,15 @@ public class AndroidBinaryBuilder
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(FakeBuckConfig.builder().build())),
         target);
+  }
+
+  private static ToolchainProvider createToolchainProvider() {
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+
+    testToolchainProvider.addToolchain(
+        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
+
+    return testToolchainProvider;
   }
 
   public static AndroidBinaryBuilder createBuilder(BuildTarget buildTarget) {

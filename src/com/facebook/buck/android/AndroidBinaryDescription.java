@@ -68,6 +68,7 @@ import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.tool.config.ToolConfig;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -125,6 +126,7 @@ public class AndroidBinaryDescription
           AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
@@ -137,6 +139,7 @@ public class AndroidBinaryDescription
   private final AndroidInstallConfig androidInstallConfig;
 
   public AndroidBinaryDescription(
+      ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions javacOptions,
@@ -146,6 +149,7 @@ public class AndroidBinaryDescription
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
@@ -281,10 +285,15 @@ public class AndroidBinaryDescription
       ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
+      AndroidLegacyToolchain androidLegacyToolchain =
+          toolchainProvider.getByName(
+              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
               buildTarget,
               projectFilesystem,
+              androidLegacyToolchain,
               params,
               resolver,
               args.getAaptMode(),

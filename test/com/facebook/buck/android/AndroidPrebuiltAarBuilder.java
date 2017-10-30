@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -32,6 +33,7 @@ public class AndroidPrebuiltAarBuilder
   private AndroidPrebuiltAarBuilder(BuildTarget target) {
     super(
         new AndroidPrebuiltAarDescription(
+            new TestToolchainProvider(),
             JavaCompilationConstants.DEFAULT_JAVA_CONFIG,
             JavaCompilationConstants.ANDROID_JAVAC_OPTIONS),
         target);

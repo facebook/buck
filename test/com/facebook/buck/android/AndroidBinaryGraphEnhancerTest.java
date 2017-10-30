@@ -131,6 +131,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidBinaryGraphEnhancer(
             apkTarget,
             filesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             originalParams,
             ruleResolver,
             AndroidBinary.AaptMode.AAPT1,
@@ -281,6 +282,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidBinaryGraphEnhancer(
             apkTarget,
             projectFilesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             originalParams,
             ruleResolver,
             AndroidBinary.AaptMode.AAPT1,
@@ -405,6 +407,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidBinaryGraphEnhancer(
             target,
             projectFilesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             originalParams,
             ruleResolver,
             AndroidBinary.AaptMode.AAPT1,
@@ -470,6 +473,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidBinaryGraphEnhancer(
             target,
             projectFilesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             originalParams,
             ruleResolver,
             AndroidBinary.AaptMode.AAPT1,
@@ -564,6 +568,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidBinaryGraphEnhancer(
             target,
             projectFilesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             originalParams,
             ruleResolver,
             AndroidBinary.AaptMode.AAPT1,

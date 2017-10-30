@@ -47,6 +47,7 @@ public class IosReactNativeLibraryDescription
   private final Supplier<SourcePath> packager;
 
   public IosReactNativeLibraryDescription(final ReactNativeBuckConfig buckConfig) {
+
     this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
     this.packager = buckConfig::getPackagerSourcePath;
   }

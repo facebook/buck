@@ -439,6 +439,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidAppModularityDescription());
     builder.register(
         new AndroidBinaryDescription(
+            toolchainProvider,
             javaConfig,
             defaultJavaOptions,
             defaultJavacOptions,
@@ -451,6 +452,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidBuildConfigDescription(javaConfig, defaultJavacOptions));
     builder.register(
         new AndroidInstrumentationApkDescription(
+            toolchainProvider,
             javaConfig,
             proGuardConfig,
             defaultJavacOptions,
@@ -464,9 +466,13 @@ public class KnownBuildRuleTypes {
         new AndroidLibraryDescription(
             javaConfig, defaultJavacOptions, defaultAndroidCompilerFactory));
     builder.register(new AndroidManifestDescription());
-    builder.register(new AndroidPrebuiltAarDescription(javaConfig, defaultJavacOptions));
-    builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
-    builder.register(new AndroidResourceDescription(config.isGrayscaleImageProcessingEnabled()));
+    builder.register(
+        new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig, defaultJavacOptions));
+    builder.register(
+        new AndroidReactNativeLibraryDescription(toolchainProvider, reactNativeBuckConfig));
+    builder.register(
+        new AndroidResourceDescription(
+            toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
     builder.register(new ApkGenruleDescription());
     builder.register(
         new ApplePackageDescription(
@@ -548,7 +554,7 @@ public class KnownBuildRuleTypes {
             defaultTestRuleTimeoutMs,
             defaultJavaCxxPlatform,
             cxxPlatforms));
-    builder.register(new JsBundleDescription());
+    builder.register(new JsBundleDescription(toolchainProvider));
     builder.register(new JsBundleGenruleDescription());
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());

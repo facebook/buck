@@ -8,6 +8,7 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/apple:apple",
@@ -33,6 +34,7 @@ java_immutables_library(
         "//src/com/facebook/buck/shell:worker_tool",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/worker:worker_job_params",

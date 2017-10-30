@@ -17,6 +17,7 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.Aapt2Compile;
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -45,6 +46,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.WorkerTool;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -68,6 +70,12 @@ public class JsBundleDescription
           JsFlavors.OPTIMIZATION_DOMAIN,
           JsFlavors.RAM_BUNDLE_DOMAIN,
           JsFlavors.OUTPUT_OPTIONS_DOMAIN);
+
+  private final ToolchainProvider toolchainProvider;
+
+  public JsBundleDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
+  }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
@@ -122,7 +130,8 @@ public class JsBundleDescription
     if (flavors.contains(JsFlavors.ANDROID)
         && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)
         && !flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
-      return createAndroidRule(buildTarget, projectFilesystem, resolver, args.getAndroidPackage());
+      return createAndroidRule(
+          toolchainProvider, buildTarget, projectFilesystem, resolver, args.getAndroidPackage());
     }
 
     // Flavors are propagated from js_bundle targets to their js_library dependencies
@@ -181,6 +190,7 @@ public class JsBundleDescription
   }
 
   private static BuildRule createAndroidRule(
+      ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
@@ -200,7 +210,8 @@ public class JsBundleDescription
                   new HumanReadableException(
                       "Specify `android_package` when building %s for Android.",
                       buildTarget.getUnflavoredBuildTarget()));
-      return createAndroidResources(buildTarget, projectFilesystem, resolver, jsBundle, rDot);
+      return createAndroidResources(
+          toolchainProvider, buildTarget, projectFilesystem, resolver, jsBundle, rDot);
     } else {
       return createAndroidBundle(buildTarget, projectFilesystem, resolver, jsBundle);
     }
@@ -227,15 +238,20 @@ public class JsBundleDescription
   }
 
   private static BuildRule createAndroidResources(
+      ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       JsBundle jsBundle,
       String rDotJavaPackage) {
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      AndroidLegacyToolchain androidLegacyToolchain =
+          toolchainProvider.getByName(
+              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          androidLegacyToolchain,
           ImmutableSortedSet.of(jsBundle),
           jsBundle.getSourcePathToResources());
     }

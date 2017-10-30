@@ -127,6 +127,7 @@ public class AndroidBinaryGraphEnhancer {
   AndroidBinaryGraphEnhancer(
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
       AndroidBinary.AaptMode aaptMode,
@@ -214,6 +215,7 @@ public class AndroidBinaryGraphEnhancer {
         new AndroidBinaryResourcesGraphEnhancer(
             originalBuildTarget,
             projectFilesystem,
+            androidLegacyToolchain,
             ruleResolver,
             originalBuildTarget,
             ExopackageMode.enabledForResources(exopackageModes),

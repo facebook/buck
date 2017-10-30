@@ -16,6 +16,8 @@
 
 package com.facebook.buck.toolchain.impl;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchainFactory;
 import com.facebook.buck.config.BuckConfig;
@@ -33,7 +35,8 @@ import java.util.Optional;
 public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   enum ToolchainDescriptor {
-    ANDROID(AndroidToolchain.DEFAULT_NAME, DefaultAndroidToolchainFactory.class);
+    ANDROID(AndroidToolchain.DEFAULT_NAME, DefaultAndroidToolchainFactory.class),
+    ANDROID_LEGACY(AndroidLegacyToolchain.DEFAULT_NAME, DefaultAndroidLegacyToolchainFactory.class);
 
     @VisibleForTesting final String name;
     private final Class<? extends ToolchainFactory<?>> toolchainFactoryClass;

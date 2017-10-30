@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -34,7 +35,7 @@ public class JsFlavorsTest {
 
   @BeforeClass
   public static void setupDescriptions() {
-    bundleDescription = new JsBundleDescription();
+    bundleDescription = new JsBundleDescription(new TestToolchainProvider());
     libraryDescription = new JsLibraryDescription();
   }
 
