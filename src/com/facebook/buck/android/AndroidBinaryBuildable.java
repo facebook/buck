@@ -301,7 +301,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     steps.add(
         new ZipalignStep(
-            getBuildTarget(), getProjectFilesystem().getRootPath(), apkToAlign, apkPath));
+            androidLegacyToolchain,
+            getBuildTarget(),
+            getProjectFilesystem().getRootPath(),
+            apkToAlign,
+            apkPath));
 
     buildableContext.recordArtifact(apkPath);
     return steps.build();

@@ -55,15 +55,18 @@ public class SplitResources extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath pathToAaptResources;
   @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final SourcePathRuleFinder ruleFinder;
 
   public SplitResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToAaptResources,
       SourcePath pathToOriginalRDotTxt) {
     super(buildTarget, projectFilesystem);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.ruleFinder = ruleFinder;
     this.pathToAaptResources = pathToAaptResources;
     this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
@@ -99,6 +102,7 @@ public class SplitResources extends AbstractBuildRule {
         .add(new SplitResourcesStep(context.getSourcePathResolver()))
         .add(
             new ZipalignStep(
+                androidLegacyToolchain,
                 getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
                 getUnalignedExoPath(),

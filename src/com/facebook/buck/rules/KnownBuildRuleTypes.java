@@ -461,7 +461,8 @@ public class KnownBuildRuleTypes {
             cxxBuckConfig,
             dxConfig));
     builder.register(
-        new AndroidInstrumentationTestDescription(defaultJavaOptions, defaultTestRuleTimeoutMs));
+        new AndroidInstrumentationTestDescription(
+            toolchainProvider, defaultJavaOptions, defaultTestRuleTimeoutMs));
     builder.register(
         new AndroidLibraryDescription(
             javaConfig, defaultJavacOptions, defaultAndroidCompilerFactory));

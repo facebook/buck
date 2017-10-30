@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -39,13 +40,17 @@ import org.immutables.value.Value;
 public class AndroidInstrumentationTestDescription
     implements Description<AndroidInstrumentationTestDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaOptions javaOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
       resourceSupplierCache;
 
   public AndroidInstrumentationTestDescription(
-      JavaOptions javaOptions, Optional<Long> defaultTestRuleTimeoutMs) {
+      ToolchainProvider toolchainProvider,
+      JavaOptions javaOptions,
+      Optional<Long> defaultTestRuleTimeoutMs) {
+    this.toolchainProvider = toolchainProvider;
     this.javaOptions = javaOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.resourceSupplierCache = new ConcurrentHashMap<>();
@@ -73,9 +78,14 @@ public class AndroidInstrumentationTestDescription
           buildTarget, apk.getFullyQualifiedName(), apk.getType());
     }
 
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
     return new AndroidInstrumentationTest(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,
         args.getLabels(),

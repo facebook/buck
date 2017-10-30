@@ -80,7 +80,12 @@ public class AdbHelperTest {
       AdbOptions adbOptions,
       TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
-    return new AdbHelper(adbOptions, targetDeviceOptions, () -> executionContext, true);
+    return new AdbHelper(
+        adbOptions,
+        targetDeviceOptions,
+        TestAndroidLegacyToolchainFactory.create(),
+        () -> executionContext,
+        true);
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -397,7 +402,12 @@ public class AdbHelperTest {
   }
 
   private AdbHelper createAdbHelper(final List<IDevice> deviceList) {
-    return new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), () -> testContext, true) {
+    return new AdbHelper(
+        new AdbOptions(),
+        new TargetDeviceOptions(),
+        TestAndroidLegacyToolchainFactory.create(),
+        () -> testContext,
+        true) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
         return deviceList

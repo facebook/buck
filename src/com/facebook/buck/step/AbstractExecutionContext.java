@@ -186,26 +186,6 @@ abstract class AbstractExecutionContext implements Closeable {
     return getConsole().getAnsi();
   }
 
-  /**
-   * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a {@link
-   * RuntimeException}. Use this when your logic requires the user to specify the location of an
-   * Android SDK. A user who is building a "pure Java" (i.e., not Android) project using Buck should
-   * never have to exercise this code path.
-   *
-   * <p>If the location of an Android SDK is optional, then use {@link
-   * #getAndroidPlatformTargetSupplier()}.
-   *
-   * @throws RuntimeException if no AndroidPlatformTarget is available
-   */
-  @Value.Lazy
-  public AndroidPlatformTarget getAndroidPlatformTarget() {
-    return getAndroidPlatformTargetSupplier().get();
-  }
-
-  public String getPathToAdbExecutable() {
-    return getAndroidPlatformTarget().getAdbExecutable().toString();
-  }
-
   public void logError(Throwable error, String msg, Object... formatArgs) {
     getBuckEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }

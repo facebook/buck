@@ -25,12 +25,18 @@ import java.util.Optional;
 
 public class ZipalignStep extends ShellStep {
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Path inputFile;
   private final Path outputFile;
 
   public ZipalignStep(
-      BuildTarget buildTarget, Path workingDirectory, Path inputFile, Path outputFile) {
+      AndroidLegacyToolchain androidLegacyToolchain,
+      BuildTarget buildTarget,
+      Path workingDirectory,
+      Path inputFile,
+      Path outputFile) {
     super(Optional.of(buildTarget), workingDirectory);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.inputFile = inputFile;
     this.outputFile = outputFile;
   }
@@ -39,7 +45,7 @@ public class ZipalignStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+    AndroidPlatformTarget androidPlatformTarget = androidLegacyToolchain.getAndroidPlatformTarget();
     args.add(androidPlatformTarget.getZipalignExecutable().toString());
     args.add("-f").add("4");
     args.add(inputFile.toString());

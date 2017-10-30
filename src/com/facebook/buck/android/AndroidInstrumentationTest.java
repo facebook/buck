@@ -76,6 +76,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
           System.getProperty(
               "buck.testrunner_classes", new File("build/testrunner/classes").getAbsolutePath()));
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
+
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   private final ImmutableSet<String> labels;
@@ -93,6 +95,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   protected AndroidInstrumentationTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       HasInstallableApk apk,
       Set<String> labels,
@@ -104,6 +107,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       PackagedResource guavaJar,
       PackagedResource toolsCommonJar) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.labels = ImmutableSet.copyOf(labels);
@@ -190,7 +194,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     steps.add(
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
-            executionContext.getPathToAdbExecutable(),
+            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
             Optional.empty(),
@@ -358,7 +362,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     InstrumentationStep step =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
-            executionContext.getPathToAdbExecutable(),
+            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(

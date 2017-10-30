@@ -317,6 +317,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new SplitResources(
         buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR),
         projectFilesystem,
+        androidLegacyToolchain,
         ruleFinder,
         aaptOutputPath,
         aaptRDotTxtPath);

@@ -93,6 +93,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
@@ -103,10 +104,12 @@ public class AdbHelper implements AndroidDevicesHelper {
   public AdbHelper(
       AdbOptions adbOptions,
       TargetDeviceOptions deviceOptions,
+      AndroidLegacyToolchain androidLegacyToolchain,
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
@@ -477,7 +480,8 @@ public class AdbHelper implements AndroidDevicesHelper {
    */
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  private static AndroidDebugBridge createAdb(ExecutionContext context)
+  private static AndroidDebugBridge createAdb(
+      AndroidLegacyToolchain androidLegacyToolchain, ExecutionContext context)
       throws InterruptedException {
     DdmPreferences.setTimeOut(60000);
 
@@ -488,7 +492,8 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     AndroidDebugBridge adb =
-        AndroidDebugBridge.createBridge(context.getPathToAdbExecutable(), false);
+        AndroidDebugBridge.createBridge(
+            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(), false);
     if (adb == null) {
       context
           .getConsole()
@@ -515,7 +520,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {
-      adb = createAdb(contextSupplier.get());
+      adb = createAdb(androidLegacyToolchain, contextSupplier.get());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
