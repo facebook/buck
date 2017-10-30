@@ -350,8 +350,7 @@ public class Config {
           Splitter.on(pairSeparator)
               .omitEmptyStrings()
               .withKeyValueSeparator(Splitter.on(keyValueSeparator).trimResults())
-              .split(value.get())
-              .entrySet());
+              .split(value.get()));
     } else {
       return ImmutableMap.of();
     }

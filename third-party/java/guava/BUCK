@@ -1,9 +1,19 @@
 prebuilt_jar(
-    name = "guava",
+    name = "shaded-guava-20",
     binary_jar = "guava-20.0.jar",
     licenses = [
         "COPYING",
     ],
     source_jar = "guava-20.0-sources.jar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "guava",
+    binary_jar = "guava-21.0.jar",
+    licenses = [
+        "COPYING",
+    ],
+    source_jar = "guava-21.0-sources.jar",
     visibility = ["PUBLIC"],
 )

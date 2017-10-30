@@ -37,6 +37,7 @@ prebuilt_jar(
     name = "sdk-common",
     binary_jar = "sdk-common-%s.jar" % version,
     source_jar = "sdk-common-%s-sources.jar" % version,
+    deps = ["//third-party/java/guava:shaded-guava-20"],
 )
 
 prebuilt_jar(
@@ -58,5 +59,6 @@ prebuilt_jar(
     deps = [
         ":common",
         "//third-party/java/kxml2:kxml2",
+        "//third-party/java/guava:shaded-guava-20",
     ],
 )

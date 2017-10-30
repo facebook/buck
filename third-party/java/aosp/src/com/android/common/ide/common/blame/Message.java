@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -204,8 +205,8 @@ public final class Message {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper toStringHelper =
-                Objects.toStringHelper(this).add("kind", mKind).add("text", mText)
+        MoreObjects.ToStringHelper toStringHelper =
+                MoreObjects.toStringHelper(this).add("kind", mKind).add("text", mText)
                 .add("sources", mSourceFilePositions);
         if (!mText.equals(mRawMessage)) {
             toStringHelper.add("original message", mRawMessage);
