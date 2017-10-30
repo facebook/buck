@@ -77,6 +77,14 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
 
   private boolean isRecoverable(Diagnostic<? extends JavaFileObject> diagnostic) {
     try {
+      // There's a bug in javac whereby under certain circumstances it will assign its default
+      // flag set to a Diagnostic object without copying it first, and then mutate the set
+      // such that it contains the "recoverable" flag. That can cause missing class file errors
+      // to be reported as recoverable, when they're really not.
+      if (diagnostic.getCode().equals("compiler.err.cant.access")) {
+        return false;
+      }
+
       return (Boolean)
           Preconditions.checkNotNull(isFlagSetMethod)
               .invoke(

@@ -532,10 +532,13 @@ public class StubJarTest {
         .setSourceFile(
             "A.java",
             "package com.example.buck;",
+            // This next import triggers a bug in javac whereby the inability to load the super
+            // of Dep gets marked a "recoverable" error, even though it's not
+            "import static com.example.buck.otherdep.NonExistent.Member;",
             "import com.example.buck.dependency.Dep;",
             "public abstract class A implements Dep.Inner, Runnable { }")
         .addExpectedCompileError(
-            "A.java:3: error: cannot access com.example.buck.dependency.Dep2\n"
+            "A.java:4: error: cannot access com.example.buck.dependency.Dep2\n"
                 + "public abstract class A implements Dep.Inner, Runnable { }\n"
                 + "                ^\n"
                 + "  class file for com.example.buck.dependency.Dep2 not found")
@@ -567,10 +570,13 @@ public class StubJarTest {
         .setSourceFile(
             "A.java",
             "package com.example.buck;",
+            // This next import triggers a bug in javac whereby the inability to load the super
+            // of Dep gets marked a "recoverable" error, even though it's not
+            "import static com.example.buck.otherdep.NonExistent.Member;",
             "import com.example.buck.dependency.Dep;",
             "public class A extends Dep.Inner { }")
         .addExpectedCompileError(
-            "A.java:3: error: cannot access com.example.buck.dependency.Dep2\n"
+            "A.java:4: error: cannot access com.example.buck.dependency.Dep2\n"
                 + "public class A extends Dep.Inner { }\n"
                 + "       ^\n"
                 + "  class file for com.example.buck.dependency.Dep2 not found")
