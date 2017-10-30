@@ -11,8 +11,8 @@ trap finish EXIT
 
 REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
 
-FORMAT_JAR_URL="https://github.com/google/google-java-format/releases/download/google-java-format-1.3/google-java-format-1.3-all-deps.jar"
-FORMAT_JAR_LOCATION="${HOME}/google-java-format-1.3-all-deps.jar"
+FORMAT_JAR_URL="https://github.com/google/google-java-format/releases/download/google-java-format-1.4/google-java-format-1.4-all-deps.jar"
+FORMAT_JAR_LOCATION="${HOME}/google-java-format-1.4-all-deps.jar"
 
 wget -O "${FORMAT_JAR_LOCATION}" "${FORMAT_JAR_URL}"
 
