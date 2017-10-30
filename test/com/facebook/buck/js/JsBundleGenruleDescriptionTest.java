@@ -42,11 +42,10 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -133,10 +132,8 @@ public class JsBundleGenruleDescriptionTest {
   public void addsBundleAndBundleNameAsEnvironmentVariable() {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
-    ExecutionContext context = TestExecutionContext.newBuilder().build();
-
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    setup.genrule().addEnvironmentVariables(pathResolver, context, builder);
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
     ImmutableMap<String, String> env = builder.build();
 
     assertThat(
@@ -179,7 +176,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void addAppleBundleResourcesIsDelegatedToUnderlyingBundle() {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
-    new JsBundleGenruleDescription()
+    new JsBundleGenruleDescription(new TestToolchainProvider())
         .addAppleBundleResources(
             genruleBuilder,
             setup.targetNode(),
@@ -274,10 +271,8 @@ public class JsBundleGenruleDescriptionTest {
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
-    ExecutionContext context = TestExecutionContext.newBuilder().build();
-
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    setup.genrule().addEnvironmentVariables(pathResolver, context, builder);
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
     ImmutableMap<String, String> env = builder.build();
 
     assertThat(

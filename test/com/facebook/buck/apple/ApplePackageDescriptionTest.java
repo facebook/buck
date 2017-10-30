@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
@@ -148,6 +149,7 @@ public class ApplePackageDescriptionTest {
 
   private ApplePackageDescription descriptionWithCommand(String command) {
     return new ApplePackageDescription(
+        new TestToolchainProvider(),
         FakeBuckConfig.builder()
             .setSections(
                 "[apple]",

@@ -16,16 +16,29 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 
 public class JsBundleGenruleBuilder
     extends AbstractNodeBuilder<
         JsBundleGenruleDescriptionArg.Builder, JsBundleGenruleDescriptionArg,
         JsBundleGenruleDescription, JsBundleGenrule> {
   private static final JsBundleGenruleDescription genruleDescription =
-      new JsBundleGenruleDescription();
+      new JsBundleGenruleDescription(createToolchainProvider());
+
+  private static ToolchainProvider createToolchainProvider() {
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+
+    testToolchainProvider.addToolchain(
+        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
+
+    return testToolchainProvider;
+  }
 
   JsBundleGenruleBuilder(
       BuildTarget target, BuildTarget bundleTarget, ProjectFilesystem projectFilesystem) {

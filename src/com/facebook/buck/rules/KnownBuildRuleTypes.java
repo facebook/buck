@@ -473,10 +473,13 @@ public class KnownBuildRuleTypes {
     builder.register(
         new AndroidResourceDescription(
             toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
-    builder.register(new ApkGenruleDescription());
+    builder.register(new ApkGenruleDescription(toolchainProvider));
     builder.register(
         new ApplePackageDescription(
-            appleConfig, defaultCxxPlatform.getFlavor(), platformFlavorsToAppleCxxPlatforms));
+            toolchainProvider,
+            appleConfig,
+            defaultCxxPlatform.getFlavor(),
+            platformFlavorsToAppleCxxPlatforms));
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
             appleBinaryDescription,
@@ -503,7 +506,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
-    builder.register(new CxxGenruleDescription(cxxPlatforms));
+    builder.register(new CxxGenruleDescription(toolchainProvider, cxxPlatforms));
     builder.register(new CxxLuaExtensionDescription(luaPlatforms, cxxBuckConfig));
     builder.register(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
@@ -516,7 +519,7 @@ public class KnownBuildRuleTypes {
         new DTestDescription(
             dBuckConfig, cxxBuckConfig, defaultCxxPlatform, defaultTestRuleTimeoutMs));
     builder.register(new ExportFileDescription());
-    builder.register(new GenruleDescription());
+    builder.register(new GenruleDescription(toolchainProvider));
     builder.register(new GenAidlDescription(toolchainProvider));
     builder.register(new GoBinaryDescription(goBuckConfig));
     builder.register(new GoLibraryDescription(goBuckConfig));
@@ -555,7 +558,7 @@ public class KnownBuildRuleTypes {
             defaultJavaCxxPlatform,
             cxxPlatforms));
     builder.register(new JsBundleDescription(toolchainProvider));
-    builder.register(new JsBundleGenruleDescription());
+    builder.register(new JsBundleGenruleDescription(toolchainProvider));
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());
     builder.register(

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.rules.macros.QueryPathsMacroExpander;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
@@ -68,6 +70,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               .put("query_paths", new QueryPathsMacroExpander(Optional.empty()))
               .build());
 
+  protected final ToolchainProvider toolchainProvider;
+
+  protected AbstractGenruleDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
+  }
+
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
@@ -77,9 +85,13 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
     return new Genrule(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params,
         args.getSrcs(),
         cmd,

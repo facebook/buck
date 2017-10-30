@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.shell.AbstractGenruleDescription;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
@@ -56,14 +58,17 @@ public class ApplePackageDescription
         ImplicitDepsInferringDescription<
             ApplePackageDescription.AbstractApplePackageDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final Flavor defaultCxxFlavor;
   private final AppleConfig config;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public ApplePackageDescription(
+      ToolchainProvider toolchainProvider,
       AppleConfig config,
       Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+    this.toolchainProvider = toolchainProvider;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.config = config;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
@@ -90,10 +95,16 @@ public class ApplePackageDescription
                 buildTarget,
                 cellRoots,
                 resolver));
+
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
           buildTarget,
           projectFilesystem,
+          androidLegacyToolchain,
           params.withExtraDeps(
               () ->
                   ImmutableSortedSet.<BuildRule>naturalOrder()

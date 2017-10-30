@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
@@ -61,6 +60,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
   ApkGenrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       List<SourcePath> srcs,
@@ -73,6 +73,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
     super(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params,
         srcs,
         cmd,
@@ -109,9 +110,8 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
   @Override
   protected void addEnvironmentVariables(
       SourcePathResolver pathResolver,
-      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
     String apkAbsolutePath =
         pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toString();

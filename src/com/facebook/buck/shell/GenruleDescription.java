@@ -16,16 +16,22 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public class GenruleDescription extends AbstractGenruleDescription<GenruleDescriptionArg> {
+
+  public GenruleDescription(ToolchainProvider toolchainProvider) {
+    super(toolchainProvider);
+  }
 
   @Override
   public Class<GenruleDescriptionArg> getConstructorArgType() {
@@ -42,10 +48,15 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
     if (!args.getExecutable().orElse(false)) {
       return new Genrule(
           buildTarget,
           projectFilesystem,
+          androidLegacyToolchain,
           params,
           args.getSrcs(),
           cmd,
@@ -57,6 +68,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       return new GenruleBinary(
           buildTarget,
           projectFilesystem,
+          androidLegacyToolchain,
           params,
           args.getSrcs(),
           cmd,

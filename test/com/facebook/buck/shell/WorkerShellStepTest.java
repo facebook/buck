@@ -379,7 +379,7 @@ public class WorkerShellStepTest {
             new WorkerProcessPoolFactory(new FakeProjectFilesystem())) {
 
           @Override
-          protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+          protected ImmutableMap<String, String> getEnvironmentVariables() {
             return ImmutableMap.of(
                 "FOO", "foo_expanded",
                 "BAR", "bar_expanded");

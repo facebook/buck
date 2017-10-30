@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -49,6 +51,10 @@ import org.immutables.value.Value;
 public class JsBundleGenruleDescription
     extends AbstractGenruleDescription<JsBundleGenruleDescriptionArg>
     implements Flavored, HasAppleBundleResourcesDescription<JsBundleGenruleDescriptionArg> {
+
+  public JsBundleGenruleDescription(ToolchainProvider toolchainProvider) {
+    super(toolchainProvider);
+  }
 
   @Override
   public Class<JsBundleGenruleDescriptionArg> getConstructorArgType() {
@@ -72,7 +78,8 @@ public class JsBundleGenruleDescription
     if (flavors.contains(JsFlavors.SOURCE_MAP) || flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
       // SOURCE_MAP is a special flavor that allows accessing the written source map, typically
       // via export_file in reference mode
-      // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by the worker)
+      // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by
+      // the worker)
 
       SourcePath output =
           args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)
@@ -101,10 +108,15 @@ public class JsBundleGenruleDescription
           buildTarget, bundleTarget);
     }
 
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
     Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
     return new JsBundleGenrule(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params.withExtraDeps(
             Suppliers.memoize(
                 () ->

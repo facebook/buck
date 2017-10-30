@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -31,7 +32,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -53,6 +53,7 @@ public class JsBundleGenrule extends Genrule
   public JsBundleGenrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       JsBundleGenruleDescriptionArg args,
       Optional<Arg> cmd,
@@ -62,6 +63,7 @@ public class JsBundleGenrule extends Genrule
     super(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params,
         args.getSrcs(),
         cmd,
@@ -77,9 +79,8 @@ public class JsBundleGenrule extends Genrule
   @Override
   protected void addEnvironmentVariables(
       SourcePathResolver pathResolver,
-      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     environmentVariablesBuilder
         .put("JS_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToOutput()).toString())
         .put("JS_BUNDLE_NAME", jsBundle.getBundleName());
@@ -111,7 +112,8 @@ public class JsBundleGenrule extends Genrule
             // First, all Genrule steps including the last RmDir step are added
             .addAll(buildSteps.subList(0, lastRmStep.getAsInt() + 1))
             // Our MkdirStep must run after all RmSteps created by Genrule to prevent immediate
-            // deletion of the directory. It must, however, run before the genrule command itself runs.
+            // deletion of the directory. It must, however, run before the genrule command itself
+            // runs.
             .add(
                 MkdirStep.of(
                     BuildCellRelativePath.fromCellRelativePath(

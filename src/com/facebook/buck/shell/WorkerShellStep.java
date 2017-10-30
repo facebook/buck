@@ -120,7 +120,7 @@ public class WorkerShellStep implements Step {
   String getExpandedJobArgs(ExecutionContext context) {
     return expandEnvironmentVariables(
         this.getWorkerJobParamsToUse(context.getPlatform()).getJobArgs(),
-        getEnvironmentVariables(context));
+        getEnvironmentVariables());
   }
 
   @VisibleForTesting
@@ -165,7 +165,7 @@ public class WorkerShellStep implements Step {
    *
    * @param context that may be useful when determining environment variables to include.
    */
-  protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  protected ImmutableMap<String, String> getEnvironmentVariables() {
     return ImmutableMap.of();
   }
 

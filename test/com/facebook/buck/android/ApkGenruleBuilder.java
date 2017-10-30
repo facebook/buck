@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 
 public class ApkGenruleBuilder
     extends AbstractNodeBuilder<
@@ -25,7 +26,7 @@ public class ApkGenruleBuilder
         ApkGenrule> {
 
   private ApkGenruleBuilder(BuildTarget target) {
-    super(new ApkGenruleDescription(), target);
+    super(new ApkGenruleDescription(new TestToolchainProvider()), target);
   }
 
   public static ApkGenruleBuilder create(BuildTarget target) {

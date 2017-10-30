@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -33,6 +34,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
   protected GenruleBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
@@ -40,7 +42,17 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out) {
-    super(buildTarget, projectFilesystem, params, srcs, cmd, bash, cmdExe, type, out);
+    super(
+        buildTarget,
+        projectFilesystem,
+        androidLegacyToolchain,
+        params,
+        srcs,
+        cmd,
+        bash,
+        cmdExe,
+        type,
+        out);
   }
 
   @Override

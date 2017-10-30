@@ -37,6 +37,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +52,7 @@ public class GenruleDescriptionTest {
 
   @Test
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
-    GenruleDescription genruleDescription = new GenruleDescription();
+    GenruleDescription genruleDescription = new GenruleDescription(new TestToolchainProvider());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     Map<String, Object> instance =
         ImmutableMap.of(

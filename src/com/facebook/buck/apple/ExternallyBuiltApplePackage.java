@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -25,7 +26,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +42,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
   public ExternallyBuiltApplePackage(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
@@ -49,6 +50,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
     super(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params,
         ImmutableList.of(bundle),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
@@ -63,9 +65,8 @@ public class ExternallyBuiltApplePackage extends Genrule {
   @Override
   protected void addEnvironmentVariables(
       SourcePathResolver pathResolver,
-      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     environmentVariablesBuilder.put(
         "SDKROOT", packageConfigAndPlatformInfo.getSdkPath().toString());
   }

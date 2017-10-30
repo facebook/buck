@@ -22,7 +22,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
@@ -56,6 +58,7 @@ import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -63,7 +66,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -346,8 +348,6 @@ public class GenruleTest {
         genrule.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
 
-    ExecutionContext executionContext = newEmptyExecutionContext(Platform.LINUX);
-
     MoreAsserts.assertStepsNames(
         "", ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "worker"), steps);
 
@@ -356,7 +356,7 @@ public class GenruleTest {
     WorkerShellStep workerShellStep = (WorkerShellStep) step;
     assertThat(workerShellStep.getShortName(), Matchers.equalTo("worker"));
     assertThat(
-        workerShellStep.getEnvironmentVariables(executionContext),
+        workerShellStep.getEnvironmentVariables(),
         Matchers.hasEntry(
             "OUT",
             filesystem
@@ -521,19 +521,17 @@ public class GenruleTest {
     EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    testToolchainProvider.addToolchain(
+        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create(android));
     Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(target)
+        GenruleBuilder.newGenruleBuilder(target, testToolchainProvider)
             .setBash("echo something > $OUT")
             .setOut("file")
             .build(resolver);
 
-    ExecutionContext context =
-        TestExecutionContext.newBuilder()
-            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(android))
-            .build();
-
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    genrule.addEnvironmentVariables(pathResolver, context, builder);
+    genrule.addEnvironmentVariables(pathResolver, builder);
     ImmutableMap<String, String> env = builder.build();
 
     assertEquals(Paths.get(".").toString(), env.get("DX"));
@@ -559,7 +557,7 @@ public class GenruleTest {
             .build(resolver);
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    genrule.addEnvironmentVariables(pathResolver, TestExecutionContext.newInstance(), builder);
+    genrule.addEnvironmentVariables(pathResolver, builder);
 
     assertEquals("1", builder.build().get("NO_BUCKD"));
   }

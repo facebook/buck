@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 
 public class CxxGenruleBuilder
     extends AbstractNodeBuilder<
@@ -29,7 +30,7 @@ public class CxxGenruleBuilder
         BuildRule> {
 
   public CxxGenruleBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new CxxGenruleDescription(cxxPlatforms), target);
+    super(new CxxGenruleDescription(new TestToolchainProvider(), cxxPlatforms), target);
   }
 
   public CxxGenruleBuilder(BuildTarget target) {

@@ -65,6 +65,7 @@ import com.facebook.buck.rules.macros.SimpleMacroExpander;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -103,7 +104,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-  public CxxGenruleDescription(FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public CxxGenruleDescription(
+      ToolchainProvider toolchainProvider, FlavorDomain<CxxPlatform> cxxPlatforms) {
+    super(toolchainProvider);
     this.cxxPlatforms = cxxPlatforms;
   }
 

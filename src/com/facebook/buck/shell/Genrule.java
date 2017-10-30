@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
@@ -130,6 +131,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final String out;
   @AddToRuleKey private final String type;
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
@@ -139,6 +141,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   protected Genrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
@@ -147,6 +150,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> type,
       String out) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = cmd;
     this.bash = bash;
@@ -188,7 +192,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   protected void addEnvironmentVariables(
       SourcePathResolver pathResolver,
-      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
@@ -213,7 +216,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // should be generalized to specify local paths to tools that can be used in genrules.
     AndroidPlatformTarget android;
     try {
-      android = context.getAndroidPlatformTarget();
+      android = androidLegacyToolchain.getAndroidPlatformTarget();
     } catch (HumanReadableException e) {
       android = null;
     }
@@ -282,7 +285,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
           ExecutionContext executionContext,
           ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
         Genrule.this.addEnvironmentVariables(
-            context.getSourcePathResolver(), executionContext, environmentVariablesBuilder);
+            context.getSourcePathResolver(), environmentVariablesBuilder);
       }
     };
   }
@@ -295,11 +298,9 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         convertToWorkerJobParams(cmdExe),
         new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
-      protected ImmutableMap<String, String> getEnvironmentVariables(
-          ExecutionContext executionContext) {
+      protected ImmutableMap<String, String> getEnvironmentVariables() {
         ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
-        Genrule.this.addEnvironmentVariables(
-            context.getSourcePathResolver(), executionContext, envVarBuilder);
+        Genrule.this.addEnvironmentVariables(context.getSourcePathResolver(), envVarBuilder);
         return envVarBuilder.build();
       }
     };
