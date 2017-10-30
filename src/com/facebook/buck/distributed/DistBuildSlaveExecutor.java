@@ -113,7 +113,7 @@ public class DistBuildSlaveExecutor {
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
-          return BuildStatusUtil.isBuildComplete(job.getStatus());
+          return BuildStatusUtil.isTerminalBuildStatus(job.getStatus());
         };
 
     return new MinionModeRunner(

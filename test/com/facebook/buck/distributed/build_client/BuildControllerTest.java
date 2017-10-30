@@ -241,7 +241,7 @@ public class BuildControllerTest {
         .andReturn(Optional.empty());
 
     ////////////////////////////////////////////////////
-    //////////////// FINAL STATUS LOOP /////////////////
+    //////////////// TOP-LEVEL FINAL STATUS ////////////
     ////////////////////////////////////////////////////
 
     job = job.deepCopy(); // new copy
@@ -261,6 +261,18 @@ public class BuildControllerTest {
         .andReturn(ImmutableList.of());
     expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, buildSlaveRunId))
         .andReturn(Optional.empty());
+
+    ////////////////////////////////////////////////////
+    //////////////// FINAL SLAVE STATUS ////////////////
+    ////////////////////////////////////////////////////
+
+    // After the top level build status has been set, the slave also sets its own status.
+    // This will complete the build.
+    job = job.deepCopy(); // new copy
+    slaveInfo1.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
+    job.putToSlaveInfoByRunId(buildSlaveRunId.getId(), slaveInfo1);
+    expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
+
     mockEventBus.post(anyObject(ClientSideBuildSlaveFinishedStatsEvent.class));
     expectLastCall().times(1);
 

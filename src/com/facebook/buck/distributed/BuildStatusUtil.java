@@ -28,7 +28,7 @@ public class BuildStatusUtil {
     return exitCode == 0 ? BuildStatus.FINISHED_SUCCESSFULLY : BuildStatus.FAILED;
   }
 
-  public static boolean isBuildComplete(BuildStatus buildStatus) {
+  public static boolean isTerminalBuildStatus(BuildStatus buildStatus) {
     return buildStatus == BuildStatus.FINISHED_SUCCESSFULLY || buildStatus == BuildStatus.FAILED;
   }
 }

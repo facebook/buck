@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_client;
 
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD;
 
+import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
@@ -27,7 +28,6 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -37,6 +37,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -57,7 +58,6 @@ import java.util.stream.Collectors;
 
 /** The build phase. */
 public class BuildPhase {
-
   /** The result from a build. */
   public class BuildResult {
     private final BuildJob finalBuildJob;
@@ -78,6 +78,8 @@ public class BuildPhase {
   }
 
   private static final Logger LOG = Logger.get(BuildPhase.class);
+
+  private static final int FETCH_FINAL_BUILD_JOB_TIMEOUT_SECONDS = 5;
 
   private final DistBuildService distBuildService;
   private final ClientStatsTracker distBuildClientStats;
@@ -294,11 +296,51 @@ public class BuildPhase {
 
   private void checkTerminateScheduledUpdates(
       BuildJob job, Optional<List<BuildSlaveStatus>> slaveStatuses) {
-    if (job.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)
-        || job.getStatus().equals(BuildStatus.FAILED)) {
+    if (BuildStatusUtil.isTerminalBuildStatus(job.getStatus())) {
+      // Top level build was set to finished status, however individual slaves might not yet
+      // have marked themselves finished, so wait for this to happen before returning.
+      // (Without this we have no guarantees about BuildSlaveFinishedStats being uploaded yet).
+      BuildJob finalBuildJob = tryGetBuildJobWithAllSlavesInFinishedState(job);
+
       // Terminate scheduled tasks with a custom exception to indicate success.
-      throw new JobCompletedException(job, slaveStatuses);
+      throw new JobCompletedException(finalBuildJob, slaveStatuses);
     }
+  }
+
+  private BuildJob tryGetBuildJobWithAllSlavesInFinishedState(BuildJob job) {
+    final StampedeId stampedeId = job.getStampedeId();
+    try {
+      Stopwatch stopwatch = Stopwatch.createStarted();
+      while (!allSlavesFinished(job)) {
+        if (stopwatch.elapsed(TimeUnit.SECONDS) > FETCH_FINAL_BUILD_JOB_TIMEOUT_SECONDS) {
+          LOG.warn("Failed to fetch BuildJob with all slaves in terminal state before timeout");
+          break;
+        }
+
+        try {
+          Thread.sleep(statusPollIntervalMillis); // Back off a little before fetching again.
+        } catch (InterruptedException e) {
+          LOG.error(e);
+          Thread.interrupted(); // Reset interrupted status.
+          return job; // Return whatever the latest BuildJob we have is.
+        }
+
+        job = distBuildService.getCurrentBuildJobState(stampedeId);
+      }
+
+      return job;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private boolean allSlavesFinished(BuildJob job) {
+    for (BuildSlaveInfo slaveInfo : job.getSlaveInfoByRunId().values()) {
+      if (!BuildStatusUtil.isTerminalBuildStatus(slaveInfo.getStatus())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /** Exception thrown when the build job is complete. */

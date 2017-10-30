@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 COMMON_FILES = (
     "AbstractDistBuildClientStats.java",
     "BuildJobStateSerializer.java",
+    "BuildStatusUtil.java",
     "ClientStatsTracker.java",
     "DistBuildCellIndexer.java",
     "DistBuildService.java",
