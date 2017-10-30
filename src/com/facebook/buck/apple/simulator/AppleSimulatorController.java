@@ -171,7 +171,7 @@ public class AppleSimulatorController {
    * @return The number of milliseconds waited if the specified simulator booted, {@code
    *     Optional.empty()} otherwise.
    */
-  public Optional<Long> waitForSimulatorToBoot(long timeoutMillis, final String simulatorUdid)
+  private Optional<Long> waitForSimulatorToBoot(long timeoutMillis, final String simulatorUdid)
       throws IOException, InterruptedException {
     return waitForSimulatorState(
         timeoutMillis,
