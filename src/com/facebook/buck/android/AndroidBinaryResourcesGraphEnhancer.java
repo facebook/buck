@@ -359,6 +359,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new Aapt2Link(
         buildTarget.withAppendedFlavors(AAPT2_LINK_FLAVOR),
         projectFilesystem,
+        androidLegacyToolchain,
         ruleFinder,
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
@@ -415,6 +416,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new AaptPackageResources(
         buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR),
         projectFilesystem,
+        androidLegacyToolchain,
         ruleFinder,
         ruleResolver,
         manifest,

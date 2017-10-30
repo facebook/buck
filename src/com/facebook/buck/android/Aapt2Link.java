@@ -57,11 +57,13 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
   Aapt2Link(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<Aapt2Compile> compileRules,
       ImmutableList<HasAndroidResourceDeps> resourceRules,
@@ -69,6 +71,7 @@ public class Aapt2Link extends AbstractBuildRule {
       ManifestEntries manifestEntries,
       boolean noAutoVersion) {
     super(buildTarget, projectFilesystem);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
@@ -209,7 +212,8 @@ public class Aapt2Link extends AbstractBuildRule {
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+      AndroidPlatformTarget androidPlatformTarget =
+          androidLegacyToolchain.getAndroidPlatformTarget();
 
       ImmutableList.Builder<String> builder = ImmutableList.builder();
 

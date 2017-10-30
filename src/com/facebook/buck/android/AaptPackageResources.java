@@ -59,6 +59,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   static ImmutableSortedSet<BuildRule> getAllDeps(
@@ -87,6 +88,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   AaptPackageResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
@@ -96,6 +98,7 @@ public class AaptPackageResources extends AbstractBuildRule {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(buildTarget, projectFilesystem);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.skipCrunchPngs = skipCrunchPngs;
@@ -173,6 +176,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     steps.add(
         new AaptStep(
             getBuildTarget(),
+            androidLegacyToolchain,
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getRelativeResDirectories(

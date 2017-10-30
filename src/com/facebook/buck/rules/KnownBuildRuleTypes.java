@@ -517,7 +517,7 @@ public class KnownBuildRuleTypes {
             dBuckConfig, cxxBuckConfig, defaultCxxPlatform, defaultTestRuleTimeoutMs));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
-    builder.register(new GenAidlDescription());
+    builder.register(new GenAidlDescription(toolchainProvider));
     builder.register(new GoBinaryDescription(goBuckConfig));
     builder.register(new GoLibraryDescription(goBuckConfig));
     builder.register(new GoTestDescription(goBuckConfig, defaultTestRuleTimeoutMs));

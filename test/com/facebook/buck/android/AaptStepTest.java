@@ -54,6 +54,7 @@ public class AaptStepTest {
       ManifestEntries manifestEntries) {
     return new AaptStep(
         BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(),
         /* workingDirectory */ basePath,
         /* manifestDirectory */ basePath.resolve("AndroidManifest.xml"),
         /* resDirectories */ ImmutableList.of(),

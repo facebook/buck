@@ -183,6 +183,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new AaptPackageResources(
             aaptPackageResourcesTarget,
             filesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             ruleFinder,
             ruleResolver,
             /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),

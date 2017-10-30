@@ -48,14 +48,12 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -284,26 +282,7 @@ public class DuplicateResourcesTest {
 
     AaptStep step = (AaptStep) Iterables.getOnlyElement(Iterables.getOnlyElement(ruleSteps));
 
-    AndroidDirectoryResolver androidDirectoryResolver =
-        new FakeAndroidDirectoryResolver(
-            Optional.of(filesystem.getPath("/android-sdk")),
-            Optional.of(filesystem.getPath("/android-build-tools")),
-            Optional.empty(),
-            Optional.empty());
-
-    AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.createFromDefaultDirectoryStructure(
-            "",
-            androidDirectoryResolver,
-            "",
-            ImmutableSet.of(),
-            Optional.empty(),
-            Optional.empty());
-
-    ExecutionContext context =
-        TestExecutionContext.newBuilder()
-            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-            .build();
+    ExecutionContext context = TestExecutionContext.newBuilder().build();
 
     return step.getShellCommand(context);
   }

@@ -263,6 +263,7 @@ public class AaptPackageResourcesTest {
             new AaptPackageResources(
                 aaptTarget,
                 filesystem,
+                TestAndroidLegacyToolchainFactory.create(),
                 ruleFinder,
                 ruleResolver,
                 constructorArgs.manifest,

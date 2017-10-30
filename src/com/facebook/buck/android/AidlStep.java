@@ -33,6 +33,7 @@ import java.util.Set;
 public class AidlStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
@@ -40,12 +41,14 @@ public class AidlStep extends ShellStep {
   public AidlStep(
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
+      AndroidLegacyToolchain androidLegacyToolchain,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
     super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = destinationDirectory;
@@ -57,7 +60,7 @@ public class AidlStep extends ShellStep {
 
     // The arguments passed to aidl are based off of what I observed when running Ant in verbose
     // mode.
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+    AndroidPlatformTarget androidPlatformTarget = androidLegacyToolchain.getAndroidPlatformTarget();
     verifyImportPaths(filesystem, importDirectoryPaths);
     args.add(androidPlatformTarget.getAidlExecutable().toString());
 
