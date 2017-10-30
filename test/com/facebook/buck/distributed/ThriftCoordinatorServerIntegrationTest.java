@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -138,7 +139,9 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   private static ThriftCoordinatorServer createCoordinatorServer(
       int port, BuildTargetsQueue queue, ThriftCoordinatorServer.EventListener eventListener) {
-    return new ThriftCoordinatorServer(port, queue, STAMPEDE_ID, eventListener);
+    SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
+    future.set(queue);
+    return new ThriftCoordinatorServer(port, future, STAMPEDE_ID, eventListener);
   }
 
   @Test

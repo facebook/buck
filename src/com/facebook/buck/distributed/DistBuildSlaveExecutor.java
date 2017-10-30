@@ -26,10 +26,14 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class DistBuildSlaveExecutor {
@@ -56,18 +60,7 @@ public class DistBuildSlaveExecutor {
     BuildExecutorArgs builderArgs = args.createBuilderArgs();
     try (ExecutionContext executionContext =
         LocalBuildExecutor.createExecutionContext(builderArgs)) {
-      BuildExecutor localBuildExecutor =
-          new LocalBuildExecutor(
-              builderArgs,
-              executionContext,
-              initializer.getDelegateAndGraphs().getActionGraphAndResolver(),
-              initializer.getDelegateAndGraphs().getCachingBuildEngineDelegate(),
-              args.getArtifactCache(),
-              args.getExecutorService(),
-              KEEP_GOING,
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty());
+      BuildExecutor localBuildExecutor = createBuilder(builderArgs, executionContext);
 
       switch (args.getDistBuildMode()) {
         case REMOTE_BUILD:
@@ -109,6 +102,33 @@ public class DistBuildSlaveExecutor {
     return runner.runAndReturnExitCode();
   }
 
+  private BuildExecutor createBuilder(
+      BuildExecutorArgs builderArgs, ExecutionContext executionContext) {
+    Supplier<BuildExecutor> builderSupplier =
+        () -> {
+          DelegateAndGraphs delegateAndGraphs = null;
+          try {
+            delegateAndGraphs = initializer.getDelegateAndGraphs().get();
+          } catch (InterruptedException | ExecutionException e) {
+            String msg = String.format("Failed to get the DelegateAndGraphs.");
+            LOG.error(e, msg);
+            throw new RuntimeException(msg, e);
+          }
+          return new LocalBuildExecutor(
+              builderArgs,
+              executionContext,
+              delegateAndGraphs.getActionGraphAndResolver(),
+              delegateAndGraphs.getCachingBuildEngineDelegate(),
+              args.getArtifactCache(),
+              args.getExecutorService(),
+              KEEP_GOING,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+        };
+    return new LazyInitBuilder(builderSupplier);
+  }
+
   private MinionModeRunner newMinionMode(
       BuildExecutor localBuildExecutor, String coordinatorAddress, int coordinatorPort) {
     MinionModeRunner.BuildCompletionChecker checker =
@@ -129,17 +149,8 @@ public class DistBuildSlaveExecutor {
 
   private CoordinatorModeRunner newCoordinatorMode(
       int coordinatorPort, boolean isLocalMinionAlsoRunning) {
-    final CellPathResolver cellNames = args.getState().getRootCell().getCellPathResolver();
-    List<BuildTarget> targets =
-        args.getState()
-            .getRemoteState()
-            .getTopLevelTargets()
-            .stream()
-            .map(target -> BuildTargetParser.fullyQualifiedNameToBuildTarget(cellNames, target))
-            .collect(Collectors.toList());
-    BuildTargetsQueue queue =
-        BuildTargetsQueue.newQueue(
-            initializer.getDelegateAndGraphs().getActionGraphAndResolver().getResolver(), targets);
+    ListenableFuture<BuildTargetsQueue> queue =
+        Futures.transform(initializer.getDelegateAndGraphs(), x -> createBuildQueue(x));
     Optional<String> minionQueue = args.getDistBuildConfig().getMinionQueue();
     Preconditions.checkArgument(
         minionQueue.isPresent(),
@@ -151,6 +162,21 @@ public class DistBuildSlaveExecutor {
             minionQueue.get(),
             isLocalMinionAlsoRunning);
     return new CoordinatorModeRunner(coordinatorPort, queue, args.getStampedeId(), listener);
+  }
+
+  private BuildTargetsQueue createBuildQueue(DelegateAndGraphs delegateAndGraphs) {
+    final CellPathResolver cellNames = args.getState().getRootCell().getCellPathResolver();
+    List<BuildTarget> targets =
+        args.getState()
+            .getRemoteState()
+            .getTopLevelTargets()
+            .stream()
+            .map(target -> BuildTargetParser.fullyQualifiedNameToBuildTarget(cellNames, target))
+            .collect(Collectors.toList());
+    BuildTargetsQueue queue =
+        BuildTargetsQueue.newQueue(
+            delegateAndGraphs.getActionGraphAndResolver().getResolver(), targets);
+    return queue;
   }
 
   public static int getFreePortForCoordinator() throws IOException {

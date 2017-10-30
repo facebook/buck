@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.MinionModeRunnerIntegrationTest.FakeBuildEx
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -37,9 +38,10 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     int port = ThriftCoordinatorServerIntegrationTest.findRandomOpenPortOnAllLocalInterfaces();
     ThriftCoordinatorServer.EventListener eventListener =
         EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
+    SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
+    queueFuture.set(BuildTargetsQueueTest.createDiamondDependencyQueue());
     CoordinatorModeRunner coordinator =
-        new CoordinatorModeRunner(
-            port, BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID, eventListener);
+        new CoordinatorModeRunner(port, queueFuture, STAMPEDE_ID, eventListener);
     FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(

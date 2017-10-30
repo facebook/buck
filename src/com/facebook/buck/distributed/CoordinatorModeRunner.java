@@ -18,19 +18,20 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 
 public class CoordinatorModeRunner implements DistBuildModeRunner {
 
-  private final BuildTargetsQueue queue;
+  private final ListenableFuture<BuildTargetsQueue> queue;
   private final int coordinatorPort;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
 
   public CoordinatorModeRunner(
       int coordinatorPort,
-      BuildTargetsQueue queue,
+      ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener) {
     this.stampedeId = stampedeId;
@@ -56,7 +57,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
     private final ThriftCoordinatorServer server;
 
-    private AsyncCoordinatorRun(BuildTargetsQueue queue) throws IOException {
+    private AsyncCoordinatorRun(ListenableFuture<BuildTargetsQueue> queue) throws IOException {
       this.server = new ThriftCoordinatorServer(coordinatorPort, queue, stampedeId, eventListener);
       this.server.start();
     }

@@ -44,6 +44,7 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -55,19 +56,25 @@ public class DelegateAndGraphsInitializer {
   private static final Logger LOG = Logger.get(DelegateAndGraphsInitializer.class);
 
   private final DelegateAndGraphsInitializerArgs args;
-  private final DelegateAndGraphs delegateAndGraphs;
+  private final ListenableFuture<DelegateAndGraphs> delegateAndGraphs;
 
   public DelegateAndGraphsInitializer(DelegateAndGraphsInitializerArgs args) {
     this.args = args;
-    try {
-      this.delegateAndGraphs = createDelegateAndGraphs();
-    } catch (InterruptedException | IOException e) {
-      LOG.error(e, "Critical failure while creating the build engine delegate and graphs.");
-      throw new RuntimeException(e);
-    }
+    this.delegateAndGraphs =
+        args.getExecutorService()
+            .submit(
+                () -> {
+                  try {
+                    return createDelegateAndGraphs();
+                  } catch (InterruptedException | IOException e) {
+                    LOG.error(
+                        e, "Critical failure while creating the build engine delegate and graphs.");
+                    throw new RuntimeException(e);
+                  }
+                });
   }
 
-  public DelegateAndGraphs getDelegateAndGraphs() {
+  public ListenableFuture<DelegateAndGraphs> getDelegateAndGraphs() {
     return delegateAndGraphs;
   }
 

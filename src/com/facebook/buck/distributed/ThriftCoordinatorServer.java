@@ -20,21 +20,21 @@ import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
+import org.apache.thrift.TException;
 import org.apache.thrift.server.TThreadedSelectorServer;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TTransportException;
@@ -43,6 +43,7 @@ public class ThriftCoordinatorServer implements Closeable {
 
   /** Listen to ThriftCoordinatorServer events. */
   public interface EventListener {
+
     void onThriftServerStarted(String address, int port) throws IOException;
 
     void onThriftServerClosing(int buildExitCode) throws IOException;
@@ -50,20 +51,21 @@ public class ThriftCoordinatorServer implements Closeable {
 
   public static final int UNEXPECTED_STOP_EXIT_CODE = 42;
   public static final int GET_WORK_FAILED_EXIT_CODE = 43;
+  public static final int TEXCEPTION_EXIT_CODE = 44;
 
   private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
 
   private static final long MAX_TEAR_DOWN_MILLIS = TimeUnit.SECONDS.toMillis(2);
   private static final long MAX_DIST_BUILD_DURATION_MILLIS = TimeUnit.HOURS.toMillis(2);
 
-  private final MinionWorkloadAllocator allocator;
   private final int port;
-  private final CoordinatorServiceHandler handler;
   private final CoordinatorService.Processor<CoordinatorService.Iface> processor;
   private final Object lock;
   private final CompletableFuture<Integer> exitCodeFuture;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
+
+  private volatile CoordinatorService.Iface handler;
 
   @Nullable private TNonblockingServerSocket transport;
   @Nullable private TThreadedSelectorServer server;
@@ -71,17 +73,18 @@ public class ThriftCoordinatorServer implements Closeable {
 
   public ThriftCoordinatorServer(
       int port,
-      BuildTargetsQueue queue,
+      ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
-    this.allocator = new MinionWorkloadAllocator(queue);
     this.port = port;
-    this.handler = new CoordinatorServiceHandler();
-    this.processor = new CoordinatorService.Processor<>(handler);
+    this.handler = new IdleCoordinatorService();
+    CoordinatorServiceHandler handlerWrapper = new CoordinatorServiceHandler();
+    this.processor = new CoordinatorService.Processor<>(handlerWrapper);
+    queue.addListener(() -> switchToActiveMode(queue), MoreExecutors.directExecutor());
   }
 
   public ThriftCoordinatorServer start() throws IOException {
@@ -145,7 +148,20 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
+  private void switchToActiveMode(Future<BuildTargetsQueue> queue) {
+    Preconditions.checkState(queue.isDone());
+    try {
+      MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
+      this.handler = new ActiveCoordinatorService(allocator, exitCodeFuture);
+    } catch (InterruptedException | ExecutionException e) {
+      String msg = "Failed to create the BuildTargetsQueue.";
+      LOG.error(msg);
+      throw new RuntimeException(msg, e);
+    }
+  }
+
   private class CoordinatorServiceHandler implements CoordinatorService.Iface {
+
     @Override
     public GetWorkResponse getWork(GetWorkRequest request) {
       try {
@@ -172,51 +188,13 @@ public class ThriftCoordinatorServer implements Closeable {
       Preconditions.checkArgument(request.isSetMinionId());
       Preconditions.checkArgument(request.isSetLastExitCode());
 
-      // Create the response with some defaults
-      GetWorkResponse response = new GetWorkResponse();
-      response.setContinueBuilding(true);
-      response.setWorkUnits(new ArrayList<>());
-
       synchronized (lock) {
-        if (exitCodeFuture.isDone()) {
-          // Tell any remaining minions that the build is finished and that they should shutdown.
-          // Note: we cannot assume that when exitCodeFuture was set the first time the
-          // coordinator server will shutdown immediately.
-          response.setContinueBuilding(false);
-          return response;
+        try {
+          return handler.getWork(request);
+        } catch (TException e) {
+          exitCodeFuture.complete(TEXCEPTION_EXIT_CODE);
+          throw new RuntimeException(e);
         }
-
-        // If the minion died, then kill the whole build.
-        if (request.getLastExitCode() != 0) {
-          LOG.error(
-              String.format(
-                  "Got non zero exit code in GetWorkRequest from minion [%s]. Exit code [%s]",
-                  request.getMinionId(), request.getLastExitCode()));
-          exitCodeFuture.complete(request.getLastExitCode());
-          response.setContinueBuilding(false);
-          return response;
-        }
-
-        List<WorkUnit> newWorkUnitsForMinion =
-            allocator.dequeueZeroDependencyNodes(
-                request.getMinionId(),
-                request.getFinishedTargets(),
-                request.getMaxWorkUnitsToFetch());
-
-        // If the build is already finished (or just finished with this update, then signal this to
-        // the minion.
-        if (allocator.isBuildFinished()) {
-          exitCodeFuture.complete(0);
-          LOG.info(
-              String.format(
-                  "Minion [%s] is being told to exit because the build has finished.",
-                  request.minionId));
-          response.setContinueBuilding(false);
-        } else {
-          response.setWorkUnits(newWorkUnitsForMinion);
-        }
-
-        return response;
       }
     }
 
