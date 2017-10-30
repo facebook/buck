@@ -37,7 +37,8 @@ import javax.tools.JavaFileObject;
 public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<JavaFileObject> {
   private final DiagnosticListener<? super JavaFileObject> inner;
   @Nullable private JavaCompiler.CompilationTask task;
-  @Nullable private Object log;
+  @Nullable private Field contextField;
+  @Nullable private Method instanceMethod;
   @Nullable private Field nErrorsField;
   @Nullable private Enum<?> recoverableError;
   @Nullable private Method isFlagSetMethod;
@@ -67,10 +68,23 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
     Field nErrorsField = Preconditions.checkNotNull(this.nErrorsField);
 
     try {
-      int nerrors = (Integer) nErrorsField.get(log);
+      int nerrors = (Integer) nErrorsField.get(getLog());
       nerrors -= 1;
-      nErrorsField.set(log, nerrors);
+      nErrorsField.set(getLog(), nerrors);
     } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Gets the current log object, since the Log and the Context change for each round of annotation
+   * processing.
+   */
+  private Object getLog() {
+    try {
+      Object context = Preconditions.checkNotNull(contextField).get(task);
+      return Preconditions.checkNotNull(instanceMethod).invoke(null, context);
+    } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
   }
@@ -95,20 +109,20 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
   }
 
   private void ensureInitialized() {
-    if (nErrorsField != null && log != null) {
+    if (nErrorsField != null) {
       return;
     }
 
     try {
       Class<? extends JavaCompiler.CompilationTask> compilerClass =
           Preconditions.checkNotNull(task).getClass();
-      Field contextField = compilerClass.getSuperclass().getDeclaredField("context");
+      contextField = compilerClass.getSuperclass().getDeclaredField("context");
       contextField.setAccessible(true);
       Object context = contextField.get(task);
 
       ClassLoader compilerClassLoader = compilerClass.getClassLoader();
       Class<?> logClass = Class.forName("com.sun.tools.javac.util.Log", false, compilerClassLoader);
-      log = logClass.getMethod("instance", context.getClass()).invoke(null, context);
+      instanceMethod = logClass.getMethod("instance", context.getClass());
       nErrorsField = logClass.getField("nerrors");
 
       Class<?> diagnosticClass =
@@ -137,7 +151,6 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
       diagnosticField = diagnosticSourceUnwrapperClass.getField("d");
     } catch (ClassNotFoundException
         | IllegalAccessException
-        | InvocationTargetException
         | NoSuchFieldException
         | NoSuchMethodException e) {
       throw new RuntimeException(e);

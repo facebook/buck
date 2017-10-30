@@ -220,13 +220,13 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       Throwable cause = e.getCause();
       if (cause instanceof IOException) {
         throw (IOException) cause;
-      } else if (!getDiagnosticMessages().isEmpty()) {
+      } else if (!getErrorMessages().isEmpty()) {
         return Collections.emptyList();
       }
 
       throw new AssertionError(e);
     } finally {
-      if (!allowCompilationErrors && !diagnosticCollector.getDiagnosticMessages().isEmpty()) {
+      if (!allowCompilationErrors && !diagnosticCollector.getErrorMessages().isEmpty()) {
         fail(
             "Compilation failed! Diagnostics:\n"
                 + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
@@ -248,6 +248,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
 
   public List<String> getDiagnosticMessages() {
     return diagnosticCollector.getDiagnosticMessages();
+  }
+
+  public List<String> getErrorMessages() {
+    return diagnosticCollector.getErrorMessages();
   }
 
   public Classes getClasses() {
@@ -359,15 +363,23 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
    * diagnostic at the time its reported and collect that instead.
    */
   private static class DiagnosticMessageCollector<S> implements DiagnosticListener<S> {
-    private List<String> diagnostics = new ArrayList<>();
+    private List<Diagnostic<? extends S>> diagnostics = new ArrayList<>();
 
     @Override
     public void report(Diagnostic<? extends S> diagnostic) {
-      diagnostics.add(diagnostic.toString());
+      diagnostics.add(diagnostic);
     }
 
     private List<String> getDiagnosticMessages() {
-      return diagnostics;
+      return diagnostics.stream().map(Diagnostic::toString).collect(Collectors.toList());
+    }
+
+    private List<String> getErrorMessages() {
+      return diagnostics
+          .stream()
+          .filter(d -> d.getKind() == Diagnostic.Kind.ERROR)
+          .map(Diagnostic::toString)
+          .collect(Collectors.toList());
     }
   }
 }

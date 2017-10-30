@@ -61,6 +61,7 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic.Kind;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -581,6 +582,38 @@ public class StubJarTest {
                 + "       ^\n"
                 + "  class file for com.example.buck.dependency.Dep2 not found")
         .createStubJar();
+  }
+
+  /**
+   * Regression test for a bug where our error suppressing listener wasn't tracking Context changes
+   * across rounds.
+   */
+  @Test
+  public void suppressesErrorsEvenWithMultipleRounds() throws IOException {
+    tester
+        .setSourceFile("Dep.java", "package com.example.buck.dep;", "public class Dep { }")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import com.example.buck.dep.Dep;",
+            "public class A extends Dep {",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A extends com/example/buck/dep/Dep  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        // Having an AP issue a warning causes the listener to warm up during the first roun, thus
+        // exposing the bug
+        .setIssueAnnotationProcessorWarnings(true)
+        .createAndCheckStubJar();
   }
 
   @Test
@@ -4435,6 +4468,7 @@ public class StubJarTest {
     private ImmutableSortedSet<Path> classpath = EMPTY_CLASSPATH;
     private Path stubJarPath;
     private Path fullJarPath;
+    private boolean issueAPWarnings;
 
     public Tester() {
       expectedStubDirectory.add("META-INF/");
@@ -4502,6 +4536,11 @@ public class StubJarTest {
 
     public Tester setStubJar(Path stubJarPath) {
       this.stubJarPath = stubJarPath;
+      return this;
+    }
+
+    public Tester setIssueAnnotationProcessorWarnings(boolean value) {
+      this.issueAPWarnings = value;
       return this;
     }
 
@@ -4593,6 +4632,9 @@ public class StubJarTest {
                     @Override
                     public boolean process(
                         Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                      if (issueAPWarnings) {
+                        processingEnv.getMessager().printMessage(Kind.WARNING, "Warning");
+                      }
                       return false;
                     }
                   }));
@@ -4616,7 +4658,7 @@ public class StubJarTest {
           } else {
             List<String> actualCompileErrors =
                 testCompiler
-                    .getDiagnosticMessages()
+                    .getErrorMessages()
                     .stream()
                     .map(
                         diagnostic ->
@@ -4691,7 +4733,7 @@ public class StubJarTest {
         if (!expectedCompileErrors.isEmpty()) {
           List<String> actualCompileErrors =
               compiler
-                  .getDiagnosticMessages()
+                  .getErrorMessages()
                   .stream()
                   .map(
                       diagnostic ->
