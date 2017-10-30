@@ -64,6 +64,7 @@ public class DxStep extends ShellStep {
   }
 
   private final ProjectFilesystem filesystem;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
@@ -79,9 +80,16 @@ public class DxStep extends ShellStep {
   public DxStep(
       BuildTarget target,
       ProjectFilesystem filesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       Path outputDexFile,
       Iterable<Path> filesToDex) {
-    this(target, filesystem, outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
+    this(
+        target,
+        filesystem,
+        androidLegacyToolchain,
+        outputDexFile,
+        filesToDex,
+        EnumSet.noneOf(DxStep.Option.class));
   }
 
   /**
@@ -93,10 +101,18 @@ public class DxStep extends ShellStep {
   public DxStep(
       BuildTarget target,
       ProjectFilesystem filesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options) {
-    this(target, filesystem, outputDexFile, filesToDex, options, Optional.empty());
+    this(
+        target,
+        filesystem,
+        androidLegacyToolchain,
+        outputDexFile,
+        filesToDex,
+        options,
+        Optional.empty());
   }
 
   /**
@@ -109,12 +125,14 @@ public class DxStep extends ShellStep {
   public DxStep(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
       Optional<String> maxHeapSize) {
     super(Optional.of(buildTarget), filesystem.getRootPath());
     this.filesystem = filesystem;
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
@@ -130,7 +148,7 @@ public class DxStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
+    AndroidPlatformTarget androidPlatformTarget = androidLegacyToolchain.getAndroidPlatformTarget();
     String dx = androidPlatformTarget.getDxExecutable().toString();
 
     if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {

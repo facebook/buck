@@ -51,7 +51,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -103,21 +102,23 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             "%s.dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarOutput.toString());
 
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
-    DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, filesystem, params, javaLibraryRule);
-    List<Step> steps = preDex.getBuildSteps(context, buildableContext);
-
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
     EasyMock.replay(androidPlatformTarget);
 
-    ExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-            .build();
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
+    BuildRuleParams params = TestBuildRuleParams.create();
+    DexProducedFromJavaLibrary preDex =
+        new DexProducedFromJavaLibrary(
+            buildTarget,
+            filesystem,
+            TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
+            params,
+            javaLibraryRule);
+    List<Step> steps = preDex.getBuildSteps(context, buildableContext);
+
+    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
     String expectedDxCommand =
         String.format(
@@ -176,7 +177,12 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, projectFilesystem, params, javaLibrary);
+        new DexProducedFromJavaLibrary(
+            buildTarget,
+            projectFilesystem,
+            TestAndroidLegacyToolchainFactory.create(),
+            params,
+            javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     Path dexOutput = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
@@ -216,7 +222,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
-            buildTarget, projectFilesystem, params, accumulateClassNames);
+            buildTarget,
+            projectFilesystem,
+            TestAndroidLegacyToolchainFactory.create(),
+            params,
+            accumulateClassNames);
     assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),

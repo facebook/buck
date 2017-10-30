@@ -81,15 +81,18 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   @VisibleForTesting static final String REFERENCED_RESOURCES = "referenced_resources";
 
   @AddToRuleKey private final SourcePath javaLibrarySourcePath;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       JavaLibrary javaLibrary) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.javaLibrary = javaLibrary;
     this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -135,6 +138,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
           new DxStep(
               getBuildTarget(),
               getProjectFilesystem(),
+              androidLegacyToolchain,
               getPathToDex(),
               Collections.singleton(pathToOutputFile),
               EnumSet.of(

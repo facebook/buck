@@ -112,7 +112,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
 
-  // Only these two fields should not be added to the rulekey.
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final ListeningExecutorService dxExecutorService;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
@@ -153,6 +153,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   }
 
   NonPreDexedDexBuildable(
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePathRuleFinder ruleFinder,
       SourcePath aaptGeneratedProguardConfigFile,
       ImmutableSortedSet<SourcePath> additionalJarsForProguard,
@@ -169,6 +170,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget) {
     super(buildTarget, filesystem);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.aaptGeneratedProguardConfigFile = aaptGeneratedProguardConfigFile;
     this.additionalJarsForProguard = additionalJarsForProguard;
     this.apkModuleMap = apkModuleMap;
@@ -853,6 +855,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     SmartDexingStep smartDexingCommand =
         new SmartDexingStep(
             getBuildTarget(),
+            androidLegacyToolchain,
             buildContext,
             getProjectFilesystem(),
             selectedPrimaryDexPath,

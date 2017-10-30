@@ -90,6 +90,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           DxStep.Option.NO_OPTIMIZE);
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final APKModuleGraph apkModuleGraph;
   private final ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps;
   private final DexProducedFromJavaLibrary dexForUberRDotJava;
@@ -100,6 +101,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public PreDexMerge(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       DexSplitMode dexSplitMode,
       APKModuleGraph apkModuleGraph,
@@ -109,6 +111,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Optional<Integer> xzCompressionLevel,
       Optional<String> dxMaxHeapSize) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
     this.preDexDeps = preDexDeps;
@@ -303,6 +306,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(
         new SmartDexingStep(
             getBuildTarget(),
+            androidLegacyToolchain,
             context,
             getProjectFilesystem(),
             primaryDexPath,
@@ -415,6 +419,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new DxStep(
             getBuildTarget(),
             getProjectFilesystem(),
+            androidLegacyToolchain,
             primaryDexPath,
             filesToDex,
             DX_MERGE_OPTIONS));

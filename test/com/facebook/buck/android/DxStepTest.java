@@ -75,6 +75,7 @@ public class DxStepTest extends EasyMockSupport {
           new DxStep(
               BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(Option.NO_OPTIMIZE));
@@ -104,6 +105,7 @@ public class DxStepTest extends EasyMockSupport {
           new DxStep(
               BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX);
 
@@ -132,6 +134,7 @@ public class DxStepTest extends EasyMockSupport {
           new DxStep(
               BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
@@ -161,6 +164,7 @@ public class DxStepTest extends EasyMockSupport {
           new DxStep(
               BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX);
 
@@ -194,6 +198,7 @@ public class DxStepTest extends EasyMockSupport {
           new DxStep(
               BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX);
 
@@ -228,6 +233,7 @@ public class DxStepTest extends EasyMockSupport {
           new DxStep(
               BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(DxStep.Option.class),

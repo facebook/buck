@@ -220,6 +220,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new DexProducedFromJavaLibrary(
             fakeUberRDotJavaDexTarget,
             filesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             TestBuildRuleParams.create(),
             fakeUberRDotJavaCompile);
     ruleResolver.addToIndex(fakeUberRDotJavaDex);

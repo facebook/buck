@@ -97,6 +97,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildTarget originalBuildTarget;
   private final SortedSet<BuildRule> originalDeps;
   private final ProjectFilesystem projectFilesystem;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
   private final Optional<String> keepResourcePattern;
@@ -174,6 +175,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex) {
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
     this.projectFilesystem = projectFilesystem;
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalBuildTarget;
     this.originalDeps = originalParams.getBuildDeps();
@@ -422,6 +424,7 @@ public class AndroidBinaryGraphEnhancer {
         new DexProducedFromJavaLibrary(
             originalBuildTarget.withAppendedFlavors(DEX_UBER_R_DOT_JAVA_FLAVOR),
             projectFilesystem,
+            androidLegacyToolchain,
             paramsForDexUberRDotJava,
             compileUberRDotJava);
     ruleResolver.addToIndex(dexUberRDotJava);
@@ -578,6 +581,7 @@ public class AndroidBinaryGraphEnhancer {
         new PreDexMerge(
             originalBuildTarget.withAppendedFlavors(DEX_MERGE_FLAVOR),
             projectFilesystem,
+            androidLegacyToolchain,
             paramsForPreDexMerge,
             dexSplitMode,
             apkModuleGraph,
@@ -625,7 +629,11 @@ public class AndroidBinaryGraphEnhancer {
                 BuildRuleParams paramsForPreDex =
                     buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
                 return new DexProducedFromJavaLibrary(
-                    preDexTarget, projectFilesystem, paramsForPreDex, javaLibrary);
+                    preDexTarget,
+                    projectFilesystem,
+                    androidLegacyToolchain,
+                    paramsForPreDex,
+                    javaLibrary);
               });
       preDexDeps.put(
           apkModuleGraph.findModuleForTarget(buildTarget), (DexProducedFromJavaLibrary) preDexRule);
@@ -664,6 +672,7 @@ public class AndroidBinaryGraphEnhancer {
                     packageableCollection.getModuleMappedClasspathEntriesToDex()));
     NonPreDexedDexBuildable nonPreDexedDexBuildable =
         new NonPreDexedDexBuildable(
+            androidLegacyToolchain,
             ruleFinder,
             aaptGeneratedProguardConfigFile,
             additionalJarsForProguard,
