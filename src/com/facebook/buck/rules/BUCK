@@ -136,6 +136,7 @@ java_immutables_library(
         "//src/com/facebook/buck/ocaml:ocaml",
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/decorators:decorators",
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/python:rules",

@@ -29,6 +29,7 @@ import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
@@ -287,6 +288,19 @@ abstract class AbstractCell {
             .setRawConfig(getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build();
+    return EventReportingProjectBuildFileParser.of(
+        createProjectBuildFileParser(
+            typeCoercerFactory, console, eventBus, parserConfig, buildFileParserOptions),
+        eventBus);
+  }
+
+  /** Creates a project build file parser based on Buck configuration settings. */
+  private ProjectBuildFileParser createProjectBuildFileParser(
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      ParserConfig parserConfig,
+      ProjectBuildFileParserOptions buildFileParserOptions) {
     PythonDslProjectBuildFileParser pythonDslProjectBuildFileParser =
         new PythonDslProjectBuildFileParser(
             buildFileParserOptions,

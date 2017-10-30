@@ -101,7 +101,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Nullable private FutureTask<Void> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
-  @Nullable private ProjectBuildFileParseEvents.Started projectBuildFileParseEventStarted;
 
   private AtomicReference<Path> currentBuildFile = new AtomicReference<Path>();
 
@@ -182,8 +181,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   /** Initialize the parser, starting buck.py. */
   private void init() throws IOException {
-    projectBuildFileParseEventStarted = new ProjectBuildFileParseEvents.Started();
-    buckEventBus.post(projectBuildFileParseEventStarted);
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(buckEventBus, PerfEventId.of("ParserInit"))) {
 
@@ -751,11 +748,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         }
       }
     } finally {
-      if (isInitialized) {
-        buckEventBus.post(
-            new ProjectBuildFileParseEvents.Finished(
-                Preconditions.checkNotNull(projectBuildFileParseEventStarted)));
-      }
       isClosed = true;
     }
   }

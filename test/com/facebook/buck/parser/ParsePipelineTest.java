@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -48,6 +47,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -341,7 +342,7 @@ public class ParsePipelineTest {
         targetNodeParsePipelineCache;
     private final RawNodeParsePipelineCache rawNodeParsePipelineCache;
     private final ListeningExecutorService executorService;
-    private final Set<PythonDslProjectBuildFileParser> projectBuildFileParsers;
+    private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
 
     public Fixture(
         String scenario,
@@ -366,10 +367,11 @@ public class ParsePipelineTest {
           new ProjectBuildFileParserPool(
               4, // max parsers
               input -> {
-                ProjectBuildFileParser buildFileParser =
-                    input.createBuildFileParser(coercerFactory, console, eventBus);
+                CloseRecordingProjectBuildFileParserDecorator buildFileParser =
+                    new CloseRecordingProjectBuildFileParserDecorator(
+                        input.createBuildFileParser(coercerFactory, console, eventBus));
                 synchronized (projectBuildFileParsers) {
-                  projectBuildFileParsers.add((PythonDslProjectBuildFileParser) buildFileParser);
+                  projectBuildFileParsers.add(buildFileParser);
                 }
                 return buildFileParser;
               },
@@ -424,11 +426,11 @@ public class ParsePipelineTest {
     }
 
     private void waitForParsersToClose() throws InterruptedException {
-      Iterable<PythonDslProjectBuildFileParser> parserSnapshot;
+      Iterable<CloseRecordingProjectBuildFileParserDecorator> parserSnapshot;
       synchronized (projectBuildFileParsers) {
         parserSnapshot = ImmutableSet.copyOf(projectBuildFileParsers);
       }
-      waitForAll(parserSnapshot, PythonDslProjectBuildFileParser::isClosed);
+      waitForAll(parserSnapshot, CloseRecordingProjectBuildFileParserDecorator::isClosed);
     }
 
     @Override
@@ -440,10 +442,56 @@ public class ParsePipelineTest {
       executorService.shutdown();
       assertThat(executorService.awaitTermination(5, TimeUnit.SECONDS), is(true));
       synchronized (projectBuildFileParsers) {
-        for (PythonDslProjectBuildFileParser parser : projectBuildFileParsers) {
+        for (CloseRecordingProjectBuildFileParserDecorator parser : projectBuildFileParsers) {
           assertThat(parser.isClosed(), is(true));
         }
       }
+    }
+  }
+
+  /**
+   * Decorates {@link com.facebook.buck.parser.api.ProjectBuildFileParser} to track whether it was
+   * closed.
+   */
+  private static class CloseRecordingProjectBuildFileParserDecorator
+      implements ProjectBuildFileParser {
+    private final ProjectBuildFileParser delegate;
+    private final AtomicBoolean isClosed;
+
+    private CloseRecordingProjectBuildFileParserDecorator(ProjectBuildFileParser delegate) {
+      this.delegate = delegate;
+      this.isClosed = new AtomicBoolean(false);
+    }
+
+    @Override
+    public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
+        throws BuildFileParseException, InterruptedException, IOException {
+      return delegate.getAll(buildFile, processedBytes);
+    }
+
+    @Override
+    public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
+        Path buildFile, AtomicLong processedBytes)
+        throws BuildFileParseException, InterruptedException, IOException {
+      return delegate.getAll(buildFile, processedBytes);
+    }
+
+    @Override
+    public void reportProfile() throws IOException {
+      delegate.reportProfile();
+    }
+
+    @Override
+    public void close() throws BuildFileParseException, InterruptedException, IOException {
+      try {
+        delegate.close();
+      } finally {
+        isClosed.set(true);
+      }
+    }
+
+    public boolean isClosed() {
+      return isClosed.get();
     }
   }
 }
