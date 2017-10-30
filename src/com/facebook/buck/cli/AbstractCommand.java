@@ -295,7 +295,6 @@ public abstract class AbstractCommand implements Command {
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return ExecutionContext.builder()
         .setConsole(params.getConsole())
-        .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
         .setBuckEventBus(params.getBuckEventBus())
         .setPlatform(params.getPlatform())
         .setEnvironment(params.getEnvironment())

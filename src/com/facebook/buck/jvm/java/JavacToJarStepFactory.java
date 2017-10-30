@@ -47,7 +47,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private JavacOptions javacOptions;
-  @AddToRuleKey private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
+  @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
       SourcePathResolver resolver,
@@ -55,21 +55,20 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       ProjectFilesystem projectFilesystem,
       Javac javac,
       JavacOptions javacOptions,
-      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+      ExtraClasspathProvider extraClasspathProvider) {
     super(resolver, ruleFinder, projectFilesystem);
     this.javac = javac;
     this.javacOptions = javacOptions;
-    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
+    this.extraClasspathProvider = extraClasspathProvider;
   }
 
   public JavacPipelineState createPipelineState(
-      BuildContext context,
       BuildTarget invokingRule,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters) {
     final JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     return new JavacPipelineState(
         javac,
@@ -92,7 +91,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       Builder<Step> steps,
       BuildableContext buildableContext) {
     final JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
     if (generatingCode) {
@@ -122,7 +121,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
     JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
     return buildTimeOptions.getBootclasspath();
   }
 
@@ -215,7 +214,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
     if (isSpoolingToJarEnabled) {
       final JavacOptions buildTimeOptions =
-          javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+          javacOptions.withBootclasspathFromContext(extraClasspathProvider);
       boolean generatingCode = !buildTimeOptions.getAnnotationProcessingParams().isEmpty();
       if (generatingCode) {
         // Javac requires that the root directory for generated sources already exists.

@@ -173,10 +173,11 @@ public class AndroidPrebuiltAarDescription
           args.getRequiredForSourceOnlyAbi());
     }
 
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
-      AndroidLegacyToolchain androidLegacyToolchain =
-          toolchainProvider.getByName(
-              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
@@ -224,7 +225,7 @@ public class AndroidPrebuiltAarDescription
             projectFilesystem,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,
-            AndroidClasspathFromContextFunction.INSTANCE),
+            new AndroidClasspathProvider(androidLegacyToolchain)),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()),
         args.getRequiredForSourceOnlyAbi());

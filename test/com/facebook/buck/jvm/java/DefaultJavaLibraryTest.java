@@ -83,7 +83,6 @@ import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1453,8 +1452,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     replay(platformTarget);
 
     return FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)))
-        .withAndroidPlatformTargetSupplier(Suppliers.ofInstance(platformTarget));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)));
   }
 
   private abstract static class AnnotationProcessorTarget {

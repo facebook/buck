@@ -29,7 +29,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -80,10 +79,7 @@ public class AaptStepTest {
     replay(androidPlatformTarget);
 
     ExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setConsole(new TestConsole(verbosity))
-            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-            .build();
+        TestExecutionContext.newBuilder().setConsole(new TestConsole(verbosity)).build();
 
     return executionContext;
   }

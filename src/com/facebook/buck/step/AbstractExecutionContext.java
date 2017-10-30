@@ -16,7 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -37,7 +36,6 @@ import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
@@ -97,15 +95,6 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter
   abstract ProjectFilesystemFactory getProjectFilesystemFactory();
-
-  /**
-   * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to
-   * specify one, an exception will be thrown.
-   */
-  @Value.Default
-  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
-    return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
-  }
 
   @Value.Default
   public long getDefaultTestTimeoutMillis() {

@@ -427,7 +427,8 @@ public class KnownBuildRuleTypes {
                 new CommandThreadFactory("SmartDexing")));
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
-        new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
+        new DefaultAndroidLibraryCompilerFactory(
+            toolchainProvider, javaConfig, scalaConfig, kotlinBuckConfig);
 
     builder.register(
         new AndroidAarDescription(

@@ -38,7 +38,8 @@ public class AndroidLibraryBuilder
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
       language ->
           new JavaConfiguredCompilerFactory(
-              DEFAULT_JAVA_CONFIG, AndroidClasspathFromContextFunction.INSTANCE);
+              DEFAULT_JAVA_CONFIG,
+              new AndroidClasspathProvider(TestAndroidLegacyToolchainFactory.create()));
 
   private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(

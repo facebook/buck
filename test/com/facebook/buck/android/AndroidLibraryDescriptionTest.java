@@ -23,7 +23,7 @@ import static org.easymock.EasyMock.verify;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -36,14 +36,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
@@ -218,16 +216,13 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     replay(androidPlatformTarget);
 
-    ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
-        AndroidClasspathFromContextFunction.INSTANCE;
+    ExtraClasspathProvider extraClasspathProvider =
+        new AndroidClasspathProvider(
+            TestAndroidLegacyToolchainFactory.create(androidPlatformTarget));
 
     JavacOptions options =
         JavacOptions.builder().setSourceLevel("1.7").setTargetLevel("1.7").build();
-    JavacOptions updated =
-        options.withBootclasspathFromContext(
-            extraClasspathFromContextFunction,
-            FakeBuildContext.NOOP_CONTEXT.withAndroidPlatformTargetSupplier(
-                Suppliers.ofInstance(androidPlatformTarget)));
+    JavacOptions updated = options.withBootclasspathFromContext(extraClasspathProvider);
 
     assertEquals(
         Optional.of(

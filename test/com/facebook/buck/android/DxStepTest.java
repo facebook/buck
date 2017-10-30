@@ -30,7 +30,6 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -258,9 +257,6 @@ public class DxStepTest extends EasyMockSupport {
   private ExecutionContext createExecutionContext(int verbosityLevel) throws IOException {
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
     TestConsole console = new TestConsole(verbosity);
-    return TestExecutionContext.newBuilder()
-        .setConsole(console)
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
+    return TestExecutionContext.newBuilder().setConsole(console).build();
   }
 }

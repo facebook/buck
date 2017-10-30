@@ -24,17 +24,16 @@ import javax.annotation.Nullable;
 
 public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final JavaBuckConfig javaBuckConfig;
-  private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
+  private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavaConfiguredCompilerFactory(JavaBuckConfig javaBuckConfig) {
-    this(javaBuckConfig, ExtraClasspathFromContextFunction.EMPTY);
+    this(javaBuckConfig, ExtraClasspathProvider.EMPTY);
   }
 
   public JavaConfiguredCompilerFactory(
-      JavaBuckConfig javaBuckConfig,
-      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+      JavaBuckConfig javaBuckConfig, ExtraClasspathProvider extraClasspathProvider) {
     this.javaBuckConfig = javaBuckConfig;
-    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
+    this.extraClasspathProvider = extraClasspathProvider;
   }
 
   @Override
@@ -77,7 +76,7 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         projectFilesystem,
         getJavac(buildRuleResolver, arg),
         javacOptions,
-        extraClasspathFromContextFunction);
+        extraClasspathProvider);
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

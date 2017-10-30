@@ -25,7 +25,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -102,7 +102,7 @@ public class DummyRDotJavaTest {
                 filesystem,
                 DEFAULT_JAVAC,
                 ANDROID_JAVAC_OPTIONS,
-                ExtraClasspathFromContextFunction.EMPTY),
+                ExtraClasspathProvider.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
@@ -203,7 +203,7 @@ public class DummyRDotJavaTest {
                 filesystem,
                 DEFAULT_JAVAC,
                 ANDROID_JAVAC_OPTIONS,
-                ExtraClasspathFromContextFunction.EMPTY),
+                ExtraClasspathProvider.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),

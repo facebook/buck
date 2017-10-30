@@ -17,22 +17,28 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinConfiguredCompilerFactory;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaConfiguredCompilerFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaConfig;
   private final ScalaBuckConfig scalaConfig;
   private final KotlinBuckConfig kotlinBuckConfig;
 
   public DefaultAndroidLibraryCompilerFactory(
-      JavaBuckConfig javaConfig, ScalaBuckConfig scalaConfig, KotlinBuckConfig kotlinBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaConfig,
+      ScalaBuckConfig scalaConfig,
+      KotlinBuckConfig kotlinBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaConfig = javaConfig;
     this.scalaConfig = scalaConfig;
     this.kotlinBuckConfig = kotlinBuckConfig;
@@ -40,17 +46,18 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
 
   @Override
   public ConfiguredCompilerFactory getCompiler(AndroidLibraryDescription.JvmLanguage language) {
-    ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
-        AndroidClasspathFromContextFunction.INSTANCE;
+    ExtraClasspathProvider extraClasspathProvider =
+        new AndroidClasspathProvider(
+            toolchainProvider.getByName(
+                AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class));
     switch (language) {
       case JAVA:
-        return new JavaConfiguredCompilerFactory(javaConfig, extraClasspathFromContextFunction);
+        return new JavaConfiguredCompilerFactory(javaConfig, extraClasspathProvider);
       case SCALA:
-        return new ScalaConfiguredCompilerFactory(
-            scalaConfig, javaConfig, extraClasspathFromContextFunction);
+        return new ScalaConfiguredCompilerFactory(scalaConfig, javaConfig, extraClasspathProvider);
       case KOTLIN:
         return new KotlinConfiguredCompilerFactory(
-            kotlinBuckConfig, javaConfig, extraClasspathFromContextFunction);
+            kotlinBuckConfig, javaConfig, extraClasspathProvider);
     }
     throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
   }

@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
@@ -142,10 +141,9 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     }
   }
 
-  public JavacOptions withBootclasspathFromContext(
-      ExtraClasspathFromContextFunction extraClasspathFromContextFunction, BuildContext context) {
+  public JavacOptions withBootclasspathFromContext(ExtraClasspathProvider extraClasspathProvider) {
     String extraClasspath =
-        Joiner.on(File.pathSeparator).join(extraClasspathFromContextFunction.apply(context));
+        Joiner.on(File.pathSeparator).join(extraClasspathProvider.getExtraClasspath());
     JavacOptions options = (JavacOptions) this;
 
     if (!extraClasspath.isEmpty()) {

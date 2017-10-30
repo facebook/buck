@@ -637,7 +637,6 @@ public class TestCommand extends BuildCommand {
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())
-                  .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
                   .build();
 
           // Once all of the rules are built, then run the tests.

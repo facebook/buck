@@ -20,7 +20,7 @@ import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -48,7 +48,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
-  @AddToRuleKey private final ExtraClasspathFromContextFunction extraClassPath;
+  @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
   private final Javac javac;
   private final JavacOptions javacOptions;
 
@@ -58,7 +58,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ProjectFilesystem projectFilesystem,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
-      ExtraClasspathFromContextFunction extraClassPath,
+      ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
     super(resolver, ruleFinder, projectFilesystem);
@@ -93,7 +93,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               pathToSrcsList,
               ImmutableSortedSet.<Path>naturalOrder()
                   .addAll(
-                      Optional.ofNullable(extraClassPath.apply(buildContext))
+                      Optional.ofNullable(extraClassPath.getExtraClasspath())
                           .orElse(ImmutableList.of()))
                   .addAll(declaredClasspathEntries)
                   .build(),
@@ -118,7 +118,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                   ImmutableSortedSet.<Path>naturalOrder()
                       .add(outputDirectory)
                       .addAll(
-                          Optional.ofNullable(extraClassPath.apply(buildContext))
+                          Optional.ofNullable(extraClassPath.getExtraClasspath())
                               .orElse(ImmutableList.of()))
                       .addAll(declaredClasspathEntries)
                       .build())
@@ -132,7 +132,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
-    return javacOptions.withBootclasspathFromContext(extraClassPath, context).getBootclasspath();
+    return javacOptions.withBootclasspathFromContext(extraClassPath).getBootclasspath();
   }
 
   @Override

@@ -21,7 +21,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AbiGenerationMode;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -77,7 +77,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
                 projectFilesystem,
                 javac,
                 javacOptions,
-                ExtraClasspathFromContextFunction.EMPTY),
+                ExtraClasspathProvider.EMPTY),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
             /* resources */ ImmutableSortedSet.of(),
             /* resourcesRoot */ Optional.empty(),

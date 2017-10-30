@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.command;
 
-import com.facebook.buck.android.AndroidPlatformTargetSupplier;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
@@ -211,16 +210,10 @@ public class LocalBuildExecutor implements BuildExecutor {
     // TODO(shivanker): Fix this for stampede to be able to build android.
     final ConcurrencyLimit concurrencyLimit =
         args.getBuckConfig().getView(ResourcesConfig.class).getConcurrencyLimit();
-    final AndroidPlatformTargetSupplier androidSupplier =
-        AndroidPlatformTargetSupplier.create(
-            args.getRootCell().getFilesystem(),
-            args.getRootCell().getBuckConfig(),
-            args.getPlatform());
     final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
 
     return ExecutionContext.builder()
         .setConsole(args.getConsole())
-        .setAndroidPlatformTargetSupplier(androidSupplier)
         .setTargetDevice(Optional.empty())
         .setDefaultTestTimeoutMillis(1000)
         .setCodeCoverageEnabled(false)

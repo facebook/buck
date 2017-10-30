@@ -201,7 +201,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             javac,
             javacOptions,
-            ExtraClasspathFromContextFunction.EMPTY);
+            ExtraClasspathProvider.EMPTY);
 
     compileStepFactory.createCompileStep(
         context, getBuildTarget(), compilerParameters, steps, buildableContext);

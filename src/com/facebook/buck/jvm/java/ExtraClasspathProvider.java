@@ -18,25 +18,25 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
-import com.facebook.buck.rules.BuildContext;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.function.Function;
 
-/** Used to provide extra classpath entries to a compiler based on the build context. */
-public interface ExtraClasspathFromContextFunction
-    extends Function<BuildContext, Iterable<Path>>, AddsToRuleKey {
-  ExtraClasspathFromContextFunction EMPTY = new EmptyExtraClasspathFromContextFunction();
+/** Used to provide extra classpath entries to a compiler. */
+public interface ExtraClasspathProvider extends AddsToRuleKey {
 
-  class EmptyExtraClasspathFromContextFunction implements ExtraClasspathFromContextFunction {
+  Iterable<Path> getExtraClasspath();
+
+  ExtraClasspathProvider EMPTY = new EmptyExtraClasspathProvider();
+
+  class EmptyExtraClasspathProvider implements ExtraClasspathProvider {
     @AddToRuleKey
     @SuppressWarnings("unused")
     private final String classpath = "default";
 
-    private EmptyExtraClasspathFromContextFunction() {}
+    private EmptyExtraClasspathProvider() {}
 
     @Override
-    public Iterable<Path> apply(BuildContext buildContext) {
+    public Iterable<Path> getExtraClasspath() {
       return Collections.emptyList();
     }
   }

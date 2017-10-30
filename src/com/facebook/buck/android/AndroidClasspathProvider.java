@@ -16,23 +16,24 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
 import java.nio.file.Path;
 
-public class AndroidClasspathFromContextFunction implements ExtraClasspathFromContextFunction {
-  public static final AndroidClasspathFromContextFunction INSTANCE =
-      new AndroidClasspathFromContextFunction();
+public class AndroidClasspathProvider implements ExtraClasspathProvider {
+
+  private final AndroidLegacyToolchain androidLegacyToolchain;
 
   @AddToRuleKey
   @SuppressWarnings("unused")
   private final String classpath = "android";
 
-  private AndroidClasspathFromContextFunction() {}
+  public AndroidClasspathProvider(AndroidLegacyToolchain androidLegacyToolchain) {
+    this.androidLegacyToolchain = androidLegacyToolchain;
+  }
 
   @Override
-  public Iterable<Path> apply(BuildContext context) {
-    return context.getAndroidPlatformTargetSupplier().get().getBootclasspathEntries();
+  public Iterable<Path> getExtraClasspath() {
+    return androidLegacyToolchain.getAndroidPlatformTarget().getBootclasspathEntries();
   }
 }
