@@ -2557,6 +2557,83 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsReferencesToImportedTypesShadowingStarImportedOnes() throws IOException {
+    tester
+        .setSourceFile("String.java", "package com.example.buck.shadow;", "public class String { }")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import com.example.buck.shadow.String;",
+            "public class A {",
+            "  String s;",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x0",
+            "  Lcom/example/buck/shadow/String; s",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void stubsReferencesToMemberTypesShadowingImportedOnes() throws IOException {
+    tester
+        .setSourceFile(
+            "State.java", "package com.example.buck.state;", "public @interface State { }")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import com.example.buck.state.State;",
+            "@State",
+            "public class A {",
+            "  State s;",
+            "  public static class State { }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$State",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A$State {",
+            "",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/A$State com/example/buck/A State",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  @Lcom/example/buck/state/State;() // invisible",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/A$State com/example/buck/A State",
+            "",
+            "  // access flags 0x0",
+            "  Lcom/example/buck/A$State; s",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void stubsImportedReferencesToInnerClassesOfOtherTypes() throws IOException {
     tester
         .setSourceFile(

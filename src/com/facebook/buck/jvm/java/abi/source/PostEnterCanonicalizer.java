@@ -42,6 +42,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -163,8 +164,23 @@ class PostEnterCanonicalizer {
               enclosingType.getKind() != TypeKind.NONE
                   ? (DeclaredType) getCanonicalType(enclosingType, null)
                   : null;
+
           TypeElement canonicalElement =
               (TypeElement) elements.getCanonicalElement(declaredType.asElement());
+          // If an import statement for a type that is not available would shadow a type from a
+          // star-imported package (such as java.lang), the compiler will happily resolve to the
+          // star-imported type (expecting that the imported type will be filled in by an annotation
+          // processor). We check whether we would have inferred something different.
+          if (canonicalElement.getNestingKind() == NestingKind.TOP_LEVEL
+              && treePath != null
+              && treePath.getLeaf().getKind() == Tree.Kind.IDENTIFIER) {
+            DeclaredType inferredType = (DeclaredType) getImportedType(treePath);
+            if (inferredType != null) {
+              TypeElement inferredElement =
+                  (TypeElement) elements.getCanonicalElement(inferredType.asElement());
+              canonicalElement = inferredElement;
+            }
+          }
 
           return types.getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
         }
@@ -280,47 +296,8 @@ class PostEnterCanonicalizer {
       case IDENTIFIER:
         {
           // If it's imported, then it must be a class; look it up
-          TreePath importedIdentifierPath = getImportedIdentifier(treePath);
-          if (importedIdentifierPath != null) {
-            TypeMirror underlyingType = javacTrees.getTypeMirror(importedIdentifierPath);
-
-            if (underlyingType == null) {
-              // A null underlying type in an imported identifier means the import was a static
-              // import. We need to figure the type out ourselves.
-
-              MemberSelectTree importedIdentifierTree =
-                  (MemberSelectTree) importedIdentifierPath.getLeaf();
-              DeclaredType parentType =
-                  (DeclaredType)
-                      getCanonicalType(
-                          new TreePath(
-                              importedIdentifierPath, importedIdentifierTree.getExpression()));
-              TypeElement parentElement = (TypeElement) parentType.asElement();
-              if (parentElement instanceof InferredTypeElement) {
-                return types.getDeclaredType(
-                    elements.getOrCreateTypeElement(
-                        (InferredTypeElement) parentElement,
-                        importedIdentifierTree.getIdentifier()));
-              } else {
-                // The parent element didn't have to be inferred (it was on the classpath), yet
-                // it also didn't contain a type matching the identifier we're looking at. (If it
-                // had, we wouldn't have gotten an ErrorType for the identifier and thus wouldn't
-                // be in this method to begin with.) Either the type legit doesn't exist, or it
-                // comes from a superclass/superinterface of the parent element that is not
-                // available. Either way, the developer needs to change something.
-                javacTrees.printMessage(
-                    Diagnostic.Kind.ERROR,
-                    String.format(
-                        "%s does not contain a type named %s. If it comes from a superclass or interface, import it from there.",
-                        parentElement, importedIdentifierTree.getIdentifier()),
-                    importedIdentifierPath.getLeaf(),
-                    importedIdentifierPath.getCompilationUnit());
-                throw new SourceCodeWillNotCompileException();
-              }
-            }
-
-            return getCanonicalType(importedIdentifierPath);
-          }
+          TypeMirror importedType = getImportedType(treePath);
+          if (importedType != null) return importedType;
 
           // Infer the type by heuristic
           IdentifierTree identifierTree = (IdentifierTree) tree;
@@ -339,6 +316,51 @@ class PostEnterCanonicalizer {
       default:
         throw new AssertionError(String.format("Unexpected tree kind %s", tree.getKind()));
     }
+  }
+
+  @Nullable
+  private TypeMirror getImportedType(TreePath treePath) {
+    TreePath importedIdentifierPath = getImportedIdentifier(treePath);
+    if (importedIdentifierPath != null) {
+      TypeMirror underlyingType = javacTrees.getTypeMirror(importedIdentifierPath);
+
+      if (underlyingType == null) {
+        // A null underlying type in an imported identifier means the import was a static
+        // import. We need to figure the type out ourselves.
+
+        MemberSelectTree importedIdentifierTree =
+            (MemberSelectTree) importedIdentifierPath.getLeaf();
+        DeclaredType parentType =
+            (DeclaredType)
+                getCanonicalType(
+                    new TreePath(importedIdentifierPath, importedIdentifierTree.getExpression()));
+        TypeElement parentElement = (TypeElement) parentType.asElement();
+        if (parentElement instanceof InferredTypeElement) {
+          return types.getDeclaredType(
+              elements.getOrCreateTypeElement(
+                  (InferredTypeElement) parentElement, importedIdentifierTree.getIdentifier()));
+        } else {
+          // The parent element didn't have to be inferred (it was on the classpath), yet
+          // it also didn't contain a type matching the identifier we're looking at. (If it
+          // had, we wouldn't have gotten an ErrorType for the identifier and thus wouldn't
+          // be in this method to begin with.) Either the type legit doesn't exist, or it
+          // comes from a superclass/superinterface of the parent element that is not
+          // available. Either way, the developer needs to change something.
+          javacTrees.printMessage(
+              Diagnostic.Kind.ERROR,
+              String.format(
+                  "%s does not contain a type named %s. If it comes from a superclass or interface, import it from there.",
+                  parentElement, importedIdentifierTree.getIdentifier()),
+              importedIdentifierPath.getLeaf(),
+              importedIdentifierPath.getCompilationUnit());
+          throw new SourceCodeWillNotCompileException();
+        }
+      }
+
+      return getCanonicalType(importedIdentifierPath);
+    }
+
+    return null;
   }
 
   private boolean isProbablyPackageName(CharSequence identifier) {
