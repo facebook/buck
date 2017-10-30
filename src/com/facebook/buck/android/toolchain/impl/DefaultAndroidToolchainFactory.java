@@ -25,6 +25,7 @@ import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -32,6 +33,7 @@ import java.util.Optional;
 public class DefaultAndroidToolchainFactory implements ToolchainFactory<AndroidToolchain> {
   @Override
   public Optional<AndroidToolchain> createToolchain(
+      ToolchainProvider toolchainProvider,
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
       ProjectFilesystem filesystem) {

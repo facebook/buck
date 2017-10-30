@@ -107,6 +107,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     } catch (IllegalAccessException | InstantiationException e) {
       throw new RuntimeException(e);
     }
-    return toolchainFactory.createToolchain(environment, buckConfig, projectFilesystem);
+    return toolchainFactory.createToolchain(this, environment, buckConfig, projectFilesystem);
   }
 }
