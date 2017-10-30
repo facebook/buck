@@ -36,6 +36,7 @@ import java.util.Optional;
 public class NdkBuildStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Path root;
   private final Path makefile;
   private final Path buildArtifactsDirectory;
@@ -46,6 +47,7 @@ public class NdkBuildStep extends ShellStep {
   public NdkBuildStep(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       Path root,
       Path makefile,
       Path buildArtifactsDirectory,
@@ -55,6 +57,7 @@ public class NdkBuildStep extends ShellStep {
     super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.root = root;
     this.makefile = makefile;
     this.buildArtifactsDirectory = buildArtifactsDirectory;
@@ -78,7 +81,8 @@ public class NdkBuildStep extends ShellStep {
     Optional<Path> ndkBuild =
         new ExecutableFinder()
             .getOptionalExecutable(
-                Paths.get("ndk-build"), context.getAndroidPlatformTarget().checkNdkDirectory());
+                Paths.get("ndk-build"),
+                androidLegacyToolchain.getAndroidPlatformTarget().checkNdkDirectory());
     if (!ndkBuild.isPresent()) {
       throw new HumanReadableException("Unable to find ndk-build");
     }

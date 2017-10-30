@@ -109,10 +109,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
       Optional<RedexOptions> redexOptions,
@@ -130,6 +132,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSortedSet<APKModule> apkModules) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
     this.redexOptions = redexOptions;
@@ -481,6 +484,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         ReDexStep.createSteps(
             buildTarget,
             getProjectFilesystem(),
+            androidLegacyToolchain,
             resolver,
             redexOptions.get(),
             apkToRedexAndAlign,

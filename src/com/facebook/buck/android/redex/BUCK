@@ -5,6 +5,9 @@ java_library(
     srcs = [
         "ReDexStep.java",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/android:helpers",
+    ],
     tests = [
         "//test/com/facebook/buck/android:binary-integration-1",
         "//test/com/facebook/buck/android:binary-integration-2",

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.redex;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -37,6 +38,7 @@ import java.util.Optional;
 
 /** Runs <a href="https://github.com/facebook/redex">ReDex</a> on an APK. */
 public class ReDexStep extends ShellStep {
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final ImmutableList<String> redexBinaryArgs;
   private final ImmutableMap<String, String> redexEnvironmentVariables;
   private final Path inputApkPath;
@@ -53,6 +55,7 @@ public class ReDexStep extends ShellStep {
   ReDexStep(
       BuildTarget buildTarget,
       Path workingDirectory,
+      AndroidLegacyToolchain androidLegacyToolchain,
       List<String> redexBinaryArgs,
       Map<String, String> redexEnvironmentVariables,
       Path inputApkPath,
@@ -65,6 +68,7 @@ public class ReDexStep extends ShellStep {
       Path seeds,
       SourcePathResolver pathResolver) {
     super(Optional.of(buildTarget), workingDirectory);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.redexBinaryArgs = ImmutableList.copyOf(redexBinaryArgs);
     this.redexEnvironmentVariables = ImmutableMap.copyOf(redexEnvironmentVariables);
     this.inputApkPath = inputApkPath;
@@ -81,6 +85,7 @@ public class ReDexStep extends ShellStep {
   public static ImmutableList<Step> createSteps(
       BuildTarget target,
       final ProjectFilesystem filesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePathResolver resolver,
       RedexOptions redexOptions,
       Path inputApkPath,
@@ -95,6 +100,7 @@ public class ReDexStep extends ShellStep {
         new ReDexStep(
             target,
             filesystem.getRootPath(),
+            androidLegacyToolchain,
             redexBinary.getCommandPrefix(resolver),
             redexBinary.getEnvironment(resolver),
             inputApkPath,
@@ -157,7 +163,9 @@ public class ReDexStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.<String, String>builder()
-        .put("ANDROID_SDK", context.getAndroidPlatformTarget().checkSdkDirectory().toString())
+        .put(
+            "ANDROID_SDK",
+            androidLegacyToolchain.getAndroidPlatformTarget().checkSdkDirectory().toString())
         .putAll(redexEnvironmentVariables)
         .build();
   }

@@ -306,6 +306,9 @@ HELPERS_SRCS = [
 java_immutables_library(
     name = "helpers",
     srcs = HELPERS_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/toolchain:toolchain",
+    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -330,7 +333,6 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

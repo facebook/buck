@@ -48,6 +48,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   AndroidInstrumentationApk(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       AndroidBinary apkUnderTest,
@@ -60,6 +61,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
     super(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         buildRuleParams,
         ruleFinder,
         apkUnderTest.getProguardJvmArgs(),

@@ -45,6 +45,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -69,6 +70,7 @@ public class RobolectricTestDescription
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateOptions;
@@ -77,12 +79,14 @@ public class RobolectricTestDescription
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public RobolectricTestDescription(
+      ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform,
       AndroidLibraryCompilerFactory compilerFactory) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateOptions = templateOptions;
@@ -190,10 +194,15 @@ public class RobolectricTestDescription
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
 
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+
     return new RobolectricTest(
         buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
+        androidLegacyToolchain,
         testsLibrary,
         args.getLabels(),
         args.getContacts(),

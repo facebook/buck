@@ -364,6 +364,7 @@ public class AndroidBinaryDescription
           new AndroidBinary(
               buildTarget,
               projectFilesystem,
+              androidLegacyToolchain,
               params,
               ruleFinder,
               Optional.of(args.getProguardJvmArgs()),

@@ -347,9 +347,13 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     }
     AndroidToolchain androidToolchain =
         toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
+    AndroidLegacyToolchain androidLegacyToolchain =
+        toolchainProvider.getByName(
+            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
     return new NdkLibrary(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
         getGeneratedMakefilePath(buildTarget, projectFilesystem),

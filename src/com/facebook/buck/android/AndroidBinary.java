@@ -142,6 +142,7 @@ public class AndroidBinary extends AbstractBuildRule
   AndroidBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Optional<List<String>> proguardJvmArgs,
@@ -220,6 +221,7 @@ public class AndroidBinary extends AbstractBuildRule
         new AndroidBinaryBuildable(
             getBuildTarget(),
             getProjectFilesystem(),
+            androidLegacyToolchain,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
             redexOptions,

@@ -389,7 +389,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                   "OUT_JARS_DIR",
                   getProjectFilesystem().resolve(preprocessJavaClassesOutDir).toString());
 
-              AndroidPlatformTarget platformTarget = context.getAndroidPlatformTarget();
+              AndroidPlatformTarget platformTarget =
+                  androidLegacyToolchain.getAndroidPlatformTarget();
               String bootclasspath =
                   Joiner.on(':')
                       .join(
@@ -575,6 +576,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
         getBuildTarget(),
+        androidLegacyToolchain,
         javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()),
         getProjectFilesystem(),
         proguardJarOverride.isPresent()

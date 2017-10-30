@@ -73,6 +73,20 @@ public class NdkLibraryBuilder
         filesystem);
   }
 
+  public NdkLibraryBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
+    super(
+        new NdkLibraryDescription(toolchainProvider, NDK_PLATFORMS) {
+          @Override
+          protected ImmutableSortedSet<SourcePath> findSources(
+              ProjectFilesystem filesystem, Path buildRulePath) {
+            return ImmutableSortedSet.of(
+                PathSourcePath.of(filesystem, buildRulePath.resolve("Android.mk")));
+          }
+        },
+        target,
+        new FakeProjectFilesystem());
+  }
+
   private static ToolchainProvider createToolchainProvider() {
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());

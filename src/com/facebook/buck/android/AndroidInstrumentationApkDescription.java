@@ -219,6 +219,7 @@ public class AndroidInstrumentationApkDescription
     return new AndroidInstrumentationApk(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
         params,
         ruleFinder,
         apkUnderTest,

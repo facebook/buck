@@ -32,12 +32,14 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.zip.Unzip;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.hamcrest.Matchers;
@@ -232,8 +234,22 @@ public class AndroidAarIntegrationTest {
   public void testNativeLibraryDependent() throws InterruptedException, IOException {
     Main.KnownBuildRuleTypesFactoryFactory factoryFactory =
         (processExecutor, sdkEnvironment, toolchainProvider, pluginManager) -> {
+          AndroidDirectoryResolver androidDirectoryResolver =
+              new DefaultAndroidDirectoryResolver(
+                  filesystem.getRootPath().getFileSystem(),
+                  ImmutableMap.copyOf(System.getenv()),
+                  AndroidNdkHelper.DEFAULT_CONFIG);
+
+          AndroidPlatformTarget androidPlatformTarget =
+              AndroidPlatformTarget.getDefaultPlatformTarget(
+                  androidDirectoryResolver, Optional.empty(), Optional.empty());
+
           TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
           testToolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+          testToolchainProvider.addToolchain(
+              AndroidLegacyToolchain.DEFAULT_NAME,
+              new DefaultAndroidLegacyToolchain(
+                  () -> androidPlatformTarget, androidDirectoryResolver));
           return new KnownBuildRuleTypesFactory(
               processExecutor, sdkEnvironment, testToolchainProvider, pluginManager);
         };

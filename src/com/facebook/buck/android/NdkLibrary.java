@@ -66,6 +66,8 @@ import javax.annotation.Nullable;
 public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements NativeLibraryBuildRule, AndroidPackageable {
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
+
   /** @see NativeLibraryBuildRule#isAsset() */
   @AddToRuleKey private final boolean isAsset;
 
@@ -92,6 +94,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   protected NdkLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       Path makefile,
       String makefileContents,
@@ -101,6 +104,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> ndkVersion,
       Function<String, String> macroExpander) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.isAsset = isAsset;
 
     this.root = buildTarget.getBasePath();
@@ -156,6 +160,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new NdkBuildStep(
             getBuildTarget(),
             getProjectFilesystem(),
+            androidLegacyToolchain,
             root,
             makefile,
             buildArtifactsDirectory,

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -35,8 +36,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -51,6 +52,7 @@ public class NdkLibraryTest {
   private ExecutionContext executionContext;
   private String ndkBuildCommand;
   private ProjectFilesystem projectFilesystem;
+  private AndroidPlatformTarget androidPlatformTarget;
 
   @Before
   public void setUp() throws InterruptedException {
@@ -63,13 +65,10 @@ public class NdkLibraryTest {
             ImmutableMap.copyOf(System.getenv()),
             AndroidNdkHelper.DEFAULT_CONFIG);
 
-    AndroidPlatformTarget androidPlatformTarget =
+    androidPlatformTarget =
         AndroidPlatformTarget.getDefaultPlatformTarget(
             resolver, Optional.empty(), Optional.empty());
-    executionContext =
-        TestExecutionContext.newBuilder()
-            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-            .build();
+    executionContext = TestExecutionContext.newBuilder().build();
     ndkBuildCommand =
         new ExecutableFinder()
             .getOptionalExecutable(Paths.get("ndk-build"), resolver.getNdkOrAbsent().get())
@@ -85,10 +84,16 @@ public class NdkLibraryTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
 
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+    toolchainProvider.addToolchain(
+        AndroidLegacyToolchain.DEFAULT_NAME,
+        TestAndroidLegacyToolchainFactory.create(androidPlatformTarget));
+
     String basePath = "java/src/com/facebook/base";
     BuildTarget target = BuildTargetFactory.newInstance(String.format("//%s:base", basePath));
     NdkLibrary ndkLibrary =
-        new NdkLibraryBuilder(target)
+        new NdkLibraryBuilder(target, toolchainProvider)
             .setFlags(ImmutableList.of("flag1", "flag2"))
             .setIsAsset(true)
             .build(ruleResolver, projectFilesystem);

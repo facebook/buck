@@ -600,6 +600,7 @@ public class KnownBuildRuleTypes {
     builder.register(new RemoteFileDescription(downloader));
     builder.register(
         new RobolectricTestDescription(
+            toolchainProvider,
             javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
