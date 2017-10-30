@@ -38,9 +38,7 @@ public class ExportFileIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "export_file_source_path_dep", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:file");
-
-    result.assertSuccess();
+    workspace.runBuckCommand("build", "//:file").assertSuccess();
   }
 
   @Test

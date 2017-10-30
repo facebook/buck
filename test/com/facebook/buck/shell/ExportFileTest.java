@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -91,16 +92,16 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
+            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+            "rm -f -r " + Paths.get("buck-out/gen/example.html/example.html"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + Paths.get("buck-out/gen/example.html")),
+                + Paths.get("buck-out/gen/example.html/example.html")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("example.html"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("example.html"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -123,16 +124,16 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/fish"),
+            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+            "rm -f -r " + Paths.get("buck-out/gen/example.html/fish"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + Paths.get("buck-out/gen/fish")),
+                + Paths.get("buck-out/gen/example.html/fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -158,13 +159,16 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/fish"),
-            "cp " + projectFilesystem.resolve("chips") + " " + Paths.get("buck-out/gen/fish")),
+            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+            "rm -f -r " + Paths.get("buck-out/gen/example.html/fish"),
+            "cp "
+                + projectFilesystem.resolve("chips")
+                + " "
+                + Paths.get("buck-out/gen/example.html/fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 

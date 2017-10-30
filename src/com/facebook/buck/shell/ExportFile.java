@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -118,11 +119,7 @@ public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private Path getCopiedPath() {
     Preconditions.checkState(mode == ExportFileDescription.Mode.COPY);
-    return getProjectFilesystem()
-        .getBuckPaths()
-        .getGenDir()
-        .resolve(getBuildTarget().getBasePath())
-        .resolve(name);
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").resolve(name);
   }
 
   @Override
