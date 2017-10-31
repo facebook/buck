@@ -16,12 +16,10 @@
 
 package com.facebook.buck.tools.consistency;
 
-import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -68,12 +66,21 @@ public class TestBinWriter {
       output.write("sys.exit(" + Integer.toString(returnCode) + ")");
       output.write(System.lineSeparator());
     }
-    Files.setPosixFilePermissions(
-        binPath,
-        ImmutableSet.of(
-            PosixFilePermission.OWNER_READ,
-            PosixFilePermission.OWNER_WRITE,
-            PosixFilePermission.OWNER_EXECUTE));
+    setPermissions();
+  }
+
+  private void setPermissions() throws IOException {
+    // Used instead of Files.setPosixFilePermissions for windows support
+    File binFile = new File(binPath.toAbsolutePath().toString());
+    if (!binFile.setExecutable(true, true)) {
+      throw new IOException(String.format("Could not set executable flag on %s", binPath));
+    }
+    if (!binFile.setWritable(true, true)) {
+      throw new IOException(String.format("Could not set writeable flag on %s", binPath));
+    }
+    if (!binFile.setReadable(true, true)) {
+      throw new IOException(String.format("Could not set readable flag on %s", binPath));
+    }
   }
 
   /**
@@ -101,11 +108,6 @@ public class TestBinWriter {
       output.write(System.lineSeparator());
       output.write("sys.exit(" + Integer.toString(returnCode) + ")");
     }
-    Files.setPosixFilePermissions(
-        binPath,
-        ImmutableSet.of(
-            PosixFilePermission.OWNER_READ,
-            PosixFilePermission.OWNER_WRITE,
-            PosixFilePermission.OWNER_EXECUTE));
+    setPermissions();
   }
 }

@@ -35,7 +35,7 @@ public class BuckRunnerTest {
 
   @Before
   public void setUp() throws IOException {
-    binPath = temporaryFolder.newFile("test.bin");
+    binPath = temporaryFolder.newFile("test.py");
     writer = new TestBinWriter(binPath);
   }
 
@@ -45,6 +45,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
+            Optional.of("python"),
             binPath.toAbsolutePath().toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
@@ -72,6 +73,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
+            Optional.of("python"),
             binPath.toAbsolutePath().toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
@@ -99,6 +101,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
+            Optional.of("python"),
             binPath.toAbsolutePath().toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
@@ -126,6 +129,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
+            Optional.of("python"),
             binPath.toAbsolutePath().toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),

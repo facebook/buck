@@ -16,6 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -54,10 +56,44 @@ public class BuckRunner {
       List<String> buckSubCommandOptions,
       Optional<Path> repositoryPath,
       boolean randomizeEnvironment) {
+    this(
+        Optional.empty(),
+        buckCommand,
+        buckSubcommand,
+        extraBuckOptions,
+        buckSubCommandOptions,
+        repositoryPath,
+        randomizeEnvironment);
+  }
+
+  /**
+   * Runs the buck command with several arguments, and makes the output available to the caller. The
+   * extra interpreter argument is used sometimes because windows does not let one execute scripts
+   * directly; the interpreter has to be specified
+   *
+   * @param interpreter The interpreter to prefix the command with
+   * @param buckCommand The path to the buck command
+   * @param buckSubcommand The subcommand to run
+   * @param extraBuckOptions Any arguments that need to come between the subcommand and the
+   *     subcommand's arguments. e.g. -c cxx.cc=/bin/gcc
+   * @param buckSubCommandOptions Any options that need to go to the subcommand, like target names
+   * @param repositoryPath The path to run buck from. If not provided, run from the current dir
+   * @param randomizeEnvironment If true, try to randomize the parsing environment for buck
+   */
+  @VisibleForTesting
+  public BuckRunner(
+      Optional<String> interpreter,
+      String buckCommand,
+      String buckSubcommand,
+      List<String> extraBuckOptions,
+      List<String> buckSubCommandOptions,
+      Optional<Path> repositoryPath,
+      boolean randomizeEnvironment) {
     this.repositoryPath = repositoryPath;
     this.randomizeEnvironment = randomizeEnvironment;
     this.fullCommand =
         ImmutableList.<String>builder()
+            .addAll(interpreter.map(Collections::singletonList).orElse(Collections.emptyList()))
             .add(buckCommand, buckSubcommand)
             .addAll(extraBuckOptions)
             .addAll(buckSubCommandOptions)

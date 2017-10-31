@@ -51,7 +51,7 @@ public class RuleKeyStressRunnerTest {
 
   @Before
   public void setUp() throws IOException {
-    tempBinPath = temporaryPaths.newFile("buck.bin");
+    tempBinPath = temporaryPaths.newFile("buck_bin.py");
     binWriter = new TestBinWriter(tempBinPath);
     differFactory =
         () -> {
@@ -96,6 +96,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of(),
             ImmutableList.of("//:test1", "//:test2"));
@@ -162,6 +163,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1"));
@@ -184,6 +186,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of(),
             ImmutableList.of("//:not_target1"));
@@ -226,6 +229,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1"));

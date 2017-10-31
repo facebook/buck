@@ -44,7 +44,7 @@ public class BuckStressRunnerTest {
 
   @Before
   public void setUp() throws IOException {
-    binPath = temporaryFolder.newFile("test.bin");
+    binPath = temporaryFolder.newFile("test.py");
     binWriter = new TestBinWriter(binPath);
   }
 
@@ -68,6 +68,7 @@ public class BuckStressRunnerTest {
             .mapToObj(
                 i ->
                     new BuckRunner(
+                        Optional.of("python"),
                         binPath.toAbsolutePath().toString(),
                         "targets",
                         ImmutableList.of(),
@@ -104,6 +105,7 @@ public class BuckStressRunnerTest {
             .mapToObj(
                 i ->
                     new BuckRunner(
+                        Optional.of("python"),
                         binPath.toAbsolutePath().toString(),
                         "targets",
                         ImmutableList.of(),
@@ -153,6 +155,7 @@ public class BuckStressRunnerTest {
                 throw new RuntimeException(e);
               }
               return new BuckRunner(
+                  Optional.of("python"),
                   tempPath.toAbsolutePath().toString(),
                   "targets",
                   ImmutableList.of(),

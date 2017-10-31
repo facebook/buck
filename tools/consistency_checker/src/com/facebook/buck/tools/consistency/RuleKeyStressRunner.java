@@ -21,6 +21,7 @@ import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.stream.IntStream;
 /** Runs buck targets several times to see if the generated rule keys are different at all */
 public class RuleKeyStressRunner {
   private final Callable<RuleKeyDiffer> differFactory;
+  private final Optional<String> interpreter;
   private final String buckBinPath;
   private final List<String> buckArgs;
   private final List<String> targets;
@@ -50,7 +52,30 @@ public class RuleKeyStressRunner {
       String buckBinPath,
       List<String> buckArgs,
       List<String> targets) {
+    this(differFactory, Optional.empty(), buckBinPath, buckArgs, targets);
+  }
+
+  /**
+   * Creates an instance of {@link RuleKeyStressRunner} The extra interpreter argument is used
+   * sometimes because windows does not let one execute scripts directly; the interpreter has to be
+   * specified
+   *
+   * @param interpreter The interpreter to prefix the command with
+   * @param differFactory A method that creates a {@link RuleKeyDiffer}
+   * @param buckBinPath The 'buck' command. Either a path, or an alias
+   * @param buckArgs Additional arguments that should be added between "targets" and the targets
+   *     list
+   * @param targets The list of targets to operate on
+   */
+  @VisibleForTesting
+  public RuleKeyStressRunner(
+      Callable<RuleKeyDiffer> differFactory,
+      Optional<String> interpreter,
+      String buckBinPath,
+      List<String> buckArgs,
+      List<String> targets) {
     this.differFactory = differFactory;
+    this.interpreter = interpreter;
     this.buckBinPath = buckBinPath;
     this.buckArgs = buckArgs;
     this.targets = targets;
@@ -78,7 +103,7 @@ public class RuleKeyStressRunner {
                       .addAll(targets)
                       .build();
               return new BuckRunner(
-                  buckBinPath, "targets", buckArgs, targetsArgs, repositoryPath, true);
+                  interpreter, buckBinPath, "targets", buckArgs, targetsArgs, repositoryPath, true);
             })
         .collect(Collectors.toList());
   }

@@ -39,6 +39,7 @@ import java.util.stream.IntStream;
 public class TargetsStressRunner {
 
   private final Callable<TargetsDiffer> differFactory;
+  private final Optional<String> interpreter;
   private final String buckBinPath;
   private final List<String> buckArgs;
   private final List<String> targets;
@@ -57,7 +58,27 @@ public class TargetsStressRunner {
       String buckBinPath,
       List<String> buckArgs,
       List<String> targets) {
+    this(differFactory, Optional.empty(), buckBinPath, buckArgs, targets);
+  }
+
+  /**
+   * Creates an instance of {@link TargetsStressRunner}
+   *
+   * @param interpreter The interpreter to prefix the command with
+   * @param differFactory A method that creates a {@link TargetsDiffer}
+   * @param buckBinPath The 'buck' command. Either a path, or an alias
+   * @param buckArgs Additional arguments that should be added between "targets" and the targets
+   *     list
+   * @param targets The list of targets to operate on
+   */
+  public TargetsStressRunner(
+      Callable<TargetsDiffer> differFactory,
+      Optional<String> interpreter,
+      String buckBinPath,
+      List<String> buckArgs,
+      List<String> targets) {
     this.differFactory = differFactory;
+    this.interpreter = interpreter;
     this.buckBinPath = buckBinPath;
     this.buckArgs = buckArgs;
     this.targets = targets;
@@ -74,6 +95,7 @@ public class TargetsStressRunner {
     try (OutputStream writer = Files.newOutputStream(temporaryFile)) {
       BuckRunner runner =
           new BuckRunner(
+              interpreter,
               buckBinPath,
               "query",
               buckArgs,
@@ -108,7 +130,15 @@ public class TargetsStressRunner {
             String.format("@%s", targetsListFile.toAbsolutePath().toString()));
     return IntStream.range(0, numRuns)
         .mapToObj(
-            i -> new BuckRunner(buckBinPath, "targets", buckArgs, targetArgs, repositoryPath, true))
+            i ->
+                new BuckRunner(
+                    interpreter,
+                    buckBinPath,
+                    "targets",
+                    buckArgs,
+                    targetArgs,
+                    repositoryPath,
+                    true))
         .collect(Collectors.toList());
   }
 

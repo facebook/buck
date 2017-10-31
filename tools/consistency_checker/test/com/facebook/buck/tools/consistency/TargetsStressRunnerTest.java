@@ -49,7 +49,7 @@ public class TargetsStressRunnerTest {
 
   @Before
   public void setUp() throws IOException {
-    tempBinPath = temporaryPaths.newFile("buck.bin");
+    tempBinPath = temporaryPaths.newFile("buck_bin.py");
     binWriter = new TestBinWriter(tempBinPath);
     differFactory =
         () -> {
@@ -81,6 +81,7 @@ public class TargetsStressRunnerTest {
       TargetsStressRunner runner =
           new TargetsStressRunner(
               differFactory,
+              Optional.of("python"),
               tempBinPath.toAbsolutePath().toString(),
               ImmutableList.of(),
               ImmutableList.of("//:target1", "//:target2"));
@@ -102,6 +103,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1", "//:target2"));
@@ -115,6 +117,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1", "//:target2"));
@@ -137,6 +140,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
@@ -195,6 +199,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
@@ -230,6 +235,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
+            Optional.of("python"),
             tempBinPath.toAbsolutePath().toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
