@@ -23,6 +23,7 @@ import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -121,12 +122,12 @@ public class RuleKeyStressRunner {
   public void verifyNoChanges(Path firstOutputFile, List<Path> outputFiles)
       throws ParseException, RuleKeyStressRunException, MaxDifferencesException,
           GraphTraversalException {
-    // TODO: Multiple root targets
     RuleKeyFileParser parser = new RuleKeyFileParser(new RuleKeyLogFileReader());
+    ImmutableSet<String> immutableTargets = ImmutableSet.copyOf(targets);
     ParsedRuleKeyFile originalFile =
-        parser.parseFile(firstOutputFile.toAbsolutePath(), targets.get(0));
+        parser.parseFile(firstOutputFile.toAbsolutePath(), immutableTargets);
     for (Path file : outputFiles) {
-      ParsedRuleKeyFile newRuleKeyFile = parser.parseFile(file, targets.get(0));
+      ParsedRuleKeyFile newRuleKeyFile = parser.parseFile(file, immutableTargets);
       RuleKeyDiffer ruleKeyDiffer = null;
       try {
         ruleKeyDiffer = differFactory.call();

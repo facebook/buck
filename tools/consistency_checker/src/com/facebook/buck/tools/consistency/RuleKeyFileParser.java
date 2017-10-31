@@ -18,6 +18,8 @@ package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
@@ -55,16 +57,25 @@ public class RuleKeyFileParser {
   static class ParsedRuleKeyFile {
 
     public final Path filename;
-    public final RuleKeyNode rootNode;
+    public final ImmutableMap<String, RuleKeyNode> rootNodes;
     public final Map<String, RuleKeyNode> rules;
     public final Duration parseTime;
 
     public ParsedRuleKeyFile(
-        Path filename, RuleKeyNode rootNode, Map<String, RuleKeyNode> rules, Duration parseTime) {
+        Path filename,
+        ImmutableMap<String, RuleKeyNode> rootNodes,
+        Map<String, RuleKeyNode> rules,
+        Duration parseTime) {
       this.filename = filename;
-      this.rootNode = rootNode;
+      this.rootNodes = rootNodes;
       this.rules = rules;
       this.parseTime = parseTime;
+    }
+
+    public void resetVisits() {
+      for (RuleKeyNode node : rules.values()) {
+        node.visited = false;
+      }
     }
   }
 
@@ -75,13 +86,14 @@ public class RuleKeyFileParser {
    * Parse a thrift compact serialized file
    *
    * @param filename The name of the file
-   * @param targetName The name of the target that should be found
+   * @param targetNames The name of the targets that should be found
    * @return A {@link ParsedRuleKeyFile} object that all deserialized rules, and the rule key hash
    *     of the specified target
    * @throws ParseException If an IO or serialization error occurs, or if the target could not be
    *     found in the file
    */
-  public ParsedRuleKeyFile parseFile(Path filename, String targetName) throws ParseException {
+  public ParsedRuleKeyFile parseFile(Path filename, ImmutableSet<String> targetNames)
+      throws ParseException {
     long startNanos = System.nanoTime();
     int initialSize;
     try {
@@ -91,6 +103,7 @@ public class RuleKeyFileParser {
           e, filename, "File size is too large (>2.1 billion objects would be deserialized");
     }
 
+    final ImmutableMap.Builder<String, RuleKeyNode> rootNodesBuilder = ImmutableMap.builder();
     final Map<String, RuleKeyNode> rules = new HashMap<>();
     // Made into an array so we can mutate from the inside of the visitor
     final AtomicReference<RuleKeyNode> rootNode = new AtomicReference<>(null);
@@ -100,8 +113,8 @@ public class RuleKeyFileParser {
           filename,
           ruleKey -> {
             RuleKeyNode newNode = new RuleKeyNode(ruleKey);
-            if ("DEFAULT".equals(ruleKey.type) && targetName.equals(ruleKey.name)) {
-              rootNode.set(newNode);
+            if ("DEFAULT".equals(ruleKey.type) && targetNames.contains(ruleKey.name)) {
+              rootNodesBuilder.put(ruleKey.name, newNode);
             }
             RuleKeyNode oldValue = rules.put(ruleKey.key, newNode);
             if (oldValue != null && !oldValue.ruleKey.equals(newNode.ruleKey)) {
@@ -122,10 +135,13 @@ public class RuleKeyFileParser {
       }
     }
 
-    if (rootNode.get() == null) {
-      throw new ParseException(filename, "Could not find %s in %s", targetName, filename);
+    ImmutableMap<String, RuleKeyNode> rootNodes = rootNodesBuilder.build();
+    for (String targetName : targetNames) {
+      if (!rootNodes.containsKey(targetName)) {
+        throw new ParseException(filename, "Could not find %s in %s", targetName, filename);
+      }
     }
     Duration runtime = Duration.ofNanos(System.nanoTime() - startNanos);
-    return new ParsedRuleKeyFile(filename, rootNode.get(), rules, runtime);
+    return new ParsedRuleKeyFile(filename, rootNodes, rules, runtime);
   }
 }

@@ -28,6 +28,7 @@ import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.RuleKeyStressRunner.RuleKeyStressRunException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
 import com.facebook.buck.tools.consistency.TargetsStressRunner.TargetsStressRunException;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -366,9 +367,14 @@ public class Main {
 
     Future<ParsedRuleKeyFile> originalFileFuture =
         service.submit(
-            () -> fileParser.parseFile(Paths.get(args.originalLogFile), args.targetName));
+            () ->
+                fileParser.parseFile(
+                    Paths.get(args.originalLogFile), ImmutableSet.copyOf(args.targetNames)));
     Future<ParsedRuleKeyFile> newFileFuture =
-        service.submit(() -> fileParser.parseFile(Paths.get(args.newLogFile), args.targetName));
+        service.submit(
+            () ->
+                fileParser.parseFile(
+                    Paths.get(args.newLogFile), ImmutableSet.copyOf(args.targetNames)));
 
     try {
       originalFile = Optional.of(originalFileFuture.get());

@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,22 +53,27 @@ public class RuleKeyFileParserTest {
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
     FullRuleKey ruleKey2 = new FullRuleKey("key2", "//:name1", "other_type", ImmutableMap.of());
     FullRuleKey ruleKey3 = new FullRuleKey("key3", "//:name2", "OTHER", ImmutableMap.of());
+    FullRuleKey ruleKey4 = new FullRuleKey("key4", "//:name4", "DEFAULT", ImmutableMap.of());
     try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
       logger.write(ruleKey1);
       logger.write(ruleKey2);
       logger.write(ruleKey3);
+      logger.write(ruleKey4);
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, "//:name1");
+    ParsedRuleKeyFile parsedFile =
+        parser.parseFile(logPath, ImmutableSet.of("//:name1", "//:name4"));
 
-    Assert.assertEquals("key1", parsedFile.rootNode.ruleKey.key);
+    Assert.assertEquals("key1", parsedFile.rootNodes.get("//:name1").ruleKey.key);
+    Assert.assertEquals("key4", parsedFile.rootNodes.get("//:name4").ruleKey.key);
     Assert.assertEquals(logPath, parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
-    Assert.assertEquals(3, parsedFile.rules.size());
+    Assert.assertEquals(4, parsedFile.rules.size());
     Assert.assertEquals(ruleKey1, parsedFile.rules.get("key1").ruleKey);
     Assert.assertEquals(ruleKey2, parsedFile.rules.get("key2").ruleKey);
     Assert.assertEquals(ruleKey3, parsedFile.rules.get("key3").ruleKey);
+    Assert.assertEquals(ruleKey4, parsedFile.rules.get("key4").ruleKey);
   }
 
   @Test
@@ -81,7 +87,7 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    parser.parseFile(logPath, "//:invalid_name");
+    parser.parseFile(logPath, ImmutableSet.of("//:name1", "//:invalid_name"));
   }
 
   @Test
@@ -101,7 +107,7 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    parser.parseFile(logPath, "//:name1");
+    parser.parseFile(logPath, ImmutableSet.of("//:name1"));
   }
 
   @Test
@@ -122,7 +128,7 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    parser.parseFile(logPath, "//:name1");
+    parser.parseFile(logPath, ImmutableSet.of("//:name1"));
   }
 
   @Test
@@ -133,9 +139,9 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, "//:name1");
+    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, ImmutableSet.of("//:name1"));
 
-    Assert.assertEquals("key1", parsedFile.rootNode.ruleKey.key);
+    Assert.assertEquals("key1", parsedFile.rootNodes.get("//:name1").ruleKey.key);
     Assert.assertEquals(logPath, parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(1, parsedFile.rules.size());
@@ -157,6 +163,6 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, "//:name1");
+    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, ImmutableSet.of("//:name1"));
   }
 }

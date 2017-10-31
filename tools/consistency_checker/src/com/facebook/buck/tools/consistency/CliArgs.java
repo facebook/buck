@@ -103,10 +103,9 @@ public class CliArgs extends CliCommand {
     @Argument(
       metaVar = "target name",
       usage = "The root target to traverse from in each file",
-      required = true,
-      index = 2
+      required = true
     )
-    String targetName;
+    List<String> targetNames;
 
     @Option(
       name = "--color",

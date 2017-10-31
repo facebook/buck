@@ -24,7 +24,9 @@ import com.facebook.buck.tools.consistency.RuleKeyDiffPrinter.TargetScope.Proper
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.ParsedRuleKeyFile;
 import com.facebook.buck.tools.consistency.RuleKeyFileParser.RuleKeyNode;
 import com.google.common.collect.Sets;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Traverses a graph of rule keys and prints out the differences between them. */
 public class RuleKeyDiffer {
@@ -36,6 +38,10 @@ public class RuleKeyDiffer {
    * the graph is malformed
    */
   public class GraphTraversalException extends Exception {
+    GraphTraversalException(String message, Object... formatObjects) {
+      super(String.format(message, formatObjects));
+    }
+
     GraphTraversalException(Throwable e, String message, Object... formatObjects) {
       super(String.format(message, formatObjects), e);
     }
@@ -55,7 +61,19 @@ public class RuleKeyDiffer {
    */
   public DiffResult printDiff(ParsedRuleKeyFile originalFile, ParsedRuleKeyFile newFile)
       throws MaxDifferencesException, GraphTraversalException {
-    printDiff(originalFile, originalFile.rootNode, newFile, newFile.rootNode);
+    if (!originalFile.rootNodes.keySet().equals(newFile.rootNodes.keySet())) {
+      String originalTargets =
+          originalFile.rootNodes.keySet().stream().collect(Collectors.joining(","));
+      String newTargets = newFile.rootNodes.keySet().stream().collect(Collectors.joining(","));
+      throw new GraphTraversalException(
+          "Root nodes in %s do not match root nodes in %s. %s vs %s",
+          originalFile.filename, newFile.filename, originalTargets, newTargets);
+    }
+    for (Map.Entry<String, RuleKeyNode> entry : originalFile.rootNodes.entrySet()) {
+      printDiff(originalFile, entry.getValue(), newFile, newFile.rootNodes.get(entry.getKey()));
+      originalFile.resetVisits();
+      newFile.resetVisits();
+    }
     return printer.hasChanges();
   }
 
