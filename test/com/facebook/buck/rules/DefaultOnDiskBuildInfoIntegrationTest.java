@@ -88,10 +88,16 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
     Path emptySubDir = dirPath.resolve("empty_sub_dir");
     Path fileWithinDirPath = subDir.resolve("some_inner.path");
     Path otherPathWithinDir = subDir.resolve("other.file");
+    Path symlinkedDirPath =
+        BuildTargets.getScratchPath(projectFilesystem, buildTarget, "%s/symlinked_dir");
+    Path symlinkPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink");
+    Path fileInSymlinkedDirPath = symlinkedDirPath.resolve("file_in_symlink");
+    Path fileViaSymlinkPath = symlinkPath.resolve("file_in_symlink");
 
     recorder.recordArtifact(filePath);
     recorder.recordArtifact(dirPath);
     recorder.recordArtifact(fileWithinDirPath);
+    recorder.recordArtifact(symlinkPath);
 
     projectFilesystem.mkdirs(subDir);
     projectFilesystem.mkdirs(emptySubDir);
@@ -100,6 +106,11 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
     projectFilesystem.writeContentsToPath("data1", fileWithinDirPath);
     projectFilesystem.writeContentsToPath("data2", otherPathWithinDir);
     projectFilesystem.writeContentsToPath("other0", filePath.getParent().resolve("non.recorded"));
+
+    projectFilesystem.mkdirs(symlinkedDirPath);
+    projectFilesystem.createSymLink(
+        symlinkPath, projectFilesystem.resolve(symlinkedDirPath), false);
+    projectFilesystem.writeContentsToPath("data3", fileInSymlinkedDirPath);
 
     recorder.addMetadata(
         BuildInfo.MetadataKey.RECORDED_PATHS,
@@ -128,7 +139,9 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
             subDir,
             emptySubDir,
             fileWithinDirPath,
-            otherPathWithinDir),
+            otherPathWithinDir,
+            symlinkPath,
+            fileViaSymlinkPath),
         onDiskBuildInfo.getPathsForArtifact());
     assertEquals(
         ImmutableSortedMap.of(

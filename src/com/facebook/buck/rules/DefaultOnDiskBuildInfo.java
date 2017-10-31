@@ -169,20 +169,20 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
     for (Path path : getOutputPaths()) {
       paths.add(path);
-      projectFilesystem.walkFileTree(
+      projectFilesystem.walkRelativeFileTree(
           path,
           new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                 throws IOException {
-              paths.add(projectFilesystem.relativize(dir));
+              paths.add(dir);
               return super.preVisitDirectory(dir, attrs);
             }
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
-              paths.add(projectFilesystem.relativize(file));
+              paths.add(file);
               return super.visitFile(file, attrs);
             }
           });
