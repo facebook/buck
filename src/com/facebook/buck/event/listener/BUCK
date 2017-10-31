@@ -62,6 +62,7 @@ java_immutables_library(
         "//src/com/facebook/buck/distributed:common",
         "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/distributed/build_client:build_client",
+        "//src/com/facebook/buck/distributed/build_slave:build_slave",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

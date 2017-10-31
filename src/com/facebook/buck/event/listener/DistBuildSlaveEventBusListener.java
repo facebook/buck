@@ -17,12 +17,12 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
-import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.BuildSlaveFinishedStatusEvent;
+import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;

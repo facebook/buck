@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildModeInfo;
 import com.facebook.buck.distributed.thrift.StampedeId;

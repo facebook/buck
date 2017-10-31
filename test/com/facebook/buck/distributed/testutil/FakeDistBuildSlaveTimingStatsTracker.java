@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed.testutil;
 
-import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import java.util.HashMap;
 import java.util.Map;
 

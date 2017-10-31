@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;

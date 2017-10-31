@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.DistBuildState;
+import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;

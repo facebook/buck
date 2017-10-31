@@ -14,10 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
-import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker.SlaveEvents;
+import com.facebook.buck.distributed.DistBuildCachingEngineDelegate;
+import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
+import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;

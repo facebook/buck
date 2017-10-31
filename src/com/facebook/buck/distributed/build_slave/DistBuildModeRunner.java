@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import java.io.IOException;
 

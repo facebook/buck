@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed.build_client;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.BuildSlavePerStageTimingStats;
 import com.google.common.base.Preconditions;

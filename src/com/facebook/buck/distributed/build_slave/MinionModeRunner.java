@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;

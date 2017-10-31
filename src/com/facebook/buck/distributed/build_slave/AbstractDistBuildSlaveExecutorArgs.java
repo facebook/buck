@@ -14,12 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.resources.ResourcesConfig;
-import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.distributed.DistBuildMode;
+import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildState;
+import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
@@ -99,7 +103,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   }
 
   /**
-   * Create {@link BuildExecutorArgs} using {@link DistBuildExecutorArgs}.
+   * Create {@link BuildExecutorArgs} using {@link DistBuildSlaveExecutorArgs}.
    *
    * @return New instance of {@link BuildExecutorArgs}.
    */

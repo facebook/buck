@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
@@ -69,8 +69,7 @@ public class ThriftCoordinatorServer implements Closeable {
 
   private volatile CoordinatorService.Iface handler;
 
-  @Nullable private TNonblockingServerSocket transport;
-  @Nullable private TThreadedSelectorServer server;
+  @Nullable private volatile TThreadedSelectorServer server;
   @Nullable private Thread serverThread;
 
   public ThriftCoordinatorServer(
@@ -91,6 +90,7 @@ public class ThriftCoordinatorServer implements Closeable {
 
   public ThriftCoordinatorServer start() throws IOException {
     synchronized (lock) {
+      TNonblockingServerSocket transport;
       try {
         transport = new TNonblockingServerSocket(this.port.orElse(0));
         // If we initially specified port zero, we would now have the correct value.
@@ -110,7 +110,7 @@ public class ThriftCoordinatorServer implements Closeable {
     return this;
   }
 
-  public ThriftCoordinatorServer stop() throws IOException {
+  private ThriftCoordinatorServer stop() throws IOException {
     eventListener.onThriftServerClosing(exitCodeFuture.getNow(UNEXPECTED_STOP_EXIT_CODE));
     synchronized (lock) {
       Preconditions.checkNotNull(server, "Server has already been stopped.").stop();

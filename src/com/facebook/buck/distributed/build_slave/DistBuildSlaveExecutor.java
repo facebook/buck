@@ -14,11 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.command.LocalBuildExecutor;
+import com.facebook.buck.distributed.BuildStatusUtil;
+import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;

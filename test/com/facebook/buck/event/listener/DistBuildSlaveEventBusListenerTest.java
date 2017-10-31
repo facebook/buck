@@ -33,7 +33,7 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
-import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker.SlaveEvents;
+import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.testutil.FakeDistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;

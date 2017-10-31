@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
@@ -102,8 +102,8 @@ public class BuildTargetsQueue {
         if (!allReverseDeps.containsKey(dependencyTarget)) {
           allReverseDeps.put(dependencyTarget, new HashSet<>());
         }
-        allReverseDeps.get(dependencyTarget).add(target);
-        allForwardDeps.get(target).add(dependencyTarget);
+        Preconditions.checkNotNull(allReverseDeps.get(dependencyTarget)).add(target);
+        Preconditions.checkNotNull(allForwardDeps.get(target)).add(dependencyTarget);
 
         if (!visitedTargets.contains(dependencyTarget)) {
           visitedTargets.add(dependencyTarget);
