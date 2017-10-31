@@ -227,6 +227,7 @@ struct CreateBuildResponse {
 # Request for the servers to start a distributed build.
 struct StartBuildRequest {
   1: optional StampedeId stampedeId;
+  2: optional bool enqueueJob = true;
 }
 
 struct StartBuildResponse {

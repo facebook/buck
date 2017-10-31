@@ -345,9 +345,22 @@ public class DistBuildService implements Closeable {
   }
 
   public BuildJob startBuild(StampedeId id) throws IOException {
+    return startBuild(id, true);
+  }
+
+  /**
+   * Make a start-build request with custom value for {@param enqueueJob}.
+   *
+   * @param id - Stampede id for the build you want to start.
+   * @param enqueueJob - Whether or not this job should be enqueued on the coordinator queue.
+   * @return - Latest BuildJob spec.
+   * @throws IOException
+   */
+  public BuildJob startBuild(StampedeId id, boolean enqueueJob) throws IOException {
     // Start the build
     StartBuildRequest startRequest = new StartBuildRequest();
     startRequest.setStampedeId(id);
+    startRequest.setEnqueueJob(enqueueJob);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.START_BUILD);
     request.setStartBuildRequest(startRequest);
