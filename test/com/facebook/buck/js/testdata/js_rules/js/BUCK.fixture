@@ -161,3 +161,16 @@ sh_test(
   test = 'test_for_fruit.sh',
   args = [],
 )
+
+genrule(
+  name = 'genrule-using-only-sourcemap',
+  out = 'out',
+  bash = 'cp $(location :fruit-with-extras#source_map) $OUT',
+)
+
+genrule(
+  name = 'genrule-using-only-sourcemap-of-bundle-genrule',
+  out = 'out',
+  bash = 'cp $(location :sourcemap-genrule#source_map) $OUT',
+)
+
