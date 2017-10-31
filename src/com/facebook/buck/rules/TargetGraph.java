@@ -35,10 +35,13 @@ import javax.annotation.Nullable;
  * build files.
  */
 public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
+
   public static final TargetGraph EMPTY =
       new TargetGraph(new MutableDirectedGraph<>(), ImmutableMap.of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?, ?>> targetsToNodes;
+
+  private Optional<Integer> cachedHashCode = Optional.empty();
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?, ?>> graph,
@@ -91,12 +94,24 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
     if (!(obj instanceof TargetGraph)) {
       return false;
     }
+
+    TargetGraph other = (TargetGraph) obj;
+    if (cachedHashCode.isPresent()
+        && other.cachedHashCode.isPresent()
+        && !cachedHashCode.get().equals(other.cachedHashCode.get())) {
+      return false;
+    }
+
     return targetsToNodes.equals(((TargetGraph) obj).targetsToNodes);
   }
 
   @Override
   public int hashCode() {
-    return targetsToNodes.hashCode();
+    if (cachedHashCode.isPresent()) {
+      return cachedHashCode.get();
+    }
+    cachedHashCode = Optional.of(targetsToNodes.hashCode());
+    return cachedHashCode.get();
   }
 
   /**
