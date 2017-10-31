@@ -247,7 +247,7 @@ export_file(
 
 export_file(
     name = "guava.jar",
-    src = "//third-party/java/guava:guava",
+    src = "//third-party/java/guava:shaded-guava-20",
 )
 
 export_file(
