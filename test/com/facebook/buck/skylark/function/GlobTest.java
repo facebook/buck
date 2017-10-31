@@ -19,9 +19,11 @@ package com.facebook.buck.skylark.function;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
@@ -33,7 +35,6 @@ import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
-import com.google.devtools.build.lib.vfs.inmemoryfs.InMemoryFileSystem;
 import java.io.IOException;
 import java.util.EnumSet;
 import org.junit.Assert;
@@ -46,8 +47,9 @@ public class GlobTest {
   private PrintingEventHandler eventHandler;
 
   @Before
-  public void setUp() {
-    InMemoryFileSystem fileSystem = new InMemoryFileSystem();
+  public void setUp() throws InterruptedException {
+    SkylarkFilesystem fileSystem =
+        SkylarkFilesystem.using(FakeProjectFilesystem.createJavaOnlyFilesystem());
     root = fileSystem.getRootDirectory();
     eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
   }
@@ -118,7 +120,11 @@ public class GlobTest {
       throws IOException, InterruptedException {
     BuildFileAST buildFileAst =
         BuildFileAST.parseBuildFile(ParserInputSource.create(buildFile), eventHandler);
-    Environment env = Environment.builder(mutability).setGlobals(BazelLibrary.GLOBALS).build();
+    Environment env =
+        Environment.builder(mutability)
+            .setGlobals(BazelLibrary.GLOBALS)
+            .useDefaultSemantics()
+            .build();
     env.setupDynamic(
         PackageFactory.PACKAGE_CONTEXT,
         PackageContext.builder().setGlobber(SimpleGlobber.create(root)).build());

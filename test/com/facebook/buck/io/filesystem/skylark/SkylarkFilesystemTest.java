@@ -44,17 +44,17 @@ public class SkylarkFilesystemTest {
 
   @Test
   public void supportsModifications() throws Exception {
-    assertTrue(skylarkFilesystem.supportsModifications());
+    assertTrue(skylarkFilesystem.supportsModifications(toSkylarkPath("foo")));
   }
 
   @Test
   public void supportsSymbolicLinksNatively() throws Exception {
-    assertTrue(skylarkFilesystem.supportsSymbolicLinksNatively());
+    assertTrue(skylarkFilesystem.supportsSymbolicLinksNatively(toSkylarkPath("foo")));
   }
 
   @Test
   public void supportsHardLinksNatively() throws Exception {
-    assertTrue(skylarkFilesystem.supportsHardLinksNatively());
+    assertTrue(skylarkFilesystem.supportsHardLinksNatively(toSkylarkPath("foo")));
   }
 
   @Test
@@ -86,7 +86,7 @@ public class SkylarkFilesystemTest {
   }
 
   private Path toSkylarkPath(String path) {
-    return skylarkFilesystem.getPath(path);
+    return skylarkFilesystem.getPath(projectFilesystem.resolve(path).toString());
   }
 
   private Path toSkylarkPath(java.nio.file.Path path) {
@@ -155,7 +155,8 @@ public class SkylarkFilesystemTest {
     projectFilesystem.createNewFile(directory.resolve("file1"));
     projectFilesystem.createNewFile(directory.resolve("file2"));
     assertEquals(
-        ImmutableList.of(toSkylarkPath("/dir/file1"), toSkylarkPath("/dir/file2")),
+        ImmutableList.of(
+            toSkylarkPath("file1").getBaseName(), toSkylarkPath("file2").getBaseName()),
         skylarkFilesystem.getDirectoryEntries(toSkylarkPath("/dir")));
   }
 

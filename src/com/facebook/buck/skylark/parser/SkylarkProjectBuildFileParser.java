@@ -230,6 +230,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .setImportedExtensions(importMap)
             .setGlobals(buckGlobalsSupplier.get())
             .setPhase(Environment.Phase.LOADING)
+            .useDefaultSemantics()
             .build();
     String basePath = getBasePath(buildFile);
     env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
@@ -249,8 +250,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *     Environment.Extension}.
    */
   private ImmutableMap<String, Environment.Extension> buildImportMap(
-      bazel.shaded.com.google.common.collect.ImmutableList<SkylarkImport> skylarkImports,
-      ParseContext parseContext)
+      ImmutableList<SkylarkImport> skylarkImports, ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap.Builder<String, Environment.Extension> extensionMapBuilder =
         ImmutableMap.builder();
@@ -269,7 +269,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         if (!extensionAst.getImports().isEmpty()) {
           envBuilder.setImportedExtensions(buildImportMap(extensionAst.getImports(), parseContext));
         }
-        Environment extensionEnv = envBuilder.build();
+        Environment extensionEnv = envBuilder.useDefaultSemantics().build();
         extensionEnv.setup("native", nativeModuleSupplier.get());
         boolean success = extensionAst.exec(extensionEnv, eventHandler);
         if (!success) {
@@ -292,7 +292,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     Environment.Frame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
-          Environment.builder(mutability).setGlobals(BazelLibrary.GLOBALS).build();
+          Environment.builder(mutability)
+              .setGlobals(BazelLibrary.GLOBALS)
+              .useDefaultSemantics()
+              .build();
 
       globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
       for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {

@@ -62,17 +62,17 @@ public class SkylarkFilesystem extends AbstractFileSystemWithCustomStat {
   }
 
   @Override
-  public boolean supportsModifications() {
+  public boolean supportsModifications(Path path) {
     return true;
   }
 
   @Override
-  public boolean supportsSymbolicLinksNatively() {
+  public boolean supportsSymbolicLinksNatively(Path path) {
     return true;
   }
 
   @Override
-  protected boolean supportsHardLinksNatively() {
+  protected boolean supportsHardLinksNatively(Path path) {
     return true;
   }
 
@@ -130,11 +130,13 @@ public class SkylarkFilesystem extends AbstractFileSystemWithCustomStat {
   }
 
   @Override
-  protected Collection<Path> getDirectoryEntries(Path path) throws IOException {
+  protected Collection<String> getDirectoryEntries(Path path) throws IOException {
     // close directory entries steam as soon as possible to avoid "Too many open files" error
-    try (Stream<java.nio.file.Path> entriesStream = Files.list(toJavaPath(path))) {
+    java.nio.file.Path directory = toJavaPath(path);
+    try (Stream<java.nio.file.Path> entriesStream = Files.list(directory)) {
       return entriesStream
-          .map(p -> getPath(p.toString()))
+          .map(directory::relativize)
+          .map(java.nio.file.Path::toString)
           .collect(MoreCollectors.toImmutableList());
     }
   }
