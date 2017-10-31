@@ -820,7 +820,7 @@ public class DefaultRuleKeyFactoryTest {
       throw new UnsupportedOperationException();
     }
 
-    public boolean isCached(RuleKeyAppendable appendable) {
+    public boolean isCached(AddsToRuleKey appendable) {
       throw new UnsupportedOperationException();
     }
 

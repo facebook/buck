@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -34,8 +35,6 @@ import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -485,31 +484,21 @@ public class InputBasedRuleKeyFactoryTest {
     factory.build(smallEnoughRule);
   }
 
-  private static class RuleKeyAppendableWithInput implements RuleKeyAppendable {
+  private static class RuleKeyAppendableWithInput implements AddsToRuleKey {
 
-    private final SourcePath input;
+    @AddToRuleKey private final SourcePath input;
 
     public RuleKeyAppendableWithInput(SourcePath input) {
       this.input = input;
     }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("input", input);
-    }
   }
 
-  private static class NestedRuleKeyAppendableWithInput implements RuleKeyAppendable {
+  private static class NestedRuleKeyAppendableWithInput implements AddsToRuleKey {
 
-    private final RuleKeyAppendable appendable;
+    @AddToRuleKey private final AddsToRuleKey input;
 
     public NestedRuleKeyAppendableWithInput(SourcePath input) {
-      this.appendable = new RuleKeyAppendableWithInput(input);
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("input", appendable);
+      this.input = new RuleKeyAppendableWithInput(input);
     }
   }
 
