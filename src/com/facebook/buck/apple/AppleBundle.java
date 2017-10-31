@@ -1050,7 +1050,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         return ((NativeTestable) binaryRule).getPrivateCxxPreprocessorInput(cxxPlatform);
       }
     }
-    return CxxPreprocessorInput.EMPTY;
+    return CxxPreprocessorInput.of();
   }
 
   private boolean adHocCodeSignIsSufficient() {

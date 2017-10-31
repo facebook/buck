@@ -130,7 +130,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
-    return CxxPreprocessorInput.EMPTY;
+    return CxxPreprocessorInput.of();
   }
 
   private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>

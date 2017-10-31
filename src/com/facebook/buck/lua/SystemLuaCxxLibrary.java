@@ -60,7 +60,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
-    return CxxPreprocessorInput.EMPTY;
+    return CxxPreprocessorInput.of();
   }
 
   @Override

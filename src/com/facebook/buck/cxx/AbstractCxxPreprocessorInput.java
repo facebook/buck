@@ -31,7 +31,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** The components that get contributed to a top-level run of the C++ preprocessor. */
-@Value.Immutable
+@Value.Immutable(singleton = true)
 @BuckStyleImmutable
 abstract class AbstractCxxPreprocessorInput {
 
@@ -72,8 +72,6 @@ abstract class AbstractCxxPreprocessorInput {
 
     return builder.build();
   }
-
-  public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableMultimap.Builder<CxxSource.Type, Arg> preprocessorFlags = ImmutableMultimap.builder();

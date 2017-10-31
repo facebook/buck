@@ -162,7 +162,7 @@ public class CxxSourceRuleFactoryTest {
                               ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))
                       .build()));
 
-      CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
+      CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.of();
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
@@ -455,7 +455,7 @@ public class CxxSourceRuleFactoryTest {
               .setRuleFinder(ruleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(cxxPlatform)
-              .addCxxPreprocessorInput(CxxPreprocessorInput.EMPTY)
+              .addCxxPreprocessorInput(CxxPreprocessorInput.of())
               .setPicType(CxxSourceRuleFactory.PicType.PDC)
               .build();
 

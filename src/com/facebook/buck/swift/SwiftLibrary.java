@@ -263,7 +263,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     if (!isPlatformSupported(cxxPlatform)) {
-      return CxxPreprocessorInput.EMPTY;
+      return CxxPreprocessorInput.of();
     }
 
     BuildRule rule = requireSwiftCompileRule(cxxPlatform.getFlavor());

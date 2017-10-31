@@ -158,7 +158,7 @@ public class CxxPreprocessablesTest {
 
     // Create a normal dep which depends on the two CxxPreprocessorDep rules above.
     BuildTarget depTarget3 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep3");
-    CxxPreprocessorInput nothing = CxxPreprocessorInput.EMPTY;
+    CxxPreprocessorInput nothing = CxxPreprocessorInput.of();
     FakeCxxPreprocessorDep dep3 = createFakeCxxPreprocessorDep(depTarget3, nothing, dep1, dep2);
 
     // Verify that getTransitiveCxxPreprocessorInput gets all CxxPreprocessorInput objects
@@ -228,7 +228,7 @@ public class CxxPreprocessablesTest {
     BuildRule middle = new FakeBuildRule("//:middle", bottom);
 
     // Create a native linkable that sits at the top of the dep chain.
-    CxxPreprocessorInput topInput = CxxPreprocessorInput.EMPTY;
+    CxxPreprocessorInput topInput = CxxPreprocessorInput.of();
     BuildRule top = createFakeCxxPreprocessorDep("//:top", topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
