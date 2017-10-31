@@ -41,11 +41,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -111,7 +110,7 @@ public class Omnibus {
 
   // Build the data structure containing bookkeeping which describing the omnibus link for the
   // given included and excluded roots.
-  protected static OmnibusSpec buildSpec(
+  static OmnibusSpec buildSpec(
       final CxxPlatform cxxPlatform,
       final Iterable<? extends NativeLinkTarget> includedRoots,
       final Iterable<? extends NativeLinkable> excludedRoots) {
@@ -220,9 +219,11 @@ public class Omnibus {
         .graph(graph)
         .roots(roots)
         .body(
-            FluentIterable.from(graph.getNodes())
-                .filter(Predicates.not(roots.keySet()::contains))
-                .toMap(Functions.forMap(nativeLinkables)))
+            graph
+                .getNodes()
+                .stream()
+                .filter(n -> !roots.containsKey(n))
+                .collect(MoreCollectors.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
         .deps(Maps.asMap(deps, Functions.forMap(nativeLinkables)))
         .excluded(Maps.asMap(excluded, Functions.forMap(nativeLinkables)))
         .build();
@@ -259,7 +260,7 @@ public class Omnibus {
 
   // Create a build rule which links the given root node against the merged omnibus library
   // described by the given spec file.
-  protected static OmnibusRoot createRoot(
+  private static OmnibusRoot createRoot(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
@@ -402,7 +403,7 @@ public class Omnibus {
     return OmnibusRoot.of(rootRule.getSourcePathToOutput());
   }
 
-  protected static OmnibusRoot createRoot(
+  private static OmnibusRoot createRoot(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
@@ -428,7 +429,7 @@ public class Omnibus {
         root.getNativeLinkTargetOutputPath(cxxPlatform));
   }
 
-  protected static OmnibusRoot createDummyRoot(
+  private static OmnibusRoot createDummyRoot(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
@@ -486,7 +487,7 @@ public class Omnibus {
   }
 
   // Create a build rule to link the giant merged omnibus library described by the given spec.
-  protected static OmnibusLibrary createOmnibus(
+  private static OmnibusLibrary createOmnibus(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
