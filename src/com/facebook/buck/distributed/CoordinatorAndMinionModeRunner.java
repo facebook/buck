@@ -37,6 +37,7 @@ public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
     try (CoordinatorModeRunner.AsyncCoordinatorRun coordinatorRun =
         coordinatorModeRunner.runAsyncAndReturnExitCode()) {
       LOG.debug("Running the Minion with the Coordinator in the background...");
+      minionModeRunner.setCoordinatorPort(coordinatorRun.getPort());
       try {
         // We only care about the Coordinator exit code that is controlling this process.
         minionModeRunner.runAndReturnExitCode();

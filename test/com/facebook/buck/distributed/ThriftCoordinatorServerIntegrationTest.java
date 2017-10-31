@@ -22,6 +22,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
+import java.util.OptionalInt;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,13 +35,11 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   @Test
   public void testMakingSimpleRequest() throws IOException {
-    int port = findRandomOpenPortOnAllLocalInterfaces();
     try (ThriftCoordinatorServer server =
-            createCoordinatorServer(port, BuildTargetsQueue.newEmptyQueue());
-        ThriftCoordinatorClient client =
-            new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
+            createServerOnRandomPort(BuildTargetsQueue.newEmptyQueue());
+        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
       server.start();
-      client.start();
+      client.start(server.getPort());
       GetWorkResponse response =
           client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
       Assert.assertNotNull(response);
@@ -50,23 +49,21 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   @Test
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
-    int port = findRandomOpenPortOnAllLocalInterfaces();
     BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();
 
     ThriftCoordinatorServer.EventListener eventListener =
         EasyMock.createMock(ThriftCoordinatorServer.EventListener.class);
-    eventListener.onThriftServerStarted(EasyMock.anyString(), EasyMock.eq(port));
+    eventListener.onThriftServerStarted(EasyMock.anyString(), EasyMock.gt(0));
     EasyMock.expectLastCall().once();
     eventListener.onThriftServerClosing(0);
     EasyMock.expectLastCall().once();
     EasyMock.replay(eventListener);
 
     try (ThriftCoordinatorServer server =
-            createCoordinatorServer(port, diamondQueue, eventListener);
-        ThriftCoordinatorClient client =
-            new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
+            createCoordinatorServer(OptionalInt.empty(), diamondQueue, eventListener);
+        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
       server.start();
-      client.start();
+      client.start(server.getPort());
 
       GetWorkResponse responseOne =
           client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
@@ -120,25 +117,22 @@ public class ThriftCoordinatorServerIntegrationTest {
     EasyMock.verify(eventListener);
   }
 
-  public static int findRandomOpenPortOnAllLocalInterfaces() throws IOException {
-    return DistBuildSlaveExecutor.getFreePortForCoordinator();
-  }
-
   public static ThriftCoordinatorServer createServerOnRandomPort(BuildTargetsQueue queue)
       throws IOException {
-    int port = findRandomOpenPortOnAllLocalInterfaces();
-    return createCoordinatorServer(port, queue);
+    return createCoordinatorServer(OptionalInt.empty(), queue);
   }
 
   private static ThriftCoordinatorServer createCoordinatorServer(
-      int port, BuildTargetsQueue queue) {
+      OptionalInt port, BuildTargetsQueue queue) {
     ThriftCoordinatorServer.EventListener eventListener =
         EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
     return createCoordinatorServer(port, queue, eventListener);
   }
 
   private static ThriftCoordinatorServer createCoordinatorServer(
-      int port, BuildTargetsQueue queue, ThriftCoordinatorServer.EventListener eventListener) {
+      OptionalInt port,
+      BuildTargetsQueue queue,
+      ThriftCoordinatorServer.EventListener eventListener) {
     SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
     future.set(queue);
     return new ThriftCoordinatorServer(port, future, STAMPEDE_ID, eventListener);
@@ -147,15 +141,14 @@ public class ThriftCoordinatorServerIntegrationTest {
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testTerminateOnException() throws Exception {
-    int port = findRandomOpenPortOnAllLocalInterfaces();
     StampedeId wrongStampedeId = new StampedeId().setId("not-" + STAMPEDE_ID.id);
 
     try (ThriftCoordinatorServer server =
-            createCoordinatorServer(port, BuildTargetsQueue.newEmptyQueue());
+            createCoordinatorServer(OptionalInt.empty(), BuildTargetsQueue.newEmptyQueue());
         ThriftCoordinatorClient client =
-            new ThriftCoordinatorClient("localhost", port, wrongStampedeId)) {
+            new ThriftCoordinatorClient("localhost", wrongStampedeId)) {
       server.start();
-      client.start();
+      client.start(server.getPort());
       try {
         client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
         Assert.fail("expecting exception, because stampede id mismatches");

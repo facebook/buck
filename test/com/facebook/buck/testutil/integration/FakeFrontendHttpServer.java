@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.slb.ThriftProtocol;
@@ -43,8 +42,8 @@ public abstract class FakeFrontendHttpServer implements Closeable {
   private final HttpServer server;
 
   public FakeFrontendHttpServer() throws IOException {
-    this.port = DistBuildSlaveExecutor.getFreePortForCoordinator();
-    this.server = HttpServer.create(new InetSocketAddress(port), MAX_CONNECTIONS_WAITING_IN_QUEUE);
+    this.server = HttpServer.create(new InetSocketAddress(0), MAX_CONNECTIONS_WAITING_IN_QUEUE);
+    this.port = this.server.getAddress().getPort();
     this.server.createContext("/status.php", httpExchange -> handleStatusRequest(httpExchange));
     this.server.createContext("/thrift", httpExchange -> handleThriftRequest(httpExchange));
     this.serverThread =

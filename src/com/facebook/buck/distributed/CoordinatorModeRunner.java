@@ -21,25 +21,41 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.OptionalInt;
 
 public class CoordinatorModeRunner implements DistBuildModeRunner {
 
+  // Note that this is only the port specified by the caller.
+  // If this is zero, the server might be running on any other free port.
+  // TODO(shivanker): Add a getPort() method in case we need to use the actual port here.
+  private final OptionalInt coordinatorPort;
+
   private final ListenableFuture<BuildTargetsQueue> queue;
-  private final int coordinatorPort;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
 
+  /**
+   * Constructor
+   *
+   * @param coordinatorPort - Passing in an empty optional will pick up a random free port.
+   */
   public CoordinatorModeRunner(
-      int coordinatorPort,
+      OptionalInt coordinatorPort,
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener) {
     this.stampedeId = stampedeId;
-    Preconditions.checkArgument(
-        coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
+    coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
     this.queue = queue;
     this.coordinatorPort = coordinatorPort;
     this.eventListener = eventListener;
+  }
+
+  public CoordinatorModeRunner(
+      ListenableFuture<BuildTargetsQueue> queue,
+      StampedeId stampedeId,
+      ThriftCoordinatorServer.EventListener eventListener) {
+    this(OptionalInt.empty(), queue, stampedeId, eventListener);
   }
 
   @Override
@@ -47,6 +63,24 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
     try (AsyncCoordinatorRun run = new AsyncCoordinatorRun(queue)) {
       return run.getExitCode();
     }
+  }
+
+  /**
+   * Function to verify that the specified port lies in the non-kernel-reserved port range.
+   *
+   * @throws IllegalStateException
+   */
+  public static void validatePort(int port) {
+    Preconditions.checkState(
+        port != 0,
+        "Invalid coordinator port: "
+            + "Specified coordinator port cannot be zero. See constructor.");
+    Preconditions.checkState(
+        port > 1024, "Invalid coordinator port: " + "Cannot bind to reserved port [%d].", port);
+    Preconditions.checkState(
+        port < 65536,
+        "Invalid coordinator port: " + "Network port [%d] cannot be more than 2 bytes.",
+        port);
   }
 
   public AsyncCoordinatorRun runAsyncAndReturnExitCode() throws IOException {
@@ -64,6 +98,10 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
     public int getExitCode() {
       return server.waitUntilBuildCompletesAndReturnExitCode();
+    }
+
+    public int getPort() {
+      return this.server.getPort();
     }
 
     @Override

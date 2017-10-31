@@ -36,6 +36,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,7 +50,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   private static final int IDLE_SLEEP_INTERVAL_MS = 10;
 
   private final String coordinatorAddress;
-  private final int coordinatorPort;
+  private volatile OptionalInt coordinatorPort;
   private final BuildExecutor buildExecutor;
   private final StampedeId stampedeId;
   private final BuildSlaveRunId buildSlaveRunId;
@@ -78,7 +79,24 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   public MinionModeRunner(
       String coordinatorAddress,
-      int coordinatorPort,
+      BuildExecutor buildExecutor,
+      StampedeId stampedeId,
+      BuildSlaveRunId buildSlaveRunId,
+      int availableWorkUnitBuildCapacity,
+      BuildCompletionChecker buildCompletionChecker) {
+    this(
+        coordinatorAddress,
+        OptionalInt.empty(),
+        buildExecutor,
+        stampedeId,
+        buildSlaveRunId,
+        availableWorkUnitBuildCapacity,
+        buildCompletionChecker);
+  }
+
+  public MinionModeRunner(
+      String coordinatorAddress,
+      OptionalInt coordinatorPort,
       BuildExecutor buildExecutor,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
@@ -99,7 +117,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   @VisibleForTesting
   public MinionModeRunner(
       String coordinatorAddress,
-      int coordinatorPort,
+      OptionalInt coordinatorPort,
       BuildExecutor buildExecutor,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
@@ -109,9 +127,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
     this.buildExecutor = buildExecutor;
     this.stampedeId = stampedeId;
     this.buildSlaveRunId = buildSlaveRunId;
-    Preconditions.checkArgument(
-        coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.coordinatorAddress = coordinatorAddress;
+    coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
     this.coordinatorPort = coordinatorPort;
 
     this.buildCompletionChecker = buildCompletionChecker;
@@ -126,9 +143,11 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   @Override
   public int runAndReturnExitCode() throws IOException, InterruptedException {
+    Preconditions.checkState(coordinatorPort.isPresent(), "Coordinator port has not been set.");
+
     try (ThriftCoordinatorClient client =
-        new ThriftCoordinatorClient(coordinatorAddress, coordinatorPort, stampedeId)) {
-      completionCheckingThriftCall(() -> client.start());
+        new ThriftCoordinatorClient(coordinatorAddress, stampedeId)) {
+      completionCheckingThriftCall(() -> client.start(coordinatorPort.getAsInt()));
 
       final String minionId = generateMinionId(buildSlaveRunId);
 
@@ -147,6 +166,11 @@ public class MinionModeRunner implements DistBuildModeRunner {
     buildExecutor.shutdown();
 
     return exitCode.get();
+  }
+
+  public void setCoordinatorPort(int coordinatorPort) {
+    CoordinatorModeRunner.validatePort(coordinatorPort);
+    this.coordinatorPort = OptionalInt.of(coordinatorPort);
   }
 
   private void signalFinishedTargetsAndFetchMoreWork(

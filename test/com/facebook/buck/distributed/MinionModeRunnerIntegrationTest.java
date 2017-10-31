@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -50,7 +51,7 @@ public class MinionModeRunnerIntegrationTest {
     MinionModeRunner minion =
         new MinionModeRunner(
             "localhost",
-            42,
+            OptionalInt.of(4242),
             localBuilder,
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl1"),
@@ -69,7 +70,7 @@ public class MinionModeRunnerIntegrationTest {
     MinionModeRunner minion =
         new MinionModeRunner(
             "localhost",
-            42,
+            OptionalInt.of(4242),
             localBuilder,
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl2"),
@@ -91,7 +92,7 @@ public class MinionModeRunnerIntegrationTest {
       MinionModeRunner minion =
           new MinionModeRunner(
               "localhost",
-              server.getPort(),
+              OptionalInt.of(server.getPort()),
               localBuilder,
               STAMPEDE_ID,
               new BuildSlaveRunId().setId("sl3"),

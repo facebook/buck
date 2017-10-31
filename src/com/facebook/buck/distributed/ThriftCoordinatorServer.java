@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -58,12 +59,13 @@ public class ThriftCoordinatorServer implements Closeable {
   private static final long MAX_TEAR_DOWN_MILLIS = TimeUnit.SECONDS.toMillis(2);
   private static final long MAX_DIST_BUILD_DURATION_MILLIS = TimeUnit.HOURS.toMillis(2);
 
-  private final int port;
   private final CoordinatorService.Processor<CoordinatorService.Iface> processor;
   private final Object lock;
   private final CompletableFuture<Integer> exitCodeFuture;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
+
+  private volatile OptionalInt port;
 
   private volatile CoordinatorService.Iface handler;
 
@@ -72,7 +74,7 @@ public class ThriftCoordinatorServer implements Closeable {
   @Nullable private Thread serverThread;
 
   public ThriftCoordinatorServer(
-      int port,
+      OptionalInt port,
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener) {
@@ -90,7 +92,9 @@ public class ThriftCoordinatorServer implements Closeable {
   public ThriftCoordinatorServer start() throws IOException {
     synchronized (lock) {
       try {
-        transport = new TNonblockingServerSocket(this.port);
+        transport = new TNonblockingServerSocket(this.port.orElse(0));
+        // If we initially specified port zero, we would now have the correct value.
+        this.port = OptionalInt.of(transport.getPort());
       } catch (TTransportException e) {
         throw new ThriftException(e);
       }
@@ -102,7 +106,7 @@ public class ThriftCoordinatorServer implements Closeable {
       serverThread.start();
     }
 
-    eventListener.onThriftServerStarted(InetAddress.getLocalHost().getHostName(), port);
+    eventListener.onThriftServerStarted(InetAddress.getLocalHost().getHostName(), port.getAsInt());
     return this;
   }
 
@@ -124,7 +128,10 @@ public class ThriftCoordinatorServer implements Closeable {
   }
 
   public int getPort() {
-    return port;
+    if (port.isPresent()) {
+      return port.getAsInt();
+    }
+    throw new RuntimeException("Port is unknown since the coordinator server is not up yet.");
   }
 
   @Override

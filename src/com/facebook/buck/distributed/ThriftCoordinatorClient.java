@@ -38,20 +38,18 @@ public class ThriftCoordinatorClient implements Closeable {
   private static final Logger LOG = Logger.get(ThriftCoordinatorClient.class);
 
   private final String remoteHost;
-  private final int remotePort;
   private final StampedeId stampedeId;
 
   @Nullable private TFramedTransport transport;
   @Nullable private CoordinatorService.Client client;
 
-  public ThriftCoordinatorClient(String remoteHost, int remotePort, StampedeId stampedeId) {
+  public ThriftCoordinatorClient(String remoteHost, StampedeId stampedeId) {
     this.remoteHost = Preconditions.checkNotNull(remoteHost);
-    this.remotePort = remotePort;
     this.stampedeId = stampedeId;
   }
 
   /** Starts the thrift client. */
-  public ThriftCoordinatorClient start() throws ThriftException {
+  public ThriftCoordinatorClient start(int remotePort) throws ThriftException {
     transport = new TFramedTransport(new TSocket(remoteHost, remotePort));
 
     try {

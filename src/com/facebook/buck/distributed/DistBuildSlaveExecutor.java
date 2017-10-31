@@ -30,9 +30,9 @@ import com.google.common.base.Supplier;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -53,7 +53,7 @@ public class DistBuildSlaveExecutor {
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
     if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
-      return newCoordinatorMode(getFreePortForCoordinator(), false).runAndReturnExitCode();
+      return newCoordinatorMode(false).runAndReturnExitCode();
     }
 
     DistBuildModeRunner runner = null;
@@ -80,15 +80,14 @@ public class DistBuildSlaveExecutor {
               newMinionMode(
                   localBuildExecutor,
                   args.getRemoteCoordinatorAddress(),
-                  args.getRemoteCoordinatorPort());
+                  OptionalInt.of(args.getRemoteCoordinatorPort()));
           break;
 
         case COORDINATOR_AND_MINION:
-          int localCoordinatorPort = getFreePortForCoordinator();
           runner =
               new CoordinatorAndMinionModeRunner(
-                  newCoordinatorMode(localCoordinatorPort, true),
-                  newMinionMode(localBuildExecutor, LOCALHOST_ADDRESS, localCoordinatorPort));
+                  newCoordinatorMode(true),
+                  newMinionMode(localBuildExecutor, LOCALHOST_ADDRESS, OptionalInt.empty()));
           break;
 
         case COORDINATOR:
@@ -130,7 +129,7 @@ public class DistBuildSlaveExecutor {
   }
 
   private MinionModeRunner newMinionMode(
-      BuildExecutor localBuildExecutor, String coordinatorAddress, int coordinatorPort) {
+      BuildExecutor localBuildExecutor, String coordinatorAddress, OptionalInt coordinatorPort) {
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
@@ -147,8 +146,7 @@ public class DistBuildSlaveExecutor {
         checker);
   }
 
-  private CoordinatorModeRunner newCoordinatorMode(
-      int coordinatorPort, boolean isLocalMinionAlsoRunning) {
+  private CoordinatorModeRunner newCoordinatorMode(boolean isLocalMinionAlsoRunning) {
     ListenableFuture<BuildTargetsQueue> queue =
         Futures.transform(initializer.getDelegateAndGraphs(), x -> createBuildQueue(x));
     Optional<String> minionQueue = args.getDistBuildConfig().getMinionQueue();
@@ -161,7 +159,7 @@ public class DistBuildSlaveExecutor {
             args.getStampedeId(),
             minionQueue.get(),
             isLocalMinionAlsoRunning);
-    return new CoordinatorModeRunner(coordinatorPort, queue, args.getStampedeId(), listener);
+    return new CoordinatorModeRunner(queue, args.getStampedeId(), listener);
   }
 
   private BuildTargetsQueue createBuildQueue(DelegateAndGraphs delegateAndGraphs) {
@@ -177,12 +175,5 @@ public class DistBuildSlaveExecutor {
         BuildTargetsQueue.newQueue(
             delegateAndGraphs.getActionGraphAndResolver().getResolver(), targets);
     return queue;
-  }
-
-  public static int getFreePortForCoordinator() throws IOException {
-    // Passing argument 0 to ServerSocket will allocate a new free random port.
-    try (ServerSocket socket = new ServerSocket(0)) {
-      return socket.getLocalPort();
-    }
   }
 }
