@@ -21,16 +21,11 @@ import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildMode;
-import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +36,6 @@ import java.util.stream.Collectors;
 public class DistBuildSlaveExecutor {
 
   private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
-  private static final String LOCALHOST_ADDRESS = "localhost";
   private static final boolean KEEP_GOING = true;
 
   private final DistBuildSlaveExecutorArgs args;
@@ -55,7 +49,14 @@ public class DistBuildSlaveExecutor {
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
     if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
-      return newCoordinatorMode(false).runAndReturnExitCode();
+      return MultiSlaveBuildModeRunnerFactory.createCoordinator(
+              initializer.getActionGraphAndResolver(),
+              getTopLevelTargetsToBuild(),
+              args.getDistBuildConfig(),
+              args.getDistBuildService(),
+              args.getStampedeId(),
+              false)
+          .runAndReturnExitCode();
     }
 
     DistBuildModeRunner runner = null;
@@ -79,17 +80,26 @@ public class DistBuildSlaveExecutor {
 
         case MINION:
           runner =
-              newMinionMode(
+              MultiSlaveBuildModeRunnerFactory.createMinion(
                   localBuildExecutor,
+                  args.getDistBuildService(),
+                  args.getStampedeId(),
+                  args.getBuildSlaveRunId(),
                   args.getRemoteCoordinatorAddress(),
-                  OptionalInt.of(args.getRemoteCoordinatorPort()));
+                  OptionalInt.of(args.getRemoteCoordinatorPort()),
+                  args.getDistBuildConfig());
           break;
 
         case COORDINATOR_AND_MINION:
           runner =
-              new CoordinatorAndMinionModeRunner(
-                  newCoordinatorMode(true),
-                  newMinionMode(localBuildExecutor, LOCALHOST_ADDRESS, OptionalInt.empty()));
+              MultiSlaveBuildModeRunnerFactory.createCoordinatorAndMinion(
+                  initializer.getActionGraphAndResolver(),
+                  getTopLevelTargetsToBuild(),
+                  args.getDistBuildConfig(),
+                  args.getDistBuildService(),
+                  args.getStampedeId(),
+                  args.getBuildSlaveRunId(),
+                  localBuildExecutor);
           break;
 
         case COORDINATOR:
@@ -130,52 +140,15 @@ public class DistBuildSlaveExecutor {
     return new LazyInitBuilder(builderSupplier);
   }
 
-  private MinionModeRunner newMinionMode(
-      BuildExecutor localBuildExecutor, String coordinatorAddress, OptionalInt coordinatorPort) {
-    MinionModeRunner.BuildCompletionChecker checker =
-        () -> {
-          BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
-          return BuildStatusUtil.isTerminalBuildStatus(job.getStatus());
-        };
-
-    return new MinionModeRunner(
-        coordinatorAddress,
-        coordinatorPort,
-        localBuildExecutor,
-        args.getStampedeId(),
-        args.getBuildSlaveRunId(),
-        args.getBuildThreadCount(),
-        checker);
-  }
-
-  private CoordinatorModeRunner newCoordinatorMode(boolean isLocalMinionAlsoRunning) {
-    ListenableFuture<BuildTargetsQueue> queue =
-        Futures.transform(initializer.getDelegateAndGraphs(), x -> createBuildQueue(x));
-    Optional<String> minionQueue = args.getDistBuildConfig().getMinionQueue();
-    Preconditions.checkArgument(
-        minionQueue.isPresent(),
-        "Minion queue name is missing to be able to run in Coordinator mode.");
-    ThriftCoordinatorServer.EventListener listener =
-        new CoordinatorEventListener(
-            args.getDistBuildService(),
-            args.getStampedeId(),
-            minionQueue.get(),
-            isLocalMinionAlsoRunning);
-    return new CoordinatorModeRunner(queue, args.getStampedeId(), listener);
-  }
-
-  private BuildTargetsQueue createBuildQueue(DelegateAndGraphs delegateAndGraphs) {
-    final CellPathResolver cellNames = args.getState().getRootCell().getCellPathResolver();
-    List<BuildTarget> targets =
-        args.getState()
-            .getRemoteState()
-            .getTopLevelTargets()
-            .stream()
-            .map(target -> BuildTargetParser.fullyQualifiedNameToBuildTarget(cellNames, target))
-            .collect(Collectors.toList());
-    BuildTargetsQueue queue =
-        BuildTargetsQueue.newQueue(
-            delegateAndGraphs.getActionGraphAndResolver().getResolver(), targets);
-    return queue;
+  private List<BuildTarget> getTopLevelTargetsToBuild() {
+    return args.getState()
+        .getRemoteState()
+        .getTopLevelTargets()
+        .stream()
+        .map(
+            target ->
+                BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                    args.getRootCell().getCellPathResolver(), target))
+        .collect(Collectors.toList());
   }
 }

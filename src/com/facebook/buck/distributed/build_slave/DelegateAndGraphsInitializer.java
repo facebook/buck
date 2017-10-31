@@ -47,6 +47,7 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -79,6 +80,10 @@ public class DelegateAndGraphsInitializer {
 
   public ListenableFuture<DelegateAndGraphs> getDelegateAndGraphs() {
     return delegateAndGraphs;
+  }
+
+  public ListenableFuture<ActionGraphAndResolver> getActionGraphAndResolver() {
+    return Futures.transform(delegateAndGraphs, x -> x.getActionGraphAndResolver());
   }
 
   private DelegateAndGraphs createDelegateAndGraphs() throws IOException, InterruptedException {
