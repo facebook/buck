@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
+import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFactory;
 import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
@@ -378,8 +379,8 @@ public class ProjectCommand extends BuildCommand {
         new BuildCommand(
             targets.stream().map(Object::toString).collect(MoreCollectors.toImmutableList()));
     buildCommand.setKeepGoing(true);
-    buildCommand.setArtifactCacheDisabled(disableCaching);
-    return buildCommand.run(params);
+    return buildCommand.run(
+        disableCaching ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory()) : params);
   }
 
   private int runPreprocessScriptIfNeeded(CommandRunnerParams params, Ide projectIde)

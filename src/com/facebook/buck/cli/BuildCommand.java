@@ -22,8 +22,6 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_BUILD_ANALYSIS;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
@@ -254,8 +252,6 @@ public class BuildCommand extends AbstractCommand {
     return arguments;
   }
 
-  private boolean isArtifactCacheDisabled = false;
-
   public boolean isCodeCoverageEnabled() {
     return false;
   }
@@ -294,14 +290,6 @@ public class BuildCommand extends AbstractCommand {
       mode = Optional.of(CachingBuildEngine.BuildMode.SHALLOW);
     }
     return mode;
-  }
-
-  public void setArtifactCacheDisabled(boolean value) {
-    isArtifactCacheDisabled = value;
-  }
-
-  public boolean isArtifactCacheDisabled() {
-    return isArtifactCacheDisabled;
   }
 
   public boolean isKeepGoing() {
@@ -955,11 +943,6 @@ public class BuildCommand extends AbstractCommand {
       Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws IOException, InterruptedException {
 
-    ArtifactCache artifactCache = params.getArtifactCacheFactory().newInstance(useDistributedBuild);
-    if (isArtifactCacheDisabled()) {
-      artifactCache = new NoopArtifactCache();
-    }
-
     try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
         getDefaultRuleKeyCacheScope(params, actionGraphAndResolver)) {
       LocalBuildExecutor builder =
@@ -968,7 +951,7 @@ public class BuildCommand extends AbstractCommand {
               getExecutionContext(),
               actionGraphAndResolver,
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
-              artifactCache,
+              params.getArtifactCacheFactory().newInstance(useDistributedBuild),
               executor,
               isKeepGoing(),
               Optional.of(ruleKeyCacheScope),
