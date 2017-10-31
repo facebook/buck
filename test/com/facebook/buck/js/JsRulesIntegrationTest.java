@@ -195,11 +195,6 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void sourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
-    workspace.runBuckBuild("//js:genrule-using-only-sourcemap").assertSuccess();
-  }
-
-  @Test
   public void bundleGenrule() throws IOException {
     workspace.runBuckBuild("//js:genrule-inner", "//js:genrule-outer").assertSuccess();
     workspace.verify(Paths.get("bundle_genrules.expected"), genPath);
@@ -251,10 +246,5 @@ public class JsRulesIntegrationTest {
   public void genruleAllowsToRewriteSourcemap() throws IOException {
     workspace.runBuckBuild("//js:sourcemap-genrule#source_map").assertSuccess();
     workspace.verify(Paths.get("sourcemap_genrule.expected"), genPath);
-  }
-
-  @Test
-  public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
-    workspace.runBuckBuild("//js:genrule-using-only-sourcemap-of-bundle-genrule").assertSuccess();
   }
 }

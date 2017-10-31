@@ -130,7 +130,8 @@ public class JsBundleGenruleDescriptionTest {
 
   @Test
   public void addsBundleAndBundleNameAsEnvironmentVariable() {
-    SourcePathResolver pathResolver = sourcePathResolver();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, builder);
     ImmutableMap<String, String> env = builder.build();
@@ -201,27 +202,23 @@ public class JsBundleGenruleDescriptionTest {
   public void exposesSourceMapOfJsBundleWithSpecialFlavor() {
     setUp(JsFlavors.SOURCE_MAP);
 
-    DefaultSourcePathResolver pathResolver = sourcePathResolver();
-
-    assertEquals(
-        pathResolver.getRelativePath(setup.jsBundle().getSourcePathToSourceMap()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+    assertEquals(setup.jsBundle().getSourcePathToSourceMap(), setup.rule().getSourcePathToOutput());
   }
 
   @Test
   public void exposeDepsFileOfJsBundleWithSpecialFlavor() {
     setUp(JsFlavors.DEPENDENCY_FILE);
-    DefaultSourcePathResolver pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        setup.jsBundleDepsFile().getSourcePathToOutput(), setup.rule().getSourcePathToOutput());
   }
 
   @Test
   public void createsJsDir() {
     JsBundleGenrule genrule = setup.genrule();
-    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ImmutableList<Step> buildSteps =
         ImmutableList.copyOf(genrule.getBuildSteps(context, buildableContext));
@@ -272,7 +269,8 @@ public class JsBundleGenruleDescriptionTest {
   public void addsSourceMapAndSourceMapOutAsEnvironmentVariable() {
     setUpWithRewriteSourceMap();
 
-    SourcePathResolver pathResolver = sourcePathResolver();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, builder);
     ImmutableMap<String, String> env = builder.build();
@@ -293,11 +291,7 @@ public class JsBundleGenruleDescriptionTest {
   public void specialSourceMapTargetPointsToOwnSourceMap() {
     setUpWithRewriteSourceMap(JsFlavors.SOURCE_MAP);
 
-    DefaultSourcePathResolver pathResolver = sourcePathResolver();
-
-    assertEquals(
-        pathResolver.getRelativePath(setup.genrule().getSourcePathToSourceMap()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+    assertEquals(setup.genrule().getSourcePathToSourceMap(), setup.rule().getSourcePathToOutput());
   }
 
   @Test
@@ -305,7 +299,9 @@ public class JsBundleGenruleDescriptionTest {
     setUpWithRewriteSourceMap();
 
     JsBundleGenrule genrule = setup.genrule();
-    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ImmutableList<Step> buildSteps =
         ImmutableList.copyOf(genrule.getBuildSteps(context, buildableContext));
@@ -330,7 +326,9 @@ public class JsBundleGenruleDescriptionTest {
   public void recordsSourcemapArtifact() {
     setUpWithRewriteSourceMap();
 
-    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     setup.genrule().getBuildSteps(context, buildableContext);
 
@@ -356,10 +354,6 @@ public class JsBundleGenruleDescriptionTest {
 
   private JsBundleGenruleBuilder.Options builderOptions() {
     return builderOptions(defaultBundleTarget);
-  }
-
-  private DefaultSourcePathResolver sourcePathResolver() {
-    return DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
   }
 
   private static class TestSetup {

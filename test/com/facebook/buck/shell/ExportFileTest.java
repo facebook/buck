@@ -55,7 +55,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -331,30 +330,5 @@ public class ExportFileTest {
         .setOut("out")
         .setMode(ExportFileDescription.Mode.REFERENCE)
         .build(resolver, projectFilesystem);
-  }
-
-  @Test
-  public void referenceModeExposesUnderlyingBuildTargetAsRuntimeDep() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
-    Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(
-                BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:genrule"),
-                projectFilesystem)
-            .setOut("out")
-            .setCmd("")
-            .build(resolver, projectFilesystem);
-    ExportFile exportFile =
-        new ExportFileBuilder(target)
-            .setMode(ExportFileDescription.Mode.REFERENCE)
-            .setSrc(genrule.getSourcePathToOutput())
-            .build(resolver, projectFilesystem);
-
-    assertEquals(
-        ImmutableList.of(genrule.getBuildTarget()),
-        exportFile.getRuntimeDeps(ruleFinder).collect(Collectors.toList()));
   }
 }

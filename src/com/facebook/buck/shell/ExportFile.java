@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -164,7 +163,7 @@ public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // that our filesystem matches that of the source.  In copy mode, we return the path we've
     // allocated for the copy.
     return mode == ExportFileDescription.Mode.REFERENCE
-        ? ForwardingBuildTargetSourcePath.of(getBuildTarget(), src)
+        ? src
         : ExplicitBuildTargetSourcePath.of(getBuildTarget(), getCopiedPath());
   }
 
