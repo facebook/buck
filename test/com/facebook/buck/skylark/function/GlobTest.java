@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.function;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
@@ -48,9 +49,9 @@ public class GlobTest {
 
   @Before
   public void setUp() throws InterruptedException {
-    SkylarkFilesystem fileSystem =
-        SkylarkFilesystem.using(FakeProjectFilesystem.createJavaOnlyFilesystem());
-    root = fileSystem.getRootDirectory();
+    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
+    root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
     eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
   }
 

@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.io.impl;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.*;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -36,10 +37,9 @@ public class SimpleGlobberTest {
 
   @Before
   public void setUp() throws Exception {
-    SkylarkFilesystem fileSystem =
-        SkylarkFilesystem.using(FakeProjectFilesystem.createJavaOnlyFilesystem());
-    root = fileSystem.getRootDirectory().getRelative("foo");
-    FileSystemUtils.createDirectoryAndParents(root);
+    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
+    root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
     globber = SimpleGlobber.create(root);
   }
 
