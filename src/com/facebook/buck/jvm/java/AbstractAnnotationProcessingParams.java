@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -49,16 +48,11 @@ import org.immutables.value.Value;
 abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
   public static final AnnotationProcessingParams EMPTY =
       AnnotationProcessingParams.builder()
-          .setOwnerTarget(null)
           .setProjectFilesystem(null)
           .setModernProcessors(ImmutableList.of())
           .setParameters(ImmutableSortedSet.of())
           .setProcessOnly(false)
           .build();
-
-  @Nullable
-  @AddToRuleKey
-  protected abstract BuildTarget getOwnerTarget();
 
   @Nullable
   protected abstract ProjectFilesystem getProjectFilesystem();
@@ -115,7 +109,7 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
 
   @Value.Check
   protected void check() {
-    if (!isEmpty() && getOwnerTarget() != null) {
+    if (!isEmpty()) {
       Preconditions.checkNotNull(getProjectFilesystem());
     }
   }

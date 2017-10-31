@@ -99,7 +99,6 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
     }
 
     AnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
-    builder.setOwnerTarget(owner);
     builder.setLegacySafeAnnotationProcessors(safeAnnotationProcessors);
     builder.setProjectFilesystem(filesystem);
 

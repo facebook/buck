@@ -1560,7 +1560,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     private DefaultJavaLibrary createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException, NoSuchBuildTargetException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
-      annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);
       annotationProcessingParamsBuilder.setProjectFilesystem(projectFilesystem);
 
       tmp.newFolder("android", "java", "src", "com", "facebook");
