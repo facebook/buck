@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.command;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -78,9 +78,9 @@ public class LocalBuildExecutor implements BuildExecutor {
       ExecutionContext executionContext,
       ActionGraphAndResolver actionGraphAndResolver,
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
-      ArtifactCache artifactCache,
       WeightedListeningExecutorService executorService,
       boolean keepGoing,
+      boolean useDistributedBuildCache,
       Optional<RuleKeyCacheScope<RuleKey>> ruleKeyRuleKeyCacheScope,
       Optional<BuildMode> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
@@ -99,7 +99,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             actionGraphAndResolver.getResolver(),
             args.getRootCell(),
             cachingBuildEngine,
-            artifactCache,
+            args.getArtifactCacheFactory().newInstance(useDistributedBuildCache),
             args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
             args.getClock(),
             executionContext,
@@ -256,6 +256,8 @@ abstract class AbstractBuildExecutorArgs {
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();
+
+  public abstract ArtifactCacheFactory getArtifactCacheFactory();
 
   public BuckConfig getBuckConfig() {
     return getRootCell().getBuckConfig();

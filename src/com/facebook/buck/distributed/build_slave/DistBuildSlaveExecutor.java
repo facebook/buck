@@ -120,9 +120,9 @@ public class DistBuildSlaveExecutor {
               executionContext,
               delegateAndGraphs.getActionGraphAndResolver(),
               delegateAndGraphs.getCachingBuildEngineDelegate(),
-              args.getArtifactCache(),
               args.getExecutorService(),
               KEEP_GOING,
+              true,
               Optional.empty(),
               Optional.empty(),
               Optional.empty());

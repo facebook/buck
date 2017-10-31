@@ -951,9 +951,9 @@ public class BuildCommand extends AbstractCommand {
               getExecutionContext(),
               actionGraphAndResolver,
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
-              params.getArtifactCacheFactory().newInstance(useDistributedBuild),
               executor,
               isKeepGoing(),
+              useDistributedBuild,
               Optional.of(ruleKeyCacheScope),
               getBuildEngineMode(),
               ruleKeyLogger);

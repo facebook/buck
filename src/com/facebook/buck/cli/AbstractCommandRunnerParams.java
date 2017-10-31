@@ -133,6 +133,7 @@ public abstract class AbstractCommandRunnerParams {
         .setExecutors(getExecutors())
         .setProjectFilesystemFactory(getProjectFilesystemFactory())
         .setBuildInfoStoreManager(getBuildInfoStoreManager())
+        .setArtifactCacheFactory(getArtifactCacheFactory())
         .build();
   }
 }

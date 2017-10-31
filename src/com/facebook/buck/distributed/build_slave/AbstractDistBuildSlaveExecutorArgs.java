@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.DistBuildConfig;
@@ -64,7 +64,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract Console getConsole();
 
-  public abstract ArtifactCache getArtifactCache();
+  public abstract ArtifactCacheFactory getArtifactCacheFactory();
 
   public abstract Platform getPlatform();
 
@@ -117,6 +117,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setExecutors(getExecutors())
         .setProjectFilesystemFactory(getProjectFilesystemFactory())
         .setBuildInfoStoreManager(getBuildInfoStoreManager())
+        .setArtifactCacheFactory(getArtifactCacheFactory())
         .build();
   }
 
