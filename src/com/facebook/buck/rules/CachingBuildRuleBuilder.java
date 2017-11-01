@@ -222,6 +222,31 @@ class CachingBuildRuleBuilder {
             });
   }
 
+  // Return a `BuildResult.Builder` with rule-specific state pre-filled.
+  private BuildResult.Builder buildResultBuilder() {
+    return BuildResult.builder().setRule(rule);
+  }
+
+  private BuildResult success(BuildRuleSuccessType successType, CacheResult cacheResult) {
+    return buildResultBuilder()
+        .setStatus(BuildRuleStatus.SUCCESS)
+        .setSuccessOptional(successType)
+        .setCacheResult(cacheResult)
+        .setUploadCompleteFuture(uploadCompleteFuture)
+        .build();
+  }
+
+  private BuildResult failure(Throwable thrown) {
+    return buildResultBuilder().setStatus(BuildRuleStatus.FAIL).setFailureOptional(thrown).build();
+  }
+
+  private BuildResult canceled(Throwable thrown) {
+    return buildResultBuilder()
+        .setStatus(BuildRuleStatus.CANCELED)
+        .setFailureOptional(thrown)
+        .build();
+  }
+
   /**
    * We have a lot of places where tasks are submitted into a service implicitly. There is no way to
    * assign custom weights to such tasks. By creating a temporary service with adjusted weights it
@@ -297,7 +322,7 @@ class CachingBuildRuleBuilder {
               thrown = addBuildRuleContextToException(thrown);
               recordFailureAndCleanUp(thrown);
 
-              return Futures.immediateFuture(BuildResult.failure(rule, thrown));
+              return Futures.immediateFuture(failure(thrown));
             });
 
     // Do things that need to happen after either success or failure, but don't block the dependents
@@ -748,11 +773,9 @@ class CachingBuildRuleBuilder {
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
       if (lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get())) {
         return Optional.of(
-            BuildResult.success(
-                rule,
+            success(
                 BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                CacheResult.localKeyUnchangedHit(),
-                uploadCompleteFuture));
+                CacheResult.localKeyUnchangedHit()));
       }
     }
     return Optional.empty();
@@ -773,8 +796,7 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<BuildResult> buildOrFetchFromCache() throws IOException {
     // If we've already seen a failure, exit early.
     if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-      return Futures.immediateFuture(
-          BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
+      return Futures.immediateFuture(canceled(buildRuleBuilderDelegate.getFirstFailure()));
     }
 
     // 1. Check if it's already built.
@@ -863,8 +885,7 @@ class CachingBuildRuleBuilder {
                 LOG.info(
                     "Cannot populate cache for " + rule.getBuildTarget().getFullyQualifiedName());
                 return Optional.of(
-                    BuildResult.canceled(
-                        rule,
+                    canceled(
                         new HumanReadableException(
                             "Skipping %s: in cache population mode local builds are disabled",
                             rule)));
@@ -903,11 +924,7 @@ class CachingBuildRuleBuilder {
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
     if (defaultKey.equals(cachedRuleKey.orElse(null))) {
       return Optional.of(
-          BuildResult.success(
-              rule,
-              BuildRuleSuccessType.MATCHING_RULE_KEY,
-              CacheResult.localKeyUnchangedHit(),
-              uploadCompleteFuture));
+          success(BuildRuleSuccessType.MATCHING_RULE_KEY, CacheResult.localKeyUnchangedHit()));
     }
     return Optional.empty();
   }
@@ -939,17 +956,14 @@ class CachingBuildRuleBuilder {
     if (!cacheResult.getType().isSuccess()) {
       return Optional.empty();
     }
-    return Optional.of(
-        BuildResult.success(
-            rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult, uploadCompleteFuture));
+    return Optional.of(success(BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
   }
 
   private ListenableFuture<Optional<BuildResult>> handleDepsResults(List<BuildResult> depResults) {
     for (BuildResult depResult : depResults) {
       if (buildMode != CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE
           && !depResult.isSuccess()) {
-        return Futures.immediateFuture(
-            Optional.of(BuildResult.canceled(rule, depResult.getFailure())));
+        return Futures.immediateFuture(Optional.of(canceled(depResult.getFailure())));
       }
     }
     depsAreAvailable = true;
@@ -1453,11 +1467,7 @@ class CachingBuildRuleBuilder {
               cacheResult -> {
                 if (cacheResult.getType().isSuccess()) {
                   return Optional.of(
-                      BuildResult.success(
-                          rule,
-                          BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
-                          cacheResult,
-                          uploadCompleteFuture));
+                      success(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED, cacheResult));
                 }
                 return Optional.<BuildResult>empty();
               });
@@ -1485,11 +1495,9 @@ class CachingBuildRuleBuilder {
     if (checkMatchingInputBasedKey(inputRuleKey)) {
       return Futures.immediateFuture(
           Optional.of(
-              BuildResult.success(
-                  rule,
+              success(
                   BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
-                  CacheResult.localKeyUnchangedHit(),
-                  uploadCompleteFuture)));
+                  CacheResult.localKeyUnchangedHit())));
     }
 
     // Try to fetch the artifact using the input-based rule key.
@@ -1503,11 +1511,7 @@ class CachingBuildRuleBuilder {
           if (cacheResult.getType().isSuccess()) {
             try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {
               return Optional.of(
-                  BuildResult.success(
-                      rule,
-                      BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
-                      cacheResult,
-                      uploadCompleteFuture));
+                  success(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
             }
           }
           return Optional.empty();
@@ -1563,8 +1567,7 @@ class CachingBuildRuleBuilder {
                 () -> {
                   if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
                     Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
-                    return Optional.of(
-                        BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
+                    return Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure()));
                   }
                   try (Scope ignored = buildRuleScope()) {
                     return function.call();
@@ -1586,8 +1589,7 @@ class CachingBuildRuleBuilder {
           if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
             Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
             return Futures.immediateFuture(
-                Optional.of(
-                    BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
+                Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure())));
           }
           return function.call();
         },
@@ -1616,8 +1618,7 @@ class CachingBuildRuleBuilder {
       try {
         if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
           Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
-          future.set(
-              Optional.of(BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
+          future.set(Optional.of(canceled(buildRuleBuilderDelegate.getFirstFailure())));
           return;
         }
         try (Scope ignored = buildRuleScope()) {
@@ -1626,10 +1627,7 @@ class CachingBuildRuleBuilder {
 
         // Set the future outside of the scope, to match the behavior of other steps that use
         // futures provided by the ExecutorService.
-        future.set(
-            Optional.of(
-                BuildResult.success(
-                    rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult, uploadCompleteFuture)));
+        future.set(Optional.of(success(BuildRuleSuccessType.BUILT_LOCALLY, cacheResult)));
       } catch (Throwable t) {
         future.setException(t);
       }
