@@ -412,9 +412,11 @@ public abstract class DefaultJavaLibraryRules {
                         getProjectFilesystem(),
                         getInitialParams(),
                         Preconditions.checkNotNull(getLibraryRule().getSourcePathToOutput()),
-                        getJavaBuckConfig() != null
-                            && getJavaBuckConfig().getSourceAbiVerificationMode()
-                                != JavaBuckConfig.SourceAbiVerificationMode.OFF));
+                        getJavaBuckConfig() == null
+                                || getJavaBuckConfig().getSourceAbiVerificationMode()
+                                    == SourceAbiVerificationMode.OFF
+                            ? AbiGenerationMode.CLASS
+                            : getAbiGenerationMode()));
   }
 
   @Value.Lazy

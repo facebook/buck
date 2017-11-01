@@ -4387,7 +4387,9 @@ public class StubJarTest {
 
   private Path createStubJar(Path fullJar) throws IOException {
     Path stubJar = fullJar.getParent().resolve("stub.jar");
-    new StubJar(fullJar).setSourceAbiCompatible(true).writeTo(filesystem, stubJar);
+    new StubJar(fullJar)
+        .setCompatibilityMode(AbiGenerationMode.SOURCE)
+        .writeTo(filesystem, stubJar);
     return stubJar;
   }
 

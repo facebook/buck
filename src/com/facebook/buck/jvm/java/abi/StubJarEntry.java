@@ -22,12 +22,12 @@ import javax.annotation.Nullable;
 
 public abstract class StubJarEntry {
   @Nullable
-  static StubJarEntry of(LibraryReader input, Path path, boolean sourceAbiCompatible)
+  static StubJarEntry of(LibraryReader input, Path path, AbiGenerationMode compatibilityMode)
       throws IOException {
     if (isStubbableResource(input, path)) {
       return StubJarResourceEntry.of(input, path);
     } else if (input.isClass(path)) {
-      return StubJarClassEntry.of(input, path, sourceAbiCompatible);
+      return StubJarClassEntry.of(input, path, compatibilityMode);
     }
 
     return null;
