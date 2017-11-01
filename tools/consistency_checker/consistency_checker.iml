@@ -9,9 +9,9 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="buck" />
-    <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
-    <orderEntry type="library" name="args4j" level="project" />
     <orderEntry type="library" name="buck-lib" level="project" />
+    <orderEntry type="library" name="args4j" level="project" />
     <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
   </component>
 </module>
