@@ -30,7 +30,7 @@ third-party/java/eclipse/org.eclipse.jdt.core.prefs
 third-party/java/eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar
 third-party/java/eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar
 third-party/java/errorprone/error_prone_annotations-2.0.19.jar
-third-party/java/gson/gson-2.2.4.jar
+third-party/java/gson/gson-2.8.2.jar
 third-party/java/guava/guava-20.0.jar
 third-party/java/guava/guava-23.3-jre.jar
 third-party/java/guice/guice-3.0.jar

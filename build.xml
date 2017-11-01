@@ -131,7 +131,7 @@
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
     <include name="guice/guice-multibindings-3.0.jar" />
-    <include name="gson/gson-2.2.4.jar" />
+    <include name="gson/gson-2.8.2.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/builder-2.5.7-SNAPSHOT.jar" />
     <include name="immutables/value-2.5.7-SNAPSHOT.jar" />

@@ -75,7 +75,7 @@
     <orderEntry type="module" module-name="aosp" />
     <orderEntry type="library" name="concurrent-locks" level="project" />
     <orderEntry type="library" name="dd-plist" level="project" />
-    <orderEntry type="library" name="gson-2.2.4" level="project" />
+    <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="guava" level="project" />
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jetty" level="project" />

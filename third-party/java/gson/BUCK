@@ -1,10 +1,10 @@
 prebuilt_jar(
     name = "gson",
-    binary_jar = "gson-2.2.4.jar",
+    binary_jar = "gson-2.8.2.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "gson-2.2.4-sources.jar",
+    source_jar = "gson-2.8.2-sources.jar",
     # Do not used this.
     # Use Jackson instead.
     # Jackson keeps a hot cache of serializers and deserializers as a useful optimization.
