@@ -42,6 +42,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -226,6 +227,8 @@ public class Omnibus {
                 .collect(MoreCollectors.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
         .deps(Maps.asMap(deps, Functions.forMap(nativeLinkables)))
         .excluded(Maps.asMap(excluded, Functions.forMap(nativeLinkables)))
+        .excludedRoots(
+            RichStream.from(excludedRoots).map(NativeLinkable::getBuildTarget).toImmutableSet())
         .build();
   }
 
@@ -700,9 +703,11 @@ public class Omnibus {
       }
     }
 
-    // Lastly, add in any shared libraries from excluded nodes the normal way.
+    // Lastly, add in any shared libraries from excluded nodes the normal way, omitting non-root
+    // static libraries.
     for (NativeLinkable nativeLinkable : spec.getExcluded().values()) {
-      if (nativeLinkable.getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC) {
+      if (spec.getExcludedRoots().contains(nativeLinkable.getBuildTarget())
+          || nativeLinkable.getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC) {
         for (Map.Entry<String, SourcePath> ent :
             nativeLinkable.getSharedLibraries(cxxPlatform).entrySet()) {
           libs.addLibraries(OmnibusLibrary.of(ent.getKey(), ent.getValue()));
@@ -725,6 +730,9 @@ public class Omnibus {
 
     // All native nodes which are to be statically linked into the giant combined shared library.
     public abstract ImmutableMap<BuildTarget, NativeLinkable> getBody();
+
+    // All root native nodes which are not included in the omnibus link.
+    public abstract ImmutableSet<BuildTarget> getExcludedRoots();
 
     // All native nodes which are not included in the omnibus link, as either a root or a body node.
     public abstract ImmutableMap<BuildTarget, NativeLinkable> getExcluded();

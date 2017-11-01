@@ -398,6 +398,45 @@ public class OmnibusTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC));
   }
 
+  @Test
+  public void excludedStaticRootsProduceSharedLibraries() throws NoSuchBuildTargetException {
+    NativeLinkTarget includedRoot = new OmnibusRootNode("//:included", ImmutableList.of());
+    NativeLinkable excludedRoot =
+        new OmnibusNode(
+            "//:excluded", ImmutableList.of(), ImmutableList.of(), NativeLinkable.Linkage.STATIC);
+
+    // Verify the spec.
+    Omnibus.OmnibusSpec spec =
+        Omnibus.buildSpec(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(includedRoot),
+            ImmutableList.of(excludedRoot));
+    assertThat(spec.getExcludedRoots(), Matchers.containsInAnyOrder(excludedRoot.getBuildTarget()));
+    assertThat(
+        spec.getExcluded().keySet(), Matchers.containsInAnyOrder(excludedRoot.getBuildTarget()));
+
+    // Verify the libs.
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    ImmutableMap<String, SourcePath> libs =
+        toSonameMap(
+            Omnibus.getSharedLibraries(
+                target,
+                new FakeProjectFilesystem(),
+                TestBuildRuleParams.create(),
+                resolver,
+                ruleFinder,
+                CxxPlatformUtils.DEFAULT_CONFIG,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ImmutableList.of(),
+                ImmutableList.of(includedRoot),
+                ImmutableList.of(excludedRoot)));
+    assertThat(libs.keySet(), Matchers.hasItem(excludedRoot.getBuildTarget().toString()));
+  }
+
   private CxxLink getCxxLinkRule(SourcePathRuleFinder ruleFinder, SourcePath path) {
     return ((CxxLink) ruleFinder.getRule((ExplicitBuildTargetSourcePath) path));
   }
