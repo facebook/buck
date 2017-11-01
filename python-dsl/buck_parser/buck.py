@@ -516,7 +516,7 @@ class BuildFileProcessor(object):
             env_vars = {}
         if ignore_paths is None:
             ignore_paths = []
-        self._cache = {}
+        self._include_cache = {}
         self._current_build_env = None
         self._sync_cookie_state = SyncCookieState()
 
@@ -996,11 +996,6 @@ class BuildFileProcessor(object):
         :returns: build context (potentially different if retrieved from cache) and loaded module.
         """
 
-        # First check the cache.
-        cached = self._cache.get((path, type(build_env)))
-        if cached is not None:
-            return cached
-
         # Install the build context for this input as the current context.
         with self._set_build_env(build_env):
             # Set of helpers callable from the child environment.
@@ -1046,7 +1041,6 @@ class BuildFileProcessor(object):
             with self._build_file_sandboxing():
                 exec(code, module.__dict__)
 
-        self._cache[(path, type(build_env))] = build_env, module
         return build_env, module
 
     def _process_include(self, path, is_implicit_include):
@@ -1057,8 +1051,17 @@ class BuildFileProcessor(object):
         :param is_implicit_include: whether the file being processed is an implicit include, or was
             included from an implicit include.
         """
+
+        # First check the cache.
+        cached = self._include_cache.get(path)
+        if cached is not None:
+            return cached
+
         build_env = IncludeContext()
-        return self._process(build_env, path, is_implicit_include=is_implicit_include)
+        build_env, mod = self._process(build_env, path, is_implicit_include=is_implicit_include)
+
+        self._include_cache[path] = build_env, mod
+        return build_env, mod
 
     def _process_build_file(self, watch_root, project_prefix, path):
         """Process the build file at the given path."""
