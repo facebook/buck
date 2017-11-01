@@ -4608,7 +4608,9 @@ public class StubJarTest {
           if (manifest != null) {
             testCompiler.setManifest(manifest);
           }
-          testCompiler.useFrontendOnlyJavacTask();
+          if (testingMode == MODE_SOURCE_BASED_MISSING_DEPS) {
+            testCompiler.useFrontendOnlyJavacTask();
+          }
           testCompiler.addSourceFileContents(sourceFileName, sourceFileContents);
           testCompiler.addClasspath(classpath1);
           testCompiler.setProcessors(
