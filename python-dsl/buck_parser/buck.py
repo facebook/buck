@@ -995,8 +995,9 @@ class BuildFileProcessor(object):
             included from an implicit include.
         :returns: build context (potentially different if retrieved from cache) and loaded module.
         """
+
         # First check the cache.
-        cached = self._cache.get(path)
+        cached = self._cache.get((path, type(build_env)))
         if cached is not None:
             return cached
 
@@ -1045,7 +1046,7 @@ class BuildFileProcessor(object):
             with self._build_file_sandboxing():
                 exec(code, module.__dict__)
 
-        self._cache[path] = build_env, module
+        self._cache[(path, type(build_env))] = build_env, module
         return build_env, module
 
     def _process_include(self, path, is_implicit_include):

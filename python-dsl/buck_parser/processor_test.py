@@ -1232,5 +1232,27 @@ foo_rule(
             '{"__env": {}}]}',
             result)
 
+    def test_file_parsed_as_build_file_and_include_def(self):
+        """
+        Test that paths can be parsed as both build files and include defs.
+        """
+
+        # Setup a build file, foo, and another build file bar which includes
+        # the former.
+        foo = ProjectFile(self.project_root, path='foo', contents=('FOO = 1',))
+        bar = (
+            ProjectFile(
+                self.project_root,
+                path='bar',
+                contents=('include_defs({0!r})'.format(foo.name))))
+        self.write_files(foo, bar)
+
+        # Parse bar, which parses foo as an include def, then parse foo as a
+        # build file.
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(bar.root, bar.prefix, bar.path, [])
+        build_file_processor.process(foo.root, foo.prefix, foo.path, [])
+
+
 if __name__ == '__main__':
     unittest.main()
