@@ -86,6 +86,17 @@ class InterfaceScanner {
     new TreeContextScanner<Void, Void>(trees) {
       private boolean inInitializer = false;
 
+      @Override
+      public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
+        // We change the order relative to our superclass so that the imports get scanned first
+        // (in case they are needed to resolve the package annotations), and we don't bother
+        // scanning the package name because it is not needed.
+        scan(node.getImports(), aVoid);
+        scan(node.getPackageAnnotations(), aVoid);
+        scan(node.getTypeDecls(), aVoid);
+        return null;
+      }
+
       /** Reports types that are imported via single-type imports */
       @Override
       public Void visitImport(ImportTree importTree, Void aVoid) {

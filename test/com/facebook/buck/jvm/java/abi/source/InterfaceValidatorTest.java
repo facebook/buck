@@ -236,6 +236,22 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testImportedPackageAnnotationSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/anno/Anno.java",
+            Joiner.on('\n').join("package com.facebook.anno;", "public @interface Anno { }")));
+
+    compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/foo/package-info.java",
+            Joiner.on('\n')
+                .join("@Anno", "package com.facebook.foo;", "import com.facebook.anno.Anno;")));
+
+    assertNoErrors();
+  }
+
+  @Test
   public void testStarImportedTypeFromClasspathFails() throws IOException {
     withClasspath(
         ImmutableMap.of(
