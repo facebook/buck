@@ -963,6 +963,16 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void parseErrorsShouldBeReportedGracefullyWithSourceOnlyAbi() throws IOException {
+    setUpProjectWorkspaceForScenario("parse_errors");
+
+    ProcessResult result =
+        workspace.runBuckBuild(
+            "-c", "java.abi_generation_mode=source_only", "//:errors#source-abi");
+    assertThat(result.getStderr(), Matchers.stringContainsInOrder("illegal start of expression"));
+  }
+
+  @Test
   public void missingDepsShouldNotCrashSourceOnlyVerifier() throws IOException {
     setUpProjectWorkspaceForScenario("missing_deps");
 

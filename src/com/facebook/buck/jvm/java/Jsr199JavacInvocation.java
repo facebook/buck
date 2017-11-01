@@ -391,6 +391,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       if (success) {
                         return 0;
                       } else {
+                        debugLogDiagnostics();
+                        reportDiagnosticsToUser();
                         return 1;
                       }
                     }
