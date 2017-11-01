@@ -1,6 +1,6 @@
 TARGETS = {
-  'linux': ['-Wl,--unresolved-symbols=ignore-all'],
-  'macos': ['-Wl,-flat_namespace,-undefined,suppress'],
+    "linux": ["-Wl,--unresolved-symbols=ignore-all"],
+    "macos": ["-Wl,-flat_namespace,-undefined,suppress"],
 }
 
 for target, flags in TARGETS.iteritems():

@@ -1,11 +1,11 @@
 android_resource(
-  name = 'dep1',
-  package = 'com.test',
-  res = subdir_glob([('res', '**')]),
-  assets = subdir_glob([('assets', '**')]),
-  project_res = 'proj-res',
-  project_assets = 'proj-assets',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "dep1",
+    assets = subdir_glob([("assets", "**")]),
+    package = "com.test",
+    project_assets = "proj-assets",
+    project_res = "proj-res",
+    res = subdir_glob([("res", "**")]),
+    visibility = [
+        "PUBLIC",
+    ],
 )

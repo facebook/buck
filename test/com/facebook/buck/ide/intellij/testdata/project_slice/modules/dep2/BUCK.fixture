@@ -1,15 +1,15 @@
 android_library(
-  name = 'dep2',
-  srcs = [],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "dep2",
+    srcs = [],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 export_file(
-  name = 'unused',
-  src = '.notfound',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "unused",
+    src = ".notfound",
+    visibility = [
+        "PUBLIC",
+    ],
 )

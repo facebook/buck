@@ -1,23 +1,23 @@
 cxx_binary(
-  name = 'binary',
-  deps = ['//subdir:library'],
-  srcs = [ 'binary.cpp' ],
-  link_style = 'shared',
+    name = "binary",
+    srcs = ["binary.cpp"],
+    link_style = "shared",
+    deps = ["//subdir:library"],
 )
 
 cxx_binary(
-  name = 'static_binary',
-  deps = ['//subdir:library'],
-  srcs = [ 'binary.cpp' ],
-  link_style = 'static',
+    name = "static_binary",
+    srcs = ["binary.cpp"],
+    link_style = "static",
+    deps = ["//subdir:library"],
 )
 
 cxx_binary(
-  name = 'clowny_binary',
-  deps = [
-    '//subdir:library1',
-    '//subdir:library2',
-  ],
-  srcs = [ 'binary.cpp' ],
-  link_style = 'shared',
+    name = "clowny_binary",
+    srcs = ["binary.cpp"],
+    link_style = "shared",
+    deps = [
+        "//subdir:library1",
+        "//subdir:library2",
+    ],
 )

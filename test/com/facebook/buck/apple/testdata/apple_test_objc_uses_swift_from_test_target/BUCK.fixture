@@ -1,10 +1,13 @@
 apple_test(
-    name = 'LibTest',
-    srcs = ['Test/LibTest.m', 'Test/Dummy.swift'],
-    swift_version = '4',
-    info_plist = 'Test/LibTest.plist',
-    frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+    name = "LibTest",
+    srcs = [
+        "Test/Dummy.swift",
+        "Test/LibTest.m",
     ],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test/LibTest.plist",
+    swift_version = "4",
 )

@@ -1,10 +1,13 @@
 cxx_binary(
-  name = 'bin',
-  srcs = [
-    'main.cpp',
-    ('file.cpp', ['-DFUNCTION_NAME=oneFunction']),
-  ],
-  headers = [
-    'file.h'
-  ],
+    name = "bin",
+    srcs = [
+        "main.cpp",
+        (
+            "file.cpp",
+            ["-DFUNCTION_NAME=oneFunction"],
+        ),
+    ],
+    headers = [
+        "file.h",
+    ],
 )

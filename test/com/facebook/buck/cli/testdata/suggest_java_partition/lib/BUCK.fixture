@@ -1,8 +1,8 @@
 java_library(
-  name = 'lib',
-  srcs = glob(['*.java']),
-  deps = ['//third-party:third-party'],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = ["//third-party:third-party"],
 )

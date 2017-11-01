@@ -7,7 +7,7 @@ export_file(
 # Has no deps
 java_library(
     name = "example",
-    resources = [ "beta.txt" ],
+    resources = ["beta.txt"],
     deps = [],
 )
 

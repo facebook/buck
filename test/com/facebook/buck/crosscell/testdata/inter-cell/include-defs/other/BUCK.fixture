@@ -1,10 +1,10 @@
-include_defs('root//DEFS')
+include_defs("root//DEFS")
 
 genrule(
-  name='rule',
-  bash=r'''
+    name = "rule",
+    out = "rule",
+    bash = """
     touch $OUT
     [[ '{0}' == 'from root' ]]
-    exit $?;'''.format(from_root()),
-  out='rule',
+    exit $?;""".format(from_root()),
 )

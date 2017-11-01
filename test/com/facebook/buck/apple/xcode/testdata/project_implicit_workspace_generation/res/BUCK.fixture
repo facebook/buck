@@ -1,6 +1,6 @@
 apple_resource(
-  name='res',
-  dirs=[],
-  files=['img.jpg'],
-  visibility=['PUBLIC']
+    name = "res",
+    dirs = [],
+    files = ["img.jpg"],
+    visibility = ["PUBLIC"],
 )

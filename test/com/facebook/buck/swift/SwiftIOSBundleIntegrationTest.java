@@ -249,8 +249,8 @@ public class SwiftIOSBundleIntegrationTest {
 
     workspace.replaceFileContents(
         "BUCK",
-        "preferred_linkage = 'any', # iosdep1 preferred_linkage anchor",
-        "preferred_linkage = 'static'");
+        "preferred_linkage = \"any\",  # iosdep1 preferred_linkage anchor",
+        "preferred_linkage = \"static\"");
 
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(

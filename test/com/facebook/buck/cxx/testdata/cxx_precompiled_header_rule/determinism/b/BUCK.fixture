@@ -1,13 +1,13 @@
-cxx_binary (
+cxx_binary(
     name = "main",
-    precompiled_header = "//determinism/lib:pch",
     srcs = ["main.cpp"],
-    deps = [":bar"],
     compiler_flags = ["-fPIC"],
+    precompiled_header = "//determinism/lib:pch",
+    deps = [":bar"],
 )
 
-cxx_library (
+cxx_library(
     name = "bar",
-    headers = ["bar.h"],
     srcs = ["bar.cpp"],
+    headers = ["bar.h"],
 )

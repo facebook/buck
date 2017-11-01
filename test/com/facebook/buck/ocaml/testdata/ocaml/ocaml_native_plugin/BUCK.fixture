@@ -1,19 +1,19 @@
 genrule(
-  name = 'tester',
-  srcs = [
-    'registry.ml',
-    'tester.ml',
-  ],
-  cmd = 'ocamlopt -o $OUT dynlink.cmxa registry.ml tester.ml',
-  out = './tester',
-  executable = True,
+    name = "tester",
+    srcs = [
+        "registry.ml",
+        "tester.ml",
+    ],
+    out = "./tester",
+    cmd = "ocamlopt -o $OUT dynlink.cmxa registry.ml tester.ml",
+    executable = True,
 )
 
 ocaml_library(
-  name = 'plugin',
-  srcs = [
-    'registry.ml',
-    'plugin.ml',
-  ],
-  native_plugin=True,
+    name = "plugin",
+    srcs = [
+        "plugin.ml",
+        "registry.ml",
+    ],
+    native_plugin = True,
 )

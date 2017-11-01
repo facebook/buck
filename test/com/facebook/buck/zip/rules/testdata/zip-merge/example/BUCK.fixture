@@ -7,9 +7,9 @@ java_library(
 zip_file(
     name = "no-merge",
     srcs = [
-      ":cake",
-      ":cake#src",
-      "cake.txt",
+        "cake.txt",
+        ":cake",
+        ":cake#src",
     ],
     merge_source_zips = False,
 )

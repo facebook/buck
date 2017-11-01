@@ -1,143 +1,143 @@
 apple_bundle(
-  name = 'DemoApp',
-  binary = ':DemoAppBinary',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    'DemoAppBinary/*.h',
-  ]),
-  srcs = glob([
-    'DemoAppBinary/*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
-  deps = [
-    ':DemoAppLibrary',
-    ':Assets1',
-    ':Assets2',
-  ],
+    name = "DemoAppBinary",
+    srcs = glob([
+        "DemoAppBinary/*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "DemoAppBinary/*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":Assets1",
+        ":Assets2",
+        ":DemoAppLibrary",
+    ],
 )
 
 apple_library(
-  name = 'DemoAppLibrary',
-  preprocessor_flags = ['-fobjc-arc'],
-  exported_headers = glob([
-    'DemoAppLibrary/*.h',
-  ]),
-  srcs = glob([
-    'DemoAppLibrary/*.m',
-  ]),
-  deps = [
-    ':Assets1',
-    ':Assets3',
-  ],
-  frameworks = [],
+    name = "DemoAppLibrary",
+    srcs = glob([
+        "DemoAppLibrary/*.m",
+    ]),
+    exported_headers = glob([
+        "DemoAppLibrary/*.h",
+    ]),
+    frameworks = [],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":Assets1",
+        ":Assets3",
+    ],
 )
 
 apple_asset_catalog(
-  name = 'Assets1',
-  dirs = [ 'Assets1.xcassets' ],
+    name = "Assets1",
+    dirs = ["Assets1.xcassets"],
 )
 
 apple_asset_catalog(
-  name = 'Assets2',
-  dirs = [ 'Assets2.xcassets' ],
+    name = "Assets2",
+    dirs = ["Assets2.xcassets"],
 )
 
 apple_asset_catalog(
-  name = 'Assets3',
-  dirs = [ 'Assets3.xcassets' ],
-  app_icon = 'Icon',
-  launch_image = 'LaunchImage',
+    name = "Assets3",
+    app_icon = "Icon",
+    dirs = ["Assets3.xcassets"],
+    launch_image = "LaunchImage",
 )
 
 genrule(
-  name = 'MakeCombinedAssets',
-  cmd = 'mkdir $OUT && for s in $SRCS; do cp -r $s/* $OUT/; done',
-  srcs = [
-    'Assets2.xcassets',
-  ],
-  out = "Combined.xcassets",
+    name = "MakeCombinedAssets",
+    srcs = [
+        "Assets2.xcassets",
+    ],
+    out = "Combined.xcassets",
+    cmd = "mkdir $OUT && for s in $SRCS; do cp -r $s/* $OUT/; done",
 )
 
 apple_asset_catalog(
-  name = "AssetsCombined",
-  dirs = [ ':MakeCombinedAssets' ],
+    name = "AssetsCombined",
+    dirs = [":MakeCombinedAssets"],
 )
 
 apple_bundle(
-  name = 'CombinedAssetsApp',
-  binary = ':CombinedAssetsAppBinary',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "CombinedAssetsApp",
+    binary = ":CombinedAssetsAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 apple_binary(
-  name = 'CombinedAssetsAppBinary',
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    'DemoAppBinary/*.h',
-  ]),
-  srcs = glob([
-    'DemoAppBinary/*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
-  deps = [
-    ':DemoAppLibrary',
-    ':AssetsCombined',
-  ],
+    name = "CombinedAssetsAppBinary",
+    srcs = glob([
+        "DemoAppBinary/*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "DemoAppBinary/*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":AssetsCombined",
+        ":DemoAppLibrary",
+    ],
 )
 
 apple_asset_catalog(
-  name = 'ExtraIconAndLaunchImage',
-  dirs = [ 'ExtraIconAndLaunchImage.xcassets' ],
-  app_icon = 'Icon2',
-  launch_image = 'LaunchImage2',
+    name = "ExtraIconAndLaunchImage",
+    app_icon = "Icon2",
+    dirs = ["ExtraIconAndLaunchImage.xcassets"],
+    launch_image = "LaunchImage2",
 )
 
 apple_binary(
-  name = 'DemoAppBinaryWithMoreThanOneIconAndLaunchImage',
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    'DemoAppBinary/*.h',
-  ]),
-  srcs = glob([
-    'DemoAppBinary/*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
-  deps = [
-    ':DemoAppLibrary',
-    ':Assets1',
-    ':Assets2',
-    ':ExtraIconAndLaunchImage',
-  ],
+    name = "DemoAppBinaryWithMoreThanOneIconAndLaunchImage",
+    srcs = glob([
+        "DemoAppBinary/*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "DemoAppBinary/*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":Assets1",
+        ":Assets2",
+        ":DemoAppLibrary",
+        ":ExtraIconAndLaunchImage",
+    ],
 )
 
 apple_bundle(
-  name = 'DemoAppWithMoreThanOneIconAndLaunchImage',
-  binary = ':DemoAppBinaryWithMoreThanOneIconAndLaunchImage',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoAppWithMoreThanOneIconAndLaunchImage",
+    binary = ":DemoAppBinaryWithMoreThanOneIconAndLaunchImage",
+    extension = "app",
+    info_plist = "Info.plist",
 )

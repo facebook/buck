@@ -1,8 +1,8 @@
 ocaml_binary(
-    name = 'ctest',
+    name = "ctest",
     srcs = [
-        'ctest.c',
-        'test.ml',
+        "ctest.c",
+        "test.ml",
     ],
     deps = [
     ],

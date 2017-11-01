@@ -1,4 +1,4 @@
 android_library(
-    name='src',
-    visibility=['PUBLIC'],
+    name = "src",
+    visibility = ["PUBLIC"],
 )

@@ -16,12 +16,12 @@ def my_genrule(
   )
 
 my_genrule(
-  name = 'example',
-  out = 'baz.txt',
+    name = "example",
+    out = "baz.txt",
 )
 
 keystore(
-  name = 'debug_keystore',
-  store = 'debug.keystore',
-  properties = 'debug.keystore.properties',
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
 )

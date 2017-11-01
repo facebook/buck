@@ -1,43 +1,43 @@
 apple_resource(
-  name = 'Resources',
-  files = ['Resource.plist'],
-  dirs = [],
+    name = "Resources",
+    dirs = [],
+    files = ["Resource.plist"],
 )
 
 apple_library(
-  name = 'TestLib',
-  preferred_linkage = 'shared',
-  exported_headers = ['lib.h'],
-  srcs = ['lib.c'],
-  deps = [':Resources'],
+    name = "TestLib",
+    srcs = ["lib.c"],
+    exported_headers = ["lib.h"],
+    preferred_linkage = "shared",
+    deps = [":Resources"],
 )
 
 apple_bundle(
-  name = 'TestFramework',
-  info_plist = 'Dummy-Info.plist',
-  binary = ':TestLib#shared',
-  extension = 'framework',
+    name = "TestFramework",
+    binary = ":TestLib#shared",
+    extension = "framework",
+    info_plist = "Dummy-Info.plist",
 )
 
 apple_library(
-  name = 'BinaryLib',
-  srcs = ['binlib.c'],
-  deps = [':TestLib#headers'],
+    name = "BinaryLib",
+    srcs = ["binlib.c"],
+    deps = [":TestLib#headers"],
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  srcs = ['main.c'],
-  deps = [
-    ':BinaryLib',
-    ':TestLib'
-  ],
+    name = "DemoAppBinary",
+    srcs = ["main.c"],
+    deps = [
+        ":BinaryLib",
+        ":TestLib",
+    ],
 )
 
 apple_bundle(
-  name = 'DemoApp',
-  info_plist = 'Dummy-Info.plist',
-  extension = 'app',
-  binary = ':DemoAppBinary',
-  deps = [':TestFramework'],
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Dummy-Info.plist",
+    deps = [":TestFramework"],
 )

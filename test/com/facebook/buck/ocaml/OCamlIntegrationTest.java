@@ -167,7 +167,8 @@ public class OCamlIntegrationTest {
     BuildTarget staticLib1 = createStaticLibraryBuildTarget(lib1);
     ImmutableSet<BuildTarget> targets1 = ImmutableSet.of(target, binary, lib1, staticLib1);
     // We rebuild if lib name changes
-    workspace.replaceFileContents("hello_ocaml/BUCK", "name = 'ocamllib'", "name = 'ocamllib1'");
+    workspace.replaceFileContents(
+        "hello_ocaml/BUCK", "name = \"ocamllib\"", "name = \"ocamllib1\"");
     workspace.replaceFileContents("hello_ocaml/BUCK", ":ocamllib", ":ocamllib1");
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();

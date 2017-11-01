@@ -154,7 +154,7 @@ public class CxxDependencyFileIntegrationTest {
   public void removingUsedHeaderAndReferenceToItCausesRebuild() throws IOException {
     workspace.writeContentsToPath("int main() { return 1; }", "test.cpp");
     Files.delete(workspace.getPath("used.h"));
-    workspace.replaceFileContents("BUCK", "\'used.h\',", "");
+    workspace.replaceFileContents("BUCK", "\"used.h\",", "");
     runCommand("build", target.toString()).assertSuccess();
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),

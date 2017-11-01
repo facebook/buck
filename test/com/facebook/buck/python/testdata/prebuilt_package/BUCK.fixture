@@ -3,24 +3,24 @@
 # .pyc files from the zip so it is version agnostic:
 #  zip -d test/com/facebook/buck/python/testdata/prebuilt_package/dist/package-0.1-py2.6.egg \*.pyc
 prebuilt_python_library(
-    name='python_egg',
-    binary_src=glob(['dist/package-0.1-py*.egg'])[0],
+    name = "python_egg",
+    binary_src = glob(["dist/package-0.1-py*.egg"])[0],
 )
 
 # To regenerate the package, run python setup.py bdist_wheel (you may need to install wheel).
 prebuilt_python_library(
-    name='python_whl',
-    binary_src=glob(['dist/package-0.1-py*.whl'])[0],
+    name = "python_whl",
+    binary_src = glob(["dist/package-0.1-py*.whl"])[0],
 )
 
 python_binary(
-    name='main_egg',
-    main='main.py',
-    deps=[':python_egg'],
+    name = "main_egg",
+    main = "main.py",
+    deps = [":python_egg"],
 )
 
 python_binary(
-    name='main_whl',
-    main='main.py',
-    deps=[':python_whl'],
+    name = "main_whl",
+    main = "main.py",
+    deps = [":python_whl"],
 )

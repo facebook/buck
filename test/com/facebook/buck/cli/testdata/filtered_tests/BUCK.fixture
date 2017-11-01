@@ -1,14 +1,14 @@
 java_test(
-  name = 'broken',
-  labels = ['flaky'],
-  srcs = [
-    'Broken.java',
-  ],
+    name = "broken",
+    srcs = [
+        "Broken.java",
+    ],
+    labels = ["flaky"],
 )
 
 python_test(
-  name = 'bad_test',
-  srcs = [
-    'bad_test.py',
-  ],
+    name = "bad_test",
+    srcs = [
+        "bad_test.py",
+    ],
 )

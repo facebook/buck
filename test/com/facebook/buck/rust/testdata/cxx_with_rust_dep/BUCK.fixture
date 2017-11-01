@@ -1,12 +1,12 @@
 cxx_binary(
     name = "hello",
-    link_style = "static",
     #link_style = "shared",
-    srcs = [ "main.c" ],
-    deps = [ ":helloer" ],
+    srcs = ["main.c"],
+    link_style = "static",
+    deps = [":helloer"],
 )
 
 rust_library(
     name = "helloer",
-    srcs = [ "helloer.rs" ],
+    srcs = ["helloer.rs"],
 )

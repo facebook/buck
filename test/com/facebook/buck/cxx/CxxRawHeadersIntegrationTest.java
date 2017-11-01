@@ -225,7 +225,7 @@ public class CxxRawHeadersIntegrationTest {
   public void removingUsedHeaderAndReferenceToItCausesRebuild1() throws IOException {
     workspace.writeContentsToPath("int main() { return 1; }", "depfiles1/test.cpp");
     Files.delete(workspace.getPath("depfiles1/used.h"));
-    workspace.replaceFileContents("depfiles1/BUCK", "\'used.h\',", "");
+    workspace.replaceFileContents("depfiles1/BUCK", "\"used.h\",", "");
     runCommand("build", target1.toString()).assertSuccess();
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget1).getSuccessType(),
@@ -236,7 +236,7 @@ public class CxxRawHeadersIntegrationTest {
   public void removingUsedHeaderAndReferenceToItCausesRebuild2() throws IOException {
     workspace.writeContentsToPath("int main() { return 1; }", "depfiles2/test/test.cpp");
     Files.delete(workspace.getPath("depfiles2/headers/used.h"));
-    workspace.replaceFileContents("depfiles2/headers/BUCK", "\'used.h\',", "");
+    workspace.replaceFileContents("depfiles2/headers/BUCK", "\"used.h\",", "");
     runCommand("build", target2.toString()).assertSuccess();
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget2).getSuccessType(),

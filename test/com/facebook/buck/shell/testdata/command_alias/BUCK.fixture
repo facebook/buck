@@ -1,10 +1,10 @@
 command_alias(
     name = "outer",
-    exe = "//alias:inner",
     args = [
         "$(location //scripts:scripts)",
         "1",
         "second arg",
     ],
     env = {"ENV_B": "2"},
+    exe = "//alias:inner",
 )

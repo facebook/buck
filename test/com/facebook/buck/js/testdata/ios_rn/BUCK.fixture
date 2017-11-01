@@ -1,63 +1,63 @@
 apple_resource(
-  name = 'DemoAppResources',
-  files = glob(['*.png']),
-  dirs = ['Images'],
+    name = "DemoAppResources",
+    dirs = ["Images"],
+    files = glob(["*.png"]),
 )
 
 apple_bundle(
-  name = 'DemoApp',
-  binary = ':DemoAppBinary',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  deps = [
-    ':DemoAppResources',
-    '//js:DemoAppJS',
-  ],
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    '*.h',
-  ]),
-  srcs = glob([
-    '*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
+    name = "DemoAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":DemoAppResources",
+        "//js:DemoAppJS",
+    ],
 )
 
 apple_bundle(
-  name = 'DemoApp-Unbundle',
-  binary = ':DemoAppBinary-Unbundle',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp-Unbundle",
+    binary = ":DemoAppBinary-Unbundle",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 apple_binary(
-  name = 'DemoAppBinary-Unbundle',
-  deps = [
-    ':DemoAppResources',
-    '//js:DemoAppJS#unbundle',
-  ],
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    '*.h',
-  ]),
-  srcs = glob([
-    '*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
+    name = "DemoAppBinary-Unbundle",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":DemoAppResources",
+        "//js:DemoAppJS#unbundle",
+    ],
 )

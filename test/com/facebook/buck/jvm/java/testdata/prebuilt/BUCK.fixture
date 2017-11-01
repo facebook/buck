@@ -1,72 +1,72 @@
 java_library(
-  name = 'depends_on_jar',
-  deps = [ ':jar' ],
+    name = "depends_on_jar",
+    deps = [":jar"],
 )
 
 prebuilt_jar(
-  name = 'jar',
-  binary_jar = 'junit.jar',
+    name = "jar",
+    binary_jar = "junit.jar",
 )
 
 genrule(
-  name = 'genjar',
-  out = 'junit2.jar',
-  bash = 'cp junit.jar $OUT',
-  cmd_exe = 'copy junit.jar %OUT%',
-  srcs = [
-    'junit.jar',
-  ],
+    name = "genjar",
+    srcs = [
+        "junit.jar",
+    ],
+    out = "junit2.jar",
+    bash = "cp junit.jar $OUT",
+    cmd_exe = "copy junit.jar %OUT%",
 )
 
 prebuilt_jar(
-  name = 'jar_from_gen',
-  binary_jar = ':genjar',
+    name = "jar_from_gen",
+    binary_jar = ":genjar",
 )
 
 python_binary(
-  name = 'unzip',
-  main = 'unzip.py',
+    name = "unzip",
+    main = "unzip.py",
 )
 
 genrule(
-  name = 'genjardir',
-  out = 'junit2',
-  cmd = 'mkdir -p $OUT && $(exe :unzip) $SRCS $OUT',
-  srcs = [
-    'junit.jar'
-  ],
+    name = "genjardir",
+    srcs = [
+        "junit.jar",
+    ],
+    out = "junit2",
+    cmd = "mkdir -p $OUT && $(exe :unzip) $SRCS $OUT",
 )
 
 prebuilt_jar(
-  name = 'jar_from_gen_dir',
-  binary_jar = ':genjardir',
+    name = "jar_from_gen_dir",
+    binary_jar = ":genjardir",
 )
 
 java_library(
-  name = 'lib_from_gen_dir',
-  srcs = [
-    'PrebuiltJunitMain.java',
-  ],
-  deps = [
-    ':jar_from_gen_dir',
-  ],
+    name = "lib_from_gen_dir",
+    srcs = [
+        "PrebuiltJunitMain.java",
+    ],
+    deps = [
+        ":jar_from_gen_dir",
+    ],
 )
 
 java_binary(
-  name = 'bin_from_gen_dir',
-  main_class = 'PrebuiltJunitMain',
-  deps = [
-    ':lib_from_gen_dir',
-  ],
+    name = "bin_from_gen_dir",
+    main_class = "PrebuiltJunitMain",
+    deps = [
+        ":lib_from_gen_dir",
+    ],
 )
 
 export_file(
-  name = 'exported_zip',
-  out = 'junit.zip',
-  src = 'junit.jar',
+    name = "exported_zip",
+    src = "junit.jar",
+    out = "junit.zip",
 )
 
 prebuilt_jar(
-  name = 'jar_from_exported_zip',
-  binary_jar = ':exported_zip',
+    name = "jar_from_exported_zip",
+    binary_jar = ":exported_zip",
 )

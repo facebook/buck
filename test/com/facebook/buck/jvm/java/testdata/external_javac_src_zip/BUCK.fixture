@@ -3,29 +3,32 @@
 # with some hard-coded Java source code into a single library.
 
 java_library(
-  name = 'zip',
-  source = '7',
-  target = '7',
-  srcs = ['Zip.java'],
+    name = "zip",
+    srcs = ["Zip.java"],
+    source = "7",
+    target = "7",
 )
 
 java_binary(
-  name = 'run_zip',
-  main_class = 'com.example.Zip',
-  deps = ['//:zip'],
+    name = "run_zip",
+    main_class = "com.example.Zip",
+    deps = ["//:zip"],
 )
 
 genrule(
-  name = 'generate_java_sources',
-  bash = '$(exe :run_zip) $OUT',
-  cmd_exe = '$(exe :run_zip) %OUT%',
-  out = 'output.src.zip',
+    name = "generate_java_sources",
+    out = "output.src.zip",
+    bash = "$(exe :run_zip) $OUT",
+    cmd_exe = "$(exe :run_zip) %OUT%",
 )
 
 java_library(
-  name = 'lib',
-  srcs = ['Yin.java', ':generate_java_sources'],
-  deps = [
-    '//:generate_java_sources',
-  ],
+    name = "lib",
+    srcs = [
+        "Yin.java",
+        ":generate_java_sources",
+    ],
+    deps = [
+        "//:generate_java_sources",
+    ],
 )

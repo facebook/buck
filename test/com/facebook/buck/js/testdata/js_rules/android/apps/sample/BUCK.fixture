@@ -1,22 +1,21 @@
 android_binary(
-  name = 'app',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//android/keystores:debug',
-  deps = [
-    '//android/java/com/sample/lib:lib',
-    '//android/res/com/sample/base:base',
-    '//js:fruit-salad-in-a-bundle#android',
-  ],
+    name = "app",
+    keystore = "//android/keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android/java/com/sample/lib:lib",
+        "//android/res/com/sample/base:base",
+        "//js:fruit-salad-in-a-bundle#android",
+    ],
 )
 
 android_binary(
-  name = 'app_with_genrule',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//android/keystores:debug',
-  deps = [
-    '//android/java/com/sample/lib:lib',
-    '//android/res/com/sample/base:base',
-    '//js:genrule-outer#android',
-  ],
+    name = "app_with_genrule",
+    keystore = "//android/keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android/java/com/sample/lib:lib",
+        "//android/res/com/sample/base:base",
+        "//js:genrule-outer#android",
+    ],
 )
-

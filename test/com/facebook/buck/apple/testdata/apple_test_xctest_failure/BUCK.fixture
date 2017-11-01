@@ -1,9 +1,9 @@
 apple_test(
-    name = 'foo',
-    srcs = ['FooXCTest.m'],
-    info_plist = 'Test.plist',
+    name = "foo",
+    srcs = ["FooXCTest.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
+    info_plist = "Test.plist",
 )

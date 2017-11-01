@@ -1,18 +1,18 @@
 apple_library(
-    name = 'bar',
-    srcs = ['Bar.m'],
+    name = "bar",
+    srcs = ["Bar.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
 )
 
 apple_test(
-    name = 'foo',
-    deps = [':bar'],
-    srcs = ['Foo.m'],
-    info_plist = 'Test.plist',
+    name = "foo",
+    srcs = ["Foo.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
+    info_plist = "Test.plist",
+    deps = [":bar"],
 )

@@ -1,0 +1,4 @@
+import os
+
+def joinlines(lines):
+    return os.linesep.join(lines)

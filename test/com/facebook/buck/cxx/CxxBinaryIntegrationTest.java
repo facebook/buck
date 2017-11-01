@@ -1895,7 +1895,7 @@ public class CxxBinaryIntegrationTest {
 
     workspace.resetBuildLogFile();
 
-    workspace.replaceFileContents("BUCK", "['lib1.h']", "['lib1.h', 'lib2.h']");
+    workspace.replaceFileContents("BUCK", "[\"lib1.h\"]", "[\"lib1.h\", \"lib2.h\"]");
 
     result = workspace.runBuckCommand("build", "//:bin");
     result.assertSuccess();

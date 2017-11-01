@@ -1,13 +1,13 @@
-cxx_library (
+cxx_library(
     name = "lib",
-    visibility = ["PUBLIC"],
-    headers = ["lib.h"],
     srcs = ["lib.cpp"],
+    headers = ["lib.h"],
+    visibility = ["PUBLIC"],
 )
 
-cxx_precompiled_header (
+cxx_precompiled_header(
     name = "pch",
-    visibility = ["PUBLIC"],
     src = "lib.h",
+    visibility = ["PUBLIC"],
     deps = [":lib"],
 )

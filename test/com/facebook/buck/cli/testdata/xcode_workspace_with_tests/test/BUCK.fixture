@@ -1,6 +1,6 @@
 apple_test(
-  name='test',
-  srcs=glob(['*.m']),
-  info_plist = 'Test.plist',
-  visibility=['PUBLIC'],
+    name = "test",
+    srcs = glob(["*.m"]),
+    info_plist = "Test.plist",
+    visibility = ["PUBLIC"],
 )

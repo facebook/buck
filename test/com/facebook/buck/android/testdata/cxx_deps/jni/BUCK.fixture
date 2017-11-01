@@ -1,14 +1,14 @@
 ndk_library(
-  name = 'foo',
-  flags = [
-    'NDK_APPLICATION_MK=$(env PWD)/jni/Application.mk',
-  ],
-  deps = [
-    '//bar:bar',
-  ],
-  srcs = [
-    'foo.cpp',
-    'Android.mk',
-    'Application.mk',
-  ],
+    name = "foo",
+    srcs = [
+        "Android.mk",
+        "Application.mk",
+        "foo.cpp",
+    ],
+    flags = [
+        "NDK_APPLICATION_MK=$(env PWD)/jni/Application.mk",
+    ],
+    deps = [
+        "//bar:bar",
+    ],
 )

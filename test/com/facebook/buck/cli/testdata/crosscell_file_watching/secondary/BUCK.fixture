@@ -1,13 +1,13 @@
 export_file(
-  name = 'hello',
-  src = 'hello.txt',
-  visibility = ['PUBLIC'],
+    name = "hello",
+    src = "hello.txt",
+    visibility = ["PUBLIC"],
 )
 
 cxx_library(
-  name = 'cxxlib',
-  srcs = glob(['*.cpp']),
-  exported_headers = glob(['*.hpp']),
-  compiler_flags = ['-g'],
-  visibility = ['PUBLIC'],
+    name = "cxxlib",
+    srcs = glob(["*.cpp"]),
+    compiler_flags = ["-g"],
+    exported_headers = glob(["*.hpp"]),
+    visibility = ["PUBLIC"],
 )

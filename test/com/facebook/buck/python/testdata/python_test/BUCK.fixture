@@ -1,70 +1,70 @@
 python_test(
-  name='test-success',
-  srcs=[
-    'test_success.py',
-  ],
+    name = "test-success",
+    srcs = [
+        "test_success.py",
+    ],
 )
 
 python_test(
-  name='test-failure',
-  srcs=[
-    'test_failure.py',
-  ],
+    name = "test-failure",
+    srcs = [
+        "test_failure.py",
+    ],
 )
 
 python_test(
-  name='test-skip',
-  srcs=[
-    'test_skipped.py',
-  ],
+    name = "test-skip",
+    srcs = [
+        "test_skipped.py",
+    ],
 )
 
 python_test(
-  name='test-env',
-  srcs=[
-    'test_env.py',
-  ],
-  env={
-    'PYTHON_TEST_ENV_VAR': '42',
-  },
+    name = "test-env",
+    srcs = [
+        "test_env.py",
+    ],
+    env = {
+        "PYTHON_TEST_ENV_VAR": "42",
+    },
 )
 
 python_test(
-  name='test-spinning',
-  srcs=[
-    'test_spinning.py',
-  ],
-  test_rule_timeout_ms = 100,
+    name = "test-spinning",
+    srcs = [
+        "test_spinning.py",
+    ],
+    test_rule_timeout_ms = 100,
 )
 
 python_test(
-  name='test-setup-class-failure',
-  srcs=[
-    'test_setup_class_failure.py',
-  ],
+    name = "test-setup-class-failure",
+    srcs = [
+        "test_setup_class_failure.py",
+    ],
 )
 
 python_test(
-  name='test-setup-class-failure-with-test-suite',
-  srcs=[
-    'test_setup_class_failure_with_test_suite.py',
-  ],
+    name = "test-setup-class-failure-with-test-suite",
+    srcs = [
+        "test_setup_class_failure_with_test_suite.py",
+    ],
 )
 
 python_binary(
-  name='binary-with-tests',
-  main_module='binary_main.py',
-  tests=[
-    '//:test-assigned-to-binary',
-  ],
+    name = "binary-with-tests",
+    main_module = "binary_main.py",
+    tests = [
+        "//:test-assigned-to-binary",
+    ],
 )
 
 python_test(
-  name='test-assigned-to-binary',
-  srcs=[
-    'test_success.py',
-  ],
-  deps=[
-    '//:binary-with-tests',
-  ],
+    name = "test-assigned-to-binary",
+    srcs = [
+        "test_success.py",
+    ],
+    deps = [
+        "//:binary-with-tests",
+    ],
 )

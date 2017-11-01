@@ -1,10 +1,10 @@
-STRING_VALUE = 'No one overwrote me'
+STRING_VALUE = "No one overwrote me"
 
 echo_genrule(
-  name='base_genrule',
-  srcs=['//fakeModule:fake_genrule'],
-  echo_str=STRING_VALUE,
-  out='rootOut',
+    name = "base_genrule",
+    srcs = ["//fakeModule:fake_genrule"],
+    out = "rootOut",
+    echo_str = STRING_VALUE,
 )
 
 # If subsequent build files are parsed but aren't sandboxed, this will raise

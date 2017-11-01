@@ -1,23 +1,26 @@
 ios_react_native_library(
-  name = 'DemoAppJS',
-  srcs = glob(['**/*.js', '**/*.png']),
-  entry_path = 'app/sample.ios.js',
-  bundle_name = 'Apps/DemoApp/DemoApp.bundle',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "DemoAppJS",
+    srcs = glob([
+        "**/*.js",
+        "**/*.png",
+    ]),
+    bundle_name = "Apps/DemoApp/DemoApp.bundle",
+    entry_path = "app/sample.ios.js",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 sh_binary(
-  name = 'packager_worker_sh',
-  main = 'packager_worker.sh',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "packager_worker_sh",
+    main = "packager_worker.sh",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 command_alias(
-    name = 'packager_worker',
-    exe = ':packager_worker_sh',
-    env = {'ABC': '123'},
+    name = "packager_worker",
+    env = {"ABC": "123"},
+    exe = ":packager_worker_sh",
 )

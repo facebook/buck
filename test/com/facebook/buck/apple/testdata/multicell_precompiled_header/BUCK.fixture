@@ -1,8 +1,8 @@
 apple_library(
-  name = 'library',
-  precompiled_header = 'secondary//pch:pch',
-  srcs = [
-    'LibFile1.m',
-    'LibFile2.m',
-  ],
+    name = "library",
+    srcs = [
+        "LibFile1.m",
+        "LibFile2.m",
+    ],
+    precompiled_header = "secondary//pch:pch",
 )

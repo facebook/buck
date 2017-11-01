@@ -1,12 +1,12 @@
 sh_binary(
-  name = 'node',
-  main = 'node',
-  resources = [
-    'file with spaces in its name',
-    'binaries/os_x_node_executable',
-    'binaries/linux_node_executable',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "node",
+    main = "node",
+    resources = [
+        "binaries/linux_node_executable",
+        "binaries/os_x_node_executable",
+        "file with spaces in its name",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

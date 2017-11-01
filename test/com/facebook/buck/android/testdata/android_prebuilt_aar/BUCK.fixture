@@ -1,87 +1,87 @@
 genrule(
-  name = 'gen_aar',
-  cmd = '$(exe :aar_generator) $TMP $OUT',
-  out = 'the.aar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "gen_aar",
+    out = "the.aar",
+    cmd = "$(exe :aar_generator) $TMP $OUT",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 genrule(
-  name = 'gen_aar-with-jsr',
-  cmd = '$(exe :aar_generator) ' +
-    '--lib $(location //third-party/jsr:jsr) $TMP $OUT',
-  out = 'jsr.aar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "gen_aar-with-jsr",
+    out = "jsr.aar",
+    cmd = "$(exe :aar_generator) " +
+          "--lib $(location //third-party/jsr:jsr) $TMP $OUT",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 genrule(
-  name = 'gen_aar-with-extra-res-entry',
-  cmd = '$(exe :aar_generator) --extra-res-entry $TMP $OUT',
-  out = 'extra.aar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "gen_aar-with-extra-res-entry",
+    out = "extra.aar",
+    cmd = "$(exe :aar_generator) --extra-res-entry $TMP $OUT",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 genrule(
-  name = 'gen_aar-no-classes-dot-jar',
-  cmd = '$(exe :aar_generator) --no-classes-dot-jar $TMP $OUT',
-  out = 'no_classes_dot_jar.aar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "gen_aar-no-classes-dot-jar",
+    out = "no_classes_dot_jar.aar",
+    cmd = "$(exe :aar_generator) --no-classes-dot-jar $TMP $OUT",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 python_binary(
-  name = 'aar_generator',
-  main = 'gen_aar.py',
+    name = "aar_generator",
+    main = "gen_aar.py",
 )
 
 android_prebuilt_aar(
-  name = 'aar',
-  aar = ':gen_aar',
+    name = "aar",
+    aar = ":gen_aar",
 )
 
 android_library(
-  name = 'lib',
-  srcs = [ 'ExampleActivity.java' ],
-  deps = [ ':aar' ],
+    name = "lib",
+    srcs = ["ExampleActivity.java"],
+    deps = [":aar"],
 )
 
 keystore(
-  name = 'debug',
-  store = 'debug.keystore',
-  properties = 'debug.keystore.properties',
-  visibility = ['PUBLIC'],
+    name = "debug",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
 )
 
 android_binary(
-  name = 'app',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':debug',
-  package_type = 'DEBUG',
-  deps = [
-    ':lib',
-  ],
+    name = "app",
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "DEBUG",
+    deps = [
+        ":lib",
+    ],
 )
 
 android_binary(
-  name = 'app-extra-res-entry',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':debug',
-  deps = [
-    '//android_prebuilt_aar-dep:aar-extra-res-entry',
-  ],
+    name = "app-extra-res-entry",
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android_prebuilt_aar-dep:aar-extra-res-entry",
+    ],
 )
 
 android_binary(
-  name = 'app-no-classes-dot-jar',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':debug',
-  deps = [
-    '//android_prebuilt_aar-dep:aar-no-classes-dot-jar',
-  ],
+    name = "app-no-classes-dot-jar",
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android_prebuilt_aar-dep:aar-no-classes-dot-jar",
+    ],
 )

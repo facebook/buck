@@ -1,7 +1,6 @@
 cxx_library(
-  name = 'simple',
-  srcs = [
-    '../simple.cc',
-  ],
+    name = "simple",
+    srcs = [
+        "../simple.cc",
+    ],
 )
-

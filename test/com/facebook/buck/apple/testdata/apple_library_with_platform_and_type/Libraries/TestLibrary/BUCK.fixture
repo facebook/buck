@@ -1,10 +1,10 @@
 apple_library(
-  name = 'TestLibrary',
-  info_plist = 'Info.plist',
-  srcs = ['TestClass.m'],
-  linker_flags = ['-lobjc'],
-  defaults = {
-    'platform': 'iphoneos-arm64',
-    'type': 'shared',
-  },
+    name = "TestLibrary",
+    srcs = ["TestClass.m"],
+    defaults = {
+        "platform": "iphoneos-arm64",
+        "type": "shared",
+    },
+    info_plist = "Info.plist",
+    linker_flags = ["-lobjc"],
 )

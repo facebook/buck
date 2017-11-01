@@ -1,41 +1,41 @@
 rust_binary(
-  name = "hello",
-  srcs = [
-    "main.rs",
-  ],
-  deps = [
-    "//messenger:messenger",
-  ],
+    name = "hello",
+    srcs = [
+        "main.rs",
+    ],
+    deps = [
+        "//messenger:messenger",
+    ],
 )
 
 rust_binary(
-  name = "hello-shared",
-  link_style = 'shared',
-  srcs = [
-    "main.rs",
-  ],
-  deps = [
-    "//messenger:messenger",
-  ],
+    name = "hello-shared",
+    srcs = [
+        "main.rs",
+    ],
+    link_style = "shared",
+    deps = [
+        "//messenger:messenger",
+    ],
 )
 
 rust_binary(
-  name = "hello_alias",
-  srcs = [
-    "main.rs",
-  ],
-  deps = [
-    "//messenger2:messenger2",
-  ],
+    name = "hello_alias",
+    srcs = [
+        "main.rs",
+    ],
+    deps = [
+        "//messenger2:messenger2",
+    ],
 )
 
 rust_binary(
-  name = "hyphen",
-  srcs = [ "hyphen.rs" ],
-  deps = [ ":hyphenated-name" ],
+    name = "hyphen",
+    srcs = ["hyphen.rs"],
+    deps = [":hyphenated-name"],
 )
 
 rust_library(
-  name = "hyphenated-name",
-  srcs = [ "hyphenated_name.rs" ],
+    name = "hyphenated-name",
+    srcs = ["hyphenated_name.rs"],
 )

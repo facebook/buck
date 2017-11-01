@@ -1,26 +1,26 @@
 cxx_library(
-  name = 'foo',
-  exported_headers = [
-    'foo.h',
-  ],
-  srcs = [
-    'foo.cpp',
-  ],
+    name = "foo",
+    srcs = [
+        "foo.cpp",
+    ],
+    exported_headers = [
+        "foo.h",
+    ],
 )
 
 cxx_binary(
-  name = 'bar',
-  link_style = 'shared',
-  srcs = [
-    'bar.cpp',
-  ],
-  deps = [
-    ':foo',
-  ],
+    name = "bar",
+    srcs = [
+        "bar.cpp",
+    ],
+    link_style = "shared",
+    deps = [
+        ":foo",
+    ],
 )
 
 genrule(
-  name = 'gen',
-  out = 'gen.txt',
-  cmd = '$(exe :bar) > $OUT',
+    name = "gen",
+    out = "gen.txt",
+    cmd = "$(exe :bar) > $OUT",
 )

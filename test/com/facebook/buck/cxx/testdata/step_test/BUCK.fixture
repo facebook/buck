@@ -1,201 +1,201 @@
 cxx_library(
-  name = 'simple',
-  srcs = [
-    'simple.cc',
-    'simple.c',
-    'simple.s',
-  ],
+    name = "simple",
+    srcs = [
+        "simple.c",
+        "simple.cc",
+        "simple.s",
+    ],
 )
 
 cxx_binary(
-  name = 'binary_with_unused_header',
-  srcs = [
-    'source.cpp',
-  ],
-  headers = [
-    'unused_header.h',
-  ],
+    name = "binary_with_unused_header",
+    srcs = [
+        "source.cpp",
+    ],
+    headers = [
+        "unused_header.h",
+    ],
 )
 
 cxx_library(
-  name = 'binary_with_unused_header_nosymlinks',
-  srcs = [
-    'source.cpp',
-  ],
-  headers = [
-    'unused_header.h',
-  ],
-  xcode_public_headers_symlinks = False,
-  xcode_private_headers_symlinks = False,
+    name = "binary_with_unused_header_nosymlinks",
+    srcs = [
+        "source.cpp",
+    ],
+    headers = [
+        "unused_header.h",
+    ],
+    xcode_private_headers_symlinks = False,
+    xcode_public_headers_symlinks = False,
 )
 
 genrule(
-  name = 'genheader',
-  out = 'genheader.h',
-  cmd = 'echo "#define TEST" > $OUT',
-  srcs = [
-    'unused.dat',
-  ]
+    name = "genheader",
+    srcs = [
+        "unused.dat",
+    ],
+    out = "genheader.h",
+    cmd = "echo \"#define TEST\" > $OUT",
 )
 
 cxx_binary(
-  name = 'binary_using_generated_header',
-  srcs = [
-    'foo.cpp',
-  ],
-  headers = [
-    ':genheader',
-  ],
+    name = "binary_using_generated_header",
+    srcs = [
+        "foo.cpp",
+    ],
+    headers = [
+        ":genheader",
+    ],
 )
 
 genrule(
-  name = 'gensource',
-  out = 'bar.cpp',
-  cmd = 'echo "int main() { return 4; }" > $OUT',
-  srcs = [
-    'unused.dat',
-  ]
+    name = "gensource",
+    srcs = [
+        "unused.dat",
+    ],
+    out = "bar.cpp",
+    cmd = "echo \"int main() { return 4; }\" > $OUT",
 )
 
 cxx_binary(
-  name = 'binary_using_generated_source',
-  srcs = [
-    ':gensource',
-  ],
+    name = "binary_using_generated_source",
+    srcs = [
+        ":gensource",
+    ],
 )
 
 cxx_binary(
-  name = 'binary_with_used_full_header',
-  header_namespace = 'prefix',
-  headers = [
-    'source_full_header.h',
-  ],
-  srcs = [
-    'source_full_header.cpp',
-  ],
+    name = "binary_with_used_full_header",
+    srcs = [
+        "source_full_header.cpp",
+    ],
+    header_namespace = "prefix",
+    headers = [
+        "source_full_header.h",
+    ],
 )
 
 cxx_library(
-  name = 'binary_with_used_full_header_nosymlinks',
-  header_namespace = 'prefix',
-  headers = [
-    'source_full_header.h',
-  ],
-  srcs = [
-    'source_full_header.cpp',
-  ],
-  xcode_public_headers_symlinks = False,
-  xcode_private_headers_symlinks = False,
+    name = "binary_with_used_full_header_nosymlinks",
+    srcs = [
+        "source_full_header.cpp",
+    ],
+    header_namespace = "prefix",
+    headers = [
+        "source_full_header.h",
+    ],
+    xcode_private_headers_symlinks = False,
+    xcode_public_headers_symlinks = False,
 )
 
 cxx_binary(
-  name = 'binary_with_used_relative_header',
-  headers = [
-    'source_relative_header.h',
-  ],
-  srcs = [
-    'source_relative_header.cpp',
-  ],
+    name = "binary_with_used_relative_header",
+    srcs = [
+        "source_relative_header.cpp",
+    ],
+    headers = [
+        "source_relative_header.h",
+    ],
 )
 
 cxx_library(
-  name = 'binary_with_used_relative_header_nosymlinks',
-  headers = [
-    'source_relative_header.h',
-  ],
-  srcs = [
-    'source_relative_header.cpp',
-  ],
-  xcode_public_headers_symlinks = False,
-  xcode_private_headers_symlinks = False,
+    name = "binary_with_used_relative_header_nosymlinks",
+    srcs = [
+        "source_relative_header.cpp",
+    ],
+    headers = [
+        "source_relative_header.h",
+    ],
+    xcode_private_headers_symlinks = False,
+    xcode_public_headers_symlinks = False,
 )
 
 genrule(
-  name = 'simple.s',
-  cmd = 'gcc -S -o $OUT $SRCS',
-  out = 'simple.s',
-  srcs = [
-    'simple.cc',
-  ],
+    name = "simple.s",
+    srcs = [
+        "simple.cc",
+    ],
+    out = "simple.s",
+    cmd = "gcc -S -o $OUT $SRCS",
 )
 
 cxx_library(
-  name = 'simple_assembly',
-  srcs = [
-    ':simple.s',
-  ],
+    name = "simple_assembly",
+    srcs = [
+        ":simple.s",
+    ],
 )
 
 cxx_library(
-  name = 'lang_compiler_flags',
-  # Take advantage of the fact that Buck always applies compilation flags
-  # to preprocessing.  That way we can define macros to test flags are being
-  # set.
-  lang_compiler_flags = {
-    'c_cpp_output': ['-DBLAH_C'],
-    'cxx_cpp_output': ['-DBLAH_CXX'],
-  },
-  srcs = [
-    'lang_compiler_flags.c',
-    'lang_compiler_flags.cc',
-  ],
+    name = "lang_compiler_flags",
+    srcs = [
+        "lang_compiler_flags.c",
+        "lang_compiler_flags.cc",
+    ],
+    # Take advantage of the fact that Buck always applies compilation flags
+    # to preprocessing.  That way we can define macros to test flags are being
+    # set.
+    lang_compiler_flags = {
+        "c_cpp_output": ["-DBLAH_C"],
+        "cxx_cpp_output": ["-DBLAH_CXX"],
+    },
 )
 
 sh_binary(
-  name = 'cc',
-  main = 'cc.sh',
+    name = "cc",
+    main = "cc.sh",
 )
 
 sh_binary(
-  name = 'cxx',
-  main = 'cxx.sh',
+    name = "cxx",
+    main = "cxx.sh",
 )
 
 cxx_binary(
-  name = 'untracked_header',
-  srcs = [
-    'untracked_header.cpp',
-  ],
+    name = "untracked_header",
+    srcs = [
+        "untracked_header.cpp",
+    ],
 )
 
 cxx_binary(
-  name = 'untracked_header_with_prefix_header',
-  prefix_header = 'untracked_header.pch',
-  srcs = [
-    'untracked_header.cpp',
-  ],
+    name = "untracked_header_with_prefix_header",
+    srcs = [
+        "untracked_header.cpp",
+    ],
+    prefix_header = "untracked_header.pch",
 )
 
 cxx_binary(
-  name = 'binary_with_used_relative_parent_header',
-  headers = [
-    'source_relative_parent_header.h',
-  ],
-  srcs = [
-    'source_relative_parent_header/source.cpp',
-  ],
+    name = "binary_with_used_relative_parent_header",
+    srcs = [
+        "source_relative_parent_header/source.cpp",
+    ],
+    headers = [
+        "source_relative_parent_header.h",
+    ],
 )
 
 cxx_library(
-  name = 'binary_with_used_relative_parent_header_nosymlinks',
-  headers = [
-    'source_relative_parent_header.h',
-  ],
-  srcs = [
-    'source_relative_parent_header/source.cpp',
-  ],
-  xcode_public_headers_symlinks = False,
-  xcode_private_headers_symlinks = False,
+    name = "binary_with_used_relative_parent_header_nosymlinks",
+    srcs = [
+        "source_relative_parent_header/source.cpp",
+    ],
+    headers = [
+        "source_relative_parent_header.h",
+    ],
+    xcode_private_headers_symlinks = False,
+    xcode_public_headers_symlinks = False,
 )
 
 apple_test(
-  name = 'with_xctest',
-  srcs = [
-    'apple_test.m',
-  ],
-  info_plist = 'Test.plist',
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
-  ],
+    name = "with_xctest",
+    srcs = [
+        "apple_test.m",
+    ],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test.plist",
 )

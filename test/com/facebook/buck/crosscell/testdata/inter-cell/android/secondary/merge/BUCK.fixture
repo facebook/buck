@@ -9,20 +9,20 @@
 #
 
 cxx_library(
-  name = 'G',
-  srcs = ['G.c'],
-  soname = 'lib1g.so',
-  can_be_asset = True,
-  deps = [
-    ':H',
-  ],
-  visibility = ['PUBLIC'],
+    name = "G",
+    srcs = ["G.c"],
+    can_be_asset = True,
+    soname = "lib1g.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":H",
+    ],
 )
 
 cxx_library(
-  name = 'H',
-  srcs = ['H.c'],
-  soname = 'lib1h.so',
-  can_be_asset = True,
-  visibility = ['PUBLIC'],
+    name = "H",
+    srcs = ["H.c"],
+    can_be_asset = True,
+    soname = "lib1h.so",
+    visibility = ["PUBLIC"],
 )

@@ -1,93 +1,93 @@
 apple_library(
-  name = 'one',
-  srcs = [ '1.txt' ],
-  deps = [
-    ':two',
-    ':three',
-  ],
-  tests = [ ':one-tests' ],
+    name = "one",
+    srcs = ["1.txt"],
+    tests = [":one-tests"],
+    deps = [
+        ":three",
+        ":two",
+    ],
 )
 
 apple_library(
-  name = 'two',
-  srcs = [ '2.txt' ],
-  deps = [
-    ':four',
-  ],
+    name = "two",
+    srcs = ["2.txt"],
+    deps = [
+        ":four",
+    ],
 )
 
 apple_library(
-  name = 'three',
-  srcs = [ '3.txt' ],
-  deps = [
-    ':four',
-    ':five',
-  ],
+    name = "three",
+    srcs = ["3.txt"],
+    deps = [
+        ":five",
+        ":four",
+    ],
 )
 
 apple_library(
-  name = 'four',
-  srcs = [ '4.txt' ],
-  deps = [
-    ':six',
-  ],
-  tests = [
-    ':four-tests',
-    ':four-application-tests',
-  ],
+    name = "four",
+    srcs = ["4.txt"],
+    tests = [
+        ":four-application-tests",
+        ":four-tests",
+    ],
+    deps = [
+        ":six",
+    ],
 )
 
 apple_library(
-  name = 'five',
-  srcs = [
-    '5.txt',
-    ':six',
-  ],
+    name = "five",
+    srcs = [
+        "5.txt",
+        ":six",
+    ],
 )
 
 apple_library(
-  name = 'six',
-  srcs = [ '6.txt' ],
-  tests = [ ':six-tests' ],
+    name = "six",
+    srcs = ["6.txt"],
+    tests = [":six-tests"],
 )
 
 apple_library(
-  name = 'seven',
-  srcs = [ '7.txt' ],
-  tests = [ ':four-application-tests' ],
+    name = "seven",
+    srcs = ["7.txt"],
+    tests = [":four-application-tests"],
 )
 
 apple_test(
-  name = 'one-tests',
-  info_plist = 'Test.plist',
-  srcs = [ '1-test.txt' ],
-  deps = [ ':one' ],
+    name = "one-tests",
+    srcs = ["1-test.txt"],
+    info_plist = "Test.plist",
+    deps = [":one"],
 )
 
 apple_test(
-  name = 'four-tests',
-  info_plist = 'Test.plist',
-  srcs = [ '4-test.txt' ],
-  deps = [ ':four' ],
+    name = "four-tests",
+    srcs = ["4-test.txt"],
+    info_plist = "Test.plist",
+    deps = [":four"],
 )
 
 apple_test(
-  name = 'four-application-tests',
-  info_plist = 'Test.plist',
-  srcs = [ '4-application-test.txt' ],
-  deps = [
-    ':four',
-    ':application-test-lib',
-  ],
+    name = "four-application-tests",
+    srcs = ["4-application-test.txt"],
+    info_plist = "Test.plist",
+    deps = [
+        ":application-test-lib",
+        ":four",
+    ],
 )
 
 apple_test(
-  name = 'six-tests',
-  info_plist = 'Test.plist',
-  srcs = [ '6-test.txt' ],
-  deps = [ ':six' ],
+    name = "six-tests",
+    srcs = ["6-test.txt"],
+    info_plist = "Test.plist",
+    deps = [":six"],
 )
 
 apple_library(
-  name = 'application-test-lib',
+    name = "application-test-lib",
 )

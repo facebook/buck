@@ -1,16 +1,19 @@
 cxx_library(
-    name = 'not_compilable',
-    srcs = ['foo.c'],
-    visibility = ['PUBLIC'],
+    name = "not_compilable",
+    srcs = ["foo.c"],
+    visibility = ["PUBLIC"],
 )
 
 cxx_library(
-    name = 'not_linkable',
-    srcs = ['bar.c'],
-    headers = ['bar.h'],
-    visibility = ['PUBLIC'],
+    name = "not_linkable",
+    srcs = ["bar.c"],
+    headers = ["bar.h"],
     platform_linker_flags = [
-      (LINUX_PLATFORM, ['-Wl,--no-undefined']),
-      (WINDOWS_PLATFORM, WINDOWS_LINK_FLAGS),
+        (
+            LINUX_PLATFORM,
+            ["-Wl,--no-undefined"],
+        ),
+        (WINDOWS_PLATFORM, WINDOWS_LINK_FLAGS),
     ],
+    visibility = ["PUBLIC"],
 )

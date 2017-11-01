@@ -1,16 +1,16 @@
 genrule(
-  name = 'bar',
-  out = 'bar',
-  bash = 'touch $OUT',
-  cmd_exe = 'echo "" > %OUT%',
+    name = "bar",
+    out = "bar",
+    bash = "touch $OUT",
+    cmd_exe = "echo \"\" > %OUT%",
 )
 
 genrule(
-  name = 'foo',
-  out = 'foo',
-  cmd = 'touch $OUT',
-  cmd_exe = 'echo "" > %OUT%',
-  srcs = [
-    ':bar',
-  ],
+    name = "foo",
+    srcs = [
+        ":bar",
+    ],
+    out = "foo",
+    cmd = "touch $OUT",
+    cmd_exe = "echo \"\" > %OUT%",
 )

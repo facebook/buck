@@ -1,152 +1,152 @@
 genrule(
-  name = 'gen',
-  out = 'out',
-  cmd = '$(exe :bin) > $OUT',
+    name = "gen",
+    out = "out",
+    cmd = "$(exe :bin) > $OUT",
 )
 
 python_binary(
-  name = 'bin',
-  main_module = 'main',
-  deps = [
-    ':lib',
-  ],
+    name = "bin",
+    main_module = "main",
+    deps = [
+        ":lib",
+    ],
 )
 
 python_library(
-  name = 'lib',
-  srcs = [
-    'main.py',
-    'foo/bar/mod.py',
-  ],
+    name = "lib",
+    srcs = [
+        "foo/bar/mod.py",
+        "main.py",
+    ],
 )
 
 python_binary(
-  name = 'bin-with-native-libs',
-  main_module = 'main_with_native_libs',
-  deps = [
-    ':lib-with-native-libs',
-  ],
+    name = "bin-with-native-libs",
+    main_module = "main_with_native_libs",
+    deps = [
+        ":lib-with-native-libs",
+    ],
 )
 
 python_library(
-  name = 'lib-with-native-libs',
-  srcs = [
-    'main_with_native_libs.py',
-  ],
-  deps = [
-    ':foo',
-  ],
+    name = "lib-with-native-libs",
+    srcs = [
+        "main_with_native_libs.py",
+    ],
+    deps = [
+        ":foo",
+    ],
 )
 
 cxx_library(
-  name = 'foo',
-  srcs = [
-    'foo.c',
-  ],
-  deps = [
-    ':bar',
-  ],
+    name = "foo",
+    srcs = [
+        "foo.c",
+    ],
+    deps = [
+        ":bar",
+    ],
 )
 
 cxx_library(
-  name = 'bar',
-  exported_headers = [
-    'bar.h',
-  ],
-  srcs = [
-    'bar.c',
-  ],
-  deps = [
-    ':func',
-  ],
+    name = "bar",
+    srcs = [
+        "bar.c",
+    ],
+    exported_headers = [
+        "bar.h",
+    ],
+    deps = [
+        ":func",
+    ],
 )
 
 cxx_library(
-  name = 'func',
-  exported_headers = [
-    'func.h',
-  ],
-  srcs = [
-    'func.c',
-  ],
+    name = "func",
+    srcs = [
+        "func.c",
+    ],
+    exported_headers = [
+        "func.h",
+    ],
 )
 
 python_binary(
-  name = 'bin-with-extra-dep',
-  main_module = 'main',
-  deps = [
-    ':lib',
-    ':extra',
-  ],
+    name = "bin-with-extra-dep",
+    main_module = "main",
+    deps = [
+        ":extra",
+        ":lib",
+    ],
 )
 
 sh_binary(
-  name = 'pex_tool',
-  main = 'pex_tool.sh',
+    name = "pex_tool",
+    main = "pex_tool.sh",
 )
 
 genrule(
-  name = 'extra',
-  out = 'out',
-  cmd = 'touch $OUT',
+    name = "extra",
+    out = "out",
+    cmd = "touch $OUT",
 )
 
 cxx_library(
-  name = 'platform_a',
-  exported_preprocessor_flags = [
-    '-DPLATFORM_A',
-  ],
-  srcs = [
-    'platform_a.c',
-  ],
+    name = "platform_a",
+    srcs = [
+        "platform_a.c",
+    ],
+    exported_preprocessor_flags = [
+        "-DPLATFORM_A",
+    ],
 )
 
 cxx_library(
-  name = 'platform_b',
-  exported_preprocessor_flags = [
-    '-DPLATFORM_B',
-  ],
-  srcs = [
-    'platform_b.c',
-  ],
+    name = "platform_b",
+    srcs = [
+        "platform_b.c",
+    ],
+    exported_preprocessor_flags = [
+        "-DPLATFORM_B",
+    ],
 )
 
 cxx_python_extension(
-  name = 'extension',
-  srcs = [
-    'extension.c',
-  ],
+    name = "extension",
+    srcs = [
+        "extension.c",
+    ],
 )
 
 python_binary(
-  name = 'binary_with_extension_a',
-  main_module = 'extension',
-  platform = 'a',
-  deps = [
-    ':extension',
-  ],
+    name = "binary_with_extension_a",
+    main_module = "extension",
+    platform = "a",
+    deps = [
+        ":extension",
+    ],
 )
 
 python_binary(
-  name = 'binary_with_extension_b',
-  main_module = 'extension',
-  platform = 'b',
-  deps = [
-    ':extension',
-  ],
+    name = "binary_with_extension_b",
+    main_module = "extension",
+    platform = "b",
+    deps = [
+        ":extension",
+    ],
 )
 
 python_library(
-  name = 'main_module',
-  srcs = [
-    'main_module.py',
-  ],
+    name = "main_module",
+    srcs = [
+        "main_module.py",
+    ],
 )
 
 python_binary(
-  name = 'main_module_bin',
-  main_module = 'main_module',
-  deps = [
-    ':main_module',
-  ],
+    name = "main_module_bin",
+    main_module = "main_module",
+    deps = [
+        ":main_module",
+    ],
 )

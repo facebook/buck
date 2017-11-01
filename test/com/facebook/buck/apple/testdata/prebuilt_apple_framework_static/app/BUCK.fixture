@@ -1,9 +1,9 @@
 apple_binary(
-    name = 'TestApp',
-    srcs = ['main.m'],
-    deps = ['//prebuilt_static:BuckTest'],
+    name = "TestApp",
+    srcs = ["main.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
-    visibility = ['PUBLIC'],
+    visibility = ["PUBLIC"],
+    deps = ["//prebuilt_static:BuckTest"],
 )

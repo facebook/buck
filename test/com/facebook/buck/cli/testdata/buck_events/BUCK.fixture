@@ -1,9 +1,9 @@
 java_library(
-  name = 'foo',
-  srcs = glob(['*.java']),
-  resources = [
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "foo",
+    srcs = glob(["*.java"]),
+    resources = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

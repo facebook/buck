@@ -1,17 +1,17 @@
 apple_package(
-  name = 'FooPackage',
-  bundle = ':FooBundle',
+    name = "FooPackage",
+    bundle = ":FooBundle",
 )
 
 apple_bundle(
-  name = 'FooBundle',
-  binary = ':FooBinary',
-  info_plist = 'Info.plist',
-  extension = 'app',
+    name = "FooBundle",
+    binary = ":FooBinary",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 genrule(
-  name = 'FooBinary',
-  out = 'FooBinary',
-  cmd = 'echo "I AM A BINARY" > $OUT',
+    name = "FooBinary",
+    out = "FooBinary",
+    cmd = "echo \"I AM A BINARY\" > $OUT",
 )

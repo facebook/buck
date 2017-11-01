@@ -1,11 +1,11 @@
 android_library(
-  name = 'lib',
-  srcs = glob(['*.java']),
-  deps = [
-    'secondary//java/com/crosscell:crosscell',
-    '//res/com/sample/base:base',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "secondary//java/com/crosscell:crosscell",
+        "//res/com/sample/base:base",
+    ],
 )

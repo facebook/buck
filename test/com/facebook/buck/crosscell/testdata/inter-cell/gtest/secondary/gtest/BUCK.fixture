@@ -1,15 +1,15 @@
 cxx_library(
-  name = 'gtest',
-  header_namespace = 'gtest',
-  exported_headers = [
-    'gtest.h',
-  ],
-  compiler_flags = [
-    '-g',
-    '-std=c++11',
-  ],
-  srcs = [
-    'gtest.cpp',
-  ],
-  visibility = ['PUBLIC'],
+    name = "gtest",
+    srcs = [
+        "gtest.cpp",
+    ],
+    compiler_flags = [
+        "-g",
+        "-std=c++11",
+    ],
+    exported_headers = [
+        "gtest.h",
+    ],
+    header_namespace = "gtest",
+    visibility = ["PUBLIC"],
 )

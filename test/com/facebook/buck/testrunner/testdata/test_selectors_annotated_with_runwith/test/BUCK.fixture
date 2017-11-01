@@ -1,8 +1,8 @@
 java_test(
-  name = 'broken',
-  srcs = glob(['*.java']),
-  deps = [
-    '//src:runner',
-    '//lib:junit',
-  ],
+    name = "broken",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//lib:junit",
+        "//src:runner",
+    ],
 )

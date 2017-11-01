@@ -1,13 +1,13 @@
 java_library(
-  name = 'example',
-  srcs = [
-    'Example.java',
-  ],
+    name = "example",
+    srcs = [
+        "Example.java",
+    ],
 )
 
 python_library(
-  name = 'example_py',
-  srcs = [
-    'example.py',
-  ],
+    name = "example_py",
+    srcs = [
+        "example.py",
+    ],
 )

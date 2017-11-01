@@ -1,12 +1,11 @@
 genrule(
-  name = 'no-download',
-  cmd = 'echo "hello world" > $OUT',
-  out = 'greeting.txt',
+    name = "no-download",
+    out = "greeting.txt",
+    cmd = "echo \"hello world\" > $OUT",
 )
 
 genrule(
-  name = 'needs-download',
-  cmd = 'cat $(location :remote) > $OUT',
-  out = 'greeting2.txt',
+    name = "needs-download",
+    out = "greeting2.txt",
+    cmd = "cat $(location :remote) > $OUT",
 )
-

@@ -1,8 +1,8 @@
 java_library(
-  name = 'no_srcs',
-  
-  # Need at least one resource, or else no JAR file will be generated.
-  resources = [
-    'BUCK',
-  ],
+    name = "no_srcs",
+
+    # Need at least one resource, or else no JAR file will be generated.
+    resources = [
+        "BUCK",
+    ],
 )

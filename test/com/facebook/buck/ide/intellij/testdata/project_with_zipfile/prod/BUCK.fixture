@@ -1,25 +1,25 @@
 java_binary(
     name = "prod",
     deps = [
-        "//dep:zipdep",
+        ":zipdep",
         "//dep:srcdep",
+        "//dep:zipdep",
         "//dep1:zipdep",
         "//dep2:zipdep",
-        ":zipdep",
     ],
 )
 
 genrule(
     name = "copyfile",
     srcs = ["A.java"],
-    cmd = "cp $SRCS $OUT",
     out = ".",
+    cmd = "cp $SRCS $OUT",
 )
 
 zip_file(
     name = "dep.src.zip",
+    srcs = [":copyfile"],
     out = "dep.src.zip",
-    srcs = [":copyfile",],
 )
 
 java_library(
@@ -27,4 +27,3 @@ java_library(
     srcs = [":dep.src.zip"],
     visibility = ["PUBLIC"],
 )
-

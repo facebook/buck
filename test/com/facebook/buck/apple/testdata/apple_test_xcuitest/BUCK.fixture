@@ -1,20 +1,20 @@
 apple_test(
-    name = 'foo',
-    srcs = ['FooXCTest.m'],
-    info_plist = 'Test.plist',
+    name = "foo",
+    srcs = ["FooXCTest.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
+    info_plist = "Test.plist",
 )
 
 apple_test(
-    name = 'bar',
-    is_ui_test = True,
-    srcs = ['FooXCUITest.m'],
-    info_plist = 'Test.plist',
+    name = "bar",
+    srcs = ["FooXCUITest.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
+    info_plist = "Test.plist",
+    is_ui_test = True,
 )

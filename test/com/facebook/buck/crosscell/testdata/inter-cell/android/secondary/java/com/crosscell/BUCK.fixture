@@ -1,7 +1,7 @@
 android_library(
-  name = 'crosscell',
-  srcs = glob(['*.java']),
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "crosscell",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
 )

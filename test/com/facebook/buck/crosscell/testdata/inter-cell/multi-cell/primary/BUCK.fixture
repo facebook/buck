@@ -1,8 +1,8 @@
 cxx_binary(
-  name = 'cxxbinary',
-  srcs = glob(['*.cpp']),
-  compiler_flags = ['-g'],
-  deps = [
-    'secondary//:cxxlib'
-  ],
+    name = "cxxbinary",
+    srcs = glob(["*.cpp"]),
+    compiler_flags = ["-g"],
+    deps = [
+        "secondary//:cxxlib",
+    ],
 )

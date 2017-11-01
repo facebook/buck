@@ -1,325 +1,323 @@
 android_binary(
-  name = 'java-only',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  dex_compression = 'jar',
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-  ],
+    name = "java-only",
+    dex_compression = "jar",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+    ],
 )
 
 android_binary(
-  name = 'app_modular_debug',
-  package_type = 'debug',
-  manifest = 'AndroidManifest.xml',
-  application_module_configs = {
-    'small_with_no_resource_deps' : ['//java/com/sample/small:small_with_no_resource_deps'],
-  },
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//java/com/sample/small:small_with_no_resource_deps',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_modular_debug",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_modular_proguard_dontobfuscate',
-  proguard_config = 'dontobfuscate.pro',
-  package_type = 'release',
-  manifest = 'AndroidManifest.xml',
-  application_module_targets = [
-    '//java/com/sample/small:small_with_no_resource_deps',
-  ],
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//java/com/sample/small:small_with_no_resource_deps',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_modular_proguard_dontobfuscate",
+    application_module_targets = [
+        "//java/com/sample/small:small_with_no_resource_deps",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "release",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    proguard_config = "dontobfuscate.pro",
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_modular_proguard_obfuscate',
-  proguard_config = 'obfuscate.pro',
-  package_type = 'release',
-  manifest = 'AndroidManifest.xml',
-  application_module_targets = [
-    '//java/com/sample/small:small_with_no_resource_deps',
-  ],
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//java/com/sample/small:small_with_no_resource_deps',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_modular_proguard_obfuscate",
+    application_module_targets = [
+        "//java/com/sample/small:small_with_no_resource_deps",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "release",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    proguard_config = "obfuscate.pro",
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_proguard',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  proguard_config = 'obfuscate.pro',
-  dex_compression = 'jar',
-  minimize_primary_dex_size = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//native/cxx:lib',
-  ],
+    name = "app_with_proguard",
+    dex_compression = "jar",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    minimize_primary_dex_size = True,
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    proguard_config = "obfuscate.pro",
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+    ],
 )
 
 android_binary(
-  name = 'app',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  # ARGS_FOR_APP
-  dex_compression = 'jar',
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//native/cxx:lib',
-  ],
+    name = "app",
+    # ARGS_FOR_APP
+    dex_compression = "jar",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+    ],
 )
 
 genrule(
-  name = 'disassemble_app_r_dot_java',
-  bash = ' && '.join([
-      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
-      'cat $TMP/com/sample*/R*.smali | grep ^.field > $OUT',
-      ]),
-  out = 'all_r_fields.smali',
+    name = "disassemble_app_r_dot_java",
+    out = "all_r_fields.smali",
+    bash = " && ".join([
+        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app)",
+        "cat $TMP/com/sample*/R*.smali | grep ^.field > $OUT",
+    ]),
 )
 
 android_binary(
-  name = 'app-art',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//native/cxx:lib',
-  ],
+    name = "app-art",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+    ],
 )
 
 android_binary(
-  name = 'app_with_deeper_deps',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib_depending_on_main_lib',
-  ],
+    name = "app_with_deeper_deps",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib_depending_on_main_lib",
+    ],
 )
 
 android_binary(
-  name = 'app-dex-exo',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  exopackage_modes = ['secondary_dex'],
-  package_asset_libraries = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//native/cxx:lib',
-    '//third-party:kiwi',
-  ],
+    name = "app-dex-exo",
+    exopackage_modes = ["secondary_dex"],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+        "//third-party:kiwi",
+    ],
 )
 
 android_binary(
-  name = 'app-native-exo',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  cpu_filters = [
-    'arm',
-  ],
-  exopackage_modes = ['native_library'],
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//native/cxx:lib',
-    '//third-party:kiwi',
-  ],
+    name = "app-native-exo",
+    cpu_filters = [
+        "arm",
+    ],
+    exopackage_modes = ["native_library"],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+        "//third-party:kiwi",
+    ],
 )
 
 android_binary(
-  name = 'app-dex-native-exo',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  cpu_filters = [
-    'arm',
-  ],
-  exopackage_modes = [
-    'native_library',
-    'secondary_dex',
-  ],
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//native/cxx:lib',
-    '//third-party:kiwi',
-  ],
+    name = "app-dex-native-exo",
+    cpu_filters = [
+        "arm",
+    ],
+    exopackage_modes = [
+        "native_library",
+        "secondary_dex",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+        "//third-party:kiwi",
+    ],
 )
 
 android_binary(
-  name = 'app-full-exo',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  cpu_filters = [
-    'arm',
-  ],
-  exopackage_modes = [
-    'native_library',
-    'secondary_dex',
-    'resources',
-  ],
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//native/cxx:lib',
-    '//third-party:kiwi',
-  ],
+    name = "app-full-exo",
+    cpu_filters = [
+        "arm",
+    ],
+    exopackage_modes = [
+        "native_library",
+        "secondary_dex",
+        "resources",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+        "//third-party:kiwi",
+    ],
 )
 
 android_binary(
-  name = 'app-dex-native-exo-intra-reorder',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  reorder_classes_intra_dex = True,
-  dex_reorder_tool_file = "//external_files:fake_reorder_tool.sh",
-  dex_reorder_data_dump_file = "//external_files:fake_data_file",
-  exopackage_modes = [
-    'native_library',
-    'secondary_dex',
-  ],
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//third-party:kiwi',
-  ],
+    name = "app-dex-native-exo-intra-reorder",
+    dex_reorder_data_dump_file = "//external_files:fake_data_file",
+    dex_reorder_tool_file = "//external_files:fake_reorder_tool.sh",
+    exopackage_modes = [
+        "native_library",
+        "secondary_dex",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    reorder_classes_intra_dex = True,
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//third-party:kiwi",
+    ],
 )
 
 android_app_modularity(
-  name = 'modularity-metadata',
-  application_module_configs = {
-    'small_with_no_resource_deps' : ['//java/com/sample/small:small_with_no_resource_deps'],
-  },
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//java/com/sample/small:small_with_no_resource_deps',
-    '//res/com/sample/base:base',
-  ],
-  no_dx = [],
+    name = "modularity-metadata",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    no_dx = [],
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_app_modularity(
-  name = 'modularity-metadata-inner-class',
-  application_module_configs = {
-    'small_inner_class_with_no_resource_deps' :
-      ['//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps'],
-  },
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps',
-    '//res/com/sample/base:base',
-  ],
-  no_dx = [],
+    name = "modularity-metadata-inner-class",
+    application_module_configs = {
+        "small_inner_class_with_no_resource_deps": ["//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps"],
+    },
+    no_dx = [],
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app-with-consistency-check',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  application_module_configs = {
-    'small_with_no_resource_deps' : ['//java/com/sample/small:small_with_no_resource_deps'],
-  },
-  android_app_modularity_result = ':modularity-metadata',
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//java/com/sample/small:small_with_no_resource_deps',
-    '//res/com/sample/base:base',
-    ':modularity-metadata',
-  ],
-  no_dx = [],
+    name = "app-with-consistency-check",
+    android_app_modularity_result = ":modularity-metadata",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    no_dx = [],
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        ":modularity-metadata",
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app-with-consistency-failure',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  use_split_dex = True,
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  application_module_configs = {
-  },
-  android_app_modularity_result = ':modularity-metadata',
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-    '//java/com/sample/small:small_with_no_resource_deps',
-    '//res/com/sample/base:base',
-    ':modularity-metadata',
-  ],
-  no_dx = [],
+    name = "app-with-consistency-failure",
+    android_app_modularity_result = ":modularity-metadata",
+    application_module_configs = {
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    no_dx = [],
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        ":modularity-metadata",
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
 )
-    

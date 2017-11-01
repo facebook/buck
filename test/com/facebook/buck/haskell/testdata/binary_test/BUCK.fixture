@@ -1,94 +1,94 @@
 haskell_binary(
-  name = 'foo',
-  main = 'Foo',
-  srcs = [
-    'Foo.hs',
-  ],
+    name = "foo",
+    srcs = [
+        "Foo.hs",
+    ],
+    main = "Foo",
 )
 
 haskell_binary(
-  name = 'foo_rtsflags',
-  main = 'Foo',
-  srcs = [
-    'Foo.hs',
-  ],
-  linker_flags = [
-    '-rtsopts',
-  ],
+    name = "foo_rtsflags",
+    srcs = [
+        "Foo.hs",
+    ],
+    linker_flags = [
+        "-rtsopts",
+    ],
+    main = "Foo",
 )
 
 haskell_binary(
-  name = 'dependent',
-  main = 'Dependent',
-  srcs = [
-    'Dependent.hs',
-  ],
-  deps = [
-    ':dependency',
-  ],
+    name = "dependent",
+    srcs = [
+        "Dependent.hs",
+    ],
+    main = "Dependent",
+    deps = [
+        ":dependency",
+    ],
 )
 
 haskell_library(
-  name = 'dependency',
-  srcs = [
-    'Dependency.hs',
-  ],
+    name = "dependency",
+    srcs = [
+        "Dependency.hs",
+    ],
 )
 
 haskell_binary(
-  name = 'foreign',
-  main = 'Foreign',
-  srcs = [
-    'Foreign.hs',
-  ],
-  deps = [
-    ':c',
-  ],
+    name = "foreign",
+    srcs = [
+        "Foreign.hs",
+    ],
+    main = "Foreign",
+    deps = [
+        ":c",
+    ],
 )
 
 cxx_library(
-  name = 'c',
-  srcs = [
-    'foreign.c',
-  ],
+    name = "c",
+    srcs = [
+        "foreign.c",
+    ],
 )
 
 haskell_binary(
-  name = 'gen_main',
-  srcs = [
-    ':gen',
-  ],
+    name = "gen_main",
+    srcs = [
+        ":gen",
+    ],
 )
 
 cxx_genrule(
-  name = 'gen',
-  out = 'Main.hs',
-  cmd = 'echo \'module Main where\nmain = putStrLn "$(cppflags)"\' > $OUT',
+    name = "gen",
+    out = "Main.hs",
+    cmd = "echo 'module Main where\nmain = putStrLn \"$(cppflags)\"' > $OUT",
 )
 
 cxx_library(
-  name = 'c_header',
-  exported_headers = [
-    'header.h',
-  ],
+    name = "c_header",
+    exported_headers = [
+        "header.h",
+    ],
 )
 
 haskell_binary(
-  name = 'hs_header',
-  main = 'HsHeader',
-  compiler_flags = ['-cpp'],
-  srcs = [
-    'HsHeader.hs',
-  ],
-  deps = [
-    ':c_header',
-  ],
+    name = "hs_header",
+    srcs = [
+        "HsHeader.hs",
+    ],
+    compiler_flags = ["-cpp"],
+    main = "HsHeader",
+    deps = [
+        ":c_header",
+    ],
 )
 
 haskell_binary(
-  name = 'error',
-  main = 'Error',
-  srcs = [
-    'Error.hs',
-  ],
+    name = "error",
+    srcs = [
+        "Error.hs",
+    ],
+    main = "Error",
 )

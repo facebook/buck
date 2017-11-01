@@ -1,24 +1,24 @@
 java_library(
-  name = 'test-library',
-  srcs = [],
-  deps = [],
-  source = '6',
-  target = '6',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "test-library",
+    srcs = [],
+    source = "6",
+    target = "6",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
 )
 
 genrule(
-  name = 'A',
-  out = 'A.txt',
+    name = "A",
+    out = "A.txt",
 )
 
 genrule(
-  name = 'B',
-  cmd = '$(classpath :test-library)',
-  out = 'B.txt',
-  srcs = [
-    ':A'
-  ],
+    name = "B",
+    srcs = [
+        ":A",
+    ],
+    out = "B.txt",
+    cmd = "$(classpath :test-library)",
 )

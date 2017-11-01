@@ -1,9 +1,9 @@
 ocaml_binary(
-    name = 'calc',
+    name = "calc",
     srcs = [
-        'parser.mly',
-        'lexer.mll',
-        'calc.ml',
+        "calc.ml",
+        "lexer.mll",
+        "parser.mly",
     ],
     deps = [
     ],

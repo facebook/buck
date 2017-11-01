@@ -1,21 +1,21 @@
 android_resource(
-  name = 'res',
-  package = 'com.example',
-  manifest = 'AndroidManifest.xml',
+    name = "res",
+    manifest = "AndroidManifest.xml",
+    package = "com.example",
 )
 
 android_library(
-  name = 'lib',
-  srcs = glob(['**/*.java']),
+    name = "lib",
+    srcs = glob(["**/*.java"]),
 )
 
 android_aar(
-  name = 'app',
-  manifest_skeleton = 'AndroidManifest.xml',
-  deps = [
-    ':res',
-    ':lib',
-    '//foo:foo',
-    '//bar:bar',
-  ],
+    name = "app",
+    manifest_skeleton = "AndroidManifest.xml",
+    deps = [
+        ":lib",
+        ":res",
+        "//bar:bar",
+        "//foo:foo",
+    ],
 )

@@ -1,7 +1,10 @@
 groovy_library(
-  name = 'xcompile',
-  srcs = ['Bar.groovy', 'Baz.java'],
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "xcompile",
+    srcs = [
+        "Bar.groovy",
+        "Baz.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

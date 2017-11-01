@@ -1,6 +1,6 @@
 apple_binary(
-  name = 'binary',
-  compiler_flags = ['-g'],
-  srcs = ['main.c'],
-  deps = ['other_cell//:library'],
+    name = "binary",
+    srcs = ["main.c"],
+    compiler_flags = ["-g"],
+    deps = ["other_cell//:library"],
 )

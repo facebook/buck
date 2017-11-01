@@ -1,4 +1,4 @@
-cxx_precompiled_header (
+cxx_precompiled_header(
     name = "pch",
     src = "header.h",
     deps = [
@@ -6,39 +6,39 @@ cxx_precompiled_header (
     ],
 )
 
-cxx_library (
+cxx_library(
     name = "lib1",
-    precompiled_header = ":pch",
     srcs = [
         "lib1.cpp",
     ],
     compiler_flags = ["-frtti"],
+    precompiled_header = ":pch",
 )
 
-cxx_library (
+cxx_library(
     name = "lib2",
-    precompiled_header = ":pch",
     srcs = [
         "lib2.cpp",
     ],
     compiler_flags = ["-frtti"],
+    precompiled_header = ":pch",
 )
 
-cxx_library (
+cxx_library(
     name = "lib3",
-    precompiled_header = ":pch",
     srcs = [
         "lib3.cpp",
     ],
     compiler_flags = ["-fno-rtti"],
+    precompiled_header = ":pch",
 )
 
-cxx_binary (
+cxx_binary(
     name = "main",
-    precompiled_header = ":pch",
     srcs = [
         "main.cpp",
     ],
+    precompiled_header = ":pch",
     deps = [
         ":lib1",
         ":lib2",

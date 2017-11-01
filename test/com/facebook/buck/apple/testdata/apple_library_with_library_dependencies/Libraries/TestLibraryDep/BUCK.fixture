@@ -1,9 +1,9 @@
 apple_library(
-  name = 'TestLibraryDep',
-  info_plist = 'Info.plist',
-  exported_headers = ['TestClassDep.h'],
-  srcs = ['TestClassDep.m'],
-  linker_flags = ['-lobjc'],
-  deps = ['//Libraries/TestLibraryTransitiveDep:TestLibraryTransitiveDep'],
-  visibility = ['PUBLIC'],
+    name = "TestLibraryDep",
+    srcs = ["TestClassDep.m"],
+    exported_headers = ["TestClassDep.h"],
+    info_plist = "Info.plist",
+    linker_flags = ["-lobjc"],
+    visibility = ["PUBLIC"],
+    deps = ["//Libraries/TestLibraryTransitiveDep:TestLibraryTransitiveDep"],
 )

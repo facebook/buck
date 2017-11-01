@@ -1,20 +1,20 @@
 cxx_library(
-  name = 'foo',
-  srcs = [
-    'foo.cpp',
-  ],
-  deps = [
-    ':bar',
-  ],
+    name = "foo",
+    srcs = [
+        "foo.cpp",
+    ],
+    deps = [
+        ":bar",
+    ],
 )
 
 cxx_library(
-  name = 'bar',
-  force_static = True,
-  srcs = [
-    'bar.cpp',
-  ],
-  exported_headers = [
-    'bar.h',
-  ],
+    name = "bar",
+    srcs = [
+        "bar.cpp",
+    ],
+    exported_headers = [
+        "bar.h",
+    ],
+    force_static = True,
 )

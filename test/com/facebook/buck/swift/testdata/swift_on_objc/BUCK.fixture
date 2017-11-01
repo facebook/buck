@@ -1,47 +1,47 @@
 apple_library(
-  name = 'dep1',
-  srcs = [
-    'Test1.swift',
-  ],
+    name = "dep1",
+    srcs = [
+        "Test1.swift",
+    ],
 )
 
 swift_library(
-  name = 'dep2',
-  srcs = [
-    'Test2.swift',
-  ],
-  deps = [
-    ':dep1',
-  ],
+    name = "dep2",
+    srcs = [
+        "Test2.swift",
+    ],
+    deps = [
+        ":dep1",
+    ],
 )
 
 apple_binary(
-  name='binary',
-  headers= [
-      'AppDelegate.h'
-  ],
-  srcs = [
-      'AppDelegate.m',
-      'main.m',
-      'Test0.swift',
-  ],
-  deps = [
-    ':dep2',
-  ],
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
+    name = "binary",
+    srcs = [
+        "AppDelegate.m",
+        "Test0.swift",
+        "main.m",
+    ],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = [
+        "AppDelegate.h",
+    ],
+    deps = [
+        ":dep2",
+    ],
 )
 
 apple_bundle(
-    name='bundle',
-    binary=':binary',
-    extension='app',
-    info_plist='Info.plist',
-    product_name = 'bundle',
-    info_plist_substitutions={
-        'PRODUCT_BUNDLE_IDENTIFIER': 'com.uber.test1',
-        'EXECUTABLE_NAME': 'bundle'
-    }
+    name = "bundle",
+    binary = ":binary",
+    extension = "app",
+    info_plist = "Info.plist",
+    info_plist_substitutions = {
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.uber.test1",
+        "EXECUTABLE_NAME": "bundle",
+    },
+    product_name = "bundle",
 )

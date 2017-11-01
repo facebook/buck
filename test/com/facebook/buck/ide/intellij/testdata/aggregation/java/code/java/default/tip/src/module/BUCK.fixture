@@ -1,7 +1,7 @@
 java_library(
     name = "nested_module",
-    source = "1.7",
     srcs = glob(["*.java"]),
+    source = "1.7",
     visibility = [
         "PUBLIC",
     ],

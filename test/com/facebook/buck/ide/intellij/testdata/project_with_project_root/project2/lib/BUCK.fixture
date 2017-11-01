@@ -3,10 +3,10 @@ java_library(
     srcs = [
         "Test.java",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         "//project2/dep:dep",
     ],
-    visibility = [
-        "PUBLIC",
-    ]
 )

@@ -1,6 +1,6 @@
 apple_library(
-  name = 'library',
-  compiler_flags = ['-g'],
-  srcs = ['lib.c'],
-  visibility = ['PUBLIC'],
+    name = "library",
+    srcs = ["lib.c"],
+    compiler_flags = ["-g"],
+    visibility = ["PUBLIC"],
 )

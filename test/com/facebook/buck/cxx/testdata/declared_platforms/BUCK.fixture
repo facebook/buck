@@ -1,19 +1,19 @@
 cxx_binary(
-    name='simple',
-    srcs=[
-        'simple.cpp',
+    name = "simple",
+    srcs = [
+        "simple.cpp",
     ],
-    deps=[
-        ':library#my-favorite-platform',
-    ]
+    deps = [
+        ":library#my-favorite-platform",
+    ],
 )
 
 cxx_library(
-    name='library',
-    srcs=[
-        'bar.cpp',
+    name = "library",
+    srcs = [
+        "bar.cpp",
     ],
-    exported_headers=[
-        'bar.h',
+    exported_headers = [
+        "bar.h",
     ],
 )

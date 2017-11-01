@@ -230,7 +230,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     // Now convert it into an asset native library and ensure that we re-run apkbuilder.
     workspace.replaceFileContents(
-        "native/cxx/BUCK", "name = 'lib',", "name = 'lib',\ncan_be_asset=True,");
+        "native/cxx/BUCK", "name = \"lib\",", "name = \"lib\",\ncan_be_asset = True,");
 
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();

@@ -1,104 +1,104 @@
 haskell_library(
-  name = 'foo',
-  srcs = [
-    'Foo.hs',
-  ],
+    name = "foo",
+    srcs = [
+        "Foo.hs",
+    ],
 )
 
 haskell_library(
-  name = 'dependent',
-  srcs = [
-    'Dependent.hs',
-  ],
-  deps = [
-    ':dependency',
-  ],
+    name = "dependent",
+    srcs = [
+        "Dependent.hs",
+    ],
+    deps = [
+        ":dependency",
+    ],
 )
 
 haskell_library(
-  name = 'dependency',
-  srcs = [
-    'Dependency.hs',
-  ],
+    name = "dependency",
+    srcs = [
+        "Dependency.hs",
+    ],
 )
 
 haskell_library(
-  name = 'foreign',
-  srcs = [
-    'Foreign.hs',
-  ],
-  deps = [
-    ':c',
-  ],
+    name = "foreign",
+    srcs = [
+        "Foreign.hs",
+    ],
+    deps = [
+        ":c",
+    ],
 )
 
 cxx_library(
-  name = 'c',
-  srcs = [
-    'foreign.c',
-  ],
+    name = "c",
+    srcs = [
+        "foreign.c",
+    ],
 )
 
 haskell_library(
-  name = 'first_order_a_fail',
-  srcs = [
-    'FirstOrderA.hs',
-  ],
-  deps = [
-    ':first_order_b',
-  ],
+    name = "first_order_a_fail",
+    srcs = [
+        "FirstOrderA.hs",
+    ],
+    deps = [
+        ":first_order_b",
+    ],
 )
 
 haskell_library(
-  name = 'first_order_a_pass',
-  srcs = [
-    'FirstOrderA.hs',
-  ],
-  deps = [
-    ':first_order_b',
-    ':first_order_c',
-  ],
+    name = "first_order_a_pass",
+    srcs = [
+        "FirstOrderA.hs",
+    ],
+    deps = [
+        ":first_order_b",
+        ":first_order_c",
+    ],
 )
 
 haskell_library(
-  name = 'first_order_b',
-  srcs = [
-    'FirstOrderB.hs',
-  ],
-  deps = [
-    ':first_order_c',
-  ],
+    name = "first_order_b",
+    srcs = [
+        "FirstOrderB.hs",
+    ],
+    deps = [
+        ":first_order_c",
+    ],
 )
 
 haskell_library(
-  name = 'first_order_c',
-  srcs = [
-    'FirstOrderC.hs',
-  ],
+    name = "first_order_c",
+    srcs = [
+        "FirstOrderC.hs",
+    ],
 )
 
 haskell_library(
-  name = 'order',
-  srcs = [
-    'OrderA.hs',
-    'OrderB.hs',
-  ],
+    name = "order",
+    srcs = [
+        "OrderA.hs",
+        "OrderB.hs",
+    ],
 )
 
 cxx_library(
-  name = 'c_header',
-  exported_headers = [
-    'header.h',
-  ],
+    name = "c_header",
+    exported_headers = [
+        "header.h",
+    ],
 )
 
 haskell_library(
-  name = 'hs_header',
-  compiler_flags = ['-cpp'],
-  srcs = [
-    'HsHeader.hs',
-  ],
-  deps = [
-    ':c_header',
-  ],
+    name = "hs_header",
+    srcs = [
+        "HsHeader.hs",
+    ],
+    compiler_flags = ["-cpp"],
+    deps = [
+        ":c_header",
+    ],
 )

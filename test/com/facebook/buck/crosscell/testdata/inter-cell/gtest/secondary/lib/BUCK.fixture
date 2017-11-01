@@ -1,11 +1,11 @@
 cxx_library(
-  name = 'cxxlib',
-  header_namespace = 'lib',
-  exported_headers = glob(['*.h']),
-  srcs = glob(['*.cpp']),
-  compiler_flags = [
-    '-g',
-    '-std=c++11',
-  ],
-  visibility = ['PUBLIC'],
+    name = "cxxlib",
+    srcs = glob(["*.cpp"]),
+    compiler_flags = [
+        "-g",
+        "-std=c++11",
+    ],
+    exported_headers = glob(["*.h"]),
+    header_namespace = "lib",
+    visibility = ["PUBLIC"],
 )

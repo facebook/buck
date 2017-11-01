@@ -1,8 +1,8 @@
 genrule(
-  name = "test",
-  out = "test.txt",
-  cmd = "echo $SRCS > test.txt",
-  srcs = [
-    "foo.txt",
-  ]
+    name = "test",
+    srcs = [
+        "foo.txt",
+    ],
+    out = "test.txt",
+    cmd = "echo $SRCS > test.txt",
 )

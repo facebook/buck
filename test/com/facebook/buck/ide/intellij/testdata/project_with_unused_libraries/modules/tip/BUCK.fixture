@@ -1,7 +1,7 @@
 java_library(
-  name = 'tip',
-  srcs = glob(['src/**/*.java']),
-  deps = [
-    '//libs:guava',
-  ],
+    name = "tip",
+    srcs = glob(["src/**/*.java"]),
+    deps = [
+        "//libs:guava",
+    ],
 )

@@ -1,48 +1,51 @@
 EMPTY_CONFIGS = {
-  'Debug': {},
-  'Release': {},
+    "Debug": {},
+    "Release": {},
 }
 
 apple_binary(
-  name = 'TestAppBinary',
-  configs = EMPTY_CONFIGS,
-  srcs = [],
-  frameworks = [],
-  deps = [
-    '//Libraries:Dep1',
-    '//Libraries:Dep2',
-  ],
+    name = "TestAppBinary",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        "//Libraries:Dep1",
+        "//Libraries:Dep2",
+    ],
 )
 
 apple_bundle(
-  name = 'TestApp',
-  deps = [':TestAppBinary'],
-  binary = ':TestAppBinary',
-  extension = 'app',
-  tests = [':TestAppTests', ':non_apple_test_should_be_ignored'],
-  info_plist = 'Info.plist',
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    tests = [
+        ":TestAppTests",
+        ":non_apple_test_should_be_ignored",
+    ],
+    deps = [":TestAppBinary"],
 )
 
 apple_test(
-  name = 'TestAppTests',
-  configs = EMPTY_CONFIGS,
-  info_plist = 'Test.plist',
-  srcs = [],
-  frameworks = [],
-  deps = [
-    '//Libraries:Dep1',
-    '//Libraries:Dep2',
-  ],
+    name = "TestAppTests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        "//Libraries:Dep1",
+        "//Libraries:Dep2",
+    ],
 )
 
 sh_test(
-  name = 'non_apple_test_should_be_ignored',
-  test = 'dummy.sh',
-  args = [],
-  deps = [],
+    name = "non_apple_test_should_be_ignored",
+    args = [],
+    test = "dummy.sh",
+    deps = [],
 )
 
 xcode_workspace_config(
-  name = 'workspace',
-  src_target = '//Apps:TestApp'
+    name = "workspace",
+    src_target = "//Apps:TestApp",
 )

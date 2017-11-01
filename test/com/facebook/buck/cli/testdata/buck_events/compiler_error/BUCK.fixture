@@ -1,8 +1,7 @@
 java_test(
-  name = 'broken',
-  labels = ['flaky'],
-  srcs = [
-    'Broken.java',
-  ],
+    name = "broken",
+    srcs = [
+        "Broken.java",
+    ],
+    labels = ["flaky"],
 )
-

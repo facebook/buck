@@ -1,5 +1,5 @@
 apple_library(
-  name = 'TestLibrary2',
-  deps = ['//Libraries/TestLibrary:TestLibrary'],
-  srcs = ['TestClass2.m'],
+    name = "TestLibrary2",
+    srcs = ["TestClass2.m"],
+    deps = ["//Libraries/TestLibrary:TestLibrary"],
 )

@@ -1,56 +1,56 @@
 java_library(
-  name = 'primary',
-  srcs = [ 'PrimaryClass.java' ],
+    name = "primary",
+    srcs = ["PrimaryClass.java"],
 )
 
 java_library(
-  name = 'dep',
-  srcs = [ 'Dependency.java' ],
+    name = "dep",
+    srcs = ["Dependency.java"],
 )
 
 genrule(
-  name = 'gen_aar',
-  srcs = [
-    'AndroidManifest.xml',
-    'build_aar.sh',
-    'build_aar.bat',
-  ],
-  bash = './build_aar.sh $OUT $TMP AndroidManifest.xml $(location :primary) $(location :dep)',
-  cmd_exe = 'build_aar.bat %OUT% %TMP% AndroidManifest.xml $(location :primary) $(location :dep)',
-  out = 'example.aar',
+    name = "gen_aar",
+    srcs = [
+        "AndroidManifest.xml",
+        "build_aar.sh",
+        "build_aar.bat",
+    ],
+    out = "example.aar",
+    bash = "./build_aar.sh $OUT $TMP AndroidManifest.xml $(location :primary) $(location :dep)",
+    cmd_exe = "build_aar.bat %OUT% %TMP% AndroidManifest.xml $(location :primary) $(location :dep)",
 )
 
 android_prebuilt_aar(
-  name = 'aar',
-  aar = ':gen_aar',
+    name = "aar",
+    aar = ":gen_aar",
 )
 
 android_library(
-  name = 'lib',
-  srcs = [ 'UseClassInLib.java' ],
-  deps = [
-    ':aar',
-  ],
+    name = "lib",
+    srcs = ["UseClassInLib.java"],
+    deps = [
+        ":aar",
+    ],
 )
 
 android_binary(
-  name = 'app',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    ':lib',
-  ],
+    name = "app",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        ":lib",
+    ],
 )
 
 genrule(
-  name = 'extract-classes-dex',
-  bash = ' && '.join([
-      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
-      'find $TMP -name \\*.smali > $OUT',
-      ]),
-  cmd_exe = ' && '.join([
-      '$(exe //third-party/smali:baksmali) -o %TMP% $(location :app)',
-      'dir /s/b %TMP% | findstr /L .smali > %OUT%',
-      ]),
-  out = 'smali-files.txt',
+    name = "extract-classes-dex",
+    out = "smali-files.txt",
+    bash = " && ".join([
+        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app)",
+        "find $TMP -name \*.smali > $OUT",
+    ]),
+    cmd_exe = " && ".join([
+        "$(exe //third-party/smali:baksmali) -o %TMP% $(location :app)",
+        "dir /s/b %TMP% | findstr /L .smali > %OUT%",
+    ]),
 )

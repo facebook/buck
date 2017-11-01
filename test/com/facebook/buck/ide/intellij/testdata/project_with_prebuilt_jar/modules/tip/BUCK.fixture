@@ -4,13 +4,13 @@ java_library(
         "Test.java",
     ],
     deps = [
-        ":library"
+        ":library",
     ],
 )
 
 prebuilt_jar(
     name = "library",
     binary_jar = "library.jar",
-    source_jar = "librarysrc.jar",
     javadoc_url = "http://company.com/library/",
+    source_jar = "librarysrc.jar",
 )

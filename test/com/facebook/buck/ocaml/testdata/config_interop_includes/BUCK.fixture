@@ -1,7 +1,7 @@
 ocaml_binary(
-    name = 'test',
+    name = "test",
     srcs = [
-        'test.ml',
+        "test.ml",
     ],
     deps = [
     ],

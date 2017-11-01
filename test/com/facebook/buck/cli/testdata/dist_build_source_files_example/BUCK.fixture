@@ -1,16 +1,16 @@
 java_library(
-  name = 'libA',
-  srcs = [
-    'A.java',
-  ],
-  deps = [
-    ':libB',
-  ],
+    name = "libA",
+    srcs = [
+        "A.java",
+    ],
+    deps = [
+        ":libB",
+    ],
 )
 
 java_library(
-  name = 'libB',
-  srcs = [
-    'B.java',
-  ],
+    name = "libB",
+    srcs = [
+        "B.java",
+    ],
 )

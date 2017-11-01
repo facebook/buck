@@ -1,37 +1,37 @@
 prebuilt_jar(
-  name = 'guava',
-  binary_jar = 'guava.jar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "guava",
+    binary_jar = "guava.jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 prebuilt_jar(
-  name = 'jsr305',
-  binary_jar = 'jsr305.jar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "jsr305",
+    binary_jar = "jsr305.jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit.jar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "junit",
+    binary_jar = "junit.jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 genrule(
-  name = 'generated_jar',
-  cmd = 'echo foo > $OUT',
-  out = 'generated.jar',
+    name = "generated_jar",
+    out = "generated.jar",
+    cmd = "echo foo > $OUT",
 )
 
 prebuilt_jar(
-  name = 'generated',
-  binary_jar = ':generated_jar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "generated",
+    binary_jar = ":generated_jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )
