@@ -75,6 +75,7 @@ public class CxxTestDescription
   private final Flavor defaultCxxFlavor;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final Optional<Long> defaultTestRuleTimeoutMs;
+  private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
@@ -84,6 +85,7 @@ public class CxxTestDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.cxxPlatforms = cxxPlatforms;
+    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
@@ -383,13 +385,8 @@ public class CxxTestDescription
       return true;
     }
 
-    for (Flavor flavor : cxxPlatforms.getFlavors()) {
-      if (flavors.equals(ImmutableSet.of(flavor))) {
-        return true;
-      }
-    }
-
-    return false;
+    return cxxPlatforms.containsAnyOf(flavors)
+        || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
   @Override

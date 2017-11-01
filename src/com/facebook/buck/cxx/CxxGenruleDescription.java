@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -85,6 +86,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -103,11 +105,15 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxGenruleDescription(
-      ToolchainProvider toolchainProvider, FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxBuckConfig cxxBuckConfig,
+      ToolchainProvider toolchainProvider,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(toolchainProvider);
     this.cxxPlatforms = cxxPlatforms;
+    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
   public static boolean wrapsCxxGenrule(SourcePathRuleFinder ruleFinder, SourcePath path) {
@@ -184,7 +190,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxPlatforms.containsAnyOf(flavors);
+    return cxxPlatforms.containsAnyOf(flavors)
+        || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
   @Override

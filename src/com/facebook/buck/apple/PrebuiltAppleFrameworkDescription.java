@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -55,10 +56,12 @@ public class PrebuiltAppleFrameworkDescription
         MetadataProvidingDescription<PrebuiltAppleFrameworkDescriptionArg> {
 
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
+  private final ImmutableSet<Flavor> declaredPlatforms;
 
   public PrebuiltAppleFrameworkDescription(
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
+      CxxBuckConfig cxxBuckConfig, FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
     this.appleCxxPlatformsFlavorDomain = appleCxxPlatformsFlavorDomain;
+    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
   @Override
@@ -67,6 +70,8 @@ public class PrebuiltAppleFrameworkDescription
     // It's mainly there to be compatible with other apple rules which blindly add flavor tags to
     // all its targets.
     return RichStream.from(flavors)
+            .filter(flavor -> !declaredPlatforms.contains(flavor))
+            .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
             .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
             .filter(flavor -> !AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor))
             .filter(flavor -> !AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor))

@@ -384,7 +384,7 @@ public class KnownBuildRuleTypes {
             swiftPlatformsProvider.getSwiftCxxPlatforms());
     builder.register(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
-        new PrebuiltAppleFrameworkDescription(platformFlavorsToAppleCxxPlatforms);
+        new PrebuiltAppleFrameworkDescription(cxxBuckConfig, platformFlavorsToAppleCxxPlatforms);
     builder.register(appleFrameworkDescription);
 
     AppleBinaryDescription appleBinaryDescription =
@@ -508,7 +508,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
-    builder.register(new CxxGenruleDescription(toolchainProvider, cxxPlatforms));
+    builder.register(new CxxGenruleDescription(cxxBuckConfig, toolchainProvider, cxxPlatforms));
     builder.register(new CxxLuaExtensionDescription(luaPlatforms, cxxBuckConfig));
     builder.register(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));

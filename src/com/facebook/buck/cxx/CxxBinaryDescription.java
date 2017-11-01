@@ -71,6 +71,7 @@ public class CxxBinaryDescription
   private final InferBuckConfig inferBuckConfig;
   private final Flavor defaultCxxFlavor;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxBinaryDescription(
       CxxBuckConfig cxxBuckConfig,
@@ -81,6 +82,7 @@ public class CxxBinaryDescription
     this.inferBuckConfig = inferBuckConfig;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.cxxPlatforms = cxxPlatforms;
+    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ binary. */
@@ -307,7 +309,8 @@ public class CxxBinaryDescription
   public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
     Set<Flavor> flavors = inputFlavors;
 
-    Set<Flavor> platformFlavors = Sets.intersection(flavors, cxxPlatforms.getFlavors());
+    Set<Flavor> platformFlavors =
+        Sets.intersection(flavors, Sets.union(cxxPlatforms.getFlavors(), declaredPlatforms));
     if (platformFlavors.size() > 1) {
       return false;
     }

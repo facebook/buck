@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
@@ -30,7 +32,12 @@ public class CxxGenruleBuilder
         BuildRule> {
 
   public CxxGenruleBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new CxxGenruleDescription(new TestToolchainProvider(), cxxPlatforms), target);
+    super(
+        new CxxGenruleDescription(
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new TestToolchainProvider(),
+            cxxPlatforms),
+        target);
   }
 
   public CxxGenruleBuilder(BuildTarget target) {
