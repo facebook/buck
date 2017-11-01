@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -43,6 +44,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class Manifest {
+
+  private static final Logger LOG = Logger.get(Manifest.class);
 
   private static final int VERSION = 0;
 
@@ -77,6 +80,7 @@ public class Manifest {
     key = new RuleKey(input.readUTF());
 
     int numberOfHeaders = input.readInt();
+    LOG.verbose("%s: loading %d header entries", this.key, numberOfHeaders);
     headers = new ArrayList<>(numberOfHeaders);
     headerIndices = new HashMap<>(numberOfHeaders);
     for (int index = 0; index < numberOfHeaders; index++) {
@@ -86,6 +90,7 @@ public class Manifest {
     }
 
     int numberOfHashes = input.readInt();
+    LOG.verbose("%s: loading %d hash entries", this.key, numberOfHashes);
     hashes = new ArrayList<>(numberOfHashes);
     hashIndices = new HashMap<>(numberOfHashes);
     for (int index = 0; index < numberOfHashes; index++) {
@@ -96,6 +101,7 @@ public class Manifest {
     }
 
     int numberOfEntries = input.readInt();
+    LOG.verbose("%s: loading %d dep file rule key entries", this.key, numberOfEntries);
     entries = new ArrayList<>(numberOfEntries);
     for (int entryIndex = 0; entryIndex < numberOfEntries; entryIndex++) {
       int numberOfEntryHashes = input.readInt();
@@ -104,6 +110,7 @@ public class Manifest {
         entryHashes[hashIndex] = input.readInt();
       }
       RuleKey key = new RuleKey(input.readUTF());
+      LOG.verbose("%s: loaded entry for dep file rule key %s", this.key, key);
       entries.add(new Pair<>(key, entryHashes));
     }
   }
@@ -132,7 +139,7 @@ public class Manifest {
 
   /** Hash the files pointed to by the source paths. */
   @VisibleForTesting
-  protected static HashCode hashSourcePathGroup(
+  static HashCode hashSourcePathGroup(
       FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableList<SourcePath> paths)
       throws IOException {
     if (paths.size() == 1) {

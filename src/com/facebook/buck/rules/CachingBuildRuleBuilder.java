@@ -1392,6 +1392,7 @@ class CachingBuildRuleBuilder {
         fetch(artifactCache, manifestCacheKey, tempFile),
         manifestResult -> {
           if (!manifestResult.getType().isSuccess()) {
+            LOG.verbose("%s: cache miss on manifest %s", rule.getBuildTarget(), manifestCacheKey);
             return Futures.immediateFuture(Optional.empty());
           }
           RuleKeyAndInputs manifestKey =
@@ -1426,6 +1427,8 @@ class CachingBuildRuleBuilder {
                 manifestKey.getRuleKey());
             return Futures.immediateFuture(Optional.empty());
           }
+
+          LOG.verbose("%s: cache hit on manifest %s", rule.getBuildTarget(), manifest.getKey());
 
           // Verify the manifest.
           Preconditions.checkState(
