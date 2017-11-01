@@ -836,7 +836,7 @@ class BuildFileProcessor(object):
         build_env.includes.add(path)
         build_env.merge(inner_env)
 
-    def _load(self, name, *symbols, **symbol_kwargs):
+    def _load(self, is_implicit_include, name, *symbols, **symbol_kwargs):
         # type: (str, *str, **str) -> None
         """Pull the symbols from the named include into the current caller's context.
 
@@ -849,7 +849,7 @@ class BuildFileProcessor(object):
         # Resolve the named include to its path and process it to get its
         # build context and module.
         path = self._get_load_path(name)
-        inner_env, module = self._process_include(path, False)
+        inner_env, module = self._process_include(path, is_implicit_include)
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
@@ -1006,7 +1006,7 @@ class BuildFileProcessor(object):
                 'allow_unsafe_import': self._import_whitelist_manager.allow_unsafe_import,
                 'glob': self._glob,
                 'subdir_glob': self._subdir_glob,
-                'load': self._load,
+                'load': functools.partial(self._load, is_implicit_include),
             }
 
             # Don't include implicit includes if the current file being
