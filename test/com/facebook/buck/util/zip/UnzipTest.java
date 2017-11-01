@@ -59,7 +59,6 @@ public class UnzipTest {
 
   @Test
   public void testExtractZipFile() throws InterruptedException, IOException {
-
     try (ZipArchive zipArchive = new ZipArchive(this.zipFile, true)) {
       zipArchive.add("1.bin", DUMMY_FILE_CONTENTS);
       zipArchive.add("subdir/2.bin", DUMMY_FILE_CONTENTS);
@@ -259,6 +258,25 @@ public class UnzipTest {
     }
 
     Path extractFolder = tmpFolder.newFolder();
+    Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar")));
+  }
+
+  @Test
+  public void testDirectoryPathsOverwriteFiles() throws InterruptedException, IOException {
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      // It seems very unlikely that a zip file would contain ".." paths, but handle it anyways.
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar"));
+      zip.closeArchiveEntry();
+    }
+
+    Path extractFolder = tmpFolder.newFolder();
+    Files.write(extractFolder.resolve("foo"), ImmutableList.of("whatever"));
     Unzip.extractZipFile(
         new DefaultProjectFilesystemFactory(),
         zipFile.toAbsolutePath(),

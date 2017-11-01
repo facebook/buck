@@ -39,6 +39,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -204,6 +205,50 @@ public class Unzip {
           fillIntermediatePaths(p.getKey(), pathMap);
         }
       }
+
+      /**
+       * This is just used to allow us to record which directories we've already created and skip
+       * creating them multiple times.
+       */
+      class DirectoryCreator {
+        private Set<Path> existing = new HashSet<>();
+
+        private DirectoryCreator() {
+          existing.add(filesystem.getRootPath());
+        }
+
+        private void mkdirs(Path target) throws IOException {
+          if (existing.contains(target)) {
+            return;
+          }
+          filesystem.mkdirs(target);
+          while (target != null) {
+            existing.add(target);
+            target = target.getParent();
+          }
+        }
+
+        private void forcefullyCreateDirs(Path target) throws IOException {
+          if (existing.contains(target)) {
+            return;
+          }
+          if (filesystem.exists(target)) {
+            if (!filesystem.isDirectory(target)) {
+              filesystem.deleteFileAtPath(target);
+              filesystem.mkdirs(target);
+            }
+          } else {
+            if (target.getParent() != null) {
+              forcefullyCreateDirs(target.getParent());
+            }
+            filesystem.mkdirs(target);
+          }
+          existing.add(target);
+        }
+      }
+
+      DirectoryCreator creator = new DirectoryCreator();
+
       for (SortedMap.Entry<Path, ZipArchiveEntry> p : pathMap.entrySet()) {
         Path target = p.getKey();
         ZipArchiveEntry entry = p.getValue();
@@ -219,17 +264,17 @@ public class Unzip {
             }
           } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
             filesystem.deleteFileAtPath(target);
-            filesystem.mkdirs(target);
+            creator.mkdirs(target);
           } else {
-            filesystem.mkdirs(target);
+            creator.forcefullyCreateDirs(target);
           }
         } else {
           if (filesystem.isFile(target, LinkOption.NOFOLLOW_LINKS)) { // NOPMD for clarity
             // pass
           } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
             filesystem.deleteRecursivelyIfExists(target);
-          } else {
-            filesystem.createParentDirs(target);
+          } else if (target.getParent() != null) {
+            creator.forcefullyCreateDirs(target.getParent());
           }
           filesWritten.add(target);
           writeZipContents(zip, entry, filesystem, target);
