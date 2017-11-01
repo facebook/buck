@@ -382,6 +382,8 @@ java_immutables_library(
         "AbstractBuildResult.java",
         "AbstractBuildRuleKeys.java",
         "AbstractCachingBuildEngineBuckConfig.java",
+        "AbstractManifestFetchResult.java",
+        "AbstractManifestLoadResult.java",
         "AbstractResourceAwareSchedulingInfo.java",
         "AbstractRuleScheduleInfo.java",
         "ActionGraphCache.java",

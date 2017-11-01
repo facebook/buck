@@ -46,6 +46,8 @@ abstract class AbstractBuildResult {
 
   abstract Optional<Throwable> getFailureOptional();
 
+  abstract Optional<ManifestFetchResult> getManifestFetchResult();
+
   @Value.Check
   void check() {
     Preconditions.checkArgument(

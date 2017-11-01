@@ -82,7 +82,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -154,6 +153,7 @@ class CachingBuildRuleBuilder {
 
   private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
   private volatile boolean depsAreAvailable;
+  @Nullable private volatile ManifestFetchResult manifestFetchResult = null;
 
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
@@ -224,7 +224,11 @@ class CachingBuildRuleBuilder {
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
   private BuildResult.Builder buildResultBuilder() {
-    return BuildResult.builder().setRule(rule);
+    BuildResult.Builder builder = BuildResult.builder().setRule(rule);
+    if (manifestFetchResult != null) {
+      builder.setManifestFetchResult(manifestFetchResult);
+    }
+    return builder;
   }
 
   private BuildResult success(BuildRuleSuccessType successType, CacheResult cacheResult) {
@@ -745,15 +749,29 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
-    Optional<RuleKey> manifestKey =
-        manifestBasedKeySupplier.get().map(RuleKeyAndInputs::getRuleKey);
-    if (!manifestKey.isPresent()) {
+    Optional<RuleKeyAndInputs> manifestKeyAndInputs = manifestBasedKeySupplier.get();
+    if (!manifestKeyAndInputs.isPresent()) {
       return Futures.immediateFuture(Optional.empty());
     }
     getBuildInfoRecorder()
-        .addBuildMetadata(BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().toString());
+        .addBuildMetadata(
+            BuildInfo.MetadataKey.MANIFEST_KEY, manifestKeyAndInputs.get().getRuleKey().toString());
     try (Scope ignored = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
-      return performManifestBasedCacheFetch(manifestKey.get());
+      return Futures.transform(
+          performManifestBasedCacheFetch(manifestKeyAndInputs.get()),
+          (@Nonnull ManifestFetchResult result) -> {
+            this.manifestFetchResult = result;
+            if (!result.getRuleCacheResult().isPresent()) {
+              return Optional.empty();
+            }
+            if (!result.getRuleCacheResult().get().getType().isSuccess()) {
+              return Optional.empty();
+            }
+            return Optional.of(
+                success(
+                    BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
+                    result.getRuleCacheResult().get()));
+          });
     }
   }
 
@@ -1326,13 +1344,10 @@ class CachingBuildRuleBuilder {
 
     // If we already have a manifest downloaded, use that.
     if (rule.getProjectFilesystem().exists(manifestPath)) {
-      try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
-        Manifest existingManifest = new Manifest(inputStream);
-        if (existingManifest.getKey().equals(manifestKey.getRuleKey())) {
-          manifest = existingManifest;
-        }
-      } catch (Exception e) {
-        LOG.error(e, "Failed to deserialize on-disk manifest for rule %s.", rule);
+      ManifestLoadResult existingManifest = loadManifest(manifestKey.getRuleKey());
+      if (existingManifest.getManifest().isPresent()
+          && existingManifest.getManifest().get().getKey().equals(manifestKey.getRuleKey())) {
+        manifest = existingManifest.getManifest().get();
       }
     } else {
       // Ensure the path to manifest exist
@@ -1388,12 +1403,14 @@ class CachingBuildRuleBuilder {
         (SupportsDependencyFileRuleKey) rule, eventBus, ruleKeyFactories);
   }
 
-  // Fetch an artifact from the cache using manifest-based caching.
-  private ListenableFuture<Optional<BuildResult>> performManifestBasedCacheFetch(
-      RuleKey manifestCacheKey) {
-    Preconditions.checkArgument(useManifestCaching());
+  private ListenableFuture<CacheResult> fetchManifest(RuleKey key) throws IOException {
+    Preconditions.checkState(useManifestCaching());
 
-    final LazyPath tempFile =
+    Path path = getManifestPath(rule);
+
+    // Use a temp path to store the downloaded artifact.  We'll rename it into place on success to
+    // make the process more atomic.
+    LazyPath tempPath =
         new LazyPath() {
           @Override
           protected Path create() throws IOException {
@@ -1402,74 +1419,90 @@ class CachingBuildRuleBuilder {
         };
 
     return Futures.transformAsync(
-        fetch(artifactCache, manifestCacheKey, tempFile),
-        manifestResult -> {
-          if (!manifestResult.getType().isSuccess()) {
-            LOG.verbose("%s: cache miss on manifest %s", rule.getBuildTarget(), manifestCacheKey);
-            return Futures.immediateFuture(Optional.empty());
-          }
-          RuleKeyAndInputs manifestKey =
-              Preconditions.checkNotNull(manifestBasedKeySupplier).get().get();
-
-          Path manifestPath = getManifestPath(rule);
-
-          // Clear out any existing manifest.
-          rule.getProjectFilesystem().deleteFileAtPathIfExists(manifestPath);
-
-          // Now, fetch an existing manifest from the cache.
-          rule.getProjectFilesystem().createParentDirs(manifestPath);
-
-          try (OutputStream outputStream =
-                  rule.getProjectFilesystem().newFileOutputStream(manifestPath);
-              InputStream inputStream =
-                  new GZIPInputStream(
-                      new BufferedInputStream(Files.newInputStream(tempFile.get())))) {
-            ByteStreams.copy(inputStream, outputStream);
-          }
-          Files.delete(tempFile.get());
-
-          // Deserialize the manifest.
-          Manifest manifest;
-          try (InputStream input = rule.getProjectFilesystem().newFileInputStream(manifestPath)) {
-            manifest = new Manifest(input);
-          } catch (Exception e) {
-            LOG.error(
-                e,
-                "Failed to deserialize fetched-from-cache manifest for rule %s with key %s",
-                rule,
-                manifestKey.getRuleKey());
-            return Futures.immediateFuture(Optional.empty());
+        fetch(artifactCache, key, tempPath),
+        (@Nonnull CacheResult cacheResult) -> {
+          if (!cacheResult.getType().isSuccess()) {
+            LOG.verbose("%s: cache miss on manifest %s", rule.getBuildTarget(), key);
+            return Futures.immediateFuture(cacheResult);
           }
 
-          LOG.verbose("%s: cache hit on manifest %s", rule.getBuildTarget(), manifest.getKey());
+          // Download is successful, so move the manifest into place.
+          rule.getProjectFilesystem().createParentDirs(path);
+          rule.getProjectFilesystem().deleteFileAtPathIfExists(path);
+          rule.getProjectFilesystem().move(tempPath.get(), path);
 
-          // Verify the manifest.
+          LOG.verbose("%s: cache hit on manifest %s", rule.getBuildTarget(), key);
+
+          return Futures.immediateFuture(cacheResult);
+        });
+  }
+
+  private ManifestLoadResult loadManifest(RuleKey key) {
+    Preconditions.checkState(useManifestCaching());
+
+    Path path = getManifestPath(rule);
+
+    // Deserialize the manifest.
+    Manifest manifest;
+    try (InputStream input =
+        new GZIPInputStream(rule.getProjectFilesystem().newFileInputStream(path))) {
+      manifest = new Manifest(input);
+    } catch (Exception e) {
+      LOG.error(
+          e,
+          "Failed to deserialize fetched-from-cache manifest for rule %s with key %s",
+          rule,
+          key);
+      return ManifestLoadResult.error("corrupted manifest path");
+    }
+
+    return ManifestLoadResult.success(manifest);
+  }
+
+  // Fetch an artifact from the cache using manifest-based caching.
+  private ListenableFuture<ManifestFetchResult> performManifestBasedCacheFetch(
+      RuleKeyAndInputs keyAndInputs) throws IOException {
+    Preconditions.checkArgument(useManifestCaching());
+
+    // Fetch the manifest from the cache.
+    return Futures.transformAsync(
+        fetchManifest(keyAndInputs.getRuleKey()),
+        (@Nonnull CacheResult manifestCacheResult) -> {
+          ManifestFetchResult.Builder manifestFetchResult = ManifestFetchResult.builder();
+          manifestFetchResult.setManifestCacheResult(manifestCacheResult);
+          if (!manifestCacheResult.getType().isSuccess()) {
+            return Futures.immediateFuture(manifestFetchResult.build());
+          }
+
+          // Load the manifest from disk.
+          ManifestLoadResult loadResult = loadManifest(keyAndInputs.getRuleKey());
+          if (!loadResult.getManifest().isPresent()) {
+            manifestFetchResult.setManifestLoadError(loadResult.getError().get());
+            return Futures.immediateFuture(manifestFetchResult.build());
+          }
+          Manifest manifest = loadResult.getManifest().get();
           Preconditions.checkState(
-              manifest.getKey().equals(manifestKey.getRuleKey()),
+              manifest.getKey().equals(keyAndInputs.getRuleKey()),
               "%s: found incorrectly keyed manifest: %s != %s",
               rule.getBuildTarget(),
-              manifestKey.getRuleKey(),
+              keyAndInputs.getRuleKey(),
               manifest.getKey());
 
-          // Lookup the rule for the current state of our inputs.
-          Optional<RuleKey> ruleKey =
-              manifest.lookup(fileHashCache, pathResolver, manifestKey.getInputs());
-          if (!ruleKey.isPresent()) {
-            return Futures.immediateFuture(Optional.empty());
+          // Lookup the dep file rule key matching the current state of our inputs.
+          Optional<RuleKey> depFileRuleKey =
+              manifest.lookup(fileHashCache, pathResolver, keyAndInputs.getInputs());
+          if (!depFileRuleKey.isPresent()) {
+            return Futures.immediateFuture(manifestFetchResult.build());
           }
+          manifestFetchResult.setDepFileRuleKey(depFileRuleKey.get());
 
+          // Fetch the rule outputs from cache using the found dep file rule key.
           return Futures.transform(
               tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                  ruleKey.get(),
-                  artifactCache,
-                  // TODO(simons): This should be shared between all tests, not one per cell
-                  rule.getProjectFilesystem()),
-              cacheResult -> {
-                if (cacheResult.getType().isSuccess()) {
-                  return Optional.of(
-                      success(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED, cacheResult));
-                }
-                return Optional.<BuildResult>empty();
+                  depFileRuleKey.get(), artifactCache, rule.getProjectFilesystem()),
+              (@Nonnull CacheResult ruleCacheResult) -> {
+                manifestFetchResult.setRuleCacheResult(ruleCacheResult);
+                return manifestFetchResult.build();
               });
         });
   }
