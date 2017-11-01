@@ -63,7 +63,7 @@ public class BuildReport {
       Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
       if (result.isPresent()) {
-        success = Optional.ofNullable(result.get().getSuccess());
+        success = result.get().getSuccessOptional();
       }
 
       String successIndicator;
@@ -134,7 +134,7 @@ public class BuildReport {
       Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
       if (result.isPresent()) {
-        success = Optional.ofNullable(result.get().getSuccess());
+        success = result.get().getSuccessOptional();
       }
       Map<String, Object> value = new LinkedHashMap<>();
 

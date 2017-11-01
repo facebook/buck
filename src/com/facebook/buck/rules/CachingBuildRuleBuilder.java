@@ -311,7 +311,7 @@ class CachingBuildRuleBuilder {
                 handleResult(input);
 
                 // Reset interrupted flag once failure has been recorded.
-                if (input.getFailure() instanceof InterruptedException) {
+                if (!input.isSuccess() && input.getFailure() instanceof InterruptedException) {
                   Threads.interruptCurrentThread();
                 }
               }
@@ -384,7 +384,7 @@ class CachingBuildRuleBuilder {
 
       try (Scope ignored = LeafEvents.scope(eventBus, "finalizing_build_rule")) {
         // We shouldn't see any build fail result at this point.
-        BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
+        BuildRuleSuccessType success = input.getSuccess();
         switch (success) {
           case BUILT_LOCALLY:
             finalizeBuiltLocally(outputSize);
@@ -677,7 +677,7 @@ class CachingBuildRuleBuilder {
 
     try (Scope ignored = buildRuleScope()) {
       if (input.getStatus() == BuildRuleStatus.SUCCESS) {
-        BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
+        BuildRuleSuccessType success = input.getSuccess();
         successType = Optional.of(success);
 
         // Try get the output size.
@@ -947,10 +947,9 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<Optional<BuildResult>> handleDepsResults(List<BuildResult> depResults) {
     for (BuildResult depResult : depResults) {
       if (buildMode != CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE
-          && depResult.getStatus() != BuildRuleStatus.SUCCESS) {
+          && !depResult.isSuccess()) {
         return Futures.immediateFuture(
-            Optional.of(
-                BuildResult.canceled(rule, Preconditions.checkNotNull(depResult.getFailure()))));
+            Optional.of(BuildResult.canceled(rule, depResult.getFailure())));
       }
     }
     depsAreAvailable = true;
@@ -1817,14 +1816,14 @@ class CachingBuildRuleBuilder {
     private BuildRuleEvent.Finished getEvent(BuildRuleEvent.Resumed resumedEvent) {
       boolean failureOrBuiltLocally =
           input.getStatus() == BuildRuleStatus.FAIL
-              || input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY;
+              || (input.isSuccess() && input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY);
       // Log the result to the event bus.
       BuildRuleEvent.Finished finished =
           BuildRuleEvent.finished(
               resumedEvent,
               getBuildRuleKeys(),
               input.getStatus(),
-              input.getCacheResult(),
+              input.getCacheResult().orElse(CacheResult.miss()),
               onDiskBuildInfo
                   .getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
                   .map(BuildId::new),

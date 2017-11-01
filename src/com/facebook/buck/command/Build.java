@@ -251,7 +251,7 @@ public class Build implements Closeable {
           .setFailures(
               buildResults
                   .stream()
-                  .filter(input -> input.getSuccess() == null)
+                  .filter(input -> !input.isSuccess())
                   .collect(Collectors.toList()))
           .setResults(resultBuilder)
           .build();
@@ -271,10 +271,7 @@ public class Build implements Closeable {
 
     return BuildExecutionResult.builder()
         .setFailures(
-            results
-                .stream()
-                .filter(input -> input.getSuccess() == null)
-                .collect(Collectors.toList()))
+            results.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()))
         .setResults(resultBuilder)
         .build();
   }
@@ -312,9 +309,8 @@ public class Build implements Closeable {
       results = buildFuture.get();
       if (!buildContext.isKeepGoing()) {
         for (BuildResult result : results) {
-          Throwable thrown = result.getFailure();
-          if (thrown != null) {
-            throw new BuildExecutionException(thrown, rulesToBuild, results);
+          if (!result.isSuccess()) {
+            throw new BuildExecutionException(result.getFailure(), rulesToBuild, results);
           }
         }
       }

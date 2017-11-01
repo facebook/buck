@@ -136,7 +136,7 @@ public class JavaDepsFinder {
     BuildResult result = Futures.getUnchecked(future);
 
     Symbols features;
-    if (result.getSuccess() != null) {
+    if (result.isSuccess()) {
       features = buildRule.getFeatures();
     } else {
       Throwable failure = result.getFailure();

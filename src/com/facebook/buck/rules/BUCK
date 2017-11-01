@@ -379,6 +379,7 @@ java_immutables_library(
     name = "rules",
     srcs = [
         "AbstractBuildEngineBuildContext.java",
+        "AbstractBuildResult.java",
         "AbstractBuildRuleKeys.java",
         "AbstractCachingBuildEngineBuckConfig.java",
         "AbstractResourceAwareSchedulingInfo.java",
@@ -391,7 +392,6 @@ java_immutables_library(
         "BuildInfoStore.java",
         "BuildInfoStoreManager.java",
         "BuildOutputInitializer.java",
-        "BuildResult.java",
         "BuildRuleDiagnosticData.java",
         "BuildRuleEvent.java",
         "BuildRulePipelinesRunner.java",

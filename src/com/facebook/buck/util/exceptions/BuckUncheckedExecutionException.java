@@ -55,6 +55,18 @@ public class BuckUncheckedExecutionException extends RuntimeException
     this.context = context;
   }
 
+  @Override
+  public String getLocalizedMessage() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(context);
+    String parentMessage = super.getLocalizedMessage();
+    if (!parentMessage.isEmpty()) {
+      builder.append(": ");
+      builder.append(parentMessage);
+    }
+    return builder.toString();
+  }
+
   public BuckUncheckedExecutionException(Throwable cause, String format, Object... args) {
     this(cause, String.format(format, args));
   }

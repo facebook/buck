@@ -1101,7 +1101,9 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
         assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
-        assertThat(result.getCacheResult().getType(), equalTo(CacheResultType.ERROR));
+        assertThat(
+            result.getCacheResult().map(CacheResult::getType),
+            equalTo(Optional.of(CacheResultType.ERROR)));
       }
     }
 
@@ -2966,10 +2968,10 @@ public class CachingBuildEngineTest {
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
-      assertEquals(
+      assertThat(
           "Should not attempt to fetch from cache",
-          CacheResultType.IGNORED,
-          result.getCacheResult().getType());
+          result.getCacheResult().map(CacheResult::getType),
+          equalTo(Optional.of(CacheResultType.IGNORED)));
       assertEquals("should not have written to the cache", 0, cache.getArtifactCount());
     }
 
@@ -3756,7 +3758,7 @@ public class CachingBuildEngineTest {
                     buildRule)
                 .getResult()
                 .get();
-        if (DEBUG && result.getFailure() != null) {
+        if (DEBUG && !result.isSuccess()) {
           result.getFailure().printStackTrace();
         }
         lastSuccessType = result.getSuccess();

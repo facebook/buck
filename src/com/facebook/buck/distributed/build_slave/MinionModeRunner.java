@@ -259,7 +259,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
             final String fullyQualifiedName = result.getRule().getFullyQualifiedName();
 
-            if (result.getSuccess() == null) {
+            if (!result.isSuccess()) {
               LOG.error(String.format("Building of target [%s] failed.", fullyQualifiedName));
               exitCode.set(1); // Ensure the build doesn't deadlock
               return;
@@ -282,7 +282,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   private void registerUploadCompletionHandler(final BuildResult buildResult) {
     final String fullyQualifiedName = buildResult.getRule().getFullyQualifiedName();
     Futures.addCallback(
-        buildResult.getUploadCompleteFuture(),
+        buildResult.getUploadCompleteFuture().orElse(Futures.immediateFuture(null)),
         new FutureCallback<Void>() {
           @Override
           public void onSuccess(@Nullable Void result) {
