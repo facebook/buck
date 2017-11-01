@@ -154,6 +154,7 @@ class CachingBuildRuleBuilder {
   private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
   private volatile boolean depsAreAvailable;
   @Nullable private volatile ManifestFetchResult manifestFetchResult = null;
+  @Nullable private volatile ManifestStoreResult manifestStoreResult = null;
 
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
@@ -227,6 +228,9 @@ class CachingBuildRuleBuilder {
     BuildResult.Builder builder = BuildResult.builder().setRule(rule);
     if (manifestFetchResult != null) {
       builder.setManifestFetchResult(manifestFetchResult);
+    }
+    if (manifestStoreResult != null) {
+      builder.setManifestStoreResult(manifestStoreResult);
     }
     return builder;
   }
@@ -601,11 +605,16 @@ class CachingBuildRuleBuilder {
             getBuildInfoRecorder()
                 .addBuildMetadata(
                     BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
-            updateAndStoreManifest(
-                depFileRuleKeyAndInputs.get().getRuleKey(),
-                depFileRuleKeyAndInputs.get().getInputs(),
-                manifestKey.get(),
-                artifactCache);
+            ManifestStoreResult manifestStoreResult =
+                updateAndStoreManifest(
+                    depFileRuleKeyAndInputs.get().getRuleKey(),
+                    depFileRuleKeyAndInputs.get().getInputs(),
+                    manifestKey.get(),
+                    artifactCache);
+            this.manifestStoreResult = manifestStoreResult;
+            if (manifestStoreResult.getStoreFuture().isPresent()) {
+              uploadCompleteFuture = manifestStoreResult.getStoreFuture().get();
+            }
           }
         }
       }
@@ -1330,7 +1339,7 @@ class CachingBuildRuleBuilder {
   }
 
   // Update the on-disk manifest with the new dep-file rule key and push it to the cache.
-  private void updateAndStoreManifest(
+  private ManifestStoreResult updateAndStoreManifest(
       RuleKey key,
       ImmutableSet<SourcePath> inputs,
       RuleKeyAndInputs manifestKey,
@@ -1339,15 +1348,20 @@ class CachingBuildRuleBuilder {
 
     Preconditions.checkState(useManifestCaching());
 
+    ManifestStoreResult.Builder resultBuilder = ManifestStoreResult.builder();
+
     final Path manifestPath = getManifestPath(rule);
     Manifest manifest = new Manifest(manifestKey.getRuleKey());
+    resultBuilder.setDidCreateNewManifest(true);
 
     // If we already have a manifest downloaded, use that.
     if (rule.getProjectFilesystem().exists(manifestPath)) {
       ManifestLoadResult existingManifest = loadManifest(manifestKey.getRuleKey());
+      existingManifest.getError().ifPresent(resultBuilder::setManifestLoadError);
       if (existingManifest.getManifest().isPresent()
           && existingManifest.getManifest().get().getKey().equals(manifestKey.getRuleKey())) {
         manifest = existingManifest.getManifest().get();
+        resultBuilder.setDidCreateNewManifest(false);
       }
     } else {
       // Ensure the path to manifest exist
@@ -1359,6 +1373,7 @@ class CachingBuildRuleBuilder {
     // this efficiently and it's not clear how much benefit this will give us.
     if (manifest.size() >= maxDepFileCacheEntries) {
       manifest = new Manifest(manifestKey.getRuleKey());
+      resultBuilder.setDidCreateNewManifest(true);
     }
 
     // Update the manifest with the new output rule key.
@@ -1379,21 +1394,26 @@ class CachingBuildRuleBuilder {
       ByteStreams.copy(inputStream, outputStream);
     }
 
-    uploadCompleteFuture =
-        cache.store(
-            ArtifactInfo.builder().addRuleKeys(manifestKey.getRuleKey()).build(),
-            BorrowablePath.borrowablePath(tempFile));
+    // Queue the upload operation and save a future wrapping it.
+    resultBuilder.setStoreFuture(
+        MoreFutures.addListenableCallback(
+            cache.store(
+                ArtifactInfo.builder().addRuleKeys(manifestKey.getRuleKey()).build(),
+                BorrowablePath.borrowablePath(tempFile)),
+            MoreFutures.finallyCallback(
+                () -> {
+                  try {
+                    Files.deleteIfExists(tempFile);
+                  } catch (IOException e) {
+                    LOG.warn(
+                        e,
+                        "Error occurred while deleting temporary manifest file for %s",
+                        manifestPath);
+                  }
+                }),
+            MoreExecutors.directExecutor()));
 
-    uploadCompleteFuture.addListener(
-        () -> {
-          try {
-            Files.deleteIfExists(tempFile);
-          } catch (IOException e) {
-            LOG.warn(
-                e, "Error occurred while deleting temporary manifest file for %s", manifestPath);
-          }
-        },
-        MoreExecutors.directExecutor());
+    return resultBuilder.build();
   }
 
   private Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus)

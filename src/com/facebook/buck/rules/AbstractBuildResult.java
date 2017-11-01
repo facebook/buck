@@ -48,6 +48,8 @@ abstract class AbstractBuildResult {
 
   abstract Optional<ManifestFetchResult> getManifestFetchResult();
 
+  abstract Optional<ManifestStoreResult> getManifestStoreResult();
+
   @Value.Check
   void check() {
     Preconditions.checkArgument(
