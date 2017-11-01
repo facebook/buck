@@ -30,6 +30,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -100,27 +101,7 @@ class SignatureFactory {
 
         @Override
         public Void visitExecutable(ExecutableElement element, SignatureVisitor visitor) {
-          if (!signatureRequired(element)) {
-            return null;
-          }
-
-          for (TypeParameterElement typeParameterElement : element.getTypeParameters()) {
-            typeParameterElement.accept(this, visitor);
-          }
-
-          for (VariableElement parameter : element.getParameters()) {
-            parameter.asType().accept(typeVisitorAdapter, visitor.visitParameterType());
-          }
-
-          element.getReturnType().accept(typeVisitorAdapter, visitor.visitReturnType());
-
-          if (throwsATypeVar(element)) {
-            for (TypeMirror thrownType : element.getThrownTypes()) {
-              thrownType.accept(typeVisitorAdapter, visitor.visitExceptionType());
-            }
-          }
-
-          return null;
+          return element.asType().accept(typeVisitorAdapter, visitor);
         }
 
         @Override
@@ -162,6 +143,31 @@ class SignatureFactory {
           }
 
           return defaultAction(t, visitor);
+        }
+
+        @Override
+        public Void visitExecutable(ExecutableType t, SignatureVisitor visitor) {
+          if (!signatureRequired(t)) {
+            return null;
+          }
+
+          for (TypeVariable typeVariable : t.getTypeVariables()) {
+            typeVariable.asElement().accept(elementVisitorAdapter, visitor);
+          }
+
+          for (TypeMirror parameter : t.getParameterTypes()) {
+            parameter.accept(this, visitor.visitParameterType());
+          }
+
+          t.getReturnType().accept(this, visitor.visitReturnType());
+
+          if (throwsATypeVar(t)) {
+            for (TypeMirror thrownType : t.getThrownTypes()) {
+              thrownType.accept(typeVisitorAdapter, visitor.visitExceptionType());
+            }
+          }
+
+          return null;
         }
 
         @Override
@@ -274,6 +280,14 @@ class SignatureFactory {
     return result.isEmpty() ? null : result;
   }
 
+  @Nullable
+  public String getSignature(TypeMirror type) {
+    SignatureWriter writer = new SignatureWriter();
+    type.accept(typeVisitorAdapter, writer);
+    String result = writer.toString();
+    return result.isEmpty() ? null : result;
+  }
+
   /**
    * Returns true if the JVM spec requires a signature to be emitted for this type. See JVMS8
    * 4.7.9.1
@@ -300,30 +314,30 @@ class SignatureFactory {
    * Returns true if the JVM spec requires a signature to be emitted for this method. See JVMS8
    * 4.7.9.1
    */
-  private static boolean signatureRequired(ExecutableElement element) {
-    if (!element.getTypeParameters().isEmpty()) {
+  private static boolean signatureRequired(ExecutableType type) {
+    if (!type.getTypeVariables().isEmpty()) {
       return true;
     }
 
-    if (usesGenerics(element.getReturnType())) {
+    if (usesGenerics(type.getReturnType())) {
       return true;
     }
 
-    for (VariableElement parameter : element.getParameters()) {
-      if (usesGenerics(parameter.asType())) {
+    for (TypeMirror parameterType : type.getParameterTypes()) {
+      if (usesGenerics(parameterType)) {
         return true;
       }
     }
 
-    if (throwsATypeVar(element)) {
+    if (throwsATypeVar(type)) {
       return true;
     }
 
     return false;
   }
 
-  private static boolean throwsATypeVar(ExecutableElement element) {
-    for (TypeMirror thrownType : element.getThrownTypes()) {
+  private static boolean throwsATypeVar(ExecutableType type) {
+    for (TypeMirror thrownType : type.getThrownTypes()) {
       if (thrownType.getKind() == TypeKind.TYPEVAR) {
         return true;
       }
