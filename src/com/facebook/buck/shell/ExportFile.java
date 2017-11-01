@@ -181,4 +181,10 @@ public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
         ? Stream.of(rule.get().getBuildTarget())
         : Stream.empty();
   }
+
+  @Override
+  public boolean isCacheable() {
+    // This rule just copies a file (in COPY mode), so caching is not beneficial here.
+    return false;
+  }
 }
