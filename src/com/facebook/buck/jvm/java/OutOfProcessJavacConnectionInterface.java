@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;

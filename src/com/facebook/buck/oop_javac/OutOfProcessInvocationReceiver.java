@@ -17,7 +17,6 @@
 package com.facebook.buck.oop_javac;
 
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.jvm.java.AbiGenerationMode;
 import com.facebook.buck.jvm.java.JarBackedJavac;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JarParametersSerializer;
@@ -28,6 +27,7 @@ import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacPluginJsr199FieldsSerializer;
 import com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac;
 import com.facebook.buck.jvm.java.OutOfProcessJavacConnectionInterface;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;

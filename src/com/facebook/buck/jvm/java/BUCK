@@ -91,15 +91,6 @@ java_library(
 )
 
 java_library(
-    name = "abi-generation-mode",
-    srcs = [
-        "AbiGenerationMode.java",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [],
-)
-
-java_library(
     name = "javac-sink",
     srcs = [
         "JavacEventSink.java",
@@ -204,7 +195,7 @@ java_immutables_library(
         "TracingProcessorWrapper.java",
     ],
     exported_deps = [
-        "//src/com/facebook/buck/jvm/java:abi-generation-mode",
+        "//src/com/facebook/buck/jvm/java/abi:abi",
     ],
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
@@ -234,7 +225,6 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java:javac-internals",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java:packagefinder",
-        "//src/com/facebook/buck/jvm/java/abi:abi",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/plugin:plugin",
         "//src/com/facebook/buck/jvm/java/tracing:tracing",

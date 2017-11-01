@@ -7,9 +7,9 @@ java_library(
     deps = [
         "//src/com/facebook/buck/event/api:api",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
-        "//src/com/facebook/buck/jvm/java:abi-generation-mode",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/jvm/java/abi:abi-generation-mode",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/model:model",

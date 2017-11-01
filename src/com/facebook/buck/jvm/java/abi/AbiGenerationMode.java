@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.java.abi;
 
 import java.util.Optional;
 import javax.tools.Diagnostic;
