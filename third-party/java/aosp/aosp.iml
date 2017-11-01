@@ -30,11 +30,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../guava/guava-21.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/../guava/guava-23.3-jre.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$MODULE_DIR$/../guava/guava-21.0-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/../guava/guava-23.3-jre-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

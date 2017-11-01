@@ -4,7 +4,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/android/sdklib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-20.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-21.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-23.3-jre.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ini4j/ini4j-0.5.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.4.0.jar!/" />
@@ -34,7 +34,7 @@
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-20.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-21.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-23.3-jre-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.4.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-4.4.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />

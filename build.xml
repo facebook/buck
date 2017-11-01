@@ -90,7 +90,7 @@
     <include name="android/ddmlib-25.3.0.jar" />
     <include name="diffutils/diffutils-1.3.0.jar" />
     <include name="guava/guava-20.0.jar" />
-    <include name="guava/guava-21.0.jar" />
+    <include name="guava/guava-23.3-jre.jar" />
     <include name="ini4j/ini4j-0.5.2.jar" />
     <include name="jackson/jackson-annotations-2.7.8.jar" />
     <include name="jackson/jackson-core-2.7.8.jar" />
@@ -264,7 +264,7 @@
   <fileset dir="${third-party.dir}/java" id="testrunner.jars">
     <include name="android/ddmlib-25.3.0.jar" />
     <include name="guava/guava-20.0.jar" />
-    <include name="guava/guava-21.0.jar" />
+    <include name="guava/guava-23.3-jre.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
@@ -478,7 +478,7 @@
   </target>
 
   <fileset dir="${third-party.dir}/java" id="dx.jars">
-    <include name="guava/guava-21.0.jar" />
+    <include name="guava/guava-23.3-jre.jar" />
   </fileset>
 
   <path id="dx.classpath">
@@ -506,7 +506,7 @@
     </javac>
 
     <jar destfile="${build.dir}/dx.jar">
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-21.0.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-23.3-jre.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.12.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
@@ -565,7 +565,6 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.7.7.201606060606.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.7.201606060606.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/plexus/plexus-utils-3.0.20.jar"/>
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-20.0.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-6.0.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-analysis-6.0.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-commons-6.0.jar" />
@@ -765,7 +764,7 @@
 
   <path id="pmd-classpath">
     <fileset dir="${basedir}/pmd" includes="*.jar" />
-    <pathelement location="${third-party.dir}/java/guava/guava-21.0.jar" />
+    <pathelement location="${third-party.dir}/java/guava/guava-23.3-jre.jar" />
   </path>
 
   <!--
@@ -936,6 +935,9 @@
 
     <!-- Include the Compiler Tree API stub because its types are used in some places. -->
     <pathelement location="${third-party.dir}/java/jdk/stub-compiler-tree-api.jar" />
+
+    <!-- Guava depends on some j2objc stuff when dealing with javadocs. -->
+    <pathelement location="${third-party.dir}/java/j2objc/j2objc-annotations-1.3.jar" />
   </path>
 
   <target name="javadoc"
