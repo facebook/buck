@@ -51,8 +51,8 @@ public class Manifest {
 
   private final RuleKey key;
 
-  private final List<String> headers;
-  private final Map<String, Integer> headerIndices;
+  private final List<String> inputs;
+  private final Map<String, Integer> inputIndices;
 
   private final List<Pair<Integer, HashCode>> hashes;
   private final Map<HashCode, Integer> hashIndices;
@@ -62,8 +62,8 @@ public class Manifest {
   /** Create an empty manifest. */
   public Manifest(RuleKey key) {
     this.key = key;
-    headers = new ArrayList<>();
-    headerIndices = new HashMap<>();
+    inputs = new ArrayList<>();
+    inputIndices = new HashMap<>();
     hashes = new ArrayList<>();
     hashIndices = new HashMap<>();
     entries = new ArrayList<>();
@@ -80,13 +80,13 @@ public class Manifest {
     key = new RuleKey(input.readUTF());
 
     int numberOfHeaders = input.readInt();
-    LOG.verbose("%s: loading %d header entries", this.key, numberOfHeaders);
-    headers = new ArrayList<>(numberOfHeaders);
-    headerIndices = new HashMap<>(numberOfHeaders);
+    LOG.verbose("%s: loading %d input entries", this.key, numberOfHeaders);
+    inputs = new ArrayList<>(numberOfHeaders);
+    inputIndices = new HashMap<>(numberOfHeaders);
     for (int index = 0; index < numberOfHeaders; index++) {
-      String header = input.readUTF();
-      headers.add(header);
-      headerIndices.put(header, index);
+      String inputName = input.readUTF();
+      inputs.add(inputName);
+      inputIndices.put(inputName, index);
     }
 
     int numberOfHashes = input.readInt();
@@ -94,10 +94,10 @@ public class Manifest {
     hashes = new ArrayList<>(numberOfHashes);
     hashIndices = new HashMap<>(numberOfHashes);
     for (int index = 0; index < numberOfHashes; index++) {
-      int headerIndex = input.readInt();
-      HashCode headerHash = HashCode.fromString(input.readUTF());
-      hashes.add(new Pair<>(headerIndex, headerHash));
-      hashIndices.put(headerHash, index);
+      int inputIndex = input.readInt();
+      HashCode inputHash = HashCode.fromString(input.readUTF());
+      hashes.add(new Pair<>(inputIndex, inputHash));
+      hashIndices.put(inputHash, index);
     }
 
     int numberOfEntries = input.readInt();
@@ -119,17 +119,17 @@ public class Manifest {
     return key;
   }
 
-  private Integer addHash(String header, HashCode hash) {
-    Integer headerIndex = headerIndices.get(header);
-    if (headerIndex == null) {
-      headers.add(header);
-      headerIndex = headers.size() - 1;
-      headerIndices.put(header, headerIndex);
+  private Integer addHash(String input, HashCode hash) {
+    Integer inputIndex = inputIndices.get(input);
+    if (inputIndex == null) {
+      inputs.add(input);
+      inputIndex = inputs.size() - 1;
+      inputIndices.put(input, inputIndex);
     }
 
     Integer hashIndex = hashIndices.get(hash);
     if (hashIndex == null) {
-      hashes.add(new Pair<>(headerIndex, hash));
+      hashes.add(new Pair<>(inputIndex, hash));
       hashIndex = hashes.size() - 1;
       hashIndices.put(hash, hashIndex);
     }
@@ -171,8 +171,8 @@ public class Manifest {
       throws IOException {
     for (int hashIndex : hashIndices) {
       Pair<Integer, HashCode> hashEntry = hashes.get(hashIndex);
-      String header = headers.get(hashEntry.getFirst());
-      ImmutableList<SourcePath> candidates = universe.get(header);
+      String input = inputs.get(hashEntry.getFirst());
+      ImmutableList<SourcePath> candidates = universe.get(input);
       if (candidates.isEmpty()) {
         return false;
       }
@@ -182,8 +182,8 @@ public class Manifest {
       } catch (NoSuchFileException e) {
         return false;
       }
-      HashCode headerHash = hashEntry.getSecond();
-      if (!headerHash.equals(onDiskHeaderHash)) {
+      HashCode inputHash = hashEntry.getSecond();
+      if (!inputHash.equals(onDiskHeaderHash)) {
         return false;
       }
     }
@@ -201,7 +201,7 @@ public class Manifest {
     ImmutableSet.Builder<String> interestingPathsBuilder = new ImmutableSet.Builder<>();
     for (Pair<?, int[]> entry : entries) {
       for (int hashIndex : entry.getSecond()) {
-        interestingPathsBuilder.add(headers.get(hashes.get(hashIndex).getFirst()));
+        interestingPathsBuilder.add(inputs.get(hashes.get(hashIndex).getFirst()));
       }
     }
     ImmutableSet<String> interestingPaths = interestingPathsBuilder.build();
@@ -269,9 +269,9 @@ public class Manifest {
 
     output.writeUTF(key.toString());
 
-    output.writeInt(headers.size());
-    for (String header : headers) {
-      output.writeUTF(header);
+    output.writeInt(inputs.size());
+    for (String input : inputs) {
+      output.writeUTF(input);
     }
 
     output.writeInt(hashes.size());
@@ -301,9 +301,9 @@ public class Manifest {
       ImmutableMap.Builder<String, HashCode> entryBuilder = ImmutableMap.builder();
       for (int hashIndex : entry.getSecond()) {
         Pair<Integer, HashCode> hashEntry = hashes.get(hashIndex);
-        String header = headers.get(hashEntry.getFirst());
-        HashCode headerHash = hashEntry.getSecond();
-        entryBuilder.put(header, headerHash);
+        String input = inputs.get(hashEntry.getFirst());
+        HashCode inputHash = hashEntry.getSecond();
+        entryBuilder.put(input, inputHash);
       }
       builder.put(entry.getFirst(), entryBuilder.build());
     }
@@ -324,6 +324,7 @@ public class Manifest {
     }
     return manifest;
   }
+
   /**
    * Create a multimap that's the result of apply the function to the input values, filtered by a
    * predicate.
