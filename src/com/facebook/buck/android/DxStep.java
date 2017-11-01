@@ -75,8 +75,9 @@ public class DxStep extends ShellStep {
     ;
   }
 
-  /** Available tools to create dex files **/
+  /** Available tools to create dex files * */
   public static final String DX = "dx";
+
   public static final String D8 = "d8";
 
   private final ProjectFilesystem filesystem;
@@ -171,8 +172,8 @@ public class DxStep extends ShellStep {
             || options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         "In-process dexing is only supported with custom DX");
 
-    Preconditions.checkArgument(!intermediate || dexTool.equals(D8),
-        "Intermediate dexing is only supported with D8");
+    Preconditions.checkArgument(
+        !intermediate || dexTool.equals(D8), "Intermediate dexing is only supported with D8");
   }
 
   @Override
@@ -258,13 +259,16 @@ public class DxStep extends ShellStep {
         boolean outputToDex = outputDexFile.getFileName().toString().endsWith(".dex");
         Path output = outputToDex ? Files.createTempDirectory("buck-d8") : outputDexFile;
 
-        D8Command.Builder builder = D8Command.builder()
-            .addProgramFiles(inputs)
-            .setIntermediate(intermediate)
-            .setMode(options.contains(Option.NO_OPTIMIZE)
-                ? CompilationMode.DEBUG : CompilationMode.RELEASE)
-            .setDiagnosticsHandler(diagnosticsHandler)
-            .setOutputPath(output);
+        D8Command.Builder builder =
+            D8Command.builder()
+                .addProgramFiles(inputs)
+                .setIntermediate(intermediate)
+                .setMode(
+                    options.contains(Option.NO_OPTIMIZE)
+                        ? CompilationMode.DEBUG
+                        : CompilationMode.RELEASE)
+                .setDiagnosticsHandler(diagnosticsHandler)
+                .setOutputPath(output);
 
         D8Output d8Output = com.android.tools.r8.D8.run(builder.build());
 
@@ -278,18 +282,23 @@ public class DxStep extends ShellStep {
         resourcesReferencedInCode = d8Output.getReferencedResources();
         return 0;
       } catch (CompilationException | IOException e) {
-        context.postEvent(ConsoleEvent.severe(String.join(System.lineSeparator(),
-            diagnosticsHandler.diagnostics.stream()
-                .map(Diagnostic::getDiagnosticMessage)
-                .collect(MoreCollectors.toImmutableList())
-        )));
+        context.postEvent(
+            ConsoleEvent.severe(
+                String.join(
+                    System.lineSeparator(),
+                    diagnosticsHandler
+                        .diagnostics
+                        .stream()
+                        .map(Diagnostic::getDiagnosticMessage)
+                        .collect(MoreCollectors.toImmutableList()))));
         e.printStackTrace(context.getStdErr());
         return 1;
       }
     } else if (DX.equals(dexTool)) {
       ImmutableList<String> argv = getShellCommandInternal(context);
 
-      // The first arguments should be ".../dx --dex" ("...\dx.bat --dex on Windows).  Strip them off
+      // The first arguments should be ".../dx --dex" ("...\dx.bat --dex on Windows).  Strip them
+      // off
       // because we bypass the dispatcher and go straight to the dexer.
       Preconditions.checkState(
           argv.get(0).endsWith(File.separator + "dx") || argv.get(0).endsWith("\\dx.bat"));
@@ -358,6 +367,6 @@ public class DxStep extends ShellStep {
     }
 
     @Override
-    public void info(Diagnostic info) { }
+    public void info(Diagnostic info) {}
   }
 }

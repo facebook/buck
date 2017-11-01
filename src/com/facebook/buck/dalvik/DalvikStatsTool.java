@@ -301,23 +301,23 @@ public class DalvikStatsTool {
 
       @Override
       /**
-      * 
-      * Lambdas/Method Refs for D8 desugaring
-      *
-      * Stateless (no arguments) - Adds 1 class, 1 field (for instance var) and 2 methods (1 constructor + 1 accessor)
-      * Stateful (has arguments) - Adds 1 class, 1 field per argument and 3 methods ( 1 constructor + 1 accessor + 1 bridge)
-      *
-      * we always assume the worst case and for every invoke dynamic in the bytecode,
-      * augmenting the dex references by the max possible fields/methods.
-      * At worst, we will end up over estimating slightly,
-      * but real world test has shown that the difference is very small to notice.
-      *
-      */
+       * Lambdas/Method Refs for D8 desugaring
+       *
+       * <p>Stateless (no arguments) - Adds 1 class, 1 field (for instance var) and 2 methods (1
+       * constructor + 1 accessor) Stateful (has arguments) - Adds 1 class, 1 field per argument and
+       * 3 methods ( 1 constructor + 1 accessor + 1 bridge)
+       *
+       * <p>we always assume the worst case and for every invoke dynamic in the bytecode, augmenting
+       * the dex references by the max possible fields/methods. At worst, we will end up over
+       * estimating slightly, but real world test has shown that the difference is very small to
+       * notice.
+       */
       public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
         super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
         registerMethodHandleType(bsm);
 
-        String uid = String.valueOf(DalvikMemberReference.of(bsm.getOwner(), name, desc).hashCode());
+        String uid =
+            String.valueOf(DalvikMemberReference.of(bsm.getOwner(), name, desc).hashCode());
         createAdditionalFieldsForDesugar(uid + String.valueOf(bsm.hashCode()));
         for (Object arg : bsmArgs) {
           if (arg instanceof Handle) {
@@ -392,10 +392,7 @@ public class DalvikStatsTool {
           case Opcodes.H_GETSTATIC:
           case Opcodes.H_PUTFIELD:
           case Opcodes.H_PUTSTATIC:
-            visitFieldInsn(Opcodes.GETFIELD,
-                handle.getOwner(),
-                handle.getName(),
-                handle.getDesc());
+            visitFieldInsn(Opcodes.GETFIELD, handle.getOwner(), handle.getName(), handle.getDesc());
             break;
           case Opcodes.H_INVOKEVIRTUAL:
           case Opcodes.H_INVOKEINTERFACE:
@@ -411,7 +408,8 @@ public class DalvikStatsTool {
             createAdditionalMethodsForDesugar(handle);
             break;
           default:
-            throw new IllegalStateException("MethodHandle tag is not supported: " + handle.getTag());
+            throw new IllegalStateException(
+                "MethodHandle tag is not supported: " + handle.getTag());
         }
       }
 
@@ -437,11 +435,7 @@ public class DalvikStatsTool {
       }
 
       private void createAdditionalFieldsForDesugar(String uid) {
-        visitFieldInsn(
-            Opcodes.GETFIELD,
-            "-$$Lambda$" + uid,
-            "lambda$field$" + uid,
-            "desugared");
+        visitFieldInsn(Opcodes.GETFIELD, "-$$Lambda$" + uid, "lambda$field$" + uid, "desugared");
       }
     }
 
