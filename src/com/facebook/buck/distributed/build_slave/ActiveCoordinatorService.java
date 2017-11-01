@@ -32,11 +32,15 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
 
   private final MinionWorkloadAllocator allocator;
   private final CompletableFuture<Integer> exitCodeFuture;
+  private final DistBuildTraceTracker chromeTraceTracker;
 
   public ActiveCoordinatorService(
-      MinionWorkloadAllocator allocator, CompletableFuture<Integer> exitCodeFuture) {
+      MinionWorkloadAllocator allocator,
+      CompletableFuture<Integer> exitCodeFuture,
+      DistBuildTraceTracker chromeTraceTracker) {
     this.allocator = allocator;
     this.exitCodeFuture = exitCodeFuture;
+    this.chromeTraceTracker = chromeTraceTracker;
   }
 
   @Override
@@ -68,6 +72,9 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     List<WorkUnit> newWorkUnitsForMinion =
         allocator.dequeueZeroDependencyNodes(
             request.getMinionId(), request.getFinishedTargets(), request.getMaxWorkUnitsToFetch());
+
+    chromeTraceTracker.updateWork(
+        request.getMinionId(), request.getFinishedTargets(), newWorkUnitsForMinion);
 
     // If the build is already finished (or just finished with this update, then signal this to
     // the minion.

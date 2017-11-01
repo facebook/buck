@@ -29,6 +29,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -57,7 +58,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildConfig distBuildConfig,
       DistBuildService distBuildService,
       StampedeId stampedeId,
-      boolean isLocalMinionAlsoRunning) {
+      boolean isLocalMinionAlsoRunning,
+      Path logDirectoryPath) {
     ListenableFuture<BuildTargetsQueue> queue =
         Futures.transform(
             actionGraphAndResolverFuture, x -> createBuildQueue(x, topLevelTargetsToBuild));
@@ -68,7 +70,7 @@ public class MultiSlaveBuildModeRunnerFactory {
     ThriftCoordinatorServer.EventListener listener =
         new CoordinatorEventListener(
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
-    return new CoordinatorModeRunner(queue, stampedeId, listener);
+    return new CoordinatorModeRunner(queue, stampedeId, listener, logDirectoryPath);
   }
 
   /**
@@ -118,7 +120,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildService distBuildService,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
-      BuildExecutor localBuildExecutor) {
+      BuildExecutor localBuildExecutor,
+      Path logDirectoryPath) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             actionGraphAndResolverFuture,
@@ -126,7 +129,8 @@ public class MultiSlaveBuildModeRunnerFactory {
             distBuildConfig,
             distBuildService,
             stampedeId,
-            true),
+            true,
+            logDirectoryPath),
         createMinion(
             localBuildExecutor,
             distBuildService,

@@ -129,6 +129,7 @@ public abstract class DistBuildFactory {
                 // state.getRootCell().getBuckConfig().getKeySeed()
                 .setCacheKeySeed(params.getBuckConfig().getKeySeed())
                 .setConsole(params.getConsole())
+                .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)
                 .setExecutors(params.getExecutors())
                 .setDistBuildMode(mode)

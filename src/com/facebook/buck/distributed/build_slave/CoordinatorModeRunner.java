@@ -17,13 +17,17 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.OptionalInt;
 
 public class CoordinatorModeRunner implements DistBuildModeRunner {
+  private static final Logger LOG = Logger.get(CoordinatorModeRunner.class);
 
   // Note that this is only the port specified by the caller.
   // If this is zero, the server might be running on any other free port.
@@ -32,6 +36,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
   private final ListenableFuture<BuildTargetsQueue> queue;
   private final StampedeId stampedeId;
+  private final Path logDirectoryPath;
   private final ThriftCoordinatorServer.EventListener eventListener;
 
   /**
@@ -43,9 +48,11 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
       OptionalInt coordinatorPort,
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
-      ThriftCoordinatorServer.EventListener eventListener) {
+      ThriftCoordinatorServer.EventListener eventListener,
+      Path logDirectoryPath) {
     this.stampedeId = stampedeId;
     coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
+    this.logDirectoryPath = logDirectoryPath;
     this.queue = queue;
     this.coordinatorPort = coordinatorPort;
     this.eventListener = eventListener;
@@ -54,8 +61,9 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   public CoordinatorModeRunner(
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
-      ThriftCoordinatorServer.EventListener eventListener) {
-    this(OptionalInt.empty(), queue, stampedeId, eventListener);
+      ThriftCoordinatorServer.EventListener eventListener,
+      Path logDirectoryPath) {
+    this(OptionalInt.empty(), queue, stampedeId, eventListener, logDirectoryPath);
   }
 
   @Override
@@ -107,6 +115,14 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
     @Override
     public void close() throws IOException {
       this.server.close();
+
+      try {
+        this.server
+            .traceSnapshot()
+            .dumpToChromeTrace(logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME));
+      } catch (Exception e) {
+        LOG.warn("Failed to write chrome trace", e);
+      }
     }
   }
 }

@@ -59,6 +59,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private static final long MAX_TEAR_DOWN_MILLIS = TimeUnit.SECONDS.toMillis(2);
   private static final long MAX_DIST_BUILD_DURATION_MILLIS = TimeUnit.HOURS.toMillis(2);
 
+  private final DistBuildTraceTracker chromeTraceTracker;
   private final CoordinatorService.Processor<CoordinatorService.Iface> processor;
   private final Object lock;
   private final CompletableFuture<Integer> exitCodeFuture;
@@ -76,11 +77,12 @@ public class ThriftCoordinatorServer implements Closeable {
       OptionalInt port,
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
-      ThriftCoordinatorServer.EventListener eventListener) {
+      EventListener eventListener) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
+    this.chromeTraceTracker = new DistBuildTraceTracker(stampedeId);
     this.port = port;
     this.handler = new IdleCoordinatorService();
     CoordinatorServiceHandler handlerWrapper = new CoordinatorServiceHandler();
@@ -141,6 +143,13 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
+  /** Create a snapshot of dist build trace. */
+  public DistBuildTrace traceSnapshot() {
+    synchronized (lock) {
+      return chromeTraceTracker.snapshot();
+    }
+  }
+
   public Future<Integer> getExitCode() {
     return exitCodeFuture;
   }
@@ -159,7 +168,7 @@ public class ThriftCoordinatorServer implements Closeable {
     Preconditions.checkState(queue.isDone());
     try {
       MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
-      this.handler = new ActiveCoordinatorService(allocator, exitCodeFuture);
+      this.handler = new ActiveCoordinatorService(allocator, exitCodeFuture, chromeTraceTracker);
     } catch (InterruptedException | ExecutionException e) {
       String msg = "Failed to create the BuildTargetsQueue.";
       LOG.error(msg);

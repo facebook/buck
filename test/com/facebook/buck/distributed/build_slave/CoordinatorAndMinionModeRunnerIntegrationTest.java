@@ -20,28 +20,37 @@ import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.OptionalInt;
 import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
 
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
+
   @Test
   public void testDiamondGraphRun()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
+
+    Path logDirectoryPath = tempDir.getRoot().toPath();
 
     ThriftCoordinatorServer.EventListener eventListener =
         EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
     SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
     queueFuture.set(BuildTargetsQueueTest.createDiamondDependencyQueue());
+
     CoordinatorModeRunner coordinator =
-        new CoordinatorModeRunner(queueFuture, STAMPEDE_ID, eventListener);
+        new CoordinatorModeRunner(queueFuture, STAMPEDE_ID, eventListener, logDirectoryPath);
     FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
@@ -58,5 +67,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     Assert.assertEquals(0, exitCode);
     Assert.assertEquals(4, localBuilder.getBuildTargets().size());
     Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));
+
+    Path buildTracePath = logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME);
+    Assert.assertTrue(buildTracePath.toFile().exists());
   }
 }

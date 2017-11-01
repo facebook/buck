@@ -36,12 +36,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class MinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
+
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
   @Test(expected = ThriftException.class)
   public void testMinionWithoutServerAndWithUnfinishedBuild()

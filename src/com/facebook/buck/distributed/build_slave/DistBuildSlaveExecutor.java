@@ -55,7 +55,8 @@ public class DistBuildSlaveExecutor {
               args.getDistBuildConfig(),
               args.getDistBuildService(),
               args.getStampedeId(),
-              false)
+              false,
+              args.getLogDirectoryPath())
           .runAndReturnExitCode();
     }
 
@@ -99,7 +100,8 @@ public class DistBuildSlaveExecutor {
                   args.getDistBuildService(),
                   args.getStampedeId(),
                   args.getBuildSlaveRunId(),
-                  localBuildExecutor);
+                  localBuildExecutor,
+                  args.getLogDirectoryPath());
           break;
 
         case COORDINATOR:

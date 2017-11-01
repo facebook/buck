@@ -40,6 +40,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.nio.file.Path;
 import java.util.Map;
 import org.immutables.value.Value;
 
@@ -65,6 +66,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract Console getConsole();
 
   public abstract ArtifactCacheFactory getArtifactCacheFactory();
+
+  public abstract Path getLogDirectoryPath();
 
   public abstract Platform getPlatform();
 
