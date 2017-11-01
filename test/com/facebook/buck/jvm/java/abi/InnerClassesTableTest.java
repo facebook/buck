@@ -107,10 +107,10 @@ public class InnerClassesTableTest {
             "com/example/buck/TopLevel$StaticMember",
             "com/example/buck/TopLevel$StaticMember$StaticMemberMember");
   }
-  //endregion
+  // endregion
 
   // Edge case tests that don't belong anywhere else.
-  //region EdgeCasesTests
+  // region EdgeCasesTests
   @Test
   public void doesNotListInnersOfInnersIfNotReferenced() throws IOException {
     tester
@@ -167,7 +167,7 @@ public class InnerClassesTableTest {
             "com/example/buck/TopLevel$StaticMember$Inner",
             "com/example/buck/TopLevel$StaticMember$Inner$Innermost");
   }
-  //endregion
+  // endregion
 
   // Tests that inner class references are found even if they are deeply inside some compound type
   // expression.
@@ -578,10 +578,11 @@ public class InnerClassesTableTest {
 
       DescriptorFactory descriptorFactory = new DescriptorFactory(elements);
       AccessFlags accessFlags = new AccessFlags(elements);
-      InnerClassesTable innerClassesTable = new InnerClassesTable(descriptorFactory, accessFlags);
+      InnerClassesTable innerClassesTable =
+          new InnerClassesTable(descriptorFactory, accessFlags, topElement);
 
       ClassNode classNode = new ClassNode(Opcodes.ASM6);
-      innerClassesTable.reportInnerClassReferences(topElement, classNode);
+      innerClassesTable.reportInnerClassReferences(classNode);
 
       assertEquals(
           Arrays.asList(innerClassesEntries),

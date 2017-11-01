@@ -50,7 +50,6 @@ class ClassVisitorDriverFromElement {
   private final SourceVersion targetVersion;
   private final Elements elements;
   private final AccessFlags accessFlagsUtils;
-  private final InnerClassesTable innerClassesTable;
   private final boolean includeParameterMetadata;
 
   /**
@@ -71,7 +70,6 @@ class ClassVisitorDriverFromElement {
     this.includeParameterMetadata = includeParameterMetadata;
     signatureFactory = new SignatureFactory(descriptorFactory);
     accessFlagsUtils = new AccessFlags(elements);
-    innerClassesTable = new InnerClassesTable(descriptorFactory, accessFlagsUtils);
   }
 
   public void driveVisitor(Element fullElement, ClassVisitor visitor) {
@@ -124,7 +122,8 @@ class ClassVisitorDriverFromElement {
 
       visitAnnotations(e, classVisitor::visitAnnotation);
 
-      innerClassesTable.reportInnerClassReferences(e, classVisitor);
+      new InnerClassesTable(descriptorFactory, accessFlagsUtils, e)
+          .reportInnerClassReferences(classVisitor);
 
       classVisitor.visitEnd();
 
@@ -162,7 +161,9 @@ class ClassVisitorDriverFromElement {
 
       super.visitType(e, visitor);
 
-      innerClassesTable.reportInnerClassReferences(e, visitor);
+      InnerClassesTable innerClassesTable =
+          new InnerClassesTable(descriptorFactory, accessFlagsUtils, e);
+      innerClassesTable.reportInnerClassReferences(visitor);
 
       return null;
     }

@@ -47,16 +47,88 @@ import org.objectweb.asm.Opcodes;
 public class InnerClassesTable {
   private final DescriptorFactory descriptorFactory;
   private final AccessFlags accessFlagsUtils;
+  private final Element topElement;
+  private final Set<TypeElement> referencesToInners = new HashSet<>();
 
-  public InnerClassesTable(DescriptorFactory descriptorFactory, AccessFlags accessFlagsUtils) {
+  public InnerClassesTable(
+      DescriptorFactory descriptorFactory, AccessFlags accessFlagsUtils, Element topElement) {
     this.descriptorFactory = descriptorFactory;
     this.accessFlagsUtils = accessFlagsUtils;
+    this.topElement = topElement;
   }
 
-  public void reportInnerClassReferences(Element topElement, ClassVisitor visitor) {
+  public void addTypeReferences(TypeMirror type) {
+    new TypeScanner8<Void, Void>() {
+      @Override
+      public Void scan(@Nullable TypeMirror t, Void aVoid) {
+        if (t == null) {
+          return null;
+        }
+        return super.scan(t, aVoid);
+      }
+
+      @Override
+      public Void visitDeclared(DeclaredType t, Void aVoid) {
+        TypeElement element = (TypeElement) t.asElement();
+        if (element.getNestingKind() == NestingKind.MEMBER) {
+          referencesToInners.add(element);
+          element.getEnclosingElement().asType().accept(this, null);
+        }
+
+        try {
+          return super.visitDeclared(t, aVoid);
+        } catch (CannotInferException e) {
+          // We cannot know the enclosing type or type arguments of an inferred type, so
+          // we can't visit them for type references. However, inferred type mirrors are
+          // only returned from asType on an inferred type element. If there were
+          // type arguments in the code, we'd have a StandaloneDeclaredType instead of
+          // an InferredType. Similarly, the enclosing type will be visited by way of
+          // visiting the enclosing element above. So it's safe to just ignore the
+          // exception.
+
+          return null;
+        }
+      }
+    }.scan(type);
+  }
+
+  private void addTypeReferences(List<? extends AnnotationMirror> annotationMirrors) {
+    annotationMirrors.forEach(this::addTypeReferences);
+  }
+
+  private void addTypeReferences(AnnotationMirror annotationMirror) {
+    addTypeReferences(annotationMirror.getAnnotationType());
+    annotationMirror.getElementValues().values().forEach(this::addTypeReferences);
+  }
+
+  private void addTypeReferences(@Nullable AnnotationValue annotationValue) {
+    if (annotationValue == null) {
+      return;
+    }
+    new AnnotationValueScanner8<Void, Void>() {
+      @Override
+      public Void visitType(TypeMirror t, Void aVoid) {
+        addTypeReferences(t);
+        return super.visitType(t, aVoid);
+      }
+
+      @Override
+      public Void visitEnumConstant(VariableElement c, Void aVoid) {
+        addTypeReferences(c.asType());
+        return super.visitEnumConstant(c, aVoid);
+      }
+
+      @Override
+      public Void visitAnnotation(AnnotationMirror a, Void aVoid) {
+        addTypeReferences(a.getAnnotationType());
+        return super.visitAnnotation(a, aVoid);
+      }
+    }.scan(annotationValue);
+  }
+
+  public void reportInnerClassReferences(ClassVisitor visitor) {
     List<TypeElement> enclosingClasses = new ArrayList<>();
     List<TypeElement> memberClasses = new ArrayList<>();
-    Set<TypeElement> referencesToInners = new HashSet<>();
 
     ElementKind elementKind = topElement.getKind();
     if (elementKind.isClass() || elementKind.isInterface()) {
@@ -90,7 +162,7 @@ public class InnerClassesTable {
             addTypeReferences(e.getAnnotationMirrors());
             e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
             addTypeReferences(e.getSuperclass());
-            e.getInterfaces().forEach(this::addTypeReferences);
+            e.getInterfaces().forEach(InnerClassesTable.this::addTypeReferences);
             // Members will be visited in the call to super, below
 
             return super.visitType(e, aVoid);
@@ -103,7 +175,7 @@ public class InnerClassesTable {
             addTypeReferences(e.getReturnType());
             addTypeReferences(e.getDefaultValue());
             // Parameters will be visited in the call to super, below
-            e.getThrownTypes().forEach(this::addTypeReferences);
+            e.getThrownTypes().forEach(InnerClassesTable.this::addTypeReferences);
             return super.visitExecutable(e, aVoid);
           }
 
@@ -119,75 +191,6 @@ public class InnerClassesTable {
             addTypeReferences(e.getAnnotationMirrors());
             addTypeReferences(e.asType());
             return super.visitTypeParameter(e, aVoid);
-          }
-
-          private void addTypeReferences(TypeMirror type) {
-            new TypeScanner8<Void, Void>() {
-              @Override
-              public Void scan(@Nullable TypeMirror t, Void aVoid) {
-                if (t == null) {
-                  return null;
-                }
-                return super.scan(t, aVoid);
-              }
-
-              @Override
-              public Void visitDeclared(DeclaredType t, Void aVoid) {
-                TypeElement element = (TypeElement) t.asElement();
-                if (element.getNestingKind() == NestingKind.MEMBER) {
-                  referencesToInners.add(element);
-                  element.getEnclosingElement().asType().accept(this, null);
-                }
-
-                try {
-                  return super.visitDeclared(t, aVoid);
-                } catch (CannotInferException e) {
-                  // We cannot know the enclosing type or type arguments of an inferred type, so
-                  // we can't visit them for type references. However, inferred type mirrors are
-                  // only returned from asType on an inferred type element. If there were
-                  // type arguments in the code, we'd have a StandaloneDeclaredType instead of
-                  // an InferredType. Similarly, the enclosing type will be visited by way of
-                  // visiting the enclosing element above. So it's safe to just ignore the
-                  // exception.
-
-                  return null;
-                }
-              }
-            }.scan(type);
-          }
-
-          private void addTypeReferences(List<? extends AnnotationMirror> annotationMirrors) {
-            annotationMirrors.forEach(this::addTypeReferences);
-          }
-
-          private void addTypeReferences(AnnotationMirror annotationMirror) {
-            addTypeReferences(annotationMirror.getAnnotationType());
-            annotationMirror.getElementValues().values().forEach(this::addTypeReferences);
-          }
-
-          private void addTypeReferences(@Nullable AnnotationValue annotationValue) {
-            if (annotationValue == null) {
-              return;
-            }
-            new AnnotationValueScanner8<Void, Void>() {
-              @Override
-              public Void visitType(TypeMirror t, Void aVoid) {
-                addTypeReferences(t);
-                return super.visitType(t, aVoid);
-              }
-
-              @Override
-              public Void visitEnumConstant(VariableElement c, Void aVoid) {
-                addTypeReferences(c.asType());
-                return super.visitEnumConstant(c, aVoid);
-              }
-
-              @Override
-              public Void visitAnnotation(AnnotationMirror a, Void aVoid) {
-                addTypeReferences(a.getAnnotationType());
-                return super.visitAnnotation(a, aVoid);
-              }
-            }.scan(annotationValue);
           }
         };
     elementScanner.scan(topElement);
