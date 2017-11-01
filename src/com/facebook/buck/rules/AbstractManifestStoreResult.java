@@ -39,6 +39,9 @@ interface AbstractManifestStoreResult {
   /** @return whether an existing manifest was updated, or a new one was stored. */
   boolean didCreateNewManifest();
 
+  /** @return stats for the stored manifest. */
+  ManifestStats getManifestStats();
+
   /** @return the error generated when trying to load an existing manifest. */
   Optional<String> getManifestLoadError();
 

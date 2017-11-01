@@ -343,4 +343,12 @@ public class Manifest {
     }
     return builder.build();
   }
+
+  ManifestStats getStats() {
+    return ManifestStats.builder()
+        .setNumDepFiles(entries.size())
+        .setNumInputs(inputs.size())
+        .setNumHashes(hashes.size())
+        .build();
+  }
 }

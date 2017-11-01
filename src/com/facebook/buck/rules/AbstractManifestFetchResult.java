@@ -43,6 +43,9 @@ abstract class AbstractManifestFetchResult {
         !getDepFileRuleKey().isPresent() || isManifestValid(),
         "dep file rule key should only be provided if there is a valid manifest");
     Preconditions.checkArgument(
+        getManifestStats().isPresent() == isManifestValid(),
+        "manifest stats should be provided iff there is a valid manifest");
+    Preconditions.checkArgument(
         getRuleCacheResult().isPresent() == getDepFileRuleKey().isPresent(),
         "rule cache result should be provided iff there is a dep file rule key");
   }
@@ -52,6 +55,9 @@ abstract class AbstractManifestFetchResult {
 
   /** @return the error generated when trying to load the manifest. */
   abstract Optional<String> getManifestLoadError();
+
+  /** @return stats for the fetched manifest. */
+  abstract Optional<ManifestStats> getManifestStats();
 
   /** @return the matching dep file rule key found in the manifest. */
   abstract Optional<RuleKey> getDepFileRuleKey();

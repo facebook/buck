@@ -1379,6 +1379,10 @@ class CachingBuildRuleBuilder {
     // Update the manifest with the new output rule key.
     manifest.addEntry(fileHashCache, key, pathResolver, manifestKey.getInputs(), inputs);
 
+    // Record the current manifest stats settings now that we've finalized the manifest we're going
+    // to store.
+    resultBuilder.setManifestStats(manifest.getStats());
+
     // Serialize the manifest to disk.
     try (OutputStream outputStream =
         rule.getProjectFilesystem().newFileOutputStream(manifestPath)) {
@@ -1507,6 +1511,7 @@ class CachingBuildRuleBuilder {
               rule.getBuildTarget(),
               keyAndInputs.getRuleKey(),
               manifest.getKey());
+          manifestFetchResult.setManifestStats(manifest.getStats());
 
           // Lookup the dep file rule key matching the current state of our inputs.
           Optional<RuleKey> depFileRuleKey =
