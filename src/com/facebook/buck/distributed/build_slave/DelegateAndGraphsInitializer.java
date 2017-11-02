@@ -109,7 +109,8 @@ public class DelegateAndGraphsInitializer {
           Preconditions.checkNotNull(
               codec.createTargetGraph(
                   args.getState().getRemoteState().getTargetGraph(),
-                  key -> Preconditions.checkNotNull(cells.get(key))));
+                  key -> Preconditions.checkNotNull(cells.get(key)),
+                  args.getKnownBuildRuleTypesProvider()));
 
       try {
         if (args.getState().getRemoteRootCellConfig().getBuildVersions()) {

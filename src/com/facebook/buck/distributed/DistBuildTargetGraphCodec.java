@@ -28,6 +28,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -117,7 +118,9 @@ public class DistBuildTargetGraphCodec {
   }
 
   public TargetGraphAndBuildTargets createTargetGraph(
-      BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
+      BuildJobStateTargetGraph remoteTargetGraph,
+      Function<Integer, Cell> cellLookup,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
       throws IOException {
 
     ImmutableMap.Builder<BuildTarget, TargetNode<?, ?>> targetNodeIndexBuilder =
@@ -141,6 +144,7 @@ public class DistBuildTargetGraphCodec {
       TargetNode<?, ?> targetNode =
           parserTargetNodeFactory.createTargetNode(
               cell,
+              knownBuildRuleTypesProvider.get(cell),
               buildFilePath,
               target,
               rawNode,

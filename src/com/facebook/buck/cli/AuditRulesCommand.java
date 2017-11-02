@@ -98,7 +98,13 @@ public class AuditRulesCommand extends AbstractCommand {
         params
             .getCell()
             .createBuildFileParser(
-                new DefaultTypeCoercerFactory(), params.getConsole(), params.getBuckEventBus())) {
+                new DefaultTypeCoercerFactory(),
+                params.getConsole(),
+                params.getBuckEventBus(),
+                params
+                    .getKnownBuildRuleTypesProvider()
+                    .get(params.getCell())
+                    .getAllDescriptions())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {

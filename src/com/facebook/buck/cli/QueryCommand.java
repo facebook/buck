@@ -123,6 +123,7 @@ public class QueryCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 pool.getListeningExecutorService(),
                 params.getCell(),
+                params.getKnownBuildRuleTypesProvider(),
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
       ListeningExecutorService executor = pool.getListeningExecutorService();

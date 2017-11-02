@@ -23,12 +23,18 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Benchmark;
@@ -107,6 +113,13 @@ public class ParserBenchmark {
             .build();
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            new KnownBuildRuleTypesFactory(
+                new DefaultProcessExecutor(new TestConsole()),
+                cell.getSdkEnvironment(),
+                new TestToolchainProvider(),
+                BuckPluginManagerFactory.createPluginManager()));
 
     eventBus = BuckEventBusForTests.newInstance();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
@@ -118,7 +131,8 @@ public class ParserBenchmark {
             new BroadcastEventListener(),
             config.getView(ParserConfig.class),
             typeCoercerFactory,
-            marshaller);
+            marshaller,
+            knownBuildRuleTypesProvider);
   }
 
   @After

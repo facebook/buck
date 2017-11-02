@@ -29,7 +29,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DistBuildCellParams;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -98,7 +98,6 @@ public class DistBuildState {
       BuckConfig localBuckConfig, // e.g. the slave's .buckconfig
       BuildJobState jobState,
       Cell rootCell,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
       SdkEnvironment sdkEnvironment,
       ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
@@ -137,8 +136,7 @@ public class DistBuildState {
     }
 
     CellProvider cellProvider =
-        CellProvider.createForDistributedBuild(
-            cellParams.build(), knownBuildRuleTypesFactory, sdkEnvironment);
+        CellProvider.createForDistributedBuild(cellParams.build(), sdkEnvironment);
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
@@ -192,10 +190,13 @@ public class DistBuildState {
     return Preconditions.checkNotNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
   }
 
-  public TargetGraphAndBuildTargets createTargetGraph(DistBuildTargetGraphCodec codec)
+  public TargetGraphAndBuildTargets createTargetGraph(
+      DistBuildTargetGraphCodec codec, KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
       throws IOException {
     return codec.createTargetGraph(
-        remoteState.getTargetGraph(), key -> Preconditions.checkNotNull(cells.get(key)));
+        remoteState.getTargetGraph(),
+        key -> Preconditions.checkNotNull(cells.get(key)),
+        knownBuildRuleTypesProvider);
   }
 
   public ProjectFileHashCache createRemoteFileHashCache(ProjectFileHashCache decoratedCache) {

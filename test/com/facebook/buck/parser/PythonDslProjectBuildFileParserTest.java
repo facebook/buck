@@ -27,12 +27,16 @@ import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
@@ -63,12 +67,21 @@ import org.junit.rules.ExpectedException;
 public class PythonDslProjectBuildFileParserTest {
 
   private Cell cell;
+  private KnownBuildRuleTypes knownBuildRuleTypes;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void createCell() throws IOException, InterruptedException {
     cell = new TestCellBuilder().build();
+    KnownBuildRuleTypesFactory knownBuildRuleTypesFactory =
+        new KnownBuildRuleTypesFactory(
+            new DefaultProcessExecutor(new TestConsole()),
+            cell.getSdkEnvironment(),
+            new TestToolchainProvider(),
+            BuckPluginManagerFactory.createPluginManager());
+    knownBuildRuleTypes =
+        knownBuildRuleTypesFactory.create(cell.getBuckConfig(), cell.getFilesystem());
   }
 
   private static FakeProcess fakeProcessWithJsonOutput(
@@ -98,7 +111,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsSuccessThenProjectBuildFileParserClosesCleanly()
       throws IOException, BuildFileParseException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccess()) {
       buildFileParser.initIfNeeded();
@@ -110,7 +123,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsFailureThenProjectBuildFileParserThrowsOnClose()
       throws IOException, BuildFileParseException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsError()) {
       buildFileParser.initIfNeeded();
@@ -125,7 +138,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
@@ -152,7 +165,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
@@ -192,7 +205,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
@@ -222,7 +235,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
@@ -252,7 +265,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
         "Buck wasn't able to parse foo/BUCK:\n"
@@ -293,7 +306,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
         "Buck wasn't able to parse foo/BUCK:\n"
@@ -332,7 +345,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
@@ -389,7 +402,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
 
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(

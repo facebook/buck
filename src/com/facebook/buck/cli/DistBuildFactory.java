@@ -143,6 +143,7 @@ public abstract class DistBuildFactory {
                 .setDistBuildConfig(distBuildConfig)
                 .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
                 .setTimingStatsTracker(timingStatsTracker)
+                .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
                 .build());
     return executor;
   }

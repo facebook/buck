@@ -20,6 +20,7 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import java.nio.file.Path;
@@ -29,6 +30,7 @@ import java.util.Map;
 public interface ParserTargetNodeFactory<T> {
   T createTargetNode(
       Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
       Path buildFile,
       BuildTarget target,
       Map<String, Object> rawNode,

@@ -76,6 +76,7 @@ public class AuditTestsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 pool.getListeningExecutorService(),
                 params.getCell(),
+                params.getKnownBuildRuleTypesProvider(),
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =

@@ -87,6 +87,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SdkEnvironment;
@@ -665,9 +666,10 @@ public final class Main {
           buildWatchman(
               context, parserConfig, projectWatchList, clientEnvironment, console, clock)) {
 
-        KnownBuildRuleTypesFactory factory =
-            knownBuildRuleTypesFactoryFactory.create(
-                processExecutor, sdkEnvironment, toolchainProvider, pluginManager);
+        KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+            KnownBuildRuleTypesProvider.of(
+                knownBuildRuleTypesFactoryFactory.create(
+                    processExecutor, sdkEnvironment, toolchainProvider, pluginManager));
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
@@ -675,15 +677,19 @@ public final class Main {
                     watchman,
                     buckConfig,
                     command.getConfigOverrides(),
-                    factory,
                     sdkEnvironment,
                     projectFilesystemFactory)
                 .getCellByPath(filesystem.getRootPath());
 
         Optional<Daemon> daemon =
             context.isPresent() && (watchman != Watchman.NULL_WATCHMAN)
-                ? Optional.of(daemonLifecycleManager.getDaemon(rootCell))
+                ? Optional.of(
+                    daemonLifecycleManager.getDaemon(rootCell, knownBuildRuleTypesProvider))
                 : Optional.empty();
+
+        // Used the cached provider, if present.
+        knownBuildRuleTypesProvider =
+            daemon.map(Daemon::getKnownBuildRuleTypesProvider).orElse(knownBuildRuleTypesProvider);
 
         if (!daemon.isPresent() && shouldCleanUpTrash) {
           // Clean up the trash on a background thread if this was a
@@ -1036,7 +1042,8 @@ public final class Main {
                     broadcastEventListener,
                     rootCell.getBuckConfig().getView(ParserConfig.class),
                     typeCoercerFactory,
-                    new ConstructorArgMarshaller(typeCoercerFactory));
+                    new ConstructorArgMarshaller(typeCoercerFactory),
+                    knownBuildRuleTypesProvider);
           }
 
           // Because the Parser is potentially constructed before the CounterRegistry,
@@ -1105,13 +1112,13 @@ public final class Main {
                         .setBuildEnvironmentDescription(buildEnvironmentDescription)
                         .setVersionedTargetGraphCache(versionedTargetGraphCache)
                         .setActionGraphCache(actionGraphCache)
-                        .setKnownBuildRuleTypesFactory(factory)
+                        .setKnownBuildRuleTypesProvider(knownBuildRuleTypesProvider)
                         .setSdkEnvironment(sdkEnvironment)
                         .setInvocationInfo(Optional.of(invocationInfo))
                         .setDefaultRuleKeyFactoryCacheRecycler(defaultRuleKeyFactoryCacheRecycler)
                         .setBuildInfoStoreManager(storeManager)
                         .setProjectFilesystemFactory(projectFilesystemFactory)
-                        .setToolchainProvider(factory.getToolchainProvider())
+                        .setToolchainProvider(toolchainProvider)
                         .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));

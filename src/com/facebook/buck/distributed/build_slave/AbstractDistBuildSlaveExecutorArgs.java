@@ -32,6 +32,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
@@ -97,6 +98,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
+  public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
+
   public int getBuildThreadCount() {
     return getState()
         .getRemoteRootCellConfig()
@@ -138,6 +141,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setExecutorService(this.getExecutorService())
         .setExecutors(this.getExecutors())
         .setProvider(this.getProvider())
+        .setKnownBuildRuleTypesProvider(this.getKnownBuildRuleTypesProvider())
         .build();
   }
 

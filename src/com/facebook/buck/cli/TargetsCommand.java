@@ -48,6 +48,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -630,8 +631,10 @@ public class TargetsCommand extends AbstractCommand {
         ImmutableSet.builder();
     for (String name : types) {
       try {
-        BuildRuleType type = params.getCell().getBuildRuleType(name);
-        Description<?> description = params.getCell().getDescription(type);
+        KnownBuildRuleTypes knownBuildRuleTypes =
+            params.getKnownBuildRuleTypesProvider().get(params.getCell());
+        BuildRuleType type = knownBuildRuleTypes.getBuildRuleType(name);
+        Description<?> description = knownBuildRuleTypes.getDescription(type);
         descriptionClassesBuilder.add((Class<? extends Description<?>>) description.getClass());
       } catch (IllegalArgumentException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe("Invalid build rule type: " + name));
@@ -797,6 +800,7 @@ public class TargetsCommand extends AbstractCommand {
             params.getBuckEventBus(),
             executor,
             params.getCell(),
+            params.getKnownBuildRuleTypesProvider(),
             getEnableParserProfiling(),
             SpeculativeParsing.DISABLED)) {
 

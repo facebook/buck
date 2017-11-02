@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -55,4 +56,6 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
   public abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
 
   public abstract FileContentsProvider getProvider();
+
+  public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
 }

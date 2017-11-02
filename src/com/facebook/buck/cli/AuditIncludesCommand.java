@@ -63,7 +63,13 @@ public class AuditIncludesCommand extends AbstractCommand {
         params
             .getCell()
             .createBuildFileParser(
-                new DefaultTypeCoercerFactory(), params.getConsole(), params.getBuckEventBus())) {
+                new DefaultTypeCoercerFactory(),
+                params.getConsole(),
+                params.getBuckEventBus(),
+                params
+                    .getKnownBuildRuleTypesProvider()
+                    .get(params.getCell())
+                    .getAllDescriptions())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {
@@ -83,10 +89,9 @@ public class AuditIncludesCommand extends AbstractCommand {
         int includesMetadataEntryIndex = 3;
         Preconditions.checkState(
             includesMetadataEntryIndex <= rawRules.size(), "__includes metadata entry is missing.");
+        // __includes meta rule is the 3rd one from the end
         Map<String, Object> includesMetaRule =
-            rawRules.get(
-                rawRules.size()
-                    - includesMetadataEntryIndex); // __includes meta rule is the 3rd one from the end
+            rawRules.get(rawRules.size() - includesMetadataEntryIndex);
         @SuppressWarnings("unchecked")
         @Nullable
         Iterable<String> includes = (Iterable<String>) includesMetaRule.get("__includes");

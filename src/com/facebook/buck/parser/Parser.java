@@ -37,6 +37,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -84,17 +85,20 @@ public class Parser {
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
   private final TypeCoercerFactory typeCoercerFactory;
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   public Parser(
       BroadcastEventListener broadcastEventListener,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
-      ConstructorArgMarshaller marshaller) {
+      ConstructorArgMarshaller marshaller,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.permState =
         new DaemonicParserState(
             broadcastEventListener, typeCoercerFactory, parserConfig.getNumParsingThreads());
     this.marshaller = marshaller;
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
   }
 
   protected DaemonicParserState getPermState() {
@@ -140,6 +144,7 @@ public class Parser {
             eventBus,
             executor,
             cell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.ENABLED)) {
       return state.getAllTargetNodes(cell, buildFile);
@@ -159,6 +164,7 @@ public class Parser {
             eventBus,
             executor,
             cell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.DISABLED)) {
       return state.getTargetNode(target);
@@ -216,6 +222,7 @@ public class Parser {
             eventBus,
             executor,
             cell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.DISABLED)) {
       return getRawTargetNode(state, cell, targetNode);
@@ -253,6 +260,7 @@ public class Parser {
             eventBus,
             executor,
             rootCell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.ENABLED)) {
       return buildTargetGraph(state, eventBus, toExplore);
@@ -377,6 +385,7 @@ public class Parser {
             eventBus,
             executor,
             rootCell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.ENABLED)) {
 
@@ -411,7 +420,13 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this, eventBus, executor, rootCell, enableProfiling, speculativeParsing)) {
+            this,
+            eventBus,
+            executor,
+            rootCell,
+            knownBuildRuleTypesProvider,
+            enableProfiling,
+            speculativeParsing)) {
       return resolveTargetSpecs(state, eventBus, rootCell, specs, applyDefaultFlavorsMode);
     }
   }

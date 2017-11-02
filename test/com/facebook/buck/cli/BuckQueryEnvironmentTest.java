@@ -29,17 +29,23 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -75,13 +81,22 @@ public class BuckQueryEnvironmentTest {
             .setFilesystem(TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()))
             .build();
 
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            new KnownBuildRuleTypesFactory(
+                new DefaultProcessExecutor(new TestConsole()),
+                cell.getSdkEnvironment(),
+                new TestToolchainProvider(),
+                BuckPluginManagerFactory.createPluginManager()));
+
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new Parser(
             new BroadcastEventListener(),
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory));
+            new ConstructorArgMarshaller(typeCoercerFactory),
+            knownBuildRuleTypesProvider);
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     parserState =
         new PerBuildState(
@@ -89,6 +104,7 @@ public class BuckQueryEnvironmentTest {
             eventBus,
             executor,
             cell,
+            knownBuildRuleTypesProvider,
             /* enableProfiling */ false,
             PerBuildState.SpeculativeParsing.ENABLED);
 

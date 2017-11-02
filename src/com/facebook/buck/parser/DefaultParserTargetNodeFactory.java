@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
@@ -99,14 +100,15 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   @Override
   public TargetNode<?, ?> createTargetNode(
       Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
       Path buildFile,
       BuildTarget target,
       Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
-    BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(cell, rawNode);
+    BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownBuildRuleTypes, rawNode);
 
     // Because of the way that the parser works, we know this can never return null.
-    Description<?> description = cell.getDescription(buildRuleType);
+    Description<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
 
     UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
@@ -249,8 +251,9 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     }
   }
 
-  private static BuildRuleType parseBuildRuleTypeFromRawRule(Cell cell, Map<String, Object> map) {
+  private static BuildRuleType parseBuildRuleTypeFromRawRule(
+      KnownBuildRuleTypes knownBuildRuleTypes, Map<String, Object> map) {
     String type = (String) Preconditions.checkNotNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return cell.getBuildRuleType(type);
+    return knownBuildRuleTypes.getBuildRuleType(type);
   }
 }

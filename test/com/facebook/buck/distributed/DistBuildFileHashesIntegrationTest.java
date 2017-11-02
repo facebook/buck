@@ -34,11 +34,14 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -46,9 +49,12 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -94,6 +100,13 @@ public class DistBuildFileHashesIntegrationTest {
     BuckConfig rootCellConfig = FakeBuckConfig.builder().setFilesystem(rootFs).build();
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            new KnownBuildRuleTypesFactory(
+                new DefaultProcessExecutor(new TestConsole()),
+                rootCell.getSdkEnvironment(),
+                new TestToolchainProvider(),
+                BuckPluginManagerFactory.createPluginManager()));
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
@@ -103,7 +116,8 @@ public class DistBuildFileHashesIntegrationTest {
             new BroadcastEventListener(),
             rootCellConfig.getView(ParserConfig.class),
             typeCoercerFactory,
-            constructorArgMarshaller);
+            constructorArgMarshaller,
+            knownBuildRuleTypesProvider);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),
@@ -162,6 +176,13 @@ public class DistBuildFileHashesIntegrationTest {
             .build();
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            new KnownBuildRuleTypesFactory(
+                new DefaultProcessExecutor(new TestConsole()),
+                rootCell.getSdkEnvironment(),
+                new TestToolchainProvider(),
+                BuckPluginManagerFactory.createPluginManager()));
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
@@ -171,7 +192,8 @@ public class DistBuildFileHashesIntegrationTest {
             new BroadcastEventListener(),
             rootCellConfig.getView(ParserConfig.class),
             typeCoercerFactory,
-            constructorArgMarshaller);
+            constructorArgMarshaller,
+            knownBuildRuleTypesProvider);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),

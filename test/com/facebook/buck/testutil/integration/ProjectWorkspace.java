@@ -43,12 +43,10 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
@@ -105,7 +103,6 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.tools.ToolProvider;
 import org.hamcrest.Matchers;
-import org.pf4j.PluginManager;
 
 /**
  * {@link ProjectWorkspace} is a directory that contains a Buck project, complete with build files.
@@ -777,15 +774,11 @@ public class ProjectWorkspace {
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-
     return CellProvider.createForLocalBuild(
             filesystem,
             Watchman.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(
-                processExecutor, sdkEnvironment, toolchainProvider, pluginManager),
             sdkEnvironment,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());

@@ -25,10 +25,16 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +56,7 @@ public class SkylarkProjectBuildFileParserTest {
 
   private SkylarkProjectBuildFileParser parser;
   private ProjectFilesystem projectFilesystem;
+  private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -57,6 +64,13 @@ public class SkylarkProjectBuildFileParserTest {
   public void setUp() throws Exception {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            new KnownBuildRuleTypesFactory(
+                new DefaultProcessExecutor(new TestConsole()),
+                cell.getSdkEnvironment(),
+                new TestToolchainProvider(),
+                BuckPluginManagerFactory.createPluginManager()));
     parser =
         SkylarkProjectBuildFileParser.using(
             ProjectBuildFileParserOptions.builder()
@@ -64,7 +78,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
                 .setIgnorePaths(ImmutableSet.of())
                 .setBuildFileName("BUCK")
-                .setDescriptions(cell.getAllDescriptions())
+                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getAllDescriptions())
                 .setBuildFileImportWhitelist(ImmutableList.of())
                 .setPythonInterpreter("skylark")
                 .build(),
@@ -382,7 +396,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
                 .setIgnorePaths(ImmutableSet.of())
                 .setBuildFileName("BUCK")
-                .setDescriptions(cell.getAllDescriptions())
+                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getAllDescriptions())
                 .setBuildFileImportWhitelist(ImmutableList.of())
                 .setPythonInterpreter("skylark")
                 .setCellRoots(ImmutableMap.of("tp2", anotherCell))

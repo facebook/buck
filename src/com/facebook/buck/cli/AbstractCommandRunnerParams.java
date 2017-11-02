@@ -28,7 +28,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -104,7 +104,7 @@ public abstract class AbstractCommandRunnerParams {
 
   public abstract ActionGraphCache getActionGraphCache();
 
-  public abstract KnownBuildRuleTypesFactory getKnownBuildRuleTypesFactory();
+  public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
 
   public abstract SdkEnvironment getSdkEnvironment();
 

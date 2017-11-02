@@ -37,18 +37,14 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /**
@@ -75,48 +71,13 @@ abstract class AbstractCell {
   abstract BuckConfig getBuckConfig();
 
   @Value.Auxiliary
-  abstract KnownBuildRuleTypesFactory getKnownBuildRuleTypesFactory();
-
-  @Value.Auxiliary
   abstract CellProvider getCellProvider();
 
   @Value.Auxiliary
   abstract SdkEnvironment getSdkEnvironment();
 
-  @Value.Derived
-  @Value.Auxiliary
-  Supplier<KnownBuildRuleTypes> getKnownBuildRuleTypesSupplier() {
-    // Stampede needs the Cell before it can materialize all the files required by
-    // knownBuildRuleTypesFactory (specifically java/javac), and as such we need to load this
-    // lazily when getKnownBuildRuleTypes() is called.
-    return Suppliers.memoize(
-            () -> {
-              try {
-                return getKnownBuildRuleTypesFactory().create(getBuckConfig(), getFilesystem());
-              } catch (IOException e) {
-                throw new RuntimeException(
-                    String.format(
-                        "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
-                        getFilesystem().getRootPath()),
-                    e);
-              } catch (InterruptedException e) {
-                Threads.interruptCurrentThread();
-                throw new RuntimeException(
-                    String.format(
-                        "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
-                        getFilesystem().getRootPath()),
-                    e);
-              }
-            })
-        ::get;
-  }
-
   public Path getRoot() {
     return getFilesystem().getRootPath();
-  }
-
-  public KnownBuildRuleTypes getKnownBuildRuleTypes() {
-    return getKnownBuildRuleTypesSupplier().get();
   }
 
   public boolean isCompatibleForCaching(Cell other) {
@@ -193,18 +154,6 @@ abstract class AbstractCell {
     return getCellProvider().getLoadedCells();
   }
 
-  public Description<?> getDescription(BuildRuleType type) {
-    return getKnownBuildRuleTypes().getDescription(type);
-  }
-
-  public BuildRuleType getBuildRuleType(String rawType) {
-    return getKnownBuildRuleTypes().getBuildRuleType(rawType);
-  }
-
-  public ImmutableSet<Description<?>> getAllDescriptions() {
-    return getKnownBuildRuleTypes().getAllDescriptions();
-  }
-
   /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
    * otherwise prefer {@link #getAbsolutePathToBuildFile(BuildTarget)}.
@@ -237,19 +186,23 @@ abstract class AbstractCell {
    * ProjectBuildFileParser}.
    */
   public ProjectBuildFileParser createBuildFileParser(
-      TypeCoercerFactory typeCoercerFactory, Console console, BuckEventBus eventBus) {
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      Iterable<Description<?>> descriptions) {
     return createBuildFileParser(
-        typeCoercerFactory, console, eventBus, /* enableProfiling */ false);
+        typeCoercerFactory, console, eventBus, descriptions, /* enableProfiling */ false);
   }
 
   /**
-   * Same as @{{@link #createBuildFileParser(TypeCoercerFactory, Console, BuckEventBus)}} but
-   * provides a way to configure whether parse profiling should be enabled
+   * Same as @{{@link #createBuildFileParser(TypeCoercerFactory, Console, BuckEventBus, Iterable)}}
+   * but provides a way to configure whether parse profiling should be enabled
    */
   public ProjectBuildFileParser createBuildFileParser(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
+      Iterable<Description<?>> descriptions,
       boolean enableProfiling) {
 
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
@@ -278,7 +231,7 @@ abstract class AbstractCell {
             .setIgnorePaths(getFilesystem().getIgnorePaths())
             .setBuildFileName(getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(getAllDescriptions())
+            .setDescriptions(descriptions)
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)

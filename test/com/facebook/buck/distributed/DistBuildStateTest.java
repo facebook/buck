@@ -49,6 +49,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -103,7 +104,7 @@ public class DistBuildStateTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  private KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
+  private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private SdkEnvironment sdkEnvironment;
 
   private void setUp(BuckConfig buckConfig) {
@@ -113,9 +114,10 @@ public class DistBuildStateTest {
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
-    knownBuildRuleTypesFactory =
-        new KnownBuildRuleTypesFactory(
-            processExecutor, sdkEnvironment, toolchainProvider, pluginManager);
+    knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            new KnownBuildRuleTypesFactory(
+                processExecutor, sdkEnvironment, toolchainProvider, pluginManager));
   }
 
   @Test
@@ -153,7 +155,6 @@ public class DistBuildStateTest {
             FakeBuckConfig.builder().build(),
             dump,
             rootCellWhenLoading,
-            knownBuildRuleTypesFactory,
             sdkEnvironment,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
@@ -219,7 +220,6 @@ public class DistBuildStateTest {
             FakeBuckConfig.builder().build(),
             dump,
             rootCellWhenLoading,
-            knownBuildRuleTypesFactory,
             sdkEnvironment,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
@@ -248,7 +248,8 @@ public class DistBuildStateTest {
             new BroadcastEventListener(),
             buckConfig.getView(ParserConfig.class),
             typeCoercerFactory,
-            constructorArgMarshaller);
+            constructorArgMarshaller,
+            knownBuildRuleTypesProvider);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),
@@ -278,14 +279,15 @@ public class DistBuildStateTest {
             FakeBuckConfig.builder().build(),
             dump,
             rootCellWhenLoading,
-            knownBuildRuleTypesFactory,
             sdkEnvironment,
             new DefaultProjectFilesystemFactory());
 
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
     TargetGraph reconstructedGraph =
-        distributedBuildState.createTargetGraph(targetGraphCodec).getTargetGraph();
+        distributedBuildState
+            .createTargetGraph(targetGraphCodec, knownBuildRuleTypesProvider)
+            .getTargetGraph();
     assertEquals(
         reconstructedGraph
             .getNodes()
@@ -364,7 +366,6 @@ public class DistBuildStateTest {
             localBuckConfig,
             dump,
             rootCellWhenLoading,
-            knownBuildRuleTypesFactory,
             sdkEnvironment,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();

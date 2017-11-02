@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -61,12 +62,15 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildFileParseException for syntax errors.
    */
   public final ImmutableSet<T> getAllNodes(
-      final Cell cell, final Path buildFile, AtomicLong processedBytes)
+      final Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      final Path buildFile,
+      AtomicLong processedBytes)
       throws BuildFileParseException {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
-      return getAllNodesJob(cell, buildFile, processedBytes).get();
+      return getAllNodesJob(cell, knownBuildRuleTypes, buildFile, processedBytes).get();
     } catch (Exception e) {
       propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
       propagateCauseIfInstanceOf(e, ExecutionException.class);
@@ -84,12 +88,16 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  public final T getNode(final Cell cell, final BuildTarget buildTarget, AtomicLong processedBytes)
+  public final T getNode(
+      final Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      final BuildTarget buildTarget,
+      AtomicLong processedBytes)
       throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
-      return getNodeJob(cell, buildTarget, processedBytes).get();
+      return getNodeJob(cell, knownBuildRuleTypes, buildTarget, processedBytes).get();
     } catch (Exception e) {
       if (e.getCause() != null) {
         propagateIfInstanceOf(e.getCause(), BuildFileParseException.class);
@@ -115,7 +123,8 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @return future.
    */
   public abstract ListenableFuture<ImmutableSet<T>> getAllNodesJob(
-      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException;
+      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
+      throws BuildTargetException;
 
   /**
    * Asynchronously get the {@link TargetNode}. This leverages the cache.
@@ -128,7 +137,11 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildTargetException when the buildTarget is malformed.
    */
   public abstract ListenableFuture<T> getNodeJob(
-      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException;
+      Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      BuildTarget buildTarget,
+      AtomicLong processedBytes)
+      throws BuildTargetException;
 
   @Override
   public void close() {

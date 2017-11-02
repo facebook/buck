@@ -26,6 +26,8 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.util.Ansi;
@@ -82,6 +84,7 @@ public class PerBuildState implements AutoCloseable {
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   public enum SpeculativeParsing {
     ENABLED,
@@ -93,12 +96,14 @@ public class PerBuildState implements AutoCloseable {
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       Cell rootCell,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
 
     this.parser = parser;
     this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     this.cells = new ConcurrentHashMap<>();
     this.cellSymlinkAllowability = new ConcurrentHashMap<>();
@@ -115,7 +120,9 @@ public class PerBuildState implements AutoCloseable {
     this.projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
-            input -> createBuildFileParser(input),
+            cell ->
+                createBuildFileParser(
+                    cell, knownBuildRuleTypesProvider.get(cell).getAllDescriptions()),
             enableProfiling);
 
     this.rawNodeParsePipeline =
@@ -135,7 +142,8 @@ public class PerBuildState implements AutoCloseable {
             eventBus,
             parserConfig.getEnableParallelParsing()
                 && speculativeParsing == SpeculativeParsing.ENABLED,
-            rawNodeParsePipeline);
+            rawNodeParsePipeline,
+            knownBuildRuleTypesProvider);
 
     register(rootCell);
   }
@@ -144,28 +152,32 @@ public class PerBuildState implements AutoCloseable {
       throws BuildFileParseException, BuildTargetException {
     Cell owningCell = getCell(target);
 
-    return targetNodeParsePipeline.getNode(owningCell, target, parseProcessedBytes);
+    return targetNodeParsePipeline.getNode(
+        owningCell, knownBuildRuleTypesProvider.get(owningCell), target, parseProcessedBytes);
   }
 
   public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
       throws BuildTargetException {
     Cell owningCell = getCell(target);
 
-    return targetNodeParsePipeline.getNodeJob(owningCell, target, parseProcessedBytes);
+    return targetNodeParsePipeline.getNodeJob(
+        owningCell, knownBuildRuleTypesProvider.get(owningCell), target, parseProcessedBytes);
   }
 
   public ImmutableSet<TargetNode<?, ?>> getAllTargetNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodes(cell, buildFile, parseProcessedBytes);
+    return targetNodeParsePipeline.getAllNodes(
+        cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
   }
 
   public ListenableFuture<ImmutableSet<TargetNode<?, ?>>> getAllTargetNodesJob(
       Cell cell, Path buildFile) throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile, parseProcessedBytes);
+    return targetNodeParsePipeline.getAllNodesJob(
+        cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
   }
 
   public ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
@@ -173,12 +185,14 @@ public class PerBuildState implements AutoCloseable {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
-    return rawNodeParsePipeline.getAllNodes(cell, buildFile, parseProcessedBytes);
+    return rawNodeParsePipeline.getAllNodes(
+        cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
   }
 
-  private ProjectBuildFileParser createBuildFileParser(Cell cell) {
+  private ProjectBuildFileParser createBuildFileParser(
+      Cell cell, Iterable<Description<?>> descriptions) {
     return cell.createBuildFileParser(
-        this.parser.getTypeCoercerFactory(), console, eventBus, enableProfiling);
+        this.parser.getTypeCoercerFactory(), console, eventBus, descriptions, enableProfiling);
   }
 
   private void register(Cell cell) {

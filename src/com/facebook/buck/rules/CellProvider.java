@@ -88,7 +88,6 @@ public final class CellProvider {
       Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
       SdkEnvironment sdkEnvironment,
       ProjectFilesystemFactory projectFilesystemFactory) {
 
@@ -174,7 +173,6 @@ public final class CellProvider {
                     cellFilesystem,
                     watchman,
                     buckConfig,
-                    knownBuildRuleTypesFactory,
                     cellProvider,
                     sdkEnvironment);
               }
@@ -191,16 +189,13 @@ public final class CellProvider {
               rootFilesystem,
               watchman,
               rootConfig,
-              knownBuildRuleTypesFactory,
               cellProvider,
               sdkEnvironment);
         });
   }
 
   public static CellProvider createForDistributedBuild(
-      ImmutableMap<Path, DistBuildCellParams> cellParams,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      SdkEnvironment sdkEnvironment) {
+      ImmutableMap<Path, DistBuildCellParams> cellParams, SdkEnvironment sdkEnvironment) {
     return new CellProvider(
         cellProvider ->
             CacheLoader.from(
@@ -215,7 +210,6 @@ public final class CellProvider {
                       cellParam.getFilesystem(),
                       Watchman.NULL_WATCHMAN,
                       cellParam.getConfig(),
-                      knownBuildRuleTypesFactory,
                       cellProvider,
                       sdkEnvironment);
                 }),
