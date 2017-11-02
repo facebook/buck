@@ -18,26 +18,48 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class StringRuleKeyHasherTest extends AbstractRuleKeyHasherTest<String> {
+@RunWith(Enclosed.class)
+public class StringRuleKeyHasherTest {
 
-  @Test
-  public void testStringEscaping() {
-    assertEquals("string(\"abc\")::", newHasher().putString("abc").hash());
-    assertEquals("string(\"abc\\ndef\\\"g\\\"\")::", newHasher().putString("abc\ndef\"g\"").hash());
+  @RunWith(Parameterized.class)
+  public static class UniquenessTest extends CommonRuleKeyHasherTest.UniquenessTest<String> {
+    @SuppressWarnings("unchecked")
+    @Parameters(name = "{0} != {2}")
+    public static Iterable<Object[]> cases() {
+      /** String hasher doesn't distinguish number types and that's fine. */
+      return CommonRuleKeyHasherTest.uniquenessTestCases(
+          StringRuleKeyHasherTest::newHasher,
+          new Pair[] {new Pair<>("0", 0), new Pair<>("42", 42)});
+    }
   }
 
-  /** String hasher doesn't distinguish number types and that's fine. */
-  @Override
-  protected Number[] getNumbersForUniquenessTest() {
-    return new Number[] {0, 42};
+  public static class ConsistencyTest extends CommonRuleKeyHasherTest.ConsistencyTest<String> {
+    @Override
+    protected RuleKeyHasher<String> newHasher() {
+      return StringRuleKeyHasherTest.newHasher();
+    }
   }
 
-  @Override
-  protected StringRuleKeyHasher newHasher() {
+  public static class ExtaTests {
+    @Test
+    public void testStringEscaping() {
+      assertEquals("string(\"abc\")::", newHasher().putString("abc").hash());
+      assertEquals(
+          "string(\"abc\\ndef\\\"g\\\"\")::", newHasher().putString("abc\ndef\"g\"").hash());
+    }
+  }
+
+  public static StringRuleKeyHasher newHasher() {
     return new StringRuleKeyHasher();
   }
 }
