@@ -31,6 +31,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
+import com.facebook.buck.shell.ExportFile;
+import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -58,6 +60,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       InternalFlavor.of("merge_third_party_jar_resources");
   private static final Flavor WRITE_EXO_RESOURCES_HASH_FLAVOR =
       InternalFlavor.of("write_exo_resources_hash");
+  private static final Flavor COPY_MANIFEST_FLAVOR = InternalFlavor.of("copy_manifest");
 
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final SourcePathRuleFinder ruleFinder;
@@ -282,9 +285,22 @@ class AndroidBinaryResourcesGraphEnhancer {
       }
     }
 
+    // Create a rule that copies the AndroidManifest. This allows the AndroidBinary rule (and
+    // exopackage installation rules) to have a runtime dep on the manifest without having to have
+    // a runtime dep on the full aapt output.
+    ExportFile manifestCopyRule =
+        new ExportFile(
+            originalBuildTarget.withAppendedFlavors(COPY_MANIFEST_FLAVOR),
+            projectFilesystem,
+            ruleFinder,
+            "AndroidManifest.xml",
+            ExportFileDescription.Mode.COPY,
+            aaptOutputInfo.getAndroidManifestXml());
+    ruleResolver.addToIndex(manifestCopyRule);
+
     return resultBuilder
         .setAaptGeneratedProguardConfigFile(aaptOutputInfo.getAaptGeneratedProguardConfigFile())
-        .setAndroidManifestXml(aaptOutputInfo.getAndroidManifestXml())
+        .setAndroidManifestXml(manifestCopyRule.getSourcePathToOutput())
         .setPathToRDotTxt(aaptOutputInfo.getPathToRDotTxt())
         .setRDotJavaDir(
             generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
