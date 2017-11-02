@@ -166,9 +166,12 @@ java_immutables_library(
 java_library(
     name = "rule_key",
     srcs = [
+        "AddToRuleKey.java",
+        "AddsToRuleKey.java",
         "RuleKey.java",
         "RuleKeyDiagnosticsMode.java",
     ],
+    required_for_source_only_abi = True,  # TODO(jkeljo): Break out the annotations
     visibility = [
         "PUBLIC",
     ],
@@ -226,8 +229,6 @@ java_immutables_library(
         "AbstractTargetNode.java",
         "AbstractVersionedTool.java",
         "ActionGraph.java",
-        "AddToRuleKey.java",
-        "AddsToRuleKey.java",
         "BinaryBuildRule.java",
         "BinaryBuildRuleToolProvider.java",
         "BuckPyFunction.java",
@@ -276,9 +277,9 @@ java_immutables_library(
     ],
     exported_deps = [
         ":abstract_description_arg",
+        ":rule_key",
         ":visibility",
     ],
-    required_for_source_only_abi = True,  # TODO(jkeljo): Break out the annotations
     resources = [
         "BuckPyFunction.stg",
     ],
@@ -291,7 +292,6 @@ java_immutables_library(
     ],
     deps = [
         ":interfaces",
-        ":rule_key",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/graph:graph",

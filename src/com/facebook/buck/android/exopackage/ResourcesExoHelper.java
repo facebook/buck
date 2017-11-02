@@ -25,6 +25,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 public class ResourcesExoHelper {
   @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
@@ -42,8 +43,26 @@ public class ResourcesExoHelper {
     this.resourcesInfo = resourcesInfo;
   }
 
+  public static ImmutableMap<Path, Path> getFilesToInstall(ImmutableMap<String, Path> filesByHash) {
+    return ExopackageUtil.applyFilenameFormat(filesByHash, RESOURCES_DIR, "%s.apk");
+  }
+
+  /** Returns a map of hash to path for resource files. */
+  public static ImmutableMap<String, Path> getResourceFilesByHash(
+      SourcePathResolver pathResolver,
+      ProjectFilesystem projectFilesystem,
+      Stream<ExopackagePathAndHash> resourcesPaths) {
+    return resourcesPaths.collect(
+        MoreCollectors.toImmutableMap(
+            pathAndHash ->
+                projectFilesystem
+                    .readFileIfItExists(pathResolver.getAbsolutePath(pathAndHash.getHashPath()))
+                    .get(),
+            i -> projectFilesystem.resolve(pathResolver.getAbsolutePath(i.getPath()))));
+  }
+
   public ImmutableMap<Path, Path> getFilesToInstall() {
-    return ExopackageUtil.applyFilenameFormat(getResourceFilesByHash(), RESOURCES_DIR, "%s.apk");
+    return getFilesToInstall(getResourceFilesByHash());
   }
 
   public ImmutableMap<Path, String> getMetadataToInstall() {
@@ -53,16 +72,8 @@ public class ResourcesExoHelper {
   }
 
   private ImmutableMap<String, Path> getResourceFilesByHash() {
-    return resourcesInfo
-        .getResourcesPaths()
-        .stream()
-        .collect(
-            MoreCollectors.toImmutableMap(
-                pathAndHash ->
-                    projectFilesystem
-                        .readFileIfItExists(pathResolver.getAbsolutePath(pathAndHash.getHashPath()))
-                        .get(),
-                i -> projectFilesystem.resolve(pathResolver.getAbsolutePath(i.getPath()))));
+    return getResourceFilesByHash(
+        pathResolver, projectFilesystem, resourcesInfo.getResourcesPaths().stream());
   }
 
   private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {

@@ -55,6 +55,9 @@ public class ExopackageInstaller {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
+  public static final String SECONDARY_DEX_TYPE = "secondary_dex";
+  public static final String NATIVE_LIBRARY_TYPE = "native_library";
+  public static final String RESOURCES_TYPE = "resources";
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
@@ -158,20 +161,20 @@ public class ExopackageInstaller {
     if (exoInfo.getDexInfo().isPresent()) {
       DexExoHelper dexExoHelper =
           new DexExoHelper(pathResolver, projectFilesystem, exoInfo.getDexInfo().get());
-      installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
+      installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), SECONDARY_DEX_TYPE);
     }
 
     if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
           new NativeExoHelper(
               device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
-      installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
+      installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), NATIVE_LIBRARY_TYPE);
     }
 
     if (exoInfo.getResourcesInfo().isPresent()) {
       ResourcesExoHelper resourcesExoHelper =
           new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
-      installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
+      installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), RESOURCES_TYPE);
     }
   }
 

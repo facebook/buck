@@ -16,8 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
+import com.facebook.buck.android.exopackage.ResourcesExoHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -25,67 +26,48 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.InstallTrigger;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-/**
- * Finishes exopackage installation by:
- * <li>updating the metadata.txt files for the different exopackage types
- * <li>deleting unwanted files (.so/.dex/.apk from previous installs)
- * <li>installing the apk
- * <li>killing the app/process
- */
-public class ExopackageInstallFinisher extends AbstractBuildRule {
-  // Due to the InstallTrigger, this rule will run on every build. The @AddToRuleKey fields and any
-  // additional deps are required to just ensure that inputs are ready and that certain work (like
-  // installing files) has already happened.
+/** Installs exopackage resource files to the device/devices. */
+public class ExopackageResourcesInstaller extends AbstractBuildRule {
   @AddToRuleKey private final InstallTrigger trigger;
-  @AddToRuleKey private final SourcePath deviceExoContents;
-  @AddToRuleKey private final SourcePath apkPath;
+  @AddToRuleKey private final ImmutableList<ExopackagePathAndHash> paths;
   @AddToRuleKey private final SourcePath manifestPath;
+  @AddToRuleKey private final SourcePath deviceExoContents;
 
-  private final Supplier<ImmutableSortedSet<BuildRule>> depsSupplier;
-  private final ApkInfo apkInfo;
+  private final Supplier<SortedSet<BuildRule>> depsSupplier;
 
-  public ExopackageInstallFinisher(
-      BuildTarget installerTarget,
+  public ExopackageResourcesInstaller(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder sourcePathRuleFinder,
-      ApkInfo apkInfo,
-      ExopackageDeviceDirectoryLister directoryLister,
-      ImmutableList<BuildRule> extraDeps) {
-    super(installerTarget, projectFilesystem);
+      SourcePathRuleFinder ruleFinder,
+      Collection<ExopackagePathAndHash> paths,
+      SourcePath manifestPath,
+      SourcePath deviceExoContents) {
+    super(buildTarget, projectFilesystem);
     this.trigger = new InstallTrigger(projectFilesystem);
-    this.deviceExoContents = directoryLister.getSourcePathToOutput();
-    this.apkInfo = apkInfo;
-    this.apkPath = apkInfo.getApkPath();
-    this.manifestPath = apkInfo.getManifestPath();
-
-    this.depsSupplier =
-        Suppliers.memoize(
-            () ->
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .add(directoryLister)
-                    .addAll(extraDeps)
-                    .addAll(
-                        sourcePathRuleFinder.filterBuildRuleInputs(
-                            Arrays.asList(apkPath, manifestPath)))
-                    .build());
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+    this.paths = ImmutableList.copyOf(paths);
+    this.manifestPath = manifestPath;
+    this.deviceExoContents = deviceExoContents;
   }
 
   @Override
@@ -97,38 +79,36 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
     return ImmutableList.of(
-        new AbstractExecutionStep("finishing_apk_installation") {
+        new AbstractExecutionStep("installing_exo_resource_files") {
           @Override
           public StepExecutionResult execute(ExecutionContext context)
               throws IOException, InterruptedException {
             trigger.verify(context);
-            ExopackageInfo exoInfo = apkInfo.getExopackageInfo().get();
+            SourcePathResolver resolver = buildContext.getSourcePathResolver();
             String packageName =
                 AdbHelper.tryToExtractPackageNameFromManifest(
-                    buildContext.getSourcePathResolver().getAbsolutePath(manifestPath));
+                    resolver.getAbsolutePath(manifestPath));
             ImmutableSortedMap<String, ImmutableSortedSet<Path>> contents =
                 ExopackageDeviceDirectoryLister.deserializeDirectoryContentsForPackage(
                     getProjectFilesystem(),
-                    buildContext.getSourcePathResolver().getRelativePath(deviceExoContents),
+                    resolver.getRelativePath(deviceExoContents),
                     packageName);
             context
                 .getAndroidDevicesHelper()
                 .get()
                 .adbCall(
-                    "finishing_apk_installation_call",
+                    "installing_exo_resource_files",
                     device -> {
-                      ExopackageInstaller installer =
-                          new ExopackageInstaller(
-                              buildContext.getSourcePathResolver(),
-                              context,
-                              getProjectFilesystem(),
-                              packageName,
-                              device);
-                      installer.finishExoFileInstallation(
-                          ImmutableSortedSet.copyOf(contents.get(device.getSerialNumber())),
-                          exoInfo);
-                      installer.installApkIfNecessary(apkInfo);
-                      installer.killApp(apkInfo, null);
+                      ImmutableSortedSet<Path> presentFiles =
+                          Preconditions.checkNotNull(contents.get(device.getSerialNumber()));
+                      new ExopackageInstaller(
+                              resolver, context, getProjectFilesystem(), packageName, device)
+                          .installMissingFiles(
+                              presentFiles,
+                              ResourcesExoHelper.getFilesToInstall(
+                                  ResourcesExoHelper.getResourceFilesByHash(
+                                      resolver, getProjectFilesystem(), paths.stream())),
+                              ExopackageInstaller.RESOURCES_TYPE);
                       return true;
                     },
                     true);
@@ -141,10 +121,5 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
   @Override
   public SourcePath getSourcePathToOutput() {
     return null;
-  }
-
-  @Override
-  public boolean isCacheable() {
-    return false;
   }
 }
