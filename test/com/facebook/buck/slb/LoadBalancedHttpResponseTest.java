@@ -57,6 +57,7 @@ public class LoadBalancedHttpResponseTest extends EasyMockSupport {
             .body(responseBody)
             .code(200)
             .protocol(Protocol.HTTP_1_1)
+            .message("")
             .request(request)
             .build();
   }

@@ -98,7 +98,7 @@
     <orderEntry type="library" name="diffutils-1.3.0" level="project" />
     <orderEntry type="library" name="jdom" level="project" />
     <orderEntry type="library" name="okio" level="project" />
-    <orderEntry type="library" name="okhttp-3.6.0" level="project" />
+    <orderEntry type="library" name="okhttp" level="project" />
     <orderEntry type="library" name="sqlite" level="project" />
     <orderEntry type="library" name="android-tools-25.3.0" level="project" />
     <orderEntry type="library" name="jmh" level="project" />

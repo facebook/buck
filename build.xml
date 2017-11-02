@@ -143,7 +143,7 @@
     <include name="jdom/jdom-2.0.6.jar" />
     <include name="jimfs/jimfs-1.1.jar" />
     <include name="jsr/javax.inject-1.jar" />
-    <include name="okhttp/okhttp-3.6.0.jar" />
+    <include name="okhttp/okhttp-3.9.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
     <include name="oshi/oshi-core-3.3-SNAPSHOT.jar" />
     <include name="servlet-api/javax.servlet-api-3.1.0.jar" />

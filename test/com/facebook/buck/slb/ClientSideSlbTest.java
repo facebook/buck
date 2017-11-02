@@ -138,6 +138,7 @@ public class ClientSideSlbTest extends EasyMockSupport {
                           .code(200)
                           .protocol(Protocol.HTTP_1_1)
                           .request(new Request.Builder().url(server.toString()).build())
+                          .message("")
                           .build();
                   callback.onResponse(mockCall, response);
                   return null;
