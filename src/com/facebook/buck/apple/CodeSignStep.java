@@ -137,6 +137,9 @@ class CodeSignStep implements Step {
     if (identity.getFingerprint().isPresent()) {
       return identity.getFingerprint().get().toString().toUpperCase();
     } else {
+      if (identity.shouldUseSubjectCommonNameToSign()) {
+        return identity.getSubjectCommonName();
+      }
       return "-"; // ad-hoc
     }
   }

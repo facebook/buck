@@ -176,7 +176,8 @@ public class AppleBundleDescription
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.assetCatalogValidation(),
-        args.getCodesignFlags());
+        args.getCodesignFlags(),
+        args.getCodesignIdentity());
   }
 
   /**

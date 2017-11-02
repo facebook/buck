@@ -294,7 +294,8 @@ public class AppleTestDescription
             appleConfig.useDryRunCodeSigning(),
             appleConfig.cacheBundlesAndPackages(),
             appleConfig.assetCatalogValidation(),
-            args.getCodesignFlags());
+            args.getCodesignFlags(),
+            args.getCodesignIdentity());
     resolver.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);

@@ -336,7 +336,8 @@ public class AppleBinaryDescription
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.assetCatalogValidation(),
-        ImmutableList.of());
+        ImmutableList.of(),
+        Optional.empty());
   }
 
   private BuildRule createBinary(

@@ -47,6 +47,14 @@ abstract class AbstractCodeSignIdentity implements AddsToRuleKey {
           .setSubjectCommonName("Ad Hoc")
           .build();
 
+  public static CodeSignIdentity ofAdhocSignedWithSubjectCommonName(String commonName) {
+    return CodeSignIdentity.builder()
+        .setFingerprint(Optional.empty())
+        .setSubjectCommonName(commonName)
+        .setShouldUseSubjectCommonNameToSign(true)
+        .build();
+  }
+
   /**
    * Returns the identity's certificate hash, defined to be unique for each identity.
    *
@@ -60,7 +68,18 @@ abstract class AbstractCodeSignIdentity implements AddsToRuleKey {
    *
    * <p>Not guaranteed to be unique.
    */
+  @AddToRuleKey(stringify = true)
   public abstract String getSubjectCommonName();
+
+  /**
+   * @return True if {@link AbstractCodeSignIdentity#getSubjectCommonName()} can be used to sign if
+   *     {@link AbstractCodeSignIdentity#getFingerprint()} is empty.
+   */
+  @AddToRuleKey(stringify = true)
+  @Value.Default
+  public boolean shouldUseSubjectCommonNameToSign() {
+    return false;
+  }
 
   /** Convert a {@code String} into a fingerprint {@code HashCode} if it's in the correct format. */
   public static Optional<HashCode> toFingerprint(String identifier) {

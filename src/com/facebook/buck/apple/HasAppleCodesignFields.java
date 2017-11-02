@@ -17,7 +17,19 @@
 package com.facebook.buck.apple;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
+/** Defines a set of codesign-related fields that are applicable to bundle-like rules. */
 public interface HasAppleCodesignFields {
+  /**
+   * @return Additional flags passed to the underlying codesign tool. For example, this can be used
+   *     to sign deep macOS frameworks using "--deep".
+   */
   ImmutableList<String> getCodesignFlags();
+
+  /**
+   * @return A codesign identity that will be used for adhoc signing (i.e., on platforms like macOS
+   *     and simulators). This field can be used to sign with Developer ID on macOS.
+   */
+  Optional<String> getCodesignIdentity();
 }

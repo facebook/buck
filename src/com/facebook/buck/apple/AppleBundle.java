@@ -142,6 +142,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final ImmutableList<String> codesignFlags;
 
+  @AddToRuleKey private final Optional<String> codesignIdentitySubjectName;
+
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
@@ -187,7 +189,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable,
-      ImmutableList<String> codesignFlags) {
+      ImmutableList<String> codesignFlags,
+      Optional<String> codesignIdentity) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
@@ -222,6 +225,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.cacheable = cacheable;
     this.codesignFlags = codesignFlags;
+    this.codesignIdentitySubjectName = codesignIdentity;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getSourcePathToOutput() != null;
@@ -500,7 +504,11 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       if (adHocCodeSignIsSufficient()) {
         signingEntitlementsTempPath = Optional.empty();
-        codeSignIdentitySupplier = () -> CodeSignIdentity.AD_HOC;
+        CodeSignIdentity identity =
+            codesignIdentitySubjectName
+                .map(id -> CodeSignIdentity.ofAdhocSignedWithSubjectCommonName(id))
+                .orElse(CodeSignIdentity.AD_HOC);
+        codeSignIdentitySupplier = () -> identity;
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
         Optional<Path> entitlementsPlist = Optional.empty();
