@@ -16,8 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
@@ -142,34 +144,92 @@ public abstract class AbstractRuleKeyHasherTest<HASH> {
     // all of the hashes should be different
     for (int i = 0; i < hashes.size(); i++) {
       for (int j = 0; j < i; j++) {
-        assertNotEquals(String.format("Collision [%d] = [%d]", i, j), hashes.get(i), hashes.get(j));
+        assertThat(
+            String.format("Collision [%d] = [%d]", i, j),
+            hashes.get(i),
+            not(equalTo(hashes.get(j))));
       }
     }
   }
 
   @Test
-  public void testConsistency() {
-    // same sequence of operations should produce the same hash
+  public void testEmptyConsistency() {
     assertEquals(newHasher().hash(), newHasher().hash());
+  }
+
+  @Test
+  public void testConsistencyForKey() {
     assertEquals(newHasher().putKey("abc").hash(), newHasher().putKey("abc").hash());
+  }
+
+  @Test
+  public void testConsistencyForNull() {
     assertEquals(newHasher().putNull().hash(), newHasher().putNull().hash());
+  }
+
+  @Test
+  public void testConsistencyForFalse() {
     assertEquals(newHasher().putBoolean(false).hash(), newHasher().putBoolean(false).hash());
+  }
+
+  @Test
+  public void testConsistencyForTrue() {
     assertEquals(newHasher().putBoolean(true).hash(), newHasher().putBoolean(true).hash());
+  }
+
+  @Test
+  public void testConsistencyForInt() {
     assertEquals(newHasher().putNumber(4).hash(), newHasher().putNumber(4).hash());
+  }
+
+  @Test
+  public void testConsistencyForLong() {
     assertEquals(newHasher().putNumber((long) 4).hash(), newHasher().putNumber((long) 4).hash());
+  }
+
+  @Test
+  public void testConsistencyForShort() {
     assertEquals(newHasher().putNumber((short) 4).hash(), newHasher().putNumber((short) 4).hash());
+  }
+
+  @Test
+  public void testConsistencyForByte() {
     assertEquals(newHasher().putNumber((byte) 4).hash(), newHasher().putNumber((byte) 4).hash());
+  }
+
+  @Test
+  public void testConsistencyForFloat() {
     assertEquals(newHasher().putNumber((float) 4).hash(), newHasher().putNumber((float) 4).hash());
+  }
+
+  @Test
+  public void testConsistencyForDouble() {
     assertEquals(
         newHasher().putNumber((double) 4).hash(), newHasher().putNumber((double) 4).hash());
+  }
+
+  @Test
+  public void testConsistencyForBytes() {
     assertEquals(
         newHasher().putBytes(new byte[] {42}).hash(), newHasher().putBytes(new byte[] {42}).hash());
+  }
+
+  @Test
+  public void testConsistencyForPattern() {
     assertEquals(
         newHasher().putPattern(Pattern.compile("42")).hash(),
         newHasher().putPattern(Pattern.compile("42")).hash());
+  }
+
+  @Test
+  public void testConsistencyForPath() {
     assertEquals(
         newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash(),
         newHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash());
+  }
+
+  @Test
+  public void testConsistencyForArchiveMemberPath() {
     assertEquals(
         newHasher()
             .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
@@ -177,18 +237,42 @@ public abstract class AbstractRuleKeyHasherTest<HASH> {
         newHasher()
             .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
             .hash());
+  }
+
+  @Test
+  public void testConsistencyForNonHashingPath() {
     assertEquals(
         newHasher().putNonHashingPath("42").hash(), newHasher().putNonHashingPath("42").hash());
+  }
+
+  @Test
+  public void testConsistencyForSourceRoot() {
     assertEquals(
         newHasher().putSourceRoot(new SourceRoot("42")).hash(),
         newHasher().putSourceRoot(new SourceRoot("42")).hash());
+  }
+
+  @Test
+  public void testConsistencyForRuleKey() {
     assertEquals(
         newHasher().putRuleKey(RULE_KEY_1).hash(), newHasher().putRuleKey(RULE_KEY_1).hash());
+  }
+
+  @Test
+  public void testConsistencyForBuildRuleType() {
     assertEquals(
         newHasher().putBuildRuleType(BuildRuleType.of("42")).hash(),
         newHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
+  }
+
+  @Test
+  public void testConsistencyForBuildTarget() {
     assertEquals(
         newHasher().putBuildTarget(TARGET_1).hash(), newHasher().putBuildTarget(TARGET_1).hash());
+  }
+
+  @Test
+  public void testConsistencyForBuildTargetSourcePath() {
     assertEquals(
         newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_1)).hash(),
         newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_1)).hash());
