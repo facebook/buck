@@ -96,7 +96,7 @@ public class JsBundleGenruleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          params,
+          new SourcePathRuleFinder(resolver),
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
           output);

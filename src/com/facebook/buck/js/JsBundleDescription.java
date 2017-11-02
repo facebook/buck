@@ -117,7 +117,7 @@ public class JsBundleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          JsUtil.copyParamsWithDependencies(params),
+          new SourcePathRuleFinder(resolver),
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToSourceMap());
