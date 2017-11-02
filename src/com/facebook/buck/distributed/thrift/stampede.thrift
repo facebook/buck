@@ -16,15 +16,6 @@ namespace java com.facebook.buck.distributed.thrift
 ## DataTypes
 ##############################################################################
 
-struct LogRecord {
-  1: optional string name;
-  2: optional i64 timestampMillis;
-}
-
-struct DebugInfo {
-  1: optional list<LogRecord> logBook;
-}
-
 # Uniquely identifies a stampede distributed build
 struct StampedeId {
   1 : optional string id;
@@ -159,8 +150,6 @@ struct BuildModeInfo {
 
 struct BuildJob {
   1: optional StampedeId stampedeId;
-  # TODO(alisdair): split DebugInfo out from the main BuildJob
-  2: optional DebugInfo debug;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
   4: optional BuckVersion buckVersion;
   # TODO(alisdair): split BuildSlaveInfo out from the main BuildJob

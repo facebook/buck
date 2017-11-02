@@ -23,7 +23,6 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -87,7 +86,6 @@ public class PreBuildPhase {
 
     distBuildClientStats.setStampedeId(stampedeId.getId());
     LOG.info("Created job. Build id = " + stampedeId.getId());
-    DistBuildUtil.logDebugInfo(job);
     eventSender.postDistBuildStatusEvent(job, ImmutableList.of(), "UPLOADING DATA");
 
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();

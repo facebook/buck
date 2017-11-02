@@ -113,7 +113,6 @@ public class BuildPhase {
     distBuildClientStats.startTimer(PERFORM_DISTRIBUTED_BUILD);
     final BuildJob job = distBuildService.startBuild(stampedeId);
     LOG.info("Started job. Build status: " + job.getStatus().toString());
-    DistBuildUtil.logDebugInfo(job);
 
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =

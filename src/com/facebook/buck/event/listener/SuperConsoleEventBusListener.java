@@ -663,10 +663,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         if (totalFilesMaterialized > 0) {
           columns.add(String.format("%d files materialized", totalFilesMaterialized));
         }
-
-        if (distBuildStatus.get().getMessage().isPresent()) {
-          columns.add(distBuildStatus.get().getMessage().get());
-        }
       }
     }
 

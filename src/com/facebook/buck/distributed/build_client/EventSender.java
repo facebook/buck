@@ -19,11 +19,9 @@ import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import java.util.List;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Sends events about the distributed build. */
@@ -42,24 +40,10 @@ public class EventSender {
   /** Posts the event to the event bus. */
   public void postDistBuildStatusEvent(
       BuildJob job, List<BuildSlaveStatus> slaveStatuses, @Nullable String statusOverride) {
-    Optional<List<LogRecord>> logBook = Optional.empty();
-
-    Optional<String> lastLine = Optional.empty();
-    if (job.isSetDebug() && job.getDebug().isSetLogBook()) {
-      logBook = Optional.of(job.getDebug().getLogBook());
-      if (logBook.get().size() > 0) {
-        lastLine = Optional.of(logBook.get().get(logBook.get().size() - 1).getName());
-      }
-    }
 
     String stage = statusOverride == null ? job.getStatus().toString() : statusOverride;
     DistBuildStatus status =
-        DistBuildStatus.builder()
-            .setStatus(stage)
-            .setMessage(lastLine)
-            .setLogBook(logBook)
-            .setSlaveStatuses(slaveStatuses)
-            .build();
+        DistBuildStatus.builder().setStatus(stage).setSlaveStatuses(slaveStatuses).build();
     buckEventBus.post(new DistBuildStatusEvent(status));
   }
 
