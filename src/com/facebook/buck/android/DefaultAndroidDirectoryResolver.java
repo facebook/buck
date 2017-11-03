@@ -495,11 +495,10 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
             + ", which is specified by your config.  Please see "
             + "https://buckbuild.com/concept/buckconfig.html#android.build_tools_version for more "
             + "details about the setting.  To install the correct version of the tools, run `"
-            + Escaper.escapeAsShellString(sdkPath.resolve("tools/android").toString())
-            + " update "
-            + "sdk --force --no-ui --all --filter build-tools-"
+            + Escaper.escapeAsShellString(sdkPath.resolve("tools/bin/sdkmanager").toString())
+            + " \"build-tools;"
             + targetBuildToolsVersion.get()
-            + "`");
+            + "\"`");
   }
 
   private boolean versionsMatch(String expected, String candidate) {
