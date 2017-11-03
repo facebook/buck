@@ -172,7 +172,7 @@ public class ThriftRuleKeyHasher implements RuleKeyHasher<FullRuleKey> {
   @Override
   public RuleKeyHasher<FullRuleKey> putBuildTargetSourcePath(
       BuildTargetSourcePath buildTargetSourcePath) {
-    return push(Value.targetPath(new TargetPath(buildTargetSourcePath.toString())));
+    return push(Value.targetPath(new TargetPath(buildTargetSourcePath.representationForRuleKey())));
   }
 
   /**

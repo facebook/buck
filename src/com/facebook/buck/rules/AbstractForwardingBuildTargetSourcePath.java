@@ -54,7 +54,11 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
 
   @Override
   public String toString() {
-    return String.valueOf(new Pair<>(getTarget(), getDelegate()));
+    return toString(getDelegate());
+  }
+
+  private String toString(Object delegateRepresentation) {
+    return String.valueOf(new Pair<>(getTarget(), delegateRepresentation));
   }
 
   @Override
@@ -74,5 +78,16 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
         .compare(getTarget(), that.getTarget())
         .compare(getDelegate(), that.getDelegate())
         .result();
+  }
+
+  /**
+   * @return a string that is safe to use for rule key calculations, i.e. does not include absolute
+   *     paths.
+   */
+  @Override
+  public String representationForRuleKey() {
+    return getDelegate() instanceof AbstractPathSourcePath
+        ? toString(((AbstractPathSourcePath) getDelegate()).getRelativePath())
+        : toString();
   }
 }

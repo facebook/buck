@@ -27,4 +27,12 @@ public interface BuildTargetSourcePath extends SourcePath {
 
   /** @return the target of the {@link BuildRule} which generates the file. */
   BuildTarget getTarget();
+
+  /**
+   * @return a string representation that is usable for rule keys, i.e. does not depend on absolute
+   *     paths
+   */
+  default String representationForRuleKey() {
+    return toString();
+  }
 }

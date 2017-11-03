@@ -168,8 +168,7 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
           ((ExplicitBuildTargetSourcePath) targetSourcePath).getResolvedPath().toString());
     } else if (targetSourcePath instanceof ForwardingBuildTargetSourcePath) {
       this.putStringified(
-          RuleKeyHasherTypes.TARGET_SOURCE_PATH,
-          ((ForwardingBuildTargetSourcePath) targetSourcePath).getDelegate().toString());
+          RuleKeyHasherTypes.TARGET_SOURCE_PATH, targetSourcePath.representationForRuleKey());
     }
     return this;
   }

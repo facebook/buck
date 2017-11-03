@@ -22,19 +22,26 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +50,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameter;
 
@@ -211,7 +219,16 @@ public final class CommonRuleKeyHasherTest {
   }
 
   public abstract static class ConsistencyTest<HASH> {
+    private static ProjectFilesystem filesystem1;
+    private static ProjectFilesystem filesystem2;
+
     protected abstract RuleKeyHasher<HASH> newHasher();
+
+    @BeforeClass
+    public static void setupFileSystems() {
+      filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
+      filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+    }
 
     @Test
     public void testEmptyConsistency() {
@@ -340,6 +357,39 @@ public final class CommonRuleKeyHasherTest {
       assertEquals(
           newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_1)).hash(),
           newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_1)).hash());
+    }
+
+    @Test
+    public void
+        testConsistencyForForwardingBuildTargetSourcePathWithExplicitBuildTargetSourcePath() {
+      ForwardingBuildTargetSourcePath forwardingSourcePath1 =
+          ForwardingBuildTargetSourcePath.of(
+              TARGET_1,
+              ExplicitBuildTargetSourcePath.of(
+                  TARGET_2, BuildTargets.getGenPath(filesystem1, TARGET_2, "%s.out")));
+      ForwardingBuildTargetSourcePath forwardingSourcePath2 =
+          ForwardingBuildTargetSourcePath.of(
+              TARGET_1,
+              ExplicitBuildTargetSourcePath.of(
+                  TARGET_2, BuildTargets.getGenPath(filesystem2, TARGET_2, "%s.out")));
+      assertEquals(
+          newHasher().putBuildTargetSourcePath(forwardingSourcePath1).hash(),
+          newHasher().putBuildTargetSourcePath(forwardingSourcePath2).hash());
+    }
+
+    @Test
+    public void testConsistencyForForwardingBuildTargetSourcePathWithPathSourcePath() {
+      Path relativePath = Paths.get("arbitrary", "path");
+
+      ForwardingBuildTargetSourcePath forwardingSourcePath1 =
+          ForwardingBuildTargetSourcePath.of(
+              TARGET_1, PathSourcePath.of(filesystem1, relativePath));
+      ForwardingBuildTargetSourcePath forwardingSourcePath2 =
+          ForwardingBuildTargetSourcePath.of(
+              TARGET_1, PathSourcePath.of(filesystem2, relativePath));
+      assertEquals(
+          newHasher().putBuildTargetSourcePath(forwardingSourcePath1).hash(),
+          newHasher().putBuildTargetSourcePath(forwardingSourcePath2).hash());
     }
   }
 

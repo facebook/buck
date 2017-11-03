@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.ByteArray;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
@@ -29,13 +30,17 @@ import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractDefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.ThriftRuleKeyHasher;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,6 +48,8 @@ import com.google.common.hash.HashCode;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -310,5 +317,31 @@ public class ThriftRuleKeyHasherTest {
     FullRuleKey ruleKey = getRuleKey();
 
     Assert.assertEquals(expected, ruleKey);
+  }
+
+  @Test
+  public void canHandleForwardingBuildTargetSourcePathsWithDifferentFilesystems()
+      throws TException {
+    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
+    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+    Path relativePath = Paths.get("arbitrary", "path");
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+
+    ForwardingBuildTargetSourcePath forwardingSourcePath1 =
+        ForwardingBuildTargetSourcePath.of(target, PathSourcePath.of(filesystem1, relativePath));
+    ForwardingBuildTargetSourcePath forwardingSourcePath2 =
+        ForwardingBuildTargetSourcePath.of(target, PathSourcePath.of(filesystem2, relativePath));
+
+    hasher.putBuildTargetSourcePath(forwardingSourcePath1).putKey(".path1");
+    hasher.putBuildTargetSourcePath(forwardingSourcePath2).putKey(".path2");
+
+    hasher.setHashKey(HashCode.fromString("0fb14bd529a66e7f6299d9853f9e5f178c6e3866"));
+    hasher.hash();
+    hasher.flushToLogger();
+    logger.close();
+
+    FullRuleKey ruleKey = getRuleKey();
+
+    Assert.assertEquals(ruleKey.values.get(".path1"), ruleKey.values.get(".path2"));
   }
 }
