@@ -520,4 +520,23 @@ public class RustBinaryIntegrationTest {
             Matchers.containsString("I'm printing hello!"),
             Matchers.containsString("Helloer called")));
   }
+
+  @Test
+  public void duplicateCrateName() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "duplicate_crate", tmp);
+    workspace.setUp();
+
+    assertThat(
+        // Check that the build works with crates with duplicate names
+        workspace
+            .runBuckCommand("run", "//:top")
+            .assertSuccess("link with duplicate crate names")
+            .getStdout(),
+        // Make sure we actually get the distinct crates we wanted.
+        Matchers.allOf(
+            Matchers.containsString("I am top"),
+            Matchers.containsString("I am mid, calling thing\nthing2"),
+            Matchers.containsString("thing1")));
+  }
 }

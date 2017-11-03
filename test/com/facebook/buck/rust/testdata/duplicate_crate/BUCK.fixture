@@ -1,0 +1,20 @@
+rust_binary(
+    name = "top",
+    srcs = [
+        "main.rs",
+    ],
+    deps = [
+        ":mid",
+        "//thing1:thing",
+    ],
+)
+
+rust_library(
+    name = "mid",
+    srcs = [
+        "mid.rs",
+    ],
+    deps = [
+        "//thing2:thing",
+    ],
+)

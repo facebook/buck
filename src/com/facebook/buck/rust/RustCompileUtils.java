@@ -49,6 +49,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
@@ -525,5 +529,21 @@ public class RustCompileUtils {
                     "Can't find suitable top-level source file for %s: %s",
                     target.getFullyQualifiedName(), fixedSrcs)),
         fixedSrcs);
+  }
+
+  /**
+   * Approximate what Cargo does - it computes a hash based on the crate version and its
+   * dependencies. Buck will deal with the dependencies and we don't need to worry about the
+   * version, but we do need to make sure that two crates with the same name in the build are
+   * distinct - so compute the hash from the full target path.
+   *
+   * @param target Which target we're computing the hash for
+   * @return Truncated MD5 hash of the target path
+   */
+  static String hashForTarget(BuildTarget target) {
+    String name = target.getUnflavoredBuildTarget().getFullyQualifiedName();
+    Hasher hasher = Hashing.md5().newHasher();
+    HashCode hash = hasher.putString(name, StandardCharsets.UTF_8).hash();
+    return hash.toString().substring(0, 16);
   }
 }

@@ -252,8 +252,14 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
                 remapSrcPaths.addRemapOption(cmd, scratchDir.toString() + "/");
 
+                // Generate a target-unique string to distinguish distinct crates with the same
+                // name.
+                String metadata =
+                    RustCompileUtils.hashForTarget(RustCompileRule.this.getBuildTarget());
+
                 cmd.add(String.format("-Clinker=%s", linkerCmd.get(0)))
                     .add(String.format("-Clink-arg=@%s", argFilePath))
+                    .add(String.format("-Cmetadata=%s", metadata))
                     .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
                     .addAll(dedupArgs.build())
                     .add("-o", output.toString())
