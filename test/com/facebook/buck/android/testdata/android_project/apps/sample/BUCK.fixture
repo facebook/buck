@@ -643,6 +643,18 @@ android_binary(
     ],
 )
 
+android_binary(
+    name = "app_with_d8",
+    dex_tool = "d8",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/lib8:lib8",
+        "//res/com/sample/base:base",
+    ],
+)
+
 genrule(
     name = "disassemble_app_with_aapt2",
     out = "disassembled_aapt2.smali",

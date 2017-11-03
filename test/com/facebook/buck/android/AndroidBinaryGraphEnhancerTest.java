@@ -173,6 +173,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -227,7 +228,8 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildRule preDexMergeRule =
         graphEnhancer.createPreDexMergeRule(preDexedLibraries, fakeUberRDotJavaDex);
-    BuildTarget dexMergeTarget = BuildTargetFactory.newInstance("//java/com/example:apk#dex_merge");
+    BuildTarget dexMergeTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#dex,dex_merge");
     BuildRule dexMergeRule = ruleResolver.getRule(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);
@@ -326,6 +328,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -451,6 +454,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -517,6 +521,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -612,6 +617,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());

@@ -209,6 +209,7 @@ public class AndroidInstrumentationApkDescription
             cxxBuckConfig,
             new APKModuleGraph(targetGraph, buildTarget, Optional.empty()),
             dxConfig,
+            args.getDexTool(),
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
             rulesToExcludeFromDex);
@@ -242,6 +243,11 @@ public class AndroidInstrumentationApkDescription
     @Value.Default
     default boolean getIncludesVectorDrawables() {
       return false;
+    }
+
+    @Value.Default
+    default String getDexTool() {
+      return DxStep.DX;
     }
   }
 }

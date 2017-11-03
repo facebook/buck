@@ -90,6 +90,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           DxStep.Option.NO_OPTIMIZE);
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
+  @AddToRuleKey private final String dexTool;
+
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final APKModuleGraph apkModuleGraph;
   private final ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps;
@@ -109,7 +111,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       DexProducedFromJavaLibrary dexForUberRDotJava,
       ListeningExecutorService dxExecutorService,
       Optional<Integer> xzCompressionLevel,
-      Optional<String> dxMaxHeapSize) {
+      Optional<String> dxMaxHeapSize,
+      String dexTool) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.dexSplitMode = dexSplitMode;
@@ -119,6 +122,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
     this.dxMaxHeapSize = dxMaxHeapSize;
+    this.dexTool = dexTool;
   }
 
   @Override
@@ -318,7 +322,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             DX_MERGE_OPTIONS,
             dxExecutorService,
             xzCompressionLevel,
-            dxMaxHeapSize));
+            dxMaxHeapSize,
+            dexTool));
 
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
       if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
@@ -422,7 +427,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             androidLegacyToolchain,
             primaryDexPath,
             filesToDex,
-            DX_MERGE_OPTIONS));
+            DX_MERGE_OPTIONS,
+            dexTool));
   }
 
   public Path getMetadataTxtPath() {

@@ -49,7 +49,8 @@ public class DexWithClassesTest {
             new FakeProjectFilesystem(),
             TestAndroidLegacyToolchainFactory.create(),
             params,
-            javaLibrary);
+            javaLibrary,
+            DxStep.DX);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(
@@ -80,7 +81,8 @@ public class DexWithClassesTest {
             new FakeProjectFilesystem(),
             TestAndroidLegacyToolchainFactory.create(),
             params,
-            javaLibrary);
+            javaLibrary,
+            DxStep.DX);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(

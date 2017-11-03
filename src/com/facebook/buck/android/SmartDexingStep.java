@@ -93,6 +93,7 @@ public class SmartDexingStep implements Step {
   private final Optional<Integer> xzCompressionLevel;
   private final Optional<String> dxMaxHeapSize;
   private final BuildTarget target;
+  private final String dexTool;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -120,7 +121,8 @@ public class SmartDexingStep implements Step {
       EnumSet<Option> dxOptions,
       ListeningExecutorService executorService,
       Optional<Integer> xzCompressionLevel,
-      Optional<String> dxMaxHeapSize) {
+      Optional<String> dxMaxHeapSize,
+      String dexTool) {
     this.target = target;
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.buildContext = buildContext;
@@ -142,6 +144,7 @@ public class SmartDexingStep implements Step {
     this.executorService = executorService;
     this.xzCompressionLevel = xzCompressionLevel;
     this.dxMaxHeapSize = dxMaxHeapSize;
+    this.dexTool = dexTool;
   }
 
   public static int determineOptimalThreadCount() {
@@ -304,7 +307,8 @@ public class SmartDexingStep implements Step {
               successDir.resolve(outputFile.getFileName()),
               dxOptions,
               xzCompressionLevel,
-              dxMaxHeapSize));
+              dxMaxHeapSize,
+              dexTool));
     }
 
     ImmutableList.Builder<ImmutableList<Step>> stepGroups = new ImmutableList.Builder<>();
@@ -342,6 +346,7 @@ public class SmartDexingStep implements Step {
     @Nullable private String newInputsHash;
     private final Optional<Integer> xzCompressionLevel;
     private final Optional<String> dxMaxHeapSize;
+    private final String dexTool;
 
     public DxPseudoRule(
         BuildTarget target,
@@ -354,7 +359,8 @@ public class SmartDexingStep implements Step {
         Path outputHashPath,
         EnumSet<Option> dxOptions,
         Optional<Integer> xzCompressionLevel,
-        Optional<String> dxMaxHeapSize) {
+        Optional<String> dxMaxHeapSize,
+        String dexTool) {
       this.target = target;
       this.androidLegacyToolchain = androidLegacyToolchain;
       this.buildContext = buildContext;
@@ -366,6 +372,7 @@ public class SmartDexingStep implements Step {
       this.dxOptions = dxOptions;
       this.xzCompressionLevel = xzCompressionLevel;
       this.dxMaxHeapSize = dxMaxHeapSize;
+      this.dexTool = dexTool;
     }
 
     /**
@@ -416,7 +423,8 @@ public class SmartDexingStep implements Step {
           outputPath,
           dxOptions,
           xzCompressionLevel,
-          dxMaxHeapSize);
+          dxMaxHeapSize,
+          dexTool);
       steps.add(
           new WriteFileStep(filesystem, newInputsHash, outputHashPath, /* executable */ false));
     }
@@ -439,7 +447,8 @@ public class SmartDexingStep implements Step {
       Path outputPath,
       EnumSet<Option> dxOptions,
       Optional<Integer> xzCompressionLevel,
-      Optional<String> dxMaxHeapSize) {
+      Optional<String> dxMaxHeapSize,
+      String dexTool) {
 
     String output = outputPath.toString();
 
@@ -453,7 +462,9 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               filesToDex,
               dxOptions,
-              dxMaxHeapSize));
+              dxMaxHeapSize,
+              dexTool,
+              false));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
       Path repackedJar = Paths.get(output.replaceAll("\\.xz$", ""));
@@ -492,7 +503,9 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               filesToDex,
               dxOptions,
-              dxMaxHeapSize));
+              dxMaxHeapSize,
+              dexTool,
+              false));
       steps.add(
           new RepackZipEntriesStep(
               filesystem,
@@ -522,7 +535,9 @@ public class SmartDexingStep implements Step {
               outputPath,
               filesToDex,
               dxOptions,
-              dxMaxHeapSize));
+              dxMaxHeapSize,
+              dexTool,
+              false));
       if (DexStore.JAR.matchesPath(outputPath)) {
         steps.add(
             new DexJarAnalysisStep(

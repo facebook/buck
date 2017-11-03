@@ -87,7 +87,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
             outputHashFile,
             EnumSet.of(DxStep.Option.NO_OPTIMIZE),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            DxStep.DX);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -119,7 +120,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -163,7 +165,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.of(9),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -207,7 +210,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     assertEquals(
         Joiner.on(" ")
@@ -244,7 +248,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     MoreAsserts.assertSteps(
         "Wrong steps",
@@ -285,7 +290,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
   }
 
   private AndroidPlatformTarget createAndroidPlatformTarget() throws IOException {

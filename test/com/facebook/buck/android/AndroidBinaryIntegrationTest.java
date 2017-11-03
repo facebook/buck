@@ -438,6 +438,11 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testSimpleD8App() throws IOException {
+    workspace.runBuckBuild("//apps/sample:app_with_d8").assertSuccess();
+  }
+
+  @Test
   public void testResourceOverrides() throws IOException {
     Path path = workspace.buildAndReturnOutput("//apps/sample:strings_dump_overrides");
     assertThat(
@@ -591,7 +596,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
-    buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex_uber_r_dot_java");
+    buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex,dex_uber_r_dot_java");
     verifyTrimmedRDotJava(ImmutableSet.of("title"));
 
     // Turn off trimming and turn on exopackage, and rebuilt.
@@ -632,7 +637,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
-    buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex_uber_r_dot_java");
+    buildLog.assertTargetBuiltLocally("//apps/multidex:app#dex,dex_uber_r_dot_java");
     verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
   }
 
