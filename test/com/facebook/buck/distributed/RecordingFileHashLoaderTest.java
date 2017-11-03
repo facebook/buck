@@ -34,12 +34,14 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFileHashCache;
 import com.facebook.buck.testutil.FileHashEntryMatcher;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsCollectionContaining;
@@ -50,6 +52,8 @@ import org.junit.rules.TemporaryFolder;
 
 public class RecordingFileHashLoaderTest {
   private static final HashCode EXAMPLE_HASHCODE = HashCode.fromString("1234");
+  private static final Path CELL1 = Paths.get("cell1");
+  private static final Path CELL2 = Paths.get("cell2");
 
   @Rule public TemporaryFolder projectDir = new TemporaryFolder();
   @Rule public TemporaryFolder externalDir = new TemporaryFolder();
@@ -108,6 +112,144 @@ public class RecordingFileHashLoaderTest {
     if (fileHashEntry.isSetContents()) {
       assertThat(fileHashEntry.getContents(), Matchers.equalTo(Files.readAllBytes(fileAbsPath)));
     }
+  }
+
+  @Test
+  public void testRecordsCrossCellSymlinkWithCrossCellRealPath()
+      throws IOException, InterruptedException {
+    // Scenario:
+    // /cell1/link -> /cell2/file
+    // => /cell1/link should be recorded as a file with the same contents as /cell2/file.
+
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
+    // Create cells
+    projectFilesystem.mkdirs(CELL1);
+    projectFilesystem.mkdirs(CELL2);
+
+    ProjectFilesystem cellRootFs =
+        TestProjectFilesystems.createProjectFilesystem(projectFilesystem.resolve(CELL1));
+
+    Path fileAbsPath = projectFilesystem.resolve(CELL2.resolve("file"));
+    Path fileRelPath = cellRootFs.relativize(fileAbsPath);
+    Files.write(fileAbsPath, "This file is so cool.".getBytes());
+    fileAbsPath.toFile().setExecutable(true);
+
+    Path symlinkAbsPath = cellRootFs.resolve("link");
+    Path symlinkRelPath = cellRootFs.relativize(symlinkAbsPath);
+    Files.createSymbolicLink(symlinkAbsPath, fileAbsPath);
+    symlinkAbsPath.toFile().setExecutable(true);
+
+    RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
+    BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
+    FakeProjectFileHashCache delegateCache =
+        new FakeProjectFileHashCache(
+            cellRootFs,
+            ImmutableMap.of(symlinkRelPath, EXAMPLE_HASHCODE, fileRelPath, EXAMPLE_HASHCODE));
+
+    RecordingProjectFileHashCache recordingLoader =
+        RecordingProjectFileHashCache.createForCellRoot(
+            delegateCache,
+            recordedFileHashes,
+            new DistBuildConfig(
+                FakeBuckConfig.builder()
+                    .setSections(
+                        RawConfig.builder()
+                            .put(
+                                "repositories",
+                                "cell1",
+                                projectFilesystem.resolve(CELL1).toString())
+                            .put(
+                                "repositories",
+                                "cell2",
+                                projectFilesystem.resolve(CELL2).toString())
+                            .build())
+                    .build()));
+
+    recordingLoader.get(symlinkRelPath);
+
+    assertThat(fileHashes.getEntries().size(), Matchers.equalTo(1));
+
+    BuildJobStateFileHashEntry fileHashEntry = fileHashes.getEntries().get(0);
+    assertFalse(fileHashEntry.isSetIsDirectory() && fileHashEntry.isIsDirectory());
+    assertFalse(fileHashEntry.isSetRootSymLink());
+    assertThat(fileHashEntry.getPath(), Matchers.equalTo(unixPath(symlinkRelPath.toString())));
+    assertThat(fileHashEntry.getSha1(), Matchers.equalTo(EXAMPLE_HASHCODE.toString()));
+    assertFalse(fileHashEntry.isSetPathIsAbsolute() && fileHashEntry.isPathIsAbsolute());
+    assertTrue(fileHashEntry.isSetIsExecutable() && fileHashEntry.isIsExecutable());
+    // We may or may not read the file inline here.
+    if (fileHashEntry.isSetContents()) {
+      assertThat(fileHashEntry.getContents(), Matchers.equalTo(Files.readAllBytes(fileAbsPath)));
+    }
+  }
+
+  @Test
+  public void testRecordsCrossCellSymlinkWithExternalRealPath()
+      throws IOException, InterruptedException {
+    // Scenario:
+    // /cell1/link -> /cell2/link -> /external/file
+    // => create direct link: /cell1/link -> /external/file
+
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
+    // Create cells
+    projectFilesystem.mkdirs(CELL1);
+    projectFilesystem.mkdirs(CELL2);
+
+    ProjectFilesystem cell1 =
+        TestProjectFilesystems.createProjectFilesystem(projectFilesystem.resolve(CELL1));
+    ProjectFilesystem cell2 =
+        TestProjectFilesystems.createProjectFilesystem(projectFilesystem.resolve(CELL2));
+
+    Path externalFile = externalDir.newFile("file").toPath();
+
+    Path intermediateSymLinkAbsPath = cell2.resolve("link");
+    Path intermediateSymLinkRelPath = cell1.relativize(intermediateSymLinkAbsPath);
+
+    Path symlinkAbsPath = cell1.resolve("link");
+    Path symlinkRelPath = cell1.relativize(symlinkAbsPath);
+
+    Files.createSymbolicLink(symlinkAbsPath, intermediateSymLinkRelPath);
+    Files.createSymbolicLink(intermediateSymLinkAbsPath, externalFile);
+
+    RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
+    BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
+    FakeProjectFileHashCache delegateCache =
+        new FakeProjectFileHashCache(
+            cell1,
+            ImmutableMap.of(
+                symlinkRelPath, EXAMPLE_HASHCODE, intermediateSymLinkRelPath, EXAMPLE_HASHCODE));
+
+    RecordingProjectFileHashCache recordingLoader =
+        RecordingProjectFileHashCache.createForCellRoot(
+            delegateCache,
+            recordedFileHashes,
+            new DistBuildConfig(
+                FakeBuckConfig.builder()
+                    .setSections(
+                        RawConfig.builder()
+                            .put(
+                                "repositories",
+                                "cell1",
+                                projectFilesystem.resolve(CELL1).toString())
+                            .put(
+                                "repositories",
+                                "cell2",
+                                projectFilesystem.resolve(CELL2).toString())
+                            .build())
+                    .build()));
+
+    recordingLoader.get(symlinkRelPath);
+
+    assertThat(fileHashes.getEntries().size(), Matchers.equalTo(1));
+
+    BuildJobStateFileHashEntry fileHashEntry = fileHashes.getEntries().get(0);
+    assertTrue(fileHashEntry.isSetRootSymLink());
+    assertThat(
+        fileHashEntry.getRootSymLink(), Matchers.equalTo(unixPath(symlinkRelPath.toString())));
+    assertTrue(fileHashEntry.isSetRootSymLinkTarget());
+    assertThat(
+        fileHashEntry.getRootSymLinkTarget(), Matchers.equalTo(unixPath(externalFile.toString())));
   }
 
   @Test
