@@ -49,6 +49,9 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
+import com.facebook.buck.rules.RuleDepsCache;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -81,6 +84,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -897,7 +901,7 @@ public class TargetsCommand extends AbstractCommand {
     // RuleKeyFactory if we're showing the keys.
     Optional<ActionGraph> actionGraph;
     Optional<BuildRuleResolver> buildRuleResolver;
-    Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
+    Optional<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculator = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
       if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
@@ -912,31 +916,56 @@ public class TargetsCommand extends AbstractCommand {
         buildRuleResolver = Optional.of(result.getResolver());
         if (isShowRuleKey()) {
           SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
-          ruleKeyFactory =
+          // Setup a parallel rule key calculator to use when building rule keys.
+          ruleKeyCalculator =
               Optional.of(
-                  new DefaultRuleKeyFactory(
-                      new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed()),
-                      params.getFileHashCache(),
-                      DefaultSourcePathResolver.from(ruleFinder),
-                      ruleFinder,
-                      Optional.ofNullable(ruleKeyLogger)));
+                  new ParallelRuleKeyCalculator<>(
+                      executor,
+                      new DefaultRuleKeyFactory(
+                          new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed()),
+                          params.getFileHashCache(),
+                          DefaultSourcePathResolver.from(ruleFinder),
+                          ruleFinder,
+                          Optional.ofNullable(ruleKeyLogger)),
+                      new RuleDepsCache(buildRuleResolver.get()),
+                      (eventBus, rule) -> () -> {}));
         }
       } else {
         actionGraph = Optional.empty();
         buildRuleResolver = Optional.empty();
       }
 
+      // Start rule calculations in parallel.
+      for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
+        if (actionGraph.isPresent() && isShowRuleKey()) {
+          BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
+          ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule);
+        }
+      }
+
       for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
         TargetResult.Builder builder =
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
         Preconditions.checkNotNull(builder);
-        if (actionGraph.isPresent()) {
+        if (actionGraph.isPresent() && isShowRuleKey()) {
           BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
-          if (isShowRuleKey()) {
-            builder.setRuleKey(ruleKeyFactory.get().build(rule).toString());
-            if (isShowTransitiveRuleKeys()) {
-              showTransitiveRuleKeys(rule, ruleKeyFactory.get(), targetResultBuilders);
-            }
+          builder.setRuleKey(
+              Futures.getUnchecked(
+                      ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule))
+                  .toString());
+          if (isShowTransitiveRuleKeys()) {
+            ParallelRuleKeyCalculator<RuleKey> calculator = ruleKeyCalculator.get();
+            AbstractBreadthFirstTraversal.traverse(
+                rule,
+                traversedRule -> {
+                  TargetResult.Builder showOptionsBuilder =
+                      targetResultBuilders.getOrCreate(traversedRule.getBuildTarget());
+                  showOptionsBuilder.setRuleKey(
+                      Futures.getUnchecked(
+                              calculator.calculate(params.getBuckEventBus(), traversedRule))
+                          .toString());
+                  return traversedRule.getBuildDeps();
+                });
           }
         }
       }
@@ -985,17 +1014,6 @@ public class TargetsCommand extends AbstractCommand {
       }
       return builder.build();
     }
-  }
-
-  private void showTransitiveRuleKeys(
-      BuildRule root, DefaultRuleKeyFactory ruleKeyFactory, TargetResultBuilders resultBuilders) {
-    AbstractBreadthFirstTraversal.traverse(
-        root,
-        r -> {
-          TargetResult.Builder showOptionsBuilder = resultBuilders.getOrCreate(r.getBuildTarget());
-          showOptionsBuilder.setRuleKey(ruleKeyFactory.build(r).toString());
-          return r.getBuildDeps();
-        });
   }
 
   /** Returns absolute path to the output rule, if the rule has an output. */

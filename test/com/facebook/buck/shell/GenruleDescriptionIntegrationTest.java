@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -26,6 +25,7 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -226,9 +226,8 @@ public class GenruleDescriptionIntegrationTest {
       JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);
       assert jsonNode.has("buck.outputPath");
       return Paths.get(jsonNode.get("buck.outputPath").asText());
-    } catch (Exception e) {
-      fail(e.getMessage());
-      return Paths.get("");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 }

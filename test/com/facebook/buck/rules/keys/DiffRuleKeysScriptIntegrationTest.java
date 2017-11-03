@@ -220,23 +220,26 @@ public class DiffRuleKeysScriptIntegrationTest {
 
     assertThat(
         runRuleKeyDiffer(workspace, ""),
-        Matchers.containsString(
-            // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
-            // rather than the change in the srcs property of that class is a bug in the differ.
-            "Change details for [//:java_lib_all]\n"
-                + "  (jarBuildStepsFactory):\n"
-                + "    -[ruleKey(sha1=2e849e9597fb4b75ac4616a6cc5e9e6e5be51bb1)]\n"
-                + "    +[ruleKey(sha1=e6d5ba29d484bba32135d0841c786f216c31efad)]\n"
-                + "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
-                + "  (srcs):\n"
-                + "    -[<missing>]\n"
-                + "    -[container(LIST,len=1)]\n"
-                + "    +[container(LIST,len=2)]\n"
-                + "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n"
-                + "Change details for [//:java_lib_1->jarBuildStepsFactory]\n"
-                + "  (srcs):\n"
-                + "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]\n"
-                + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]"));
+        // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
+        // rather than the change in the srcs property of that class is a bug in the differ.
+        Matchers.allOf(
+            Matchers.containsString(
+                "Change details for [//:java_lib_all]\n"
+                    + "  (jarBuildStepsFactory):\n"
+                    + "    -[ruleKey(sha1=2e849e9597fb4b75ac4616a6cc5e9e6e5be51bb1)]\n"
+                    + "    +[ruleKey(sha1=e6d5ba29d484bba32135d0841c786f216c31efad)]\n"),
+            Matchers.containsString(
+                "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
+                    + "  (srcs):\n"
+                    + "    -[<missing>]\n"
+                    + "    -[container(LIST,len=1)]\n"
+                    + "    +[container(LIST,len=2)]\n"
+                    + "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n"),
+            Matchers.containsString(
+                "Change details for [//:java_lib_1->jarBuildStepsFactory]\n"
+                    + "  (srcs):\n"
+                    + "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]\n"
+                    + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]")));
   }
 
   @Test
