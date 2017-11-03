@@ -21,12 +21,16 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.events.Event;
+import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
@@ -38,6 +42,7 @@ import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.EnumSet;
+import javax.annotation.Nullable;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,14 +68,8 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'])");
     assertThat(
-        evaluate(buildFile).lookup("txts"),
+        assertEvaluate(buildFile).lookup("txts"),
         equalTo(SkylarkList.createImmutable(ImmutableList.of("bar.txt", "foo.txt"))));
-  }
-
-  private Environment evaluate(Path buildFile) throws IOException, InterruptedException {
-    try (Mutability mutability = Mutability.create("BUCK")) {
-      return evaluate(buildFile, mutability);
-    }
   }
 
   @Test
@@ -81,7 +80,7 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'], excludes=['bar.txt'])");
     assertThat(
-        evaluate(buildFile).lookup("txts"),
+        assertEvaluate(buildFile).lookup("txts"),
         equalTo(SkylarkList.createImmutable(ImmutableList.of("foo.txt"))));
   }
 
@@ -92,7 +91,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(
         buildFile, "txts = glob(['some_dir'], exclude_directories=False)");
     assertThat(
-        evaluate(buildFile).lookup("txts"),
+        assertEvaluate(buildFile).lookup("txts"),
         equalTo(SkylarkList.createImmutable(ImmutableList.of("some_dir"))));
   }
 
@@ -103,7 +102,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(
         buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
     assertThat(
-        evaluate(buildFile).lookup("txts"),
+        assertEvaluate(buildFile).lookup("txts"),
         equalTo(SkylarkList.createImmutable(ImmutableList.of())));
   }
 
@@ -113,11 +112,63 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['some_dir'])");
     assertThat(
-        evaluate(buildFile).lookup("txts"),
+        assertEvaluate(buildFile).lookup("txts"),
         equalTo(SkylarkList.createImmutable(ImmutableList.of())));
   }
 
-  private Environment evaluate(Path buildFile, Mutability mutability)
+  @Test
+  public void testGlobBadPathsFailsWithNiceError() throws Exception {
+    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['non_existent'])");
+
+    SingleCapturingEventHandler handler = new SingleCapturingEventHandler();
+
+    try (Mutability mutability = Mutability.create("BUCK")) {
+      Pair<Boolean, Environment> result = evaluate(buildFile, mutability, handler);
+      Assert.assertFalse(result.getFirst());
+    }
+
+    Event event = handler.getLastEvent();
+    Location loc = event.getLocation();
+    Assert.assertNotNull(loc);
+
+    Assert.assertEquals(1, loc.getStartLine().intValue());
+    Assert.assertEquals(7, loc.getStartOffset());
+    Assert.assertTrue(event.getMessage().matches("Cannot find .*non_existent"));
+  }
+
+  private class SingleCapturingEventHandler implements EventHandler {
+    @Nullable private Event lastEvent;
+
+    @Override
+    public void handle(Event event) {
+      lastEvent = event;
+    }
+
+    @Nullable
+    public Event getLastEvent() {
+      return lastEvent;
+    }
+  }
+
+  private Environment assertEvaluate(Path buildFile) throws IOException, InterruptedException {
+    try (Mutability mutability = Mutability.create("BUCK")) {
+      return assertEvaluate(buildFile, mutability);
+    }
+  }
+
+  private Environment assertEvaluate(Path buildFile, Mutability mutability)
+      throws IOException, InterruptedException {
+    Pair<Boolean, Environment> result = evaluate(buildFile, mutability, eventHandler);
+    if (!result.getFirst()) {
+      Assert.fail("Build file evaluation must have succeeded");
+    }
+    return result.getSecond();
+  }
+
+  private Pair<Boolean, Environment> evaluate(
+      Path buildFile, Mutability mutability, EventHandler eventHandler)
       throws IOException, InterruptedException {
     BuildFileAST buildFileAst =
         BuildFileAST.parseBuildFile(ParserInputSource.create(buildFile), eventHandler);
@@ -130,10 +181,6 @@ public class GlobTest {
         PackageFactory.PACKAGE_CONTEXT,
         PackageContext.builder().setGlobber(SimpleGlobber.create(root)).build());
     env.setup("glob", Glob.create());
-    boolean exec = buildFileAst.exec(env, eventHandler);
-    if (!exec) {
-      Assert.fail("Build file evaluation must have succeeded");
-    }
-    return env;
+    return new Pair<>(buildFileAst.exec(env, eventHandler), env);
   }
 }

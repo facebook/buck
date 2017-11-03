@@ -29,6 +29,7 @@ import com.google.devtools.build.lib.syntax.GlobList;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 import com.google.devtools.build.lib.syntax.Type;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -104,20 +105,24 @@ public class Glob {
             Environment env)
             throws EvalException, IOException {
           PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
-          return SkylarkList.MutableList.copyOf(
-              env,
-              GlobList.captureResults(
-                  includes,
-                  excludes,
-                  packageContext
-                      .getGlobber()
-                      .run(
-                          Type.STRING_LIST.convert(includes, "'glob' includes"),
-                          Type.STRING_LIST.convert(excludes, "'glob' excludes"),
-                          excludeDirectories)
-                      .stream()
-                      .sorted()
-                      .collect(MoreCollectors.toImmutableList())));
+          try {
+            return SkylarkList.MutableList.copyOf(
+                env,
+                GlobList.captureResults(
+                    includes,
+                    excludes,
+                    packageContext
+                        .getGlobber()
+                        .run(
+                            Type.STRING_LIST.convert(includes, "'glob' includes"),
+                            Type.STRING_LIST.convert(excludes, "'glob' excludes"),
+                            excludeDirectories)
+                        .stream()
+                        .sorted()
+                        .collect(MoreCollectors.toImmutableList())));
+          } catch (FileNotFoundException fnfe) {
+            throw new EvalException(ast.getLocation(), "Cannot find " + fnfe.getMessage());
+          }
         }
       };
 

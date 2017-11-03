@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.io.impl;
 
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -26,14 +26,20 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class SimpleGlobberTest {
   private Path root;
   private Globber globber;
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws Exception {
@@ -80,5 +86,21 @@ public class SimpleGlobberTest {
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
         equalTo(ImmutableSet.of()));
+  }
+
+  @Test
+  public void testThrowsOnNonexistentDirectory() throws Exception {
+    thrown.expect(FileNotFoundException.class);
+    thrown.expectMessage(CoreMatchers.endsWith("/does"));
+
+    globber.run(Collections.singleton("does/not/exist.txt"), Collections.emptySet(), false);
+  }
+
+  @Test
+  public void testThrowsOnNonexistentFile() throws Exception {
+    thrown.expect(FileNotFoundException.class);
+    thrown.expectMessage(CoreMatchers.endsWith("/does_not_exist.txt"));
+
+    globber.run(Collections.singleton("does_not_exist.txt"), Collections.emptySet(), false);
   }
 }
