@@ -34,6 +34,7 @@ import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -299,6 +300,34 @@ public class DalvikStatsTool {
       }
 
       @Override
+      /**
+       * Lambdas/Method Refs for D8 desugaring
+       *
+       * <p>Stateless (no arguments) - Adds 1 class, 1 field (for instance var) and 2 methods (1
+       * constructor + 1 accessor) Stateful (has arguments) - Adds 1 class, 1 field per argument and
+       * 3 methods ( 1 constructor + 1 accessor + 1 bridge)
+       *
+       * <p>we always assume the worst case and for every invoke dynamic in the bytecode, augmenting
+       * the dex references by the max possible fields/methods. At worst, we will end up over
+       * estimating slightly, but real world test has shown that the difference is very small to
+       * notice.
+       */
+      public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+        super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
+        registerMethodHandleType(bsm);
+
+        String uid =
+            String.valueOf(DalvikMemberReference.of(bsm.getOwner(), name, desc).hashCode());
+        createAdditionalFieldsForDesugar(uid + String.valueOf(bsm.hashCode()));
+        for (Object arg : bsmArgs) {
+          if (arg instanceof Handle) {
+            registerMethodHandleType((Handle) arg);
+          }
+          createAdditionalFieldsForDesugar(uid + String.valueOf(arg.hashCode()));
+        }
+      }
+
+      @Override
       public void visitMultiANewArrayInsn(String desc, int dims) {
         // dx translates this instruction into a method invocation on
         // Array.newInstance(Class clazz, int...dims);
@@ -355,6 +384,58 @@ public class DalvikStatsTool {
           String desc,
           boolean visible) {
         return annotationVisitor;
+      }
+
+      private void registerMethodHandleType(Handle handle) {
+        switch (handle.getTag()) {
+          case Opcodes.H_GETFIELD:
+          case Opcodes.H_GETSTATIC:
+          case Opcodes.H_PUTFIELD:
+          case Opcodes.H_PUTSTATIC:
+            visitFieldInsn(Opcodes.GETFIELD, handle.getOwner(), handle.getName(), handle.getDesc());
+            break;
+          case Opcodes.H_INVOKEVIRTUAL:
+          case Opcodes.H_INVOKEINTERFACE:
+          case Opcodes.H_INVOKESPECIAL:
+          case Opcodes.H_INVOKESTATIC:
+          case Opcodes.H_NEWINVOKESPECIAL:
+            visitMethodInsn(
+                Opcodes.H_INVOKEVIRTUAL,
+                handle.getOwner(),
+                handle.getName(),
+                handle.getDesc(),
+                false);
+            createAdditionalMethodsForDesugar(handle);
+            break;
+          default:
+            throw new IllegalStateException(
+                "MethodHandle tag is not supported: " + handle.getTag());
+        }
+      }
+
+      private void createAdditionalMethodsForDesugar(Handle handle) {
+        visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "-$$Lambda$" + handle.getOwner(),
+            "lambda$constructor$" + handle.getName(),
+            handle.getDesc(),
+            false);
+        visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "-$$Lambda$" + handle.getOwner(),
+            "lambda$original$" + handle.getName(),
+            handle.getDesc(),
+            false);
+        visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            "-$$Lambda$" + handle.getOwner(),
+            "lambda$bridge$" + handle.getName(),
+            handle.getDesc(),
+            false);
+      }
+
+      private void createAdditionalFieldsForDesugar(String uid) {
+        visitFieldInsn(Opcodes.GETFIELD, "-$$Lambda$" + uid, "lambda$field$" + uid, "desugared");
       }
     }
 

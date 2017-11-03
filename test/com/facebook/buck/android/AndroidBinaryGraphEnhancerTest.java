@@ -173,6 +173,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -326,6 +327,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -451,6 +453,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -517,6 +520,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
@@ -612,6 +616,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
+            DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());

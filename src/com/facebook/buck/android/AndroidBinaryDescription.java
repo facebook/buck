@@ -335,6 +335,7 @@ public class AndroidBinaryDescription
               cxxBuckConfig,
               apkModuleGraph,
               dxConfig,
+              args.getDexTool(),
               getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots),
               nonPreDexedDexBuildableArgs,
               rulesToExcludeFromDex);
@@ -688,6 +689,11 @@ public class AndroidBinaryDescription
     @Value.Default
     default boolean isReorderClassesIntraDex() {
       return false;
+    }
+
+    @Value.Default
+    default String getDexTool() {
+      return DxStep.DX;
     }
 
     Optional<SourcePath> getDexReorderToolFile();

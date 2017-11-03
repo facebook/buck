@@ -46,6 +46,10 @@
   <property name="dx.classes.dir.name" value="dx_classes" />
   <property name="dx.classes.dir" value="${build.dir}/${dx.classes.dir.name}" />
 
+  <property name="d8.base.dir" value="${basedir}/third-party/java/d8" />
+  <property name="d8.src.dir" value="${d8.base.dir}/src" />
+  <property name="d8.classes.dir" value="${build.dir}/d8_classes" />
+
   <property name="eclipse.dir" value="${basedir}/third-party/java/eclipse" />
 
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
@@ -128,6 +132,7 @@
     <include name="eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
     <include name="eden/eden.jar" />
     <include name="eden/java-thrift-dependencies.jar" />
+    <include name="fastutil/fastutil-7.2.0.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
     <include name="guice/guice-multibindings-3.0.jar" />
@@ -142,6 +147,8 @@
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
     <include name="jimfs/jimfs-1.1.jar" />
+    <include name="jopt-simple/jopt-simple-4.6.jar" />
+    <include name="json-simple/json-simple-1.1.1.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="okhttp/okhttp-3.9.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
@@ -180,6 +187,7 @@
     <fileset refid="third-party.jars" />
     <pathelement location="${classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
+    <pathelement location="${d8.classes.dir}" />
     <pathelement location="${bootstrapper.jar}" />
     <pathelement location="${manual.gensrc.classes.dir}" />
   </path>
@@ -231,7 +239,7 @@
        do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
-  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, mark-successful-build" />
+  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, d8, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -454,7 +462,7 @@
   </target>
 
   <target name="compile"
-          depends="compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
+          depends="compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx, d8"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -558,6 +566,33 @@
         <include name="com/facebook/buck/util/versioncontrol/rawmanifest.py"/>
       </fileset>
     </copy>
+  </target>
+
+  <!-- D8 dex compiler -->
+  <fileset dir="${third-party.dir}/java" id="d8.jars">
+    <include name="asm/asm*-6.0.jar" />
+    <include name="commons-compress/commons-compress-1.8.1.jar" />
+    <include name="fastutil/fastutil-7.2.0.jar" />
+    <include name="guava/guava-23.3-jre.jar" />
+    <include name="jopt-simple/jopt-simple-4.6.jar" />
+    <include name="json-simple/json-simple-1.1.1.jar" />
+  </fileset>
+
+  <path id="d8.classpath">
+    <fileset refid="d8.jars" />
+  </path>
+
+  <target name="d8">
+    <mkdir dir="${d8.classes.dir}" />
+
+    <javac destdir="${d8.classes.dir}"
+           classpathref="d8.classpath"
+           debug="on"
+           deprecation="on"
+           includeAntRuntime="no"
+           >
+      <src path="${d8.src.dir}" />
+    </javac>
   </target>
 
   <target name="report-generator-jar" depends="compile">
@@ -849,6 +884,7 @@
       <string value="${manual.gensrc.classes.dir}" />
       <string value="${aosp.classes.dir}" />
       <string value="${dx.classes.dir}" />
+      <string value="${d8.classes.dir}" />
       <string value="${tracing-api.classes.dir}" />
       <string value="${bootstrapper.classes.dir}" />
       <fileset refid="buck.jars"/>
