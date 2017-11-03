@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -655,9 +654,12 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testOutputFailed() throws InterruptedException, IOException {
+    File folder = tmpDir.newFolder();
     ProjectFilesystem projectFilesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
-    assumeTrue("Can make the root directory read-only", tmpDir.getRoot().setReadOnly());
+        TestProjectFilesystems.createProjectFilesystem(folder.toPath());
+
+    // delete the folder after creating file system so write there would fail
+    folder.delete();
 
     try {
       ChromeTraceBuildListener listener =
@@ -672,12 +674,7 @@ public class ChromeTraceBuildListenerTest {
       listener.outputTrace(invocationInfo.getBuildId());
       fail("Expected an exception.");
     } catch (HumanReadableException e) {
-      assertEquals(
-          "Unable to write trace file: java.nio.file.AccessDeniedException: "
-              + projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut()),
-          e.getMessage());
-    } finally {
-      tmpDir.getRoot().setWritable(true);
+      assertTrue(e.getMessage().contains("Unable to write trace file"));
     }
   }
 
