@@ -539,4 +539,26 @@ public class RustBinaryIntegrationTest {
             Matchers.containsString("I am mid, calling thing\nthing2"),
             Matchers.containsString("thing1")));
   }
+
+  @Test
+  public void includeFileIncluded() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_include", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:include_included").assertSuccess().getStdout(),
+        Matchers.matchesPattern(
+            "^Got included stuff: /.*/buck-out/.*/included\\.rs\n"
+                + "subinclude has /.*/buck-out/.*/subdir/subinclude\\.rs\n$"));
+  }
+
+  @Test
+  public void includeFileMissing() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_include", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("run", "//:include_missing").assertFailure();
+  }
 }

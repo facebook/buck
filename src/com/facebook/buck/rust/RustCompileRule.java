@@ -281,7 +281,23 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               @Override
               public ImmutableMap<String, String> getEnvironmentVariables(
                   ExecutionContext context) {
-                return compiler.getEnvironment(buildContext.getSourcePathResolver());
+                ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+                env.putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()));
+
+                Path root = getProjectFilesystem().getRootPath();
+                Path basePath = getBuildTarget().get().getBasePath();
+
+                // These need to be set as absolute paths - the intended use
+                // is within an `include!(concat!(env!("..."), "...")`
+                // invocation in Rust source, and if the path isn't absolute
+                // it will be treated as relative to the current file including
+                // it. The trailing '/' is also to assist this use-case.
+                env.put("RUSTC_BUILD_CONTAINER", root.resolve(scratchDir).toString() + "/");
+                env.put(
+                    "RUSTC_BUILD_CONTAINER_BASE_PATH",
+                    root.resolve(scratchDir.resolve(basePath)).toString() + "/");
+
+                return env.build();
               }
 
               @Override
