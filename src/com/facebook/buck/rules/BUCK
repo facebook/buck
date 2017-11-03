@@ -417,6 +417,7 @@ java_immutables_library(
         "NoopBuildRuleWithDeclaredAndExtraDeps.java",
         "NoopInstallable.java",
         "OverrideScheduleRule.java",
+        "ParallelRuleKeyCalculator.java",
         "RuleDepsCache.java",
         "RunnableWithFuture.java",
         "SQLiteBuildInfoStore.java",
