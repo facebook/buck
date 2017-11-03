@@ -270,8 +270,10 @@ public class RustLibraryDescription
 
       @Override
       public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform) {
+        BuildTarget target = getBuildTarget();
+
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
-        String sharedLibrarySoname = CrateType.DYLIB.filenameFor(crate, cxxPlatform);
+        String sharedLibrarySoname = CrateType.DYLIB.filenameFor(target, crate, cxxPlatform);
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,

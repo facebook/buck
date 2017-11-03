@@ -541,6 +541,20 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void duplicateSharedCrateName() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "duplicate_crate", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:top_shared").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("I am top"),
+            Matchers.containsString("I am mid, calling thing\nthing2"),
+            Matchers.containsString("thing1")));
+  }
+
+  @Test
   public void includeFileIncluded() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_include", tmp);

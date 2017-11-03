@@ -199,7 +199,7 @@ public class RustCompileUtils {
       args.add(StringArg.of("-Cprefer-dynamic"));
     }
 
-    String filename = crateType.filenameFor(crateName, cxxPlatform);
+    String filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
     return RustCompileRule.from(
         ruleFinder,

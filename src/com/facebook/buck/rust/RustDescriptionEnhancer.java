@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
@@ -72,6 +73,6 @@ public class RustDescriptionEnhancer {
 
   @FunctionalInterface
   interface FilenameMap {
-    String apply(String name, CxxPlatform cxxPlatform);
+    String apply(BuildTarget tgt, String name, CxxPlatform cxxPlatform);
   }
 }

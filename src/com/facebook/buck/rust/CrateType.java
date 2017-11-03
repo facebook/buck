@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 
 /** Describe the kinds of crates rustc can generate. */
@@ -25,35 +26,37 @@ public enum CrateType {
   BIN(
       "bin",
       RustDescriptionEnhancer.RFBIN,
-      (n, p) -> String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
-  CHECK("lib", RustDescriptionEnhancer.RFCHECK, (n, p) -> String.format("lib%s.rmeta", n)),
+      (target, n, p) ->
+          String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
+  CHECK("lib", RustDescriptionEnhancer.RFCHECK, (target, n, p) -> String.format("lib%s.rmeta", n)),
   CHECKBIN(
       "bin",
       RustDescriptionEnhancer.RFCHECK,
-      (n, p) -> String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
+      (target, n, p) ->
+          String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
   LIB(
       "lib",
       RustDescriptionEnhancer.RFLIB,
-      (n, p) -> String.format("lib%s.rlib", n)), // XXX how to tell?
-  RLIB("rlib", RustDescriptionEnhancer.RFRLIB, (n, p) -> String.format("lib%s.rlib", n)),
-  RLIB_PIC("rlib", RustDescriptionEnhancer.RFRLIB_PIC, (n, p) -> String.format("lib%s.rlib", n)),
-  DYLIB(
-      "dylib",
-      RustDescriptionEnhancer.RFDYLIB,
-      (n, p) -> String.format("lib%s.%s", n, p.getSharedLibraryExtension())),
-  CDYLIB(
-      "cdylib",
-      CxxDescriptionEnhancer.SHARED_FLAVOR,
-      (n, p) -> String.format("lib%s.%s", n, p.getSharedLibraryExtension())),
+      (target, n, p) -> String.format("lib%s.rlib", n)), // XXX how to tell?
+  RLIB("rlib", RustDescriptionEnhancer.RFRLIB, (target, n, p) -> String.format("lib%s.rlib", n)),
+  RLIB_PIC(
+      "rlib", RustDescriptionEnhancer.RFRLIB_PIC, (target, n, p) -> String.format("lib%s.rlib", n)),
+  DYLIB("dylib", RustDescriptionEnhancer.RFDYLIB, CrateType::dylib_filename),
+  CDYLIB("cdylib", CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType::dylib_filename),
   STATIC(
       "staticlib",
       CxxDescriptionEnhancer.STATIC_FLAVOR,
-      (n, p) -> String.format("lib%s.%s", n, p.getStaticLibraryExtension())),
+      (target, n, p) -> String.format("lib%s.%s", n, p.getStaticLibraryExtension())),
   STATIC_PIC(
       "staticlib",
       CxxDescriptionEnhancer.STATIC_PIC_FLAVOR,
-      (n, p) -> String.format("lib%s.%s", n, p.getStaticLibraryExtension())),
+      (target, n, p) -> String.format("lib%s.%s", n, p.getStaticLibraryExtension())),
   ;
+
+  private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {
+    String hash = RustCompileUtils.hashForTarget(target);
+    return String.format("lib%s-%s.%s", crate, hash, plat.getSharedLibraryExtension());
+  }
 
   // Crate type as passed to `rustc --crate-type=`
   private final String crateType;
@@ -142,7 +145,7 @@ public enum CrateType {
    * @param cxxPlatform Platform we're building for
    * @return Path component
    */
-  public String filenameFor(String name, CxxPlatform cxxPlatform) {
-    return filenameMap.apply(name, cxxPlatform);
+  public String filenameFor(BuildTarget target, String name, CxxPlatform cxxPlatform) {
+    return filenameMap.apply(target, name, cxxPlatform);
   }
 }
