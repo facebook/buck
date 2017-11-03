@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -42,16 +41,15 @@ public final class CellPathResolverView implements CellPathResolver {
   }
 
   @Override
-  public Path getCellPath(Optional<String> cellName) {
+  public Optional<Path> getCellPath(Optional<String> cellName) {
     if (cellName.isPresent()) {
       if (declaredCellNames.contains(cellName.get())) {
         return delegate.getCellPath(cellName);
       } else {
-        throw new HumanReadableException(
-            "In cell rooted at %s: cell name '%s' is not visible.", cellPath, cellName.get());
+        return Optional.empty();
       }
     } else {
-      return cellPath;
+      return Optional.of(cellPath);
     }
   }
 

@@ -17,7 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,12 +29,7 @@ import org.kohsuke.args4j.Argument;
 
 public class AuditCellCommand extends AbstractCommand {
 
-  String getCell(BuckConfig buckConfig, Optional<String> cellName) {
-    return String.format(
-        "%s: %s", cellName, buckConfig.getCellPathResolver().getCellPath(cellName));
-  }
-
-  Stream<String> getCells(BuckConfig buckConfig) {
+  private Stream<String> getCells(BuckConfig buckConfig) {
     return buckConfig
         .getCellPathResolver()
         .getCellPaths()
@@ -52,8 +50,17 @@ public class AuditCellCommand extends AbstractCommand {
     if (getArguments().isEmpty()) {
       cellList = getCells(params.getBuckConfig());
     } else {
-      cellList =
-          getArguments().stream().map((arg) -> getCell(params.getBuckConfig(), Optional.of(arg)));
+      CellPathResolver cellPathResolver = params.getBuckConfig().getCellPathResolver();
+      Stream.Builder<String> outputBuilder = Stream.builder();
+      for (String arg : getArguments()) {
+        Optional<Path> cellPath = cellPathResolver.getCellPath(Optional.of(arg));
+        if (cellPath.isPresent()) {
+          outputBuilder.add(String.format("%s: %s", arg, cellPath.get()));
+        } else {
+          throw new HumanReadableException("Requested cell name cannot be resolved: %s", arg);
+        }
+      }
+      cellList = outputBuilder.build();
     }
 
     cellList.forEachOrdered(params.getConsole().getStdOut()::println);

@@ -261,7 +261,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path path = getProjectFilesystem().getPath(line);
       if (!path.isAbsolute()) {
         // The packager returns the paths relative to the JS root (xplat/js) so make them absolute.
-        path = cellPathResolver.getCellPath(Optional.of("xplat")).resolve("js").resolve(path);
+        path = cellPathResolver.getCellPath(Optional.of("xplat")).get().resolve("js").resolve(path);
       }
       SourcePath sourcePath = pathToSourceMap.get(path);
       if (sourcePath == null) {

@@ -229,7 +229,10 @@ public final class CellProvider {
   private static ImmutableSet<Path> getKnownRoots(CellPathResolver resolver) {
     return ImmutableSet.<Path>builder()
         .addAll(resolver.getCellPaths().values())
-        .add(resolver.getCellPath(Optional.empty()))
+        .add(
+            resolver
+                .getCellPath(Optional.empty())
+                .orElseThrow(() -> new AssertionError("Root cell path should always be known.")))
         .build();
   }
 }
