@@ -83,7 +83,14 @@ public class JsBundleGenrule extends Genrule
     super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     environmentVariablesBuilder
         .put("JS_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToOutput()).toString())
-        .put("JS_BUNDLE_NAME", jsBundle.getBundleName());
+        .put("JS_BUNDLE_NAME", jsBundle.getBundleName())
+        .put(
+            "PLATFORM",
+            JsFlavors.PLATFORM_DOMAIN
+                .getFlavor(getBuildTarget().getFlavors())
+                .map(flavor -> flavor.getName())
+                .orElse(""))
+        .put("RELEASE", getBuildTarget().getFlavors().contains(JsFlavors.RELEASE) ? "1" : "");
 
     if (rewriteSourcemap) {
       environmentVariablesBuilder.put(

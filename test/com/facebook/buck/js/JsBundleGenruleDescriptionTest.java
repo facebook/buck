@@ -144,6 +144,54 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
+  public void exposesReleaseFlavorAsEnvironmentVariable() {
+    setUp(JsFlavors.RELEASE);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("RELEASE", "1"));
+  }
+
+  @Test
+  public void withoutReleaseFlavorEnvVariableIsEmpty() {
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("RELEASE", ""));
+  }
+
+  @Test
+  public void exposesAndroidFlavorAsEnvironmentVariable() {
+    setUp(JsFlavors.ANDROID);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("PLATFORM", "android"));
+  }
+
+  @Test
+  public void exposesIosFlavorAsEnvironmentVariable() {
+    setUp(JsFlavors.IOS);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("PLATFORM", "ios"));
+  }
+
+  @Test
+  public void withoutPlatformFlavorEnvVariableIsEmpty() {
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("PLATFORM", ""));
+  }
+
+  @Test
   public void exportsResourcesOfJsBundle() {
     assertEquals(
         setup.jsBundle().getSourcePathToResources(), setup.genrule().getSourcePathToResources());
