@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.Predicate;
 
 public class BuildRuleDependencyVisitors {
   private BuildRuleDependencyVisitors() {}
@@ -48,15 +48,15 @@ public class BuildRuleDependencyVisitors {
         new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
           @Override
           public Iterable<BuildRule> visit(BuildRule rule) {
-            if (filter.apply(rule)) {
+            if (filter.test(rule)) {
               graph.addNode(rule);
               for (BuildRule dep : rule.getBuildDeps()) {
-                if (traverse.apply(dep) && filter.apply(dep)) {
+                if (traverse.test(dep) && filter.test(dep)) {
                   graph.addEdge(rule, dep);
                 }
               }
             }
-            return traverse.apply(rule) ? rule.getBuildDeps() : ImmutableSet.of();
+            return traverse.test(rule) ? rule.getBuildDeps() : ImmutableSet.of();
           }
         };
     visitor.start();

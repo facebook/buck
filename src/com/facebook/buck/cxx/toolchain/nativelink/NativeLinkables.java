@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,6 +36,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class NativeLinkables {
 
@@ -65,14 +65,14 @@ public class NativeLinkables {
 
             // If this is `NativeLinkable`, we've found a root so record the rule and terminate
             // the search.
-            if (rule instanceof NativeLinkable && !skip.apply(rule)) {
+            if (rule instanceof NativeLinkable && !skip.test(rule)) {
               NativeLinkable nativeLinkable = (NativeLinkable) rule;
               nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
               return ImmutableSet.of();
             }
 
             // Otherwise, make sure this rule is marked as traversable before following it's deps.
-            if (traverse.apply(rule)) {
+            if (traverse.test(rule)) {
               return rule.getBuildDeps();
             }
 
@@ -153,7 +153,7 @@ public class NativeLinkables {
             // Process all the traversable deps.
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
             for (NativeLinkable dep : nativeLinkableDeps) {
-              if (traverse.apply(dep)) {
+              if (traverse.test(dep)) {
                 BuildTarget depTarget = dep.getBuildTarget();
                 graph.addEdge(target, depTarget);
                 deps.add(depTarget);

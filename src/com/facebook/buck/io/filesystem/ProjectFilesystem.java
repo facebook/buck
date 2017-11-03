@@ -18,7 +18,6 @@ package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +41,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.jar.Manifest;
 
 /** An injectable service for interacting with the filesystem relative to the project root. */

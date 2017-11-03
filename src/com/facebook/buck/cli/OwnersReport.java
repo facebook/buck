@@ -27,8 +27,6 @@ import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -47,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -106,8 +105,7 @@ final class OwnersReport {
       Set<Path> ruleInputs = targetNode.getInputs();
       Predicate<Path> startsWith =
           input -> !commandInput.equals(input) && commandInput.startsWith(input);
-      if (ruleInputs.contains(commandInput)
-          || FluentIterable.from(ruleInputs).anyMatch(startsWith)) {
+      if (ruleInputs.contains(commandInput) || ruleInputs.stream().anyMatch(startsWith)) {
         return new OwnersReport(
             ImmutableSetMultimap.of(targetNode, commandInput),
             ImmutableSet.of(),

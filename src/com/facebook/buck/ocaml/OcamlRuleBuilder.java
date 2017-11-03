@@ -43,6 +43,7 @@ import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -114,12 +115,11 @@ public class OcamlRuleBuilder {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     boolean noYaccOrLexSources =
-        FluentIterable.from(srcs)
-            .transform(OcamlSource::getSource)
-            .filter(
+        srcs.stream()
+            .map(OcamlSource::getSource)
+            .noneMatch(
                 OcamlUtil.sourcePathExt(
-                    pathResolver, OcamlCompilables.OCAML_MLL, OcamlCompilables.OCAML_MLY))
-            .isEmpty();
+                    pathResolver, OcamlCompilables.OCAML_MLL, OcamlCompilables.OCAML_MLY));
     boolean noGeneratedSources =
         FluentIterable.from(srcs)
             .transform(OcamlSource::getSource)
@@ -315,13 +315,13 @@ public class OcamlRuleBuilder {
                       .add(ocamlLibraryBuild)
                       .build())),
           linkerFlags,
-          FluentIterable.from(srcs)
-              .transform(OcamlSource::getSource)
-              .transform(pathResolver::getAbsolutePath)
+          srcs.stream()
+              .map(OcamlSource::getSource)
+              .map(pathResolver::getAbsolutePath)
               .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
-              .transform(ocamlContext::getCOutput)
-              .transform(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))
-              .toList(),
+              .map(ocamlContext::getCOutput)
+              .map(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))
+              .collect(MoreCollectors.toImmutableList()),
           ocamlContext,
           ocamlLibraryBuild,
           ImmutableSortedSet.of(ocamlLibraryBuild),
@@ -504,9 +504,10 @@ public class OcamlRuleBuilder {
 
   private static ImmutableList<SourcePath> getCInput(
       SourcePathResolver resolver, ImmutableList<SourcePath> input) {
-    return FluentIterable.from(input)
+    return input
+        .stream()
         .filter(OcamlUtil.sourcePathExt(resolver, OcamlCompilables.OCAML_C))
-        .toList();
+        .collect(MoreCollectors.toImmutableList());
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(

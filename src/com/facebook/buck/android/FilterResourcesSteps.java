@@ -33,8 +33,6 @@ import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +47,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -196,13 +195,14 @@ public class FilterResourcesSteps {
       Preconditions.checkNotNull(targetDensities);
       Set<Path> rootResourceDirs = inResDirToOutResDirMap.keySet();
 
-      pathPredicates.add(ResourceFilters.createDensityFilter(filesystem, targetDensities));
+      pathPredicates.add(ResourceFilters.createDensityFilter(filesystem, targetDensities)::test);
 
       Preconditions.checkNotNull(drawableFinder);
       Set<Path> drawables = drawableFinder.findDrawables(rootResourceDirs, filesystem);
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(
-              drawables, targetDensities, /* canDownscale */ canDownscale(context)));
+                  drawables, targetDensities, /* canDownscale */ canDownscale(context))
+              ::test);
     }
 
     final boolean localeFilterEnabled = !locales.isEmpty();
@@ -228,7 +228,7 @@ public class FilterResourcesSteps {
             }
           });
     }
-    return Predicates.and(pathPredicates);
+    return pathPredicates.stream().reduce(p -> true, Predicate::and);
   }
 
   private boolean isPathWhitelisted(Path path) {

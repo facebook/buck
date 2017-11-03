@@ -32,7 +32,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -84,6 +83,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import javax.annotation.Nullable;
@@ -489,7 +489,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-            if (predicate.apply(path)) {
+            if (predicate.test(path)) {
               paths.add(path);
             }
             return FileVisitResult.CONTINUE;

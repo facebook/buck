@@ -16,14 +16,14 @@
 
 package com.facebook.buck.graph;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Dot<T> {
 
@@ -122,13 +122,13 @@ public class Dot<T> {
 
           @Override
           public Iterable<T> visit(T node) {
-            if (!shouldContainNode.apply(node)) {
+            if (!shouldContainNode.test(node)) {
               return ImmutableSet.<T>of();
             }
             builder.add(printNode(node, nodeToName, nodeToTypeName));
             ImmutableSortedSet<T> nodes =
                 ImmutableSortedSet.copyOf(
-                    Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode));
+                    Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
             for (T sink : nodes) {
               builder.add(printEdge(node, sink, nodeToName));
             }
@@ -142,11 +142,11 @@ public class Dot<T> {
 
         @Override
         public void visit(T node) {
-          if (!shouldContainNode.apply(node)) {
+          if (!shouldContainNode.test(node)) {
             return;
           }
           sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName));
-          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode)) {
+          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test)) {
             sortedSetBuilder.add(printEdge(node, sink, nodeToName));
           }
         }

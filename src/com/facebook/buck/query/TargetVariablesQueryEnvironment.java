@@ -16,11 +16,11 @@
 
 package com.facebook.buck.query;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Provides a view of an existing {@link QueryEnvironment} augmented with additional target

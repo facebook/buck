@@ -28,7 +28,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -48,6 +47,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -154,7 +154,7 @@ public class AuditRulesCommand extends AbstractCommand {
             .filter(
                 rawRule -> {
                   String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
-                  return includeType.apply(type);
+                  return includeType.test(type);
                 });
 
     PrintStream stdOut = params.getConsole().getStdOut();

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -127,35 +128,39 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
   protected abstract Preprocessor getCPreprocessor();
 
   public ImmutableList<SourcePath> getCInput() {
-    return FluentIterable.from(getInput())
+    return getInput()
+        .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_C))
-        .toSet()
-        .asList();
+        .distinct()
+        .collect(MoreCollectors.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getLexInput() {
-    return FluentIterable.from(getInput())
+    return getInput()
+        .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLL))
-        .toSet()
-        .asList();
+        .distinct()
+        .collect(MoreCollectors.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getYaccInput() {
-    return FluentIterable.from(getInput())
+    return getInput()
+        .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLY))
-        .toSet()
-        .asList();
+        .distinct()
+        .collect(MoreCollectors.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getMLInput() {
     return FluentIterable.from(getInput())
         .filter(
             OcamlUtil.sourcePathExt(
-                getSourcePathResolver(),
-                OcamlCompilables.OCAML_ML,
-                OcamlCompilables.OCAML_RE,
-                OcamlCompilables.OCAML_MLI,
-                OcamlCompilables.OCAML_REI))
+                    getSourcePathResolver(),
+                    OcamlCompilables.OCAML_ML,
+                    OcamlCompilables.OCAML_RE,
+                    OcamlCompilables.OCAML_MLI,
+                    OcamlCompilables.OCAML_REI)
+                ::test)
         .append(getLexOutput(getLexInput()))
         .append(getYaccOutput(getYaccInput()))
         .toSet()

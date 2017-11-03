@@ -65,8 +65,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -83,6 +81,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -884,17 +883,20 @@ public class AppleDescriptions {
       final Set<BuildRule> newDeps) {
     // Remove the unflavored binary rule and add the flavored one instead.
     final Predicate<BuildRule> notOriginalBinaryRule =
-        Predicates.not(BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
+        BuildRules.isBuildRuleWithTarget(originalBinaryTarget).negate();
     return params
         .withDeclaredDeps(
             FluentIterable.from(params.getDeclaredDeps().get())
-                .filter(notOriginalBinaryRule)
+                .filter(notOriginalBinaryRule::test)
                 .append(newDeps)
                 .toSortedSet(Ordering.natural()))
         .withExtraDeps(
-            FluentIterable.from(params.getExtraDeps().get())
+            params
+                .getExtraDeps()
+                .get()
+                .stream()
                 .filter(notOriginalBinaryRule)
-                .toSortedSet(Ordering.natural()));
+                .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())));
   }
 
   private static ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(

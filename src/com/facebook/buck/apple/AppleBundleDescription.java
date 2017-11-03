@@ -227,20 +227,20 @@ public class AppleBundleDescription
     // BuildTargets.propagateFlavorsInDomainIfNotPresent()
     {
       FluentIterable<BuildTarget> targetsWithPlatformFlavors =
-          depsExcludingBinary.filter(BuildTargets.containsFlavors(cxxPlatformFlavorDomain));
+          depsExcludingBinary.filter(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)::test);
 
       FluentIterable<BuildTarget> targetsWithoutPlatformFlavors =
           depsExcludingBinary.filter(
-              Predicates.not(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)));
+              BuildTargets.containsFlavors(cxxPlatformFlavorDomain).negate()::test);
 
       FluentIterable<BuildTarget> watchTargets =
           targetsWithoutPlatformFlavors
-              .filter(BuildTargets.containsFlavor(WATCH))
+              .filter(BuildTargets.containsFlavor(WATCH)::test)
               .transform(
                   input -> input.withoutFlavors(WATCH).withAppendedFlavors(actualWatchFlavor));
 
       targetsWithoutPlatformFlavors =
-          targetsWithoutPlatformFlavors.filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));
+          targetsWithoutPlatformFlavors.filter(BuildTargets.containsFlavor(WATCH).negate()::test);
 
       // Gather all the deps now that we've added platform flavors to everything.
       depsExcludingBinary =

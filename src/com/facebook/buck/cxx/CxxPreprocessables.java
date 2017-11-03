@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -44,6 +43,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 
 public class CxxPreprocessables {
@@ -131,7 +131,7 @@ public class CxxPreprocessables {
           deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
           return ImmutableSet.of();
         }
-        return traverse.apply(rule) ? rule.getBuildDeps() : ImmutableSet.of();
+        return traverse.test(rule) ? rule.getBuildDeps() : ImmutableSet.of();
       }
     }.start();
 

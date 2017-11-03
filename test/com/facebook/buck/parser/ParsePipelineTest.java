@@ -48,7 +48,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -57,6 +56,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -69,6 +69,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -96,7 +97,7 @@ public class ParsePipelineTest {
       throws InterruptedException {
     boolean allThere = false;
     for (int i = 0; i < 50; ++i) {
-      allThere |= FluentIterable.from(items).allMatch(predicate);
+      allThere |= Streams.stream(items).allMatch(predicate);
       if (allThere) {
         break;
       }

@@ -24,7 +24,6 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.easymock.EasyMock;
@@ -192,25 +192,25 @@ public class SplitZipStepTest {
             Suppliers.ofInstance(ImmutableList.of()));
     assertTrue(
         "com/google/common/collect/ImmutableSortedSet.class is listed in the manifest verbatim.",
-        requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableSortedSet.class"));
+        requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableSortedSet.class"));
     assertTrue(
         "com/google/common/collect/ImmutableSet.class is in the manifest with whitespace.",
-        requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableSet.class"));
+        requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableSet.class"));
     assertFalse(
         "com/google/common/collect/ImmutableSet.class cannot have whitespace as param.",
-        requiredInPrimaryZipPredicate.apply("  com/google/common/collect/ImmutableSet.class"));
+        requiredInPrimaryZipPredicate.test("  com/google/common/collect/ImmutableSet.class"));
     assertFalse(
         "com/google/common/collect/ImmutableMap.class is commented out.",
-        requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableMap.class"));
+        requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableMap.class"));
     assertFalse(
         "com/google/common/collect/Iterables.class is not even mentioned.",
-        requiredInPrimaryZipPredicate.apply("com/google/common/collect/Iterables.class"));
+        requiredInPrimaryZipPredicate.test("com/google/common/collect/Iterables.class"));
     assertTrue(
         "java/awt/List.class matches the substring 'List'.",
-        requiredInPrimaryZipPredicate.apply("java/awt/List.class"));
+        requiredInPrimaryZipPredicate.test("java/awt/List.class"));
     assertFalse(
         "Substring matching is case-sensitive.",
-        requiredInPrimaryZipPredicate.apply("shiny/Glistener.class"));
+        requiredInPrimaryZipPredicate.test("shiny/Glistener.class"));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -292,25 +292,25 @@ public class SplitZipStepTest {
             translatorFactory, Suppliers.ofInstance(ImmutableList.of()));
     assertTrue(
         "Mapped class from primary list should be in primary.",
-        requiredInPrimaryZipPredicate.apply("foo/bar/a.class"));
+        requiredInPrimaryZipPredicate.test("foo/bar/a.class"));
     assertTrue(
         "Unmapped class from primary list should be in primary.",
-        requiredInPrimaryZipPredicate.apply("foo/bar/UnmappedPrimary.class"));
+        requiredInPrimaryZipPredicate.test("foo/bar/UnmappedPrimary.class"));
     assertTrue(
         "Mapped class from substring should be in primary.",
-        requiredInPrimaryZipPredicate.apply("x/a.class"));
+        requiredInPrimaryZipPredicate.test("x/a.class"));
     assertTrue(
         "Unmapped class from substring should be in primary.",
-        requiredInPrimaryZipPredicate.apply("foo/primary/UnmappedPackage.class"));
+        requiredInPrimaryZipPredicate.test("foo/primary/UnmappedPackage.class"));
     assertFalse(
         "Mapped class with obfuscated name match should not be in primary.",
-        requiredInPrimaryZipPredicate.apply("foo/bar/b.class"));
+        requiredInPrimaryZipPredicate.test("foo/bar/b.class"));
     assertFalse(
         "Unmapped class name should not randomly be in primary.",
-        requiredInPrimaryZipPredicate.apply("foo/bar/UnmappedSecondary.class"));
+        requiredInPrimaryZipPredicate.test("foo/bar/UnmappedSecondary.class"));
     assertFalse(
         "Map class with obfuscated name substring should not be in primary.",
-        requiredInPrimaryZipPredicate.apply("x/b.class"));
+        requiredInPrimaryZipPredicate.test("x/b.class"));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -370,11 +370,10 @@ public class SplitZipStepTest {
         splitZipStep.createRequiredInPrimaryZipPredicate(
             translatorFactory, Suppliers.ofInstance(ImmutableList.of()));
     assertTrue(
-        "Primary class should be in primary.",
-        requiredInPrimaryZipPredicate.apply("primary.class"));
+        "Primary class should be in primary.", requiredInPrimaryZipPredicate.test("primary.class"));
     assertFalse(
         "Secondary class should be in secondary.",
-        requiredInPrimaryZipPredicate.apply("secondary.class"));
+        requiredInPrimaryZipPredicate.test("secondary.class"));
 
     EasyMock.verify(projectFilesystem);
   }

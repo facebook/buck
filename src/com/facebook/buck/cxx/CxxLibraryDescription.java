@@ -64,8 +64,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -82,6 +80,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -954,7 +953,7 @@ public class CxxLibraryDescription
         resolver,
         args.getPrivateCxxDeps(),
         args.getExportedCxxDeps(),
-        Predicates.not(hasObjects),
+        hasObjects.negate(),
         input -> {
           ImmutableList<StringWithMacros> flags =
               CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(

@@ -70,7 +70,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -97,6 +96,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
@@ -696,9 +696,11 @@ public class TargetsCommand extends AbstractCommand {
                   .map(TargetNode::getBuildTarget)
                   .collect(MoreCollectors.toImmutableSet()));
       directOwners =
-          FluentIterable.from(graph.getNodes())
+          graph
+              .getNodes()
+              .stream()
               .filter(new DirectOwnerPredicate(buildFileTree, referencedFiles.get(), buildFileName))
-              .toSet();
+              .collect(MoreCollectors.toImmutableSet());
     } else {
       directOwners = graph.getNodes();
     }
@@ -1205,7 +1207,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     @Override
-    public boolean apply(TargetNode<?, ?> node) {
+    public boolean test(TargetNode<?, ?> node) {
       // For any referenced file, only those with the nearest target base path can
       // directly depend on that file.
       if (!basePathOfTargets.contains(node.getBuildTarget().getBasePath())) {
