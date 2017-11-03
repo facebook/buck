@@ -105,5 +105,9 @@
     <orderEntry type="library" name="bazel" level="project" />
     <orderEntry type="library" name="pf4j-2.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
+    <orderEntry type="library" name="fastutil-7.2.0" level="project" />
+    <orderEntry type="library" name="jopt-simple" level="project" />
+    <orderEntry type="library" name="json-simple" level="project" />
+    <orderEntry type="library" name="d8" level="project" />
   </component>
 </module>

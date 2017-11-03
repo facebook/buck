@@ -1,0 +1,148 @@
+From 96ebf687133554841ed357cf72e2dfc7fd298bee Mon Sep 17 00:00:00 2001
+From: Gautam Korlam <gkorlam@uber.com>
+Date: Fri, 3 Nov 2017 13:32:53 -0700
+Subject: [PATCH] Compute referenced resources in D8 and disable interface
+ desugaring
+
+Computing referenced resources is used to trim the Uber R.java.
+Interface desugaring requires classpaths available during dexing.
+---
+ src/main/java/com/android/tools/r8/D8.java                 |  6 ++++--
+ src/main/java/com/android/tools/r8/D8Output.java           | 10 +++++++++-
+ src/main/java/com/android/tools/r8/dex/FileWriter.java     |  6 ++++--
+ .../java/com/android/tools/r8/graph/DexItemFactory.java    | 14 ++++++++++++++
+ .../java/com/android/tools/r8/utils/InternalOptions.java   |  3 ++-
+ 5 files changed, 33 insertions(+), 6 deletions(-)
+
+diff --git a/src/main/java/com/android/tools/r8/D8.java b/src/main/java/com/android/tools/r8/D8.java
+index ae370ae3..efc57928 100644
+--- a/src/main/java/com/android/tools/r8/D8.java
++++ b/src/main/java/com/android/tools/r8/D8.java
+@@ -69,7 +69,8 @@ public final class D8 {
+     AndroidAppOutputSink compatSink = new AndroidAppOutputSink(command.getOutputSink());
+     CompilationResult result = runForTesting(command.getInputApp(), compatSink, options);
+     assert result != null;
+-    D8Output output = new D8Output(compatSink.build(), command.getOutputMode());
++    D8Output output = new D8Output(compatSink.build(), command.getOutputMode(),
++        result.appInfo.dexItemFactory.computeReferencedResources());
+     return output;
+   }
+ 
+@@ -89,7 +90,8 @@ public final class D8 {
+     AndroidAppOutputSink compatSink = new AndroidAppOutputSink(command.getOutputSink());
+     CompilationResult result = runForTesting(command.getInputApp(), compatSink, options, executor);
+     assert result != null;
+-    return new D8Output(compatSink.build(), command.getOutputMode());
++    return new D8Output(compatSink.build(), command.getOutputMode(),
++        result.appInfo.dexItemFactory.computeReferencedResources());
+   }
+ 
+   private static void run(String[] args) throws IOException, CompilationException {
+diff --git a/src/main/java/com/android/tools/r8/D8Output.java b/src/main/java/com/android/tools/r8/D8Output.java
+index 1910e9b7..4cc80eee 100644
+--- a/src/main/java/com/android/tools/r8/D8Output.java
++++ b/src/main/java/com/android/tools/r8/D8Output.java
+@@ -7,16 +7,24 @@ import com.android.tools.r8.utils.AndroidApp;
+ import com.android.tools.r8.utils.OutputMode;
+ import java.io.IOException;
+ import java.nio.file.Path;
++import java.util.Collection;
+ 
+ /** Represents the output of a D8 compilation. */
+ public class D8Output extends BaseOutput {
+ 
+-  D8Output(AndroidApp app, OutputMode outputMode) {
++  private final Collection<String> referencedResources;
++
++  D8Output(AndroidApp app, OutputMode outputMode, Collection<String> referencedResources) {
+     super(app, outputMode);
++    this.referencedResources = referencedResources;
+   }
+ 
+   @Override
+   public void write(Path output) throws IOException {
+     getAndroidApp().write(output, getOutputMode());
+   }
++
++  public Collection<String> getReferencedResources() {
++    return referencedResources;
++  }
+ }
+diff --git a/src/main/java/com/android/tools/r8/dex/FileWriter.java b/src/main/java/com/android/tools/r8/dex/FileWriter.java
+index 27dedb19..84beffea 100644
+--- a/src/main/java/com/android/tools/r8/dex/FileWriter.java
++++ b/src/main/java/com/android/tools/r8/dex/FileWriter.java
+@@ -51,6 +51,7 @@ import com.android.tools.r8.utils.AndroidApiLevel;
+ import com.android.tools.r8.utils.DexVersion;
+ import com.android.tools.r8.utils.InternalOptions;
+ import com.android.tools.r8.utils.LebUtils;
++import com.android.tools.r8.utils.OffOrAuto;
+ import com.android.tools.r8.utils.ThrowingConsumer;
+ import com.google.common.collect.Sets;
+ import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
+@@ -226,7 +227,7 @@ public class FileWriter {
+     if (application.dexItemFactory.isClassConstructor(method.method)) {
+       return; // Class constructor is always OK.
+     }
+-    if (method.accessFlags.isStatic()) {
++    if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) && method.accessFlags.isStatic()) {
+       if (!options.canUseDefaultAndStaticInterfaceMethods()) {
+         throw new ApiLevelException(
+             AndroidApiLevel.N,
+@@ -239,7 +240,8 @@ public class FileWriter {
+         throw new CompilationError(
+             "Interface must not have constructors: " + method.method.toSourceString());
+       }
+-      if (!method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
++      if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) &&
++          !method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
+           !options.canUseDefaultAndStaticInterfaceMethods()) {
+         throw new ApiLevelException(
+             AndroidApiLevel.N,
+diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
+index a7d44ba3..ae73c0ab 100644
+--- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
++++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
+@@ -21,6 +21,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+@@ -496,4 +497,17 @@ public class DexItemFactory {
+   synchronized public void forAllTypes(Consumer<DexType> f) {
+     new ArrayList<>(types.values()).forEach(f);
+   }
++
++  // Facebook addition: compute the resources referenced by this dex file.
++  // Does not apply to any merging, just the input class.
++  public Collection<String> computeReferencedResources() {
++    Set<String> resourceNames = new HashSet<>();
++    for (DexField item: fields.values()) {
++      DexType clazz = item.clazz;
++      if (clazz.toDescriptorString().contains("/R$")) {
++        resourceNames.add(clazz.getPackageDescriptor().replaceAll("/", ".") + "." + item.name.toString());
++      }
++    }
++    return resourceNames;
++  }
+ }
+diff --git a/src/main/java/com/android/tools/r8/utils/InternalOptions.java b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
+index d7006af3..e1beb1f9 100644
+--- a/src/main/java/com/android/tools/r8/utils/InternalOptions.java
++++ b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
+@@ -97,7 +97,8 @@ public class InternalOptions {
+   // Flag to turn on/off desugaring in D8/R8.
+   public boolean enableDesugaring = true;
+   // Defines interface method rewriter behavior.
+-  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Auto;
++  // Facebook: Disabled by default as it kills incremental builds
++  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Off;
+   // Defines try-with-resources rewriter behavior.
+   public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Auto;
+ 
+-- 
+2.11.0
+

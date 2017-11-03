@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="d8">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/d8/d8.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

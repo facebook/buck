@@ -118,6 +118,7 @@
     <include name="commons-logging/commons-logging-1.2.jar" />
     <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="dd-plist/dd-plist.jar" />
+    <include name="d8/d8.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar"/>
     <include name="eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar"/>
     <include name="eclipse/org.eclipse.core.resources_3.11.0.v20160422-0304.jar"/>
@@ -128,6 +129,7 @@
     <include name="eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
     <include name="eden/eden.jar" />
     <include name="eden/java-thrift-dependencies.jar" />
+    <include name="fastutil/fastutil-7.2.0.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
     <include name="guice/guice-multibindings-3.0.jar" />
@@ -142,6 +144,8 @@
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
     <include name="jimfs/jimfs-1.1.jar" />
+    <include name="jopt-simple/jopt-simple-4.6.jar" />
+    <include name="json-simple/json-simple-1.1.1.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="okhttp/okhttp-3.9.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
