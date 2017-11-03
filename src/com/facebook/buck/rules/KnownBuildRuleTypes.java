@@ -93,12 +93,9 @@ import com.facebook.buck.haskell.HaskellPlatform;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
-import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
-import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
@@ -283,8 +280,6 @@ public class KnownBuildRuleTypes {
     CxxPlatform defaultCxxPlatform = cxxPlatformsProvider.getDefaultCxxPlatform();
 
     DBuckConfig dBuckConfig = new DBuckConfig(config);
-
-    ReactNativeBuckConfig reactNativeBuckConfig = new ReactNativeBuckConfig(config);
 
     RustBuckConfig rustBuckConfig = new RustBuckConfig(config);
 
@@ -471,8 +466,6 @@ public class KnownBuildRuleTypes {
     builder.register(
         new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig, defaultJavacOptions));
     builder.register(
-        new AndroidReactNativeLibraryDescription(toolchainProvider, reactNativeBuckConfig));
-    builder.register(
         new AndroidResourceDescription(
             toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
     builder.register(new ApkGenruleDescription(toolchainProvider));
@@ -541,7 +534,6 @@ public class KnownBuildRuleTypes {
     builder.register(
         new HalideLibraryDescription(
             cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, halideBuckConfig));
-    builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(
         new JavaBinaryDescription(
             defaultJavaOptions,

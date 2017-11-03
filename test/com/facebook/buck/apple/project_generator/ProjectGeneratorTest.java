@@ -23,7 +23,6 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -84,8 +83,6 @@ import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.js.IosReactNativeLibraryBuilder;
-import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -114,7 +111,6 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -2713,58 +2709,6 @@ public class ProjectGeneratorTest {
     assertThat(target.getBuildPhases().get(0), instanceOf(PBXResourcesBuildPhase.class));
 
     assertThat(target.getBuildPhases().get(1), instanceOf(PBXShellScriptBuildPhase.class));
-  }
-
-  @Test
-  public void testAppleBundleRuleWithRNLibraryDependency() throws IOException {
-    BuildTarget rnLibraryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "rn_library", DEFAULT_FLAVOR);
-    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    ReactNativeBuckConfig buckConfig =
-        new ReactNativeBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of(
-                        "react-native",
-                        ImmutableMap.of("packager_worker", "react-native/packager.sh")))
-                .setFilesystem(filesystem)
-                .build());
-    TargetNode<?, ?> rnLibraryNode =
-        IosReactNativeLibraryBuilder.builder(rnLibraryTarget, buckConfig)
-            .setBundleName("Apps/Foo/FooBundle.js")
-            .setEntryPath(FakeSourcePath.of(filesystem, "js/FooApp.js"))
-            .build();
-
-    BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> sharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(sharedLibraryTarget).build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?, ?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(rnLibraryTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(rnLibraryNode, sharedLibraryNode, bundleNode));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    assertThat(target.getName(), equalTo("//foo:bundle"));
-    assertThat(target.isa(), equalTo("PBXNativeTarget"));
-
-    PBXShellScriptBuildPhase shellScriptBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXShellScriptBuildPhase.class);
-
-    assertThat(shellScriptBuildPhase.getShellScript(), startsWith("BASE_DIR="));
   }
 
   @Test
