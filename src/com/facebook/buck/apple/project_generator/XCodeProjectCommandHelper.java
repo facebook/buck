@@ -417,7 +417,13 @@ public class XCodeProjectCommandHelper {
       SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
       CxxPlatform defaultCxxPlatform =
-          knownBuildRuleTypesProvider.get(cell).getDefaultCxxPlatforms();
+          knownBuildRuleTypesProvider
+              .get(cell)
+              .getDefaultCxxPlatform()
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "C/C++ platform not initialized in `KnownBuildRuleTypes"));
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               cell,

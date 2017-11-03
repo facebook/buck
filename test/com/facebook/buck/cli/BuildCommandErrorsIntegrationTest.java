@@ -92,7 +92,7 @@ public class BuildCommandErrorsIntegrationTest {
                 KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
                 buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
                 buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
-                return buildRuleTypesBuilder.register(mockDescription).build();
+                return buildRuleTypesBuilder.addDescriptions(mockDescription).build();
               }
             });
   }

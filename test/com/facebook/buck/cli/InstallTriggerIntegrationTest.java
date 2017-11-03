@@ -85,8 +85,8 @@ public class InstallTriggerIntegrationTest {
                 buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
                 buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
                 return buildRuleTypesBuilder
-                    .register(new InstallTriggerDescription())
-                    .register(new ExportFileDescription())
+                    .addDescriptions(new InstallTriggerDescription())
+                    .addDescriptions(new ExportFileDescription())
                     .build();
               }
             });

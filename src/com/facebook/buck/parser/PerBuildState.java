@@ -122,7 +122,7 @@ public class PerBuildState implements AutoCloseable {
             numParsingThreads, // Max parsers to create per cell.
             cell ->
                 createBuildFileParser(
-                    cell, knownBuildRuleTypesProvider.get(cell).getAllDescriptions()),
+                    cell, knownBuildRuleTypesProvider.get(cell).getDescriptions()),
             enableProfiling);
 
     this.rawNodeParsePipeline =

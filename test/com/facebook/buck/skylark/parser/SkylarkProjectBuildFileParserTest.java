@@ -78,7 +78,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
                 .setIgnorePaths(ImmutableSet.of())
                 .setBuildFileName("BUCK")
-                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getAllDescriptions())
+                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
                 .setBuildFileImportWhitelist(ImmutableList.of())
                 .setPythonInterpreter("skylark")
                 .build(),
@@ -396,7 +396,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
                 .setIgnorePaths(ImmutableSet.of())
                 .setBuildFileName("BUCK")
-                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getAllDescriptions())
+                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
                 .setBuildFileImportWhitelist(ImmutableList.of())
                 .setPythonInterpreter("skylark")
                 .setCellRoots(ImmutableMap.of("tp2", anotherCell))

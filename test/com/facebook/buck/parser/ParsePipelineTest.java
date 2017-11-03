@@ -415,7 +415,7 @@ public class ParsePipelineTest {
                             coercerFactory,
                             console,
                             eventBus,
-                            knownBuildRuleTypes.getAllDescriptions()));
+                            knownBuildRuleTypes.getDescriptions()));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
                 }

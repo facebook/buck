@@ -569,7 +569,7 @@ public class PythonDslProjectBuildFileParserTest {
                 .setIgnorePaths(ImmutableSet.of())
                 .setBuildFileName(DEFAULT_BUILD_FILE_NAME)
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
-                .setDescriptions(buildRuleTypes.getAllDescriptions())
+                .setDescriptions(buildRuleTypes.getDescriptions())
                 .setBuildFileImportWhitelist(ImmutableList.of())
                 .build(),
             new DefaultTypeCoercerFactory(),

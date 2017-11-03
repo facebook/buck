@@ -16,15 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -36,7 +32,6 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
@@ -185,44 +180,13 @@ public class KnownBuildRuleTypesTest {
     assertNotEquals(libraryKey, configuredKey);
   }
 
-  @Test
-  public void whenRegisteringDescriptionsLastOneWins() throws Exception {
-    FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
-    CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-
+  @Test(expected = IllegalStateException.class)
+  public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() throws Exception {
     KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Foo"));
-    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Bar"));
-    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Raz"));
-
-    buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
-    buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
-
-    KnownBuildRuleTypes buildRuleTypes = buildRuleTypesBuilder.build();
-
-    assertEquals(
-        "Only one description should have wound up in the final KnownBuildRuleTypes",
-        KnownBuildRuleTypes.builder()
-                .setCxxPlatforms(cxxPlatforms)
-                .setDefaultCxxPlatform(defaultPlatform)
-                .build()
-                .getAllDescriptions()
-                .size()
-            + 1,
-        buildRuleTypes.getAllDescriptions().size());
-
-    boolean foundTestDescription = false;
-    for (Description<?> description : buildRuleTypes.getAllDescriptions()) {
-      if (Description.getBuildRuleType(description)
-          .equals(Description.getBuildRuleType(KnownRuleTestDescription.class))) {
-        assertFalse("Should only find one test description", foundTestDescription);
-        foundTestDescription = true;
-        assertEquals(
-            "Last description should have won",
-            "Raz",
-            ((KnownRuleTestDescription) description).getValue());
-      }
-    }
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Foo"));
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Bar"));
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Raz"));
+    buildRuleTypesBuilder.build();
   }
 
   @Test
@@ -288,7 +252,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes knownBuildRuleTypes =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
     assertThat(
-        knownBuildRuleTypes.getCxxPlatforms().getValue(flavor).getCflags(),
+        knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor).getCflags(),
         Matchers.contains(flag));
   }
 
@@ -312,14 +276,14 @@ public class KnownBuildRuleTypesTest {
                 knownBuildRuleTypes.getBuildRuleType("ocaml_library"));
     assertThat(
         ocamlLibraryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
     OcamlBinaryDescription ocamlBinaryDescription =
         (OcamlBinaryDescription)
             knownBuildRuleTypes.getDescription(
                 knownBuildRuleTypes.getBuildRuleType("ocaml_binary"));
     assertThat(
         ocamlBinaryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
   }
 
   @Test
@@ -341,13 +305,13 @@ public class KnownBuildRuleTypesTest {
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));
     assertThat(
         javaBinaryDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
     JavaTestDescription javaTestDescription =
         (JavaTestDescription)
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_test"));
     assertThat(
         javaTestDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
   }
 
   private ProcessExecutor createExecutor() throws IOException {
