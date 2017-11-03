@@ -334,6 +334,23 @@ public class GenruleIntegrationTest {
     assertZipsAreEqual(outputOne, outputTwo);
   }
 
+  @Test
+  public void genruleCanUseExportFileInReferenceMode() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_export_file", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:re-exported").assertSuccess();
+
+    // rebuild with changed contents
+    String contents = "new contents";
+    workspace.writeContentsToPath(contents, "source.txt");
+    Path genruleOutput = workspace.buildAndReturnOutput("//:re-exported");
+
+    assertEquals(contents, workspace.getFileContents(genruleOutput));
+  }
+
   private void assertZipsAreEqual(Path zipPathOne, Path zipPathTwo) throws IOException {
     try (ZipFile zipOne = new ZipFile(zipPathOne.toFile());
         ZipFile zipTwo = new ZipFile(zipPathTwo.toFile())) {

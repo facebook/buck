@@ -27,6 +27,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.RichStream;
 import java.util.Collection;
 import java.util.List;
@@ -131,7 +133,11 @@ public class JsBundleDescriptionTest {
         scenario.resolver.getRuleWithType(
             bundleTarget.withFlavors(JsFlavors.IOS), JsBundleOutputs.class);
 
-    assertEquals(map.getSourcePathToOutput(), bundle.getSourcePathToSourceMap());
+    DefaultSourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver));
+    assertEquals(
+        pathResolver.getRelativePath(map.getSourcePathToOutput()),
+        pathResolver.getRelativePath(bundle.getSourcePathToSourceMap()));
   }
 
   @Test

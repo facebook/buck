@@ -1,0 +1,25 @@
+export_file(
+    name = "source",
+    src = "source.txt",
+    mode = "reference",
+)
+
+genrule(
+    name = "copy-source",
+    out = "out",
+    cmd = "cp $(location :source) $OUT",
+    cmd_exe = "copy $(location :source) %OUT%",
+)
+
+export_file(
+    name = "re-exported",
+    src = ":copy-source",
+    mode = "reference",
+)
+
+genrule(
+    name = "copy-re-exported",
+    out = "out",
+    cmd = "cp $(location :re-exported) $OUT",
+    cmd_exe = "copy $(location :re-exported) %OUT%",
+)
