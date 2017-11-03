@@ -43,8 +43,7 @@ abstract class AbstractKnownBuildRuleTypesProvider {
               @Override
               public KnownBuildRuleTypes load(@Nonnull Cell cell) throws Exception {
                 try {
-                  return getKnownBuildRuleTypesFactory()
-                      .create(cell.getBuckConfig(), cell.getFilesystem());
+                  return getKnownBuildRuleTypesFactory().create(cell);
                 } catch (IOException e) {
                   throw new RuntimeException(
                       String.format(

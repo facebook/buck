@@ -49,9 +49,9 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -395,7 +395,7 @@ public class InterCellIntegrationTest {
     ToolchainProvider toolchainProvider = new TestToolchainProvider();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor,
                 SdkEnvironment.create(
                     FakeBuckConfig.builder().build(), processExecutor, toolchainProvider),

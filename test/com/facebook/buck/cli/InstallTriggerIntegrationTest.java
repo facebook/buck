@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -34,7 +33,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.InstallTrigger;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.NoopInstallable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -46,7 +44,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -73,22 +70,17 @@ public class InstallTriggerIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
     workspace.setKnownBuildRuleTypesFactoryFactory(
         (processExecutor, sdkEnvironment, toolchainProvider, pluginManager) ->
-            new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider, pluginManager) {
-              @Override
-              public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
-                  throws IOException, InterruptedException {
-                FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
-                CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
+            cell -> {
+              FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
+              CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
-                KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-                buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
-                buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
-                return buildRuleTypesBuilder
-                    .addDescriptions(new InstallTriggerDescription())
-                    .addDescriptions(new ExportFileDescription())
-                    .build();
-              }
+              KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
+              buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
+              buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
+              return buildRuleTypesBuilder
+                  .addDescriptions(new InstallTriggerDescription())
+                  .addDescriptions(new ExportFileDescription())
+                  .build();
             });
     workspace.setUp();
   }

@@ -46,9 +46,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SdkEnvironment;
@@ -116,7 +116,7 @@ public class DistBuildStateTest {
 
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, sdkEnvironment, toolchainProvider, pluginManager));
   }
 

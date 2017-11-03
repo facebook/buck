@@ -16,42 +16,15 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
-import org.pf4j.PluginManager;
 
 /**
  * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all {@link
  * Cell} instances.
  */
-public class KnownBuildRuleTypesFactory {
+@FunctionalInterface
+public interface KnownBuildRuleTypesFactory {
 
-  private final ProcessExecutor executor;
-  private final SdkEnvironment sdkEnvironment;
-  private final ToolchainProvider toolchainProvider;
-  private final PluginManager pluginManager;
-
-  public KnownBuildRuleTypesFactory(
-      ProcessExecutor executor,
-      SdkEnvironment sdkEnvironment,
-      ToolchainProvider toolchainProvider,
-      PluginManager pluginManager) {
-    this.executor = executor;
-    this.sdkEnvironment = sdkEnvironment;
-    this.toolchainProvider = toolchainProvider;
-    this.pluginManager = pluginManager;
-  }
-
-  public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
-      throws IOException, InterruptedException {
-    return KnownBuildRuleTypes.createInstance(
-        config, filesystem, executor, toolchainProvider, sdkEnvironment, pluginManager);
-  }
-
-  public ToolchainProvider getToolchainProvider() {
-    return toolchainProvider;
-  }
+  /** @return a {@link KnownBuildRuleTypes} constructor for the given {@link Cell}. */
+  KnownBuildRuleTypes create(Cell cell) throws IOException, InterruptedException;
 }

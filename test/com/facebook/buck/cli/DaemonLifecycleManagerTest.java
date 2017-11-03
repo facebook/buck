@@ -32,7 +32,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -75,7 +75,7 @@ public class DaemonLifecycleManagerTest {
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 executor,
                 SdkEnvironment.create(
                     FakeBuckConfig.builder().build(), executor, toolchainProvider),
@@ -198,7 +198,7 @@ public class DaemonLifecycleManagerTest {
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
@@ -216,7 +216,7 @@ public class DaemonLifecycleManagerTest {
     sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
@@ -235,7 +235,7 @@ public class DaemonLifecycleManagerTest {
     sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
@@ -254,7 +254,7 @@ public class DaemonLifecycleManagerTest {
     sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
@@ -308,7 +308,7 @@ public class DaemonLifecycleManagerTest {
 
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider1 =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
                 sdkEnvironment1,
                 toolchainProvider1,
@@ -322,7 +322,7 @@ public class DaemonLifecycleManagerTest {
 
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider2 =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
                 sdkEnvironment2,
                 toolchainProvider2,

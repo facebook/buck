@@ -86,6 +86,7 @@ import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
@@ -362,7 +363,7 @@ public final class Main {
 
   @VisibleForTesting
   public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
-    this(stdOut, stdErr, stdIn, KnownBuildRuleTypesFactory::new);
+    this(stdOut, stdErr, stdIn, DefaultKnownBuildRuleTypesFactory::of);
   }
 
   /* Define all error handling surrounding main command */

@@ -39,8 +39,8 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -102,7 +102,7 @@ public class DistBuildFileHashesIntegrationTest {
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 new DefaultProcessExecutor(new TestConsole()),
                 rootCell.getSdkEnvironment(),
                 new TestToolchainProvider(),
@@ -178,7 +178,7 @@ public class DistBuildFileHashesIntegrationTest {
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
-            new KnownBuildRuleTypesFactory(
+            DefaultKnownBuildRuleTypesFactory.of(
                 new DefaultProcessExecutor(new TestConsole()),
                 rootCell.getSdkEnvironment(),
                 new TestToolchainProvider(),

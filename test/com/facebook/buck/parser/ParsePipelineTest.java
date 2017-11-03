@@ -31,6 +31,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
@@ -392,13 +393,12 @@ public class ParsePipelineTest {
 
       this.cell = this.workspace.asCell();
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory =
-          new KnownBuildRuleTypesFactory(
+          DefaultKnownBuildRuleTypesFactory.of(
               new DefaultProcessExecutor(new TestConsole()),
               cell.getSdkEnvironment(),
               new TestToolchainProvider(),
               BuckPluginManagerFactory.createPluginManager());
-      this.knownBuildRuleTypes =
-          knownBuildRuleTypesFactory.create(cell.getBuckConfig(), cell.getFilesystem());
+      this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(cell);
       this.targetNodeParsePipelineCache = new TypedParsePipelineCache<>();
       this.rawNodeParsePipelineCache = new RawNodeParsePipelineCache();
       final TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();

@@ -34,7 +34,7 @@ import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.SdkEnvironment;
@@ -172,7 +172,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setActionGraphCache(new ActionGraphCache())
         .setKnownBuildRuleTypesProvider(
             KnownBuildRuleTypesProvider.of(
-                new KnownBuildRuleTypesFactory(
+                DefaultKnownBuildRuleTypesFactory.of(
                     processExecutor, sdkEnvironment, toolchainProvider, pluginManager)))
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())

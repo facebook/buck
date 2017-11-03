@@ -29,6 +29,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -75,13 +76,12 @@ public class PythonDslProjectBuildFileParserTest {
   public void createCell() throws IOException, InterruptedException {
     cell = new TestCellBuilder().build();
     KnownBuildRuleTypesFactory knownBuildRuleTypesFactory =
-        new KnownBuildRuleTypesFactory(
+        DefaultKnownBuildRuleTypesFactory.of(
             new DefaultProcessExecutor(new TestConsole()),
             cell.getSdkEnvironment(),
             new TestToolchainProvider(),
             BuckPluginManagerFactory.createPluginManager());
-    knownBuildRuleTypes =
-        knownBuildRuleTypesFactory.create(cell.getBuckConfig(), cell.getFilesystem());
+    knownBuildRuleTypes = knownBuildRuleTypesFactory.create(cell);
   }
 
   private static FakeProcess fakeProcessWithJsonOutput(

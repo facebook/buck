@@ -25,7 +25,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -250,7 +250,7 @@ public class AndroidAarIntegrationTest {
               AndroidLegacyToolchain.DEFAULT_NAME,
               new DefaultAndroidLegacyToolchain(
                   () -> androidPlatformTarget, androidDirectoryResolver));
-          return new KnownBuildRuleTypesFactory(
+          return DefaultKnownBuildRuleTypesFactory.of(
               processExecutor, sdkEnvironment, testToolchainProvider, pluginManager);
         };
 
