@@ -711,7 +711,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     private SymlinkTree requireSymlinkTree(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules) {
       return CxxDescriptionEnhancer.requireSharedLibrarySymlinkTree(
-          buildTarget, filesystem, resolver, cxxPlatform, rules, NativeLinkable.class::isInstance);
+          buildTarget, filesystem, resolver, cxxPlatform, rules);
     }
 
     /**

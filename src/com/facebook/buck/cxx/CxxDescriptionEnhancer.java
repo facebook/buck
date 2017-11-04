@@ -924,13 +924,7 @@ public class CxxDescriptionEnhancer {
 
       // Create a symlink tree with for all shared libraries needed by this binary.
       SymlinkTree sharedLibraries =
-          requireSharedLibrarySymlinkTree(
-              target,
-              projectFilesystem,
-              resolver,
-              cxxPlatform,
-              deps,
-              NativeLinkable.class::isInstance);
+          requireSharedLibrarySymlinkTree(target, projectFilesystem, resolver, cxxPlatform, deps);
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
@@ -1208,14 +1202,13 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> deps,
-      Predicate<Object> traverse) {
+      Iterable<? extends BuildRule> deps) {
     return (SymlinkTree)
         resolver.computeIfAbsent(
             createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
             ignored ->
                 createSharedLibrarySymlinkTree(
-                    buildTarget, filesystem, cxxPlatform, deps, traverse));
+                    buildTarget, filesystem, cxxPlatform, deps, n -> false));
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {

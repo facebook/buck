@@ -185,11 +185,7 @@ public class HaskellBinaryDescription
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                  buildTarget,
-                  projectFilesystem,
-                  platform.getCxxPlatform(),
-                  deps,
-                  NativeLinkable.class::isInstance));
+                  buildTarget, projectFilesystem, platform.getCxxPlatform(), deps, n -> false));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput

@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -47,7 +46,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -301,7 +299,7 @@ public class JavaTestDescription
           projectFilesystem,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
-          Predicates.or(NativeLinkable.class::isInstance, JavaLibrary.class::isInstance));
+          JavaLibrary.class::isInstance);
     }
   }
 }

@@ -48,7 +48,7 @@ public class NativeLinkablesTest {
     private final NativeLinkableInput nativeLinkableInput;
     private final ImmutableMap<String, SourcePath> sharedLibraries;
 
-    public FakeNativeLinkable(
+    FakeNativeLinkable(
         String target,
         Iterable<? extends NativeLinkable> deps,
         Iterable<? extends NativeLinkable> exportedDeps,
@@ -230,9 +230,7 @@ public class NativeLinkablesTest {
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a),
-            NativeLinkable.class::isInstance);
+            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a), r -> false, r -> false);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
@@ -303,9 +301,7 @@ public class NativeLinkablesTest {
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba2.so")));
     NativeLinkables.getTransitiveSharedLibraries(
-        CxxPlatformUtils.DEFAULT_PLATFORM,
-        ImmutableList.of(a, b),
-        NativeLinkable.class::isInstance);
+        CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), r -> false, r -> false);
   }
 
   @Test
@@ -329,9 +325,7 @@ public class NativeLinkablesTest {
             ImmutableMap.of("libc.so", path));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a, b),
-            NativeLinkable.class::isInstance);
+            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), r -> false, r -> false);
     assertThat(
         sharedLibs, Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
   }
