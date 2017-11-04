@@ -1178,7 +1178,7 @@ public class CxxDescriptionEnhancer {
         getSharedLibrarySymlinkTreePath(filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkables.getTransitiveSharedLibraries(cxxPlatform, deps, traverse, skip);
+        NativeLinkables.getTransitiveSharedLibraries(cxxPlatform, deps, traverse, skip, false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {

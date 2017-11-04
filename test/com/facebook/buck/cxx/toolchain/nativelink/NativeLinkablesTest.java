@@ -21,6 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -230,7 +231,7 @@ public class NativeLinkablesTest {
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a), r -> false, r -> false);
+            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a), r -> false, r -> false, true);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
@@ -301,7 +302,7 @@ public class NativeLinkablesTest {
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba2.so")));
     NativeLinkables.getTransitiveSharedLibraries(
-        CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), r -> false, r -> false);
+        CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), n -> false, n -> false, true);
   }
 
   @Test
@@ -325,7 +326,11 @@ public class NativeLinkablesTest {
             ImmutableMap.of("libc.so", path));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), r -> false, r -> false);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(a, b),
+            n -> false,
+            n -> false,
+            true);
     assertThat(
         sharedLibs, Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
   }
@@ -353,7 +358,7 @@ public class NativeLinkablesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.STATIC,
-            x -> true),
+            n -> true),
         Matchers.equalTo(
             ImmutableMap.<BuildTarget, NativeLinkable>of(
                 a.getBuildTarget(), a,
@@ -365,5 +370,38 @@ public class NativeLinkablesTest {
             Linker.LinkableDepType.STATIC,
             a::equals),
         Matchers.equalTo(ImmutableMap.<BuildTarget, NativeLinkable>of(a.getBuildTarget(), a)));
+  }
+
+  @Test
+  public void transitiveSharedLibrariesDynamicallyLinksStaticRoots() throws Exception {
+    FakeNativeLinkable b =
+        new FakeNativeLinkable(
+            "//:b",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            Linkage.ANY,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.of("libb.so", FakeSourcePath.of("libb.so")));
+    FakeNativeLinkable a =
+        new FakeNativeLinkable(
+            "//:a",
+            ImmutableList.of(b),
+            ImmutableList.of(),
+            Linkage.STATIC,
+            NativeLinkableInput.builder().build(),
+            ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
+    ImmutableSortedMap<String, SourcePath> sharedLibs =
+        NativeLinkables.getTransitiveSharedLibraries(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(a),
+            NativeLinkable.class::isInstance,
+            n -> false,
+            true);
+    assertThat(
+        sharedLibs,
+        Matchers.equalTo(
+            ImmutableSortedMap.<String, SourcePath>of(
+                "liba.so", FakeSourcePath.of("liba.so"),
+                "libb.so", FakeSourcePath.of("libb.so"))));
   }
 }

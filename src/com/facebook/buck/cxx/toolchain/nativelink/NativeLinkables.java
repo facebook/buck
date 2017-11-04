@@ -51,7 +51,7 @@ public class NativeLinkables {
    * @param skip Skip this {@link BuildRule} even if it is an instance of {@link NativeLinkable}
    * @return all the roots found as a map from {@link BuildTarget} to {@link NativeLinkable}.
    */
-  static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
+  private static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
       Iterable<? extends BuildRule> from,
       Predicate<? super BuildRule> traverse,
       Predicate<? super BuildRule> skip) {
@@ -285,13 +285,16 @@ public class NativeLinkables {
    * traversing all unbroken dependency chains of {@link NativeLinkable} objects found via the
    * passed in {@link com.facebook.buck.rules.BuildRule} roots.
    *
+   * @param alwaysIncludeRoots whether to include shared libraries from roots, even if they prefer
+   *     static linkage.
    * @return a mapping of library name to the library {@link SourcePath}.
    */
   public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Predicate<? super BuildRule> traverse,
-      Predicate<? super BuildRule> skip) {
+      Predicate<? super BuildRule> skip,
+      boolean alwaysIncludeRoots) {
 
     ImmutableMap<BuildTarget, NativeLinkable> roots =
         getNativeLinkableRoots(inputs, traverse, skip);
@@ -299,15 +302,21 @@ public class NativeLinkables {
         getTransitiveNativeLinkables(cxxPlatform, roots.values());
 
     Map<String, SourcePath> libraries = new LinkedHashMap<>();
-    for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
+    for (Map.Entry<BuildTarget, NativeLinkable> ent : nativeLinkables.entrySet()) {
+      BuildTarget target = ent.getKey();
+      NativeLinkable nativeLinkable = ent.getValue();
+
+      // Only include shared libraries from the node if it's not statically linked or if it's a root
+      // node.
       NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-      if (linkage != NativeLinkable.Linkage.STATIC) {
+      if (linkage != NativeLinkable.Linkage.STATIC
+          || (alwaysIncludeRoots && roots.containsKey(target))) {
         ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(cxxPlatform);
         for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
           SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
           if (prev != null && !prev.equals(lib.getValue())) {
-            String libTargetString = null;
-            String prevTargetString = null;
+            String libTargetString;
+            String prevTargetString;
             if ((prev instanceof BuildTargetSourcePath)
                 && (lib.getValue() instanceof BuildTargetSourcePath)) {
               libTargetString = ((BuildTargetSourcePath) lib.getValue()).getTarget().toString();
