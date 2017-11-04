@@ -1,0 +1,15 @@
+java_library(
+    name = "testutil",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/sandbox:sandbox",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

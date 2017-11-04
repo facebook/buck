@@ -239,6 +239,7 @@ java_test(
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",

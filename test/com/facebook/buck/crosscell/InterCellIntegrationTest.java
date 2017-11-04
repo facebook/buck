@@ -61,6 +61,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -400,7 +401,8 @@ public class InterCellIntegrationTest {
                 SdkEnvironment.create(
                     FakeBuckConfig.builder().build(), processExecutor, toolchainProvider),
                 toolchainProvider,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new Parser(

@@ -40,6 +40,7 @@ import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -173,7 +174,11 @@ public class CleanCommandTest extends EasyMockSupport {
         .setKnownBuildRuleTypesProvider(
             KnownBuildRuleTypesProvider.of(
                 DefaultKnownBuildRuleTypesFactory.of(
-                    processExecutor, sdkEnvironment, toolchainProvider, pluginManager)))
+                    processExecutor,
+                    sdkEnvironment,
+                    toolchainProvider,
+                    pluginManager,
+                    new TestSandboxExecutionStrategyFactory())))
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setToolchainProvider(toolchainProvider)

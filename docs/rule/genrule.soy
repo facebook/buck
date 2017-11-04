@@ -41,6 +41,14 @@
 {call genrule_common.out_arg /}
 
 {call buck.arg}
+  {param name: 'enable_sandbox' /}
+  {param default : 'False' /}
+  {param desc}
+  Whether this target should be executed in a sandbox or not.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'executable' /}
   {param default : 'False' /}
   {param desc}

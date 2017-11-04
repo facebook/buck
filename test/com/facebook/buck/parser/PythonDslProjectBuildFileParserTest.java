@@ -34,6 +34,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
@@ -80,7 +81,8 @@ public class PythonDslProjectBuildFileParserTest {
             new DefaultProcessExecutor(new TestConsole()),
             cell.getSdkEnvironment(),
             new TestToolchainProvider(),
-            BuckPluginManagerFactory.createPluginManager());
+            BuckPluginManagerFactory.createPluginManager(),
+            new TestSandboxExecutionStrategyFactory());
     knownBuildRuleTypes = knownBuildRuleTypesFactory.create(cell);
   }
 

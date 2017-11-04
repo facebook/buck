@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -440,7 +441,8 @@ public class XCodeProjectCommandHelperTest {
                 new DefaultProcessExecutor(new TestConsole()),
                 cell.getSdkEnvironment(),
                 new TestToolchainProvider(),
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
     XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         cell,

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -80,7 +81,8 @@ public class DaemonLifecycleManagerTest {
                 SdkEnvironment.create(
                     FakeBuckConfig.builder().build(), executor, toolchainProvider),
                 toolchainProvider,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
   }
 
   @Test
@@ -202,7 +204,8 @@ public class DaemonLifecycleManagerTest {
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
@@ -220,7 +223,8 @@ public class DaemonLifecycleManagerTest {
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
@@ -239,7 +243,8 @@ public class DaemonLifecycleManagerTest {
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
@@ -258,7 +263,8 @@ public class DaemonLifecycleManagerTest {
                 fakeProcessExecutor,
                 sdkEnvironment,
                 toolchainProvider,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
@@ -312,7 +318,8 @@ public class DaemonLifecycleManagerTest {
                 fakeProcessExecutor,
                 sdkEnvironment1,
                 toolchainProvider1,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     TestToolchainProvider toolchainProvider2 = new TestToolchainProvider();
     toolchainProvider2.addAndroidToolchain(
@@ -326,7 +333,8 @@ public class DaemonLifecycleManagerTest {
                 fakeProcessExecutor,
                 sdkEnvironment2,
                 toolchainProvider2,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(

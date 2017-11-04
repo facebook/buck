@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -39,6 +40,8 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
 
   abstract PluginManager getPluginManager();
 
+  abstract SandboxExecutionStrategyFactory getSandboxExecutionStrategyFactory();
+
   @Override
   public KnownBuildRuleTypes create(Cell cell) throws IOException, InterruptedException {
     return KnownBuildRuleTypes.createInstance(
@@ -47,6 +50,7 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
         getExecutor(),
         getToolchainProvider(),
         getSdkEnvironment(),
-        getPluginManager());
+        getPluginManager(),
+        getSandboxExecutionStrategyFactory());
   }
 }

@@ -25,12 +25,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -54,6 +56,8 @@ public class JsBundleGenrule extends Genrule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidLegacyToolchain androidLegacyToolchain,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      BuildRuleResolver resolver,
       BuildRuleParams params,
       JsBundleGenruleDescriptionArg args,
       Optional<Arg> cmd,
@@ -64,13 +68,16 @@ public class JsBundleGenrule extends Genrule
         buildTarget,
         projectFilesystem,
         androidLegacyToolchain,
+        resolver,
         params,
+        sandboxExecutionStrategy,
         args.getSrcs(),
         cmd,
         bash,
         cmdExe,
         args.getType(),
-        JsBundleOutputs.JS_DIR_NAME);
+        JsBundleOutputs.JS_DIR_NAME,
+        false);
     this.jsBundle = jsBundle;
     jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();

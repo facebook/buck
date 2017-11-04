@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -150,6 +151,7 @@ public class ApplePackageDescriptionTest {
   private ApplePackageDescription descriptionWithCommand(String command) {
     return new ApplePackageDescription(
         new TestToolchainProvider(),
+        new NoSandboxExecutionStrategy(),
         FakeBuckConfig.builder()
             .setSections(
                 "[apple]",

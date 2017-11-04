@@ -77,7 +77,11 @@ public class BuildCommandErrorsIntegrationTest {
     workspace.setUp();
     mockDescription = new MockDescription();
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, sdkEnvironment, toolchainProvider, pluginManager) ->
+        (processExecutor,
+            sdkEnvironment,
+            toolchainProvider,
+            pluginManager,
+            sandboxExecutionStrategyFactory) ->
             cell -> {
               FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
               CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;

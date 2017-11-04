@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -59,16 +60,19 @@ public class ApplePackageDescription
             ApplePackageDescription.AbstractApplePackageDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
+  private final SandboxExecutionStrategy sandboxExecutionStrategy;
   private final Flavor defaultCxxFlavor;
   private final AppleConfig config;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public ApplePackageDescription(
       ToolchainProvider toolchainProvider,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
       AppleConfig config,
       Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
     this.toolchainProvider = toolchainProvider;
+    this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.config = config;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
@@ -105,6 +109,8 @@ public class ApplePackageDescription
           buildTarget,
           projectFilesystem,
           androidLegacyToolchain,
+          sandboxExecutionStrategy,
+          resolver,
           params.withExtraDeps(
               () ->
                   ImmutableSortedSet.<BuildRule>naturalOrder()

@@ -139,6 +139,8 @@ import com.facebook.buck.rust.RustBinaryDescription;
 import com.facebook.buck.rust.RustBuckConfig;
 import com.facebook.buck.rust.RustLibraryDescription;
 import com.facebook.buck.rust.RustTestDescription;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.CommandAliasDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
@@ -240,7 +242,8 @@ abstract class AbstractKnownBuildRuleTypes {
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
       SdkEnvironment sdkEnvironment,
-      PluginManager pluginManager)
+      PluginManager pluginManager,
+      SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory)
       throws InterruptedException, IOException {
 
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
@@ -438,6 +441,9 @@ abstract class AbstractKnownBuildRuleTypes {
         new DefaultAndroidLibraryCompilerFactory(
             toolchainProvider, javaConfig, scalaConfig, kotlinBuckConfig);
 
+    SandboxExecutionStrategy sandboxExecutionStrategy =
+        sandboxExecutionStrategyFactory.create(processExecutor, config);
+
     builder.addDescriptions(
         new AndroidAarDescription(
             new AndroidManifestDescription(),
@@ -481,10 +487,11 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new AndroidResourceDescription(
             toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
-    builder.addDescriptions(new ApkGenruleDescription(toolchainProvider));
+    builder.addDescriptions(new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(
         new ApplePackageDescription(
             toolchainProvider,
+            sandboxExecutionStrategy,
             appleConfig,
             defaultCxxPlatform.getFlavor(),
             platformFlavorsToAppleCxxPlatforms));
@@ -515,7 +522,8 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(cxxBinaryDescription);
     builder.addDescriptions(cxxLibraryDescription);
     builder.addDescriptions(
-        new CxxGenruleDescription(cxxBuckConfig, toolchainProvider, cxxPlatforms));
+        new CxxGenruleDescription(
+            cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
     builder.addDescriptions(new CxxLuaExtensionDescription(luaPlatforms, cxxBuckConfig));
     builder.addDescriptions(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
@@ -529,7 +537,8 @@ abstract class AbstractKnownBuildRuleTypes {
         new DTestDescription(
             dBuckConfig, cxxBuckConfig, defaultCxxPlatform, defaultTestRuleTimeoutMs));
     builder.addDescriptions(new ExportFileDescription());
-    builder.addDescriptions(new GenruleDescription(toolchainProvider));
+    builder.addDescriptions(
+        new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
     builder.addDescriptions(new GenAidlDescription(toolchainProvider));
     builder.addDescriptions(new GoBinaryDescription(goBuckConfig));
     builder.addDescriptions(new GoLibraryDescription(goBuckConfig));
@@ -567,7 +576,8 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultJavaCxxPlatform,
             cxxPlatforms));
     builder.addDescriptions(new JsBundleDescription(toolchainProvider));
-    builder.addDescriptions(new JsBundleGenruleDescription(toolchainProvider));
+    builder.addDescriptions(
+        new JsBundleGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(new JsLibraryDescription());
     builder.addDescriptions(new KeystoreDescription());
     builder.addDescriptions(

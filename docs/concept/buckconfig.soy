@@ -141,6 +141,7 @@ The following sections are recognized by Buck:
     'resources',
     'resources_per_rule',
     'rust',
+    'sandbox',
     'test',
     'thrift',
     'tools',
@@ -3229,6 +3230,33 @@ your <code>.buckjavaargs</code> file</a>:
     in compiler output, debug info, <code>file!()</code> and elsewhere to match the original
     source names. The options are "no" (don't remap), "unstable" (remap using the experimental
     version of these options) and "yes" (remap using the stable versions, probably 1.22 onwards).
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'sandbox' /}
+  {param description}
+    This section controls sandboxing. Sandbox execution provides better guarantees about resources
+    accessible to the processes by using system-provided capabilities to restrict certain usages
+    (for example, restricting the set of files allowed to be read and write).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'sandbox' /}
+  {param name: 'darwin_sandbox_enabled' /}
+  {param example_value: 'true' /}
+  {param description}
+    This option specifies whether sandboxing is enabled on OS X or not.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'sandbox' /}
+  {param name: 'genrule_sandbox_enabled' /}
+  {param example_value: 'true' /}
+  {param description}
+    Enables sandbox in <code>genrule</code>.
   {/param}
 {/call}
 

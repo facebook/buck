@@ -21,12 +21,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -61,6 +63,8 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidLegacyToolchain androidLegacyToolchain,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      BuildRuleResolver resolver,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       List<SourcePath> srcs,
@@ -74,13 +78,16 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
         buildTarget,
         projectFilesystem,
         androidLegacyToolchain,
+        resolver,
         params,
+        sandboxExecutionStrategy,
         srcs,
         cmd,
         bash,
         cmdExe,
         type,
-        /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk");
+        /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk",
+        false);
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;

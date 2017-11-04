@@ -96,6 +96,8 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
+import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -334,7 +336,8 @@ public final class Main {
         ProcessExecutor processExecutor,
         SdkEnvironment sdkEnvironment,
         ToolchainProvider toolchainProvider,
-        PluginManager pluginManager);
+        PluginManager pluginManager,
+        SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory);
   }
 
   private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
@@ -651,6 +654,9 @@ public final class Main {
       SdkEnvironment sdkEnvironment =
           SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
+      SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
+          new PlatformSandboxExecutionStrategyFactory();
+
       Clock clock;
       boolean enableThreadCpuTime =
           buckConfig.getBooleanValue("build", "enable_thread_cpu_time", true);
@@ -670,7 +676,11 @@ public final class Main {
         KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
             KnownBuildRuleTypesProvider.of(
                 knownBuildRuleTypesFactoryFactory.create(
-                    processExecutor, sdkEnvironment, toolchainProvider, pluginManager));
+                    processExecutor,
+                    sdkEnvironment,
+                    toolchainProvider,
+                    pluginManager,
+                    sandboxExecutionStrategyFactory));
 
         Cell rootCell =
             CellProvider.createForLocalBuild(

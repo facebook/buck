@@ -31,6 +31,7 @@ import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
@@ -70,7 +71,8 @@ public class SkylarkProjectBuildFileParserTest {
                 new DefaultProcessExecutor(new TestConsole()),
                 cell.getSdkEnvironment(),
                 new TestToolchainProvider(),
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
     parser =
         SkylarkProjectBuildFileParser.using(
             ProjectBuildFileParserOptions.builder()

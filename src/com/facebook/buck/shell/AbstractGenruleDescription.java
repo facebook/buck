@@ -42,6 +42,7 @@ import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.rules.macros.QueryPathsMacroExpander;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -71,9 +72,16 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               .build());
 
   protected final ToolchainProvider toolchainProvider;
+  protected final SandboxExecutionStrategy sandboxExecutionStrategy;
+  protected final boolean enableSandbox;
 
-  protected AbstractGenruleDescription(ToolchainProvider toolchainProvider) {
+  protected AbstractGenruleDescription(
+      ToolchainProvider toolchainProvider,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      boolean enableSandbox) {
     this.toolchainProvider = toolchainProvider;
+    this.sandboxExecutionStrategy = sandboxExecutionStrategy;
+    this.enableSandbox = enableSandbox;
   }
 
   protected BuildRule createBuildRule(
@@ -92,13 +100,16 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         buildTarget,
         projectFilesystem,
         androidLegacyToolchain,
+        resolver,
         params,
+        sandboxExecutionStrategy,
         args.getSrcs(),
         cmd,
         bash,
         cmdExe,
         args.getType(),
-        args.getOut());
+        args.getOut(),
+        args.getEnableSandbox().orElse(enableSandbox));
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
@@ -268,5 +279,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     Optional<String> getType();
 
     ImmutableList<SourcePath> getSrcs();
+
+    Optional<Boolean> getEnableSandbox();
   }
 }

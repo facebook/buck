@@ -42,6 +42,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -223,7 +224,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void addAppleBundleResourcesIsDelegatedToUnderlyingBundle() {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
-    new JsBundleGenruleDescription(new TestToolchainProvider())
+    new JsBundleGenruleDescription(new TestToolchainProvider(), new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
             setup.targetNode(),

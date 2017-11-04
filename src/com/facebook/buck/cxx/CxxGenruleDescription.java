@@ -64,6 +64,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.SimpleMacroExpander;
 import com.facebook.buck.rules.macros.StringExpander;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -110,8 +111,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   public CxxGenruleDescription(
       CxxBuckConfig cxxBuckConfig,
       ToolchainProvider toolchainProvider,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(toolchainProvider);
+    super(toolchainProvider, sandboxExecutionStrategy, false);
     this.cxxPlatforms = cxxPlatforms;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }

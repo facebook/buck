@@ -63,6 +63,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -117,7 +118,11 @@ public class DistBuildStateTest {
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor, sdkEnvironment, toolchainProvider, pluginManager));
+                processExecutor,
+                sdkEnvironment,
+                toolchainProvider,
+                pluginManager,
+                new TestSandboxExecutionStrategyFactory()));
   }
 
   @Test

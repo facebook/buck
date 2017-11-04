@@ -70,6 +70,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -246,7 +247,8 @@ public class ParserTest {
                 new DefaultProcessExecutor(new TestConsole()),
                 cell.getSdkEnvironment(),
                 new TestToolchainProvider(),
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BroadcastEventListener broadcastEventListener = new BroadcastEventListener();

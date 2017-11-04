@@ -1,0 +1,23 @@
+(version 1)
+(allow default)
+(debug deny)
+(deny file-read*
+)
+(allow file-read-metadata
+  (subpath "allowed_to_read_metadata_1")
+  (subpath "allowed_to_read_metadata_2")
+)
+(allow file-read*
+  (subpath "allowed_to_read_1")
+  (subpath "allowed_to_read_2")
+)
+(deny file-write*)
+(allow file-write*
+  (subpath "allowed_to_write_1")
+  (subpath "/dev")
+  (subpath "/private/tmp")
+  (subpath "/private/var/folders")
+  (subpath "/private/var/tmp")
+  (subpath "/tmp")
+  (subpath "/var/folders")
+)

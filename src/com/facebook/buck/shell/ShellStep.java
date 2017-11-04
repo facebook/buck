@@ -206,6 +206,10 @@ public abstract class ShellStep implements Step {
     return shellCommandArgs;
   }
 
+  protected ImmutableList<String> getShellCommandArgsForDescription(ExecutionContext context) {
+    return getShellCommand(context);
+  }
+
   @SuppressWarnings("unused")
   protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
     return Optional.empty();
@@ -226,7 +230,8 @@ public abstract class ShellStep implements Step {
 
     // Quote the arguments to the shell command as needed (this applies to $0 as well
     // e.g. if we run '/path/a b.sh' quoting is needed).
-    Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.SHELL_ESCAPER);
+    Iterable<String> cmd =
+        Iterables.transform(getShellCommandArgsForDescription(context), Escaper.SHELL_ESCAPER);
 
     String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
     // This is what the user might type in a shell to set the working directory correctly. The (...)

@@ -47,6 +47,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -136,7 +137,8 @@ public class ApkGenruleTest {
     testToolchainProvider.addToolchain(
         AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
 
-    ApkGenruleDescription description = new ApkGenruleDescription(testToolchainProvider);
+    ApkGenruleDescription description =
+        new ApkGenruleDescription(testToolchainProvider, new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())

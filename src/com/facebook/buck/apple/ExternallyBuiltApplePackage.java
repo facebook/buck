@@ -21,10 +21,12 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
@@ -43,6 +45,8 @@ public class ExternallyBuiltApplePackage extends Genrule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidLegacyToolchain androidLegacyToolchain,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      BuildRuleResolver resolver,
       BuildRuleParams params,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
@@ -51,13 +55,16 @@ public class ExternallyBuiltApplePackage extends Genrule {
         buildTarget,
         projectFilesystem,
         androidLegacyToolchain,
+        resolver,
         params,
+        sandboxExecutionStrategy,
         ImmutableList.of(bundle),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
         /* bash */ Optional.empty(),
         /* cmdExe */ Optional.empty(),
         /* type */ Optional.empty(),
-        buildTarget.getShortName() + "." + packageConfigAndPlatformInfo.getConfig().getExtension());
+        buildTarget.getShortName() + "." + packageConfigAndPlatformInfo.getConfig().getExtension(),
+        false);
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
     this.cacheable = cacheable;
   }

@@ -27,20 +27,28 @@ import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.WorkerMacroArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxProperties;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
+import com.facebook.buck.shell.programrunner.DirectProgramRunner;
+import com.facebook.buck.shell.programrunner.ProgramRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
@@ -54,12 +62,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
@@ -130,8 +140,11 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final String out;
   @AddToRuleKey private final String type;
+  @AddToRuleKey private final boolean enableSandboxingInGenrule;
 
   private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final BuildRuleResolver buildRuleResolver;
+  private final SandboxExecutionStrategy sandboxExecutionStrategy;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
@@ -142,15 +155,20 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidLegacyToolchain androidLegacyToolchain,
+      BuildRuleResolver buildRuleResolver,
       BuildRuleParams params,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> type,
-      String out) {
+      String out,
+      boolean enableSandboxingInGenrule) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
+    this.buildRuleResolver = buildRuleResolver;
+    this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = cmd;
     this.bash = bash;
@@ -172,6 +190,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
     this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
     this.isWorkerGenrule = this.isWorkerGenrule();
+    this.enableSandboxingInGenrule = enableSandboxingInGenrule;
   }
 
   /** @return the absolute path to the output file */
@@ -266,28 +285,86 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public AbstractGenruleStep createGenruleStep(BuildContext context) {
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
     // as srcs. Without this, a genrule is not guaranteed to be hermetic.
+
+    ProgramRunner programRunner;
+
+    if (sandboxExecutionStrategy.isSandboxEnabled() && enableSandboxingInGenrule) {
+      programRunner =
+          sandboxExecutionStrategy.createSandboxProgramRunner(
+              createSandboxConfiguration(sourcePathResolver));
+    } else {
+      programRunner = new DirectProgramRunner();
+    }
 
     return new AbstractGenruleStep(
         getProjectFilesystem(),
         getBuildTarget(),
         new CommandString(
-            Arg.flattenToSpaceSeparatedString(cmd, context.getSourcePathResolver()),
-            Arg.flattenToSpaceSeparatedString(bash, context.getSourcePathResolver()),
-            Arg.flattenToSpaceSeparatedString(cmdExe, context.getSourcePathResolver())),
+            Arg.flattenToSpaceSeparatedString(cmd, sourcePathResolver),
+            Arg.flattenToSpaceSeparatedString(bash, sourcePathResolver),
+            Arg.flattenToSpaceSeparatedString(cmdExe, sourcePathResolver)),
         BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToSrcDirectory)
-            .getPathRelativeToBuildCellRoot()) {
+            .getPathRelativeToBuildCellRoot(),
+        programRunner) {
       @Override
       protected void addEnvironmentVariables(
           ExecutionContext executionContext,
           ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-        Genrule.this.addEnvironmentVariables(
-            context.getSourcePathResolver(), environmentVariablesBuilder);
+        Genrule.this.addEnvironmentVariables(sourcePathResolver, environmentVariablesBuilder);
       }
     };
+  }
+
+  private SandboxProperties createSandboxConfiguration(SourcePathResolver sourcePathResolver) {
+    SandboxProperties.Builder builder = SandboxProperties.builder();
+    return builder
+        .addAllAllowedToReadPaths(
+            srcs.stream()
+                .map(sourcePathResolver::getAbsolutePath)
+                .map(Object::toString)
+                .collect(Collectors.toList()))
+        .addAllAllowedToReadPaths(collectReadablePathsFromArguments(sourcePathResolver))
+        .addAllowedToReadPaths(
+            getProjectFilesystem().resolve(pathToSrcDirectory).toString(),
+            getProjectFilesystem().resolve(pathToTmpDirectory).toString(),
+            getProjectFilesystem().resolve(pathToOutDirectory).toString())
+        .addAllowedToReadMetadataPaths(
+            getProjectFilesystem().getRootPath().toAbsolutePath().toString())
+        .addAllowedToWritePaths(
+            getProjectFilesystem().resolve(pathToTmpDirectory).toString(),
+            getProjectFilesystem().resolve(pathToOutDirectory).toString())
+        .addDeniedToReadPaths(getProjectFilesystem().getRootPath().toAbsolutePath().toString())
+        .build();
+  }
+
+  private ImmutableList<String> collectReadablePathsFromArguments(SourcePathResolver resolver) {
+    ImmutableList.Builder<String> paths = ImmutableList.builder();
+    cmd.ifPresent(c -> paths.addAll(collectExistingArgInputs(resolver, c)));
+    if (Platform.detect() == Platform.WINDOWS) {
+      cmdExe.ifPresent(c -> paths.addAll(collectExistingArgInputs(resolver, c)));
+    } else {
+      bash.ifPresent(c -> paths.addAll(collectExistingArgInputs(resolver, c)));
+    }
+    return paths.build();
+  }
+
+  private ImmutableList<String> collectExistingArgInputs(
+      SourcePathResolver sourcePathResolver, Arg arg) {
+    Collection<BuildRule> buildRules = arg.getDeps(new SourcePathRuleFinder(buildRuleResolver));
+    ImmutableList.Builder<String> inputs = ImmutableList.builder();
+    for (BuildRule buildRule : buildRules) {
+      SourcePath inputPath = buildRule.getSourcePathToOutput();
+      if (inputPath != null) {
+        inputs.add(sourcePathResolver.getAbsolutePath(inputPath).toString());
+      }
+    }
+    return inputs.build();
   }
 
   public WorkerShellStep createWorkerShellStep(BuildContext context) {

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
@@ -119,7 +120,8 @@ public class ParserBenchmark {
                 new DefaultProcessExecutor(new TestConsole()),
                 cell.getSdkEnvironment(),
                 new TestToolchainProvider(),
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     eventBus = BuckEventBusForTests.newInstance();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));

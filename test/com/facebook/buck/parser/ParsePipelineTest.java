@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -397,7 +398,8 @@ public class ParsePipelineTest {
               new DefaultProcessExecutor(new TestConsole()),
               cell.getSdkEnvironment(),
               new TestToolchainProvider(),
-              BuckPluginManagerFactory.createPluginManager());
+              BuckPluginManagerFactory.createPluginManager(),
+              new TestSandboxExecutionStrategyFactory());
       this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(cell);
       this.targetNodeParsePipelineCache = new TypedParsePipelineCache<>();
       this.rawNodeParsePipelineCache = new RawNodeParsePipelineCache();

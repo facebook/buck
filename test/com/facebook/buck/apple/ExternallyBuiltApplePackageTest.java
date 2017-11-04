@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.TestExecutionContext;
@@ -88,6 +89,8 @@ public class ExternallyBuiltApplePackageTest {
             buildTarget,
             projectFilesystem,
             TestAndroidLegacyToolchainFactory.create(),
+            new NoSandboxExecutionStrategy(),
+            resolver,
             params,
             config,
             FakeSourcePath.of(bundleLocation),
@@ -115,6 +118,8 @@ public class ExternallyBuiltApplePackageTest {
             buildTarget,
             projectFilesystem,
             TestAndroidLegacyToolchainFactory.create(),
+            new NoSandboxExecutionStrategy(),
+            resolver,
             params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
@@ -136,6 +141,8 @@ public class ExternallyBuiltApplePackageTest {
             buildTarget,
             projectFilesystem,
             TestAndroidLegacyToolchainFactory.create(),
+            new NoSandboxExecutionStrategy(),
+            resolver,
             params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
@@ -161,6 +168,8 @@ public class ExternallyBuiltApplePackageTest {
                 buildTarget,
                 projectFilesystem,
                 TestAndroidLegacyToolchainFactory.create(),
+                new NoSandboxExecutionStrategy(),
+                resolver,
                 params,
                 config.withPlatform(config.getPlatform().withBuildVersion(input)),
                 FakeSourcePath.of("Fake/Bundle/Location"),
@@ -178,6 +187,8 @@ public class ExternallyBuiltApplePackageTest {
                 buildTarget,
                 projectFilesystem,
                 TestAndroidLegacyToolchainFactory.create(),
+                new NoSandboxExecutionStrategy(),
+                resolver,
                 params,
                 config.withPlatform(
                     config

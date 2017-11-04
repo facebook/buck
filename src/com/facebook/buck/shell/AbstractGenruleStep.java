@@ -18,6 +18,8 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.shell.programrunner.DirectProgramRunner;
+import com.facebook.buck.shell.programrunner.ProgramRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
@@ -40,6 +42,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   private final ProjectFilesystem projectFilesystem;
   private final CommandString commandString;
+  private final ProgramRunner programRunner;
   private final LoadingCache<Platform, Path> scriptFilePath =
       CacheBuilder.newBuilder()
           .build(
@@ -58,10 +61,21 @@ public abstract class AbstractGenruleStep extends ShellStep {
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
       CommandString commandString,
-      Path workingDirectory) {
+      Path workingDirectory,
+      ProgramRunner programRunner) {
     super(Optional.of(buildTarget), workingDirectory);
     this.projectFilesystem = projectFilesystem;
     this.commandString = commandString;
+    this.programRunner = programRunner;
+  }
+
+  public AbstractGenruleStep(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      CommandString commandString,
+      Path workingDirectory) {
+    this(
+        projectFilesystem, buildTarget, commandString, workingDirectory, new DirectProgramRunner());
   }
 
   @Override
@@ -76,18 +90,33 @@ public abstract class AbstractGenruleStep extends ShellStep {
     String scriptFileContents = getScriptFileContents(context);
     projectFilesystem.writeContentsToPath(
         scriptFileContents + System.lineSeparator(), scriptFilePath);
+
+    programRunner.prepareForRun(projectFilesystem, scriptFilePath);
+
     return super.execute(context);
+  }
+
+  private ImmutableList<String> getCommandLine(ExecutionContext context) {
+    ExecutionArgsAndCommand executionArgsAndCommand =
+        getExecutionArgsAndCommand(context.getPlatform());
+    ImmutableList.Builder<String> commandLineBuilder = ImmutableList.builder();
+
+    Path scriptFilePath = this.scriptFilePath.getUnchecked(context.getPlatform());
+
+    return commandLineBuilder
+        .addAll(executionArgsAndCommand.shellType.executionArgs)
+        .add(scriptFilePath.toString())
+        .build();
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ExecutionArgsAndCommand executionArgsAndCommand =
-        getExecutionArgsAndCommand(context.getPlatform());
-    Path scriptFilePath = this.scriptFilePath.getUnchecked(context.getPlatform());
-    return ImmutableList.<String>builder()
-        .addAll(executionArgsAndCommand.shellType.executionArgs)
-        .add(scriptFilePath.toString())
-        .build();
+    return programRunner.enhanceCommandLine(getCommandLine(context));
+  }
+
+  @Override
+  protected ImmutableList<String> getShellCommandArgsForDescription(ExecutionContext context) {
+    return programRunner.enhanceCommandLineForDescription(getCommandLine(context));
   }
 
   @Override

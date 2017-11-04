@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
@@ -52,8 +53,9 @@ public class JsBundleGenruleDescription
     extends AbstractGenruleDescription<JsBundleGenruleDescriptionArg>
     implements Flavored, HasAppleBundleResourcesDescription<JsBundleGenruleDescriptionArg> {
 
-  public JsBundleGenruleDescription(ToolchainProvider toolchainProvider) {
-    super(toolchainProvider);
+  public JsBundleGenruleDescription(
+      ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(toolchainProvider, sandboxExecutionStrategy, false);
   }
 
   @Override
@@ -117,6 +119,8 @@ public class JsBundleGenruleDescription
         buildTarget,
         projectFilesystem,
         androidLegacyToolchain,
+        sandboxExecutionStrategy,
+        resolver,
         params.withExtraDeps(
             Suppliers.memoize(
                 () ->

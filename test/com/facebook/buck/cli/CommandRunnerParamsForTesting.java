@@ -45,6 +45,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
@@ -108,7 +109,8 @@ public class CommandRunnerParamsForTesting {
                 new DefaultProcessExecutor(new TestConsole()),
                 sdkEnvironment,
                 toolchainProvider,
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     return CommandRunnerParams.builder()
         .setConsole(console)

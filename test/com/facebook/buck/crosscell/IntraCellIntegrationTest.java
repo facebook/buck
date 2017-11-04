@@ -32,6 +32,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -71,7 +72,8 @@ public class IntraCellIntegrationTest {
                 new DefaultProcessExecutor(new TestConsole()),
                 cell.getSdkEnvironment(),
                 new TestToolchainProvider(),
-                BuckPluginManagerFactory.createPluginManager()));
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =

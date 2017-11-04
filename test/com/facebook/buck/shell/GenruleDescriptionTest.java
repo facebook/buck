@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
@@ -52,7 +54,11 @@ public class GenruleDescriptionTest {
 
   @Test
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
-    GenruleDescription genruleDescription = new GenruleDescription(new TestToolchainProvider());
+    GenruleDescription genruleDescription =
+        new GenruleDescription(
+            new TestToolchainProvider(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     Map<String, Object> instance =
         ImmutableMap.of(
