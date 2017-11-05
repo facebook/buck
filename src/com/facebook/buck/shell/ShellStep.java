@@ -97,6 +97,9 @@ public abstract class ShellStep implements Step {
     builder.setCommand(getShellCommand(context));
     Map<String, String> environment = new HashMap<>();
     setProcessEnvironment(context, environment, workingDirectory.toString());
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Environment: %s", Joiner.on(" ").withKeyValueSeparator('=').join(environment));
+    }
     builder.setEnvironment(ImmutableMap.copyOf(environment));
     builder.setDirectory(context.getBuildCellRootPath().resolve(workingDirectory));
 
