@@ -46,9 +46,7 @@ import javax.annotation.Nullable;
  * by i18n to map resource_id to fbt_hash with resource_name as the intermediary
  */
 public class GenerateStringResources extends AbstractBuildRule {
-  @SuppressWarnings("unused")
-  @AddToRuleKey
-  private final ImmutableList<SourcePath> filteredResources;
+  @AddToRuleKey private final ImmutableList<SourcePath> filteredResources;
 
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final SourcePathRuleFinder ruleFinder;

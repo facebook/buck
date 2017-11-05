@@ -189,9 +189,7 @@ public class JarBuildStepsFactory
   }
 
   public ImmutableList<Step> getPipelinedBuildStepsForAbiJar(
-      BuildContext context,
-      BuildableContext buildableContext,
-      @SuppressWarnings("unused") JavacPipelineState state) {
+      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
@@ -237,9 +235,7 @@ public class JarBuildStepsFactory
   }
 
   public ImmutableList<Step> getPipelinedBuildStepsForLibraryJar(
-      BuildContext context,
-      BuildableContext buildableContext,
-      @SuppressWarnings("unused") JavacPipelineState state) {
+      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(

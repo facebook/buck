@@ -24,9 +24,7 @@ public class AndroidClasspathProvider implements ExtraClasspathProvider {
 
   private final AndroidLegacyToolchain androidLegacyToolchain;
 
-  @AddToRuleKey
-  @SuppressWarnings("unused")
-  private final String classpath = "android";
+  @AddToRuleKey private final String classpath = "android";
 
   public AndroidClasspathProvider(AndroidLegacyToolchain androidLegacyToolchain) {
     this.androidLegacyToolchain = androidLegacyToolchain;

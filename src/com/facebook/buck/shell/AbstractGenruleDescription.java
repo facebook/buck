@@ -88,7 +88,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      @SuppressWarnings("unused") final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       T args,
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,

@@ -28,9 +28,7 @@ import java.util.Optional;
  * used as an input to BuildRules that read device state so that they can be run on every build.
  */
 public class InstallTrigger implements AddsToRuleKey {
-  @SuppressWarnings("unused")
-  @AddToRuleKey
-  private final SourcePath path;
+  @AddToRuleKey private final SourcePath path;
 
   private final ProjectFilesystem filesystem;
 

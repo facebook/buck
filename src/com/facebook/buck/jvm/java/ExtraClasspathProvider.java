@@ -29,9 +29,7 @@ public interface ExtraClasspathProvider extends AddsToRuleKey {
   ExtraClasspathProvider EMPTY = new EmptyExtraClasspathProvider();
 
   class EmptyExtraClasspathProvider implements ExtraClasspathProvider {
-    @AddToRuleKey
-    @SuppressWarnings("unused")
-    private final String classpath = "default";
+    @AddToRuleKey private final String classpath = "default";
 
     private EmptyExtraClasspathProvider() {}
 

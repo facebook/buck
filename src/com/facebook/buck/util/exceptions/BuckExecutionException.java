@@ -19,7 +19,6 @@ package com.facebook.buck.util.exceptions;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("unused")
 public class BuckExecutionException extends Exception
     implements ExceptionWithContext, WrapsException {
   private @Nullable final String context;

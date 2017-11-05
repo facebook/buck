@@ -87,7 +87,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey private final Optional<RedexOptions> redexOptions;
 
-  @SuppressWarnings("unused")
   @AddToRuleKey
   // Redex accesses some files that are indirectly referenced through the proguard command-line.txt.
   // TODO(cjhopman): Redex shouldn't do that, or this list should be constructed more carefully.

@@ -138,7 +138,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testMdpiFilterRemovesUnneededResources() {
     Set<Path> mdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
@@ -168,7 +167,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterRemovesUnneededResources() {
     Set<Path> lmdpi =
         ResourceFilters.filterByDensity(
@@ -199,7 +197,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterWithDownscale() {
     Set<Path> lmdpi =
         ResourceFilters.filterByDensity(
@@ -230,7 +227,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testHdpiFilterRemovesUnneededResources() {
     Set<Path> hdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.HDPI), false);
@@ -260,7 +256,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testXhdpiFilterRemovesUnneededResources() {
     Set<Path> xhdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.XHDPI), false);
@@ -290,7 +285,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testXxhdpiFilterRemovesUnneededResources() {
     Set<Path> xxhdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.XXHDPI), false);

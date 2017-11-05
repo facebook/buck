@@ -59,7 +59,6 @@ public class BuckCommand extends AbstractContainerCommand {
   Command subcommand;
 
   // --version is handled in python, but leave it here for --help
-  @SuppressWarnings("unused")
   @Option(
     name = "--version",
     aliases = {"-V"},

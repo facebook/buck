@@ -47,7 +47,6 @@ class DexFilesInfo implements AddsToRuleKey {
     this.proguardTextFilesPath = proguardTextFilesPath;
   }
 
-  @SuppressWarnings("unused")
   DexFilesInfo(
       SourcePath primaryDexPath,
       DexSecondaryDexDirView secondaryDexDirs,

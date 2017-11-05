@@ -913,9 +913,7 @@ class NativeLibraryMergeEnhancer {
   private static class SymbolLocalizingPostprocessor implements LinkOutputPostprocessor {
     @AddToRuleKey private final ImmutableSortedSet<String> symbolsToLocalize;
 
-    @SuppressWarnings("unused")
-    @AddToRuleKey
-    private final String postprocessorType = "localize-dynamic-symbols";
+    @AddToRuleKey private final String postprocessorType = "localize-dynamic-symbols";
 
     SymbolLocalizingPostprocessor(ImmutableSortedSet<String> symbolsToLocalize) {
       this.symbolsToLocalize = symbolsToLocalize;
