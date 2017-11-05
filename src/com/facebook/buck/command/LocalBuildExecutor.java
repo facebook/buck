@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
+import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngineResult;
@@ -43,6 +44,7 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
@@ -111,15 +113,22 @@ public class LocalBuildExecutor implements BuildExecutor {
       Iterable<String> targetToBuildStrings, Optional<Path> pathToBuildReport)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!isShutdown);
-    return build.executeAndPrintFailuresToEventBus(
-        Iterables.transform(
-            targetToBuildStrings,
-            targetName ->
-                BuildTargetParser.fullyQualifiedNameToBuildTarget(
-                    args.getRootCell().getCellPathResolver(), targetName)),
-        args.getBuckEventBus(),
-        args.getConsole(),
-        pathToBuildReport);
+    try {
+      return build.executeAndPrintFailuresToEventBus(
+          Iterables.transform(
+              targetToBuildStrings,
+              targetName ->
+                  BuildTargetParser.fullyQualifiedNameToBuildTarget(
+                      args.getRootCell().getCellPathResolver(), targetName)),
+          args.getBuckEventBus(),
+          args.getConsole(),
+          pathToBuildReport);
+    } catch (BuildTargetParseException e) {
+      throw new HumanReadableException(
+          e.getMessage()
+              + "\n"
+              + "Please check whether one of the targets passed as parameter has an empty or invalid name.");
+    }
   }
 
   @Override
