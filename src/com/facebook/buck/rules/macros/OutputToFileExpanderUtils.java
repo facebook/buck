@@ -37,6 +37,10 @@ public class OutputToFileExpanderUtils {
     // Utility class only
   }
 
+  public static Path getMacroPath(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
+    return BuildTargets.getScratchPath(projectFilesystem, buildTarget, "%s__macros");
+  }
+
   public static MacroReplacer wrapReplacerWithFileOutput(
       MacroReplacer replacer, BuildTarget target, BuildRuleResolver resolver) {
     return input -> {
@@ -59,7 +63,7 @@ public class OutputToFileExpanderUtils {
   private static Path createTempFile(
       ProjectFilesystem filesystem, BuildTarget target, MacroMatchResult matchResult)
       throws IOException {
-    Path directory = BuildTargets.getScratchPath(filesystem, target, "%s/tmp");
+    Path directory = getMacroPath(filesystem, target);
     filesystem.mkdirs(directory);
 
     // "prefix" should give a stable name, so that the same delegate with the same input can output

@@ -48,6 +48,13 @@ genrule(
 )
 
 genrule(
+    name = "echo_with_deps_to_file",
+    out = "out",
+    cmd = "cp `echo $(@query_targets \"deps(:app)\") | cut -c 2-` $OUT",
+    enable_sandbox = True,
+)
+
+genrule(
     name = "echo_with_deps",
     out = "out",
     cmd = "echo $(query_targets \"deps(:app)\") > $OUT",

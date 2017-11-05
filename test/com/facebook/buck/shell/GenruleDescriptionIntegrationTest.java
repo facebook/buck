@@ -86,6 +86,19 @@ public class GenruleDescriptionIntegrationTest {
   }
 
   @Test
+  public void depsFromDepsQueryToFile() throws Exception {
+    expectGenruleOutput(
+        ":echo_with_deps_to_file",
+        ImmutableList.of(
+            "//:app",
+            "//:lib_a",
+            "//:lib_b",
+            "//:lib_d",
+            "//annotations:proc",
+            "//annotations:proc-lib"));
+  }
+
+  @Test
   public void depsFromDepsQuery() throws Exception {
     expectGenruleOutput(
         ":echo_with_deps",
