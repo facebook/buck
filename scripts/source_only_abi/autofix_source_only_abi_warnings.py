@@ -56,6 +56,8 @@ java.abi_generation_mode=migrating_to_source_only."""
 def migrate(log_file):
     for message in javac_messages(log_file):
         for pattern, plugin in migration_plugins:
+            if len(message.details) == 0:
+                continue
             match = pattern.search(message.details[0])
             if match:
                 plugin(message)
