@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.Lists;
 import java.util.Collections;
 import org.hamcrest.Matcher;
@@ -69,12 +70,13 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void shouldSetTheAnnotationSource() {
+  public void shouldSetTheAnnotationSource() throws InterruptedException {
     AnnotationProcessingParams params =
         AnnotationProcessingParams.builder()
             .setLegacySafeAnnotationProcessors(Collections.emptySet())
             .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
             .setProcessOnly(true)
+            .setProjectFilesystem(FakeProjectFilesystem.createJavaOnlyFilesystem())
             .build();
 
     JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();
@@ -83,12 +85,13 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void shouldAddAllAddedAnnotationProcessors() {
+  public void shouldAddAllAddedAnnotationProcessors() throws InterruptedException {
     AnnotationProcessingParams params =
         AnnotationProcessingParams.builder()
             .setLegacyAnnotationProcessorDeps(Collections.emptySet())
             .setLegacyAnnotationProcessorNames(Lists.newArrayList("myproc", "theirproc"))
             .setProcessOnly(true)
+            .setProjectFilesystem(FakeProjectFilesystem.createJavaOnlyFilesystem())
             .build();
 
     JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();
