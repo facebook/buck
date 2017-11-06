@@ -45,6 +45,7 @@ public class AgentMain {
 
   private AgentMain() {}
 
+  public static final int LINE_LENGTH_LIMIT = 4096;
   public static final int CONNECT_TIMEOUT_MS = 5000;
   public static final int RECEIVE_TIMEOUT_MS = 20000;
   public static final int TOTAL_RECEIVE_TIMEOUT_MS_PER_MB = 2000;
@@ -68,6 +69,8 @@ public class AgentMain {
         doMkdirP(userArgs);
       } else if (command.equals("receive-file")) {
         doReceiveFile(userArgs);
+      } else if (command.equals("multi-receive-file")) {
+        doMultiReceiveFile(userArgs);
       } else {
         throw new IllegalArgumentException("Unknown command: " + command);
       }
@@ -251,5 +254,78 @@ public class AgentMain {
     if (!success) {
       throw new RuntimeException("Failed to rename temp file.");
     }
+  }
+
+  private static void doMultiReceiveFile(List<String> userArgs) throws IOException {
+    if (userArgs.size() != 3) {
+      throw new IllegalArgumentException("usage: multi-receive-file IP PORT NONCE");
+    }
+
+    String ip = userArgs.get(0);
+    int port = Integer.parseInt(userArgs.get(1));
+    int nonce = Integer.parseInt(userArgs.get(2));
+
+    // Send a byte to trigger the installer to accept our connection.
+    System.out.println();
+    System.out.flush();
+
+    Socket clientSocket = null;
+    try {
+      clientSocket = new Socket(ip, port);
+      clientSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
+
+      byte[] nonceBuffer =
+          new byte[] {
+            (byte) ((nonce >> 24) & 0xFF),
+            (byte) ((nonce >> 16) & 0xFF),
+            (byte) ((nonce >> 8) & 0xFF),
+            (byte) (nonce & 0xFF),
+          };
+      clientSocket.getOutputStream().write(nonceBuffer);
+
+      BufferedInputStream stream = new BufferedInputStream(clientSocket.getInputStream());
+
+      while (true) {
+        String header = readLine(stream);
+        int space = header.indexOf(' ');
+        if (space == -1) {
+          throw new IllegalStateException("No space in metadata line.");
+        }
+        int size = Integer.parseInt(header.substring(0, space));
+        String fileName = header.substring(space + 1, header.length());
+
+        if (size == 0 && fileName.equals("--continue")) {
+          continue;
+        }
+        if (size == 0 && fileName.equals("--complete")) {
+          break;
+        }
+
+        doRawReceiveFile(new File(fileName), size, stream);
+      }
+    } finally {
+      if (clientSocket != null) {
+        clientSocket.close();
+      }
+    }
+  }
+
+  private static String readLine(InputStream stream) throws IOException {
+    byte[] bytes = new byte[LINE_LENGTH_LIMIT];
+    int size = 0;
+    while (true) {
+      if (size >= bytes.length) {
+        throw new IllegalStateException("Line length too long.");
+      }
+      int nextByte = stream.read();
+      if (nextByte == -1) {
+        throw new IllegalStateException("Got EOF in middle of line.");
+      }
+      if (nextByte == '\n') {
+        break;
+      }
+      bytes[size++] = (byte) nextByte;
+    }
+    return new String(bytes, 0, size);
   }
 }

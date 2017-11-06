@@ -31,7 +31,9 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -41,10 +43,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
+import com.google.common.primitives.Ints;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +63,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 @VisibleForTesting
 public class RealAndroidDevice implements AndroidDevice {
@@ -631,12 +636,36 @@ public class RealAndroidDevice implements AndroidDevice {
     };
   }
 
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractRapidInstallMode {
+    abstract String getIpAddress();
+  }
+
+  private Optional<RapidInstallMode> getRapidInstallMode() {
+    if (!agent.get().supportsRapidInstall()) {
+      return Optional.empty();
+    }
+    if (device.isEmulator() && rapidInstallTypes.contains("emu")) {
+      return Optional.of(RapidInstallMode.builder().setIpAddress("10.0.2.2").build()); // NOPMD
+    } else if (isLocalTransport() && rapidInstallTypes.contains("tcp")) {
+      String hostIpAddr = device.getSerialNumber().replaceAll("\\.[0-9:]+$", ".1");
+      return Optional.of(RapidInstallMode.builder().setIpAddress(hostIpAddr).build());
+    }
+    return Optional.empty();
+  }
+
   @Override
   public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
-    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
-      try (SimplePerfEvent.Scope ignored2 =
-          SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-        installFile(entry.getKey(), entry.getValue());
+    Optional<RapidInstallMode> rapidInstallMode = getRapidInstallMode();
+    if (rapidInstallMode.isPresent()) {
+      doRapidInstall(rapidInstallMode.get(), filesType, installPaths);
+    } else {
+      for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+        try (SimplePerfEvent.Scope ignored2 =
+            SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+          installFile(entry.getKey(), entry.getValue());
+        }
       }
     }
   }
@@ -694,6 +723,63 @@ public class RealAndroidDevice implements AndroidDevice {
     }
 
     chmod644(targetDevicePath);
+  }
+
+  void doRapidInstall(
+      RapidInstallMode rapidInstallMode, String filesType, Map<Path, Path> installPaths)
+      throws Exception {
+    Exception failure = null;
+    String command;
+    MultiFileInstallReceiver receiver;
+
+    try (ServerSocket serverSocket = new ServerSocket(0)) {
+      int port = serverSocket.getLocalPort();
+      int nonce = (int) System.currentTimeMillis() & 0x7FFFFFFF;
+      receiver = new MultiFileInstallReceiver(serverSocket, nonce, filesType, installPaths);
+      command =
+          "umask 022 && "
+              + agent.get().getAgentCommand()
+              + "multi-receive-file "
+              + rapidInstallMode.getIpAddress()
+              + " "
+              + port
+              + " "
+              + nonce
+              + ECHO_COMMAND_SUFFIX;
+      LOG.debug("Executing %s", command);
+
+      // If we fail to execute the command, stash the exception.  My experience during development
+      // has been that the exception from checkReceiverOutput is more actionable.
+      try {
+        device.executeShellCommand(command, receiver);
+      } catch (Exception e) {
+        failure = e;
+      }
+    }
+
+    if (receiver.getError().isPresent()) {
+      Exception prev = failure;
+      failure = receiver.getError().get();
+      if (prev != null) {
+        failure.addSuppressed(prev);
+      }
+    }
+
+    try {
+      checkReceiverOutput(command, receiver);
+    } catch (Exception e) {
+      if (failure != null) {
+        e.addSuppressed(failure);
+      }
+      failure = e;
+    }
+    if (failure != null) {
+      throw failure;
+    }
+
+    for (Path targetFileName : installPaths.keySet()) {
+      chmod644(targetFileName);
+    }
   }
 
   private void chmod644(Path targetDevicePath)
@@ -865,6 +951,106 @@ public class RealAndroidDevice implements AndroidDevice {
     }
 
     public Optional<Exception> getError() {
+      return error;
+    }
+  }
+
+  private class MultiFileInstallReceiver extends CollectingOutputReceiver {
+    /*
+    The multi-file install protocol:
+
+    Buck will invoke the agent with an IP, port, and nonce (31-bit).
+    The agent will write a byte to stdout to trigger the ddmlib output receiver.
+    The agent will connect to the IP and port (where Buck or a proxy will already be listening).
+    The agent will write the nonce to the connection as a 4-byte big endian value.
+    Buck will transmit a sequence of files to the agent.
+    Each file is preceded by a header.
+    The header starts with file size as ASCII text followed by a space.
+    Next is the name of the file that the agent should write to, followed by a newline.
+    The full file contents follows the newline immediately, with no terminator.
+    The next file header begins immediately.
+    The agent recognizes two special file names, which must always have size 0.
+    "--continue" indicates that no file should be written.
+    This might be used in the future to avoid read timeouts.
+    "--complete" indicates that the transmission is complete, and the agent should exit.
+
+    Note that the nonce is not meant for security purposes.
+    It will be used to avoid confusing streams when tunnelling the connection over USB.
+     */
+
+    private static final int CONNECT_TIMEOUT_MS = 5000;
+    private static final int READ_TIMEOUT_MS = 5000;
+
+    private final ServerSocket serverSocket;
+    private final int nonce;
+    private String filesType;
+    private final Map<Path, Path> installPaths;
+    private Optional<Exception> error = Optional.empty();
+    private boolean startedSend = false;
+
+    MultiFileInstallReceiver(
+        ServerSocket serverSocket, int nonce, String filesType, Map<Path, Path> installPaths) {
+      this.serverSocket = serverSocket;
+      this.nonce = nonce;
+      this.filesType = filesType;
+      this.installPaths = installPaths;
+    }
+
+    @Override
+    public void addOutput(byte[] data, int offset, int length) {
+      super.addOutput(data, offset, length);
+      // On exceptions, we want to still collect the full output of the command (so we can get its
+      // error code and possibly error message), so we just record that there was an error and only
+      // send further output to the base receiver.
+      if (error.isPresent()) {
+        return;
+      }
+
+      // The receiver will send us a byte or so to indicate its intent to connect.
+      // Only try to listen for it once.
+      if (!startedSend) {
+        startedSend = true;
+        try {
+          sendFiles();
+        } catch (IOException e) {
+          error = Optional.of(e);
+        }
+      }
+    }
+
+    private void sendFiles() throws IOException {
+      serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
+      try (Socket connectionSocket = serverSocket.accept()) {
+        connectionSocket.setSoTimeout(READ_TIMEOUT_MS);
+        byte[] readBuffer = new byte[4];
+        int got = connectionSocket.getInputStream().read(readBuffer);
+        if (got != readBuffer.length) {
+          throw new RuntimeException("Short read from agent.");
+        }
+        int gotNonce = Ints.fromByteArray(readBuffer);
+        if (gotNonce != nonce) {
+          throw new RuntimeException(
+              String.format("Got wrong nonce from agent.  Expected %d, got %d.", nonce, gotNonce));
+        }
+
+        // TODO(dreiss): Use write timeouts.
+        OutputStream stream = connectionSocket.getOutputStream();
+        for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+          Path destination = entry.getKey();
+          Path source = entry.getValue();
+          try (SimplePerfEvent.Scope ignored =
+              SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+            // Slurp the file into RAM to make sure we know how many bytes we are getting.
+            byte[] bytes = Files.readAllBytes(source);
+            stream.write((bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8));
+            stream.write(bytes);
+          }
+        }
+        stream.write("0 --complete\n".getBytes(Charsets.UTF_8));
+      }
+    }
+
+    Optional<Exception> getError() {
       return error;
     }
   }
