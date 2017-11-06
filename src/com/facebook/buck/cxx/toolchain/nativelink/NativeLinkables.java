@@ -271,39 +271,16 @@ public class NativeLinkables {
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getTransitiveNativeLinkables(cxxPlatform, roots.values());
 
-    Map<String, SourcePath> libraries = new LinkedHashMap<>();
-    for (Map.Entry<BuildTarget, NativeLinkable> ent : nativeLinkables.entrySet()) {
-      BuildTarget target = ent.getKey();
-      NativeLinkable nativeLinkable = ent.getValue();
-
-      // Only include shared libraries from the node if it's not statically linked or if it's a root
-      // node.
-      NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-      if (linkage != NativeLinkable.Linkage.STATIC
-          || (alwaysIncludeRoots && roots.containsKey(target))) {
-        ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(cxxPlatform);
-        for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
-          SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
-          if (prev != null && !prev.equals(lib.getValue())) {
-            String libTargetString;
-            String prevTargetString;
-            if ((prev instanceof BuildTargetSourcePath)
-                && (lib.getValue() instanceof BuildTargetSourcePath)) {
-              libTargetString = ((BuildTargetSourcePath) lib.getValue()).getTarget().toString();
-              prevTargetString = ((BuildTargetSourcePath) prev).getTarget().toString();
-            } else {
-              libTargetString = lib.getValue().toString();
-              prevTargetString = prev.toString();
-            }
-            throw new HumanReadableException(
-                "Two libraries in the dependencies have the same output filename: %s\n"
-                    + "Those libraries are %s and %s",
-                lib.getKey(), libTargetString, prevTargetString);
-          }
-        }
-      }
-    }
-    return ImmutableSortedMap.copyOf(libraries);
+    SharedLibrariesBuilder builder = new SharedLibrariesBuilder();
+    nativeLinkables
+        .entrySet()
+        .stream()
+        .filter(
+            e ->
+                e.getValue().getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC
+                    || (alwaysIncludeRoots && roots.containsKey(e.getKey())))
+        .forEach(e -> builder.add(cxxPlatform, e.getValue()));
+    return builder.build();
   }
 
   /** @return the {@link NativeLinkTarget} that can be extracted from {@code object}, if any. */
@@ -316,5 +293,43 @@ public class NativeLinkables {
       return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform);
     }
     return Optional.empty();
+  }
+
+  /**
+   * Builds a map of shared library names to paths from {@link NativeLinkable}s, throwing a useful
+   * error on duplicates.
+   */
+  public static class SharedLibrariesBuilder {
+
+    private final Map<String, SourcePath> libraries = new LinkedHashMap<>();
+
+    /** Adds libraries from the given {@link NativeLinkable}. */
+    public SharedLibrariesBuilder add(CxxPlatform cxxPlatform, NativeLinkable linkable) {
+      ImmutableMap<String, SourcePath> libs = linkable.getSharedLibraries(cxxPlatform);
+      for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
+        SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
+        if (prev != null && !prev.equals(lib.getValue())) {
+          String libTargetString;
+          String prevTargetString;
+          if ((prev instanceof BuildTargetSourcePath)
+              && (lib.getValue() instanceof BuildTargetSourcePath)) {
+            libTargetString = ((BuildTargetSourcePath) lib.getValue()).getTarget().toString();
+            prevTargetString = ((BuildTargetSourcePath) prev).getTarget().toString();
+          } else {
+            libTargetString = lib.getValue().toString();
+            prevTargetString = prev.toString();
+          }
+          throw new HumanReadableException(
+              "Two libraries in the dependencies have the same output filename: %s\n"
+                  + "Those libraries are %s and %s",
+              lib.getKey(), libTargetString, prevTargetString);
+        }
+      }
+      return this;
+    }
+
+    public ImmutableSortedMap<String, SourcePath> build() {
+      return ImmutableSortedMap.copyOf(libraries);
+    }
   }
 }
