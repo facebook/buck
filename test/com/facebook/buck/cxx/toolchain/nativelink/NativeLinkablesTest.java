@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -231,7 +232,7 @@ public class NativeLinkablesTest {
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a), r -> false, r -> false, true);
+            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a), r -> Optional.empty(), true);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
@@ -302,7 +303,7 @@ public class NativeLinkablesTest {
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba2.so")));
     NativeLinkables.getTransitiveSharedLibraries(
-        CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), n -> false, n -> false, true);
+        CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), n -> Optional.empty(), true);
   }
 
   @Test
@@ -326,11 +327,7 @@ public class NativeLinkablesTest {
             ImmutableMap.of("libc.so", path));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a, b),
-            n -> false,
-            n -> false,
-            true);
+            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a, b), n -> Optional.empty(), true);
     assertThat(
         sharedLibs, Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
   }
@@ -392,11 +389,7 @@ public class NativeLinkablesTest {
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableList.of(a),
-            NativeLinkable.class::isInstance,
-            n -> false,
-            true);
+            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(a), r -> Optional.empty(), true);
     assertThat(
         sharedLibs,
         Matchers.equalTo(

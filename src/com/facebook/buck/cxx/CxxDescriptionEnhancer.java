@@ -86,7 +86,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
@@ -286,7 +286,7 @@ public class CxxDescriptionEnhancer {
       PatternMatchedCollection<SourceList> platformHeaders) {
     ImmutableMap.Builder<String, SourcePath> parsed = ImmutableMap.builder();
 
-    java.util.function.Function<SourcePath, SourcePath> fixup =
+    Function<SourcePath, SourcePath> fixup =
         path -> {
           return CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, path);
         };
@@ -1169,8 +1169,7 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem filesystem,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
-      Predicate<Object> traverse,
-      Predicate<Object> skip) {
+      Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>> passthrough) {
 
     BuildTarget symlinkTreeTarget =
         createSharedLibrarySymlinkTreeTarget(baseBuildTarget, cxxPlatform.getFlavor());
@@ -1178,23 +1177,13 @@ public class CxxDescriptionEnhancer {
         getSharedLibrarySymlinkTreePath(filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkables.getTransitiveSharedLibraries(cxxPlatform, deps, traverse, skip, false);
+        NativeLinkables.getTransitiveSharedLibraries(cxxPlatform, deps, passthrough, false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     return new SymlinkTree(symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
-  }
-
-  public static SymlinkTree createSharedLibrarySymlinkTree(
-      BuildTarget baseBuildTarget,
-      ProjectFilesystem filesystem,
-      CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> deps,
-      Predicate<Object> traverse) {
-    return createSharedLibrarySymlinkTree(
-        baseBuildTarget, filesystem, cxxPlatform, deps, traverse, x -> false);
   }
 
   public static SymlinkTree requireSharedLibrarySymlinkTree(
@@ -1208,7 +1197,7 @@ public class CxxDescriptionEnhancer {
             createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
             ignored ->
                 createSharedLibrarySymlinkTree(
-                    buildTarget, filesystem, cxxPlatform, deps, n -> false));
+                    buildTarget, filesystem, cxxPlatform, deps, n -> Optional.empty()));
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {

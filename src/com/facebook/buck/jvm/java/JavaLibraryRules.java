@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /** Common utilities for working with {@link JavaLibrary} objects. */
@@ -93,9 +92,14 @@ public class JavaLibraryRules {
     // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
     // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
     // against ABI rules or full rules
-    Predicate<Object> traverse = r -> r instanceof JavaLibrary || r instanceof CalculateAbi;
     return NativeLinkables.getTransitiveSharedLibraries(
-        cxxPlatform, deps, traverse, r -> false, true);
+        cxxPlatform,
+        deps,
+        r ->
+            r instanceof JavaLibrary || r instanceof CalculateAbi
+                ? Optional.of(r.getBuildDeps())
+                : Optional.empty(),
+        true);
   }
 
   public static ImmutableSortedSet<BuildRule> getAbiRules(

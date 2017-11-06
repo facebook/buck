@@ -181,8 +181,7 @@ public class RustCompileUtils {
                   cxxPlatform,
                   ruledeps,
                   depType,
-                  RustLinkable.class::isInstance,
-                  RustLinkable.class::isInstance)
+                  r -> r instanceof RustLinkable ? Optional.of(r.getBuildDeps()) : Optional.empty())
               .getArgs();
 
       // Add necessary rpaths if we're dynamically linking with things
@@ -350,8 +349,10 @@ public class RustCompileUtils {
                   projectFilesystem,
                   cxxPlatform,
                   params.getBuildDeps(),
-                  RustLinkable.class::isInstance,
-                  RustLinkable.class::isInstance));
+                  r ->
+                      r instanceof RustLinkable
+                          ? Optional.of(r.getBuildDeps())
+                          : Optional.empty()));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput

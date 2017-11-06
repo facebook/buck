@@ -22,7 +22,6 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
@@ -36,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class NativeLinkables {
@@ -43,57 +43,44 @@ public class NativeLinkables {
   private NativeLinkables() {}
 
   /**
-   * Find all {@link NativeLinkable} transitive roots reachable from the given {@link BuildRule}s.
+   * Find {@link NativeLinkable} nodes transitively reachable from the given roots.
    *
-   * @param from the starting set of {@link BuildRule}s to begin the search from.
-   * @param traverse a {@link Predicate} determining acceptable dependencies to traverse when
+   * @param from the starting set of roots to begin the search from.
+   * @param passthrough a {@link Function} determining acceptable dependencies to traverse when
    *     searching for {@link NativeLinkable}s.
-   * @param skip Skip this {@link BuildRule} even if it is an instance of {@link NativeLinkable}
    * @return all the roots found as a map from {@link BuildTarget} to {@link NativeLinkable}.
    */
-  private static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
-      Iterable<? extends BuildRule> from,
-      Predicate<? super BuildRule> traverse,
-      Predicate<? super BuildRule> skip) {
-
+  public static <T> ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
+      Iterable<? extends T> from,
+      Function<? super T, Optional<Iterable<? extends T>>> passthrough) {
     ImmutableMap.Builder<BuildTarget, NativeLinkable> nativeLinkables = ImmutableMap.builder();
-    AbstractBreadthFirstTraversal<BuildRule> visitor =
-        new AbstractBreadthFirstTraversal<BuildRule>(from) {
+
+    AbstractBreadthFirstTraversal<T> visitor =
+        new AbstractBreadthFirstTraversal<T>(from) {
           @Override
-          public Iterable<BuildRule> visit(BuildRule rule) {
+          public Iterable<? extends T> visit(T rule) {
+
+            // If this is a passthrough rule, just continue on to its deps.
+            Optional<Iterable<? extends T>> deps = passthrough.apply(rule);
+            if (deps.isPresent()) {
+              return deps.get();
+            }
 
             // If this is `NativeLinkable`, we've found a root so record the rule and terminate
             // the search.
-            if (rule instanceof NativeLinkable && !skip.test(rule)) {
+            if (rule instanceof NativeLinkable) {
               NativeLinkable nativeLinkable = (NativeLinkable) rule;
               nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
               return ImmutableSet.of();
             }
 
-            // Otherwise, make sure this rule is marked as traversable before following it's deps.
-            if (traverse.test(rule)) {
-              return rule.getBuildDeps();
-            }
-
+            // Otherwise, terminate the search.
             return ImmutableSet.of();
           }
         };
     visitor.start();
 
     return nativeLinkables.build();
-  }
-
-  /**
-   * Find all {@link NativeLinkable} transitive roots reachable from the given {@link BuildRule}s.
-   *
-   * @param from the starting set of {@link BuildRule}s to begin the search from.
-   * @param traverse a {@link Predicate} determining acceptable dependencies to traverse when
-   *     searching for {@link NativeLinkable}s.
-   * @return all the roots found as a map from {@link BuildTarget} to {@link NativeLinkable}.
-   */
-  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkableRoots(
-      Iterable<? extends BuildRule> from, Predicate<? super BuildRule> traverse) {
-    return getNativeLinkableRoots(from, traverse, x -> false);
   }
 
   /**
@@ -215,16 +202,14 @@ public class NativeLinkables {
    * unbroken dependency chains of {@link NativeLinkable} objects found via the passed in {@link
    * com.facebook.buck.rules.BuildRule} roots.
    */
-  public static NativeLinkableInput getTransitiveNativeLinkableInput(
+  public static <T> NativeLinkableInput getTransitiveNativeLinkableInput(
       CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs,
+      Iterable<? extends T> inputs,
       Linker.LinkableDepType depType,
-      Predicate<? super BuildRule> traverse,
-      Predicate<? super BuildRule> skip) {
+      Function<? super T, Optional<Iterable<? extends T>>> passthrough) {
 
     // Get the topologically sorted native linkables.
-    ImmutableMap<BuildTarget, NativeLinkable> roots =
-        getNativeLinkableRoots(inputs, traverse, skip);
+    ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, passthrough);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getNativeLinkables(cxxPlatform, roots.values(), depType);
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
@@ -268,19 +253,6 @@ public class NativeLinkables {
   }
 
   /**
-   * Collect up and merge all {@link NativeLinkableInput} objects from transitively traversing all
-   * unbroken dependency chains of {@link NativeLinkable} objects found via the passed in {@link
-   * com.facebook.buck.rules.BuildRule} roots.
-   */
-  public static NativeLinkableInput getTransitiveNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs,
-      Linker.LinkableDepType depType,
-      Predicate<? super BuildRule> traverse) {
-    return getTransitiveNativeLinkableInput(cxxPlatform, inputs, depType, traverse, x -> false);
-  }
-
-  /**
    * Collect all the shared libraries generated by {@link NativeLinkable}s found by transitively
    * traversing all unbroken dependency chains of {@link NativeLinkable} objects found via the
    * passed in {@link com.facebook.buck.rules.BuildRule} roots.
@@ -289,15 +261,13 @@ public class NativeLinkables {
    *     static linkage.
    * @return a mapping of library name to the library {@link SourcePath}.
    */
-  public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
+  public static <T> ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
       CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs,
-      Predicate<? super BuildRule> traverse,
-      Predicate<? super BuildRule> skip,
+      Iterable<? extends T> inputs,
+      Function<? super T, Optional<Iterable<? extends T>>> passthrough,
       boolean alwaysIncludeRoots) {
 
-    ImmutableMap<BuildTarget, NativeLinkable> roots =
-        getNativeLinkableRoots(inputs, traverse, skip);
+    ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, passthrough);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getTransitiveNativeLinkables(cxxPlatform, roots.values());
 

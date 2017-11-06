@@ -473,7 +473,8 @@ public class AppleTestDescription
 
     ImmutableMap<BuildTarget, NativeLinkable> roots =
         NativeLinkables.getNativeLinkableRoots(
-            testHostApp.getBinary().get().getBuildDeps(), x -> true);
+            testHostApp.getBinary().get().getBuildDeps(),
+            r -> !(r instanceof NativeLinkable) ? Optional.of(r.getBuildDeps()) : Optional.empty());
 
     // Union the blacklist of all the platforms. This should give a superset for each particular
     // platform, which should be acceptable as items in the blacklist thare are unmatched are simply

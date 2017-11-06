@@ -299,7 +299,7 @@ public class JavaTestDescription
           projectFilesystem,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
-          JavaLibrary.class::isInstance);
+          r -> r instanceof JavaLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
     }
   }
 }

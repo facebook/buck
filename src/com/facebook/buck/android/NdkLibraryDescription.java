@@ -202,7 +202,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
               cxxPlatform,
               params.getBuildDeps(),
               Linker.LinkableDepType.SHARED,
-              NdkLibrary.class::isInstance);
+              r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
 
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.

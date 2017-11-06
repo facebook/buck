@@ -496,7 +496,7 @@ public class CxxLinkableEnhancerTest {
             cxxPlatform,
             ImmutableList.of(top),
             Linker.LinkableDepType.STATIC,
-            NativeLinkable.class::isInstance);
+            r -> Optional.empty());
     assertThat(Arg.stringify(bottomInput.getArgs(), pathResolver), hasItem(sentinel));
     assertThat(Arg.stringify(totalInput.getArgs(), pathResolver), not(hasItem(sentinel)));
   }

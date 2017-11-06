@@ -186,7 +186,10 @@ public class OcamlRuleBuilder {
   private static NativeLinkableInput getCLinkableInput(
       CxxPlatform cxxPlatform, Iterable<BuildRule> deps) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
-        cxxPlatform, deps, Linker.LinkableDepType.STATIC, OcamlLibrary.class::isInstance);
+        cxxPlatform,
+        deps,
+        Linker.LinkableDepType.STATIC,
+        r -> r instanceof OcamlLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
   }
 
   public static BuildRule createBulkBuildRule(
