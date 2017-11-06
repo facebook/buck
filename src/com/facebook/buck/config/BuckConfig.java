@@ -470,6 +470,10 @@ public class BuckConfig implements ConfigPathGetter {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").orElse("true"));
   }
 
+  public ImmutableList<String> getAdbRapidInstallTypes() {
+    return getListWithoutComments("adb", "rapid_install_types_beta");
+  }
+
   public boolean getMultiInstallMode() {
     return getBooleanValue("adb", "multi_install_mode", false);
   }

@@ -81,6 +81,7 @@ public class RealAndroidDevice implements AndroidDevice {
   private final BuckEventBus eventBus;
   private final IDevice device;
   private final Console console;
+  private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ExopackageAgent> agent;
   private final int agentPort;
 
@@ -89,10 +90,12 @@ public class RealAndroidDevice implements AndroidDevice {
       IDevice device,
       Console console,
       @Nullable Path agentApkPath,
-      int agentPort) {
+      int agentPort,
+      ImmutableList<String> rapidInstallTypes) {
     this.eventBus = eventBus;
     this.device = device;
     this.console = console;
+    this.rapidInstallTypes = rapidInstallTypes;
     this.agent =
         Suppliers.memoize(
             () ->
@@ -105,7 +108,7 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(buckEventBus, device, console, null, -1);
+    this(buckEventBus, device, console, null, -1, ImmutableList.of());
   }
 
   /**

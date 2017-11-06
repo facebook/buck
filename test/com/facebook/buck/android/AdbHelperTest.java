@@ -85,7 +85,8 @@ public class AdbHelperTest {
         targetDeviceOptions,
         TestAndroidLegacyToolchainFactory.create(),
         () -> executionContext,
-        true);
+        true,
+        ImmutableList.of());
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -407,7 +408,8 @@ public class AdbHelperTest {
         new TargetDeviceOptions(),
         TestAndroidLegacyToolchainFactory.create(),
         () -> testContext,
-        true) {
+        true,
+        ImmutableList.of()) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
         return deviceList

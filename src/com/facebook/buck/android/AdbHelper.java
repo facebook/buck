@@ -96,6 +96,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
+  private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
 
   private static Optional<Supplier<ImmutableList<AndroidDevice>>> devicesSupplierForTests =
@@ -106,12 +107,14 @@ public class AdbHelper implements AndroidDevicesHelper {
       TargetDeviceOptions deviceOptions,
       AndroidLegacyToolchain androidLegacyToolchain,
       Supplier<ExecutionContext> contextSupplier,
-      boolean restartAdbOnFailure) {
+      boolean restartAdbOnFailure,
+      ImmutableList<String> rapidInstallTypes) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
+    this.rapidInstallTypes = rapidInstallTypes;
     this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
   }
 
@@ -467,7 +470,8 @@ public class AdbHelper implements AndroidDevicesHelper {
         device,
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
-        nextAgentPort.incrementAndGet());
+        nextAgentPort.incrementAndGet(),
+        rapidInstallTypes);
   }
 
   private static boolean isAdbInitialized(AndroidDebugBridge adb) {

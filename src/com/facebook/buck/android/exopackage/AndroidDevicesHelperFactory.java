@@ -38,6 +38,7 @@ public class AndroidDevicesHelperFactory {
         targetDeviceOptions,
         androidLegacyToolchain,
         contextSupplier,
-        buckConfig.getRestartAdbOnFailure());
+        buckConfig.getRestartAdbOnFailure(),
+        buckConfig.getAdbRapidInstallTypes());
   }
 }
