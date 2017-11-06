@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
@@ -25,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class NativeLinkables {
 
@@ -83,23 +86,13 @@ public class NativeLinkables {
     return nativeLinkables.build();
   }
 
-  /**
-   * Extract from the dependency graph all the libraries which must be considered for linking.
-   *
-   * <p>Traversal proceeds depending on whether each dependency is to be statically or dynamically
-   * linked.
-   *
-   * @param linkStyle how dependencies should be linked, if their preferred_linkage is {@code
-   *     NativeLinkable.Linkage.ANY}.
-   */
-  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
-      CxxPlatform cxxPlatform,
-      Iterable<? extends NativeLinkable> inputs,
-      Linker.LinkableDepType linkStyle,
-      Predicate<? super NativeLinkable> traverse) {
+  /** @return the nodes found from traversing the given roots in topologically sorted order. */
+  public static ImmutableMap<BuildTarget, NativeLinkable> getTopoSortedNativeLinkables(
+      Iterable<? extends NativeLinkable> roots,
+      Function<? super NativeLinkable, Stream<? extends NativeLinkable>> depsFn) {
 
     Map<BuildTarget, NativeLinkable> nativeLinkables = new HashMap<>();
-    for (NativeLinkable nativeLinkable : inputs) {
+    for (NativeLinkable nativeLinkable : roots) {
       nativeLinkables.put(nativeLinkable.getBuildTarget(), nativeLinkable);
     }
 
@@ -111,41 +104,17 @@ public class NativeLinkables {
             NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
             graph.addNode(target);
 
-            // We always traverse a rule's exported native linkables.
-            Iterable<? extends NativeLinkable> nativeLinkableDeps =
-                nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform);
-
-            boolean shouldTraverse = true;
-            switch (nativeLinkable.getPreferredLinkage(cxxPlatform)) {
-              case ANY:
-                shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
-                break;
-              case SHARED:
-                shouldTraverse = false;
-                break;
-              case STATIC:
-                shouldTraverse = true;
-                break;
-            }
-
-            // If we're linking this dependency statically, we also need to traverse its deps.
-            if (shouldTraverse) {
-              nativeLinkableDeps =
-                  Iterables.concat(
-                      nativeLinkableDeps,
-                      nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform));
-            }
-
             // Process all the traversable deps.
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-            for (NativeLinkable dep : nativeLinkableDeps) {
-              if (traverse.test(dep)) {
-                BuildTarget depTarget = dep.getBuildTarget();
-                graph.addEdge(target, depTarget);
-                deps.add(depTarget);
-                nativeLinkables.put(depTarget, dep);
-              }
-            }
+            depsFn
+                .apply(nativeLinkable)
+                .forEach(
+                    dep -> {
+                      BuildTarget depTarget = dep.getBuildTarget();
+                      graph.addEdge(target, depTarget);
+                      deps.add(depTarget);
+                      nativeLinkables.put(depTarget, dep);
+                    });
             return deps.build();
           }
         };
@@ -160,6 +129,61 @@ public class NativeLinkables {
       result.put(target, nativeLinkables.get(target));
     }
     return result.build();
+  }
+
+  /**
+   * @return the first-order dependencies to consider when linking the given {@link NativeLinkable}.
+   */
+  private static Iterable<? extends NativeLinkable> getDepsForLink(
+      CxxPlatform cxxPlatform, NativeLinkable nativeLinkable, LinkableDepType linkStyle) {
+
+    // We always traverse a rule's exported native linkables.
+    Iterable<? extends NativeLinkable> nativeLinkableDeps =
+        nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform);
+
+    boolean shouldTraverse;
+    switch (nativeLinkable.getPreferredLinkage(cxxPlatform)) {
+      case ANY:
+        shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
+        break;
+      case SHARED:
+        shouldTraverse = false;
+        break;
+        // $CASES-OMITTED$
+      default:
+        shouldTraverse = true;
+        break;
+    }
+
+    // If we're linking this dependency statically, we also need to traverse its deps.
+    if (shouldTraverse) {
+      nativeLinkableDeps =
+          Iterables.concat(
+              nativeLinkableDeps, nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform));
+    }
+
+    return nativeLinkableDeps;
+  }
+
+  /**
+   * Extract from the dependency graph all the libraries which must be considered for linking.
+   *
+   * <p>Traversal proceeds depending on whether each dependency is to be statically or dynamically
+   * linked.
+   *
+   * @param linkStyle how dependencies should be linked, if their preferred_linkage is {@code
+   *     NativeLinkable.Linkage.ANY}.
+   */
+  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
+      CxxPlatform cxxPlatform,
+      Iterable<? extends NativeLinkable> inputs,
+      Linker.LinkableDepType linkStyle,
+      Predicate<? super NativeLinkable> traverse) {
+    return getTopoSortedNativeLinkables(
+        inputs,
+        nativeLinkable ->
+            RichStream.from(getDepsForLink(cxxPlatform, nativeLinkable, linkStyle))
+                .filter(traverse));
   }
 
   public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
