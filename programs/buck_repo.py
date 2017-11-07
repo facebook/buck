@@ -1,4 +1,5 @@
 from __future__ import print_function
+import json
 import logging
 import os
 import os.path
@@ -34,6 +35,7 @@ RESOURCES = {
 }
 
 BUCK_BINARY_HASH_LOCATION = os.path.join("build", "classes", "META-INF", "buck-binary-hash.txt")
+BUCK_INFO_LOCATION = os.path.join("build", "buck-info.json")
 
 
 class BuckRepo(BuckTool):
@@ -42,6 +44,7 @@ class BuckRepo(BuckTool):
         super(BuckRepo, self).__init__(buck_project)
 
         self.buck_dir = platform_path(os.path.dirname(buck_bin_dir))
+        self._package_info = json.loads(self.__read_file(BUCK_INFO_LOCATION))
 
         dot_git = os.path.join(self.buck_dir, '.git')
         self.is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
@@ -59,18 +62,12 @@ class BuckRepo(BuckTool):
                     logging.info("Using fake buck version (via .fakebuckversion): {}".format(
                         self._fake_buck_version))
 
+    def __read_file(self, filename):
+        with open(os.path.join(self.buck_dir, filename)) as file:
+            return file.read().strip()
+
     def _join_buck_dir(self, relative_path):
         return os.path.join(self.buck_dir, *(relative_path.split('/')))
-
-    def get_git_revision(self):
-        if not self.is_git:
-            return 'N/A'
-        return buck_version.get_git_revision(self.buck_dir)
-
-    def _get_git_commit_timestamp(self):
-        if self._is_buck_repo_dirty_override or not self.is_git:
-            return -1
-        return buck_version.get_git_revision_timestamp(self.buck_dir)
 
     def _get_resource_lock_path(self):
         return None
@@ -82,35 +79,25 @@ class BuckRepo(BuckTool):
         return self._join_buck_dir(RESOURCES[resource.name])
 
     def _get_buck_version_timestamp(self):
-        return self._get_git_commit_timestamp()
+        return self._package_info['timestamp']
 
     def _get_buck_version_uid(self):
-        with Tracing('BuckRepo._get_buck_version_uid'):
-            if self._fake_buck_version:
-                return self._fake_buck_version
-
-            with open(os.path.join(self.buck_dir,
-                                   BUCK_BINARY_HASH_LOCATION)) as buck_binary_hash_file:
-                return buck_binary_hash_file.read().strip()
+        if self._fake_buck_version:
+            return self._fake_buck_version
+        return self._package_info['version']
 
     def _get_buck_git_commit(self):
-        with Tracing('BuckRepo._get_buck_git_commit'):
-            # First try to get the "clean" buck version.  If it succeeds,
-            # return it.
-            return buck_version.get_git_revision(self.buck_dir)
+        return self._get_buck_version_uid()
 
     def _get_buck_repo_dirty(self):
-        return buck_version.is_dirty(self.buck_dir)
+        return self._is_buck_repo_dirty_override == "1" or self._package_info['is_dirty']
 
     def _get_extra_java_args(self):
         with Tracing('BuckRepo._get_extra_java_args'):
             return [
                 "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
-                "-Dbuck.git_commit_timestamp={0}".format(
-                    self._get_git_commit_timestamp()),
-                "-Dbuck.git_dirty={0}".format(
-                  int(self._is_buck_repo_dirty_override == "1" or
-                      buck_version.is_dirty(self.buck_dir))),
+                "-Dbuck.git_commit_timestamp={0}".format(self._get_buck_version_timestamp()),
+                "-Dbuck.git_dirty={0}".format(int(self._get_buck_repo_dirty())),
             ]
 
     def _get_bootstrap_classpath(self):

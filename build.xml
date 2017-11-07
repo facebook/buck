@@ -74,6 +74,9 @@
   <property name="buck.hash.dir" value="${build.dir}/classes/META-INF"/>
   <property name="buck.hash.file" value="${buck.hash.dir}/buck-binary-hash.txt"/>
 
+  <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
+  <property name="buck.info.error.file" value="${build.dir}/buck-info-error.txt"/>
+
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
   <available property="jdk1.8" classname="java.util.stream.Stream"/>
   <condition
@@ -235,7 +238,7 @@
        do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
-  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, mark-successful-build" />
+  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, gen-buck-info, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -883,6 +886,12 @@
     </checksum>
     <echo file="${buck.hash.file}">${buck.hash.value}</echo>
     <echo>Generated Buck hash: ${buck.hash.value}</echo>
+  </target>
+
+  <target name="gen-buck-info">
+    <exec executable="python" output="${buck.info.file}" error="${buck.info.error.file}">
+      <arg value="programs/gen_buck_info.py"/>
+    </exec>
   </target>
 
   <target name="lint" depends="pmd, missing-test-files-check" />
