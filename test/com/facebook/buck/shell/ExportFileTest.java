@@ -93,8 +93,8 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
+            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
             "mkdir -p " + Paths.get("buck-out/gen/example.html"),
-            "rm -f -r " + Paths.get("buck-out/gen/example.html/example.html"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
@@ -125,8 +125,8 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
+            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
             "mkdir -p " + Paths.get("buck-out/gen/example.html"),
-            "rm -f -r " + Paths.get("buck-out/gen/example.html/fish"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
@@ -160,8 +160,8 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
+            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
             "mkdir -p " + Paths.get("buck-out/gen/example.html"),
-            "rm -f -r " + Paths.get("buck-out/gen/example.html/fish"),
             "cp "
                 + projectFilesystem.resolve("chips")
                 + " "

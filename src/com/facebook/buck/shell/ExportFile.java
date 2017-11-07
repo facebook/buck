@@ -35,8 +35,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -144,15 +143,10 @@ public class ExportFile extends AbstractBuildRule
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     if (mode == ExportFileDescription.Mode.COPY) {
       Path out = getCopiedPath();
-      builder.add(
-          MkdirStep.of(
+      builder.addAll(
+          MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
-      builder.add(
-          RmStep.of(
-                  BuildCellRelativePath.fromCellRelativePath(
-                      context.getBuildCellRootPath(), getProjectFilesystem(), out))
-              .withRecursive(true));
       if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
         builder.add(
             CopyStep.forDirectory(
