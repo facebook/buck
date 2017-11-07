@@ -38,6 +38,7 @@ import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxSource;
@@ -848,7 +849,7 @@ public class AppleCxxPlatformsTest {
               Optional.empty(),
               projectFilesystem.getPath("output"),
               Linker.LinkableDepType.SHARED,
-              /* thinLto */ false,
+              CxxLinkOptions.of(),
               ImmutableList.of(),
               Optional.empty(),
               Optional.empty(),

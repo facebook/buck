@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
@@ -894,7 +895,7 @@ class NativeLibraryMergeEnhancer {
                           projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
                       // Android Binaries will use share deps by default.
                       Linker.LinkableDepType.SHARED,
-                      /* thinLto */ false,
+                      CxxLinkOptions.of(),
                       Iterables.concat(
                           getNativeLinkableDepsForPlatform(cxxPlatform),
                           getNativeLinkableExportedDepsForPlatform(cxxPlatform)),

@@ -29,6 +29,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxSource;
@@ -185,7 +186,7 @@ public class NdkCxxPlatformTest {
               Optional.empty(),
               Paths.get("output"),
               Linker.LinkableDepType.SHARED,
-              /* thinLto */ false,
+              CxxLinkOptions.of(),
               ImmutableList.of(),
               Optional.empty(),
               Optional.empty(),

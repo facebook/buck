@@ -753,6 +753,7 @@ public class CxxDescriptionEnhancer {
     extraDeps.stream().map(resolver::getRule).forEach(depsBuilder::add);
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
+    CxxLinkOptions linkOptions = CxxLinkOptions.of(args.getThinLto());
     return createBuildRulesForCxxBinary(
         target,
         projectFilesystem,
@@ -769,7 +770,7 @@ public class CxxDescriptionEnhancer {
         stripStyle,
         flavoredLinkerMapMode,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-        args.getThinLto(),
+        linkOptions,
         args.getPreprocessorFlags(),
         args.getPlatformPreprocessorFlags(),
         args.getLangPreprocessorFlags(),
@@ -802,7 +803,7 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
-      boolean thinLto,
+      CxxLinkOptions linkOptions,
       ImmutableList<StringWithMacros> preprocessorFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformPreprocessorFlags,
       ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags,
@@ -884,7 +885,7 @@ public class CxxDescriptionEnhancer {
             CxxFlags.getLanguageFlagsWithMacros(
                 compilerFlags, platformCompilerFlags, langCompilerFlags, cxxPlatform),
             f -> toStringWithMacrosArgs(target, cellRoots, resolver, cxxPlatform, f)));
-    if (thinLto) {
+    if (linkOptions.getThinLto()) {
       allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto=thin")));
     }
     ImmutableListMultimap<CxxSource.Type, Arg> allCompilerFlags = allCompilerFlagsBuilder.build();
@@ -968,7 +969,7 @@ public class CxxDescriptionEnhancer {
             cxxPlatform,
             RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
             linkStyle,
-            thinLto,
+            linkOptions,
             frameworks,
             libraries,
             cxxRuntimeType,
@@ -1013,7 +1014,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       Iterable<? extends NativeLinkable> deps,
       Linker.LinkableDepType linkStyle,
-      boolean thinLto,
+      CxxLinkOptions linkOptions,
       ImmutableSortedSet<FrameworkPath> frameworks,
       ImmutableSortedSet<FrameworkPath> libraries,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -1041,7 +1042,7 @@ public class CxxDescriptionEnhancer {
                     Optional.empty(),
                     linkOutput,
                     linkStyle,
-                    thinLto,
+                    linkOptions,
                     deps,
                     cxxRuntimeType,
                     Optional.empty(),

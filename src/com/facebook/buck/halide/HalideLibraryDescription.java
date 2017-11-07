@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxStrip;
@@ -176,7 +177,7 @@ public class HalideLibraryDescription
             flavoredStripStyle,
             flavoredLinkerMapMode,
             Linker.LinkableDepType.STATIC,
-            /* thinLto */ false,
+            CxxLinkOptions.of(),
             preprocessorFlags,
             platformPreprocessorFlags,
             langPreprocessorFlags,

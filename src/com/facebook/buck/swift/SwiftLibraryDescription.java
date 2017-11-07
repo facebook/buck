@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -358,7 +359,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             Optional.of(sharedLibrarySoname),
             sharedLibOutput,
             Linker.LinkableDepType.SHARED,
-            /* thinLto */ false,
+            CxxLinkOptions.of(),
             RichStream.from(params.getBuildDeps())
                 .filter(NativeLinkable.class)
                 .concat(RichStream.of(swiftRuntimeLinkable))

@@ -18,6 +18,7 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -258,7 +259,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                     Optional.empty(),
                     getOutput(),
                     Linker.LinkableDepType.SHARED,
-                    /* thinLto */ false,
+                    CxxLinkOptions.of(),
                     getNativeStarterDeps(),
                     Optional.empty(),
                     Optional.empty(),

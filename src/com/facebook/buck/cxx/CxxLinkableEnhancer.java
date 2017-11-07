@@ -77,7 +77,7 @@ public class CxxLinkableEnhancer {
       Path output,
       ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
-      boolean thinLto,
+      CxxLinkOptions linkOptions,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<LinkOutputPostprocessor> postprocessor) {
 
@@ -92,7 +92,7 @@ public class CxxLinkableEnhancer {
     }
 
     // Add lto object path if thin LTO is on.
-    if (linker instanceof HasThinLTO && thinLto) {
+    if (linker instanceof HasThinLTO && linkOptions.getThinLto()) {
       argsBuilder.addAll(((HasThinLTO) linker).thinLTO(output));
     }
 
@@ -133,7 +133,7 @@ public class CxxLinkableEnhancer {
         postprocessor,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.shouldCacheLinks(),
-        thinLto);
+        linkOptions.getThinLto());
   }
 
   /**
@@ -155,7 +155,7 @@ public class CxxLinkableEnhancer {
       Optional<String> soname,
       Path output,
       Linker.LinkableDepType depType,
-      boolean thinLto,
+      CxxLinkOptions linkOptions,
       Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
@@ -249,7 +249,7 @@ public class CxxLinkableEnhancer {
         output,
         allArgs,
         depType,
-        thinLto,
+        linkOptions,
         cxxRuntimeType,
         postprocessor);
   }
@@ -386,7 +386,7 @@ public class CxxLinkableEnhancer {
         output,
         linkArgs,
         Linker.LinkableDepType.SHARED,
-        /* thinLto */ false,
+        CxxLinkOptions.of(),
         Optional.empty(),
         Optional.empty());
   }

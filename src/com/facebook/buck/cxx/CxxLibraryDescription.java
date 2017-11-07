@@ -490,6 +490,7 @@ public class CxxLibraryDescription
             .concat(RichStream.from(delegateNativeLinkables))
             .toImmutableList();
 
+    CxxLinkOptions linkOptions = CxxLinkOptions.of(args.getThinLto());
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
@@ -502,7 +503,7 @@ public class CxxLibraryDescription
         Optional.of(sharedLibrarySoname),
         sharedLibraryPath,
         linkableDepType,
-        args.getThinLto(),
+        linkOptions,
         allNativeLinkables,
         cxxRuntimeType,
         bundleLoader,

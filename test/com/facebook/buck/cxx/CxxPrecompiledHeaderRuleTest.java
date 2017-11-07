@@ -455,7 +455,7 @@ public class CxxPrecompiledHeaderRuleTest {
             Optional.empty(), // soname
             Paths.get("/tmp/bin.prog"),
             Linker.LinkableDepType.STATIC,
-            /*thinLTO*/ false,
+            CxxLinkOptions.of(),
             nativeLinkableDeps,
             Optional.empty(), // cxxRuntimeType,
             Optional.empty(), // bundleLoader,

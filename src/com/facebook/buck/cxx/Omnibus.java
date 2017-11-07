@@ -388,7 +388,7 @@ public class Omnibus {
                           .resolve(rootTarget.getShortName())),
                   argsBuilder.build(),
                   Linker.LinkableDepType.SHARED,
-                  /* thinLto */ false,
+                  CxxLinkOptions.of(),
                   Optional.empty(),
                   Optional.empty());
           break;

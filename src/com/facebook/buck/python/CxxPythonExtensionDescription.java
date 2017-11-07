@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -311,7 +312,7 @@ public class CxxPythonExtensionDescription
         Optional.of(extensionName),
         extensionPath,
         Linker.LinkableDepType.SHARED,
-        /* thinLto */ false,
+        CxxLinkOptions.of(),
         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
