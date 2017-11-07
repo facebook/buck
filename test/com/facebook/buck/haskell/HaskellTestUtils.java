@@ -50,11 +50,23 @@ class HaskellTestUtils {
               () -> {
                 throw new UnsupportedOperationException();
               })
+          .setGhciIservScriptTemplate(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
           .setGhciBinutils(
               () -> {
                 throw new UnsupportedOperationException();
               })
           .setGhciGhc(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciIServ(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciIServProf(
               () -> {
                 throw new UnsupportedOperationException();
               })

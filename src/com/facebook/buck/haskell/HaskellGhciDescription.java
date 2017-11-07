@@ -55,6 +55,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
@@ -327,6 +328,15 @@ public class HaskellGhciDescription
             .get(resolver, platform.getCxxPlatform()));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
 
+    ImmutableSet.Builder<BuildRule> preloadDepsBuilder = ImmutableSet.builder();
+    preloadDepsBuilder.addAll(
+        CxxDeps.builder()
+            .addDeps(args.getPreloadDeps())
+            .addPlatformDeps(args.getPlatformPreloadDeps())
+            .build()
+            .get(resolver, platform.getCxxPlatform()));
+    ImmutableSet<BuildRule> preloadDeps = preloadDepsBuilder.build();
+
     // Haskell visitor
     ImmutableSet.Builder<HaskellPackage> haskellPackages = ImmutableSet.builder();
     ImmutableSet.Builder<HaskellPackage> prebuiltHaskellPackages = ImmutableSet.builder();
@@ -372,7 +382,11 @@ public class HaskellGhciDescription
                         ? Optional.of(
                             n.getNativeLinkableExportedDepsForPlatform(platform.getCxxPlatform()))
                         : Optional.empty()),
-            ImmutableMap.of());
+            // The preloaded deps form our excluded roots, which we need to keep them separate from
+            // the omnibus library so that they can be `LD_PRELOAD`ed early.
+            RichStream.from(preloadDeps)
+                .filter(NativeLinkable.class)
+                .collect(MoreCollectors.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
 
     // Construct the omnibus shared library.
     BuildRule omnibusSharedObject =
@@ -399,6 +413,22 @@ public class HaskellGhciDescription
         .forEach(l -> sharedLibsBuilder.add(platform.getCxxPlatform(), l));
     ImmutableSortedMap<String, SourcePath> sharedLibs = sharedLibsBuilder.build();
 
+    // Build up a set of all transitive preload libs, which are the ones that have been "excluded"
+    // from the omnibus link.  These are the ones we need to LD_PRELOAD.
+    SharedLibrariesBuilder preloadLibsBuilder = new SharedLibrariesBuilder();
+    omnibusSpec
+        .getExcludedTransitiveDeps()
+        .values()
+        .stream()
+        // Don't include shared libs for static libraries -- except for preload roots, which we
+        // always link dynamically.
+        .filter(
+            l ->
+                l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC
+                    || omnibusSpec.getExcludedRoots().containsKey(l.getBuildTarget()))
+        .forEach(l -> preloadLibsBuilder.add(platform.getCxxPlatform(), l));
+    ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
+
     HaskellSources srcs =
         HaskellSources.from(
             buildTarget, resolver, pathResolver, ruleFinder, platform, "srcs", args.getSrcs());
@@ -417,13 +447,17 @@ public class HaskellGhciDescription
         args.getGhciInit(),
         omnibusSharedObject,
         sharedLibs,
+        preloadLibs,
         firstOrderHaskellPackages.build(),
         haskellPackages.build(),
         prebuiltHaskellPackages.build(),
         args.isEnableProfiling(),
         platform.getGhciScriptTemplate().get(),
+        platform.getGhciIservScriptTemplate().get(),
         platform.getGhciBinutils().get(),
         platform.getGhciGhc().get(),
+        platform.getGhciIServ().get(),
+        platform.getGhciIServProf().get(),
         platform.getGhciLib().get(),
         platform.getGhciCxx().get(),
         platform.getGhciCc().get(),
@@ -494,5 +528,15 @@ public class HaskellGhciDescription
     Optional<SourcePath> getGhciInit();
 
     Optional<Flavor> getPlatform();
+
+    @Value.Default
+    default ImmutableCollection<BuildTarget> getPreloadDeps() {
+      return ImmutableList.of();
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformPreloadDeps() {
+      return PatternMatchedCollection.of();
+    }
   }
 }

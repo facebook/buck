@@ -70,11 +70,20 @@ abstract class AbstractHaskellPlatform implements FlavorConvertible {
   /** @return The template to use for startup scripts for GHCi targets. */
   abstract Supplier<Path> getGhciScriptTemplate();
 
+  /** @return The template to use for iserv scripts for GHCi targets. */
+  abstract Supplier<Path> getGhciIservScriptTemplate();
+
   /** @return The binutils dir for GHCi targets. */
   abstract Supplier<Path> getGhciBinutils();
 
   /** @return The GHC binary for GHCi targets. */
   abstract Supplier<Path> getGhciGhc();
+
+  /** @return The IServ binary for GHCi targets. */
+  abstract Supplier<Path> getGhciIServ();
+
+  /** @return The Profiled IServ binary for GHCi targets. */
+  abstract Supplier<Path> getGhciIServProf();
 
   /** @return The lib dir for GHCi targets. */
   abstract Supplier<Path> getGhciLib();

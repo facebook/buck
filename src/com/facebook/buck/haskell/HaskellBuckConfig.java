@@ -87,8 +87,12 @@ public class HaskellBuckConfig {
             delegate.getBoolean(section, "old_binary_output_location"))
         .setPackageNamePrefix(delegate.getValue(section, "package_name_prefix"))
         .setGhciScriptTemplate(() -> delegate.getRequiredPath(section, "ghci_script_template"))
+        .setGhciIservScriptTemplate(
+            () -> delegate.getRequiredPath(section, "ghci_iserv_script_template"))
         .setGhciBinutils(() -> delegate.getRequiredPath(section, "ghci_binutils_path"))
         .setGhciGhc(() -> delegate.getRequiredPath(section, "ghci_ghc_path"))
+        .setGhciIServ(() -> delegate.getRequiredPath(section, "ghci_iserv_path"))
+        .setGhciIServProf(() -> delegate.getRequiredPath(section, "ghci_iserv_prof_path"))
         .setGhciLib(() -> delegate.getRequiredPath(section, "ghci_lib_path"))
         .setGhciCxx(() -> delegate.getRequiredPath(section, "ghci_cxx_path"))
         .setGhciCc(() -> delegate.getRequiredPath(section, "ghci_cc_path"))
