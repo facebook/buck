@@ -1,0 +1,14 @@
+genrule(
+    name = "create_file",
+    out = "file",
+    cmd = "echo hello > $OUT",
+)
+
+genrule(
+    name = "cpfile",
+    srcs = [
+        ":create_file",
+    ],
+    out = "copy",
+    cmd = "cp $SRCS $OUT",
+)

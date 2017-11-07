@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
@@ -109,11 +110,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxGenruleDescription(
+      BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(toolchainProvider, sandboxExecutionStrategy, false);
+    super(buckConfig, toolchainProvider, sandboxExecutionStrategy, false);
     this.cxxPlatforms = cxxPlatforms;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }

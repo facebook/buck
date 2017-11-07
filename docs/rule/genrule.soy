@@ -60,6 +60,15 @@
 
 {call buck.tests_arg /}
 
+{call buck.arg}
+  {param name: 'use_symlinks_in_srcs' /}
+  {param default : 'False' /}
+  {param desc}
+  Whether the <code>SRCS</code> environment variable should contain symlinks to inputs specified
+  in <code>srcs</code> instead of paths to the actual files.
+  {/param}
+{/call}
+
 {/param} // args
 
 {param examples}

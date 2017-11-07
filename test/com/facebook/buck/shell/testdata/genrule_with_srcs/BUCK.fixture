@@ -1,0 +1,28 @@
+genrule(
+    name = "cat_srcs",
+    srcs = [
+        "input.txt",
+    ],
+    out = "output.txt",
+    cmd = "echo $SRCS > $OUT",
+)
+
+genrule(
+    name = "cat_srcs_with_symlinks",
+    srcs = [
+        "input.txt",
+    ],
+    out = "output.txt",
+    cmd = "echo $SRCS > $OUT",
+    use_symlinks_in_srcs = True,
+)
+
+genrule(
+    name = "cat_srcs_with_real_paths",
+    srcs = [
+        "input.txt",
+    ],
+    out = "output.txt",
+    cmd = "echo $SRCS > $OUT",
+    use_symlinks_in_srcs = False,
+)

@@ -73,7 +73,8 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
       Optional<Arg> cmdExe,
       Optional<String> type,
       SourcePath apk,
-      boolean isCacheable) {
+      boolean isCacheable,
+      boolean useSymlinksInSrcs) {
     super(
         buildTarget,
         projectFilesystem,
@@ -87,7 +88,8 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
         cmdExe,
         type,
         /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk",
-        false);
+        false,
+        useSymlinksInSrcs);
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;

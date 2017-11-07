@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -54,8 +55,10 @@ public class JsBundleGenruleDescription
     implements Flavored, HasAppleBundleResourcesDescription<JsBundleGenruleDescriptionArg> {
 
   public JsBundleGenruleDescription(
-      ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, sandboxExecutionStrategy, false);
+      BuckConfig buckConfig,
+      ToolchainProvider toolchainProvider,
+      SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(buckConfig, toolchainProvider, sandboxExecutionStrategy, false);
   }
 
   @Override
@@ -132,7 +135,8 @@ public class JsBundleGenruleDescription
         cmd,
         bash,
         cmdExe,
-        (JsBundleOutputs) jsBundle);
+        (JsBundleOutputs) jsBundle,
+        args.getUseSymlinksInSrcs().orElse(genruleConfig.getUseSymlinksInSources()));
   }
 
   @Override

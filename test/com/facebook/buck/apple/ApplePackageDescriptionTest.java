@@ -150,6 +150,7 @@ public class ApplePackageDescriptionTest {
 
   private ApplePackageDescription descriptionWithCommand(String command) {
     return new ApplePackageDescription(
+        FakeBuckConfig.builder().build(),
         new TestToolchainProvider(),
         new NoSandboxExecutionStrategy(),
         FakeBuckConfig.builder()

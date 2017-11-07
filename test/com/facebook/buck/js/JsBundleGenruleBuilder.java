@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -30,7 +31,10 @@ public class JsBundleGenruleBuilder
         JsBundleGenruleDescriptionArg.Builder, JsBundleGenruleDescriptionArg,
         JsBundleGenruleDescription, JsBundleGenrule> {
   private static final JsBundleGenruleDescription genruleDescription =
-      new JsBundleGenruleDescription(createToolchainProvider(), new NoSandboxExecutionStrategy());
+      new JsBundleGenruleDescription(
+          FakeBuckConfig.builder().build(),
+          createToolchainProvider(),
+          new NoSandboxExecutionStrategy());
 
   private static ToolchainProvider createToolchainProvider() {
     TestToolchainProvider testToolchainProvider = new TestToolchainProvider();

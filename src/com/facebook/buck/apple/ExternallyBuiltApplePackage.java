@@ -50,7 +50,8 @@ public class ExternallyBuiltApplePackage extends Genrule {
       BuildRuleParams params,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
-      boolean cacheable) {
+      boolean cacheable,
+      boolean useSymlinksInSources) {
     super(
         buildTarget,
         projectFilesystem,
@@ -64,7 +65,8 @@ public class ExternallyBuiltApplePackage extends Genrule {
         /* cmdExe */ Optional.empty(),
         /* type */ Optional.empty(),
         buildTarget.getShortName() + "." + packageConfigAndPlatformInfo.getConfig().getExtension(),
-        false);
+        false,
+        useSymlinksInSources);
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
     this.cacheable = cacheable;
   }

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -138,7 +139,10 @@ public class ApkGenruleTest {
         AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
 
     ApkGenruleDescription description =
-        new ApkGenruleDescription(testToolchainProvider, new NoSandboxExecutionStrategy());
+        new ApkGenruleDescription(
+            FakeBuckConfig.builder().build(),
+            testToolchainProvider,
+            new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())

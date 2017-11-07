@@ -123,6 +123,7 @@ The following sections are recognized by Buck:
     'd',
     'doctor',
     'download',
+    'genrule',
     'go',
     'groovy',
     'halide',
@@ -1789,6 +1790,23 @@ cxx_library(
   {param example_value: '/custom/script/to/run.sh' /}
   {param description}
     An extra command that the report should and attach the information to the uploaded report.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'genrule' /}
+  {param description}
+  Defines the behavior of <code>genrule</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'genrule' /}
+  {param name: 'use_symlinks_in_srcs' /}
+  {param example_value: 'True' /}
+  {param description}
+  Determines whether the <code>SRCS</code> environment variable should contain symlinks to inputs
+  specified in <code>srcs</code> instead of paths to the actual files.
   {/param}
 {/call}
 

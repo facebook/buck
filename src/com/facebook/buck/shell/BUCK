@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "rules",
     srcs = [
+        "AbstractGenruleConfig.java",
         "AbstractGenruleDescription.java",
         "CommandAlias.java",
         "CommandAliasDescription.java",

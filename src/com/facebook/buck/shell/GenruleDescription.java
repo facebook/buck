@@ -38,7 +38,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       ToolchainProvider toolchainProvider,
       BuckConfig buckConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, sandboxExecutionStrategy, false);
+    super(buckConfig, toolchainProvider, sandboxExecutionStrategy, false);
     this.buckConfig = buckConfig;
   }
 
@@ -77,7 +77,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getType(),
           args.getOut(),
           sandboxConfig.isSandboxEnabledForCurrentPlatform()
-              && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()));
+              && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
+          args.getUseSymlinksInSrcs().orElse(genruleConfig.getUseSymlinksInSources()));
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -91,7 +92,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           bash,
           cmdExe,
           args.getType(),
-          args.getOut());
+          args.getOut(),
+          args.getUseSymlinksInSrcs().orElse(genruleConfig.getUseSymlinksInSources()));
     }
   }
 

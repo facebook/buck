@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.apple.AppleBundleResources;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -224,7 +225,10 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void addAppleBundleResourcesIsDelegatedToUnderlyingBundle() {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
-    new JsBundleGenruleDescription(new TestToolchainProvider(), new NoSandboxExecutionStrategy())
+    new JsBundleGenruleDescription(
+            FakeBuckConfig.builder().build(),
+            new TestToolchainProvider(),
+            new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
             setup.targetNode(),

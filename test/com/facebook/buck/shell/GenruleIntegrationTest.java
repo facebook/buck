@@ -277,6 +277,34 @@ public class GenruleIntegrationTest {
   }
 
   @Test
+  public void genruleTargetInSources() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_targets_in_sources", temporaryFolder);
+    workspace.setUp();
+
+    Path outputFile = workspace.buildAndReturnOutput("//:cpfile");
+    String actual = new String(Files.readAllBytes(outputFile), UTF_8);
+
+    assertEquals("hello", actual.trim());
+  }
+
+  @Test
+  public void genruleFileInSources() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_targets_in_sources", temporaryFolder);
+    workspace.setUp();
+
+    Path outputFile = workspace.buildAndReturnOutput("//test:cp_input_file");
+    String actual = new String(Files.readAllBytes(outputFile), UTF_8);
+    String expected1 = new String(Files.readAllBytes(workspace.getPath("test/input1.txt")), UTF_8);
+    String expected2 = new String(Files.readAllBytes(workspace.getPath("test/input2.txt")), UTF_8);
+
+    assertEquals(expected2 + expected1, actual.trim());
+  }
+
+  @Test
   public void twoGenrulesWithTheSameOutputFileShouldNotOverwriteOneAnother() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -408,6 +436,65 @@ public class GenruleIntegrationTest {
     String expected =
         new String(Files.readAllBytes(workspace.getPath("undeclared_input.txt")), UTF_8);
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void genruleHasRealPathsInSrcsByDefault() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_srcs", temporaryFolder);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:cat_srcs");
+    String outputString = new String(Files.readAllBytes(output), UTF_8).trim();
+
+    assertEquals(workspace.getPath("input.txt").toString(), outputString);
+  }
+
+  @Test
+  public void genruleHasSymlinkPathsInSrcsWhenEnabledInConfig() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_srcs", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "--config", "genrule.use_symlinks_in_srcs=True", "//:cat_srcs");
+    String outputString = new String(Files.readAllBytes(output), UTF_8).trim();
+
+    assertEquals(
+        workspace.getPath("buck-out/gen/cat_srcs__srcs/input.txt").toString(), outputString);
+  }
+
+  @Test
+  public void genruleHasSymlinkPathsInSrcsByDefault() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_srcs", temporaryFolder);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:cat_srcs_with_symlinks");
+    String outputString = new String(Files.readAllBytes(output), UTF_8).trim();
+
+    assertEquals(
+        workspace.getPath("buck-out/gen/cat_srcs_with_symlinks__srcs/input.txt").toString(),
+        outputString);
+  }
+
+  @Test
+  public void genruleHasRealPathsInSrcsWhenDisabledInTarget() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_srcs", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "--config", "genrule.use_symlinks_in_srcs=True", "//:cat_srcs_with_real_paths");
+    String outputString = new String(Files.readAllBytes(output), UTF_8).trim();
+
+    assertEquals(workspace.getPath("input.txt").toString(), outputString);
   }
 
   private void assertZipsAreEqual(Path zipPathOne, Path zipPathTwo) throws IOException {
