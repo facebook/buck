@@ -1472,7 +1472,7 @@ class CachingBuildRuleBuilder {
         new GZIPInputStream(rule.getProjectFilesystem().newFileInputStream(path))) {
       manifest = new Manifest(input);
     } catch (Exception e) {
-      LOG.error(
+      LOG.warn(
           e,
           "Failed to deserialize fetched-from-cache manifest for rule %s with key %s",
           rule,
