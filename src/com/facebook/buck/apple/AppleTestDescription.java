@@ -295,7 +295,8 @@ public class AppleTestDescription
             appleConfig.cacheBundlesAndPackages(),
             appleConfig.assetCatalogValidation(),
             args.getCodesignFlags(),
-            args.getCodesignIdentity());
+            args.getCodesignIdentity(),
+            Optional.empty());
     resolver.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);

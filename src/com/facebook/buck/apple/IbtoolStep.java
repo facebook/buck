@@ -37,6 +37,7 @@ class IbtoolStep extends ShellStep {
   private final ImmutableList<String> ibtoolCommand;
   private final Path input;
   private final Path output;
+  private final ImmutableList<String> ibtoolModuleParams;
   private final ImmutableList<String> additionalParams;
 
   public IbtoolStep(
@@ -44,6 +45,7 @@ class IbtoolStep extends ShellStep {
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       List<String> ibtoolCommand,
+      List<String> ibtoolModuleParams,
       List<String> additionalParams,
       Path input,
       Path output) {
@@ -53,6 +55,7 @@ class IbtoolStep extends ShellStep {
     this.ibtoolCommand = ImmutableList.copyOf(ibtoolCommand);
     this.input = input;
     this.output = output;
+    this.ibtoolModuleParams = ImmutableList.copyOf(ibtoolModuleParams);
     this.additionalParams = ImmutableList.copyOf(additionalParams);
   }
 
@@ -63,6 +66,7 @@ class IbtoolStep extends ShellStep {
     commandBuilder.addAll(ibtoolCommand);
     commandBuilder.add(
         "--output-format", "human-readable-text", "--notices", "--warnings", "--errors");
+    commandBuilder.addAll(ibtoolModuleParams);
     commandBuilder.addAll(additionalParams);
     commandBuilder.add(filesystem.resolve(output).toString(), filesystem.resolve(input).toString());
 

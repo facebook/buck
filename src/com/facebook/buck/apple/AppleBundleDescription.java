@@ -177,7 +177,8 @@ public class AppleBundleDescription
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.assetCatalogValidation(),
         args.getCodesignFlags(),
-        args.getCodesignIdentity());
+        args.getCodesignIdentity(),
+        args.getIbtoolModuleFlag());
   }
 
   /**
@@ -309,6 +310,12 @@ public class AppleBundleDescription
           HasDeclaredDeps,
           HasTests {
     BuildTarget getBinary();
+
+    // ibtool take --module <PRODUCT_MODULE_NAME> arguments to override
+    // customModule field set on its elements. (only when customModuleProvider="target")
+    // Module (so far, it seems to only represent swift module) contains the
+    // implementation of the declared element in nib file.
+    Optional<Boolean> getIbtoolModuleFlag();
 
     @Override
     @Hint(isDep = false)

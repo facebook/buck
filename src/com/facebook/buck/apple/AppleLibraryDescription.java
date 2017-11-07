@@ -405,6 +405,7 @@ public class AppleLibraryDescription
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.assetCatalogValidation(),
         ImmutableList.of(),
+        Optional.empty(),
         Optional.empty());
   }
 

@@ -337,6 +337,7 @@ public class AppleBinaryDescription
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.assetCatalogValidation(),
         ImmutableList.of(),
+        Optional.empty(),
         Optional.empty());
   }
 

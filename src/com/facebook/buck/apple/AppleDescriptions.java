@@ -578,7 +578,8 @@ public class AppleDescriptions {
       boolean cacheable,
       AppleAssetCatalog.ValidationType assetCatalogValidation,
       ImmutableList<String> codesignFlags,
-      Optional<String> codesignAdhocIdentity) {
+      Optional<String> codesignAdhocIdentity,
+      Optional<Boolean> ibtoolModuleFlag) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
@@ -794,7 +795,8 @@ public class AppleDescriptions {
         dryRunCodeSigning,
         cacheable,
         codesignFlags,
-        codesignAdhocIdentity);
+        codesignAdhocIdentity,
+        ibtoolModuleFlag);
   }
 
   private static void addToIndex(BuildRuleResolver resolver, Optional<? extends BuildRule> rule) {

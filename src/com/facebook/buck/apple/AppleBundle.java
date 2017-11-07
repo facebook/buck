@@ -161,6 +161,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path binaryPath;
   private final Path bundleBinaryPath;
 
+  private final ImmutableList<String> ibtoolModuleParams;
+
   private final boolean hasBinary;
   private final boolean cacheable;
 
@@ -190,7 +192,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean dryRunCodeSigning,
       boolean cacheable,
       ImmutableList<String> codesignFlags,
-      Optional<String> codesignIdentity) {
+      Optional<String> codesignIdentity,
+      Optional<Boolean> ibtoolModuleFlag) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
@@ -226,6 +229,10 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.cacheable = cacheable;
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
+    this.ibtoolModuleParams =
+        ibtoolModuleFlag.orElse(false)
+            ? ImmutableList.of("--module", this.binaryName)
+            : ImmutableList.of();
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getSourcePathToOutput() != null;
@@ -956,6 +963,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
+              ibtoolModuleParams,
               ImmutableList.of("--target-device", "watch", "--compile"),
               sourcePath,
               compiledStoryboardPath));
@@ -966,6 +974,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
+              ibtoolModuleParams,
               ImmutableList.of("--target-device", "watch", "--link"),
               compiledStoryboardPath,
               destinationPath.getParent()));
@@ -983,6 +992,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
+              ibtoolModuleParams,
               ImmutableList.of("--compile"),
               sourcePath,
               compiledStoryboardPath));
@@ -1024,6 +1034,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 ibtool.getEnvironment(resolver),
                 ibtool.getCommandPrefix(resolver),
+                ibtoolModuleParams,
                 ImmutableList.of("--compile"),
                 sourcePath,
                 compiledNibPath));
