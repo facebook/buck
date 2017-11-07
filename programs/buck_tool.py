@@ -142,6 +142,7 @@ class JvmCrashLogger(object):
 
 class BuckTool(object):
     def __init__(self, buck_project):
+        self._package_info = self._get_package_info()
         self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
@@ -153,6 +154,9 @@ class BuckTool(object):
         self._pathsep = os.pathsep
         if sys.platform == 'cygwin':
             self._pathsep = ';'
+
+    def _get_package_info(self):
+        raise NotImplementedError()
 
     def _has_resource(self, resource):
         """Check whether the given resource exists."""
@@ -172,16 +176,18 @@ class BuckTool(object):
         raise NotImplementedError()
 
     def _get_buck_version_uid(self):
-        raise NotImplementedError()
+        if self._fake_buck_version:
+            return self._fake_buck_version
+        return self._package_info['version']
 
     def _get_buck_version_timestamp(self):
-        raise NotImplementedError()
+        return self._package_info['timestamp']
 
     def _get_buck_git_commit(self):
         raise NotImplementedError()
 
     def _get_buck_repo_dirty(self):
-        raise NotImplementedError()
+        return self._package_info['is_dirty']
 
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()

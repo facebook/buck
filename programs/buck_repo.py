@@ -8,7 +8,6 @@ import sys
 from tracing import Tracing
 from buck_tool import BuckTool, platform_path
 from subprocutils import which
-import buck_version
 
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
 
@@ -41,10 +40,9 @@ BUCK_INFO_LOCATION = os.path.join("build", "buck-info.json")
 class BuckRepo(BuckTool):
 
     def __init__(self, buck_bin_dir, buck_project):
-        super(BuckRepo, self).__init__(buck_project)
-
         self.buck_dir = platform_path(os.path.dirname(buck_bin_dir))
-        self._package_info = json.loads(self.__read_file(BUCK_INFO_LOCATION))
+
+        super(BuckRepo, self).__init__(buck_project)
 
         dot_git = os.path.join(self.buck_dir, '.git')
         self.is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
@@ -62,6 +60,9 @@ class BuckRepo(BuckTool):
                     logging.info("Using fake buck version (via .fakebuckversion): {}".format(
                         self._fake_buck_version))
 
+    def _get_package_info(self):
+        return json.loads(self.__read_file(BUCK_INFO_LOCATION))
+
     def __read_file(self, filename):
         with open(os.path.join(self.buck_dir, filename)) as file:
             return file.read().strip()
@@ -77,14 +78,6 @@ class BuckRepo(BuckTool):
 
     def _get_resource(self, resource, exe=False):
         return self._join_buck_dir(RESOURCES[resource.name])
-
-    def _get_buck_version_timestamp(self):
-        return self._package_info['timestamp']
-
-    def _get_buck_version_uid(self):
-        if self._fake_buck_version:
-            return self._fake_buck_version
-        return self._package_info['version']
 
     def _get_buck_git_commit(self):
         return self._get_buck_version_uid()
