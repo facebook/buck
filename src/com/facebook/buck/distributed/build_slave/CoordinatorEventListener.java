@@ -20,12 +20,15 @@ import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildModeInfo;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 
 /** Listener to events from the Coordinator. */
 public class CoordinatorEventListener implements ThriftCoordinatorServer.EventListener {
+
   private final DistBuildService service;
   private final StampedeId stampedeId;
   private final String minionQueue;
@@ -63,6 +66,11 @@ public class CoordinatorEventListener implements ThriftCoordinatorServer.EventLi
 
   @Override
   public void onThriftServerClosing(int buildExitCode) throws IOException {
-    service.setFinalBuildStatus(stampedeId, BuildStatusUtil.exitCodeToBuildStatus(buildExitCode));
+    BuildStatus status = BuildStatusUtil.exitCodeToBuildStatus(buildExitCode);
+    String message =
+        String.format(
+            "Coordinator [%s] exited with code=[%d] and status=[%s].",
+            HostnameFetching.getHostname(), buildExitCode, status.toString());
+    service.setFinalBuildStatus(stampedeId, status, message);
   }
 }

@@ -219,7 +219,6 @@ public class DistBuildService implements Closeable {
    * @param executorService Executor to enable concurrent file reads and upload request.
    * @return A Future containing the number of missing files which were uploaded to the CAS. This
    *     future completes when the upload finishes.
-   * @throws IOException
    */
   private ListenableFuture<Integer> uploadMissingFilesAsync(
       final List<PathInfo> absPathsAndHashes, final ListeningExecutorService executorService) {
@@ -354,7 +353,6 @@ public class DistBuildService implements Closeable {
    * @param id - Stampede id for the build you want to start.
    * @param enqueueJob - Whether or not this job should be enqueued on the coordinator queue.
    * @return - Latest BuildJob spec.
-   * @throws IOException
    */
   public BuildJob startBuild(StampedeId id, boolean enqueueJob) throws IOException {
     // Start the build
@@ -699,10 +697,13 @@ public class DistBuildService implements Closeable {
   }
 
   /** Sets the final BuildStatus of the BuildJob. */
-  public void setFinalBuildStatus(StampedeId stampedeId, BuildStatus buildStatus)
+  public void setFinalBuildStatus(StampedeId stampedeId, BuildStatus status, String statusMessage)
       throws IOException {
     SetFinalBuildStatusRequest request =
-        new SetFinalBuildStatusRequest().setStampedeId(stampedeId).setBuildStatus(buildStatus);
+        new SetFinalBuildStatusRequest()
+            .setStampedeId(stampedeId)
+            .setBuildStatus(status)
+            .setBuildStatusMessage(statusMessage);
     FrontendRequest frontendRequest =
         new FrontendRequest()
             .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)

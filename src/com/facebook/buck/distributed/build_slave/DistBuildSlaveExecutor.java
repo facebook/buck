@@ -21,10 +21,13 @@ import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildMode;
+import com.facebook.buck.distributed.build_slave.RemoteBuildModeRunner.FinalBuildStatusSetter;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Supplier;
 import java.io.IOException;
 import java.util.List;
@@ -72,11 +75,7 @@ public class DistBuildSlaveExecutor {
               new RemoteBuildModeRunner(
                   localBuildExecutor,
                   args.getState().getRemoteState().getTopLevelTargets(),
-                  exitCode ->
-                      args.getDistBuildService()
-                          .setFinalBuildStatus(
-                              args.getStampedeId(),
-                              BuildStatusUtil.exitCodeToBuildStatus(exitCode)));
+                  createRemoteBuildFinalBuildStatusSetter());
           break;
 
         case MINION:
@@ -113,6 +112,20 @@ public class DistBuildSlaveExecutor {
       }
     }
     return runner.runAndReturnExitCode();
+  }
+
+  private FinalBuildStatusSetter createRemoteBuildFinalBuildStatusSetter() {
+    return new FinalBuildStatusSetter() {
+      @Override
+      public void setFinalBuildStatus(int exitCode) throws IOException {
+        BuildStatus status = BuildStatusUtil.exitCodeToBuildStatus(exitCode);
+        String message =
+            String.format(
+                "RemoteBuilder [%s] exited with code=[%d] and status=[%s].",
+                HostnameFetching.getHostname(), exitCode, status.toString());
+        args.getDistBuildService().setFinalBuildStatus(args.getStampedeId(), status, message);
+      }
+    };
   }
 
   private BuildExecutor createBuilder(

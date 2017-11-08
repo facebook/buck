@@ -732,12 +732,14 @@ public class DistBuildServiceTest {
 
     StampedeId stampedeId = createStampedeId("coordinator has decided to set the final status");
     BuildStatus finalStatus = BuildStatus.FINISHED_SUCCESSFULLY;
-    distBuildService.setFinalBuildStatus(stampedeId, finalStatus);
+    String finalStatusMessage = "Super cool message!!!!";
+    distBuildService.setFinalBuildStatus(stampedeId, finalStatus, finalStatusMessage);
     Assert.assertEquals(FrontendRequestType.SET_FINAL_BUILD_STATUS, request.getValue().getType());
     SetFinalBuildStatusRequest setStatusRequest =
         request.getValue().getSetFinalBuildStatusRequest();
     Assert.assertEquals(stampedeId, setStatusRequest.getStampedeId());
     Assert.assertEquals(finalStatus, setStatusRequest.getBuildStatus());
+    Assert.assertEquals(finalStatusMessage, setStatusRequest.getBuildStatusMessage());
     EasyMock.verify(frontendService);
   }
 }
