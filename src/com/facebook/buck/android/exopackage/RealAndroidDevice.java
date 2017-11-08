@@ -662,7 +662,7 @@ public class RealAndroidDevice implements AndroidDevice {
       doRapidInstall(rapidInstallMode.get(), filesType, installPaths);
     } else {
       for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
-        try (SimplePerfEvent.Scope ignored2 =
+        try (SimplePerfEvent.Scope ignored =
             SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
           installFile(entry.getKey(), entry.getValue());
         }
