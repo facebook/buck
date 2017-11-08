@@ -31,6 +31,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -44,6 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
 public class MinionModeRunner implements DistBuildModeRunner {
+
   private static final Logger LOG = Logger.get(MinionModeRunner.class);
 
   private final String coordinatorAddress;
@@ -66,12 +68,14 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   /** Callback when the build has completed. */
   public interface BuildCompletionChecker {
+
     boolean hasBuildFinished() throws IOException;
   }
 
   /** Encapsulates a Thrift call */
   @FunctionalInterface
   public interface ThriftCall {
+
     void apply() throws IOException;
   }
 
@@ -261,7 +265,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
             LOG.error(t, String.format("Building of unknown target failed."));
             exitCode.set(1); // Fail the Stampede build, and ensure it doesn't deadlock.
           }
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   private void registerUploadCompletionHandler(final BuildResult buildResult) {
