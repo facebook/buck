@@ -50,7 +50,8 @@ genrule(
 genrule(
     name = "echo_with_deps_to_file",
     out = "out",
-    cmd = "cp `echo $(@query_targets \"deps(:app)\") | cut -c 2-` $OUT",
+    bash = "echo $(@query_targets \"deps(:app)\") | cut -c 2- | xargs -I % cp % $OUT",
+    cmd_exe = "echo $(@query_targets \"deps(:app)\") | %{cp $_.substring(1) $OUT}",
     enable_sandbox = True,
 )
 
