@@ -73,6 +73,6 @@ public class RustDescriptionEnhancer {
 
   @FunctionalInterface
   interface FilenameMap {
-    String apply(BuildTarget tgt, String name, CxxPlatform cxxPlatform);
+    String apply(BuildTarget target, String name, CxxPlatform cxxPlatform);
   }
 }
