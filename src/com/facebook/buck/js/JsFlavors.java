@@ -72,6 +72,7 @@ public class JsFlavors {
 
   public static final InternalFlavor ANDROID_RESOURCES = InternalFlavor.of("_res_");
   public static final InternalFlavor FORCE_JS_BUNDLE = InternalFlavor.of("_js_");
+  public static final InternalFlavor LIBRARY_FILES = InternalFlavor.of("_files_");
 
   private static final String fileFlavorPrefix = "file-";
 

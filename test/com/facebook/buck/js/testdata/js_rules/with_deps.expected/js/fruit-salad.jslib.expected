@@ -1,15 +1,18 @@
-library --lib @/buck-out/gen/js/extras.jslib --lib @/buck-out/gen/js/fruit.jslib --root @
-library --root @
+library-dependencies --root @ --lib @/buck-out/gen/js/extras.jslib --lib @/buck-out/gen/js/fruit.jslib
+library-dependencies --root @
+library-files --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library --root @
+library-dependencies --root @
+library-files --root @
 transform --filename js/apple.js
 var apple;
 transform --filename js/banana.js
 var banana;
 transform --filename js/pear.js
 var pear;
+library-files --root @
 transform --filename js/fruit-salad.js
 var fruitSalad;

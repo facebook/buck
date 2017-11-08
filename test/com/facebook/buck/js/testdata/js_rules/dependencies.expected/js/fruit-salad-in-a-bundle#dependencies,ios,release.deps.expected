@@ -1,12 +1,14 @@
 dependencies --platform ios --release --lib @/buck-out/gen/js/extras#ios,release.jslib --lib @/buck-out/gen/js/fruit#ios,release.jslib --lib @/buck-out/gen/js/fruit-salad#ios,release.jslib --root @ fruit-salad
-library --release --platform ios --root @
+library-dependencies --release --platform ios --root @
+library-files --release --platform ios --root @
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library --release --platform ios --root @
+library-dependencies --release --platform ios --root @
+library-files --release --platform ios --root @
 optimize --platform ios
 transform --filename js/apple.js
 var apple;
@@ -16,15 +18,17 @@ var banana;
 optimize --platform ios
 transform --filename js/pear.js
 var pear;
-library --release --platform ios --lib @/buck-out/gen/js/extras#ios,release.jslib --lib @/buck-out/gen/js/fruit#ios,release.jslib --root @
-library --release --platform ios --root @
+library-dependencies --release --platform ios --root @ --lib @/buck-out/gen/js/extras#ios,release.jslib --lib @/buck-out/gen/js/fruit#ios,release.jslib
+library-dependencies --release --platform ios --root @
+library-files --release --platform ios --root @
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library --release --platform ios --root @
+library-dependencies --release --platform ios --root @
+library-files --release --platform ios --root @
 optimize --platform ios
 transform --filename js/apple.js
 var apple;
@@ -34,6 +38,7 @@ var banana;
 optimize --platform ios
 transform --filename js/pear.js
 var pear;
+library-files --release --platform ios --root @
 optimize --platform ios
 transform --filename js/fruit-salad.js
 var fruitSalad;
