@@ -164,10 +164,9 @@ class InterfaceScanner {
         scan(node.getModifiers(), aVoid);
         scan(node.getType(), aVoid);
 
-        // Skip the initializers of variables that aren't static constants since they're not part
-        // of the interface
-        if (element.getConstantValue() == null
-            || !element.getModifiers().contains(Modifier.STATIC)) {
+        // Skip the initializers of variables that aren't compile-time constants since they're not
+        // part of the interface
+        if (element.getConstantValue() == null) {
           return null;
         }
 

@@ -663,6 +663,27 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testFindsSimpleNameInstanceConstants() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/foo/Constants.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "class Constants {",
+                    "  protected final int CONSTANT = 3;",
+                    "}")));
+    findTypeReferences(
+        "package com.facebook.foo;",
+        "class Foo extends Constants {",
+        "  public final int CONSTANT2 = CONSTANT;",
+        "}");
+
+    assertThat(
+        constantReferences, Matchers.containsInAnyOrder(createSymbolicReference("3", 3, 32)));
+  }
+
+  @Test
   public void testIgnoresReferencesToNonexistentTypes() throws IOException {
     findTypeReferencesErrorsOK(
         "package com.facebook.foo;",
