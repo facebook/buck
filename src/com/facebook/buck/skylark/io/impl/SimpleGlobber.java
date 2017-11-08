@@ -41,6 +41,9 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class SimpleGlobber implements Globber {
 
+  private static final FilesystemCalls STRICT_EXISTENCE_FILESYSTEM_CALLS =
+      new StrictExistenceFileSystemCalls();
+
   /** Path used as a root when resolving patterns. */
   private final Path basePath;
 
@@ -80,7 +83,7 @@ public class SimpleGlobber implements Globber {
         .addPatterns(patterns)
         .setExcludeDirectories(excludeDirectories)
         // The default here silently suppresses FileNotFoundExceptions; this implementation doesn't.
-        .setFilesystemCalls(new AtomicReference<>(new StrictExistenceFileSystemCalls()))
+        .setFilesystemCalls(new AtomicReference<>(STRICT_EXISTENCE_FILESYSTEM_CALLS))
         .glob()
         .stream()
         .map(includePath -> includePath.relativeTo(basePath).getPathString())
