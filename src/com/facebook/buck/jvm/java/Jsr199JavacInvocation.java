@@ -90,11 +90,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
   @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
+  private final boolean trackClassUsage;
 
-  @Nullable private ClassUsageTracker classUsageTracker;
-  @Nullable private JavaInMemoryFileManager inMemoryFileManager;
   @Nullable private CompilerWorker worker;
-  private Jsr199TracingBridge tracingBridge;
 
   public Jsr199JavacInvocation(
       Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
@@ -121,7 +119,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
-    classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
+    this.trackClassUsage = trackClassUsage;
     this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
@@ -190,9 +188,14 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
     @Nullable private String compilerThreadName;
     @Nullable private JavacPhaseEventLogger phaseEventLogger;
+    @Nullable private JavaInMemoryFileManager inMemoryFileManager;
+    @Nullable private ClassUsageTracker classUsageTracker;
+    @Nullable private Jsr199TracingBridge tracingBridge;
 
     private CompilerWorker(ListeningExecutorService executor) {
       this.executor = executor;
+
+      classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
 
       try {
         boolean generatingSourceOnlyAbi =
@@ -294,7 +297,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       targetEvent.close();
 
       // Now start tracking the full jar
-      tracingBridge.setBuildTarget(libraryTarget);
+      Preconditions.checkNotNull(tracingBridge).setBuildTarget(libraryTarget);
       Preconditions.checkNotNull(phaseEventLogger).setBuildTarget(libraryTarget);
       targetEvent =
           new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), libraryTarget.toString());

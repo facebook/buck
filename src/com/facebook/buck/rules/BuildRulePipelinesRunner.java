@@ -174,6 +174,7 @@ class BuildRulePipelinesRunner {
       } finally {
         Preconditions.checkNotNull(state).close();
         state = null;
+        rules.clear();
       }
     }
   }

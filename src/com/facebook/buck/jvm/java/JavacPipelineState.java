@@ -174,6 +174,12 @@ public class JavacPipelineState implements RulePipelineState {
         LOG.warn(e, "Unable to close %s; we may be leaking memory.", closeable);
       }
     }
+
+    closeables.clear();
+    stdout = null;
+    stderr = null;
+    connection = null;
+    invocation = null;
   }
 
   private ImmutableList<Path> getAbsolutePathsForJavacInputs(Javac javac) {
