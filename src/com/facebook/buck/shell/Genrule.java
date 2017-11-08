@@ -56,17 +56,21 @@ import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
@@ -138,7 +142,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final String out;
   @AddToRuleKey private final String type;
   @AddToRuleKey private final boolean enableSandboxingInGenrule;
-  @AddToRuleKey private final boolean useSymlinksInSrcs;
 
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final BuildRuleResolver buildRuleResolver;
@@ -162,8 +165,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out,
-      boolean enableSandboxingInGenrule,
-      boolean useSymlinksInSrcs) {
+      boolean enableSandboxingInGenrule) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.buildRuleResolver = buildRuleResolver;
@@ -190,7 +192,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
     this.isWorkerGenrule = this.isWorkerGenrule();
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
-    this.useSymlinksInSrcs = useSymlinksInSrcs;
   }
 
   /** @return the absolute path to the output file */
@@ -212,7 +213,13 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   protected void addEnvironmentVariables(
       SourcePathResolver pathResolver,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    environmentVariablesBuilder.put("SRCS", calculateSrcsEnvVariable(pathResolver));
+    environmentVariablesBuilder.put(
+        "SRCS",
+        Joiner.on(' ')
+            .join(
+                FluentIterable.from(srcs)
+                    .transform(pathResolver::getAbsolutePath)
+                    .transform(Object::toString)));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath(pathResolver));
 
     environmentVariablesBuilder.put(
@@ -250,18 +257,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
     environmentVariablesBuilder.put("NO_BUCKD", "1");
-  }
-
-  private String calculateSrcsEnvVariable(SourcePathResolver pathResolver) {
-    Stream<Path> srcsPaths;
-    if (useSymlinksInSrcs) {
-      Path srcAbsolutePath = getProjectFilesystem().resolve(pathToSrcDirectory).toAbsolutePath();
-      srcsPaths =
-          createLinksToSources(pathResolver).keySet().stream().map(srcAbsolutePath::resolve);
-    } else {
-      srcsPaths = srcs.stream().map(pathResolver::getAbsolutePath);
-    }
-    return srcsPaths.map(Object::toString).collect(Collectors.joining(" "));
   }
 
   @VisibleForTesting
@@ -463,29 +458,18 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @VisibleForTesting
   void addSymlinkCommands(BuildContext context, ImmutableList.Builder<Step> commands) {
-    ImmutableMap<Path, Path> linksToSources = createLinksToSources(context.getSourcePathResolver());
-    if (!linksToSources.isEmpty()) {
-      commands.add(
-          new SymlinkTreeStep(
-              getProjectFilesystem(),
-              pathToSrcDirectory,
-              ImmutableSortedMap.copyOf(linksToSources)));
-    }
-  }
-
-  private ImmutableMap<Path, Path> createLinksToSources(SourcePathResolver sourcePathResolver) {
     if (srcs.isEmpty()) {
-      return ImmutableMap.of();
+      return;
     }
     Path basePath = getBuildTarget().getBasePath();
 
-    ImmutableMap.Builder<Path, Path> linksBuilder = ImmutableMap.builder();
+    Map<Path, Path> linksBuilder = new HashMap<>();
     // To preserve legacy behavior, we allow duplicate targets and just ignore all but the last.
     Set<Path> seenTargets = new HashSet<>();
     // Symlink all sources into the temp directory so that they can be used in the genrule.
-    for (SourcePath src : srcs) {
-      Path relativePath = sourcePathResolver.getRelativePath(src);
-      Path absolutePath = sourcePathResolver.getAbsolutePath(src);
+    for (SourcePath src : Lists.reverse(srcs)) {
+      Path relativePath = context.getSourcePathResolver().getRelativePath(src);
+      Path absolutePath = context.getSourcePathResolver().getAbsolutePath(src);
       Path canonicalPath = absolutePath.normalize();
 
       // By the time we get this far, all source paths (the keys in the map) have been converted
@@ -508,7 +492,9 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         linksBuilder.put(localPath, target);
       }
     }
-    return linksBuilder.build();
+    commands.add(
+        new SymlinkTreeStep(
+            getProjectFilesystem(), pathToSrcDirectory, ImmutableSortedMap.copyOf(linksBuilder)));
   }
 
   /** Get the output name of the generated file, as listed in the BUCK file. */

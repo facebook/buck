@@ -487,11 +487,9 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new AndroidResourceDescription(
             toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
-    builder.addDescriptions(
-        new ApkGenruleDescription(config, toolchainProvider, sandboxExecutionStrategy));
+    builder.addDescriptions(new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(
         new ApplePackageDescription(
-            config,
             toolchainProvider,
             sandboxExecutionStrategy,
             appleConfig,
@@ -525,7 +523,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(cxxLibraryDescription);
     builder.addDescriptions(
         new CxxGenruleDescription(
-            config, cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
+            cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
     builder.addDescriptions(new CxxLuaExtensionDescription(luaPlatforms, cxxBuckConfig));
     builder.addDescriptions(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
@@ -579,7 +577,7 @@ abstract class AbstractKnownBuildRuleTypes {
             cxxPlatforms));
     builder.addDescriptions(new JsBundleDescription(toolchainProvider));
     builder.addDescriptions(
-        new JsBundleGenruleDescription(config, toolchainProvider, sandboxExecutionStrategy));
+        new JsBundleGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(new JsLibraryDescription());
     builder.addDescriptions(new KeystoreDescription());
     builder.addDescriptions(

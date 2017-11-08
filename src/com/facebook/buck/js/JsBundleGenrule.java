@@ -63,8 +63,7 @@ public class JsBundleGenrule extends Genrule
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      JsBundleOutputs jsBundle,
-      boolean useSymlinksInSrcs) {
+      JsBundleOutputs jsBundle) {
     super(
         buildTarget,
         projectFilesystem,
@@ -78,8 +77,7 @@ public class JsBundleGenrule extends Genrule
         cmdExe,
         args.getType(),
         JsBundleOutputs.JS_DIR_NAME,
-        false,
-        useSymlinksInSrcs);
+        false);
     this.jsBundle = jsBundle;
     jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();

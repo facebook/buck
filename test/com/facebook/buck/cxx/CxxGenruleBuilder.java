@@ -35,7 +35,6 @@ public class CxxGenruleBuilder
   public CxxGenruleBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxGenruleDescription(
-            FakeBuckConfig.builder().build(),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             new TestToolchainProvider(),
             new NoSandboxExecutionStrategy(),

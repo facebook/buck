@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
@@ -74,17 +73,14 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   protected final ToolchainProvider toolchainProvider;
   protected final SandboxExecutionStrategy sandboxExecutionStrategy;
-  protected final GenruleConfig genruleConfig;
   protected final boolean enableSandbox;
 
   protected AbstractGenruleDescription(
-      BuckConfig buckConfig,
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       boolean enableSandbox) {
     this.toolchainProvider = toolchainProvider;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
-    this.genruleConfig = buckConfig.getView(GenruleConfig.class);
     this.enableSandbox = enableSandbox;
   }
 
@@ -113,8 +109,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         cmdExe,
         args.getType(),
         args.getOut(),
-        args.getEnableSandbox().orElse(enableSandbox),
-        args.getUseSymlinksInSrcs().orElse(genruleConfig.getUseSymlinksInSources()));
+        args.getEnableSandbox().orElse(enableSandbox));
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
@@ -286,7 +281,5 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     ImmutableList<SourcePath> getSrcs();
 
     Optional<Boolean> getEnableSandbox();
-
-    Optional<Boolean> getUseSymlinksInSrcs();
   }
 }

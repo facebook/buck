@@ -1,9 +1,0 @@
-genrule(
-    name = "cp_input_file",
-    srcs = [
-        "input2.txt",
-        "input1.txt",
-    ],
-    out = "output.txt",
-    cmd = "cat $SRCS > $OUT",
-)

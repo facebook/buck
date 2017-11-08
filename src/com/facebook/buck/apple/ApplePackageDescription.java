@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
-import com.facebook.buck.shell.GenruleConfig;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -65,11 +63,9 @@ public class ApplePackageDescription
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
   private final Flavor defaultCxxFlavor;
   private final AppleConfig config;
-  private final GenruleConfig genruleConfig;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public ApplePackageDescription(
-      BuckConfig buckConfig,
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       AppleConfig config,
@@ -79,7 +75,6 @@ public class ApplePackageDescription
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.config = config;
-    this.genruleConfig = buckConfig.getView(GenruleConfig.class);
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
   }
 
@@ -128,8 +123,7 @@ public class ApplePackageDescription
                       .build()),
           applePackageConfigAndPlatformInfo.get(),
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
-          bundle.isCacheable(),
-          args.getUseSymlinksInSrcs().orElse(genruleConfig.getUseSymlinksInSources()));
+          bundle.isCacheable());
     } else {
       return new BuiltinApplePackage(buildTarget, projectFilesystem, params, bundle);
     }
@@ -171,8 +165,6 @@ public class ApplePackageDescription
   interface AbstractApplePackageDescriptionArg extends CommonDescriptionArg {
     @Hint(isDep = false)
     BuildTarget getBundle();
-
-    Optional<Boolean> getUseSymlinksInSrcs();
   }
 
   /**

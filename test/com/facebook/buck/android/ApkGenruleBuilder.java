@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
@@ -29,10 +28,7 @@ public class ApkGenruleBuilder
 
   private ApkGenruleBuilder(BuildTarget target) {
     super(
-        new ApkGenruleDescription(
-            FakeBuckConfig.builder().build(),
-            new TestToolchainProvider(),
-            new NoSandboxExecutionStrategy()),
+        new ApkGenruleDescription(new TestToolchainProvider(), new NoSandboxExecutionStrategy()),
         target);
   }
 

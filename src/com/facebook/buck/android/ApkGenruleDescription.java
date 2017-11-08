@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -38,10 +37,8 @@ import org.immutables.value.Value;
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescriptionArg> {
 
   public ApkGenruleDescription(
-      BuckConfig buckConfig,
-      ToolchainProvider toolchainProvider,
-      SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(buckConfig, toolchainProvider, sandboxExecutionStrategy, false);
+      ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(toolchainProvider, sandboxExecutionStrategy, false);
   }
 
   @Override
@@ -95,8 +92,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         cmdExe,
         args.getType(),
         apk.getSourcePathToOutput(),
-        args.getIsCacheable(),
-        args.getUseSymlinksInSrcs().orElse(genruleConfig.getUseSymlinksInSources()));
+        args.getIsCacheable());
   }
 
   @BuckStyleImmutable
