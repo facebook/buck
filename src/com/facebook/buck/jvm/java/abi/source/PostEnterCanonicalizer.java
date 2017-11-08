@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
@@ -322,41 +321,6 @@ class PostEnterCanonicalizer {
   private TypeMirror getImportedType(TreePath treePath) {
     TreePath importedIdentifierPath = getImportedIdentifier(treePath);
     if (importedIdentifierPath != null) {
-      TypeMirror underlyingType = javacTrees.getTypeMirror(importedIdentifierPath);
-
-      if (underlyingType == null) {
-        // A null underlying type in an imported identifier means the import was a static
-        // import. We need to figure the type out ourselves.
-
-        MemberSelectTree importedIdentifierTree =
-            (MemberSelectTree) importedIdentifierPath.getLeaf();
-        DeclaredType parentType =
-            (DeclaredType)
-                getCanonicalType(
-                    new TreePath(importedIdentifierPath, importedIdentifierTree.getExpression()));
-        TypeElement parentElement = (TypeElement) parentType.asElement();
-        if (parentElement instanceof InferredTypeElement) {
-          return types.getDeclaredType(
-              elements.getOrCreateTypeElement(
-                  (InferredTypeElement) parentElement, importedIdentifierTree.getIdentifier()));
-        } else {
-          // The parent element didn't have to be inferred (it was on the classpath), yet
-          // it also didn't contain a type matching the identifier we're looking at. (If it
-          // had, we wouldn't have gotten an ErrorType for the identifier and thus wouldn't
-          // be in this method to begin with.) Either the type legit doesn't exist, or it
-          // comes from a superclass/superinterface of the parent element that is not
-          // available. Either way, the developer needs to change something.
-          javacTrees.printMessage(
-              Diagnostic.Kind.ERROR,
-              String.format(
-                  "%s does not contain a type named %s. If it comes from a superclass or interface, import it from there.",
-                  parentElement, importedIdentifierTree.getIdentifier()),
-              importedIdentifierPath.getLeaf(),
-              importedIdentifierPath.getCompilationUnit());
-          throw new SourceCodeWillNotCompileException();
-        }
-      }
-
       return getCanonicalType(importedIdentifierPath);
     }
 
