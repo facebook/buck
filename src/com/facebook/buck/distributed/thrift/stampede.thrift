@@ -158,6 +158,7 @@ struct BuildJob {
   7: optional BuildModeInfo buildModeInfo;
   8: optional string repository;
   9: optional string tenantId;
+  10: optional string statusMessage;
 }
 
 struct Announcement {
@@ -443,6 +444,7 @@ struct EnqueueMinionsResponse {
 struct SetFinalBuildStatusRequest {
   1: optional StampedeId stampedeId;
   2: optional BuildStatus buildStatus;
+  3: optional string buildStatusMessage;
 }
 
 struct SetFinalBuildStatusResponse {
