@@ -15,6 +15,8 @@ enum BuckCacheRequestType {
   FETCH = 100,
   STORE = 101,
   MULTI_FETCH = 102,
+  // `DELETE` is a define somewhere inside glibc
+  DELETE_REQUEST = 105,
 }
 
 struct RuleKey {
@@ -26,7 +28,7 @@ struct ArtifactMetadata {
   2: optional map<string, string> metadata;
   3: optional string buildTarget;
   4: optional string repository;
-  // 5: DEPRECATED
+  5: optional string artifactPayloadCrc32;  // DEPRECATED: Will be removed soon.
   6: optional string scheduleType;
   7: optional string artifactPayloadMd5;
   8: optional bool distributedBuildModeEnabled;
@@ -40,11 +42,14 @@ struct FetchDebugInfo {
 
   // Fastest store to return a cache hit.
   3: optional string fastestCacheHitStore;
+  // The store ID, indicating ZippyDB or Memcached, to return a cache hit.
+  4: optional string fastestCacheHitStoreId;
 }
 
 struct StoreDebugInfo {
   // All stores used in the write.
   1: optional list<string> storesWrittenInto;
+  2: optional i64 artifactSizeBytes;
 }
 
 struct BuckCacheStoreRequest {
@@ -116,6 +121,21 @@ struct PayloadInfo {
   1: optional i64 sizeBytes;
 }
 
+struct BuckCacheDeleteRequest {
+  1: optional list<RuleKey> ruleKeys;
+  2: optional string repository;
+  3: optional string scheduleType;
+  4: optional bool distributedBuildModeEnabled;
+}
+
+struct DeleteDebugInfo {
+  1: optional list<string> storesDeletedFrom;
+}
+
+struct BuckCacheDeleteResponse {
+  1: optional DeleteDebugInfo debugInfo;
+}
+
 struct BuckCacheRequest {
   1: optional BuckCacheRequestType type = BuckCacheRequestType.UNKNOWN;
 
@@ -123,6 +143,7 @@ struct BuckCacheRequest {
   101: optional BuckCacheFetchRequest fetchRequest;
   102: optional BuckCacheStoreRequest storeRequest;
   103: optional BuckCacheMultiFetchRequest multiFetchRequest;
+  105: optional BuckCacheDeleteRequest deleteRequest;
 }
 
 struct BuckCacheResponse {
@@ -135,4 +156,5 @@ struct BuckCacheResponse {
   101: optional BuckCacheFetchResponse fetchResponse;
   102: optional BuckCacheStoreResponse storeResponse;
   103: optional BuckCacheMultiFetchResponse multiFetchResponse;
+  105: optional BuckCacheDeleteResponse deleteResponse;
 }
