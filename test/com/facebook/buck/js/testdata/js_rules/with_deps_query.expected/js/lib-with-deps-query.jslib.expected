@@ -1,4 +1,4 @@
-library --lib @/buck-out/gen/js/build-target-output.json --lib @/buck-out/gen/js/native-js/photo-album-js.json --lib @/buck-out/gen/js/native-js/text-widget-js.json --root @
+library --lib @/buck-out/gen/js/build-target-output.jslib --lib @/buck-out/gen/js/native-js/photo-album-js.jslib --lib @/buck-out/gen/js/native-js/text-widget-js.jslib --root @
 library --root @
 transform --filename buck-out/gen/external/exported.js/exported.js
 var exported;

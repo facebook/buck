@@ -1,4 +1,4 @@
-dependencies --platform ios --release --lib @/buck-out/gen/js/extras#ios,release.json --lib @/buck-out/gen/js/fruit#ios,release.json --lib @/buck-out/gen/js/fruit-salad#ios,release.json --root @ fruit-salad
+dependencies --platform ios --release --lib @/buck-out/gen/js/extras#ios,release.jslib --lib @/buck-out/gen/js/fruit#ios,release.jslib --lib @/buck-out/gen/js/fruit-salad#ios,release.jslib --root @ fruit-salad
 library --release --platform ios --root @
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
@@ -16,7 +16,7 @@ var banana;
 optimize --platform ios
 transform --filename js/pear.js
 var pear;
-library --release --platform ios --lib @/buck-out/gen/js/extras#ios,release.json --lib @/buck-out/gen/js/fruit#ios,release.json --root @
+library --release --platform ios --lib @/buck-out/gen/js/extras#ios,release.jslib --lib @/buck-out/gen/js/fruit#ios,release.jslib --root @
 library --release --platform ios --root @
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js

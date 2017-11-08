@@ -84,7 +84,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.json"));
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jslib"));
   }
 
   public ImmutableSortedSet<SourcePath> getLibraryDependencies() {

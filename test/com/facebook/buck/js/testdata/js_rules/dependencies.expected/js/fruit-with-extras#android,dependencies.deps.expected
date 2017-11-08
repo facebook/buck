@@ -1,4 +1,4 @@
-dependencies --platform android --lib @/buck-out/gen/js/extras#android.json --lib @/buck-out/gen/js/fruit#android.json --root @ yoghurt banana apple
+dependencies --platform android --lib @/buck-out/gen/js/extras#android.jslib --lib @/buck-out/gen/js/fruit#android.jslib --root @ yoghurt banana apple
 library --platform android --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
