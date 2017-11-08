@@ -46,14 +46,12 @@ import javax.annotation.Nullable;
 public class MinionModeRunner implements DistBuildModeRunner {
   private static final Logger LOG = Logger.get(MinionModeRunner.class);
 
-  // TODO(alisdair): make this a .buckconfig setting
-  private static final int IDLE_SLEEP_INTERVAL_MS = 10;
-
   private final String coordinatorAddress;
   private volatile OptionalInt coordinatorPort;
   private final BuildExecutor buildExecutor;
   private final StampedeId stampedeId;
   private final BuildSlaveRunId buildSlaveRunId;
+  private final long minionPollLoopIntervalMillis;
 
   private final BuildCompletionChecker buildCompletionChecker;
   private final ExecutorService buildExecutorService;
@@ -79,29 +77,13 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   public MinionModeRunner(
       String coordinatorAddress,
-      BuildExecutor buildExecutor,
-      StampedeId stampedeId,
-      BuildSlaveRunId buildSlaveRunId,
-      int availableWorkUnitBuildCapacity,
-      BuildCompletionChecker buildCompletionChecker) {
-    this(
-        coordinatorAddress,
-        OptionalInt.empty(),
-        buildExecutor,
-        stampedeId,
-        buildSlaveRunId,
-        availableWorkUnitBuildCapacity,
-        buildCompletionChecker);
-  }
-
-  public MinionModeRunner(
-      String coordinatorAddress,
       OptionalInt coordinatorPort,
       BuildExecutor buildExecutor,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       int availableWorkUnitBuildCapacity,
-      BuildCompletionChecker buildCompletionChecker) {
+      BuildCompletionChecker buildCompletionChecker,
+      long minionPollLoopIntervalMillis) {
     this(
         coordinatorAddress,
         coordinatorPort,
@@ -110,6 +92,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
         buildSlaveRunId,
         availableWorkUnitBuildCapacity,
         buildCompletionChecker,
+        minionPollLoopIntervalMillis,
         MostExecutors.newMultiThreadExecutor(
             new CommandThreadFactory("MinionBuilderThread"), availableWorkUnitBuildCapacity));
   }
@@ -123,7 +106,9 @@ public class MinionModeRunner implements DistBuildModeRunner {
       BuildSlaveRunId buildSlaveRunId,
       int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
+      long minionPollLoopIntervalMillis,
       ExecutorService buildExecutorService) {
+    this.minionPollLoopIntervalMillis = minionPollLoopIntervalMillis;
     this.buildExecutor = buildExecutor;
     this.stampedeId = stampedeId;
     this.buildSlaveRunId = buildSlaveRunId;
@@ -153,7 +138,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
       while (!finished.get()) {
         signalFinishedTargetsAndFetchMoreWork(minionId, client);
-        Thread.sleep(IDLE_SLEEP_INTERVAL_MS);
+        Thread.sleep(minionPollLoopIntervalMillis);
       }
 
       completionCheckingThriftCall(() -> client.stop());

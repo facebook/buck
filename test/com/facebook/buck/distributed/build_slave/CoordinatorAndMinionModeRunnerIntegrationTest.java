@@ -35,6 +35,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
+  private static final long POLL_LOOP_INTERVAL_MILLIS = 8;
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -60,7 +61,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl7"),
             MAX_PARALLEL_WORK_UNITS,
-            EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class));
+            EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
+            POLL_LOOP_INTERVAL_MILLIS);
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
     int exitCode = jointRunner.runAndReturnExitCode();

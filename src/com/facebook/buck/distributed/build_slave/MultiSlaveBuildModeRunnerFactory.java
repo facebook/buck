@@ -104,7 +104,8 @@ public class MultiSlaveBuildModeRunnerFactory {
             .getView(ResourcesConfig.class)
             .getConcurrencyLimit()
             .threadLimit,
-        checker);
+        checker,
+        distBuildConfig.getMinionPollLoopIntervalMillis());
   }
 
   /**

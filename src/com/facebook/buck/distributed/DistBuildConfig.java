@@ -80,6 +80,9 @@ public class DistBuildConfig {
 
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
+  private static final String MINION_POLL_LOOP_INTERVAL_MILLIS = "minion_poll_loop_interval_millis";
+  private static final long DEFAULT_MINION_POLL_LOOP_INTERVAL_MILLIS = 10;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -183,6 +186,12 @@ public class DistBuildConfig {
     return buckConfig
         .getBoolean(STAMPEDE_SECTION, LOG_MATERIALIZATION_ENABLED)
         .orElse(DEFAULT_LOG_MATERIALIZATION_ENABLED);
+  }
+
+  public long getMinionPollLoopIntervalMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, MINION_POLL_LOOP_INTERVAL_MILLIS)
+        .orElse(DEFAULT_MINION_POLL_LOOP_INTERVAL_MILLIS);
   }
 
   /**

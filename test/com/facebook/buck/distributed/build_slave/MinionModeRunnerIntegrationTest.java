@@ -44,6 +44,7 @@ public class MinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
+  private static final long POLL_LOOP_INTERVAL_MILLIS = 9;
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -60,7 +61,8 @@ public class MinionModeRunnerIntegrationTest {
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl1"),
             MAX_PARALLEL_WORK_UNITS,
-            checker);
+            checker,
+            POLL_LOOP_INTERVAL_MILLIS);
 
     minion.runAndReturnExitCode();
     Assert.fail("The previous line should've thrown an exception.");
@@ -79,7 +81,8 @@ public class MinionModeRunnerIntegrationTest {
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl2"),
             MAX_PARALLEL_WORK_UNITS,
-            checker);
+            checker,
+            POLL_LOOP_INTERVAL_MILLIS);
 
     int exitCode = minion.runAndReturnExitCode();
     // Server does not exit because the build has already been marked as finished.
@@ -101,7 +104,8 @@ public class MinionModeRunnerIntegrationTest {
               STAMPEDE_ID,
               new BuildSlaveRunId().setId("sl3"),
               MAX_PARALLEL_WORK_UNITS,
-              checker);
+              checker,
+              POLL_LOOP_INTERVAL_MILLIS);
       int exitCode = minion.runAndReturnExitCode();
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(4, localBuilder.getBuildTargets().size());
