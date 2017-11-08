@@ -7,13 +7,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>FBControlCore</string>
+	<string>FBDeviceControl</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.facebook.FBControlCore</string>
+	<string>com.facebook.FBDeviceControl</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>FBControlCore</string>
+	<string>FBDeviceControl</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
