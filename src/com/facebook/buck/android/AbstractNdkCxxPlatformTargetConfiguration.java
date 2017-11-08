@@ -16,46 +16,55 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArch;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
+import com.facebook.buck.android.toolchain.ndk.NdkToolchain;
+import com.facebook.buck.android.toolchain.ndk.NdkToolchainTarget;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /** A container for all configuration settings needed to define a build target. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractNdkCxxPlatformTargetConfiguration {
-
-  public abstract NdkCxxPlatforms.Toolchain getToolchain();
-
-  public abstract NdkCxxPlatforms.ToolchainTarget getToolchainTarget();
-
-  public abstract NdkCxxPlatforms.TargetArch getTargetArch();
-
-  public abstract NdkCxxPlatforms.TargetArchAbi getTargetArchAbi();
+  public abstract TargetCpuType getTargetCpuType();
 
   public abstract String getTargetAppPlatform();
 
   public abstract NdkCxxPlatformCompiler getCompiler();
 
-  public abstract ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>>
-      getCompilerFlags();
-
-  public abstract ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>>
-      getAssemblerFlags();
-
-  public abstract ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>> getLinkerFlags();
-
-  public ImmutableList<String> getAssemblerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.ofNullable(getAssemblerFlags().get(type)).orElse(ImmutableList.of());
+  @Value.Derived
+  public NdkToolchain getToolchain() {
+    return getTargetCpuType().getToolchain();
   }
 
-  public ImmutableList<String> getCompilerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.ofNullable(getCompilerFlags().get(type)).orElse(ImmutableList.of());
+  @Value.Derived
+  public NdkToolchainTarget getToolchainTarget() {
+    return getTargetCpuType().getToolchainTarget();
   }
 
-  public ImmutableList<String> getLinkerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.ofNullable(getLinkerFlags().get(type)).orElse(ImmutableList.of());
+  @Value.Derived
+  public NdkTargetArch getTargetArch() {
+    return getTargetCpuType().getTargetArch();
+  }
+
+  @Value.Derived
+  public NdkTargetArchAbi getTargetArchAbi() {
+    return getTargetCpuType().getTargetArchAbi();
+  }
+
+  public ImmutableList<String> getAssemblerFlags(NdkCompilerType type) {
+    return getTargetCpuType().getAssemblerFlags(type);
+  }
+
+  public ImmutableList<String> getCompilerFlags(NdkCompilerType type) {
+    return getTargetCpuType().getCompilerFlags(type);
+  }
+
+  public ImmutableList<String> getLinkerFlags(NdkCompilerType type) {
+    return getTargetCpuType().getLinkerFlags(type);
   }
 }

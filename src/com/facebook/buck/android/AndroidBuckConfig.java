@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
@@ -68,8 +69,8 @@ public class AndroidBuckConfig {
     return delegate.getOptionalListWithoutComments("ndk", "cpu_abis").map(ImmutableSet::copyOf);
   }
 
-  public Optional<NdkCxxPlatformCompiler.Type> getNdkCompiler() {
-    return delegate.getEnum("ndk", "compiler", NdkCxxPlatformCompiler.Type.class);
+  public Optional<NdkCompilerType> getNdkCompiler() {
+    return delegate.getEnum("ndk", "compiler", NdkCompilerType.class);
   }
 
   public Optional<String> getNdkGccVersion() {

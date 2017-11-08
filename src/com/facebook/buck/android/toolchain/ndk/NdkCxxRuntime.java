@@ -25,9 +25,9 @@ public enum NdkCxxRuntime {
   LIBCXX("llvm-libc++", "c++_shared", "c++_static"),
   ;
 
-  private final String name;
-  private final String sharedName;
-  private final String staticName;
+  public final String name;
+  public final String sharedName;
+  public final String staticName;
 
   /**
    * @param name the runtimes directory name in the NDK.
@@ -38,18 +38,6 @@ public enum NdkCxxRuntime {
     this.name = name;
     this.sharedName = sharedName;
     this.staticName = staticName;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getStaticName() {
-    return staticName;
-  }
-
-  public String getSharedName() {
-    return sharedName;
   }
 
   public String getSoname() {

@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
@@ -221,7 +222,7 @@ public class NdkCxxPlatformTest {
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
             NdkCxxPlatformCompiler.builder()
-                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setType(NdkCompilerType.GCC)
                 .setVersion("gcc-version")
                 .setGccVersion("clang-version")
                 .build(),
@@ -254,7 +255,7 @@ public class NdkCxxPlatformTest {
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
             NdkCxxPlatformCompiler.builder()
-                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setType(NdkCompilerType.GCC)
                 .setVersion("gcc-version")
                 .setGccVersion("clang-version")
                 .build(),
@@ -353,7 +354,7 @@ public class NdkCxxPlatformTest {
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
             NdkCxxPlatformCompiler.builder()
-                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setType(NdkCompilerType.GCC)
                 .setVersion("gcc-version")
                 .setGccVersion("clang-version")
                 .build(),
@@ -437,12 +438,12 @@ public class NdkCxxPlatformTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     // Test all major compiler and runtime combinations.
-    ImmutableList<Pair<NdkCxxPlatformCompiler.Type, NdkCxxRuntime>> configs =
+    ImmutableList<Pair<NdkCompilerType, NdkCxxRuntime>> configs =
         ImmutableList.of(
-            new Pair<>(NdkCxxPlatformCompiler.Type.GCC, NdkCxxRuntime.GNUSTL),
-            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.GNUSTL),
-            new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.LIBCXX));
-    for (Pair<NdkCxxPlatformCompiler.Type, NdkCxxRuntime> config : configs) {
+            new Pair<>(NdkCompilerType.GCC, NdkCxxRuntime.GNUSTL),
+            new Pair<>(NdkCompilerType.CLANG, NdkCxxRuntime.GNUSTL),
+            new Pair<>(NdkCompilerType.CLANG, NdkCxxRuntime.LIBCXX));
+    for (Pair<NdkCompilerType, NdkCxxRuntime> config : configs) {
       Map<String, ImmutableMap<TargetCpuType, RuleKey>> preprocessAndCompileRukeKeys =
           new HashMap<>();
       Map<String, ImmutableMap<TargetCpuType, RuleKey>> compileRukeKeys = new HashMap<>();
@@ -515,7 +516,7 @@ public class NdkCxxPlatformTest {
             filesystem,
             root,
             NdkCxxPlatformCompiler.builder()
-                .setType(NdkCxxPlatformCompiler.Type.GCC)
+                .setType(NdkCompilerType.GCC)
                 .setVersion("gcc-version")
                 .setGccVersion("clang-version")
                 .build(),

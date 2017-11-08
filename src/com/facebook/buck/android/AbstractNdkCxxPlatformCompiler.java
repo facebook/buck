@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
@@ -23,7 +24,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 interface AbstractNdkCxxPlatformCompiler {
 
-  Type getType();
+  NdkCompilerType getType();
 
   /**
    * @return the compiler version, corresponding to either `gcc_version` or `clang_version` from the
@@ -36,32 +37,4 @@ interface AbstractNdkCxxPlatformCompiler {
    *     tools (e.g. ar, as,, ld.gold), we need to *always* have a version of GCC.
    */
   String getGccVersion();
-
-  enum Type {
-    GCC("gcc", "gcc", "g++"),
-    CLANG("clang", "clang", "clang++"),
-    ;
-
-    private final String name;
-    private final String cc;
-    private final String cxx;
-
-    Type(String name, String cc, String cxx) {
-      this.name = name;
-      this.cc = cc;
-      this.cxx = cxx;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public String getCc() {
-      return cc;
-    }
-
-    public String getCxx() {
-      return cxx;
-    }
-  }
 }

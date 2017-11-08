@@ -8,6 +8,9 @@ java_immutables_library(
     name = "cxxruntime",
     srcs = CXXRUNTIME_SRCS,
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+    ],
 )
 
 BUCK_CONFIG_SRCS = [
