@@ -1887,7 +1887,9 @@ class CachingBuildRuleBuilder {
               shouldUploadToCache,
               outputHash,
               outputSize,
-              getBuildRuleDiagnosticData(failureOrBuiltLocally));
+              getBuildRuleDiagnosticData(failureOrBuiltLocally),
+              Optional.ofNullable(manifestFetchResult),
+              Optional.ofNullable(manifestStoreResult));
       return finished;
     }
   }

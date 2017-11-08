@@ -384,6 +384,8 @@ public class CachingBuildEngineTest {
                   false,
                   Optional.empty(),
                   Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
                   Optional.empty())));
     }
 
@@ -438,6 +440,8 @@ public class CachingBuildEngineTest {
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   false,
+                  Optional.empty(),
+                  Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
@@ -662,6 +666,8 @@ public class CachingBuildEngineTest {
                     false,
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
       }
     }
@@ -716,6 +722,8 @@ public class CachingBuildEngineTest {
                     false,
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
         BuildRuleEvent.Started started =
             TestEventConfigurator.configureTestEvent(
@@ -732,6 +740,8 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                     false,
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty())));
@@ -800,6 +810,8 @@ public class CachingBuildEngineTest {
                     false,
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
         BuildRuleEvent.Started startedDep =
             TestEventConfigurator.configureTestEvent(
@@ -818,6 +830,8 @@ public class CachingBuildEngineTest {
                     false,
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
         BuildRuleEvent.Started startedTransitive =
             TestEventConfigurator.configureTestEvent(
@@ -834,6 +848,8 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                     false,
+                    Optional.empty(),
+                    Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty())));

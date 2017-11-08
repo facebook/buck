@@ -63,6 +63,8 @@ public class CacheRateStatsKeeperTest {
         false,
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 

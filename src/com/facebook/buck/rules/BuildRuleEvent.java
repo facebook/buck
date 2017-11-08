@@ -88,7 +88,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       boolean willTryUploadToCache,
       Optional<HashCode> outputHash,
       Optional<Long> outputSize,
-      Optional<BuildRuleDiagnosticData> diagnosticData) {
+      Optional<BuildRuleDiagnosticData> diagnosticData,
+      Optional<ManifestFetchResult> manifestFetchResult,
+      Optional<ManifestStoreResult> manifestStoreResult) {
     return new Finished(
         beginning,
         ruleKeys,
@@ -99,7 +101,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         willTryUploadToCache,
         outputHash,
         outputSize,
-        diagnosticData);
+        diagnosticData,
+        manifestFetchResult,
+        manifestStoreResult);
   }
 
   public static StartedRuleKeyCalc ruleKeyCalculationStarted(
@@ -207,7 +211,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
-    Optional<BuildRuleDiagnosticData> diagnosticData;
+    private final Optional<BuildRuleDiagnosticData> diagnosticData;
+    private final Optional<ManifestFetchResult> manifestFetchResult;
+    private final Optional<ManifestStoreResult> manifestStoreResult;
 
     private Finished(
         BeginningBuildRuleEvent beginning,
@@ -219,7 +225,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         boolean willTryUploadToCache,
         Optional<HashCode> outputHash,
         Optional<Long> outputSize,
-        Optional<BuildRuleDiagnosticData> diagnosticData) {
+        Optional<BuildRuleDiagnosticData> diagnosticData,
+        Optional<ManifestFetchResult> manifestFetchResult,
+        Optional<ManifestStoreResult> manifestStoreResult) {
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -230,6 +238,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.outputHash = outputHash;
       this.outputSize = outputSize;
       this.diagnosticData = diagnosticData;
+      this.manifestFetchResult = manifestFetchResult;
+      this.manifestStoreResult = manifestStoreResult;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -280,6 +290,16 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<BuildRuleDiagnosticData> getDiagnosticData() {
       return diagnosticData;
+    }
+
+    @JsonIgnore
+    public Optional<ManifestFetchResult> getManifestFetchResult() {
+      return manifestFetchResult;
+    }
+
+    @JsonIgnore
+    public Optional<ManifestStoreResult> getManifestStoreResult() {
+      return manifestStoreResult;
     }
 
     @Override

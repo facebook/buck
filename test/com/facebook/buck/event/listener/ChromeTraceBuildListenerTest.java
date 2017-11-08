@@ -392,6 +392,8 @@ public class ChromeTraceBuildListenerTest {
             false,
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty()));
 
     try (final SimplePerfEvent.Scope scope1 =
