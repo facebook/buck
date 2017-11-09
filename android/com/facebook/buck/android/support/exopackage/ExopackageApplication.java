@@ -76,6 +76,10 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
   private T createDelegate() {
     if (isExopackageEnabledForSecondaryDex()) {
       ExopackageDexLoader.loadExopackageJars(this, isExopackageEnabledForModules());
+      if (isExopackageEnabledForModules()) {
+        registerReceiver(
+            new ModularDexChangedReceiver(), ModularDexChangedReceiver.getIntentFilter());
+      }
     }
 
     if (isExopackageEnabledForNativeLibraries()) {
