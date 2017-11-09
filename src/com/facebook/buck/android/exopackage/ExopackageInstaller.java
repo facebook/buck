@@ -152,6 +152,13 @@ public class ExopackageInstaller {
       metadata.putAll(resourcesExoHelper.getMetadataToInstall());
     }
 
+    if (exoInfo.getModuleInfo().isPresent()) {
+      ModuleExoHelper moduleExoHelper =
+          new ModuleExoHelper(pathResolver, projectFilesystem, exoInfo.getModuleInfo().get());
+      wantedPaths.addAll(moduleExoHelper.getFilesToInstall().keySet());
+      metadata.putAll(moduleExoHelper.getMetadataToInstall());
+    }
+
     deleteUnwantedFiles(presentFiles, wantedPaths.build());
     installMetadata(metadata.build());
   }
@@ -175,6 +182,12 @@ public class ExopackageInstaller {
       ResourcesExoHelper resourcesExoHelper =
           new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
       installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), RESOURCES_TYPE);
+    }
+
+    if (exoInfo.getModuleInfo().isPresent()) {
+      ModuleExoHelper moduleExoHelper =
+          new ModuleExoHelper(pathResolver, projectFilesystem, exoInfo.getModuleInfo().get());
+      installMissingFiles(presentFiles, moduleExoHelper.getFilesToInstall(), "modular_dex");
     }
   }
 

@@ -88,11 +88,14 @@ class AndroidBinaryInstallGraphEnhancer {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ExopackageInfo exopackageInfo = apkInfo.getExopackageInfo().get();
     ImmutableList.Builder<BuildRule> finisherDeps = ImmutableList.builder();
-    if (exopackageInfo.getDexInfo().isPresent() || exopackageInfo.getNativeLibsInfo().isPresent()) {
+    if (exopackageInfo.getDexInfo().isPresent()
+        || exopackageInfo.getNativeLibsInfo().isPresent()
+        || exopackageInfo.getModuleInfo().isPresent()) {
       ExopackageInfo filteredExopackageInfo =
           ExopackageInfo.builder()
               .setDexInfo(exopackageInfo.getDexInfo())
               .setNativeLibsInfo(exopackageInfo.getNativeLibsInfo())
+              .setModuleInfo(exopackageInfo.getModuleInfo())
               .build();
       ExopackageFilesInstaller fileInstaller =
           new ExopackageFilesInstaller(
