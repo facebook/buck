@@ -182,13 +182,13 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
     // Iterate over all of the inFiles and add all entries that match the requiredInPrimaryZip
     // predicate.
-    LOG.debug("Traversing classpath for primary zip");
+    LOG.verbose("Traversing classpath for primary zip");
 
     classpathTraverser.traverse(
         new ClasspathTraversal(inFiles, filesystem) {
           @Override
           public void visit(FileLike entry) throws IOException {
-            LOG.debug("Visiting " + entry.getRelativePath());
+            LOG.verbose("Visiting " + entry.getRelativePath());
 
             String relativePath = entry.getRelativePath();
             if (!relativePath.endsWith(".class")) {
@@ -247,7 +247,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       }
     }
 
-    LOG.debug("Traversing classpath for secondary zip");
+    LOG.verbose("Traversing classpath for secondary zip");
 
     // Now that all of the required entries have been added to the primary zip, fill the rest of
     // the zip up with the remaining entries.
@@ -264,7 +264,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
               return;
             }
 
-            LOG.debug("Visiting " + entry.getRelativePath());
+            LOG.verbose("Visiting " + entry.getRelativePath());
 
             // Even if we have started writing a secondary dex, we still check if there is any
             // leftover
