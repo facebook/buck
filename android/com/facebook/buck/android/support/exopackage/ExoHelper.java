@@ -17,9 +17,11 @@
 package com.facebook.buck.android.support.exopackage;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Looper;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +56,29 @@ public class ExoHelper {
     final Intent intent = new Intent();
     intent.setComponent(new ComponentName(context, className));
     return intent;
+  }
+
+  /**
+   * Create a new Fragment instance. This should be preferred to Fragment#instantiate() due to
+   * caching of the lookup class.
+   *
+   * @param className the name of the fragment subclass to instantiate
+   * @param args optional args to pass to the fragment, or null if no args
+   * @return a new instance of the given Fragment class
+   * @throws RuntimeException if the given className cannot be found or instantiated as a fragment
+   */
+  public static Fragment createFragment(String className, Bundle args) {
+    try {
+      final Fragment instance = (Fragment) Class.forName(className).newInstance();
+      instance.setArguments(args);
+      return instance;
+    } catch (IllegalAccessException | InstantiationException e) {
+      throw new RuntimeException("Could not instantiate " + className, e);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(className + " could not be found", e);
+    } catch (ClassCastException e) {
+      throw new RuntimeException("Fragment is not assignable from " + className, e);
+    }
   }
 
   /**
