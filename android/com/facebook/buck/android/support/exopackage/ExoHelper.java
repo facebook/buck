@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android.support.exopackage;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Looper;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +26,19 @@ import java.util.List;
 public class ExoHelper {
   private static final List<OnModulesChangedCallback> sCallbacks =
       new ArrayList<OnModulesChangedCallback>();
+
+  /**
+   * Restart the given activity. The same intent will be used to launch the new activity, preserving
+   * actions, extras, etc. Must be run on the main thread.
+   *
+   * @param activity the activity to restart
+   */
+  public static void restartActivity(Activity activity) {
+    assertIsUiThread();
+    final Intent intent = activity.getIntent();
+    activity.startActivity(intent);
+    activity.finish();
+  }
 
   /**
    * Add a callback which will fire whenever code definitions have changed in the app. This callback
@@ -56,6 +72,12 @@ public class ExoHelper {
       for (OnModulesChangedCallback mCallback : sCallbacks) {
         mCallback.onModulesChanged();
       }
+    }
+  }
+
+  private static void assertIsUiThread() {
+    if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+      throw new RuntimeException("This method must be called from the UI thread");
     }
   }
 }
