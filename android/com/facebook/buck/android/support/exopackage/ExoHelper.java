@@ -133,6 +133,77 @@ public class ExoHelper {
   }
 
   /**
+   * Try to instantiate a support Fragment with the given classname. This should be preferred to
+   * Fragment#instantiate() due to caching of the lookup class.
+   *
+   * @param className the name of the fragment subclass to instantiate
+   * @param args optional args to pass to the fragment, or null if no args
+   * @return null if the given class does not exist, or could not be instantiated, otherwise an
+   *     instance of the Fragment subclass.
+   * @throws RuntimeException if the given className cannot be found or instantiated as a fragment
+   */
+  public static android.support.v4.app.Fragment createSupportFragment(
+      String className, Bundle args) {
+    try {
+      final android.support.v4.app.Fragment instance =
+          (android.support.v4.app.Fragment) Class.forName(className).newInstance();
+      instance.setArguments(args);
+      return instance;
+    } catch (IllegalAccessException | InstantiationException e) {
+      throw new RuntimeException("Could not instantiate " + className, e);
+    } catch (ClassNotFoundException | ClassCastException e) {
+      throw new RuntimeException(
+          className + " is not a valid Fragment subclass or could not be found", e);
+    }
+  }
+
+  /**
+   * Refresh the given fragment in place, preserving construction args, and any saved state. The new
+   * fragment will be constructed via a fresh class lookup.
+   *
+   * @param fragment the fragment to refresh
+   */
+  public static void refreshFragment(android.support.v4.app.Fragment fragment) {
+    refreshFragment(fragment, true);
+  }
+
+  /**
+   * Try refreshing the given Fragment in place, preserving construction args. The new Fragment will
+   * be constructed via a fresh class lookup.
+   *
+   * @param fragment the fragment to refresh
+   * @param preserveState if true, attempt to save the Fragment's current state and restore it to
+   *     the new instance of the fragment
+   */
+  public static void refreshFragment(
+      android.support.v4.app.Fragment fragment, boolean preserveState) {
+    assertIsUiThread();
+    android.support.v4.app.FragmentManager manager = fragment.getFragmentManager();
+    final Bundle args = fragment.getArguments();
+    android.support.v4.app.Fragment replacement =
+        createSupportFragment(fragment.getClass().getName(), args);
+
+    String tag = fragment.getTag();
+
+    if (preserveState) {
+      // Restore any state that's possible
+      final android.support.v4.app.Fragment.SavedState savedState =
+          manager.saveFragmentInstanceState(fragment);
+      replacement.setInitialSavedState(savedState);
+    }
+
+    int containerViewId = ((View) fragment.getView().getParent()).getId();
+    final android.support.v4.app.FragmentTransaction transaction = manager.beginTransaction();
+    transaction.remove(fragment);
+    if (tag != null) {
+      transaction.add(containerViewId, replacement, tag);
+    } else {
+      transaction.add(containerViewId, replacement);
+    }
+    transaction.commit();
+  }
+
+  /**
    * Restart the application by setting a PendingIntent on the AlarmManager and then killing the
    * current process.
    *

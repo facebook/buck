@@ -1,6 +1,9 @@
 android_library(
     name = "exopackage",
     srcs = glob(["*.java"]),
+    provided_deps = [
+        "//android/android/support/v4/app:support_stub",
+    ],
     source = "7",
     target = "7",
     visibility = [
