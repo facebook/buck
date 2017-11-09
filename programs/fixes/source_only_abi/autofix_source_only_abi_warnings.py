@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -48,8 +49,8 @@ java.abi_generation_mode=migrating_to_source_only."""
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--log-file",
                         help="buck.log file to search for migration instructions "
-                             "(default ./buck-out/log/buck-0.log)",
-                        default=os.path.join(os.getcwd(), "buck-out", "log", "buck-0.log"))
+                             "(default ./buck-out/log/last_buildcommand/buck.log)",
+                        default=os.path.join(os.getcwd(), "buck-out", "log", "last_buildcommand", "buck.log"))
     return parser.parse_args()
 
 

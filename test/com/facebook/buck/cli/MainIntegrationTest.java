@@ -137,6 +137,7 @@ public class MainIntegrationTest {
             "  distbuild      attaches to a distributed build (experimental)",
             "  doctor         debug and fix issues of Buck commands",
             "  fetch          downloads remote resources to your local machine",
+            "  fix            attempts to fix errors encountered in the previous build",
             "  help           "
                 + "shows this screen (or the help page of the specified command) and exits.",
             "  install        builds and installs an application",

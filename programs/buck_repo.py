@@ -13,6 +13,7 @@ from subprocutils import which
 
 RESOURCES = {
     "android_agent_path": "assets/android/agent.apk",
+    "fix_script": "programs/fixes/source_only_abi/autofix_source_only_abi_warnings.py",
     "buck_server": "bin/buck",
     "buck_build_type_info": "config/build_type/LOCAL_ANT/type.txt",
     "dx": "third-party/java/dx/etc/dx",

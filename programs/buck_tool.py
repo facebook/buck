@@ -41,6 +41,7 @@ class Resource(object):
 
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
+    Resource("fix_script", executable=True),
     Resource("testrunner_classes"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
