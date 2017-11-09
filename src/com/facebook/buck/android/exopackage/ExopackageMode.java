@@ -22,6 +22,7 @@ public enum ExopackageMode {
   SECONDARY_DEX(1),
   NATIVE_LIBRARY(2),
   RESOURCES(4),
+  MODULES(8),
   ;
 
   private final int code;
@@ -40,6 +41,10 @@ public enum ExopackageMode {
 
   public static boolean enabledForResources(EnumSet<ExopackageMode> modes) {
     return modes.contains(RESOURCES);
+  }
+
+  public static boolean enabledForModules(EnumSet<ExopackageMode> modes) {
+    return modes.contains(MODULES);
   }
 
   public static int toBitmask(EnumSet<ExopackageMode> modes) {
