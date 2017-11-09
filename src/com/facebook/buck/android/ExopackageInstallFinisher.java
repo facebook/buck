@@ -114,7 +114,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
             context
                 .getAndroidDevicesHelper()
                 .get()
-                .adbCall(
+                .adbCallOrThrow(
                     "finishing_apk_installation_call",
                     device -> {
                       ExopackageInstaller installer =

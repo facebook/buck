@@ -287,7 +287,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   @SuppressForbidden
-  public int startActivity(
+  public void startActivity(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
@@ -307,11 +307,9 @@ public class AdbHelper implements AndroidDevicesHelper {
 
       // Sanity check.
       if (launcherActivities.isEmpty()) {
-        printError("No launchable activities found.");
-        return 1;
+        throw new HumanReadableException("No launchable activities found.");
       } else if (launcherActivities.size() > 1) {
-        printError("Default activity is ambiguous.");
-        return 1;
+        throw new HumanReadableException("Default activity is ambiguous.");
       }
 
       // Construct a component for the '-n' argument of 'adb shell am start'.
@@ -328,17 +326,18 @@ public class AdbHelper implements AndroidDevicesHelper {
     StartActivityEvent.Started started =
         StartActivityEvent.started(hasInstallableApk.getBuildTarget(), activityToRun);
     getBuckEventBus().post(started);
-    boolean success =
-        adbCall(
-            "start activity",
-            (device) -> {
-              ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
-              return true;
-            },
-            false);
-    getBuckEventBus().post(StartActivityEvent.finished(started, success));
-
-    return success ? 0 : 1;
+    try {
+      adbCallOrThrow(
+          "start activity",
+          (device) -> {
+            ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
+            return true;
+          },
+          false);
+      getBuckEventBus().post(StartActivityEvent.finished(started, true));
+    } catch (Exception e) {
+      getBuckEventBus().post(StartActivityEvent.finished(started, false));
+    }
   }
 
   /**

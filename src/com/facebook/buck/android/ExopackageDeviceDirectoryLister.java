@@ -83,7 +83,7 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
             context
                 .getAndroidDevicesHelper()
                 .get()
-                .adbCall(
+                .adbCallOrThrow(
                     "listing_exo_contents_for_device",
                     (device) -> {
                       device.mkDirP(ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.toString());

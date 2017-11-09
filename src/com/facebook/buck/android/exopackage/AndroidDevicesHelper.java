@@ -19,6 +19,7 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -40,6 +41,14 @@ public interface AndroidDevicesHelper {
   interface AdbDeviceCallable {
 
     boolean apply(AndroidDevice device) throws Exception;
+  }
+
+  /** A simple wrapper around adbCall that will throw if adbCall returns false. */
+  default void adbCallOrThrow(String description, AdbDeviceCallable func, boolean quiet)
+      throws InterruptedException {
+    if (!adbCall(description, func, quiet)) {
+      throw new HumanReadableException(String.format("Error when running: <%s>", description));
+    }
   }
 
   boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
@@ -76,7 +85,7 @@ public interface AndroidDevicesHelper {
       throws InterruptedException;
 
   @SuppressForbidden
-  int startActivity(
+  void startActivity(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,

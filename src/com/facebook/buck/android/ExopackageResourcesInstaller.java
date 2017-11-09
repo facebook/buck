@@ -96,7 +96,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
             context
                 .getAndroidDevicesHelper()
                 .get()
-                .adbCall(
+                .adbCallOrThrow(
                     "installing_exo_resource_files",
                     device -> {
                       ImmutableSortedSet<Path> presentFiles =
