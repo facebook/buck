@@ -105,7 +105,8 @@ public class DummyRDotJavaTest {
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipPrebuiltRDotJava */ false);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
@@ -206,7 +207,8 @@ public class DummyRDotJavaTest {
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipPrebuiltRDotJava */ false);
     assertEquals(
         BuildTargets.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),

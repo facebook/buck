@@ -155,6 +155,11 @@ public class AndroidLibraryDescription
 
     Optional<String> getResourceUnionPackage();
 
+    @Value.Default
+    default boolean isSkipPrebuiltRDotJava() {
+      return false;
+    }
+
     Optional<String> getFinalRName();
   }
 

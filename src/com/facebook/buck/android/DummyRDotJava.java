@@ -79,6 +79,7 @@ public class DummyRDotJava extends AbstractBuildRule
   @AddToRuleKey private final Optional<String> unionPackage;
   @AddToRuleKey private final Optional<String> finalRName;
   @AddToRuleKey private final boolean useOldStyleableFormat;
+  @AddToRuleKey private final boolean skipPrebuiltRDotJava;
 
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -93,7 +94,8 @@ public class DummyRDotJava extends AbstractBuildRule
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
-      boolean useOldStyleableFormat) {
+      boolean useOldStyleableFormat,
+      boolean skipPrebuiltRDotJava) {
     this(
         buildTarget,
         projectFilesystem,
@@ -104,7 +106,8 @@ public class DummyRDotJava extends AbstractBuildRule
         unionPackage,
         finalRName,
         useOldStyleableFormat,
-        abiPaths(androidResourceDeps));
+        abiPaths(androidResourceDeps),
+        skipPrebuiltRDotJava);
   }
 
   private DummyRDotJava(
@@ -117,7 +120,8 @@ public class DummyRDotJava extends AbstractBuildRule
       Optional<String> unionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
-      ImmutableList<SourcePath> abiInputs) {
+      ImmutableList<SourcePath> abiInputs,
+      boolean skipPrebuiltRDotJava) {
     super(buildTarget, projectFilesystem);
 
     // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
@@ -135,6 +139,7 @@ public class DummyRDotJava extends AbstractBuildRule
             .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
             .collect(ImmutableList.toImmutableList());
     this.useOldStyleableFormat = useOldStyleableFormat;
+    this.skipPrebuiltRDotJava = skipPrebuiltRDotJava;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.compileStepFactory = compileStepFactory;
     this.forceFinalResourceIds = forceFinalResourceIds;
@@ -202,7 +207,8 @@ public class DummyRDotJava extends AbstractBuildRule
               forceFinalResourceIds,
               unionPackage,
               /* rName */ Optional.empty(),
-              useOldStyleableFormat);
+              useOldStyleableFormat,
+              skipPrebuiltRDotJava);
       steps.add(mergeStep);
 
       if (!finalRName.isPresent()) {
@@ -217,7 +223,8 @@ public class DummyRDotJava extends AbstractBuildRule
                 /* forceFinalResourceIds */ true,
                 unionPackage,
                 finalRName,
-                useOldStyleableFormat);
+                useOldStyleableFormat,
+                skipPrebuiltRDotJava);
         steps.add(mergeFinalRStep);
 
         javaSourceFilePaths =

@@ -134,9 +134,10 @@ public class RobolectricTestDescription
             javacOptions,
             DependencyMode.TRANSITIVE,
             args.isForceFinalResourceIds(),
-            /* resourceUnionPackage */ Optional.empty(),
+            args.getResourceUnionPackage(),
             /* rName */ Optional.empty(),
-            args.isUseOldStyleableFormat());
+            args.isUseOldStyleableFormat(),
+            /* skipPrebuiltRDotJava */ false);
 
     ImmutableList<String> vmArgs = args.getVmArgs();
 
@@ -253,6 +254,8 @@ public class RobolectricTestDescription
     Optional<String> getRobolectricRuntimeDependency();
 
     Optional<SourcePath> getRobolectricManifest();
+
+    Optional<String> getResourceUnionPackage();
 
     @Value.Default
     default boolean isUseOldStyleableFormat() {

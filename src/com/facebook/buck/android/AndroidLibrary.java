@@ -194,7 +194,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               /* forceFinalResourceIds */ false,
               args.getResourceUnionPackage(),
               args.getFinalRName(),
-              false);
+              /* useOldStyleableFormat */ false,
+              args.isSkipPrebuiltRDotJava());
 
       getDummyRDotJava()
           .ifPresent(
