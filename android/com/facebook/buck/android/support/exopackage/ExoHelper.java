@@ -18,11 +18,15 @@ package com.facebook.buck.android.support.exopackage;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.Fragment.SavedState;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
+import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +83,50 @@ public class ExoHelper {
     } catch (ClassCastException e) {
       throw new RuntimeException("Fragment is not assignable from " + className, e);
     }
+  }
+
+  /**
+   * Refresh the given fragment in place, preserving construction args, and any saved state. The new
+   * fragment will be constructed via a fresh class lookup. This method must be called from the UI
+   * thread
+   *
+   * @param fragment the fragment to refresh
+   */
+  public static void refreshFragment(Fragment fragment) {
+    refreshFragment(fragment, true);
+  }
+
+  /**
+   * Try refreshing the given Fragment in place, preserving construction args. The new Fragment will
+   * be constructed via a fresh class lookup. This method must be called from the UI thread
+   *
+   * @param fragment the fragment to refresh
+   * @param preserveState if true, attempt to save the Fragment's current state and restore it to
+   *     the new instance of the fragment
+   */
+  public static void refreshFragment(Fragment fragment, boolean preserveState) {
+    assertIsUiThread();
+    FragmentManager manager = fragment.getFragmentManager();
+    final Bundle args = fragment.getArguments();
+    Fragment replacement = createFragment(fragment.getClass().getName(), args);
+
+    String tag = fragment.getTag();
+
+    if (preserveState) {
+      // Restore any state that's possible
+      final SavedState savedState = manager.saveFragmentInstanceState(fragment);
+      replacement.setInitialSavedState(savedState);
+    }
+
+    int containerViewId = ((View) fragment.getView().getParent()).getId();
+    final FragmentTransaction transaction = manager.beginTransaction();
+    transaction.remove(fragment);
+    if (tag != null) {
+      transaction.add(containerViewId, replacement, tag);
+    } else {
+      transaction.add(containerViewId, replacement);
+    }
+    transaction.commit();
   }
 
   /**
