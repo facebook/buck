@@ -195,7 +195,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       }
 
       if (shouldPackageAssetLibraries) {
-        Preconditions.checkState(!ExopackageMode.enabledForResources(exopackageModes));
+        Preconditions.checkState(
+            ExopackageMode.enabledForModules(exopackageModes)
+                || !ExopackageMode.enabledForResources(exopackageModes));
         Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
 
         final Path libSubdirectory =

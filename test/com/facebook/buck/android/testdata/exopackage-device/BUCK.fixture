@@ -6,10 +6,16 @@ android_build_config(
 
 android_binary(
     name = "exotest",
+    application_module_configs = {
+        "mod": [
+            ":module-lib",
+        ],
+    },
     exopackage_modes = [
         "native_library",
         "secondary_dex",
         "resources",
+        "modules",
     ],
     keystore = ":debug_keystore",
     manifest = "AndroidManifest.xml",
@@ -22,6 +28,7 @@ android_binary(
     deps = [
         ":app-lib",
         ":main-lib",
+        ":module-lib",
     ],
 )
 
@@ -32,6 +39,7 @@ android_binary(
     deps = [
         ":app-lib",
         ":main-lib",
+        ":module-lib",
     ],
 )
 
@@ -60,6 +68,13 @@ android_library(
     ],
 )
 
+android_library(
+    name = "module-lib",
+    srcs = [
+        "//:module",
+    ],
+)
+
 genrule(
     name = "value",
     srcs = [
@@ -68,6 +83,16 @@ genrule(
     ],
     out = "Value.java",
     cmd = "VALUE=`cat value.txt` ; sed s/HERE/$VALUE/ < Value.java.template > $OUT",
+)
+
+genrule(
+    name = "module",
+    srcs = [
+        "module_value.txt",
+        "Module.java.template",
+    ],
+    out = "Module.java",
+    cmd = "VALUE=`cat module_value.txt` ; sed s/HERE/$VALUE/ < Module.java.template > $OUT",
 )
 
 android_resource(

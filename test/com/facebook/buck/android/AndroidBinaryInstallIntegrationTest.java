@@ -136,9 +136,24 @@ public class AndroidBinaryInstallIntegrationTest {
             "manifest_data",
             ImmutableList.of("java1_data1", "java2_data1"),
             ImmutableList.of(),
-            ResourcesExoData.empty().withAssetsData("assets"));
+            ResourcesExoData.empty().withAssetsData("assets"),
+            ImmutableList.of());
 
-    checkExoInstall(1, 2, 0, 3);
+    checkExoInstall(1, 2, 0, 3, 0);
+  }
+
+  @Test
+  public void testExoModulesInstall() throws Exception {
+    currentBuildState =
+        new ExoState(
+            "apk_data",
+            "manifest_data",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            ResourcesExoData.empty().withAssetsData("assets"),
+            ImmutableList.of("module_1", "module_2"));
+
+    checkExoInstall(1, 0, 0, 3, 2);
   }
 
   @Test
@@ -149,9 +164,10 @@ public class AndroidBinaryInstallIntegrationTest {
             "manifest_data",
             ImmutableList.of(),
             ImmutableList.of("cxx1_data1", "cxx2_data1"),
-            ResourcesExoData.empty().withAssetsData("assets"));
+            ResourcesExoData.empty().withAssetsData("assets"),
+            ImmutableList.of());
 
-    checkExoInstall(1, 0, 2, 3);
+    checkExoInstall(1, 0, 2, 3, 0);
   }
 
   @Test
@@ -163,9 +179,10 @@ public class AndroidBinaryInstallIntegrationTest {
             ImmutableList.of(),
             ImmutableList.of(),
             resourcesData(
-                "main_resources_data", "resources_data", "assets_data", "java_resources_data"));
+                "main_resources_data", "resources_data", "assets_data", "java_resources_data"),
+            ImmutableList.of());
 
-    checkExoInstall(1, 0, 0, 3);
+    checkExoInstall(1, 0, 0, 3, 0);
   }
 
   private ResourcesExoData resourcesData(
@@ -185,9 +202,10 @@ public class AndroidBinaryInstallIntegrationTest {
             "manifest_data",
             ImmutableList.of(),
             ImmutableList.of("data1", "data2"),
-            ResourcesExoData.empty().withAssetsData("assets"));
+            ResourcesExoData.empty().withAssetsData("assets"),
+            ImmutableList.of());
 
-    checkExoInstall(1, 0, 2, 3);
+    checkExoInstall(1, 0, 2, 3, 0);
   }
 
   private void setDefaultFullBuildState() {
@@ -197,41 +215,42 @@ public class AndroidBinaryInstallIntegrationTest {
             "manifest_data",
             ImmutableList.of("java1_data1", "java2_data1"),
             ImmutableList.of("cxx1_data1", "cxx2_data1"),
-            resourcesData("main_resources1", "resources1", "assets1", "java_resources1"));
+            resourcesData("main_resources1", "resources1", "assets1", "java_resources1"),
+            ImmutableList.of("module_1", "module_2"));
   }
 
   @Test
   public void testExoFullInstall() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
   }
 
   @Test
   public void testExoFullInstallAfterUninstall() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
     testDevice.uninstallPackage(FAKE_PACKAGE_NAME);
     testDevice.rmFiles(
         INSTALL_ROOT.toString(),
         testDevice.listDirRecursive(INSTALL_ROOT).stream().map(Path::toString)::iterator);
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
   }
 
   @Test
   public void testExoNoopReinstall() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
-    checkExoInstall(0, 0, 0, 0);
+    checkExoInstall(1, 2, 2, 3, 2);
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithMainJavaChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -239,16 +258,17 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData);
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(1, 0, 0, 0);
+    checkExoInstall(1, 0, 0, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithJavaChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -258,16 +278,35 @@ public class AndroidBinaryInstallIntegrationTest {
                 currentBuildState.secondaryDexesContents.get(0),
                 "new_" + currentBuildState.secondaryDexesContents.get(1)),
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData);
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 1, 0, 0);
+    checkExoInstall(0, 1, 0, 0, 0);
+  }
+
+  @Test
+  public void testExoReinstallWithJavaModuleChange() throws Exception {
+    setDefaultFullBuildState();
+
+    checkExoInstall(1, 2, 2, 3, 2);
+
+    currentBuildState =
+        new ExoState(
+            currentBuildState.mainJavaContent,
+            currentBuildState.manifestContent,
+            currentBuildState.secondaryDexesContents,
+            currentBuildState.nativeLibsContents,
+            currentBuildState.resourcesData,
+            ImmutableList.of("module_1", "new_module"));
+
+    checkExoInstall(0, 0, 0, 0, 1);
   }
 
   @Test
   public void testExoReinstallWithNativeChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -277,16 +316,17 @@ public class AndroidBinaryInstallIntegrationTest {
             ImmutableList.of(
                 currentBuildState.nativeLibsContents.get(0),
                 "new_" + currentBuildState.nativeLibsContents.get(1)),
-            currentBuildState.resourcesData);
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 1, 0);
+    checkExoInstall(0, 0, 1, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithMainResourcesChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -294,16 +334,17 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData.withMainResourcesData("new_data"));
+            currentBuildState.resourcesData.withMainResourcesData("new_data"),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(1, 0, 0, 1);
+    checkExoInstall(1, 0, 0, 1, 0);
   }
 
   @Test
   public void testExoReinstallWithResourcesChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -314,16 +355,17 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState
                 .resourcesData
                 .withResourcesData("new_resources_data")
-                .withAssetsData("new_assets_data"));
+                .withAssetsData("new_assets_data"),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 2);
+    checkExoInstall(0, 0, 0, 2, 0);
   }
 
   @Test
   public void testExoReinstallWithJavaResourcesChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -331,16 +373,17 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData.withJavaResourcesData("new_java_resources_data"));
+            currentBuildState.resourcesData.withJavaResourcesData("new_java_resources_data"),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(1, 0, 0, 1);
+    checkExoInstall(1, 0, 0, 1, 0);
   }
 
   @Test
   public void testExoReinstallWithAddedDex() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -351,16 +394,38 @@ public class AndroidBinaryInstallIntegrationTest {
                 .add("another_one")
                 .build(),
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData);
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 1, 0, 0);
+    checkExoInstall(0, 1, 0, 0, 0);
+  }
+
+  @Test
+  public void testExoReinstallWithAddedModule() throws Exception {
+    setDefaultFullBuildState();
+
+    checkExoInstall(1, 2, 2, 3, 2);
+
+    currentBuildState =
+        new ExoState(
+            currentBuildState.mainJavaContent,
+            currentBuildState.manifestContent,
+            currentBuildState.secondaryDexesContents,
+            currentBuildState.nativeLibsContents,
+            currentBuildState.resourcesData,
+            ImmutableList.<String>builder()
+                .addAll(currentBuildState.modularDexesContents)
+                .add("another_module")
+                .build());
+
+    checkExoInstall(1, 0, 0, 0, 1);
   }
 
   @Test
   public void testExoReinstallWithRemovedDex() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -368,16 +433,35 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState.manifestContent,
             ImmutableList.of("java1_data1"),
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData);
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 0);
+    checkExoInstall(0, 0, 0, 0, 0);
+  }
+
+  @Test
+  public void testExoReinstallWithRemovedModule() throws Exception {
+    setDefaultFullBuildState();
+
+    checkExoInstall(1, 2, 2, 3, 2);
+
+    currentBuildState =
+        new ExoState(
+            currentBuildState.mainJavaContent,
+            currentBuildState.manifestContent,
+            currentBuildState.secondaryDexesContents,
+            currentBuildState.nativeLibsContents,
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents.subList(0, 1));
+
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithAddedLib() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -388,16 +472,17 @@ public class AndroidBinaryInstallIntegrationTest {
                 .addAll(currentBuildState.nativeLibsContents)
                 .add("another_one")
                 .build(),
-            currentBuildState.resourcesData);
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 1, 0);
+    checkExoInstall(0, 0, 1, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithRemovedLib() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -405,9 +490,10 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             ImmutableList.copyOf(currentBuildState.nativeLibsContents.subList(0, 1)),
-            currentBuildState.resourcesData);
+            currentBuildState.resourcesData,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 0);
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   @Test
@@ -418,9 +504,10 @@ public class AndroidBinaryInstallIntegrationTest {
             "manifest",
             ImmutableList.of(),
             ImmutableList.of(),
-            resourcesData("main_resources", "resources", null, "java_resources"));
+            resourcesData("main_resources", "resources", null, "java_resources"),
+            ImmutableList.of());
 
-    checkExoInstall(1, 0, 0, 3);
+    checkExoInstall(1, 0, 0, 3, 0);
 
     currentBuildState =
         new ExoState(
@@ -428,16 +515,17 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData.withAssetsData("assets"));
+            currentBuildState.resourcesData.withAssetsData("assets"),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 1);
+    checkExoInstall(0, 0, 0, 1, 0);
   }
 
   @Test
   public void testExoReinstallWithAssetsRemoved() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -445,25 +533,29 @@ public class AndroidBinaryInstallIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesData.withAssetsData(null));
+            currentBuildState.resourcesData.withAssetsData(null),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 1);
+    checkExoInstall(0, 0, 0, 1, 0);
   }
 
   private void checkExoInstall(
       int expectedApksInstalled,
       int expectedDexesInstalled,
       int expectedLibsInstalled,
-      int expectedResourcesInstalled)
+      int expectedResourcesInstalled,
+      int expectedModulesInstalled)
       throws Exception {
     installLimiter.setAllowedInstallCounts(
         expectedApksInstalled,
         expectedDexesInstalled,
         expectedLibsInstalled,
-        expectedResourcesInstalled);
+        expectedResourcesInstalled,
+        expectedModulesInstalled);
     List<String> javaDeps = new ArrayList<>();
     List<String> cxxDeps = new ArrayList<>();
     List<String> resourceDeps = new ArrayList<>();
+    List<String> moduleDeps = new ArrayList<>();
 
     Map<String, Object> config = new TreeMap<>();
     Map<String, String> data = new TreeMap<>();
@@ -475,6 +567,9 @@ public class AndroidBinaryInstallIntegrationTest {
     data.put("java1", "unset");
     data.put("java2", "unset");
     data.put("java3", "unset");
+    data.put("java_module1", "unset");
+    data.put("java_module2", "unset");
+    data.put("java_module3", "unset");
     data.put("cxx1", "unset");
     data.put("cxx2", "unset");
     data.put("cxx3", "unset");
@@ -514,6 +609,13 @@ public class AndroidBinaryInstallIntegrationTest {
       resourceDeps.add(":java_resources");
     }
 
+    id = 1;
+    for (String content : currentBuildState.modularDexesContents) {
+      data.put("java_module" + id, content);
+      moduleDeps.add(":java_module" + id);
+      id++;
+    }
+
     ObjectMapper mapper = new ObjectMapper();
 
     config.put("data", data);
@@ -522,6 +624,7 @@ public class AndroidBinaryInstallIntegrationTest {
     config.put("java_deps", javaDeps);
     config.put("cxx_deps", cxxDeps);
     config.put("resources_deps", resourceDeps);
+    config.put("module_deps", moduleDeps);
     filesystem.writeContentsToPath(
         mapper.writerWithDefaultPrettyPrinter().writeValueAsString(config), CONFIG_PATH);
 
@@ -546,18 +649,21 @@ public class AndroidBinaryInstallIntegrationTest {
     private final ImmutableList<String> secondaryDexesContents;
     private final ImmutableList<String> nativeLibsContents;
     private final ResourcesExoData resourcesData;
+    private ImmutableList<String> modularDexesContents;
 
     public ExoState(
         String mainJavaContent,
         String manifestContent,
         ImmutableList<String> secondaryDexesContents,
         ImmutableList<String> nativeLibsContents,
-        ResourcesExoData resourcesData) {
+        ResourcesExoData resourcesData,
+        ImmutableList<String> modularDexesContents) {
       this.mainJavaContent = mainJavaContent;
       this.manifestContent = manifestContent;
       this.secondaryDexesContents = secondaryDexesContents;
       this.nativeLibsContents = nativeLibsContents;
       this.resourcesData = resourcesData;
+      this.modularDexesContents = modularDexesContents;
     }
   }
 

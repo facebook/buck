@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
+import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
@@ -40,8 +41,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
@@ -73,6 +76,7 @@ public class ExopackageInstallerIntegrationTest {
   private final Path dexDirectory = Paths.get("dex-dir");
   private final Path nativeDirectory = Paths.get("native-dir");
   private final Path resourcesDirectory = Paths.get("res-dir");
+  private final Path modulesDirectory = Paths.get("modules-dir");
   private final Path dexManifest = Paths.get("dex.manifest");
   private final Path nativeManifest = Paths.get("native.manifest");
   private final Path agentPath = Paths.get("agent.apk");
@@ -93,6 +97,7 @@ public class ExopackageInstallerIntegrationTest {
     filesystem.mkdirs(dexDirectory);
     filesystem.mkdirs(nativeDirectory);
     filesystem.mkdirs(resourcesDirectory);
+    filesystem.mkdirs(modulesDirectory);
     apkVersionCode = "1";
     setupDeviceWithAbi(SdkConstants.ABI_ARMEABI_V7A);
   }
@@ -119,9 +124,24 @@ public class ExopackageInstallerIntegrationTest {
             createFakeManifest("manifest-content\n"),
             ImmutableList.of("secondary-dex0\n", "secondary-dex1\n"),
             ImmutableSortedMap.of(),
+            ImmutableList.of(),
             ImmutableList.of());
 
-    checkExoInstall(1, 2, 0, 0);
+    checkExoInstall(1, 2, 0, 0, 0);
+  }
+
+  @Test
+  public void testExoModuleInstall() throws Exception {
+    currentBuildState =
+        new ExoState(
+            "apk-content\n",
+            createFakeManifest("manifest-content\n"),
+            ImmutableList.of(),
+            ImmutableSortedMap.of(),
+            ImmutableList.of(),
+            ImmutableList.of("module_1\n", "module_2\n"));
+
+    checkExoInstall(1, 0, 0, 0, 2);
   }
 
   @Test
@@ -136,9 +156,10 @@ public class ExopackageInstallerIntegrationTest {
                 "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libtwo.so", "x86-libtwo\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "armv7-libone\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo.so", "armv7-libtwo\n"),
+            ImmutableList.of(),
             ImmutableList.of());
 
-    checkExoInstall(1, 0, 2, 0);
+    checkExoInstall(1, 0, 2, 0, 0);
     // This should be checked already, but do it explicitly here too to make it clear
     // that we actually verify that the correct architecture libs are installed.
     assertTrue(devicePathExists("native-libs/armeabi-v7a/metadata.txt"));
@@ -158,9 +179,10 @@ public class ExopackageInstallerIntegrationTest {
             createFakeManifest("manifest-content\n"),
             ImmutableList.of(),
             ImmutableSortedMap.of(),
-            ImmutableList.of("exo-resources.apk\n", "exo-assets0\n", "exo-assets1\n"));
+            ImmutableList.of("exo-resources.apk\n", "exo-assets0\n", "exo-assets1\n"),
+            ImmutableList.of());
 
-    checkExoInstall(1, 0, 0, 3);
+    checkExoInstall(1, 0, 0, 3, 0);
   }
 
   @Test
@@ -176,9 +198,10 @@ public class ExopackageInstallerIntegrationTest {
                 "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libtwo.so", "x86-libtwo\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "armv7-libone\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo.so", "armv7-libtwo\n"),
+            ImmutableList.of(),
             ImmutableList.of());
 
-    checkExoInstall(1, 0, 2, 0);
+    checkExoInstall(1, 0, 2, 0, 0);
     // This should be checked already, but do it explicitly here too to make it clear
     // that we actually verify that the correct architecture libs are installed.
     assertFalse(devicePathExists("native-libs/armeabi-v7a/metadata.txt"));
@@ -189,15 +212,15 @@ public class ExopackageInstallerIntegrationTest {
   public void testExoFullInstall() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
   }
 
   @Test
   public void testExoNoopReinstall() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
-    checkExoInstall(0, 0, 0, 0);
+    checkExoInstall(1, 2, 2, 3, 2);
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   private void setDefaultFullBuildState() {
@@ -211,14 +234,15 @@ public class ExopackageInstallerIntegrationTest {
                 "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libtwo.so", "x86-libtwo\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "armv7-libone\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo.so", "armv7-libtwo\n"),
-            ImmutableList.of("exo-resources.apk\n", "exo-assets0\n", "exo-assets1\n"));
+            ImmutableList.of("exo-resources.apk\n", "exo-assets0\n", "exo-assets1\n"),
+            ImmutableList.of("module_1\n", "module_2\n"));
   }
 
   @Test
   public void testExoReinstallWithApkChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -226,16 +250,17 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(1, 0, 0, 0);
+    checkExoInstall(1, 0, 0, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithJavaChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -243,16 +268,35 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.manifestContent,
             ImmutableList.of("secondary-dex0\n", "new-secondary-dex1\n"),
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 1, 0, 0);
+    checkExoInstall(0, 1, 0, 0, 0);
+  }
+
+  @Test
+  public void testExoReinstallWithJavaModuleChange() throws Exception {
+    setDefaultFullBuildState();
+
+    checkExoInstall(1, 2, 2, 3, 2);
+
+    currentBuildState =
+        new ExoState(
+            currentBuildState.apkContent,
+            currentBuildState.manifestContent,
+            currentBuildState.secondaryDexesContents,
+            currentBuildState.nativeLibsContents,
+            currentBuildState.resourcesContents,
+            ImmutableList.of("module_1\n", "new_module\n"));
+
+    checkExoInstall(0, 0, 0, 0, 1);
   }
 
   @Test
   public void testExoReinstallWithNativeChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -264,16 +308,17 @@ public class ExopackageInstallerIntegrationTest {
                 "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libtwo.so", "new-x86-libtwo\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "armv7-libone\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo.so", "new-armv7-libtwo\n"),
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 1, 0);
+    checkExoInstall(0, 0, 1, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithResourcesChange() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -281,16 +326,17 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            ImmutableList.of("exo-resources.apk\n", "new-exo-assets0\n", "exo-assets1\n"));
+            ImmutableList.of("exo-resources.apk\n", "new-exo-assets0\n", "exo-assets1\n"),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 1);
+    checkExoInstall(0, 0, 0, 1, 0);
   }
 
   @Test
   public void testExoReinstallWithAddedDex() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -298,16 +344,17 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.manifestContent,
             ImmutableList.of("secondary-dex0\n", "secondary-dex1\n", "secondary-dex2\n"),
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 1, 0, 0);
+    checkExoInstall(0, 1, 0, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithRemovedDex() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -315,16 +362,17 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.manifestContent,
             ImmutableList.of("secondary-dex0\n"),
             currentBuildState.nativeLibsContents,
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 0);
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithAddedLib() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -339,16 +387,17 @@ public class ExopackageInstallerIntegrationTest {
                 .put("libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo.so", "armv7-libtwo\n")
                 .put("libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libthree.so", "armv7-libthree\n")
                 .build(),
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 1, 0);
+    checkExoInstall(0, 0, 1, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithRemovedLib() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -358,16 +407,17 @@ public class ExopackageInstallerIntegrationTest {
             ImmutableSortedMap.of(
                 "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libone.so", "x86-libone\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "armv7-libone\n"),
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 0);
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   @Test
   public void testExoReinstallWithRenamedLib() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -379,7 +429,8 @@ public class ExopackageInstallerIntegrationTest {
                 "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libtwo-new.so", "x86-libtwo\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "armv7-libone\n",
                 "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo-new.so", "armv7-libtwo\n"),
-            currentBuildState.resourcesContents);
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
 
     // TODO(cjhopman): fix exo install when library is renamed but content remains the same.
     // checkExoInstall(0, 0, 1, 0);
@@ -389,7 +440,7 @@ public class ExopackageInstallerIntegrationTest {
   public void testExoReinstallWithAssetsAdded() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -398,16 +449,17 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
             ImmutableList.of(
-                "exo-resources.apk\n", "exo-assets0\n", "exo-assets1\n", "exo-assets2\n"));
+                "exo-resources.apk\n", "exo-assets0\n", "exo-assets1\n", "exo-assets2\n"),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 1);
+    checkExoInstall(0, 0, 0, 1, 0);
   }
 
   @Test
   public void testExoReinstallWithAssetsRemoved() throws Exception {
     setDefaultFullBuildState();
 
-    checkExoInstall(1, 2, 2, 3);
+    checkExoInstall(1, 2, 2, 3, 2);
 
     currentBuildState =
         new ExoState(
@@ -415,9 +467,10 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.manifestContent,
             currentBuildState.secondaryDexesContents,
             currentBuildState.nativeLibsContents,
-            ImmutableList.of("exo-resources.apk\n", "exo-assets0\n"));
+            ImmutableList.of("exo-resources.apk\n", "exo-assets0\n"),
+            currentBuildState.modularDexesContents);
 
-    checkExoInstall(0, 0, 0, 0);
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   private void debug(String msg) {
@@ -455,7 +508,8 @@ public class ExopackageInstallerIntegrationTest {
       int expectedApksInstalled,
       int expectedDexesInstalled,
       int expectedLibsInstalled,
-      int expectedResourcesInstalled)
+      int expectedResourcesInstalled,
+      int expectedModulesInstalled)
       throws Exception {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(null);
 
@@ -556,6 +610,38 @@ public class ExopackageInstallerIntegrationTest {
       builder.addExoFile("resources/metadata.txt", expectedMetadata);
     }
 
+    Optional<ImmutableList<DexInfo>> moduleInfo = Optional.empty();
+    ImmutableList<String> modularDexesContents = currentBuildState.modularDexesContents;
+    if (!modularDexesContents.isEmpty()) {
+      ImmutableList.Builder<String> topLevelMetadata = ImmutableList.builder();
+      filesystem.deleteRecursivelyIfExists(modulesDirectory);
+      final Builder<DexInfo> moduleInfoBuilder = ImmutableList.builder();
+      for (int i = 0; i < modularDexesContents.size(); i++) {
+        String dexContent = modularDexesContents.get(i);
+        String moduleName = dexContent.trim();
+        String sourceFilename = String.format("%s.dex.jar", moduleName);
+        Path moduleDirectory = modulesDirectory.resolve(moduleName);
+        moduleDirectory.toFile().mkdirs();
+        writeFile(moduleDirectory.resolve(sourceFilename), dexContent);
+        Sha1HashCode dexHash = filesystem.computeSha1(moduleDirectory.resolve(sourceFilename));
+        String dexJarName = "module-" + dexHash + ".dex.jar";
+        builder.addExoFile("modular-dex/" + dexJarName, dexContent);
+        // Write the metadata for this module
+        Path moduleManifest = moduleDirectory.resolve(moduleName + ".metadata");
+        final String metadataContents = String.format("%s %s", sourceFilename, dexHash);
+        writeFile(moduleManifest, metadataContents);
+        builder.addExoFile("modular-dex/" + moduleName + ".metadata", metadataContents);
+        moduleInfoBuilder.add(
+            ExopackageInfo.DexInfo.of(
+                FakeSourcePath.of(filesystem, moduleManifest),
+                FakeSourcePath.of(filesystem, moduleDirectory)));
+        topLevelMetadata.add(dexJarName + " ");
+      }
+      builder.addExoFile(
+          "modular-dex/metadata.txt", Joiner.on('\n').join(topLevelMetadata.build()));
+      moduleInfo = Optional.of(moduleInfoBuilder.build());
+    }
+
     ApkInfo apkInfo =
         ApkInfo.builder()
             .setApkPath(apkSourcePath)
@@ -565,13 +651,15 @@ public class ExopackageInstallerIntegrationTest {
                     .setDexInfo(dexInfo)
                     .setNativeLibsInfo(nativeLibsInfo)
                     .setResourcesInfo(resourcesInfo)
+                    .setModuleInfo(moduleInfo)
                     .build())
             .build();
     device.setAllowedInstallCounts(
         expectedApksInstalled,
         expectedDexesInstalled,
         expectedLibsInstalled,
-        expectedResourcesInstalled);
+        expectedResourcesInstalled,
+        expectedModulesInstalled);
     try {
       assertTrue(
           new ExopackageInstaller(
@@ -663,18 +751,21 @@ public class ExopackageInstallerIntegrationTest {
     private final ImmutableList<String> secondaryDexesContents;
     private final ImmutableSortedMap<String, String> nativeLibsContents;
     private final ImmutableList<String> resourcesContents;
+    private final ImmutableList<String> modularDexesContents;
 
     public ExoState(
         String apkContent,
         String manifestContent,
         ImmutableList<String> secondaryDexesContents,
         ImmutableSortedMap<String, String> nativeLibsContents,
-        ImmutableList<String> resourcesContents) {
+        ImmutableList<String> resourcesContents,
+        ImmutableList<String> modularDexesContents) {
       this.apkContent = apkContent;
       this.manifestContent = manifestContent;
       this.secondaryDexesContents = secondaryDexesContents;
       this.nativeLibsContents = nativeLibsContents;
       this.resourcesContents = resourcesContents;
+      this.modularDexesContents = modularDexesContents;
     }
   }
 }

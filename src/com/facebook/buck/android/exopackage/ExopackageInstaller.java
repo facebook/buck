@@ -198,7 +198,8 @@ public class ExopackageInstaller {
             exoInfo ->
                 exoInfo.getDexInfo().isPresent()
                     || exoInfo.getNativeLibsInfo().isPresent()
-                    || exoInfo.getResourcesInfo().isPresent())
+                    || exoInfo.getResourcesInfo().isPresent()
+                    || exoInfo.getModuleInfo().isPresent())
         .orElse(false);
   }
 

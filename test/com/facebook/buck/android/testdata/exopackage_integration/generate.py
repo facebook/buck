@@ -22,6 +22,13 @@ generate_file('Java.template', 'Java1.java', { 'class': 'Java1', 'data': data['j
 generate_file('Java.template', 'Java2.java', { 'class': 'Java2', 'data': data['java2'], 'longstring': longstring})
 generate_file('Java.template', 'Java3.java', { 'class': 'Java3', 'data': data['java3'], 'longstring': longstring})
 
+generate_file('Java.template', 'JavaModule1.java',
+              {'class': 'JavaModule1', 'data': data['java_module1'], 'longstring': longstring})
+generate_file('Java.template', 'JavaModule2.java',
+              {'class': 'JavaModule2', 'data': data['java_module2'], 'longstring': longstring})
+generate_file('Java.template', 'JavaModule3.java',
+              {'class': 'JavaModule3', 'data': data['java_module3'], 'longstring': longstring})
+
 generate_file('MainJava.template', 'MainJava.java', { 'data': data['main_apk_java'] })
 
 generate_file('Cxx.template', 'cxx1.c', { 'data': data['cxx1'] })
