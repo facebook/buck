@@ -1,5 +1,4 @@
-library-dependencies --release --platform ios --root @
-library-files --release --platform ios --root @
+library --release --platform ios --root @
 optimize --platform ios
 transform --filename js/apple.js
 var apple;

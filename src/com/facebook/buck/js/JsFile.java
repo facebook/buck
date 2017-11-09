@@ -121,11 +121,6 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     @VisibleForTesting
-    SourcePath getSource() {
-      return src;
-    }
-
-    @VisibleForTesting
     Optional<String> getVirtualPath() {
       return virtualPath;
     }

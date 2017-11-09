@@ -1,14 +1,10 @@
-library-dependencies --root @ --lib @/buck-out/gen/js/build-target-output.jslib --lib @/buck-out/gen/js/native-js/photo-album-js.jslib --lib @/buck-out/gen/js/native-js/text-widget-js.jslib
-library-dependencies --root @
-library-files --root @
+library --lib @/buck-out/gen/js/build-target-output.jslib --lib @/buck-out/gen/js/native-js/photo-album-js.jslib --lib @/buck-out/gen/js/native-js/text-widget-js.jslib --root @
+library --root @
 transform --filename buck-out/gen/external/exported.js/exported.js
 var exported;
-library-dependencies --root @
-library-files --root @
+library --root @
 transform --filename js/native-js/photo-album.js
 var photoAlbum;
-library-dependencies --root @
-library-files --root @
+library --root @
 transform --filename js/native-js/text-widget.js
 var textWidget;
-library-files --root @

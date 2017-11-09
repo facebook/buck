@@ -1,5 +1,4 @@
-library-dependencies --root @
-library-files --root @
+library --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js

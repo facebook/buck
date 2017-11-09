@@ -1,4 +1,3 @@
-library-dependencies --root @
-library-files --root @
+library --root @
 transform --filename js/node_modules/exported.js
 var exported;

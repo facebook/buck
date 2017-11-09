@@ -1,4 +1,3 @@
-library-dependencies --root @
-library-files --root @
+library --root @
 transform --filename buck-out/gen/external/exported.js/exported.js
 var exported;
