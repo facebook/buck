@@ -1254,7 +1254,7 @@ public class ProjectView {
               try {
                 Files.delete(linkPath);
               } catch (IOException e) {
-                if (!linkInDeletedDirectories(deletedDirectories, linkPath)) {
+                if (!linkInDeletedDirectories(deletedDirectories, linkPath.toAbsolutePath())) {
                   stderr("%s deleting symlink %s\n", e.getClass().getSimpleName(), linkPath);
                 }
               }
