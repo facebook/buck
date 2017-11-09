@@ -17,15 +17,18 @@
 package com.facebook.buck.android.support.exopackage;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Fragment;
 import android.app.Fragment.SavedState;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
+import android.os.Process;
 import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,6 +130,32 @@ public class ExoHelper {
       transaction.add(containerViewId, replacement);
     }
     transaction.commit();
+  }
+
+  /**
+   * Restart the application by setting a PendingIntent on the AlarmManager and then killing the
+   * current process.
+   *
+   * @param context any current context from the application
+   */
+  public static void restartApp(Context context) {
+    Context appContext = context.getApplicationContext();
+    final Intent launchIntent =
+        appContext
+            .getPackageManager()
+            .getLaunchIntentForPackage(appContext.getPackageName())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    // Can be anything so long as it's unique. This part of the sha1sum of "buck"
+    int id = 0xe354735f;
+    final int flags =
+        PendingIntent.FLAG_CANCEL_CURRENT
+            | PendingIntent.FLAG_IMMUTABLE
+            | PendingIntent.FLAG_ONE_SHOT;
+    PendingIntent pendingIntent = PendingIntent.getActivity(appContext, id, launchIntent, flags);
+    AlarmManager am = appContext.getSystemService(AlarmManager.class);
+    long deadline = System.currentTimeMillis() + 500L;
+    am.setExact(AlarmManager.RTC_WAKEUP, deadline, pendingIntent);
+    Process.killProcess(Process.myPid());
   }
 
   /**
