@@ -49,12 +49,18 @@ public class ExopackageDexLoader {
    */
   @SuppressWarnings("PMD.CollapsibleIfStatements")
   public static void loadExopackageJars(Context context) {
-    File containingDirectory =
+    // Normal exopackage jars go to system CL
+    File secondaryDirectory =
         new File("/data/local/tmp/exopackage/" + context.getPackageName() + "/secondary-dex");
+    final List<File> dexJars = getJarFilesFromContainingDirectory(secondaryDirectory);
+    File dexOptDir = context.getDir("exopackage_dex_opt", Context.MODE_PRIVATE);
+    SystemClassLoaderAdder.installDexJars(context.getClassLoader(), dexOptDir, dexJars);
+    cleanUpOldOdexFiles(dexOptDir, dexJars);
+  }
 
-    List<File> dexJars = new ArrayList<>();
-    Set<String> expectedOdexSet = new HashSet<>();
-
+  /** Find all .dex.jar files in the given directory */
+  static List<File> getJarFilesFromContainingDirectory(File containingDirectory) {
+    List<File> dexJars = new ArrayList();
     try {
       BufferedReader metadataReader =
           new BufferedReader(
@@ -69,7 +75,6 @@ public class ExopackageDexLoader {
           }
           String baseName = line.substring(0, space);
           dexJars.add(new File(containingDirectory, baseName));
-          expectedOdexSet.add(baseName.replaceFirst("\\.jar$", ".dex"));
         }
       } finally {
         metadataReader.close();
@@ -77,10 +82,20 @@ public class ExopackageDexLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+    return dexJars;
+  }
 
-    File dexOptDir = context.getDir("exopackage_dex_opt", Context.MODE_PRIVATE);
-    SystemClassLoaderAdder.installDexJars(context.getClassLoader(), dexOptDir, dexJars);
-
+  /**
+   * Clean up any odex files that do not belong to the specified set of jars
+   *
+   * @param dexOptDir the directory to clean
+   * @param dexJars odex files pertaining to these jars will be kept
+   */
+  private static void cleanUpOldOdexFiles(File dexOptDir, List<File> dexJars) {
+    Set<String> expectedOdexSet = new HashSet<>();
+    for (File file : dexJars) {
+      expectedOdexSet.add(file.getName().replaceFirst("\\.jar$", ".dex"));
+    }
     File[] odexes = dexOptDir.listFiles();
     if (odexes != null) {
       for (File odex : odexes) {
