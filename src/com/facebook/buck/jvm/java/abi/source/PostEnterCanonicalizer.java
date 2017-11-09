@@ -53,6 +53,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 import javax.tools.Diagnostic;
+import javax.tools.Diagnostic.Kind;
 
 /**
  * After the enter phase is complete, this class can obtain the "canonical" version of any {@link
@@ -262,12 +263,22 @@ class PostEnterCanonicalizer {
       case MEMBER_SELECT:
         {
           MemberSelectTree memberSelectTree = (MemberSelectTree) tree;
-          Name identifier = memberSelectTree.getIdentifier();
-          StandaloneTypeMirror baseType =
-              (StandaloneTypeMirror)
-                  getCanonicalType(new TreePath(treePath, memberSelectTree.getExpression()));
-
+          TypeMirror canonicalBaseType =
+              getCanonicalType(new TreePath(treePath, memberSelectTree.getExpression()));
+          if (!(canonicalBaseType instanceof StandaloneTypeMirror)) {
+            javacTrees.printMessage(
+                Kind.ERROR,
+                String.format(
+                    "cannot find symbol\nsymbol: class %s\nlocation: class %s",
+                    memberSelectTree.getIdentifier(), canonicalBaseType),
+                treePath.getLeaf(),
+                treePath.getCompilationUnit());
+            return canonicalBaseType; // This isn't right, but it doesn't matter what we return
+            // since we're failing anyway
+          }
+          StandaloneTypeMirror baseType = (StandaloneTypeMirror) canonicalBaseType;
           ArtificialQualifiedNameable baseElement;
+          Name identifier = memberSelectTree.getIdentifier();
           if (baseType.getKind() == TypeKind.PACKAGE) {
             baseElement = ((StandalonePackageType) baseType).asElement();
             if (isProbablyPackageName(identifier)) {
