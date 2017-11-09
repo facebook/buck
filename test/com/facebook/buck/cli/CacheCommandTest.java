@@ -58,12 +58,13 @@ public class CacheCommandTest extends EasyMockSupport {
   @Test
   public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
-    console.printErrorText("No cache keys specified.");
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).build();
     CacheCommand cacheCommand = new CacheCommand();
     int exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(1, exitCode);
+    // "No cache keys specified." message is sent to event bus,
+    // it is not available on test console.
   }
 
   @Test
@@ -105,7 +106,6 @@ public class CacheCommandTest extends EasyMockSupport {
     expectLastCall();
 
     TestConsole console = new TestConsole();
-    console.printErrorText("Failed to retrieve an artifact with id " + ruleKeyHash + ".");
 
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).setArtifactCache(cache).build();
@@ -116,6 +116,9 @@ public class CacheCommandTest extends EasyMockSupport {
     cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
     int exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(1, exitCode);
+    assertThat(
+        console.getTextWrittenToStdErr(),
+        startsWith("Failed to retrieve an artifact with id " + ruleKeyHash + "."));
   }
 
   @Test
