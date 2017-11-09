@@ -44,11 +44,25 @@ public class ExopackageDexLoader {
 
   /**
    * Load JARs installed by Buck's Exopackage installer and add them to the Application ClassLoader.
+   * If modular exopackage is enabled, then load the modular-dex secondary directory into the
+   * DelegatingClassLoader instance.
    *
    * @param context The application context.
+   * @param exopackageEnabledForModules whether modules should be loaded into a separate classloader
+   *     or ignored and left to the app's own module system.
    */
   @SuppressWarnings("PMD.CollapsibleIfStatements")
-  public static void loadExopackageJars(Context context) {
+  public static void loadExopackageJars(Context context, boolean exopackageEnabledForModules) {
+    if (exopackageEnabledForModules) {
+      // Modular exopackage jars go to the delegating classloader so they can be swapped later
+      final File moduleDirectory =
+          new File("/data/local/tmp/exopackage/" + context.getPackageName() + "/modular-dex");
+      final List<File> dexJars = getJarFilesFromContainingDirectory(moduleDirectory);
+      final File dexOptDir = context.getDir("exopackage_modular_dex_opt", Context.MODE_PRIVATE);
+      DelegatingClassLoader.getInstance().setDexOptDir(dexOptDir).resetDelegate(dexJars);
+      cleanUpOldOdexFiles(dexOptDir, dexJars);
+    }
+
     // Normal exopackage jars go to system CL
     File secondaryDirectory =
         new File("/data/local/tmp/exopackage/" + context.getPackageName() + "/secondary-dex");
