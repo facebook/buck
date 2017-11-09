@@ -17,6 +17,8 @@
 package com.facebook.buck.android.support.exopackage;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Looper;
 import java.util.ArrayList;
@@ -38,6 +40,20 @@ public class ExoHelper {
     final Intent intent = activity.getIntent();
     activity.startActivity(intent);
     activity.finish();
+  }
+
+  /**
+   * Create an Intent to launch the component with the given classname. This is a simple wrapper
+   * around Intent#setComponent with the given params.
+   *
+   * @param context the current context
+   * @param className the name of the class targeted by the Intent
+   * @return an Intent suitable for launching the component with the given className
+   */
+  public static Intent intentForClassName(Context context, String className) {
+    final Intent intent = new Intent();
+    intent.setComponent(new ComponentName(context, className));
+    return intent;
   }
 
   /**
