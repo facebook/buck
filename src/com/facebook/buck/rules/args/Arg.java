@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * An abstraction for modeling the arguments that contribute to a command run by a {@link
@@ -47,12 +48,11 @@ public interface Arg extends RuleKeyAppendable {
   ImmutableCollection<SourcePath> getInputs();
 
   /**
-   * Append the contents of the Arg to the supplied builder. This call may inject any number of
-   * elements (including zero) into the builder. This is only ever safe to call when the rule is
+   * Feed the contents of the Arg to the supplied consumer. This call may feed any number of
+   * elements (including zero) into the consumer. This is only ever safe to call when the rule is
    * running, as it may do things like resolving source paths.
    */
-  void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver);
+  void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver);
 
   /** @return a {@link String} representation suitable to use for debugging. */
   @Override
@@ -66,7 +66,7 @@ public interface Arg extends RuleKeyAppendable {
 
   static ImmutableList<String> stringifyList(Arg input, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    input.appendToCommandLine(builder, pathResolver);
+    input.appendToCommandLine(builder::add, pathResolver);
     return builder.build();
   }
 
@@ -74,7 +74,7 @@ public interface Arg extends RuleKeyAppendable {
       Iterable<? extends Arg> args, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
-      arg.appendToCommandLine(builder, pathResolver);
+      arg.appendToCommandLine(builder::add, pathResolver);
     }
     return builder.build();
   }
@@ -84,7 +84,7 @@ public interface Arg extends RuleKeyAppendable {
     ImmutableMap.Builder<K, String> stringMap = ImmutableMap.builder();
     for (Map.Entry<K, ? extends Arg> ent : argMap.entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      ent.getValue().appendToCommandLine(builder, pathResolver);
+      ent.getValue().appendToCommandLine(builder::add, pathResolver);
       stringMap.put(ent.getKey(), Joiner.on(" ").join(builder.build()));
     }
     return stringMap.build();

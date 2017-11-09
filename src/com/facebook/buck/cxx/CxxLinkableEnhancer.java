@@ -46,7 +46,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,6 +54,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -274,15 +274,15 @@ public class CxxLinkableEnhancer {
 
           @Override
           public void appendToCommandLine(
-              ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+              Consumer<String> consumer, SourcePathResolver pathResolver) {
             ImmutableSortedSet<Path> searchPaths =
                 FluentIterable.from(frameworkPaths)
                     .transform(frameworkPathToSearchPath)
                     .filter(Objects::nonNull)
                     .toSortedSet(Ordering.natural());
             for (Path searchPath : searchPaths) {
-              builder.add("-L");
-              builder.add(searchPath.toString());
+              consumer.accept("-L");
+              consumer.accept(searchPath.toString());
             }
           }
         });
@@ -292,7 +292,7 @@ public class CxxLinkableEnhancer {
         new FrameworkPathArg(allLibraries) {
           @Override
           public void appendToCommandLine(
-              ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+              Consumer<String> consumer, SourcePathResolver pathResolver) {
             for (FrameworkPath frameworkPath : frameworkPaths) {
               String libName =
                   MorePaths.stripPathPrefixAndExtension(
@@ -303,7 +303,7 @@ public class CxxLinkableEnhancer {
               if (libName.isEmpty()) {
                 continue;
               }
-              builder.add("-l" + libName);
+              consumer.accept("-l" + libName);
             }
           }
         });
@@ -328,14 +328,14 @@ public class CxxLinkableEnhancer {
 
           @Override
           public void appendToCommandLine(
-              ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+              Consumer<String> consumer, SourcePathResolver pathResolver) {
             ImmutableSortedSet<Path> searchPaths =
                 FluentIterable.from(frameworkPaths)
                     .transform(frameworkPathToSearchPath)
                     .toSortedSet(Ordering.natural());
             for (Path searchPath : searchPaths) {
-              builder.add("-F");
-              builder.add(searchPath.toString());
+              consumer.accept("-F");
+              consumer.accept(searchPath.toString());
             }
           }
         });
@@ -348,11 +348,10 @@ public class CxxLinkableEnhancer {
   static Arg frameworksToLinkerArg(ImmutableSortedSet<FrameworkPath> frameworkPaths) {
     return new FrameworkPathArg(frameworkPaths) {
       @Override
-      public void appendToCommandLine(
-          ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
         for (FrameworkPath frameworkPath : frameworkPaths) {
-          builder.add("-framework");
-          builder.add(frameworkPath.getName(pathResolver::getAbsolutePath));
+          consumer.accept("-framework");
+          consumer.accept(frameworkPath.getName(pathResolver::getAbsolutePath));
         }
       }
     };

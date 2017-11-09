@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 public class WorkerToolDescription
@@ -119,12 +120,12 @@ public class WorkerToolDescription
           new ProxyArg(toArg.apply(args.getArgs().getLeft())) {
             @Override
             public void appendToCommandLine(
-                ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+                Consumer<String> consumer, SourcePathResolver pathResolver) {
               ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
-              super.appendToCommandLine(subBuilder, pathResolver);
+              super.appendToCommandLine(subBuilder::add, pathResolver);
               for (String arg : subBuilder.build()) {
                 for (String splitArg : arg.split("\\s+")) {
-                  builder.add(splitArg);
+                  consumer.accept(splitArg);
                 }
               }
             }

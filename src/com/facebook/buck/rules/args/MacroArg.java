@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /** An {@link Arg} which contains macros that need to be expanded. */
 public class MacroArg implements Arg {
@@ -62,10 +63,9 @@ public class MacroArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
     try {
-      builder.add(expander.expand(target, cellNames, resolver, unexpanded));
+      consumer.accept(expander.expand(target, cellNames, resolver, unexpanded));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }

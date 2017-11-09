@@ -25,6 +25,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * An {@link Arg} which must be sanitized before contributing to a {@link
@@ -53,9 +54,8 @@ public class SanitizedArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    builder.add(unsanitzed);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    consumer.accept(unsanitzed);
   }
 
   @Override

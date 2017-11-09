@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 class RelativeLinkArg implements Arg {
 
@@ -53,9 +54,8 @@ class RelativeLinkArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    builder.addAll(link);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    link.forEach(consumer);
   }
 
   @Override

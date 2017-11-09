@@ -76,11 +76,11 @@ class CxxWriteArgsToFileStep implements Step {
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
         ((FileListableLinkerInputArg) arg)
-            .appendToCommandLineRel(builder, currentCellPath, pathResolver);
+            .appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
       } else if (arg instanceof SourcePathArg) {
-        ((SourcePathArg) arg).appendToCommandLineRel(builder, currentCellPath, pathResolver);
+        ((SourcePathArg) arg).appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
       } else {
-        arg.appendToCommandLine(builder, pathResolver);
+        arg.appendToCommandLine(builder::add, pathResolver);
       }
     }
     return builder.build();

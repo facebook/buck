@@ -927,7 +927,7 @@ public class ProjectGenerator {
               node.getBuildTarget(),
               node.getCellNames(),
               emptyBuildRuleResolver)
-          .appendToCommandLine(result, defaultPathResolver);
+          .appendToCommandLine(result::add, defaultPathResolver);
     }
     return result.build();
   }

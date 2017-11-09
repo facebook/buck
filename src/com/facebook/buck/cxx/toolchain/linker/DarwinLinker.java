@@ -43,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
@@ -213,8 +214,7 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
     // `-u` command line option.
     @Override
-    public void appendToCommandLine(
-        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       Set<String> symbols = new LinkedHashSet<>();
       try {
         for (SourcePath path : symbolFiles) {
@@ -224,7 +224,7 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
         throw new RuntimeException(e);
       }
       for (String symbol : symbols) {
-        builder.addAll(Linkers.iXlinker("-u", symbol));
+        Linkers.iXlinker("-u", symbol).forEach(consumer);
       }
     }
 

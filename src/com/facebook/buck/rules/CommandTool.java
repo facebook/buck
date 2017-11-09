@@ -93,7 +93,7 @@ public class CommandTool implements Tool {
       command.addAll(baseTool.get().getCommandPrefix(resolver));
     }
     for (Arg arg : args) {
-      arg.appendToCommandLine(command, resolver);
+      arg.appendToCommandLine(command::add, resolver);
     }
     return command.build();
   }

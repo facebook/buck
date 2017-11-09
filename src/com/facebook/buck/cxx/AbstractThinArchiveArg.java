@@ -26,6 +26,7 @@ import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 /**
@@ -43,9 +44,8 @@ abstract class AbstractThinArchiveArg implements Arg, HasSourcePath {
   protected abstract ImmutableList<SourcePath> getContents();
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    builder.add(pathResolver.getAbsolutePath(getPath()).toString());
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    consumer.accept(pathResolver.getAbsolutePath(getPath()).toString());
   }
 
   @Override

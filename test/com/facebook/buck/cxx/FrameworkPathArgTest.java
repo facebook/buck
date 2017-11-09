@@ -31,8 +31,8 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.Consumer;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -44,8 +44,7 @@ public class FrameworkPathArgTest {
     }
 
     @Override
-    public void appendToCommandLine(
-        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       throw new UnsupportedOperationException();
     }
   }

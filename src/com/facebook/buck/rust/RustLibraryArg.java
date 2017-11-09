@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Consumer;
 
 /** Generate linker command line for Rust library when used as a dependency. */
 public class RustLibraryArg implements Arg, HasSourcePath {
@@ -66,16 +67,15 @@ public class RustLibraryArg implements Arg, HasSourcePath {
   }
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
     Path path = resolver.getRelativePath(rlib);
 
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     if (direct) {
-      builder.add(String.format("--extern=%s=%s", crate, path));
+      consumer.accept(String.format("--extern=%s=%s", crate, path));
     } else {
-      builder.add(String.format("-Ldependency=%s", path.getParent()));
+      consumer.accept(String.format("-Ldependency=%s", path.getParent()));
     }
   }
 

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /**
  * Arg that represents object file that should be linked into resulting binary using normal
@@ -63,16 +64,13 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
   }
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    value.appendToCommandLine(builder, pathResolver);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    value.appendToCommandLine(consumer, pathResolver);
   }
 
   public void appendToCommandLineRel(
-      ImmutableCollection.Builder<String> builder,
-      Path currentCellPath,
-      SourcePathResolver pathResolver) {
-    value.appendToCommandLineRel(builder, currentCellPath, pathResolver);
+      Consumer<String> consumer, Path currentCellPath, SourcePathResolver pathResolver) {
+    value.appendToCommandLineRel(consumer, currentCellPath, pathResolver);
   }
 
   @Override

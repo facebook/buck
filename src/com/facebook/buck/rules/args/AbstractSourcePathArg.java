@@ -26,6 +26,7 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 /** An {@link Arg} which wraps a {@link SourcePath}. */
@@ -37,19 +38,18 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
   public abstract SourcePath getPath();
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    builder.add(pathResolver.getAbsolutePath(getPath()).toString());
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    consumer.accept(pathResolver.getAbsolutePath(getPath()).toString());
   }
 
   public void appendToCommandLineRel(
-      ImmutableCollection.Builder<String> builder, Path cellPath, SourcePathResolver pathResolver) {
+      Consumer<String> consumer, Path cellPath, SourcePathResolver pathResolver) {
     SourcePath path = getPath();
     if (path instanceof BuildTargetSourcePath
         && cellPath.equals(((BuildTargetSourcePath) path).getTarget().getCellPath())) {
-      builder.add(pathResolver.getRelativePath(path).toString());
+      consumer.accept(pathResolver.getRelativePath(path).toString());
     } else {
-      appendToCommandLine(builder, pathResolver);
+      appendToCommandLine(consumer, pathResolver);
     }
   }
 

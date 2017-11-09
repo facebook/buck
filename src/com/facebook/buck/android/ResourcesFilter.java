@@ -281,7 +281,7 @@ public class ResourcesFilter extends AbstractBuildRule
   void addPostFilterCommandSteps(
       Arg command, SourcePathResolver sourcePathResolver, ImmutableList.Builder<Step> steps) {
     ImmutableList.Builder<String> commandLineBuilder = new ImmutableList.Builder<>();
-    command.appendToCommandLine(commandLineBuilder, sourcePathResolver);
+    command.appendToCommandLine(commandLineBuilder::add, sourcePathResolver);
     commandLineBuilder.add(Escaper.escapeAsBashString(getFilterResourcesDataPath()));
     commandLineBuilder.add(Escaper.escapeAsBashString(getRDotJsonPath()));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());

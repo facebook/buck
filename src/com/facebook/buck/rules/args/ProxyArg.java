@@ -22,6 +22,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
+import java.util.function.Consumer;
 
 /**
  * An {@link Arg} implementation that delegates to another arg. Could be useful for overriding one
@@ -50,9 +51,8 @@ public class ProxyArg implements Arg {
   }
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    arg.appendToCommandLine(builder, pathResolver);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    arg.appendToCommandLine(consumer, pathResolver);
   }
 
   @Override

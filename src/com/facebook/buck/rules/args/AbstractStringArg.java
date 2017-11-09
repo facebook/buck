@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -35,9 +36,8 @@ abstract class AbstractStringArg implements Arg {
   abstract String getArg();
 
   @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    builder.add(getArg());
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    consumer.accept(getArg());
   }
 
   @Override
