@@ -170,7 +170,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setVersionControlStatsGenerator(
             new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
-        .setActionGraphCache(new ActionGraphCache())
+        .setActionGraphCache(new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()))
         .setKnownBuildRuleTypesProvider(
             KnownBuildRuleTypesProvider.of(
                 DefaultKnownBuildRuleTypesFactory.of(

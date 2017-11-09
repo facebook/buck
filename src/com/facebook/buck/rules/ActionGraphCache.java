@@ -32,24 +32,18 @@ import com.facebook.buck.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
-import javax.annotation.Nullable;
 
 /**
  * Class that transforms {@link TargetGraph} to {@link ActionGraph}. It also holds a cache for the
@@ -58,9 +52,11 @@ import javax.annotation.Nullable;
 public class ActionGraphCache {
   private static final Logger LOG = Logger.get(ActionGraphCache.class);
 
-  @Nullable private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
+  private Cache<TargetGraph, ActionGraphAndResolver> previousActionGraphs;
 
-  @Nullable private HashCode lastTargetGraphHash;
+  public ActionGraphCache(int maxEntries) {
+    previousActionGraphs = CacheBuilder.newBuilder().maximumSize(maxEntries).build();
+  }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndResolver getActionGraph(
@@ -134,37 +130,32 @@ public class ActionGraphCache {
     ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
-      if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
+      ActionGraphAndResolver cachedActionGraph = previousActionGraphs.getIfPresent(targetGraph);
+      if (cachedActionGraph != null) {
         eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
           compareActionGraphs(
               eventBus,
-              lastActionGraph.getSecond(),
+              cachedActionGraph,
               targetGraph,
               fieldLoader,
               parallelizationMode,
               ruleKeyLogger);
         }
-        out = lastActionGraph.getSecond();
+        out = cachedActionGraph;
       } else {
-        eventBus.post(ActionGraphEvent.Cache.miss(lastActionGraph == null));
+        eventBus.post(ActionGraphEvent.Cache.miss(previousActionGraphs.size() == 0));
         LOG.debug("Computing TargetGraph HashCode...");
-        HashCode targetGraphHash = getTargetGraphHash(targetGraph);
-        if (lastActionGraph == null) {
+        if (previousActionGraphs.size() == 0) {
           LOG.info("ActionGraph cache miss. Cache was empty.");
           eventBus.post(ActionGraphEvent.Cache.missWithEmptyCache());
         } else {
-          if (!lastActionGraph.getFirst().equals(targetGraph)) {
-            LOG.info("ActionGraph cache miss. TargetGraphs mismatched.");
-            eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphDifference());
-          }
-          if (Objects.equals(lastTargetGraphHash, targetGraphHash)) {
-            LOG.info("ActionGraph cache miss. TargetGraphs mismatched but hashes are the same.");
-            eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphHashMatch());
-          }
+          // If we get here, that means the cache is not empty, but the target graph wasn't
+          // in the cache.
+          LOG.info("ActionGraph cache miss against " + previousActionGraphs.size() + " entries.");
+          eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphDifference());
         }
-        lastTargetGraphHash = targetGraphHash;
         Pair<TargetGraph, ActionGraphAndResolver> freshActionGraph =
             new Pair<TargetGraph, ActionGraphAndResolver>(
                 targetGraph,
@@ -176,7 +167,7 @@ public class ActionGraphCache {
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment. skipActionGraphCache? %s", skipActionGraphCache);
-          lastActionGraph = freshActionGraph;
+          previousActionGraphs.put(freshActionGraph.getFirst(), freshActionGraph.getSecond());
         }
       }
       finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
@@ -340,15 +331,6 @@ public class ActionGraphCache {
         .build();
   }
 
-  private static HashCode getTargetGraphHash(TargetGraph targetGraph) {
-    Hasher hasher = Hashing.sha1().newHasher();
-    ImmutableSet<TargetNode<?, ?>> nodes = targetGraph.getNodes();
-    for (TargetNode<?, ?> targetNode : ImmutableSortedSet.copyOf(nodes)) {
-      hasher.putBytes(targetNode.getRawInputsHashCode().asBytes());
-    }
-    return hasher.hash();
-  }
-
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
       Iterable<BuildRule> buildRules,
       BuildRuleResolver buildRuleResolver,
@@ -437,12 +419,6 @@ public class ActionGraphCache {
   }
 
   private void invalidateCache() {
-    lastActionGraph = null;
-    lastTargetGraphHash = null;
-  }
-
-  @VisibleForTesting
-  boolean isCacheEmpty() {
-    return lastActionGraph == null;
+    previousActionGraphs.invalidateAll();
   }
 }

@@ -234,7 +234,8 @@ public class DistBuildFileHashesIntegrationTest {
 
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
       throws InterruptedException, IOException {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache =
+        new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     ActionGraphAndResolver actionGraphAndResolver =
         cache.getActionGraph(
             BuckEventBusForTests.newInstance(),

@@ -34,6 +34,7 @@ import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -42,6 +43,7 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +65,9 @@ public class ActionGraphCacheTest {
 
   private TargetNode<?, ?> nodeA;
   private TargetNode<?, ?> nodeB;
-  private TargetGraph targetGraph;
+  private TargetGraph targetGraph1;
+  private TargetGraph targetGraph2;
+
   private BuckEventBus eventBus;
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
   private final int keySeed = 0;
@@ -81,7 +85,8 @@ public class ActionGraphCacheTest {
 
     nodeB = createTargetNode("B");
     nodeA = createTargetNode("A", nodeB);
-    targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
+    targetGraph1 = TargetGraphFactory.newInstance(nodeA, nodeB);
+    targetGraph2 = TargetGraphFactory.newInstance(nodeB);
 
     eventBus =
         BuckEventBusForTests.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
@@ -103,14 +108,14 @@ public class ActionGraphCacheTest {
 
   @Test
   public void hitOnCache() throws InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache = new ActionGraphCache(1);
 
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
-            targetGraph,
+            targetGraph1,
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
     // The 1st time you query the ActionGraph it's a cache miss.
@@ -122,7 +127,7 @@ public class ActionGraphCacheTest {
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
-            targetGraph,
+            targetGraph1,
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
@@ -139,14 +144,76 @@ public class ActionGraphCacheTest {
   }
 
   @Test
+  public void hitOnMultiEntryCache() {
+    ActionGraphCache cache = new ActionGraphCache(2);
+
+    // List of (graph to run, (expected hit count, expected miss count))
+    ArrayList<Pair<TargetGraph, Pair<Integer, Integer>>> runList = new ArrayList<>();
+
+    // First run for graph 1 should be a miss.
+    runList.add(new Pair<>(targetGraph1, new Pair<>(0, 1)));
+    // First run for graph 2 should be a miss.
+    runList.add(new Pair<>(targetGraph2, new Pair<>(0, 2)));
+    // Second run for graph 2 should be a hit.
+    runList.add(new Pair<>(targetGraph2, new Pair<>(1, 2)));
+    // Second run for graph 1 should be a hit.
+    runList.add(new Pair<>(targetGraph1, new Pair<>(2, 2)));
+    // Third run for graph 2 should be a hit again.
+    runList.add(new Pair<>(targetGraph2, new Pair<>(3, 2)));
+
+    runAndCheckExpectedHitMissCount(cache, runList);
+  }
+
+  @Test
+  public void testLruEvictionOrder() {
+    ActionGraphCache cache = new ActionGraphCache(2);
+
+    // List of (graph to run, (expected hit count, expected miss count))
+    ArrayList<Pair<TargetGraph, Pair<Integer, Integer>>> runList = new ArrayList<>();
+
+    // First run for graph 1 should be a miss.
+    runList.add(new Pair<>(targetGraph1, new Pair<>(0, 1)));
+    // First run for graph 2 should be a miss.
+    runList.add(new Pair<>(targetGraph2, new Pair<>(0, 2)));
+    // Run graph 1 again to make it the MRU.
+    runList.add(new Pair<>(targetGraph1, new Pair<>(1, 2)));
+    // Run empty graph to evict graph 2.
+    runList.add(new Pair<>(TargetGraph.EMPTY, new Pair<>(1, 3)));
+    // Another run with graph 2 should be a miss (it should have just been evicted)
+    runList.add(new Pair<>(targetGraph2, new Pair<>(1, 4)));
+    // Now cache order should be (by LRU): EMPTY, targetGraph2
+    runList.add(new Pair<>(targetGraph1, new Pair<>(1, 5)));
+
+    runAndCheckExpectedHitMissCount(cache, runList);
+  }
+
+  private void runAndCheckExpectedHitMissCount(
+      ActionGraphCache cache, List<Pair<TargetGraph, Pair<Integer, Integer>>> runList) {
+    for (Pair<TargetGraph, Pair<Integer, Integer>> run : runList) {
+      cache.getActionGraph(
+          eventBus,
+          CHECK_GRAPHS, /* skipActionGraphCache */
+          false,
+          run.getFirst(),
+          keySeed,
+          ActionGraphParallelizationMode.DISABLED);
+
+      assertEquals(
+          countEventsOf(ActionGraphEvent.Cache.Hit.class), (int) run.getSecond().getFirst());
+      assertEquals(
+          countEventsOf(ActionGraphEvent.Cache.Miss.class), (int) run.getSecond().getSecond());
+    }
+  }
+
+  @Test
   public void missOnCache() {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache = new ActionGraphCache(1);
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
-            targetGraph,
+            targetGraph1,
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
     // Each time you call it for a different TargetGraph so all calls should be misses.
@@ -159,7 +226,7 @@ public class ActionGraphCacheTest {
             eventBus,
             CHECK_GRAPHS,
             /* skipActionGraphCache */ false,
-            targetGraph.getSubgraph(ImmutableSet.of(nodeB)),
+            targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
@@ -172,7 +239,7 @@ public class ActionGraphCacheTest {
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
-            targetGraph,
+            targetGraph1,
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
@@ -199,14 +266,14 @@ public class ActionGraphCacheTest {
         ActionGraphCache.getFreshActionGraph(
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
-            targetGraph,
+            targetGraph1,
             ActionGraphParallelizationMode.DISABLED);
 
     ActionGraphAndResolver resultRun2 =
         ActionGraphCache.getFreshActionGraph(
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
-            targetGraph,
+            targetGraph1,
             ActionGraphParallelizationMode.DISABLED);
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
@@ -225,12 +292,12 @@ public class ActionGraphCacheTest {
     for (ActionGraphParallelizationMode mode :
         ImmutableSet.of(
             ActionGraphParallelizationMode.DISABLED, ActionGraphParallelizationMode.ENABLED)) {
-      new ActionGraphCache()
+      new ActionGraphCache(1)
           .getActionGraph(
               eventBus,
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
-              targetGraph,
+              targetGraph1,
               keySeed,
               mode);
       experimentEvents =
@@ -242,12 +309,12 @@ public class ActionGraphCacheTest {
     }
 
     trackedEvents.clear();
-    new ActionGraphCache()
+    new ActionGraphCache(1)
         .getActionGraph(
             eventBus,
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
-            targetGraph,
+            targetGraph1,
             keySeed,
             ActionGraphParallelizationMode.EXPERIMENT);
     experimentEvents =
@@ -263,12 +330,12 @@ public class ActionGraphCacheTest {
                 hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
 
     trackedEvents.clear();
-    new ActionGraphCache()
+    new ActionGraphCache(1)
         .getActionGraph(
             eventBus,
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
-            targetGraph,
+            targetGraph1,
             keySeed,
             ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE);
     experimentEvents =

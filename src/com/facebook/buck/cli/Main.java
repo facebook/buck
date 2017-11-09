@@ -1043,7 +1043,7 @@ public final class Main {
           }
 
           if (actionGraphCache == null) {
-            actionGraphCache = new ActionGraphCache();
+            actionGraphCache = new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries());
           }
 
           if (typeCoercerFactory == null || parser == null) {

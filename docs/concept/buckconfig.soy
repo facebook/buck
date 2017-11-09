@@ -1074,6 +1074,16 @@ $ buck targets --resolve-alias app#src_jar
 {/call}
 
 {call buckconfig.entry}
+	{param section: 'cache' /}
+	{param name: 'max_action_graph_cache_entries' /}
+	{param example_value: '3' /}
+	{param description}
+		Sets the maximum number of action graphs to cache. After this number, the least-recently-used
+		graph will be evicted. Defaults to 1.
+	{/param}
+{/call}
+
+{call buckconfig.entry}
   {param section: 'cache' /}
   {param name: 'load_balancing_type' /}
   {param example_value: 'SINGLE_SERVER, CLIENT_SLB' /}

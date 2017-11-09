@@ -104,7 +104,8 @@ final class Daemon implements Closeable {
     this.hashCaches = hashCachesBuilder.build();
 
     this.broadcastEventListener = new BroadcastEventListener();
-    this.actionGraphCache = new ActionGraphCache();
+    this.actionGraphCache =
+        new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 

@@ -147,7 +147,7 @@ public class CommandRunnerParamsForTesting {
             new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setInvocationInfo(Optional.empty())
-        .setActionGraphCache(new ActionGraphCache())
+        .setActionGraphCache(new ActionGraphCache(config.getMaxActionGraphCacheEntries()))
         .setKnownBuildRuleTypesProvider(knownBuildRuleTypesProvider)
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())

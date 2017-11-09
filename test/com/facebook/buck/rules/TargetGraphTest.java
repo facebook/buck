@@ -139,6 +139,25 @@ public class TargetGraphTest {
     }
   }
 
+  @Test
+  public void testBasicEqualityCorrectness() {
+    TargetNode<?, ?> child1 = createTargetNode("B");
+    TargetNode<?, ?> child2 = createTargetNode("C");
+    TargetNode<?, ?> root = createTargetNode("A", child1, child2);
+
+    TargetNode<?, ?> dupChild1 = createTargetNode("B");
+    TargetNode<?, ?> dupChild2 = createTargetNode("C");
+    TargetNode<?, ?> anotherRoot = createTargetNode("A", dupChild2, dupChild1);
+
+    TargetGraph graph1 = TargetGraphFactory.newInstance(child1, child2, root);
+    TargetGraph graph2 = TargetGraphFactory.newInstance(dupChild2, anotherRoot, dupChild1);
+
+    // .equals should return true
+    assertEquals(graph1, graph2);
+    // hash codes should be equal
+    assertEquals(graph1.hashCode(), graph2.hashCode());
+  }
+
   private void checkSubgraph(
       ImmutableSet<TargetNode<?, ?>> roots, ImmutableSet<TargetNode<?, ?>> expectedNodes) {
     TargetGraph subgraph = targetGraph.getSubgraph(roots);
