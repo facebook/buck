@@ -2181,6 +2181,58 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'abi_generation_mode' /}
+  {param example_value: 'source' /}
+  {param description}
+    <p>Specifies how Buck should create ABI jars when computing {call buck.abi_rule_keys /}. Values
+    other than <code>class</code> may not be suitable for all rules; this setting may be overridden
+    on a per-rule basis using the <code>abi_generation_mode</code> parameter on each rule.<p>
+
+    <p>The valid modes are:
+      <ul>
+        <li>
+          <code>class</code> (default): creates an ABI jar for each library by first building the
+          library and then stripping out any information that is not part of the interface (such
+          as method bodies and private members).
+        </li>
+        <li>
+          <p><code>source</code>: creates an ABI jar for each library in the process of building the
+          library, via a plugin to the Java compiler. This improves build times by allowing each
+          library's dependents to start building before the library is done building.</p>
+          <p>Implies <code>jar_spool_mode = direct_to_jar</code>.</p>
+        </li>
+        <li>
+          <p><code>source_only</code>: creates an ABI jar for each library by referencing only the
+          source code of the library, without considering (most of) its dependencies. This can
+          drastically improve build times, especially in larger apps or in build environments with
+          a large number of cores by allowing all ABI jars to be built in parallel, and then all
+          library jars to be built in parallel (up to the available parallelism in the build
+          environment). Additionally, in environments with network-based caches it can reduce
+          the number of calls to the cache required for each build.</p>
+          <p>Requires some changes to how Java code is written. To migrate, first do some builds
+          in <code>migrating_to_source_only</code> mode, using {call buck.cmd_fix /} to
+          fix any issues encountered. Once migrated, errors will still be encountered from time
+          to time when new code does not meet the requirements of this mode.
+          {call buck.cmd_fix /} can be used to address these.</p>
+          <p>When building with <code>source_only</code>, using {call buck.cmd_build /}
+          <code> --keep-going</code> is recommended since some errors that occur when building an
+          ABI jar will actually have their root cause in another rule that builds later.</p>
+          <p>Read more about source-only ABIs&nbsp;
+          {call buck.concept_link}{param page: 'java_abis' /}{param name: 'here' /}{/call}.</p>
+        </li>
+        <li>
+          <p><code>migrating_to_source_only</code>: used when migrating from <code>source</code> to&nbsp;
+          <code>source_only</code>. Acts like <code>source</code>, but issues warnings (in
+          <code>buck.log</code>, not to the console) for any Java code that would cause errors under
+          <code>source_only</code>. {call buck.cmd_fix /} can be used to fix most such warnings.
+        </li>
+      </ul>
+    </p>
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'kotlin' /}
   {param description}

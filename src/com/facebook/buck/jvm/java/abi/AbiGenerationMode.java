@@ -53,6 +53,6 @@ public enum AbiGenerationMode {
   }
 
   public boolean usesDependencies() {
-    return true;
+    return this != SOURCE_ONLY;
   }
 }

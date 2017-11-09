@@ -444,6 +444,12 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       {param page: 'rule_keys' /}
       {param text: 'Rule Keys' /}
     {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'concept' /}
+      {param page: 'java_abis' /}
+      {param text: 'Java ABIs' /}
+    {/call}
   </ul>
   <h3>Build Rules</h3>
   <ul>
@@ -575,6 +581,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         'clean',
         'doctor',
         'fetch',
+        'fix',
         'install',
         'project',
         'publish',
@@ -864,6 +871,10 @@ docsearch({
 <a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
 {/template}
 
+/***/
+{template .abi_rule_keys}
+{call .concept_link_heading}{param page : 'rule_keys' /}{param heading : 'abi_rule_keys' /}{param name : 'ABI rule keys' /}{/call}
+{/template}
 
 /***/
 {template .android_aar}
@@ -1089,6 +1100,15 @@ docsearch({
 <a href="{ROOT}concept/{$page}.html">{$name}</a>
 {/template}
 
+/**
+ * @param page
+ * @param name
+ * @param heading
+ */
+{template .concept_link_heading}
+<a href="{ROOT}concept/{$page}.html#{$heading}">{$name}</a>
+{/template}
+
 /***/
 {template .build_file}
 {call .concept_link}{param page: 'build_file' /}{param name: 'build file' /}{/call}
@@ -1152,6 +1172,11 @@ docsearch({
 /***/
 {template .cmd_fetch}
 {call .cmd_link}{param name : 'fetch' /}{/call}
+{/template}
+
+/***/
+{template .cmd_fix}
+{call .cmd_link}{param name : 'fix' /}{/call}
 {/template}
 
 /***/

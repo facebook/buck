@@ -161,6 +161,12 @@ compiled class files and resources.
 
 {call buck.provided_deps_query_arg /}
 
+{call jvm_common.abi_generation_mode /}
+
+{call jvm_common.source_only_abi_deps /}
+
+{call jvm_common.required_for_source_only_abi /}
+
 {call buck.tests_arg /}
 
 {/param} // args
