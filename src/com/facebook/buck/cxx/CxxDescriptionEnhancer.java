@@ -962,23 +962,36 @@ public class CxxDescriptionEnhancer {
     BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
 
     CxxLink cxxLink =
-        createCxxLinkRule(
-            projectFilesystem,
-            resolver,
-            cxxBuckConfig,
-            cxxPlatform,
-            RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
-            linkStyle,
-            linkOptions,
-            frameworks,
-            libraries,
-            cxxRuntimeType,
-            sourcePathResolver,
-            ruleFinder,
-            linkOutput,
-            argsBuilder,
-            linkRuleTarget,
-            linkWholeDeps);
+        (CxxLink)
+            resolver.computeIfAbsent(
+                linkRuleTarget,
+                ignored ->
+                    // Generate the final link rule.  We use the top-level target as the link rule's
+                    // target, so that it corresponds to the actual binary we build.
+                    CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                        cxxBuckConfig,
+                        cxxPlatform,
+                        projectFilesystem,
+                        resolver,
+                        sourcePathResolver,
+                        ruleFinder,
+                        linkRuleTarget,
+                        Linker.LinkType.EXECUTABLE,
+                        Optional.empty(),
+                        linkOutput,
+                        linkStyle,
+                        linkOptions,
+                        RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+                        cxxRuntimeType,
+                        Optional.empty(),
+                        ImmutableSet.of(),
+                        linkWholeDeps,
+                        NativeLinkableInput.builder()
+                            .setArgs(argsBuilder.build())
+                            .setFrameworks(frameworks)
+                            .setLibraries(libraries)
+                            .build(),
+                        Optional.empty()));
 
     BuildRule binaryRuleForExecutable;
     Optional<CxxStrip> cxxStrip = Optional.empty();
@@ -1005,55 +1018,6 @@ public class CxxDescriptionEnhancer {
         ImmutableSortedSet.copyOf(objects.keySet()),
         executableBuilder.build(),
         deps);
-  }
-
-  private static CxxLink createCxxLinkRule(
-      ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
-      Iterable<? extends NativeLinkable> deps,
-      Linker.LinkableDepType linkStyle,
-      CxxLinkOptions linkOptions,
-      ImmutableSortedSet<FrameworkPath> frameworks,
-      ImmutableSortedSet<FrameworkPath> libraries,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
-      SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
-      Path linkOutput,
-      ImmutableList.Builder<Arg> argsBuilder,
-      BuildTarget linkRuleTarget,
-      ImmutableSet<BuildTarget> linkWholeDeps) {
-    return (CxxLink)
-        resolver.computeIfAbsent(
-            linkRuleTarget,
-            ignored ->
-                // Generate the final link rule.  We use the top-level target as the link rule's
-                // target, so that it corresponds to the actual binary we build.
-                CxxLinkableEnhancer.createCxxLinkableBuildRule(
-                    cxxBuckConfig,
-                    cxxPlatform,
-                    projectFilesystem,
-                    resolver,
-                    sourcePathResolver,
-                    ruleFinder,
-                    linkRuleTarget,
-                    Linker.LinkType.EXECUTABLE,
-                    Optional.empty(),
-                    linkOutput,
-                    linkStyle,
-                    linkOptions,
-                    deps,
-                    cxxRuntimeType,
-                    Optional.empty(),
-                    ImmutableSet.of(),
-                    linkWholeDeps,
-                    NativeLinkableInput.builder()
-                        .setArgs(argsBuilder.build())
-                        .setFrameworks(frameworks)
-                        .setLibraries(libraries)
-                        .build(),
-                    Optional.empty()));
   }
 
   public static CxxStrip createCxxStripRule(
