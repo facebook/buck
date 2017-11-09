@@ -161,15 +161,16 @@ public abstract class DefaultJavaLibraryRules {
     // when flavors are explicitly specified on the command line might it be different.
     getLibraryRule();
 
-    BuildRule result = getCompareAbisRule();
-    if (result == null) {
-      result = getClassAbiRule();
-    }
-    if (result == null) {
-      result = getSourceAbiRule();
+    BuildTarget requestedTarget = getInitialBuildTarget();
+    if (HasJavaAbi.isSourceAbiTarget(requestedTarget)) {
+      return getSourceAbiRule();
+    } else if (HasJavaAbi.isClassAbiTarget(requestedTarget)) {
+      return getClassAbiRule();
+    } else if (HasJavaAbi.isVerifiedSourceAbiTarget(requestedTarget)) {
+      return getCompareAbisRule();
     }
 
-    return Preconditions.checkNotNull(result);
+    throw new AssertionError();
   }
 
   @Nullable
