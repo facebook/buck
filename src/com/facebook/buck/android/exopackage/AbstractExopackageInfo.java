@@ -19,6 +19,7 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -54,6 +55,8 @@ abstract class AbstractExopackageInfo {
 
   public abstract Optional<ExopackageInfo.DexInfo> getDexInfo();
 
+  public abstract Optional<ImmutableList<ExopackageInfo.DexInfo>> getModuleInfo();
+
   public abstract Optional<ExopackageInfo.NativeLibsInfo> getNativeLibsInfo();
 
   public abstract Optional<ExopackageInfo.ResourcesInfo> getResourcesInfo();
@@ -72,6 +75,14 @@ abstract class AbstractExopackageInfo {
               paths.add(info.getMetadata());
               paths.add(info.getDirectory());
             });
+    getModuleInfo()
+        .ifPresent(
+            modules ->
+                modules.forEach(
+                    info -> {
+                      paths.add(info.getMetadata());
+                      paths.add(info.getDirectory());
+                    }));
     getResourcesInfo()
         .ifPresent(
             info ->
@@ -89,7 +100,8 @@ abstract class AbstractExopackageInfo {
     Preconditions.checkArgument(
         getDexInfo().isPresent()
             || getNativeLibsInfo().isPresent()
-            || getResourcesInfo().isPresent(),
+            || getResourcesInfo().isPresent()
+            || getModuleInfo().isPresent(),
         "ExopackageInfo must have something to install.");
   }
 }

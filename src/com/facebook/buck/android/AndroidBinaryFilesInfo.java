@@ -18,10 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
+import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -107,6 +109,21 @@ public class AndroidBinaryFilesInfo {
       builder.setDexInfo(
           ExopackageInfo.DexInfo.of(
               preDexMerge.getMetadataTxtSourcePath(), preDexMerge.getDexDirectorySourcePath()));
+      shouldInstall = true;
+    }
+
+    if (ExopackageMode.enabledForModules(exopackageModes)) {
+      PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
+
+      ImmutableList<DexInfo> moduleInfo =
+          preDexMerge
+              .getModuleMetadataAndDexSourcePaths()
+              .map(
+                  metadataPathAndDexdir ->
+                      DexInfo.of(
+                          metadataPathAndDexdir.getFirst(), metadataPathAndDexdir.getSecond()))
+              .collect(MoreCollectors.toImmutableList());
+      builder.setModuleInfo(moduleInfo);
       shouldInstall = true;
     }
 
