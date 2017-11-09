@@ -22,6 +22,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -441,12 +443,36 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return new SplitDexPaths().jarfilesSubdir;
   }
 
+  /** @return the output directories for modular dex files */
+  Stream<Path> getModuleDexPaths() {
+    final SplitDexPaths paths = new SplitDexPaths();
+    return apkModuleGraph
+        .getAPKModules()
+        .stream()
+        .filter(module -> !module.isRootModule())
+        .map(module -> paths.additionalJarfilesSubdir.resolve(module.getName()));
+  }
+
   public SourcePath getMetadataTxtSourcePath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getMetadataTxtPath());
   }
 
   public SourcePath getDexDirectorySourcePath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getDexDirectory());
+  }
+
+  /**
+   * @return a Stream containing pairs of: 1. the metadata describing the output dex files of a
+   *     module 2. the directory containing the corresponding dex files
+   */
+  Stream<Pair<SourcePath, SourcePath>> getModuleMetadataAndDexSourcePaths() {
+    return getModuleDexPaths()
+        .map(
+            directory ->
+                new Pair<>(
+                    ExplicitBuildTargetSourcePath.of(
+                        getBuildTarget(), directory.resolve("metadata.txt")),
+                    ExplicitBuildTargetSourcePath.of(getBuildTarget(), directory)));
   }
 
   @Nullable
