@@ -90,6 +90,7 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
         WriteAppModuleMetadataStep.writeModuleMetadata(
             metadataFile,
             additionalDexStoreToJarPathMap,
+            result.getAPKModuleGraph(),
             getProjectFilesystem(),
             Optional.empty(),
             Optional.empty(),
