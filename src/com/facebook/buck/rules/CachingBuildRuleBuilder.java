@@ -1485,18 +1485,29 @@ class CachingBuildRuleBuilder {
 
   // Fetch an artifact from the cache using manifest-based caching.
   private ListenableFuture<ManifestFetchResult> performManifestBasedCacheFetch(
-      RuleKeyAndInputs keyAndInputs) throws IOException {
+      RuleKeyAndInputs originalRuleKeyAndInputs) throws IOException {
     Preconditions.checkArgument(useManifestCaching());
+
+    // Explicitly drop the input list from the caller, as holding this in the closure below until
+    // the future eventually runs can potentially consume a lot of memory.
+    RuleKey manifestRuleKey = originalRuleKeyAndInputs.getRuleKey();
+    originalRuleKeyAndInputs = null;
 
     // Fetch the manifest from the cache.
     return Futures.transformAsync(
-        fetchManifest(keyAndInputs.getRuleKey()),
+        fetchManifest(manifestRuleKey),
         (@Nonnull CacheResult manifestCacheResult) -> {
           ManifestFetchResult.Builder manifestFetchResult = ManifestFetchResult.builder();
           manifestFetchResult.setManifestCacheResult(manifestCacheResult);
           if (!manifestCacheResult.getType().isSuccess()) {
             return Futures.immediateFuture(manifestFetchResult.build());
           }
+
+          // Re-calculate the rule key and the input list.  While we do already have the input list
+          // above in `originalRuleKeyAndInputs`, we intentionally don't pass it in and use it here
+          // to avoid holding on to significant memory until this future runs.
+          RuleKeyAndInputs keyAndInputs =
+              manifestBasedKeySupplier.get().orElseThrow(IllegalStateException::new);
 
           // Load the manifest from disk.
           ManifestLoadResult loadResult = loadManifest(keyAndInputs.getRuleKey());
