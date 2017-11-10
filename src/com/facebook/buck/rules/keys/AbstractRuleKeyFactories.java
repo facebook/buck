@@ -44,13 +44,13 @@ abstract class AbstractRuleKeyFactories {
   public abstract DependencyFileRuleKeyFactory getDepFileRuleKeyFactory();
 
   public static RuleKeyFactories of(
-      int keySeed,
+      RuleKeyConfiguration ruleKeyConfiguration,
       FileHashCache fileHashCache,
       BuildRuleResolver resolver,
       long inputRuleKeyFileSizeLimit,
       RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
     return of(
-        keySeed,
+        ruleKeyConfiguration,
         fileHashCache,
         resolver,
         inputRuleKeyFileSizeLimit,
@@ -59,13 +59,13 @@ abstract class AbstractRuleKeyFactories {
   }
 
   public static RuleKeyFactories of(
-      int keySeed,
+      RuleKeyConfiguration ruleKeyConfiguration,
       FileHashCache fileHashCache,
       BuildRuleResolver resolver,
       long inputRuleKeyFileSizeLimit,
       RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return RuleKeyFactories.of(

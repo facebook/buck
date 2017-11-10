@@ -65,7 +65,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
 
   private RuleKey createRuleKey(ProjectFilesystem fileSystem, String filename, String fileContents)
       throws Exception {
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(0);
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

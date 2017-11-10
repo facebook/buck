@@ -51,6 +51,7 @@ import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -586,7 +587,7 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                     cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
                     RuleKeyFactories.of(
-                        params.getBuckConfig().getKeySeed(),
+                        RuleKeyConfiguration.of(params.getBuckConfig().getKeySeed()),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         actionGraphAndResolver.getResolver(),
                         cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),

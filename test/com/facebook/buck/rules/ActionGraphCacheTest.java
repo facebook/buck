@@ -36,6 +36,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -372,7 +373,7 @@ public class ActionGraphCacheTest {
 
   private Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
       Iterable<BuildRule> buildRules, BuildRuleResolver buildRuleResolver) {
-    RuleKeyFieldLoader ruleKeyFieldLoader = new RuleKeyFieldLoader(0);
+    RuleKeyFieldLoader ruleKeyFieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =

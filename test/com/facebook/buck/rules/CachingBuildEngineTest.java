@@ -64,6 +64,7 @@ import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -179,7 +180,8 @@ public class CachingBuildEngineTest {
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       DefaultSourcePathResolver.from(DEFAULT_RULE_FINDER);
   private static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
-  private static final RuleKeyFieldLoader FIELD_LOADER = new RuleKeyFieldLoader(0);
+  private static final RuleKeyFieldLoader FIELD_LOADER =
+      new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
   private static final DefaultRuleKeyFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyFactory(
           FIELD_LOADER,

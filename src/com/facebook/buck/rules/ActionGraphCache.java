@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Preconditions;
@@ -129,7 +130,7 @@ public class ActionGraphCache {
     ActionGraphAndResolver out;
     ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
-      RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
+      RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(keySeed));
       ActionGraphAndResolver cachedActionGraph = previousActionGraphs.getIfPresent(targetGraph);
       if (cachedActionGraph != null) {
         eventBus.post(ActionGraphEvent.Cache.hit());

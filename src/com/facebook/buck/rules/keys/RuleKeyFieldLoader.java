@@ -25,16 +25,16 @@ import java.nio.file.Path;
 
 public class RuleKeyFieldLoader {
 
-  private final int seed;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
-  public RuleKeyFieldLoader(int seed) {
-    this.seed = seed;
+  public RuleKeyFieldLoader(RuleKeyConfiguration ruleKeyConfiguration) {
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
   }
 
   void setFields(RuleKeyObjectSink builder, BuildRule buildRule, RuleKeyType ruleKeyType) {
     // "." is not a valid first character for a field name, nor a valid character for rule attribute
     // name and so the following fields will never collide with other stuff.
-    builder.setReflectively(".cache_key_seed", seed);
+    builder.setReflectively(".cache_key_seed", ruleKeyConfiguration.getSeed());
     builder.setReflectively(".target_name", buildRule.getBuildTarget().getFullyQualifiedName());
     builder.setReflectively(".build_rule_type", buildRule.getType());
     builder.setReflectively(".buckversion", BuckVersion.getVersion());

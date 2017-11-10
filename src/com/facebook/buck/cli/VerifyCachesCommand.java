@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -63,7 +64,7 @@ public class VerifyCachesCommand extends AbstractCommand {
       FileHashCache fileHashCache,
       RuleKeyCacheRecycler<RuleKey> recycler) {
     ImmutableList<Map.Entry<BuildRule, RuleKey>> contents = recycler.getCachedBuildRules();
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeySeed);
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(ruleKeySeed));
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), eventBus);

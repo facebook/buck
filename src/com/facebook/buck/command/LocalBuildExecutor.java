@@ -37,6 +37,7 @@ import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -198,7 +199,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getResourceAwareSchedulingInfo(),
         engineConfig.getConsoleLogBuildRuleFailuresInline(),
         RuleKeyFactories.of(
-            args.getBuckConfig().getKeySeed(),
+            RuleKeyConfiguration.of(args.getBuckConfig().getKeySeed()),
             cachingBuildEngineDelegate.getFileHashCache(),
             actionGraphAndResolver.getResolver(),
             engineConfig.getBuildInputRuleKeyFileSizeLimit(),

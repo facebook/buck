@@ -32,6 +32,10 @@ public class TestDefaultRuleKeyFactory extends DefaultRuleKeyFactory {
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    super(new RuleKeyFieldLoader(seed), hashLoader, pathResolver, ruleFinder);
+    super(
+        new RuleKeyFieldLoader(RuleKeyConfiguration.of(seed)),
+        hashLoader,
+        pathResolver,
+        ruleFinder);
   }
 }

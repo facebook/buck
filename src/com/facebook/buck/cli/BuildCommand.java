@@ -81,6 +81,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -833,7 +834,8 @@ public class BuildCommand extends AbstractCommand {
         new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (showRuleKey) {
-      RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed());
+      RuleKeyFieldLoader fieldLoader =
+          new RuleKeyFieldLoader(RuleKeyConfiguration.of(params.getBuckConfig().getKeySeed()));
       ruleKeyFactory =
           Optional.of(
               new DefaultRuleKeyFactory(

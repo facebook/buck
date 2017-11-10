@@ -59,6 +59,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -1044,7 +1045,7 @@ public class PythonBinaryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
-            new RuleKeyFieldLoader(0),
+            new RuleKeyFieldLoader(RuleKeyConfiguration.of(0)),
             StackedFileHashCache.createDefaultHashCaches(
                 rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
             DefaultSourcePathResolver.from(ruleFinder),
