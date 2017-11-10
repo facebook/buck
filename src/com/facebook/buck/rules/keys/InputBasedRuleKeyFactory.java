@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +45,7 @@ import java.util.function.Function;
  *
  * @see SupportsInputBasedRuleKey
  */
-public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
+public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final FileHashLoader fileHashLoader;
@@ -71,32 +70,6 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     this.ruleFinder = ruleFinder;
     this.inputSizeLimit = inputSizeLimit;
     this.ruleKeyLogger = ruleKeyLogger;
-  }
-
-  @VisibleForTesting
-  public InputBasedRuleKeyFactory(
-      RuleKeyFieldLoader ruleKeyFieldLoader,
-      FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      long inputSizeLimit) {
-    this(
-        ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, inputSizeLimit, Optional.empty());
-  }
-
-  @VisibleForTesting
-  public InputBasedRuleKeyFactory(
-      int seed,
-      FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder) {
-    this(
-        new RuleKeyFieldLoader(seed),
-        hashLoader,
-        pathResolver,
-        ruleFinder,
-        Long.MAX_VALUE,
-        Optional.empty());
   }
 
   private Result<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {

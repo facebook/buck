@@ -94,10 +94,10 @@ public class InputBasedRuleKeyFactoryTest {
             .build(resolver, filesystem);
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -123,14 +123,14 @@ public class InputBasedRuleKeyFactoryTest {
         new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(output), HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
         new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(output), HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
   }
@@ -164,7 +164,7 @@ public class InputBasedRuleKeyFactoryTest {
                 HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -175,7 +175,7 @@ public class InputBasedRuleKeyFactoryTest {
                 HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
   }
@@ -204,14 +204,14 @@ public class InputBasedRuleKeyFactoryTest {
         new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(output), HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
         new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(output), HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
   }
@@ -250,7 +250,7 @@ public class InputBasedRuleKeyFactoryTest {
                 HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -261,7 +261,7 @@ public class InputBasedRuleKeyFactoryTest {
                 HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(rule);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
   }
@@ -320,7 +320,8 @@ public class InputBasedRuleKeyFactoryTest {
 
     // Verify rule key isn't calculated.
     expectedException.expect(SizeLimiter.SizeLimitException.class);
-    new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200).build(rule);
+    new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200)
+        .build(rule);
   }
 
   @Test
@@ -351,7 +352,8 @@ public class InputBasedRuleKeyFactoryTest {
 
     // Verify rule key isn't calculated.
     expectedException.expect(SizeLimiter.SizeLimitException.class);
-    new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200).build(rule);
+    new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200)
+        .build(rule);
   }
 
   @Test
@@ -386,7 +388,8 @@ public class InputBasedRuleKeyFactoryTest {
 
     // Verify rule key isn't calculated.
     expectedException.expect(SizeLimiter.SizeLimitException.class);
-    new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200).build(rule);
+    new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200)
+        .build(rule);
   }
 
   @Test
@@ -419,7 +422,8 @@ public class InputBasedRuleKeyFactoryTest {
 
     // Verify rule key isn't calculated.
     expectedException.expect(SizeLimiter.SizeLimitException.class);
-    new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200).build(rule);
+    new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, 200)
+        .build(rule);
   }
 
   @Test
@@ -438,7 +442,8 @@ public class InputBasedRuleKeyFactoryTest {
                     filesystem, FileHashCacheMode.DEFAULT)));
     final int sizeLimit = 200;
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
+        new TestInputBasedRuleKeyFactory(
+            fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
     // Create rule with inputs that make it go past the size limit, and verify the rule key factory
     // doesn't create a rule key.
     final int tooLargeRuleSize = 300;
@@ -470,7 +475,8 @@ public class InputBasedRuleKeyFactoryTest {
                     filesystem, FileHashCacheMode.DEFAULT)));
     final int sizeLimit = 200;
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
+        new TestInputBasedRuleKeyFactory(
+            fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
     // Create a rule that doesn't pass the size limit and verify it creates a rule key.
     final int smallEnoughRuleSize = 100;
     assertThat(smallEnoughRuleSize, Matchers.lessThan(sizeLimit));
@@ -507,7 +513,7 @@ public class InputBasedRuleKeyFactoryTest {
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Object... objects) {
-    return new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+    return new TestInputBasedRuleKeyFactory(hashCache, resolver, ruleFinder)
         .build(
             new FakeBuildRule("//fake:target") {
               @AddToRuleKey List<Object> ruleObjects = Arrays.asList(objects);

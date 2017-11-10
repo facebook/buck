@@ -36,8 +36,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -211,14 +211,14 @@ public class AndroidResourceTest {
     filesystem.writeContentsToPath(
         "something", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey original =
-        new InputBasedRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder).build(resource);
+        new TestInputBasedRuleKeyFactory(fileHashCache, pathResolver, ruleFinder).build(resource);
 
     fileHashCache.invalidateAll();
 
     filesystem.writeContentsToPath(
         "something else", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey changed =
-        new InputBasedRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder).build(resource);
+        new TestInputBasedRuleKeyFactory(fileHashCache, pathResolver, ruleFinder).build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));
   }

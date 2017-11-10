@@ -40,8 +40,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -175,9 +175,9 @@ public class DirectHeaderMapTest {
         new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
 
-    key1 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
+    key1 = new TestInputBasedRuleKeyFactory(hashCache, resolver, ruleFinder).build(buildRule);
     key2 =
-        new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
+        new TestInputBasedRuleKeyFactory(hashCache, resolver, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
   }
 
@@ -200,7 +200,7 @@ public class DirectHeaderMapTest {
     RuleKey defaultKey1 =
         new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
     RuleKey inputKey1 =
-        new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestInputBasedRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
 
     Files.write(file1, "hello other world".getBytes());
     hashCache.invalidateAll();
@@ -208,7 +208,7 @@ public class DirectHeaderMapTest {
     RuleKey defaultKey2 =
         new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
     RuleKey inputKey2 =
-        new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestInputBasedRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
 
     // When the file content changes, the rulekey should change but the input rulekey should be
     // unchanged. This ensures that a dependent's rulekey changes correctly.

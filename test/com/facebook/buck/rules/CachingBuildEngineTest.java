@@ -68,6 +68,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -186,7 +187,7 @@ public class CachingBuildEngineTest {
           DEFAULT_SOURCE_PATH_RESOLVER,
           DEFAULT_RULE_FINDER);
   private static final InputBasedRuleKeyFactory NOOP_INPUT_BASED_RULE_KEY_FACTORY =
-      new InputBasedRuleKeyFactory(
+      new TestInputBasedRuleKeyFactory(
           FIELD_LOADER,
           new DummyFileHashCache(),
           DEFAULT_SOURCE_PATH_RESOLVER,
@@ -253,7 +254,7 @@ public class CachingBuildEngineTest {
       defaultRuleKeyFactory =
           new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, pathResolver, ruleFinder);
       inputBasedRuleKeyFactory =
-          new InputBasedRuleKeyFactory(
+          new TestInputBasedRuleKeyFactory(
               FIELD_LOADER, fileHashCache, pathResolver, ruleFinder, NO_INPUT_FILE_SIZE_LIMIT);
       durationTracker = new BuildRuleDurationTracker();
     }
@@ -3757,7 +3758,7 @@ public class CachingBuildEngineTest {
                   RuleKeyFactories.of(
                       new DefaultRuleKeyFactory(
                           FIELD_LOADER, fileHashCache, pathResolver, ruleFinder),
-                      new InputBasedRuleKeyFactory(
+                      new TestInputBasedRuleKeyFactory(
                           FIELD_LOADER,
                           fileHashCache,
                           pathResolver,

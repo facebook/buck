@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
@@ -217,8 +218,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
 
     InputBasedRuleKeyFactory ruleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, ruleFinder);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -227,8 +228,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
     ruleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, ruleFinder);
 
     // Re-calculate the rule key
     RuleKey key2 = ruleKeyFactory.build(symlinkTreeBuildRule);

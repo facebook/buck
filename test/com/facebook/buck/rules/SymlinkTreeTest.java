@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -177,8 +178,8 @@ public class SymlinkTreeTest {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
 
     InputBasedRuleKeyFactory ruleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -251,13 +252,14 @@ public class SymlinkTreeTest {
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(ImmutableMap.of("out", "aaaa"));
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder);
     RuleKey ruleKey1 = inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Generate an input-based rule key for the symlink tree with the contents of the link
     // target hashing to a different value: "bbbb".
     hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of("out", "bbbb"));
-    inputBasedRuleKeyFactory = new InputBasedRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
+    inputBasedRuleKeyFactory =
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder);
     RuleKey ruleKey2 = inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Verify that the rules keys are the same.

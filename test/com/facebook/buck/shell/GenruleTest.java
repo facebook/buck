@@ -50,6 +50,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -735,8 +736,7 @@ public class GenruleTest {
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -763,8 +763,7 @@ public class GenruleTest {
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -788,8 +787,7 @@ public class GenruleTest {
         "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(resolver);
     inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -825,8 +823,7 @@ public class GenruleTest {
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -857,8 +854,7 @@ public class GenruleTest {
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -881,8 +877,7 @@ public class GenruleTest {
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -918,8 +913,7 @@ public class GenruleTest {
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -946,8 +940,7 @@ public class GenruleTest {
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -970,8 +963,7 @@ public class GenruleTest {
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     inputBasedRuleKeyFactory =
-        new InputBasedRuleKeyFactory(
-            0,
+        new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);

@@ -60,6 +60,7 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -894,7 +895,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the genrule such that its rule key changes, but it's output stays the same (since
@@ -914,7 +915,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build(ruleResolver, filesystem);
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -935,7 +936,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build(ruleResolver, filesystem);
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -976,7 +977,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the Java library dependency such that its rule key changes, and change its JAR
@@ -1001,7 +1002,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "different JAR contents", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -1024,7 +1025,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -1075,7 +1076,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
@@ -1102,7 +1103,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -1125,7 +1126,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -1181,7 +1182,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
@@ -1208,7 +1209,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -1231,7 +1232,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
