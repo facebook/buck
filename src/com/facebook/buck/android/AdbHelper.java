@@ -47,6 +47,7 @@ import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -79,6 +80,9 @@ public class AdbHelper implements AndroidDevicesHelper {
   /** Pattern that matches safe package names. (Must be a full string match). */
   public static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
 
+  private static Optional<Supplier<ImmutableList<AndroidDevice>>> devicesSupplierForTests =
+      Optional.empty();
+
   /**
    * If this environment variable is set, the device with the specified serial number is targeted.
    * The -s option overrides this.
@@ -99,8 +103,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
 
-  private static Optional<Supplier<ImmutableList<AndroidDevice>>> devicesSupplierForTests =
-      Optional.empty();
+  @Nullable private ListeningExecutorService executorService = null;
 
   public AdbHelper(
       AdbOptions adbOptions,
@@ -161,31 +164,22 @@ public class AdbHelper implements AndroidDevicesHelper {
       }
     }
 
-    int adbThreadCount = options.getAdbThreadCount();
-    if (adbThreadCount <= 0) {
-      adbThreadCount = devices.size();
-    }
-
     // Start executions on all matching devices.
     List<ListenableFuture<Boolean>> futures = new ArrayList<>();
-    ListeningExecutorService executorService =
-        listeningDecorator(
-            newMultiThreadExecutor(
-                new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
-
     for (final AndroidDevice device : devices) {
       futures.add(
-          executorService.submit(
-              () -> {
-                try (SimplePerfEvent.Scope ignored =
-                    SimplePerfEvent.scope(
-                        getBuckEventBus(),
-                        PerfEventId.of("adbCall " + description),
-                        "device_serial",
-                        device.getSerialNumber())) {
-                  return func.apply(device);
-                }
-              }));
+          getExecutorService()
+              .submit(
+                  () -> {
+                    try (SimplePerfEvent.Scope ignored =
+                        SimplePerfEvent.scope(
+                            getBuckEventBus(),
+                            PerfEventId.of("adbCall " + description),
+                            "device_serial",
+                            device.getSerialNumber())) {
+                      return func.apply(device);
+                    }
+                  }));
     }
 
     // Wait for all executions to complete or fail.
@@ -204,12 +198,6 @@ public class AdbHelper implements AndroidDevicesHelper {
       }
       Threads.interruptCurrentThread();
       throw e;
-    } finally {
-      MostExecutors.shutdownOrThrow(
-          executorService,
-          10,
-          TimeUnit.MINUTES,
-          new InterruptionFailedException("Failed to shutdown ExecutorService."));
     }
 
     int successCount = 0;
@@ -229,6 +217,28 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     return failureCount == 0;
+  }
+
+  private synchronized ListeningExecutorService getExecutorService() {
+    if (executorService != null) {
+      return executorService;
+    }
+    int deviceCount;
+    try {
+      deviceCount = getDevices(true).size();
+    } catch (InterruptedException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
+    int adbThreadCount = options.getAdbThreadCount();
+    if (adbThreadCount <= 0) {
+      adbThreadCount = deviceCount;
+    }
+    adbThreadCount = Math.min(deviceCount, adbThreadCount);
+    executorService =
+        listeningDecorator(
+            newMultiThreadExecutor(
+                new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
+    return executorService;
   }
 
   private void printMessage(String message) {
@@ -562,6 +572,20 @@ public class AdbHelper implements AndroidDevicesHelper {
   private static Optional<Path> getApkFilePathFromProperties() {
     String apkFileName = System.getProperty("buck.android_agent_path");
     return Optional.ofNullable(apkFileName).map(Paths::get);
+  }
+
+  @Override
+  public synchronized void close() {
+    // getExecutorService() requires the context for lazy initialization, so explicitly check if it
+    // has been initialized.
+    if (executorService != null) {
+      MostExecutors.shutdownOrThrow(
+          executorService,
+          10,
+          TimeUnit.MINUTES,
+          new InterruptionFailedException("Failed to shutdown ExecutorService."));
+      executorService = null;
+    }
   }
 
   /** An exception that indicates that an executed command returned an unsuccessful exit code. */
