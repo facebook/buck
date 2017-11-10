@@ -183,7 +183,7 @@ public class GnuLinker implements Linker {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool);
   }
 
   // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined

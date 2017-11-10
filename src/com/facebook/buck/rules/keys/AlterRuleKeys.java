@@ -45,6 +45,7 @@ public final class AlterRuleKeys {
   }
 
   private static void amendKey(RuleKeyObjectSink sink, Object appendable) {
+    sink.setReflectively(".class", appendable.getClass().getName());
     for (AlterRuleKey alterRuleKey : cache.getUnchecked(appendable.getClass())) {
       alterRuleKey.amendKey(sink, appendable);
     }

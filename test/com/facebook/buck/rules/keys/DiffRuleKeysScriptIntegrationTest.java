@@ -226,8 +226,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             Matchers.containsString(
                 "Change details for [//:java_lib_all]\n"
                     + "  (jarBuildStepsFactory):\n"
-                    + "    -[ruleKey(sha1=2e849e9597fb4b75ac4616a6cc5e9e6e5be51bb1)]\n"
-                    + "    +[ruleKey(sha1=e6d5ba29d484bba32135d0841c786f216c31efad)]\n"),
+                    + "    -[ruleKey(sha1=07a5295e2ed9db630c5727280fa677235f2ef3b9)]\n"
+                    + "    +[ruleKey(sha1=0563a239c22974069bc3f62df26591f5fb0213fc)]\n"),
             Matchers.containsString(
                 "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
                     + "  (srcs):\n"
@@ -257,7 +257,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         expectedFileContent,
         Matchers.containsString(
-            "string(\"-I$SDKROOT/usr/include/libxml2\"):container(LIST,len=1):key(macros)::"));
+            "string(\"-I$SDKROOT/usr/include/libxml2\"):container(LIST,len=1):key(macros):"));
   }
 
   private void writeBuckConfig(ProjectWorkspace projectWorkspace, String javaVersion)

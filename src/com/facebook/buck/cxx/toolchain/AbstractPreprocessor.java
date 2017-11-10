@@ -62,6 +62,6 @@ public abstract class AbstractPreprocessor implements Preprocessor {
 
   @Override
   public final void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool);
   }
 }

@@ -182,7 +182,7 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
+    sink.setReflectively("tool", tool);
   }
 
   /**

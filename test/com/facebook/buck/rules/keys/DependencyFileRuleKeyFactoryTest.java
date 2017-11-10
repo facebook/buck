@@ -557,10 +557,7 @@ public class DependencyFileRuleKeyFactoryTest {
       throws Exception {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeDepFileBuildRule rule1 =
-        new FakeDepFileBuildRule("//:rule") {
-          @AddToRuleKey final Object myField = fieldValueBefore;
-        };
+    FakeDepFileBuildRule rule1 = new FakeDepFileBuildRuleWithField(fieldValueBefore);
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
@@ -568,10 +565,7 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .build(rule1, depFileEntries);
 
-    FakeDepFileBuildRule rule2 =
-        new FakeDepFileBuildRule("//:rule") {
-          @AddToRuleKey final Object myField = fieldValueAfter;
-        };
+    FakeDepFileBuildRule rule2 = new FakeDepFileBuildRuleWithField(fieldValueAfter);
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
@@ -856,10 +850,7 @@ public class DependencyFileRuleKeyFactoryTest {
       throws Exception {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeDepFileBuildRule rule1 =
-        new FakeDepFileBuildRule("//:rule") {
-          @AddToRuleKey final Object myField = fieldValueBefore;
-        };
+    FakeDepFileBuildRule rule1 = new FakeDepFileBuildRuleWithField(fieldValueBefore);
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
@@ -867,10 +858,7 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
             .buildManifestKey(rule1);
 
-    FakeDepFileBuildRule rule2 =
-        new FakeDepFileBuildRule("//:rule") {
-          @AddToRuleKey final Object myField = fieldValueAfter;
-        };
+    FakeDepFileBuildRule rule2 = new FakeDepFileBuildRuleWithField(fieldValueAfter);
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
@@ -950,5 +938,14 @@ public class DependencyFileRuleKeyFactoryTest {
   private BuildRuleResolver newRuleResolver() {
     return new SingleThreadedBuildRuleResolver(
         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+  }
+
+  private static class FakeDepFileBuildRuleWithField extends FakeDepFileBuildRule {
+    @AddToRuleKey final Object myField;
+
+    public FakeDepFileBuildRuleWithField(Object value) {
+      super("//:rule");
+      myField = value;
+    }
   }
 }

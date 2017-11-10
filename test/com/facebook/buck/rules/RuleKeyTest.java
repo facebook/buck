@@ -36,6 +36,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyResult;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -53,6 +54,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.SortedSet;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.junit.Test;
 
@@ -610,6 +613,60 @@ public class RuleKeyTest {
         new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(buildRule1);
     RuleKey ruleKey2 =
         new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(buildRule2);
+
+    assertNotEquals(ruleKey1, ruleKey2);
+  }
+
+  @Test
+  public void ruleKeyIncludesClass() {
+    class AddsToRuleKey1 implements AddsToRuleKey {}
+    class AddsToRuleKey2 implements AddsToRuleKey {}
+    class SimpleBuildRule extends AbstractBuildRule {
+      @AddToRuleKey final AddsToRuleKey value;
+
+      protected SimpleBuildRule(
+          BuildTarget buildTarget, ProjectFilesystem projectFilesystem, AddsToRuleKey value) {
+        super(buildTarget, projectFilesystem);
+        this.value = value;
+      }
+
+      @Override
+      public SortedSet<BuildRule> getBuildDeps() {
+        return ImmutableSortedSet.of();
+      }
+
+      @Override
+      public ImmutableList<? extends Step> getBuildSteps(
+          BuildContext context, BuildableContext buildableContext) {
+        return ImmutableList.of();
+      }
+
+      @Nullable
+      @Override
+      public SourcePath getSourcePathToOutput() {
+        return null;
+      }
+    }
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+
+    RuleKey ruleKey1 =
+        new TestDefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(new SimpleBuildRule(target, projectFilesystem, new AddsToRuleKey1()));
+    RuleKey ruleKey2 =
+        new TestDefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(new SimpleBuildRule(target, projectFilesystem, new AddsToRuleKey2()));
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
