@@ -29,7 +29,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-public class TargetNodeFactory {
+public class TargetNodeFactory implements NodeCopier {
   private final TypeCoercerFactory typeCoercerFactory;
 
   public TargetNodeFactory(TypeCoercerFactory typeCoercerFactory) {
@@ -114,6 +114,11 @@ public class TargetNodeFactory {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
+    // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
+    // because
+    // ImplicitDepsInferringDescriptions may give different results for deps based on flavors.
+    //
+    // Note that this method strips away selected versions, and may be buggy because of it.
     return TargetNode.of(
         buildTarget,
         this,
@@ -161,6 +166,7 @@ public class TargetNodeFactory {
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithDescription(
       TargetNode<?, ?> originalNode, U description) {
     try {
@@ -183,6 +189,7 @@ public class TargetNodeFactory {
     }
   }
 
+  @Override
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithFlavors(
       TargetNode<T, U> originalNode, ImmutableSet<Flavor> flavors) {
     try {

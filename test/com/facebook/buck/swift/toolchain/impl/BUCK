@@ -7,7 +7,7 @@ java_test(
     ]),
     run_test_separately = True,
     deps = [
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
         "//src/com/facebook/buck/swift/toolchain/impl:impl",
         "//test/com/facebook/buck/testutil/integration:util",
