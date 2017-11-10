@@ -49,7 +49,6 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +58,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class RobolectricTestDescription

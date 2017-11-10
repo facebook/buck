@@ -319,8 +319,7 @@ public class PythonBinaryDescription
                 .stream()
                 .map(
                     MacroArg.toMacroArgFunction(
-                            PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver)
-                        ::apply)
+                        PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver))
                 .collect(MoreCollectors.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());

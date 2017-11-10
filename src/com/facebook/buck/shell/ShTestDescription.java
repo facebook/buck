@@ -42,7 +42,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +52,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -93,10 +93,10 @@ public class ShTestDescription
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
         Stream.concat(
                 Optionals.toStream(args.getTest()).map(SourcePathArg::of),
-                args.getArgs().stream().map(toArg::apply))
+                args.getArgs().stream().map(toArg))
             .collect(MoreCollectors.toImmutableList());
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
-        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg));
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg::apply));
     return new ShTest(
         buildTarget,
         projectFilesystem,

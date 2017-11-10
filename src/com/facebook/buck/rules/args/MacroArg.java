@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /** An {@link Arg} which contains macros that need to be expanded. */
 public class MacroArg implements Arg {
@@ -139,18 +139,15 @@ public class MacroArg implements Arg {
       final BuildTarget target,
       final CellPathResolver cellNames,
       final BuildRuleResolver resolver) {
-    return new Function<String, Arg>() {
-      @Override
-      public MacroArg apply(String unexpanded) {
-        try {
-          if (containsWorkerMacro(handler, unexpanded)) {
-            return new WorkerMacroArg(handler, target, cellNames, resolver, unexpanded);
-          }
-        } catch (MacroException e) {
-          throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    return unexpanded -> {
+      try {
+        if (containsWorkerMacro(handler, unexpanded)) {
+          return new WorkerMacroArg(handler, target, cellNames, resolver, unexpanded);
         }
-        return new MacroArg(handler, target, cellNames, resolver, unexpanded);
+      } catch (MacroException e) {
+        throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
       }
+      return new MacroArg(handler, target, cellNames, resolver, unexpanded);
     };
   }
 

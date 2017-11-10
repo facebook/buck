@@ -29,11 +29,11 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */

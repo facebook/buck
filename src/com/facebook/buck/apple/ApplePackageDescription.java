@@ -40,7 +40,6 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
@@ -51,6 +50,7 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class ApplePackageDescription

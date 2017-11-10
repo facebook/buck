@@ -86,6 +86,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -499,7 +500,7 @@ public class AndroidBinaryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
     return arg.getPostFilterResourcesCmd()
-        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply);
+        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver));
   }
 
   private Optional<Arg> getPreprocessJavaClassesBash(
@@ -508,7 +509,7 @@ public class AndroidBinaryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
     return arg.getPreprocessJavaClassesBash()
-        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply);
+        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver));
   }
 
   private Optional<RedexOptions> getRedexOptions(
@@ -530,8 +531,8 @@ public class AndroidBinaryDescription
           buildTarget, SECTION, CONFIG_PARAM_REDEX);
     }
 
-    java.util.function.Function<String, Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply;
+    Function<String, Arg> macroArgFunction =
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
     List<Arg> redexExtraArgs =
         arg.getRedexExtraArgs().stream().map(macroArgFunction).collect(Collectors.toList());
 

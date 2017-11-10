@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
@@ -53,6 +54,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.CommonArg>
@@ -90,9 +92,9 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildRuleParams params,
       BuildRuleResolver resolver,
       T args,
-      Optional<com.facebook.buck.rules.args.Arg> cmd,
-      Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe) {
     AndroidLegacyToolchain androidLegacyToolchain =
         toolchainProvider.getByName(
             AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
@@ -150,12 +152,11 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     if (maybeMacroHandler.isPresent()) {
       MacroHandler macroHandler = maybeMacroHandler.get();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-          MacroArg.toMacroArgFunction(macroHandler, buildTarget, cellRoots, resolver)::apply;
-      final Optional<com.facebook.buck.rules.args.Arg> cmd = args.getCmd().map(macroArgFunction);
-      final Optional<com.facebook.buck.rules.args.Arg> bash = args.getBash().map(macroArgFunction);
-      final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
-          args.getCmdExe().map(macroArgFunction);
+      Function<String, Arg> macroArgFunction =
+          MacroArg.toMacroArgFunction(macroHandler, buildTarget, cellRoots, resolver);
+      final Optional<Arg> cmd = args.getCmd().map(macroArgFunction);
+      final Optional<Arg> bash = args.getBash().map(macroArgFunction);
+      final Optional<Arg> cmdExe = args.getCmdExe().map(macroArgFunction);
       return createBuildRule(
           buildTarget,
           projectFilesystem,
