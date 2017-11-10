@@ -223,8 +223,8 @@ public class CxxTestDescription
         ImmutableMap.copyOf(
             Maps.transformValues(
                 args.getEnv(),
-                CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                    buildTarget, cellRoots, resolver)));
+                CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver)
+                    ::apply));
 
     // Supplier which expands macros in the passed in test arguments.
     Supplier<ImmutableList<String>> testArgs =

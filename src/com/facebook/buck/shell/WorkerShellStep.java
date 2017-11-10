@@ -31,12 +31,11 @@ import com.facebook.buck.worker.WorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class WorkerShellStep implements Step {
 
@@ -162,8 +161,6 @@ public class WorkerShellStep implements Step {
    * process.
    *
    * <p>By default, this method returns an empty map.
-   *
-   * @param context that may be useful when determining environment variables to include.
    */
   protected ImmutableMap<String, String> getEnvironmentVariables() {
     return ImmutableMap.of();
@@ -184,12 +181,13 @@ public class WorkerShellStep implements Step {
     return String.format(
         "Sending job with args \'%s\' to the process started with \'%s\'",
         getExpandedJobArgs(context),
-        FluentIterable.from(
-                factory.getCommand(
-                    context.getPlatform(),
-                    getWorkerJobParamsToUse(context.getPlatform()).getWorkerProcessParams()))
-            .transform(Escaper.SHELL_ESCAPER)
-            .join(Joiner.on(' ')));
+        factory
+            .getCommand(
+                context.getPlatform(),
+                getWorkerJobParamsToUse(context.getPlatform()).getWorkerProcessParams())
+            .stream()
+            .map(Escaper.SHELL_ESCAPER)
+            .collect(Collectors.joining(" ")));
   }
 
   public BuildTarget getBuildTarget() {

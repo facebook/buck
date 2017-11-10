@@ -25,7 +25,6 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -55,6 +54,7 @@ import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -316,21 +316,22 @@ public class Resolver {
         FluentIterable.from(Files.newDirectoryStream(project))
             .transform(
                 new Function<Path, Version>() {
-                  @Nullable
-                  @Override
-                  public Version apply(Path input) {
-                    Matcher matcher = versionExtractor.matcher(input.getFileName().toString());
-                    if (matcher.matches()) {
-                      try {
-                        return versionScheme.parseVersion(matcher.group(1));
-                      } catch (InvalidVersionSpecificationException e) {
-                        throw new RuntimeException(e);
+                      @Nullable
+                      @Override
+                      public Version apply(Path input) {
+                        Matcher matcher = versionExtractor.matcher(input.getFileName().toString());
+                        if (matcher.matches()) {
+                          try {
+                            return versionScheme.parseVersion(matcher.group(1));
+                          } catch (InvalidVersionSpecificationException e) {
+                            throw new RuntimeException(e);
+                          }
+                        } else {
+                          return null;
+                        }
                       }
-                    } else {
-                      return null;
                     }
-                  }
-                })
+                    ::apply)
             .filter(Objects::nonNull);
 
     List<Version> newestPresent = Ordering.natural().greatestOf(versionsPresent, 1);

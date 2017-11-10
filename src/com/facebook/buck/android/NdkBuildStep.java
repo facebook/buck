@@ -25,13 +25,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class NdkBuildStep extends ShellStep {
 
@@ -100,8 +99,7 @@ public class NdkBuildStep extends ShellStep {
         "-C",
         this.root.toString());
 
-    Iterable<String> flags = Iterables.transform(this.flags, macroExpander);
-    builder.addAll(flags);
+    this.flags.stream().map(macroExpander).forEach(builder::add);
 
     // We want relative, not absolute, paths in the debug-info for binaries we build using
     // ndk_library.  Absolute paths are machine-specific, but relative ones should be the

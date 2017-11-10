@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util.network;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
+import java.util.function.Function;
 
 /**
  * Use this formatter as you would use a Builder to create Hive formatted rows that will transmit
@@ -67,7 +67,7 @@ public final class HiveRowFormatter {
       row.append(COLUMN_SEPARATOR);
     }
 
-    Iterable<String> escapedValues = Iterables.transform(valueArray, ESCAPE_FUNCTION);
+    Iterable<String> escapedValues = Iterables.transform(valueArray, ESCAPE_FUNCTION::apply);
     row.append(Joiner.on(ARRAY_SEPARATOR).join(escapedValues));
     return this;
   }

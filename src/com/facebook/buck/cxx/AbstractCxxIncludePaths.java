@@ -21,19 +21,19 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Function;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStylePackageVisibleTuple
@@ -89,11 +89,12 @@ abstract class AbstractCxxIncludePaths {
     builder.addAll(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-F"),
-            FluentIterable.from(getFPaths())
+            getFPaths()
+                .stream()
                 .filter(x -> !x.isSDKROOTFrameworkPath())
-                .transform(frameworkPathTransformer)
-                .transform(Object::toString)
-                .toSortedSet(Ordering.natural())));
+                .map(frameworkPathTransformer)
+                .map(Object::toString)
+                .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()))));
 
     return builder.build();
   }

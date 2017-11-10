@@ -31,7 +31,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -187,13 +186,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedSet<SourcePath> sourcePaths =
           FluentIterable.from(traversedDeps.packagedDeps)
               .filter(HasSources.class)
-              .transformAndConcat(
-                  new Function<HasSources, Iterable<SourcePath>>() {
-                    @Override
-                    public Iterable<SourcePath> apply(HasSources input) {
-                      return input.getSources();
-                    }
-                  })
+              .transformAndConcat(HasSources::getSources)
               .append(topLevelSrcs)
               .toSortedSet(Ordering.natural());
       return new SourceJar(

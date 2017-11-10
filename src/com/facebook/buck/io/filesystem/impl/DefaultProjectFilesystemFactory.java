@@ -23,14 +23,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -80,29 +79,31 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
         DefaultProjectFilesystem.getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
     builder.add(new PathOrGlobMatcher(cacheDir));
 
-    builder.addAll(
-        FluentIterable.from(config.getListWithoutComments(projectKey, ignoreKey))
-            .transform(
-                new Function<String, PathOrGlobMatcher>() {
-                  @Nullable
-                  @Override
-                  public PathOrGlobMatcher apply(String input) {
-                    // We don't really want to ignore the output directory when doing things like filesystem
-                    // walks, so return null
-                    if (buckPaths.getBuckOut().toString().equals(input)) {
-                      return null; //root.getFileSystem().getPathMatcher("glob:**");
-                    }
+    config
+        .getListWithoutComments(projectKey, ignoreKey)
+        .stream()
+        .map(
+            new Function<String, PathOrGlobMatcher>() {
+              @Nullable
+              @Override
+              public PathOrGlobMatcher apply(String input) {
+                // We don't really want to ignore the output directory when doing things like
+                // filesystem
+                // walks, so return null
+                if (buckPaths.getBuckOut().toString().equals(input)) {
+                  return null; // root.getFileSystem().getPathMatcher("glob:**");
+                }
 
-                    if (GLOB_CHARS.matcher(input).find()) {
-                      return new PathOrGlobMatcher(
-                          root.getFileSystem().getPathMatcher("glob:" + input), input);
-                    }
-                    return new PathOrGlobMatcher(root, input);
-                  }
-                })
-            // And now remove any null patterns
-            .filter(Objects::nonNull)
-            .toList());
+                if (GLOB_CHARS.matcher(input).find()) {
+                  return new PathOrGlobMatcher(
+                      root.getFileSystem().getPathMatcher("glob:" + input), input);
+                }
+                return new PathOrGlobMatcher(root, input);
+              }
+            })
+        // And now remove any null patterns
+        .filter(Objects::nonNull)
+        .forEach(builder::add);
 
     return builder.build();
   }

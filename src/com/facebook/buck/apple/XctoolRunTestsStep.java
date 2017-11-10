@@ -29,13 +29,11 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
@@ -57,6 +55,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -399,7 +398,7 @@ class XctoolRunTestsStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return Joiner.on(' ').join(Iterables.transform(command, Escaper.SHELL_ESCAPER));
+    return command.stream().map(Escaper.SHELL_ESCAPER).collect(Collectors.joining(" "));
   }
 
   private static int listAndFilterTestsThenFormatXctoolParams(

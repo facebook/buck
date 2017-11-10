@@ -26,9 +26,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import java.util.stream.Collectors;
 
 /** Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}. */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
@@ -64,8 +63,11 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
   @Override
   public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
     // TODO(mikekap): Pass environment variables through.
-    return Joiner.on(' ')
-        .join(Iterables.transform(getTool(rule).getCommandPrefix(resolver), Escaper.SHELL_ESCAPER));
+    return getTool(rule)
+        .getCommandPrefix(resolver)
+        .stream()
+        .map(Escaper.SHELL_ESCAPER)
+        .collect(Collectors.joining(" "));
   }
 
   @Override

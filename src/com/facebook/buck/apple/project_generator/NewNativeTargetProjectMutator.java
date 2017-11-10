@@ -61,10 +61,8 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,6 +79,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 
 /**
@@ -604,14 +604,13 @@ class NewNativeTargetProjectMutator {
       ImmutableSet.Builder<Path> resourceDirsBuilder,
       ImmutableSet.Builder<Path> variantResourceFilesBuilder) {
     for (AppleResourceDescriptionArg arg : resourceArgs) {
-      resourceFilesBuilder.addAll(Iterables.transform(arg.getFiles(), sourcePathResolver));
-      resourceDirsBuilder.addAll(Iterables.transform(arg.getDirs(), sourcePathResolver));
-      variantResourceFilesBuilder.addAll(
-          Iterables.transform(arg.getVariants(), sourcePathResolver));
+      arg.getFiles().stream().map(sourcePathResolver).forEach(resourceFilesBuilder::add);
+      arg.getDirs().stream().map(sourcePathResolver).forEach(resourceDirsBuilder::add);
+      arg.getVariants().stream().map(sourcePathResolver).forEach(variantResourceFilesBuilder::add);
     }
 
     for (AppleAssetCatalogDescriptionArg arg : assetCatalogArgs) {
-      resourceDirsBuilder.addAll(Iterables.transform(arg.getDirs(), sourcePathResolver));
+      arg.getDirs().stream().map(sourcePathResolver).forEach(resourceDirsBuilder::add);
     }
 
     for (AppleWrapperResourceArg arg : resourcePathArgs) {
@@ -696,11 +695,12 @@ class NewNativeTargetProjectMutator {
         shellScriptBuildPhase
             .getInputPaths()
             .addAll(
-                FluentIterable.from(arg.getSrcs())
-                    .transform(sourcePathResolver)
-                    .transform(pathRelativizer::outputDirToRootRelative)
-                    .transform(Object::toString)
-                    .toSet());
+                arg.getSrcs()
+                    .stream()
+                    .map(sourcePathResolver)
+                    .map(pathRelativizer::outputDirToRootRelative)
+                    .map(Object::toString)
+                    .collect(Collectors.toSet()));
         shellScriptBuildPhase.getOutputPaths().addAll(arg.getOutputs());
         shellScriptBuildPhase.setShellScript(arg.getCmd());
       } else if (node.getDescription() instanceof JsBundleDescription) {

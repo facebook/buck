@@ -287,7 +287,7 @@ abstract class AbstractCxxSourceRuleFactory {
   // code for this object is important, and since `Function`s use object equality/hash-codes, we
   // need a stable object each time.
   @Value.Lazy
-  protected com.google.common.base.Function<String, String> getSanitizeFunction() {
+  protected Function<String, String> getSanitizeFunction() {
     return getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty());
   }
 

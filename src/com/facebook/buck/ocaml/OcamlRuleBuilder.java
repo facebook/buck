@@ -47,7 +47,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -61,6 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /** Compute transitive dependencies and generate ocaml build rules */
@@ -215,11 +215,13 @@ public class OcamlRuleBuilder {
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(params.getBuildDeps())
-            .transformAndConcat(getLibInclude(false))
+            .transformAndConcat(getLibInclude(false)::apply)
             .toList();
 
     ImmutableList<String> bytecodeIncludes =
-        FluentIterable.from(params.getBuildDeps()).transformAndConcat(getLibInclude(true)).toList();
+        FluentIterable.from(params.getBuildDeps())
+            .transformAndConcat(getLibInclude(true)::apply)
+            .toList();
 
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(params.getBuildDeps());
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(params.getBuildDeps());
@@ -368,11 +370,13 @@ public class OcamlRuleBuilder {
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(params.getBuildDeps())
-            .transformAndConcat(getLibInclude(false))
+            .transformAndConcat(getLibInclude(false)::apply)
             .toList();
 
     ImmutableList<String> bytecodeIncludes =
-        FluentIterable.from(params.getBuildDeps()).transformAndConcat(getLibInclude(true)).toList();
+        FluentIterable.from(params.getBuildDeps())
+            .transformAndConcat(getLibInclude(true)::apply)
+            .toList();
 
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(params.getBuildDeps());
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(params.getBuildDeps());

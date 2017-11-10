@@ -16,9 +16,9 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import java.util.Objects;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**

@@ -22,10 +22,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public interface Javac extends RuleKeyAppendable, Tool {

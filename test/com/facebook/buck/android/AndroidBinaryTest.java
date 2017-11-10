@@ -50,10 +50,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -66,6 +64,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -319,10 +319,12 @@ public class AndroidBinaryTest {
 
   private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands)
       throws Exception {
-    Iterable<Class<?>> filteredObservedCommands =
-        FluentIterable.from(steps)
-            .transform((Function<Step, Class<?>>) Step::getClass)
-            .filter(Sets.newHashSet(expectedCommands)::contains);
+    List<Class<?>> filteredObservedCommands =
+        steps
+            .stream()
+            .map(((Function<Step, Class<?>>) Step::getClass))
+            .filter(Sets.newHashSet(expectedCommands)::contains)
+            .collect(Collectors.toList());
     MoreAsserts.assertIterablesEquals(expectedCommands, filteredObservedCommands);
   }
 

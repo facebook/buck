@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.timing.SettableFakeClock;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.Multimap;
 import java.io.ByteArrayOutputStream;
@@ -28,6 +27,7 @@ import java.nio.channels.WritableByteChannel;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /** Fake implementation of {@link ListeningProcessExecutor} for tests. */
 public class FakeListeningProcessExecutor extends ListeningProcessExecutor {

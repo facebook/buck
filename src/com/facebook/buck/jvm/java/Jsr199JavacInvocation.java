@@ -37,7 +37,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.JarBuilder;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -60,6 +59,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
@@ -142,7 +142,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           .writeLinesToPath(
               FluentIterable.from(javaSourceFilePaths)
                   .transform(Object::toString)
-                  .transform(Javac.ARGFILES_ESCAPER),
+                  .transform(Javac.ARGFILES_ESCAPER::apply),
               pathToSrcsList);
     } catch (IOException e) {
       context

@@ -38,7 +38,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -73,14 +72,10 @@ abstract class GoDescriptors {
     FluentIterable<GoLinkable> linkables =
         FluentIterable.from(targets)
             .transformAndConcat(
-                new Function<BuildTarget, ImmutableSet<GoLinkable>>() {
-                  @Override
-                  public ImmutableSet<GoLinkable> apply(BuildTarget input) {
-                    BuildTarget flavoredTarget =
-                        input.withAppendedFlavors(
-                            platform.getFlavor(), TRANSITIVE_LINKABLES_FLAVOR);
-                    return resolver.requireMetadata(flavoredTarget, ImmutableSet.class).get();
-                  }
+                input -> {
+                  BuildTarget flavoredTarget =
+                      input.withAppendedFlavors(platform.getFlavor(), TRANSITIVE_LINKABLES_FLAVOR);
+                  return resolver.requireMetadata(flavoredTarget, ImmutableSet.class).get();
                 });
     if (includeSelf) {
       Preconditions.checkArgument(sourceTarget.getFlavors().contains(TRANSITIVE_LINKABLES_FLAVOR));
@@ -138,13 +133,7 @@ abstract class GoDescriptors {
             goBuckConfig.getVendorPaths(),
             buildTarget.getBasePath(),
             FluentIterable.from(linkables)
-                .transformAndConcat(
-                    new Function<GoLinkable, ImmutableSet<Path>>() {
-                      @Override
-                      public ImmutableSet<Path> apply(GoLinkable input) {
-                        return input.getGoLinkInput().keySet();
-                      }
-                    })),
+                .transformAndConcat(input -> input.getGoLinkInput().keySet())),
         ImmutableSet.copyOf(srcs),
         ImmutableList.copyOf(compilerFlags),
         goBuckConfig.getCompiler(),

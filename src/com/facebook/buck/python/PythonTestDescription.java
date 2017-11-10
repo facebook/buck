@@ -346,7 +346,8 @@ public class PythonTestDescription
         () ->
             ImmutableMap.copyOf(
                 Maps.transformValues(
-                    args.getEnv(), MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver)));
+                    args.getEnv(),
+                    MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver)::apply));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(

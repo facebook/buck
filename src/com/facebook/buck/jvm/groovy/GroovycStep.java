@@ -122,7 +122,7 @@ class GroovycStep implements Step {
     filesystem.writeLinesToPath(
         FluentIterable.from(expandedSources)
             .transform(Object::toString)
-            .transform(Javac.ARGFILES_ESCAPER),
+            .transform(Javac.ARGFILES_ESCAPER::apply),
         pathToSrcsList);
   }
 

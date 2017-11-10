@@ -28,7 +28,6 @@ import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public abstract class ShellStep implements Step {
@@ -234,7 +234,8 @@ public abstract class ShellStep implements Step {
     // Quote the arguments to the shell command as needed (this applies to $0 as well
     // e.g. if we run '/path/a b.sh' quoting is needed).
     Iterable<String> cmd =
-        Iterables.transform(getShellCommandArgsForDescription(context), Escaper.SHELL_ESCAPER);
+        Iterables.transform(
+            getShellCommandArgsForDescription(context), Escaper.SHELL_ESCAPER::apply);
 
     String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
     // This is what the user might type in a shell to set the working directory correctly. The (...)

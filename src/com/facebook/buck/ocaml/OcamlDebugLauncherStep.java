@@ -27,7 +27,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -78,13 +77,7 @@ public class OcamlDebugLauncherStep implements Step {
 
     Iterable<String> includesBytecodeDirs =
         FluentIterable.from(args.ocamlInput)
-            .transformAndConcat(
-                new Function<OcamlLibrary, Iterable<String>>() {
-                  @Override
-                  public Iterable<String> apply(OcamlLibrary input) {
-                    return input.getBytecodeIncludeDirs();
-                  }
-                });
+            .transformAndConcat(OcamlLibrary::getBytecodeIncludeDirs);
 
     ImmutableList<String> includesBytecodeFlags =
         ImmutableList.copyOf(

@@ -30,7 +30,6 @@ import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.util.Ansi;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Locale;
@@ -38,6 +37,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.logging.Level;
 import org.junit.Test;
 

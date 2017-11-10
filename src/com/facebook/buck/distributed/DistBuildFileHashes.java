@@ -34,7 +34,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -150,15 +149,7 @@ public class DistBuildFileHashes {
     }
     ListenableFuture<List<Map.Entry<BuildRule, RuleKey>>> ruleKeyComputation =
         Futures.allAsList(ruleKeyEntries);
-    return Futures.transform(
-        ruleKeyComputation,
-        new Function<List<Map.Entry<BuildRule, RuleKey>>, ImmutableMap<BuildRule, RuleKey>>() {
-          @Override
-          public ImmutableMap<BuildRule, RuleKey> apply(List<Map.Entry<BuildRule, RuleKey>> input) {
-            return ImmutableMap.copyOf(input);
-          }
-        },
-        executorService);
+    return Futures.transform(ruleKeyComputation, ImmutableMap::copyOf, executorService);
   }
 
   private static ListenableFuture<ImmutableList<RecordedFileHashes>> fileHashesComputation(
@@ -167,12 +158,7 @@ public class DistBuildFileHashes {
       ListeningExecutorService executorService) {
     return Futures.transform(
         ruleKeyComputationForSideEffect,
-        new Function<Void, ImmutableList<RecordedFileHashes>>() {
-          @Override
-          public ImmutableList<RecordedFileHashes> apply(Void input) {
-            return ImmutableList.copyOf(remoteFileHashes);
-          }
-        },
+        input -> ImmutableList.copyOf(remoteFileHashes),
         executorService);
   }
 

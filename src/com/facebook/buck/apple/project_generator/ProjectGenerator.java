@@ -137,7 +137,6 @@ import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -154,6 +153,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Streams;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -181,7 +181,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Generator for xcode project and associated files from a set of xcode/ios rules. */
@@ -1371,16 +1373,22 @@ public class ProjectGenerator {
         appendConfigsBuilder
             .put(
                 "OTHER_SWIFT_FLAGS",
-                Joiner.on(' ').join(Iterables.transform(otherSwiftFlags, Escaper.BASH_ESCAPER)))
+                Streams.stream(otherSwiftFlags)
+                    .map(Escaper.BASH_ESCAPER)
+                    .collect(Collectors.joining(" ")))
             .put(
                 "OTHER_CFLAGS",
-                Joiner.on(' ').join(Iterables.transform(otherCFlags, Escaper.BASH_ESCAPER)))
+                Streams.stream(otherCFlags)
+                    .map(Escaper.BASH_ESCAPER)
+                    .collect(Collectors.joining(" ")))
             .put(
                 "OTHER_CPLUSPLUSFLAGS",
-                Joiner.on(' ').join(Iterables.transform(otherCxxFlags, Escaper.BASH_ESCAPER)))
+                Streams.stream(otherCxxFlags)
+                    .map(Escaper.BASH_ESCAPER)
+                    .collect(Collectors.joining(" ")))
             .put(
                 "OTHER_LDFLAGS",
-                Joiner.on(' ').join(Iterables.transform(otherLdFlags, Escaper.BASH_ESCAPER)));
+                otherLdFlags.stream().map(Escaper.BASH_ESCAPER).collect(Collectors.joining(" ")));
 
         ImmutableMultimap.Builder<String, ImmutableList<String>> platformFlagsBuilder =
             ImmutableMultimap.builder();
@@ -1401,20 +1409,20 @@ public class ProjectGenerator {
           appendConfigsBuilder
               .put(
                   String.format("OTHER_CFLAGS[sdk=*%s*]", sdk),
-                  Joiner.on(' ')
-                      .join(
+                  Streams.stream(
                           Iterables.transform(
                               Iterables.concat(
                                   otherCFlags, Iterables.concat(platformFlags.get(sdk))),
-                              Escaper.BASH_ESCAPER)))
+                              Escaper.BASH_ESCAPER::apply))
+                      .collect(Collectors.joining(" ")))
               .put(
                   String.format("OTHER_CPLUSPLUSFLAGS[sdk=*%s*]", sdk),
-                  Joiner.on(' ')
-                      .join(
+                  Streams.stream(
                           Iterables.transform(
                               Iterables.concat(
                                   otherCxxFlags, Iterables.concat(platformFlags.get(sdk))),
-                              Escaper.BASH_ESCAPER)));
+                              Escaper.BASH_ESCAPER::apply))
+                      .collect(Collectors.joining(" ")));
         }
 
         ImmutableMultimap.Builder<String, ImmutableList<String>> platformLinkerFlagsBuilder =
@@ -1432,12 +1440,12 @@ public class ProjectGenerator {
         for (String sdk : platformLinkerFlags.keySet()) {
           appendConfigsBuilder.put(
               String.format("OTHER_LDFLAGS[sdk=*%s*]", sdk),
-              Joiner.on(' ')
-                  .join(
+              Streams.stream(
                       Iterables.transform(
                           Iterables.concat(
                               otherLdFlags, Iterables.concat(platformLinkerFlags.get(sdk))),
-                          Escaper.BASH_ESCAPER)));
+                          Escaper.BASH_ESCAPER::apply))
+                  .collect(Collectors.joining(" ")));
         }
 
         ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();

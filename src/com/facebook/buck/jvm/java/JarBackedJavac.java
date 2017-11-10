@@ -22,7 +22,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
@@ -30,6 +29,7 @@ import com.google.common.collect.Ordering;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.function.Function;
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
@@ -76,7 +76,7 @@ public class JarBackedJavac extends Jsr199Javac {
         classLoaderCache.getClassLoaderForClassPath(
             ClassLoader.getSystemClassLoader(),
             FluentIterable.from(context.getAbsolutePathsForInputs())
-                .transform(PATH_TO_URL)
+                .transform(PATH_TO_URL::apply)
                 // Use "toString" since URL.equals does DNS lookups.
                 .toSortedSet(Ordering.usingToString())
                 .asList());

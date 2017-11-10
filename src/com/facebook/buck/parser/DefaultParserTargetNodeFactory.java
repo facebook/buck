@@ -41,7 +41,6 @@ import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
@@ -52,6 +51,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Creates {@link TargetNode} instances from raw data coming in form the {@link

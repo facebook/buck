@@ -22,9 +22,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Function;
 
 /** Creates {@link TargetNode} instances for the parser. */
 public interface ParserTargetNodeFactory<T> {

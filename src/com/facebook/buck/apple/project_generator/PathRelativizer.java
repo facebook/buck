@@ -19,10 +19,10 @@ package com.facebook.buck.apple.project_generator;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Function;
 
 /**
  * Helper class to convert among various relative path-like objects.

@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.SampleRate;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import java.util.function.Function;
 
 /** Decides whether a particular {@link BuildId} belongs to a sampling group of a supplied size. */
 public class BuildIdSampler implements Function<BuildId, Boolean> {

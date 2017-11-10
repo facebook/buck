@@ -77,7 +77,6 @@ import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatorOverridingDescription;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -88,6 +87,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -182,7 +182,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   private static String shquoteJoin(Iterable<String> args) {
-    return Joiner.on(' ').join(Iterables.transform(args, Escaper.SHELL_ESCAPER));
+    return Streams.stream(args).map(Escaper.SHELL_ESCAPER).collect(Collectors.joining(" "));
   }
 
   @Override
@@ -632,11 +632,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
               preprocessor,
               /* pch */ Optional.empty());
-      return Joiner.on(' ')
-          .join(
-              Iterables.transform(
-                  com.facebook.buck.rules.args.Arg.stringify(flags.getAllFlags(), pathResolver),
-                  Escaper.SHELL_ESCAPER));
+      return com.facebook.buck.rules.args.Arg.stringify(flags.getAllFlags(), pathResolver)
+          .stream()
+          .map(Escaper.SHELL_ESCAPER)
+          .collect(Collectors.joining(" "));
     }
 
     @Override

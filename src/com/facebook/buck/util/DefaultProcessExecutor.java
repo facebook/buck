@@ -146,7 +146,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
      * for more details.
      */
     if (Platform.detect() == Platform.WINDOWS) {
-      command = ImmutableList.copyOf(Iterables.transform(command, Escaper.CREATE_PROCESS_ESCAPER));
+      command =
+          ImmutableList.copyOf(Iterables.transform(command, Escaper.CREATE_PROCESS_ESCAPER::apply));
     }
     ProcessBuilder pb = new ProcessBuilder(command);
     if (params.getDirectory().isPresent()) {

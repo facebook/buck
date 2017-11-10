@@ -16,7 +16,6 @@
 
 package com.facebook.buck.i18n;
 
-import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -25,6 +24,7 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.Locale;
+import java.util.function.Function;
 import javax.annotation.concurrent.ThreadSafe;
 
 /** Thread-safe and i18n-safe wrapper for {@link NumberFormat} (which is not thread-safe). */

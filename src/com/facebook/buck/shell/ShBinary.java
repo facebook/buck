@@ -39,8 +39,8 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -94,11 +94,12 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     String pathBackToRoot = Joiner.on("/").join(Collections.nCopies(levelsBelowRoot, ".."));
 
     ImmutableList<String> resourceStrings =
-        FluentIterable.from(resources)
-            .transform(context.getSourcePathResolver()::getRelativePath)
-            .transform(Object::toString)
-            .transform(Escaper.BASH_ESCAPER)
-            .toList();
+        resources
+            .stream()
+            .map(context.getSourcePathResolver()::getRelativePath)
+            .map(Object::toString)
+            .map(Escaper.BASH_ESCAPER)
+            .collect(MoreCollectors.toImmutableList());
 
     return new ImmutableList.Builder<Step>()
         .addAll(

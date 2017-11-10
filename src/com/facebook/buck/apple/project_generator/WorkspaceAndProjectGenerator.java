@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.project_generator;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleDependenciesCache;
@@ -46,7 +47,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -72,6 +72,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class WorkspaceAndProjectGenerator {
@@ -781,17 +782,13 @@ public class WorkspaceAndProjectGenerator {
       final ImmutableSet<TargetNode<?, ?>> excludes) {
     return FluentIterable.from(nodes)
         .transformAndConcat(
-            new Function<TargetNode<?, ?>, Iterable<TargetNode<?, ?>>>() {
-              @Override
-              public Iterable<TargetNode<?, ?>> apply(TargetNode<?, ?> input) {
-                return AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            input ->
+                AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                     projectGraph,
                     Optional.of(dependenciesCache),
-                    AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                    RecursiveDependenciesMode.BUILDING,
                     input,
-                    Optional.empty());
-              }
-            })
+                    Optional.empty()))
         .append(nodes)
         .filter(
             input ->

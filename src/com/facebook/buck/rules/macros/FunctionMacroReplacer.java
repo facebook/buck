@@ -19,8 +19,8 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.model.macros.MacroReplacer;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import java.util.function.Function;
 
 /** A @{link MacroReplacer} wrapping a @{link Function}. */
 public class FunctionMacroReplacer implements MacroReplacer {

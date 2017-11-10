@@ -21,7 +21,6 @@ import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -86,10 +85,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
               return Futures.allAsList(allNodeJobs.build());
             },
             executorService);
-    return Futures.transform(
-        allNodesListJob,
-        (Function<List<T>, ImmutableSet<T>>) ImmutableSet::copyOf,
-        executorService);
+    return Futures.transform(allNodesListJob, ImmutableSet::copyOf, executorService);
   }
 
   @Override

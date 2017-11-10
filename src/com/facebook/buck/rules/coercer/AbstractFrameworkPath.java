@@ -25,14 +25,14 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Function;
+import org.immutables.value.Value;
 
 /**
  * Frameworks can be specified as either a path to a file, or a path prefixed by a build setting.
@@ -81,8 +81,8 @@ abstract class AbstractFrameworkPath
     return Files.getNameWithoutExtension(fileName);
   }
 
-  public  boolean isSDKROOTFrameworkPath() {
-    if (getSourceTreePath().isPresent()){
+  public boolean isSDKROOTFrameworkPath() {
+    if (getSourceTreePath().isPresent()) {
       return getSourceTreePath().get().getSourceTree() == PBXReference.SourceTree.SDKROOT;
     }
     return false;

@@ -50,7 +50,6 @@ import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -141,14 +140,7 @@ public class ParsePipelineTest {
                 fixture.getCell().getFilesystem().resolve("BUCK"),
                 new AtomicLong());
     FluentIterable<BuildTarget> allDeps =
-        FluentIterable.from(libTargetNodes)
-            .transformAndConcat(
-                new Function<TargetNode<?, ?>, Iterable<BuildTarget>>() {
-                  @Override
-                  public Iterable<BuildTarget> apply(TargetNode<?, ?> input) {
-                    return input.getBuildDeps();
-                  }
-                });
+        FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
     waitForAll(
         allDeps,
         dep -> fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null);

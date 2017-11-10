@@ -36,7 +36,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -51,6 +50,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -192,8 +192,9 @@ public class NativeRelinker {
 
     Function<SourcePath, SourcePath> pathMapper = Functions.forMap(pathMap.build());
     rules = relinkRules.build();
-    relinkedLibs = ImmutableMap.copyOf(Maps.transformValues(linkableLibs, pathMapper));
-    relinkedLibsAssets = ImmutableMap.copyOf(Maps.transformValues(linkableLibsAssets, pathMapper));
+    relinkedLibs = ImmutableMap.copyOf(Maps.transformValues(linkableLibs, pathMapper::apply));
+    relinkedLibsAssets =
+        ImmutableMap.copyOf(Maps.transformValues(linkableLibsAssets, pathMapper::apply));
   }
 
   private static DirectedAcyclicGraph<BuildRule> getBuildGraph(Set<BuildRule> rules) {
@@ -250,7 +251,7 @@ public class NativeRelinker {
         relinkerParams,
         resolver,
         ruleFinder,
-        ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
+        ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded::apply)),
         cpuType,
         Preconditions.checkNotNull(nativePlatforms.get(cpuType)).getObjdump(),
         cxxBuckConfig,

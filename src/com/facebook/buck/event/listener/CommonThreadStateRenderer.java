@@ -20,7 +20,6 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Ansi;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
@@ -29,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class CommonThreadStateRenderer {
   /** Amount of time a rule can run before we render it with as a warning. */

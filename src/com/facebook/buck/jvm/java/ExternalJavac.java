@@ -226,9 +226,9 @@ public class ExternalJavac implements Javac {
           FluentIterable<String> escapedPaths =
               FluentIterable.from(expandedSources)
                   .transform(Object::toString)
-                  .transform(ARGFILES_ESCAPER);
+                  .transform(ARGFILES_ESCAPER::apply);
           FluentIterable<String> escapedArgs =
-              FluentIterable.from(options).transform(ARGFILES_ESCAPER);
+              FluentIterable.from(options).transform(ARGFILES_ESCAPER::apply);
 
           context
               .getProjectFilesystem()

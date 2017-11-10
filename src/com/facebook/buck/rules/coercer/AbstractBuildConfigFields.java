@@ -20,13 +20,13 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields.Field;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
@@ -98,7 +98,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
   protected abstract Map<String, Field> getNameToField();
 
   public static BuildConfigFields fromFieldDeclarations(Iterable<String> declarations) {
-    return fromFields(FluentIterable.from(declarations).transform(TRANSFORM));
+    return fromFields(FluentIterable.from(declarations).transform(TRANSFORM::apply));
   }
 
   /** @return a {@link BuildConfigFields} with no fields */

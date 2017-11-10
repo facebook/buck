@@ -46,7 +46,8 @@ public class CxxFlags {
       public void appendToRuleKey(RuleKeyObjectSink sink) {
         SortedMap<String, String> sanitizedMap =
             Maps.transformValues(
-                flagMacros, cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()));
+                flagMacros,
+                cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty())::apply);
         sink.setReflectively("flagMacros", sanitizedMap);
       }
 
@@ -120,7 +121,8 @@ public class CxxFlags {
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<String>> entry :
         languageFlags.entrySet()) {
       langFlags.putAll(
-          entry.getKey(), Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));
+          entry.getKey(),
+          Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)::apply));
     }
 
     return langFlags.build();

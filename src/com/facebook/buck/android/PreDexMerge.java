@@ -38,7 +38,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -60,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -397,16 +397,17 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         FluentIterable.from(preDexDeps.values())
             .transform(
                 new Function<DexProducedFromJavaLibrary, Path>() {
-                  @Override
-                  @Nullable
-                  public Path apply(DexProducedFromJavaLibrary preDex) {
-                    if (preDex.hasOutput()) {
-                      return preDex.getPathToDex();
-                    } else {
-                      return null;
+                      @Override
+                      @Nullable
+                      public Path apply(DexProducedFromJavaLibrary preDex) {
+                        if (preDex.hasOutput()) {
+                          return preDex.getPathToDex();
+                        } else {
+                          return null;
+                        }
+                      }
                     }
-                  }
-                })
+                    ::apply)
             .filter(Objects::nonNull);
 
     // If this APK has Android resources, then the generated R.class files also need to be dexed.

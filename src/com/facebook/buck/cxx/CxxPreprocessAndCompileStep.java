@@ -177,7 +177,7 @@ class CxxPreprocessAndCompileStep implements Step {
     if (useArgfile) {
       filesystem.writeLinesToPath(
           Iterables.transform(
-              getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER),
+              getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER::apply),
           getArgfile());
       builder.setCommand(
           ImmutableList.<String>builder()

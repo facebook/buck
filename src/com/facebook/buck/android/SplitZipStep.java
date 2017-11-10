@@ -30,7 +30,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -51,6 +50,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -319,12 +319,13 @@ public class SplitZipStep implements Step {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexHeadClassesFile.isPresent()) {
-      Iterable<String> classes =
-          FluentIterable.from(filesystem.readLines(secondaryDexHeadClassesFile.get()))
-              .transform(String::trim)
-              .filter(SplitZipStep::isNeitherEmptyNorComment)
-              .transform(translatorFactory.createObfuscationFunction());
-      builder.addAll(classes);
+      filesystem
+          .readLines(secondaryDexHeadClassesFile.get())
+          .stream()
+          .map(String::trim)
+          .filter(SplitZipStep::isNeitherEmptyNorComment)
+          .map(translatorFactory.createObfuscationFunction())
+          .forEach(builder::add);
     }
 
     return builder.build();
@@ -342,12 +343,13 @@ public class SplitZipStep implements Step {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexTailClassesFile.isPresent()) {
-      Iterable<String> classes =
-          FluentIterable.from(filesystem.readLines(secondaryDexTailClassesFile.get()))
-              .transform(String::trim)
-              .filter(SplitZipStep::isNeitherEmptyNorComment)
-              .transform(translatorFactory.createObfuscationFunction());
-      builder.addAll(classes);
+      filesystem
+          .readLines(secondaryDexTailClassesFile.get())
+          .stream()
+          .map(String::trim)
+          .filter(SplitZipStep::isNeitherEmptyNorComment)
+          .map(translatorFactory.createObfuscationFunction())
+          .forEach(builder::add);
     }
 
     return builder.build();
@@ -395,12 +397,14 @@ public class SplitZipStep implements Step {
       throws IOException {
 
     ImmutableList<Type> scenarioClasses =
-        FluentIterable.from(filesystem.readLines(primaryDexScenarioFile.get()))
-            .transform(String::trim)
+        filesystem
+            .readLines(primaryDexScenarioFile.get())
+            .stream()
+            .map(String::trim)
             .filter(SplitZipStep::isNeitherEmptyNorComment)
-            .transform(translatorFactory.createObfuscationFunction())
-            .transform(Type::getObjectType)
-            .toList();
+            .map(translatorFactory.createObfuscationFunction())
+            .map(Type::getObjectType)
+            .collect(MoreCollectors.toImmutableList());
 
     FirstOrderHelper.addTypesAndDependencies(scenarioClasses, classesSupplier.get(), builder);
   }

@@ -41,8 +41,8 @@ import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
@@ -55,6 +55,7 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -276,10 +277,11 @@ public class CxxLinkableEnhancer {
           public void appendToCommandLine(
               Consumer<String> consumer, SourcePathResolver pathResolver) {
             ImmutableSortedSet<Path> searchPaths =
-                FluentIterable.from(frameworkPaths)
-                    .transform(frameworkPathToSearchPath)
+                frameworkPaths
+                    .stream()
+                    .map(frameworkPathToSearchPath)
                     .filter(Objects::nonNull)
-                    .toSortedSet(Ordering.natural());
+                    .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
             for (Path searchPath : searchPaths) {
               consumer.accept("-L");
               consumer.accept(searchPath.toString());
@@ -330,9 +332,10 @@ public class CxxLinkableEnhancer {
           public void appendToCommandLine(
               Consumer<String> consumer, SourcePathResolver pathResolver) {
             ImmutableSortedSet<Path> searchPaths =
-                FluentIterable.from(frameworkPaths)
-                    .transform(frameworkPathToSearchPath)
-                    .toSortedSet(Ordering.natural());
+                frameworkPaths
+                    .stream()
+                    .map(frameworkPathToSearchPath)
+                    .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
             for (Path searchPath : searchPaths) {
               consumer.accept("-F");
               consumer.accept(searchPath.toString());

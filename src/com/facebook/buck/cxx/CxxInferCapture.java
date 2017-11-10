@@ -213,7 +213,7 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
         throws IOException, InterruptedException {
       getProjectFilesystem()
           .writeLinesToPath(
-              Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER), getArgfile());
+              Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER::apply), getArgfile());
       return StepExecutionResult.SUCCESS;
     }
 

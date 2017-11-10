@@ -18,7 +18,7 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Function;
+import java.util.function.Function;
 import org.junit.Test;
 
 @SuppressWarnings("PMD.PrematureDeclaration")

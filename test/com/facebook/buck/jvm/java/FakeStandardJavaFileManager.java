@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -33,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
@@ -124,22 +124,22 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjectsFromFiles(
       Iterable<? extends File> files) {
-    return Iterables.transform(files, fileToJavaFileObject);
+    return Iterables.transform(files, fileToJavaFileObject::apply);
   }
 
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjects(File... files) {
-    return Iterables.transform(Lists.newArrayList(files), fileToJavaFileObject);
+    return Iterables.transform(Lists.newArrayList(files), fileToJavaFileObject::apply);
   }
 
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjectsFromStrings(Iterable<String> names) {
-    return Iterables.transform(names, stringToJavaFileObject);
+    return Iterables.transform(names, stringToJavaFileObject::apply);
   }
 
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjects(String... names) {
-    return Iterables.transform(Lists.newArrayList(names), stringToJavaFileObject);
+    return Iterables.transform(Lists.newArrayList(names), stringToJavaFileObject::apply);
   }
 
   @Override
