@@ -296,7 +296,8 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -329,7 +330,8 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -361,7 +363,8 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -397,7 +400,8 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -431,7 +435,8 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -464,7 +469,8 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();

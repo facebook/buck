@@ -605,7 +605,8 @@ public class BuildCommand extends AbstractCommand {
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(typeCoercerFactory));
+            new TargetNodeFactory(typeCoercerFactory),
+            params.getRuleKeyConfiguration());
     DistBuildTargetGraphCodec targetGraphCodec =
         new DistBuildTargetGraphCodec(
             parserTargetNodeFactory,

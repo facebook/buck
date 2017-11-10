@@ -215,7 +215,8 @@ public class DelegateAndGraphsInitializer {
     ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(typeCoercerFactory));
+            new TargetNodeFactory(typeCoercerFactory),
+            args.getRuleKeyConfiguration());
 
     return new DistBuildTargetGraphCodec(
         parserTargetNodeFactory,

@@ -135,7 +135,8 @@ public class PerBuildState implements AutoCloseable {
                 parser.getMarshaller(),
                 parser.getPermState().getBuildFileTrees(),
                 symlinkCheckers,
-                new TargetNodeFactory(parser.getPermState().getTypeCoercerFactory())),
+                new TargetNodeFactory(parser.getPermState().getTypeCoercerFactory()),
+                rootCell.getRuleKeyConfiguration()),
             parserConfig.getEnableParallelParsing()
                 ? executorService
                 : MoreExecutors.newDirectExecutorService(),

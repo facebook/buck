@@ -555,7 +555,7 @@ public class DefaultRuleKeyFactoryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(
-            new RuleKeyFieldLoader(RuleKeyConfiguration.of(0)),
+            new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
             new StackedFileHashCache(
                 ImmutableList.of(
                     DefaultFileHashCache.createDefaultFileHashCache(
@@ -612,7 +612,7 @@ public class DefaultRuleKeyFactoryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultRuleKeyFactory factory =
         new DefaultRuleKeyFactory(
-            new RuleKeyFieldLoader(RuleKeyConfiguration.of(0)),
+            new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
             new StackedFileHashCache(
                 ImmutableList.of(
                     DefaultFileHashCache.createDefaultFileHashCache(

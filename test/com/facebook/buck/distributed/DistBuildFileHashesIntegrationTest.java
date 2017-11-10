@@ -49,7 +49,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
+import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -79,8 +79,6 @@ import org.junit.Test;
 public class DistBuildFileHashesIntegrationTest {
 
   private static final String SYMLINK_FILE_NAME = "SymlinkSourceFile.java";
-
-  private static final int KEY_SEED = 0;
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -243,7 +241,7 @@ public class DistBuildFileHashesIntegrationTest {
             true,
             false,
             targetGraph,
-            RuleKeyConfiguration.of(KEY_SEED),
+            TestRuleKeyConfigurationFactory.create(),
             ActionGraphParallelizationMode.DISABLED,
             Optional.empty());
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
@@ -273,7 +271,7 @@ public class DistBuildFileHashesIntegrationTest {
         stackedCache,
         cellIndexer,
         MoreExecutors.newDirectExecutorService(),
-        RuleKeyConfiguration.of(KEY_SEED),
+        TestRuleKeyConfigurationFactory.create(),
         rootCell);
   }
 }
