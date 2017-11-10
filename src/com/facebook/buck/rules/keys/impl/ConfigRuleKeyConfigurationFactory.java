@@ -17,16 +17,12 @@
 package com.facebook.buck.rules.keys.impl;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 
 /** Creates {@link RuleKeyConfiguration} using information from {@link BuckConfig}. */
 public class ConfigRuleKeyConfigurationFactory {
 
   public static RuleKeyConfiguration create(BuckConfig buckConfig) {
-    return RuleKeyConfiguration.builder()
-        .setSeed(buckConfig.getKeySeed())
-        .setCoreKey(BuckVersion.getVersion())
-        .build();
+    return RuleKeyConfiguration.of(buckConfig.getKeySeed());
   }
 }

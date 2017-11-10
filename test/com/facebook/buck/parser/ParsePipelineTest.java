@@ -40,7 +40,6 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -438,8 +437,7 @@ public class ParsePipelineTest {
                   constructorArgMarshaller,
                   buildFileTrees,
                   nodeListener,
-                  new TargetNodeFactory(coercerFactory),
-                  TestRuleKeyConfigurationFactory.create()),
+                  new TargetNodeFactory(coercerFactory)),
               this.executorService,
               this.eventBus,
               speculativeParsing == PerBuildState.SpeculativeParsing.ENABLED,

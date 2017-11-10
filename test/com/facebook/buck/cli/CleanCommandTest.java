@@ -40,7 +40,7 @@ import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -183,7 +183,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setToolchainProvider(toolchainProvider)
-        .setRuleKeyConfiguration(TestRuleKeyConfigurationFactory.create())
+        .setRuleKeyConfiguration(RuleKeyConfiguration.of(buckConfig.getKeySeed()))
         .build();
   }
 }

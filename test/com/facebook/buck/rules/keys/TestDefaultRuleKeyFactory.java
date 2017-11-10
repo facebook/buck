@@ -33,7 +33,7 @@ public class TestDefaultRuleKeyFactory extends DefaultRuleKeyFactory {
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
     super(
-        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.createWithSeed(seed)),
+        new RuleKeyFieldLoader(RuleKeyConfiguration.of(seed)),
         hashLoader,
         pathResolver,
         ruleFinder);

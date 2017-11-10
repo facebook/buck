@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -63,7 +62,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
             sourcePathResolver,
             ruleFinder,
             materializingStackedFileHashCache,
-            RuleKeyConfiguration.builder().setSeed(0).setCoreKey(BuckVersion.getVersion()).build());
+            RuleKeyConfiguration.of(0));
 
     this.materializerFileHashCaches =
         materializingStackedFileHashCache

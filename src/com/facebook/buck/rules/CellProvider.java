@@ -19,7 +19,6 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.rules.keys.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -175,8 +174,7 @@ public final class CellProvider {
                     watchman,
                     buckConfig,
                     cellProvider,
-                    sdkEnvironment,
-                    ConfigRuleKeyConfigurationFactory.create(buckConfig));
+                    sdkEnvironment);
               }
             },
         cellProvider -> {
@@ -192,8 +190,7 @@ public final class CellProvider {
               watchman,
               rootConfig,
               cellProvider,
-              sdkEnvironment,
-              ConfigRuleKeyConfigurationFactory.create(rootConfig));
+              sdkEnvironment);
         });
   }
 
@@ -214,8 +211,7 @@ public final class CellProvider {
                       Watchman.NULL_WATCHMAN,
                       cellParam.getConfig(),
                       cellProvider,
-                      sdkEnvironment,
-                      ConfigRuleKeyConfigurationFactory.create(cellParam.getConfig()));
+                      sdkEnvironment);
                 }),
         null);
   }
