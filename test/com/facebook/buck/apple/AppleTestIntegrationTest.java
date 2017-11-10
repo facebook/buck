@@ -327,15 +327,19 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  public void skipsXCUITests() throws IOException {
+  public void skipsRunButBuildsTargetsForXCUITests() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xcuitest", tmp);
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo", "//:bar");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//:LogicTest", "//:UITest");
     result.assertSuccess();
+    workspace
+        .getBuildLog()
+        .assertTargetBuiltLocally("//:TestHostApp#dwarf,no-include-frameworks,strip-non-global");
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
   }
 
