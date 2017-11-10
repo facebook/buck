@@ -46,8 +46,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.js.JsBundle;
-import com.facebook.buck.js.JsBundleDescription;
-import com.facebook.buck.js.JsBundleDescriptionArg;
+import com.facebook.buck.js.JsBundleOutputs;
+import com.facebook.buck.js.JsBundleOutputsDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -703,7 +703,7 @@ class NewNativeTargetProjectMutator {
                     .collect(Collectors.toSet()));
         shellScriptBuildPhase.getOutputPaths().addAll(arg.getOutputs());
         shellScriptBuildPhase.setShellScript(arg.getCmd());
-      } else if (node.getDescription() instanceof JsBundleDescription) {
+      } else if (node.getDescription() instanceof JsBundleOutputsDescription) {
         shellScriptBuildPhase.setShellScript(
             generateXcodeShellScriptForJsBundle(node, buildRuleResolverForNode));
       } else {
@@ -725,7 +725,7 @@ class NewNativeTargetProjectMutator {
   private String generateXcodeShellScriptForJsBundle(
       TargetNode<?, ?> targetNode,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
-    Preconditions.checkArgument(targetNode.getConstructorArg() instanceof JsBundleDescriptionArg);
+    Preconditions.checkArgument(targetNode.getDescription() instanceof JsBundleOutputsDescription);
 
     ST template;
     try {
@@ -742,8 +742,8 @@ class NewNativeTargetProjectMutator {
     BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
     BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
 
-    Preconditions.checkState(rule instanceof JsBundle);
-    JsBundle bundle = (JsBundle) rule;
+    Preconditions.checkState(rule instanceof JsBundleOutputs);
+    JsBundleOutputs bundle = (JsBundleOutputs) rule;
 
     SourcePath jsOutput = bundle.getSourcePathToOutput();
     SourcePath resOutput = bundle.getSourcePathToResources();
@@ -762,7 +762,7 @@ class NewNativeTargetProjectMutator {
       Cell cell,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
     for (TargetNode<?, ?> targetNode : scriptPhases) {
-      if (targetNode.getDescription() instanceof JsBundleDescription) {
+      if (targetNode.getDescription() instanceof JsBundleOutputsDescription) {
         BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
         BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
 

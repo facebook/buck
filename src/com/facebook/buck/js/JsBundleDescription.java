@@ -62,7 +62,8 @@ import org.immutables.value.Value;
 public class JsBundleDescription
     implements Description<JsBundleDescriptionArg>,
         Flavored,
-        HasAppleBundleResourcesDescription<JsBundleDescriptionArg> {
+        HasAppleBundleResourcesDescription<JsBundleDescriptionArg>,
+        JsBundleOutputsDescription<JsBundleDescriptionArg> {
 
   static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
       ImmutableSet.of(

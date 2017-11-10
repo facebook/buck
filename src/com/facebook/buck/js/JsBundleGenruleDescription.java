@@ -51,7 +51,9 @@ import org.immutables.value.Value;
 
 public class JsBundleGenruleDescription
     extends AbstractGenruleDescription<JsBundleGenruleDescriptionArg>
-    implements Flavored, HasAppleBundleResourcesDescription<JsBundleGenruleDescriptionArg> {
+    implements Flavored,
+        HasAppleBundleResourcesDescription<JsBundleGenruleDescriptionArg>,
+        JsBundleOutputsDescription<JsBundleGenruleDescriptionArg> {
 
   public JsBundleGenruleDescription(
       ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
