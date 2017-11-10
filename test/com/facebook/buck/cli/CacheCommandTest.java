@@ -22,7 +22,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -40,6 +40,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -47,6 +48,7 @@ import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -55,21 +57,35 @@ import org.junit.Test;
 
 public class CacheCommandTest extends EasyMockSupport {
 
-  @Test
-  public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
+  private void testRunCommandWithNoArgumentsImpl(boolean fetchPrefix) throws Exception {
     TestConsole console = new TestConsole();
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).build();
     CacheCommand cacheCommand = new CacheCommand();
+    cacheCommand.setArguments(
+        fetchPrefix ? Collections.singletonList("fetch") : Collections.emptyList());
     int exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(1, exitCode);
     // "No cache keys specified." message is sent to event bus,
     // it is not available on test console.
+
+    assertThat(
+        console.getTextWrittenToStdErr(),
+        fetchPrefix ? not(containsString("deprecated")) : containsString("deprecated"));
   }
 
   @Test
-  public void testRunCommandAndFetchArtifactsSuccessfully()
-      throws IOException, InterruptedException {
+  public void testRunCommandWithNoArguments() throws Exception {
+    testRunCommandWithNoArgumentsImpl(false);
+  }
+
+  @Test
+  public void testRunCommandFetchWithNoArguments() throws Exception {
+    testRunCommandWithNoArgumentsImpl(true);
+  }
+
+  private void testRunCommandAndFetchArtifactsSuccessfullyImpl(boolean fetchPrefix)
+      throws Exception {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     ArtifactCache cache = createMock(ArtifactCache.class);
@@ -83,15 +99,34 @@ public class CacheCommandTest extends EasyMockSupport {
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).setArtifactCache(cache).build();
 
+    Builder<String> arguments = ImmutableList.builder();
+    if (fetchPrefix) {
+      arguments.add("fetch");
+    }
+    arguments.add(ruleKeyHash);
+
     replayAll();
 
     CacheCommand cacheCommand = new CacheCommand();
-    cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
+    cacheCommand.setArguments(arguments.build());
     int exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(0, exitCode);
     assertThat(
         console.getTextWrittenToStdErr(),
-        startsWith("Successfully downloaded artifact with id " + ruleKeyHash + " at "));
+        containsString("Successfully downloaded artifact with id " + ruleKeyHash + " at "));
+    assertThat(
+        console.getTextWrittenToStdErr(),
+        fetchPrefix ? not(containsString("deprecated")) : containsString("deprecated"));
+  }
+
+  @Test
+  public void testRunCommandAndFetchArtifactsSuccessfully() throws Exception {
+    testRunCommandAndFetchArtifactsSuccessfullyImpl(false);
+  }
+
+  @Test
+  public void testRunCommandFetchAndFetchArtifactsSuccessfully() throws Exception {
+    testRunCommandAndFetchArtifactsSuccessfullyImpl(true);
   }
 
   @Test
@@ -118,7 +153,7 @@ public class CacheCommandTest extends EasyMockSupport {
     assertEquals(1, exitCode);
     assertThat(
         console.getTextWrittenToStdErr(),
-        startsWith("Failed to retrieve an artifact with id " + ruleKeyHash + "."));
+        containsString("Failed to retrieve an artifact with id " + ruleKeyHash + "."));
   }
 
   @Test

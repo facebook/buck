@@ -89,6 +89,18 @@ public class CacheCommand extends AbstractCommand {
     }
 
     List<String> arguments = getArguments();
+
+    // Lack of arguments implicitly means fetch now. The old behaviour will be deprecated soon.
+    // TODO(nga): Remove old behaviour of buck cache.
+    if (!arguments.isEmpty() && arguments.get(0).equals("fetch")) {
+      arguments = arguments.subList(1, arguments.size());
+    } else {
+      params
+          .getConsole()
+          .printErrorText(
+              "Using `cache` without a command is deprecated, use `cache fetch` instead");
+    }
+
     if (arguments.isEmpty()) {
       params.getBuckEventBus().post(ConsoleEvent.severe("No cache keys specified."));
       return 1;
