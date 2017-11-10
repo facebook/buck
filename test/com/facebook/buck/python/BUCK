@@ -500,6 +500,7 @@ java_test(
         "//test/com/facebook/buck/python:builders",
         "//test/com/facebook/buck/python:testutil",
         "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/macros:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/step:testutil",

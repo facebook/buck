@@ -36,8 +36,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -104,9 +104,11 @@ public class AndroidResourceTest {
     SourcePathResolver pathResolver2 = DefaultSourcePathResolver.from(ruleFinder2);
 
     RuleKey ruleKey1 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver1, ruleFinder1).build(androidResource1);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver1, ruleFinder1)
+            .build(androidResource1);
     RuleKey ruleKey2 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver2, ruleFinder2).build(androidResource2);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver2, ruleFinder2)
+            .build(androidResource2);
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.", ruleKey1, ruleKey2);

@@ -36,7 +36,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -173,9 +173,9 @@ public class KnownBuildRuleTypesTest {
         new FakeFileHashCache(
             ImmutableMap.of(javac, MorePaths.asByteSource(javac).hash(Hashing.sha1())));
     RuleKey configuredKey =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(configuredRule);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(configuredRule);
     RuleKey libraryKey =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(libraryRule);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(libraryRule);
 
     assertNotEquals(libraryKey, configuredKey);
   }

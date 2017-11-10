@@ -40,8 +40,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -170,9 +170,9 @@ public class DirectHeaderMapTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
                     FileHashCacheMode.DEFAULT)));
-    RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
+    RuleKey key1 = new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(buildRule);
     RuleKey key2 =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
 
     key1 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
@@ -198,7 +198,7 @@ public class DirectHeaderMapTest {
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
     RuleKey defaultKey1 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
     RuleKey inputKey1 =
         new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
 
@@ -206,7 +206,7 @@ public class DirectHeaderMapTest {
     hashCache.invalidateAll();
 
     RuleKey defaultKey2 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
     RuleKey inputKey2 =
         new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
 

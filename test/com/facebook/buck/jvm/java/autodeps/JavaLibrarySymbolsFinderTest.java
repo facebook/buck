@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -134,7 +135,7 @@ public class JavaLibrarySymbolsFinderTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     projectFilesystem, FileHashCacheMode.DEFAULT)));
     final DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =
         finder -> {
           JavaSymbolsRule javaSymbolsRule =

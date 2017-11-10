@@ -80,7 +80,7 @@ public class RuleKeyDiagnosticsTest {
         };
 
     RuleKeyFactoryWithDiagnostics<RuleKey> factory =
-        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), sourcePathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), sourcePathResolver, ruleFinder);
 
     RuleKeyDiagnostics<RuleKey, String> ruleKeyDiagnostics1 =
         new RuleKeyDiagnostics<>(

@@ -35,7 +35,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
@@ -135,7 +135,7 @@ public class PrebuiltJarSymbolsFinderTest {
             throw new RuntimeException(e);
           }
           RuleKey ruleKey =
-              new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+              new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder)
                   .build(javaSymbolsRule);
           jarFile.delete();
 
@@ -178,7 +178,7 @@ public class PrebuiltJarSymbolsFinderTest {
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
 
     RuleKey key1 =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder)
             .build(javaSymbolsRule1);
 
     JavaSymbolsRule javaSymbolsRule2 =
@@ -187,7 +187,7 @@ public class PrebuiltJarSymbolsFinderTest {
             createFinderForGeneratedJar("//foo:jar_genrule2"),
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
     RuleKey key2 =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder)
             .build(javaSymbolsRule2);
 
     assertNotNull(key1);

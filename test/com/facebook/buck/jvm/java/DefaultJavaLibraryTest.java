@@ -59,6 +59,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -1346,11 +1347,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       fileHashes.put(filename, Hashing.sha1().hashString(filename, Charsets.UTF_8).toString());
     }
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver1, ruleFinder1);
+        new TestDefaultRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver1, ruleFinder1);
     DefaultRuleKeyFactory ruleKeyFactory2 =
-        new DefaultRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver2, ruleFinder2);
+        new TestDefaultRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver2, ruleFinder2);
 
     RuleKey key1 = ruleKeyFactory.build(rule1);
     RuleKey key2 = ruleKeyFactory2.build(rule2);

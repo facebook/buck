@@ -49,6 +49,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -685,7 +686,7 @@ public class GenruleTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), pathResolver, ruleFinder);
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.
@@ -729,8 +730,7 @@ public class GenruleTest {
         "something", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(resolver);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -758,8 +758,7 @@ public class GenruleTest {
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -821,8 +820,7 @@ public class GenruleTest {
         "something", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(resolver);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -854,8 +852,7 @@ public class GenruleTest {
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     defaultRuleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -916,8 +913,7 @@ public class GenruleTest {
         "something", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(resolver);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
@@ -945,8 +941,7 @@ public class GenruleTest {
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     defaultRuleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);

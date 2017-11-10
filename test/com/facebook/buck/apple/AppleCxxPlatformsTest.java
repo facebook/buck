@@ -68,6 +68,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -765,8 +766,7 @@ public class AppleCxxPlatformsTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             new FakeFileHashCache(
                 ImmutableMap.<Path, HashCode>builder()
                     .put(projectFilesystem.resolve("source.cpp"), HashCode.fromInt(0))
@@ -825,8 +825,7 @@ public class AppleCxxPlatformsTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))

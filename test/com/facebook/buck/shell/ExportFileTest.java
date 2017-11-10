@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -245,7 +246,7 @@ public class ExportFileTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 
@@ -281,7 +282,7 @@ public class ExportFileTest {
             new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     resolver = DefaultSourcePathResolver.from(ruleFinder);
-    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
+    ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);

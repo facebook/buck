@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
@@ -40,8 +41,7 @@ public class ToolTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("path", Strings.repeat("a", 40))
@@ -89,8 +89,8 @@ public class ToolTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
 
     String tool = "tool";
     String version = "version";
@@ -119,8 +119,7 @@ public class ToolTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     // Note: the hashes of both files are the same

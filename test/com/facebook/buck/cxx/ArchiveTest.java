@@ -44,7 +44,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -93,7 +93,7 @@ public class ArchiveTest {
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
@@ -110,7 +110,7 @@ public class ArchiveTest {
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
@@ -128,7 +128,7 @@ public class ArchiveTest {
 
     // Verify that changing the output path causes a rulekey change.
     RuleKey outputChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
@@ -146,7 +146,7 @@ public class ArchiveTest {
 
     // Verify that changing the inputs causes a rulekey change.
     RuleKey inputChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
@@ -164,7 +164,7 @@ public class ArchiveTest {
 
     // Verify that changing the type of archiver causes a rulekey change.
     RuleKey archiverTypeChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,

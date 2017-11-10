@@ -524,6 +524,7 @@ java_test(
         "//test/com/facebook/buck/jvm/java/testutil:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/step:testutil",
         "//test/com/facebook/buck/testutil:testutil",

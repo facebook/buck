@@ -90,14 +90,6 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
         ruleKeyLogger);
   }
 
-  public DefaultRuleKeyFactory(
-      int seed,
-      FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder) {
-    this(new RuleKeyFieldLoader(seed), hashLoader, pathResolver, ruleFinder);
-  }
-
   private <HASH> Builder<HASH> newPopulatedBuilder(
       BuildRule buildRule, RuleKeyHasher<HASH> hasher) {
     Builder<HASH> builder = new Builder<>(hasher);

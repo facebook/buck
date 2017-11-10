@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.ShellStep;
@@ -203,8 +204,7 @@ public class ExternallyBuiltApplePackageTest {
 
   private DefaultRuleKeyFactory newRuleKeyFactory() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    return new DefaultRuleKeyFactory(
-        0,
+    return new TestDefaultRuleKeyFactory(
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
         DefaultSourcePathResolver.from(ruleFinder),

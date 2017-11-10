@@ -62,6 +62,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -107,8 +108,7 @@ public class NdkCxxPlatformTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("source.cpp", Strings.repeat("a", 40))
@@ -163,8 +163,7 @@ public class NdkCxxPlatformTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))

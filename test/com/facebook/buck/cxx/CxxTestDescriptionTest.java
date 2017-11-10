@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -463,7 +464,7 @@ public class CxxTestDescriptionTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
     return factory.build(rule);
   }
 }

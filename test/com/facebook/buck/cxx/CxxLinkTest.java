@@ -42,6 +42,7 @@ import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
@@ -92,7 +93,7 @@ public class CxxLinkTest {
     // Generate a rule key for the defaults.
 
     RuleKey defaultRuleKey =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -109,7 +110,7 @@ public class CxxLinkTest {
     // Verify that changing the archiver causes a rulekey change.
 
     RuleKey linkerChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -127,7 +128,7 @@ public class CxxLinkTest {
     // Verify that changing the output path causes a rulekey change.
 
     RuleKey outputChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -145,7 +146,7 @@ public class CxxLinkTest {
     // Verify that changing the flags causes a rulekey change.
 
     RuleKey flagsChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -172,8 +173,7 @@ public class CxxLinkTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
                     "ld", Strings.repeat("0", 40),

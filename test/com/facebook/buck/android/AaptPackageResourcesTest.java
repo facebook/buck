@@ -34,7 +34,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -258,7 +258,7 @@ public class AaptPackageResourcesTest {
   }
 
   private RuleKey calculateRuleKey(AaptConstructorArgs constructorArgs) {
-    return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+    return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
         .build(
             new AaptPackageResources(
                 aaptTarget,

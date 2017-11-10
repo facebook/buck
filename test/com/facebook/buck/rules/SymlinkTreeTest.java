@@ -28,8 +28,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -137,7 +137,7 @@ public class SymlinkTreeTest {
   @Test
   public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
     // Create a BuildRule wrapping the stock SymlinkTree buildable.
-    //BuildRule rule1 = symlinkTreeBuildable;
+    // BuildRule rule1 = symlinkTreeBuildable;
 
     // Also create a new BuildRule based around a SymlinkTree buildable with a different
     // link map.
@@ -165,9 +165,9 @@ public class SymlinkTreeTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
     RuleKey key2 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder)
             .build(modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
@@ -218,14 +218,14 @@ public class SymlinkTreeTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey ruleKey1 =
-        new DefaultRuleKeyFactory(0, hashLoader, pathResolver, ruleFinder).build(genrule);
+        new TestDefaultRuleKeyFactory(hashLoader, pathResolver, ruleFinder).build(genrule);
 
     Path existingFile = pathResolver.getAbsolutePath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
     hashCache.invalidateAll();
 
     RuleKey ruleKey2 =
-        new DefaultRuleKeyFactory(0, hashLoader, pathResolver, ruleFinder).build(genrule);
+        new TestDefaultRuleKeyFactory(hashLoader, pathResolver, ruleFinder).build(genrule);
 
     // Verify that the rules keys are different.
     assertNotEquals(ruleKey1, ruleKey2);

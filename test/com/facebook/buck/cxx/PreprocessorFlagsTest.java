@@ -34,6 +34,7 @@ import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
@@ -111,13 +112,13 @@ public class PreprocessorFlagsTest {
 
       DefaultRuleKeyFactory.Builder<HashCode> builder;
       builder =
-          new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+          new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
               .newBuilderForTesting(fakeBuildRule);
       builder.setReflectively("flags", defaultFlags);
       RuleKey defaultRuleKey = builder.build(RuleKey::new);
 
       builder =
-          new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+          new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
               .newBuilderForTesting(fakeBuildRule);
       builder.setReflectively("flags", alteredFlags);
       RuleKey alteredRuleKey = builder.build(RuleKey::new);
@@ -164,7 +165,7 @@ public class PreprocessorFlagsTest {
                   .build();
 
           DefaultRuleKeyFactory.Builder<HashCode> builder =
-              new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+              new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
                   .newBuilderForTesting(fakeBuildRule);
           builder.setReflectively(
               "flags", PreprocessorFlags.builder().setOtherFlags(flags).build());

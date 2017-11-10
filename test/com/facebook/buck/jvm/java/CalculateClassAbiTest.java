@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -99,7 +100,7 @@ public class CalculateClassAbiTest {
     FileHashCache initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory initialRuleKeyFactory =
-        new DefaultRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(initialHashCache, pathResolver, ruleFinder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
     RuleKey initialInputKey =
         new InputBasedRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder)
@@ -121,7 +122,7 @@ public class CalculateClassAbiTest {
     FileHashCache alteredHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory alteredRuleKeyFactory =
-        new DefaultRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(alteredHashCache, pathResolver, ruleFinder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);
     RuleKey alteredInputKey =
         new InputBasedRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder)
@@ -165,7 +166,7 @@ public class CalculateClassAbiTest {
     FileHashCache initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory initialRuleKeyFactory =
-        new DefaultRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(initialHashCache, pathResolver, ruleFinder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
     RuleKey initialInputKey =
         new InputBasedRuleKeyFactory(0, initialHashCache, pathResolver, ruleFinder)
@@ -185,7 +186,7 @@ public class CalculateClassAbiTest {
     FileHashCache alteredHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory alteredRuleKeyFactory =
-        new DefaultRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(alteredHashCache, pathResolver, ruleFinder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);
     RuleKey alteredInputKey =
         new InputBasedRuleKeyFactory(0, alteredHashCache, pathResolver, ruleFinder)

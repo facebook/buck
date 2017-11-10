@@ -31,12 +31,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -391,14 +390,9 @@ public class CommandAliasDescriptionTest {
             ruleFinder,
             pathResolver,
             hashCache,
-            ruleKeyFactory(hashCache, pathResolver, ruleFinder))
+            new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder))
         .setReflectively("key", result.commandAlias())
         .build(RuleKey::new);
-  }
-
-  private DefaultRuleKeyFactory ruleKeyFactory(
-      FileHashCache hashCache, SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
-    return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
   }
 
   private static CommandAliasBuilder.BuildResult multiPlatformScenario(Platform platform) {

@@ -42,6 +42,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
@@ -174,9 +175,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
     RuleKey key2 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder)
             .build(modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
@@ -192,7 +193,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -201,7 +202,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
     hashCache.invalidateAll();
-    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder);
+    ruleKeyFactory = new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder);
 
     // Re-calculate the rule key
     RuleKey key2 = ruleKeyFactory.build(symlinkTreeBuildRule);

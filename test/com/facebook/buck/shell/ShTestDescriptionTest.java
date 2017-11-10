@@ -35,6 +35,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -157,7 +158,7 @@ public class ShTestDescriptionTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
     return factory.build(rule);
   }
 }
