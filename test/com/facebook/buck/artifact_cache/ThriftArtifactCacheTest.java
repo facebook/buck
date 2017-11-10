@@ -143,8 +143,6 @@ public class ThriftArtifactCacheTest {
                   new com.facebook.buck.rules.RuleKey(HashCode.fromInt(42)),
                   LazyPath.ofInstance(artifactPath)));
       assertEquals(CacheResultType.ERROR, result.getType());
-    } catch (IOException e) {
-      e.printStackTrace();
     }
 
     EasyMock.verify(fetchClient);
