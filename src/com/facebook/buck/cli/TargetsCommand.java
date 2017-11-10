@@ -61,6 +61,7 @@ import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -454,8 +455,7 @@ public class TargetsCommand extends AbstractCommand {
             .getActionGraph(
                 params.getBuckEventBus(),
                 targetGraphAndTargets.getTargetGraph(),
-                params.getBuckConfig(),
-                params.getRuleKeyConfiguration());
+                params.getBuckConfig());
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -471,7 +471,7 @@ public class TargetsCommand extends AbstractCommand {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
-            new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
+            new RuleKeyFieldLoader(RuleKeyConfiguration.of(params.getBuckConfig().getKeySeed())),
             params.getFileHashCache(),
             DefaultSourcePathResolver.from(ruleFinder),
             ruleFinder);
@@ -912,8 +912,7 @@ public class TargetsCommand extends AbstractCommand {
                 .getActionGraph(
                     params.getBuckEventBus(),
                     targetGraphAndTargetNodes.getFirst(),
-                    params.getBuckConfig(),
-                    params.getRuleKeyConfiguration());
+                    params.getBuckConfig());
         actionGraph = Optional.of(result.getActionGraph());
         buildRuleResolver = Optional.of(result.getResolver());
         if (isShowRuleKey()) {
@@ -924,7 +923,8 @@ public class TargetsCommand extends AbstractCommand {
                   new ParallelRuleKeyCalculator<>(
                       executor,
                       new DefaultRuleKeyFactory(
-                          new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
+                          new RuleKeyFieldLoader(
+                              RuleKeyConfiguration.of(params.getBuckConfig().getKeySeed())),
                           params.getFileHashCache(),
                           DefaultSourcePathResolver.from(ruleFinder),
                           ruleFinder,

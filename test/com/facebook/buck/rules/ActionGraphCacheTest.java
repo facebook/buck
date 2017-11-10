@@ -117,7 +117,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            RuleKeyConfiguration.of(keySeed),
+            keySeed,
             ActionGraphParallelizationMode.DISABLED);
     // The 1st time you query the ActionGraph it's a cache miss.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
@@ -129,7 +129,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            RuleKeyConfiguration.of(keySeed),
+            keySeed,
             ActionGraphParallelizationMode.DISABLED);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
@@ -196,7 +196,7 @@ public class ActionGraphCacheTest {
           CHECK_GRAPHS, /* skipActionGraphCache */
           false,
           run.getFirst(),
-          RuleKeyConfiguration.of(keySeed),
+          keySeed,
           ActionGraphParallelizationMode.DISABLED);
 
       assertEquals(
@@ -215,7 +215,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            RuleKeyConfiguration.of(keySeed),
+            keySeed,
             ActionGraphParallelizationMode.DISABLED);
     // Each time you call it for a different TargetGraph so all calls should be misses.
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
@@ -228,7 +228,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS,
             /* skipActionGraphCache */ false,
             targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
-            RuleKeyConfiguration.of(keySeed),
+            keySeed,
             ActionGraphParallelizationMode.DISABLED);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -241,7 +241,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            RuleKeyConfiguration.of(keySeed),
+            keySeed,
             ActionGraphParallelizationMode.DISABLED);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -299,7 +299,7 @@ public class ActionGraphCacheTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              RuleKeyConfiguration.of(keySeed),
+              keySeed,
               mode);
       experimentEvents =
           RichStream.from(trackedEvents.stream())
@@ -316,7 +316,7 @@ public class ActionGraphCacheTest {
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            RuleKeyConfiguration.of(keySeed),
+            keySeed,
             ActionGraphParallelizationMode.EXPERIMENT);
     experimentEvents =
         RichStream.from(trackedEvents.stream())
@@ -337,7 +337,7 @@ public class ActionGraphCacheTest {
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            RuleKeyConfiguration.of(keySeed),
+            keySeed,
             ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE);
     experimentEvents =
         RichStream.from(trackedEvents.stream())

@@ -47,7 +47,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -76,7 +75,6 @@ public class IjProjectCommandHelper {
   private final VersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
-  private final RuleKeyConfiguration ruleKeyConfiguration;
   private final IjProjectConfig projectConfig;
   private final boolean enableParserProfiling;
   private final BuckBuildRunner buckBuildRunner;
@@ -93,7 +91,6 @@ public class IjProjectCommandHelper {
       VersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       Cell cell,
-      RuleKeyConfiguration ruleKeyConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
       BuckBuildRunner buckBuildRunner,
@@ -108,7 +105,6 @@ public class IjProjectCommandHelper {
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
-    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.projectConfig = projectConfig;
     this.enableParserProfiling = enableParserProfiling;
     this.buckBuildRunner = buckBuildRunner;
@@ -201,8 +197,7 @@ public class IjProjectCommandHelper {
   }
 
   private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
-    return actionGraphCache.getActionGraph(
-        buckEventBus, targetGraph, buckConfig, ruleKeyConfiguration);
+    return actionGraphCache.getActionGraph(buckEventBus, targetGraph, buckConfig);
   }
 
   private TargetGraph getProjectGraphForIde(

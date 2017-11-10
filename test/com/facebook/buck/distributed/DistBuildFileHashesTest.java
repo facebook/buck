@@ -51,7 +51,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -132,7 +131,7 @@ public class DistBuildFileHashesTest {
               createFileHashCache(),
               new DistBuildCellIndexer(rootCell),
               MoreExecutors.newDirectExecutorService(),
-              RuleKeyConfiguration.of(0),
+              /* keySeed */ 0,
               rootCell);
     }
 

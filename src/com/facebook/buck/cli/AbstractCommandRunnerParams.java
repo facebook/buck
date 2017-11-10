@@ -33,7 +33,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -119,8 +118,6 @@ public abstract class AbstractCommandRunnerParams {
 
   public abstract ToolchainProvider getToolchainProvider();
 
-  public abstract RuleKeyConfiguration getRuleKeyConfiguration();
-
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.
    *
@@ -137,7 +134,6 @@ public abstract class AbstractCommandRunnerParams {
         .setProjectFilesystemFactory(getProjectFilesystemFactory())
         .setBuildInfoStoreManager(getBuildInfoStoreManager())
         .setArtifactCacheFactory(getArtifactCacheFactory())
-        .setRuleKeyConfiguration(getRuleKeyConfiguration())
         .build();
   }
 }

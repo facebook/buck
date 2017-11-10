@@ -2,10 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 java_immutables_library(
     name = "keys",
-    srcs = glob(
-        ["**/*.java"],
-        excludes = ["impl/*.java"],
-    ),
+    srcs = glob(["**/*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/log/thrift:thrift",
     ],

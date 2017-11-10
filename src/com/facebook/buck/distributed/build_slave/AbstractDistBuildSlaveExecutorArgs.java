@@ -33,7 +33,6 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
@@ -63,7 +62,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract ActionGraphCache getActionGraphCache();
 
-  public abstract RuleKeyConfiguration getRuleKeyConfiguration();
+  public abstract int getCacheKeySeed();
 
   public abstract Console getConsole();
 
@@ -125,7 +124,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setProjectFilesystemFactory(getProjectFilesystemFactory())
         .setBuildInfoStoreManager(getBuildInfoStoreManager())
         .setArtifactCacheFactory(getArtifactCacheFactory())
-        .setRuleKeyConfiguration(getRuleKeyConfiguration())
         .build();
   }
 
@@ -138,7 +136,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setActionGraphCache(this.getActionGraphCache())
         .setParser(this.getParser())
         .setBuckEventBus(this.getBuckEventBus())
-        .setRuleKeyConfiguration(this.getRuleKeyConfiguration())
+        .setCacheKeySeed(this.getCacheKeySeed())
         .setProjectFilesystemFactory(this.getProjectFilesystemFactory())
         .setExecutorService(this.getExecutorService())
         .setExecutors(this.getExecutors())

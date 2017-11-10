@@ -60,11 +60,11 @@ public class VerifyCachesCommand extends AbstractCommand {
   private boolean verifyRuleKeyCache(
       BuckEventBus eventBus,
       PrintStream stdOut,
-      RuleKeyConfiguration ruleKeyConfiguration,
+      int ruleKeySeed,
       FileHashCache fileHashCache,
       RuleKeyCacheRecycler<RuleKey> recycler) {
     ImmutableList<Map.Entry<BuildRule, RuleKey>> contents = recycler.getCachedBuildRules();
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
+    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(ruleKeySeed));
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), eventBus);
@@ -108,7 +108,7 @@ public class VerifyCachesCommand extends AbstractCommand {
                     verifyRuleKeyCache(
                         params.getBuckEventBus(),
                         params.getConsole().getStdOut(),
-                        params.getRuleKeyConfiguration(),
+                        params.getBuckConfig().getKeySeed(),
                         params.getFileHashCache(),
                         recycler))
             .orElse(true);
