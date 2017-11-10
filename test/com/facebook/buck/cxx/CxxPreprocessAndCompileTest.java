@@ -66,18 +66,11 @@ import java.util.Optional;
 import org.junit.Test;
 
 public class CxxPreprocessAndCompileTest {
-
   private static class PreprocessorWithColorSupport extends GccPreprocessor {
-
     static final String COLOR_FLAG = "-use-color-in-preprocessor";
 
     public PreprocessorWithColorSupport(Tool tool) {
       super(tool);
-    }
-
-    @Override
-    public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-      return Optional.of(ImmutableList.of(COLOR_FLAG));
     }
   }
 

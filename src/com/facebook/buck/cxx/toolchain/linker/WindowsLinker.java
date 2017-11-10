@@ -19,17 +19,14 @@ package com.facebook.buck.cxx.toolchain.linker;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -37,31 +34,9 @@ import java.nio.file.Path;
 /**
  * A specialization of {@link Linker} containing information specific to the Windows implementation.
  */
-public class WindowsLinker implements Linker {
-  private final Tool tool;
-
+public class WindowsLinker extends DelegatingTool implements Linker {
   public WindowsLinker(Tool tool) {
-    this.tool = tool;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return tool.getDeps(ruleFinder);
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return tool.getInputs();
-  }
-
-  @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return tool.getCommandPrefix(resolver);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return tool.getEnvironment(resolver);
+    super(tool);
   }
 
   @Override
@@ -142,10 +117,5 @@ public class WindowsLinker implements Linker {
   @Override
   public boolean hasFilePathSizeLimitations() {
     return true;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("tool", tool);
   }
 }

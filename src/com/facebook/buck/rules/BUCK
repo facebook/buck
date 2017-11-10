@@ -382,6 +382,7 @@ java_immutables_library(
         "DefaultBuildableContext.java",
         "DefaultOnDiskBuildInfo.java",
         "DefaultTargetNodeToBuildRuleTransformer.java",
+        "DelegatingTool.java",
         "DescriptionProvider.java",
         "ErrorToolProvider.java",
         "ExportDependencies.java",

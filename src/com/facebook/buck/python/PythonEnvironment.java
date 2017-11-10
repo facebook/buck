@@ -17,7 +17,6 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -29,7 +28,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
-public class PythonEnvironment implements RuleKeyAppendable, Tool {
+/** Tool based on a particular python configuration. */
+public class PythonEnvironment implements Tool {
   private final Path pythonPath;
   private final PythonVersion pythonVersion;
 

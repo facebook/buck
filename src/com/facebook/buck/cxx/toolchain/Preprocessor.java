@@ -26,8 +26,6 @@ import java.util.Optional;
 
 public interface Preprocessor extends Tool {
 
-  Optional<ImmutableList<String>> getFlagsForColorDiagnostics();
-
   boolean supportsHeaderMaps();
 
   boolean supportsPrecompiledHeaders();
