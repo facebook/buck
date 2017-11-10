@@ -729,7 +729,8 @@ ANDROID_BINARY_INTEGRATION_TEST_SRCS = [
 java_test(
     name = "binary-integration-1",
     srcs = [
-        "AndroidBinaryIntegrationTest.java",
+        "AndroidBinary1IntegrationTest.java",
+        "AndroidBinary2IntegrationTest.java",
     ],
     labels = ["long_running"],
     resources = glob(["testdata/**"]),
@@ -757,7 +758,8 @@ java_test(
     srcs = glob(
         ANDROID_BINARY_INTEGRATION_TEST_SRCS,
         excludes = [
-            "AndroidBinaryIntegrationTest.java",
+        "AndroidBinary1IntegrationTest.java",
+        "AndroidBinary2IntegrationTest.java",
         ],
     ),
     labels = ["long_running"],
