@@ -65,6 +65,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
@@ -226,11 +227,12 @@ public class AppleTestDescription
 
     // UI test bundles do not use the test host as their bundle_loader, but instead a stub app
     Optional<TestHostInfo> testHostInfo;
-    if (args.getTestHostApp().isPresent() && !args.getIsUiTest()) {
+    if (args.getTestHostApp().isPresent()) {
       testHostInfo =
           Optional.of(
               createTestHostInfo(
                   buildTarget,
+                  args.getIsUiTest(),
                   resolver,
                   args.getTestHostApp().get(),
                   debugFormat,
@@ -253,7 +255,7 @@ public class AppleTestDescription
             resolver,
             cellRoots,
             args,
-            testHostInfo.map(TestHostInfo::getTestHostAppBinarySourcePath),
+            testHostInfo.flatMap(TestHostInfo::getTestHostAppBinarySourcePath),
             testHostInfo.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
             libraryTarget,
             Optionals.toStream(args.getTestHostApp()).toImmutableSortedSet(Ordering.natural()));
@@ -445,8 +447,10 @@ public class AppleTestDescription
         buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
-  private TestHostInfo createTestHostInfo(
+  @VisibleForTesting
+  TestHostInfo createTestHostInfo(
       BuildTarget buildTarget,
+      boolean isUITestTestHostInfo,
       BuildRuleResolver resolver,
       BuildTarget testHostAppBuildTarget,
       AppleDebugFormat debugFormat,
@@ -469,6 +473,9 @@ public class AppleTestDescription
     }
 
     AppleBundle testHostApp = (AppleBundle) rule;
+    if (isUITestTestHostInfo) {
+      return TestHostInfo.of(testHostApp, Optional.empty(), ImmutableSet.of());
+    }
     SourcePath testHostAppBinarySourcePath =
         testHostApp.getBinaryBuildRule().getSourcePathToOutput();
 
@@ -485,7 +492,8 @@ public class AppleTestDescription
       blacklistBuilder.addAll(
           NativeLinkables.getTransitiveNativeLinkables(platform, roots.values()).keySet());
     }
-    return TestHostInfo.of(testHostApp, testHostAppBinarySourcePath, blacklistBuilder.build());
+    return TestHostInfo.of(
+        testHostApp, Optional.of(testHostAppBinarySourcePath), blacklistBuilder.build());
   }
 
   @Override
@@ -508,8 +516,10 @@ public class AppleTestDescription
     /**
      * Location of the test host binary that can be passed as the "bundle loader" option when
      * linking the test library.
+     *
+     * <p>Is empty when this test host info is used for XCUITests, which don't have a bundle loader
      */
-    SourcePath getTestHostAppBinarySourcePath();
+    Optional<SourcePath> getTestHostAppBinarySourcePath();
 
     /** Libraries included in test host that should not be linked into the test library. */
     ImmutableSet<BuildTarget> getBlacklist();
