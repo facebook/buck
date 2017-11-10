@@ -575,4 +575,33 @@ public class RustBinaryIntegrationTest {
 
     workspace.runBuckCommand("run", "//:include_missing").assertFailure();
   }
+
+  @Test
+  public void procmacroCompile() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
+    workspace.setUp();
+
+    assertThat(
+        // Check that we can build a procmacro crate
+        workspace.runBuckCommand("run", "//:test").assertSuccess("link with procmacro").getStdout(),
+        // Make sure we get a working executable.
+        Matchers.containsString("Hello"));
+  }
+
+  @Test
+  public void procmacroCompileShared() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
+    workspace.setUp();
+
+    assertThat(
+        // Check that we can build a procmacro crate
+        workspace
+            .runBuckCommand("run", "//:test_shared")
+            .assertSuccess("link with procmacro")
+            .getStdout(),
+        // Make sure we get a working executable
+        Matchers.containsString("Hello"));
+  }
 }

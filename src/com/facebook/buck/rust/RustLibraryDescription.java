@@ -162,8 +162,15 @@ public class RustLibraryDescription
     if (type.isPresent()) {
       // Uncommon case - someone explicitly invoked buck to build a specific flavor as the
       // direct target.
-      CrateType crateType = type.get().getValue().getCrateType();
+      CrateType crateType;
+
       Linker.LinkableDepType depType;
+
+      if (args.getProcMacro()) {
+        crateType = CrateType.PROC_MACRO;
+      } else {
+        crateType = type.get().getValue().getCrateType();
+      }
 
       if (crateType.isDynamic()) {
         depType = Linker.LinkableDepType.SHARED;
@@ -210,6 +217,8 @@ public class RustLibraryDescription
         // the use of -rpath will break with flavored paths containing ','.
         if (isCheck) {
           crateType = CrateType.CHECK;
+        } else if (args.getProcMacro()) {
+          crateType = CrateType.PROC_MACRO;
         } else {
           switch (args.getPreferredLinkage()) {
             case ANY:
@@ -261,6 +270,11 @@ public class RustLibraryDescription
                 args);
         SourcePath rlib = rule.getSourcePathToOutput();
         return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getBuildDeps());
+      }
+
+      @Override
+      public boolean isProcMacro() {
+        return args.getProcMacro();
       }
 
       @Override
@@ -438,5 +452,10 @@ public class RustLibraryDescription
     Optional<String> getCrate();
 
     Optional<SourcePath> getCrateRoot();
+
+    @Value.Default
+    default boolean getProcMacro() {
+      return false;
+    }
   }
 }

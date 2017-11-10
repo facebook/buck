@@ -51,6 +51,7 @@ public enum CrateType {
       "staticlib",
       CxxDescriptionEnhancer.STATIC_PIC_FLAVOR,
       (target, n, p) -> String.format("lib%s.%s", n, p.getStaticLibraryExtension())),
+  PROC_MACRO("proc-macro", RustDescriptionEnhancer.RFPROC_MACRO, CrateType::dylib_filename),
   ;
 
   private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {
@@ -90,7 +91,11 @@ public enum CrateType {
    * @return Is natively usable.
    */
   public boolean isNative() {
-    return this == BIN || this == CDYLIB || this == STATIC || this == STATIC_PIC;
+    return this == BIN
+        || this == CDYLIB
+        || this == STATIC
+        || this == STATIC_PIC
+        || this == PROC_MACRO;
   }
 
   /**
@@ -118,7 +123,11 @@ public enum CrateType {
    * @return Needs PIC.
    */
   public boolean isPic() {
-    return isDynamic() || this == RLIB_PIC || this == STATIC_PIC || this == BIN;
+    return isDynamic()
+        || this == RLIB_PIC
+        || this == STATIC_PIC
+        || this == BIN
+        || this == PROC_MACRO;
   }
 
   /**
@@ -128,6 +137,14 @@ public enum CrateType {
    */
   public boolean isCheck() {
     return this == CHECK || this == CHECKBIN;
+  }
+
+  /**
+   * Return true if this is generating a compiler plugin - ie, it should be linked with a different
+   * linker and linker flags.
+   */
+  public boolean isProcMacro() {
+    return this == PROC_MACRO;
   }
 
   /**

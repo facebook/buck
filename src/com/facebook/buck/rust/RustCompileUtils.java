@@ -489,12 +489,14 @@ public class RustCompileUtils {
       public Iterable<BuildRule> visit(BuildRule rule) {
         Set<BuildRule> deps = ImmutableSet.of();
         if (rule instanceof RustLinkable) {
-          deps = rule.getBuildDeps();
-
           RustLinkable rustLinkable = (RustLinkable) rule;
 
-          if (rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
-            libs.putAll(rustLinkable.getRustSharedLibraries(cxxPlatform));
+          if (!rustLinkable.isProcMacro()) {
+            deps = rule.getBuildDeps();
+
+            if (rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
+              libs.putAll(rustLinkable.getRustSharedLibraries(cxxPlatform));
+            }
           }
         }
         return deps;

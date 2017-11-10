@@ -77,6 +77,11 @@ public class PrebuiltRustLibraryDescription
       }
 
       @Override
+      public boolean isProcMacro() {
+        return args.getProcMacro();
+      }
+
+      @Override
       public NativeLinkable.Linkage getPreferredLinkage() {
         return NativeLinkable.Linkage.STATIC;
       }
@@ -100,5 +105,10 @@ public class PrebuiltRustLibraryDescription
     }
 
     Optional<Linker.LinkableDepType> getLinkStyle();
+
+    @Value.Default
+    default boolean getProcMacro() {
+      return false;
+    }
   }
 }
