@@ -199,7 +199,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getResourceAwareSchedulingInfo(),
         engineConfig.getConsoleLogBuildRuleFailuresInline(),
         RuleKeyFactories.of(
-            RuleKeyConfiguration.of(args.getBuckConfig().getKeySeed()),
+            args.getRuleKeyConfiguration(),
             cachingBuildEngineDelegate.getFileHashCache(),
             actionGraphAndResolver.getResolver(),
             engineConfig.getBuildInputRuleKeyFileSizeLimit(),
@@ -268,6 +268,8 @@ abstract class AbstractBuildExecutorArgs {
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();
 
   public abstract ArtifactCacheFactory getArtifactCacheFactory();
+
+  public abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
   public BuckConfig getBuckConfig() {
     return getRootCell().getBuckConfig();

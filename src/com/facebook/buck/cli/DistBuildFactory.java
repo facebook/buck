@@ -127,7 +127,7 @@ public abstract class DistBuildFactory {
                 .setActionGraphCache(params.getActionGraphCache())
                 // TODO(alisdair,shivanker): Change this to
                 // state.getRootCell().getBuckConfig().getKeySeed()
-                .setCacheKeySeed(params.getBuckConfig().getKeySeed())
+                .setRuleKeyConfiguration(params.getRuleKeyConfiguration())
                 .setConsole(params.getConsole())
                 .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)

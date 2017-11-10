@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -138,7 +137,7 @@ final class JavaBuildGraphProcessor {
               cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
               cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
               RuleKeyFactories.of(
-                  RuleKeyConfiguration.of(params.getBuckConfig().getKeySeed()),
+                  params.getRuleKeyConfiguration(),
                   cachingBuildEngineDelegate.getFileHashCache(),
                   buildRuleResolver,
                   cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),

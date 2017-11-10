@@ -304,6 +304,7 @@ public class ProjectCommand extends BuildCommand {
                     params.getVersionedTargetGraphCache(),
                     params.getTypeCoercerFactory(),
                     params.getCell(),
+                    params.getRuleKeyConfiguration(),
                     projectConfig,
                     getEnableParserProfiling(),
                     (buildTargets, disableCaching) ->

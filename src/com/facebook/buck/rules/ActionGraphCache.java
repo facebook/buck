@@ -61,13 +61,16 @@ public class ActionGraphCache {
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndResolver getActionGraph(
-      BuckEventBus eventBus, TargetGraph targetGraph, BuckConfig buckConfig) {
+      BuckEventBus eventBus,
+      TargetGraph targetGraph,
+      BuckConfig buckConfig,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return getActionGraph(
         eventBus,
         buckConfig.isActionGraphCheckingEnabled(),
         buckConfig.isSkipActionGraphCache(),
         targetGraph,
-        buckConfig.getKeySeed(),
+        ruleKeyConfiguration,
         buckConfig.getActionGraphParallelizationMode(),
         Optional.empty());
   }
@@ -77,13 +80,14 @@ public class ActionGraphCache {
       BuckEventBus eventBus,
       TargetGraph targetGraph,
       BuckConfig buckConfig,
+      RuleKeyConfiguration ruleKeyConfiguration,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return getActionGraph(
         eventBus,
         buckConfig.isActionGraphCheckingEnabled(),
         buckConfig.isSkipActionGraphCache(),
         targetGraph,
-        buckConfig.getKeySeed(),
+        ruleKeyConfiguration,
         buckConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger);
   }
@@ -93,14 +97,14 @@ public class ActionGraphCache {
       final boolean checkActionGraphs,
       final boolean skipActionGraphCache,
       final TargetGraph targetGraph,
-      int keySeed,
+      RuleKeyConfiguration ruleKeyConfiguration,
       ActionGraphParallelizationMode parallelizationMode) {
     return getActionGraph(
         eventBus,
         checkActionGraphs,
         skipActionGraphCache,
         targetGraph,
-        keySeed,
+        ruleKeyConfiguration,
         parallelizationMode,
         Optional.empty());
   }
@@ -122,7 +126,7 @@ public class ActionGraphCache {
       final boolean checkActionGraphs,
       final boolean skipActionGraphCache,
       final TargetGraph targetGraph,
-      int keySeed,
+      RuleKeyConfiguration ruleKeyConfiguration,
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
@@ -130,7 +134,7 @@ public class ActionGraphCache {
     ActionGraphAndResolver out;
     ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
-      RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(keySeed));
+      RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
       ActionGraphAndResolver cachedActionGraph = previousActionGraphs.getIfPresent(targetGraph);
       if (cachedActionGraph != null) {
         eventBus.post(ActionGraphEvent.Cache.hit());

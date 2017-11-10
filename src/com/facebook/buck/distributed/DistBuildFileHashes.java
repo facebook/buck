@@ -75,7 +75,7 @@ public class DistBuildFileHashes {
       StackedFileHashCache originalHashCache,
       DistBuildCellIndexer cellIndexer,
       ListeningExecutorService executorService,
-      int keySeed,
+      RuleKeyConfiguration ruleKeyConfiguration,
       final Cell rootCell) {
 
     this.remoteFileHashes = new HashMap<>();
@@ -97,7 +97,8 @@ public class DistBuildFileHashes {
             });
 
     this.ruleKeyFactories =
-        createRuleKeyFactories(sourcePathResolver, ruleFinder, recordingHashCache, keySeed);
+        createRuleKeyFactories(
+            sourcePathResolver, ruleFinder, recordingHashCache, ruleKeyConfiguration);
     this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes =
         fileHashesComputation(
@@ -119,7 +120,7 @@ public class DistBuildFileHashes {
       final SourcePathResolver sourcePathResolver,
       final SourcePathRuleFinder ruleFinder,
       final FileHashCache fileHashCache,
-      final int keySeed) {
+      final RuleKeyConfiguration ruleKeyConfiguration) {
 
     return CacheBuilder.newBuilder()
         .build(
@@ -127,7 +128,7 @@ public class DistBuildFileHashes {
               @Override
               public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
                 return new DefaultRuleKeyFactory(
-                    new RuleKeyFieldLoader(RuleKeyConfiguration.of(keySeed)),
+                    new RuleKeyFieldLoader(ruleKeyConfiguration),
                     fileHashCache,
                     sourcePathResolver,
                     ruleFinder);
