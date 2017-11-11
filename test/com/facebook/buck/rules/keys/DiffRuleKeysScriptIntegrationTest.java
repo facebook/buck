@@ -129,10 +129,10 @@ public class DiffRuleKeysScriptIntegrationTest {
             .join(
                 "Change details for "
                     + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions]",
-                "  (getSourceLevel):",
+                "  (sourceLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
-                "  (getTargetLevel):",
+                "  (targetLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
                 "");
@@ -155,7 +155,7 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
-            ",default->preprocessDelegate->preprocessorFlags->getIncludes]",
+            ",default->preprocessDelegate->preprocessorFlags->includes]",
             "(include(cxx/a.h)):",
             "-[path(cxx/a.h:", /*hash*/
             ")]",
@@ -226,8 +226,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             Matchers.containsString(
                 "Change details for [//:java_lib_all]\n"
                     + "  (jarBuildStepsFactory):\n"
-                    + "    -[ruleKey(sha1=07a5295e2ed9db630c5727280fa677235f2ef3b9)]\n"
-                    + "    +[ruleKey(sha1=0563a239c22974069bc3f62df26591f5fb0213fc)]\n"),
+                    + "    -[ruleKey(sha1=ef38ab2560b83d00b82e168f7aa0f226f79415b3)]\n"
+                    + "    +[ruleKey(sha1=e247b9ddb2ad68ebd07355704a371a2a3f80cc5b)]\n"),
             Matchers.containsString(
                 "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
                     + "  (srcs):\n"
