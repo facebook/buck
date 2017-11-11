@@ -16,6 +16,18 @@ class LabelTest(unittest.TestCase):
         self.assertEqual(l.package, 'package')
         self.assertIsNone(l.cell)
 
+    def test_can_parse_label_with_dashes(self):
+        l = label.from_string('//pkg-1:name')
+        self.assertEqual(l.name, 'name')
+        self.assertEqual(l.package, 'pkg-1')
+        self.assertIsNone(l.cell)
+
+    def test_can_parse_label_with_dashes_in_cell(self):
+        l = label.from_string('my-cell//pkg-1:name')
+        self.assertEqual(l.name, 'name')
+        self.assertEqual(l.package, 'pkg-1')
+        self.assertEqual(l.cell, 'my-cell')
+
     def test_can_parse_label_with_extension(self):
         l = label.from_string('//pkg/file.ext')
         self.assertIsNone(l.name)
