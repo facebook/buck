@@ -129,7 +129,7 @@ ArgumentParser objects
 
    * epilog_ - Text to display after the argument help.
 
-   * add_help_ - Add a -h/--help option to the parser. (default: ``True``)
+   * add_help_ - Add a `-h/--help` option to the parser. (default: ``True``)
 
    * argument_default_ - Set the global default value for arguments.
      (default: ``None``)
@@ -151,7 +151,7 @@ ArgumentParser objects
    * prog_ - The name of the program (default:
      :data:`sys.argv[0]`)
 
-   * usage_ - The string describing the program usage (default: generated)
+   * usage_ - The string describing the program usage (default: ``generated``)
 
 The following sections describe how each of these are used.
 
@@ -736,7 +736,7 @@ nargs
 
 ArgumentParser objects usually associate a single command-line argument with a
 single action to be taken.  The ``nargs`` keyword argument associates a
-different number of command-line arguments with a single action..  The supported
+different number of command-line arguments with a single action.  The supported
 values are:
 
 * N (an integer).  N args from the command-line will be gathered together into a
