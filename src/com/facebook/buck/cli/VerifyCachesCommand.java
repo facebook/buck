@@ -37,9 +37,12 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
+import org.kohsuke.args4j.Option;
 
 /** Verify the contents of our FileHashCache. */
 public class VerifyCachesCommand extends AbstractCommand {
+  @Option(name = "--dump", usage = "Also dump (some) cache contents.")
+  private boolean shouldDump = false;
 
   private boolean verifyFileHashCache(PrintStream stdOut, FileHashCache cache) throws IOException {
     FileHashCacheVerificationResult result = cache.verify();
@@ -93,6 +96,18 @@ public class VerifyCachesCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     boolean success = true;
+
+    PrintStream stdOut = params.getConsole().getStdOut();
+
+    if (shouldDump) {
+      params
+          .getFileHashCache()
+          .debugDump()
+          .forEach(
+              entry -> {
+                stdOut.println(entry.getKey() + " " + entry.getValue());
+              });
+    }
 
     // Verify file hash caches.
     params.getConsole().getStdOut().println("Verifying file hash caches...");

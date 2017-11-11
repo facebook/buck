@@ -37,11 +37,14 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class DefaultFileHashCache implements ProjectFileHashCache {
 
@@ -318,6 +321,18 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         .setFilesExamined(cacheMap.size())
         .addAllVerificationErrors(errors)
         .build();
+  }
+
+  @Override
+  public Stream<Entry<Path, HashCode>> debugDump() {
+    return fileHashCacheEngine
+        .asMap()
+        .entrySet()
+        .stream()
+        .map(
+            entry ->
+                new AbstractMap.SimpleEntry<>(
+                    projectFilesystem.resolve(entry.getKey()), entry.getValue().getHashCode()));
   }
 
   public List<AbstractBuckEvent> getStatsEvents() {
