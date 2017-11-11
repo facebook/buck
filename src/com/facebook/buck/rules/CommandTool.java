@@ -39,10 +39,10 @@ import java.util.Optional;
  */
 public class CommandTool implements Tool {
 
-  private final Optional<Tool> baseTool;
-  private final ImmutableList<Arg> args;
-  private final ImmutableSortedMap<String, Arg> environment;
-  private final ImmutableSortedSet<SourcePath> extraInputs;
+  @AddToRuleKey private final Optional<Tool> baseTool;
+  @AddToRuleKey private final ImmutableList<Arg> args;
+  @AddToRuleKey private final ImmutableSortedMap<String, Arg> environment;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> extraInputs;
   private final ImmutableSortedSet<BuildRule> extraDeps;
 
   private CommandTool(
@@ -106,14 +106,6 @@ public class CommandTool implements Tool {
     }
     env.putAll(Arg.stringify(environment, resolver));
     return env.build();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("baseTool", baseTool)
-        .setReflectively("args", args)
-        .setReflectively("environment", environment)
-        .setReflectively("extraInputs", extraInputs);
   }
 
   // Builder for a `CommandTool`.

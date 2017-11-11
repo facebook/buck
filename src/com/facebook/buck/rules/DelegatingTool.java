@@ -47,7 +47,4 @@ public abstract class DelegatingTool implements Tool {
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     return tool.getEnvironment(resolver);
   }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {}
 }

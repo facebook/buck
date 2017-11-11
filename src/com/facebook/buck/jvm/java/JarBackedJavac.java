@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -43,8 +43,8 @@ public class JarBackedJavac extends Jsr199Javac {
         }
       };
 
-  private final String compilerClassName;
-  private final ImmutableSortedSet<SourcePath> classpath;
+  @AddToRuleKey private final String compilerClassName;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> classpath;
 
   public JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
     this.compilerClassName = compilerClassName;
@@ -59,14 +59,6 @@ public class JarBackedJavac extends Jsr199Javac {
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
     return classpath;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("javac", "jar-backed-jsr199")
-        .setReflectively("javac.version", "in-memory")
-        .setReflectively("javac.classname", compilerClassName)
-        .setReflectively("javac.classpath", classpath);
   }
 
   @Override

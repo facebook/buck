@@ -45,9 +45,11 @@ abstract class AbstractVersionedTool implements Tool {
   protected abstract ImmutableList<String> getExtraArgs();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract String getName();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract String getVersion();
 
   @Override
@@ -68,10 +70,5 @@ abstract class AbstractVersionedTool implements Tool {
   @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     return ImmutableMap.of();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("name", getName()).setReflectively("version", getVersion());
   }
 }

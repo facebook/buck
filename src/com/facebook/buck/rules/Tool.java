@@ -40,4 +40,7 @@ public interface Tool extends RuleKeyAppendable {
    * @param resolver
    */
   ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver);
+
+  @Override
+  default void appendToRuleKey(RuleKeyObjectSink sink) {}
 }

@@ -41,6 +41,7 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -51,7 +52,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -620,6 +620,9 @@ public class LuaBinaryDescription
     }
 
     return new Tool() {
+      @AddToRuleKey private final LuaPackageComponents toolComponents = components;
+      @AddToRuleKey private final SourcePath toolStarter = starter;
+      // TODO(cjhopman): This should probably add all the other used stuff to its rulekey.
 
       @Override
       public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
@@ -650,11 +653,6 @@ public class LuaBinaryDescription
       @Override
       public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
         return ImmutableMap.of();
-      }
-
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        sink.setReflectively("starter", starter).setReflectively("components", components);
       }
     };
   }

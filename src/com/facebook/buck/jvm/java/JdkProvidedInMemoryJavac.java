@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
@@ -27,12 +26,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("javac", "jsr199").setReflectively("javac.version", "in-memory");
-  }
-
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableSortedSet.of();

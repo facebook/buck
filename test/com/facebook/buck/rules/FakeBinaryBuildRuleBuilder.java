@@ -79,6 +79,13 @@ public class FakeBinaryBuildRuleBuilder
           buildTarget,
           projectFilesystem,
           new Tool() {
+            @AddToRuleKey private final ImmutableList<String> command = args.getCommand();
+
+            @AddToRuleKey
+            private final ImmutableSortedMap<String, String> environment = args.getEnvironment();
+
+            @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs = args.getInputs();
+
             @Override
             public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
               return deps;
@@ -91,19 +98,12 @@ public class FakeBinaryBuildRuleBuilder
 
             @Override
             public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver1) {
-              return args.getCommand();
+              return command;
             }
 
             @Override
             public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver1) {
               return args.getEnvironment();
-            }
-
-            @Override
-            public void appendToRuleKey(RuleKeyObjectSink sink) {
-              sink.setReflectively("command", args.getCommand())
-                  .setReflectively("environment", args.getEnvironment())
-                  .setReflectively("inputs", args.getInputs());
             }
           });
     }

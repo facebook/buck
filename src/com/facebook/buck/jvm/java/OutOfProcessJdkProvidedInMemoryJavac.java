@@ -21,7 +21,6 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
@@ -36,11 +35,6 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
   private static final Logger LOG = Logger.get(OutOfProcessJdkProvidedInMemoryJavac.class);
 
   OutOfProcessJdkProvidedInMemoryJavac() {}
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("javac", "oop-jsr199").setReflectively("javac.type", "oop-in-memory");
-  }
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {

@@ -26,7 +26,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -87,11 +86,6 @@ public class FakeWorkerBuilder
   }
 
   private static class FakeTool implements Tool {
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      // Do nothing
-    }
-
     @Override
     public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
       return ImmutableList.of();

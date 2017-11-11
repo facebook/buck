@@ -138,7 +138,6 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
   }
 
   private static class PlatformSpecificTool implements Tool {
-
     private final Supplier<Tool> tool;
     private final Optional<BuildTarget> genericExe;
     private final ImmutableSortedMap<Platform, BuildTarget> platformExe;

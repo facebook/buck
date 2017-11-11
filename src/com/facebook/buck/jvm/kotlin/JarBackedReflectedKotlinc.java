@@ -20,9 +20,9 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -66,7 +66,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   // Used to hang onto the KotlinDaemonShim for the life of the buckd process
   private static final Map<Set<String>, Object> kotlinShims = new ConcurrentHashMap<>();
 
-  private final ImmutableSet<SourcePath> compilerClassPath;
+  @AddToRuleKey private final ImmutableSet<SourcePath> compilerClassPath;
 
   JarBackedReflectedKotlinc(ImmutableSet<SourcePath> compilerClassPath) {
     this.compilerClassPath = compilerClassPath;
@@ -161,13 +161,6 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
     return ImmutableSet.of();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("kotlinc", "jar-backed")
-        .setReflectively("kotlinc.version", "in-memory")
-        .setReflectively("kotlinc.classpath", compilerClassPath);
   }
 
   private Object loadCompilerShim(ExecutionContext context) {

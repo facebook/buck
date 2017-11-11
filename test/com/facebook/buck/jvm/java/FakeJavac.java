@@ -20,7 +20,6 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -35,11 +34,6 @@ import javax.annotation.Nullable;
 
 /** Fake implementation of {@link com.facebook.buck.jvm.java.Javac} for tests. */
 public class FakeJavac implements Javac {
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    throw new UnsupportedOperationException();
-  }
-
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     throw new UnsupportedOperationException();

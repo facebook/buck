@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -106,11 +105,6 @@ public class RustCompileTest {
       @Override
       public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
         return ImmutableMap.of();
-      }
-
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        // Do nothing.
       }
     };
   }
@@ -211,11 +205,6 @@ public class RustCompileTest {
       @Override
       public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
         return ImmutableMap.of();
-      }
-
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        // Do nothing.
       }
     };
   }
