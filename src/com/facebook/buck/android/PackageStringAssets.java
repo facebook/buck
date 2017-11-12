@@ -152,7 +152,7 @@ public class PackageStringAssets extends AbstractBuildRule {
         new ZipStep(
             getProjectFilesystem(),
             pathToStringAssetsZip,
-            locales.stream().map(assetPathBuilder::apply).collect(MoreCollectors.toImmutableSet()),
+            locales.stream().map(assetPathBuilder).collect(MoreCollectors.toImmutableSet()),
             false,
             ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));

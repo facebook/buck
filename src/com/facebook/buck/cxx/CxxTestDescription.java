@@ -233,8 +233,7 @@ public class CxxTestDescription
                 .stream()
                 .map(
                     CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                            buildTarget, cellRoots, resolver)
-                        ::apply)
+                        buildTarget, cellRoots, resolver))
                 .collect(MoreCollectors.toImmutableList());
 
     Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =

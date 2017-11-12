@@ -175,7 +175,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         frameworks
             .stream()
             .filter(x -> !x.isSDKROOTFrameworkPath())
-            .map(frameworkPathToSearchPath::apply)
+            .map(frameworkPathToSearchPath)
             .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
             .iterator());
 

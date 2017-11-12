@@ -110,11 +110,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // since Skylark parser is currently disabled by default, avoid creating functions in case
     // it's never used
     // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
-    this.buckRuleFunctionsSupplier = Suppliers.memoize(this::getBuckRuleFunctions)::get;
+    this.buckRuleFunctionsSupplier = Suppliers.memoize(this::getBuckRuleFunctions);
     this.nativeModuleSupplier =
-        Suppliers.memoize(() -> new NativeModule(buckRuleFunctionsSupplier.get(), Glob.create()))
-            ::get;
-    this.buckGlobalsSupplier = Suppliers.memoize(this::getBuckGlobals)::get;
+        Suppliers.memoize(() -> new NativeModule(buckRuleFunctionsSupplier.get(), Glob.create()));
+    this.buckGlobalsSupplier = Suppliers.memoize(this::getBuckGlobals);
     this.readConfigFunction = ReadConfig.create();
   }
 

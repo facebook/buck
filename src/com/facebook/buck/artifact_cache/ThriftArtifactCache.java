@@ -258,8 +258,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             hybridThriftEndpoint,
             toOkHttpRequest(ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest)))) {
       return MultiFetchResult.of(
-          processMultiFetchResponse(keys, outputs, cacheRequest, joinedKeys, httpResponse)
-              ::iterator);
+          processMultiFetchResponse(keys, outputs, cacheRequest, joinedKeys, httpResponse));
     }
   }
 

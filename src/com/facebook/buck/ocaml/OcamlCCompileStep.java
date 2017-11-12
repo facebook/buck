@@ -74,7 +74,7 @@ public class OcamlCCompileStep extends ShellStep {
                 .concat(Arg.stringify(args.cFlags, resolver).stream())
                 // The ocaml compiler invokes the C compiler, along with these flags, using the
                 // shell, so we have to pre-shell-escape them.
-                .map(Escaper.BASH_ESCAPER::apply)
+                .map(Escaper.BASH_ESCAPER)
                 .flatMap(f -> Stream.of("-ccopt", f))
                 .toImmutableList())
         .add(resolver.getAbsolutePath(args.input).toString())

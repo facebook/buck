@@ -208,7 +208,7 @@ public class IjProjectTemplateDataPreparer {
               List<IjSourceFolder> sourceFolders =
                   contentRootFolders
                       .stream()
-                      .map(transformToFolder::apply)
+                      .map(transformToFolder)
                       .sorted()
                       .collect(MoreCollectors.toImmutableList());
               sources.put(contentRoot.toString(), sourceFolders);
@@ -304,7 +304,7 @@ public class IjProjectTemplateDataPreparer {
     return module
         .getGeneratedSourceCodeFolders()
         .stream()
-        .map(new IjFolderToIjSourceFolderTransform(module)::apply)
+        .map(new IjFolderToIjSourceFolderTransform(module))
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 

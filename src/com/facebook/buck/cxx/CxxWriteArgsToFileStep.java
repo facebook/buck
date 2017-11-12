@@ -52,10 +52,7 @@ class CxxWriteArgsToFileStep implements Step {
     ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
     if (escaper.isPresent()) {
       argFileContents =
-          argFileContents
-              .stream()
-              .map(escaper.get()::apply)
-              .collect(MoreCollectors.toImmutableList());
+          argFileContents.stream().map(escaper.get()).collect(MoreCollectors.toImmutableList());
     }
     return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
   }

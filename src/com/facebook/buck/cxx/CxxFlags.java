@@ -69,7 +69,7 @@ public class CxxFlags {
       PatternMatchedCollection<ImmutableList<String>> platformFlags,
       CxxPlatform platform) {
     return RichStream.from(getFlags(flags, platformFlags, platform))
-        .map(getTranslateMacrosFn(platform)::apply)
+        .map(getTranslateMacrosFn(platform))
         .toImmutableList();
   }
 
@@ -79,7 +79,7 @@ public class CxxFlags {
       CxxPlatform platform) {
     RuleKeyAppendableFunction<String, String> translateMacrosFn = getTranslateMacrosFn(platform);
     return RichStream.from(getFlags(flags, platformFlags, platform))
-        .map(s -> s.mapStrings(translateMacrosFn::apply))
+        .map(s -> s.mapStrings(translateMacrosFn))
         .toImmutableList();
   }
 
@@ -146,7 +146,7 @@ public class CxxFlags {
       RuleKeyAppendableFunction<String, String> translateMacrosFn = getTranslateMacrosFn(platform);
       langFlags.putAll(
           entry.getKey(),
-          entry.getValue().stream().map(s -> s.mapStrings(translateMacrosFn::apply))::iterator);
+          entry.getValue().stream().map(s -> s.mapStrings(translateMacrosFn))::iterator);
     }
 
     return langFlags.build();

@@ -195,14 +195,13 @@ public class FilterResourcesSteps {
       Preconditions.checkNotNull(targetDensities);
       Set<Path> rootResourceDirs = inResDirToOutResDirMap.keySet();
 
-      pathPredicates.add(ResourceFilters.createDensityFilter(filesystem, targetDensities)::test);
+      pathPredicates.add(ResourceFilters.createDensityFilter(filesystem, targetDensities));
 
       Preconditions.checkNotNull(drawableFinder);
       Set<Path> drawables = drawableFinder.findDrawables(rootResourceDirs, filesystem);
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(
-                  drawables, targetDensities, /* canDownscale */ canDownscale(context))
-              ::test);
+              drawables, targetDensities, /* canDownscale */ canDownscale(context)));
     }
 
     final boolean localeFilterEnabled = !locales.isEmpty();

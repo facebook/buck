@@ -62,7 +62,7 @@ public abstract class DebugPathSanitizer {
 
   public ImmutableList<String> sanitizeFlags(Iterable<String> flags) {
     return StreamSupport.stream(flags.spliterator(), false)
-        .map(sanitize(Optional.empty())::apply)
+        .map(sanitize(Optional.empty()))
         .collect(MoreCollectors.toImmutableList());
   }
 
