@@ -67,13 +67,13 @@ public class Glob {
     doc = "Returns a list of files that match glob search pattern.",
     parameters = {
       @Param(
-        name = "includes",
+        name = "include",
         type = SkylarkList.class,
         generic1 = String.class,
         doc = "a list of strings specifying patterns of files to include."
       ),
       @Param(
-        name = "excludes",
+        name = "exclude",
         type = SkylarkList.class,
         generic1 = String.class,
         defaultValue = "[]",
@@ -98,8 +98,8 @@ public class Glob {
       new BuiltinFunction(GLOB_FUNCTION_NAME) {
         @SuppressWarnings("unused")
         public SkylarkList<String> invoke(
-            SkylarkList<String> includes,
-            SkylarkList<String> excludes,
+            SkylarkList<String> include,
+            SkylarkList<String> exclude,
             Boolean excludeDirectories,
             FuncallExpression ast,
             Environment env)
@@ -109,13 +109,13 @@ public class Glob {
             return SkylarkList.MutableList.copyOf(
                 env,
                 GlobList.captureResults(
-                    includes,
-                    excludes,
+                    include,
+                    exclude,
                     packageContext
                         .getGlobber()
                         .run(
-                            Type.STRING_LIST.convert(includes, "'glob' includes"),
-                            Type.STRING_LIST.convert(excludes, "'glob' excludes"),
+                            Type.STRING_LIST.convert(include, "'glob' include"),
+                            Type.STRING_LIST.convert(exclude, "'glob' exclude"),
                             excludeDirectories)
                         .stream()
                         .sorted()

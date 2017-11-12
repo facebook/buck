@@ -40,7 +40,7 @@ java_immutables_library(
     name = "versions",
     srcs = glob(
         ["*.java"],
-        excludes = TYPES_SRCS + TRANSLATOR_SRCS,
+        exclude = TYPES_SRCS + TRANSLATOR_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/versions:versions",

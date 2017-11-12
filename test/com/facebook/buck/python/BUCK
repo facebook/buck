@@ -4,7 +4,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = [
+        exclude = [
             "*Test.java",
             "*Builder.java",
         ],
@@ -370,7 +370,7 @@ java_test(
     name = "python",
     srcs = glob(
         ["*Test.java"],
-        excludes = ["PythonBinaryIntegrationTest.java"],
+        exclude = ["PythonBinaryIntegrationTest.java"],
     ),
     labels = ["long_running"],
     deps = [

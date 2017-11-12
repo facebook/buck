@@ -1,6 +1,6 @@
 PYTHON_PROD_SRCS = glob(
     ["buck_parser/**/*.py"],
-    excludes = ["buck_parser/**/*_test.py"],
+    exclude = ["buck_parser/**/*_test.py"],
 )
 
 java_library(

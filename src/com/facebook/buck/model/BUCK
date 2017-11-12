@@ -31,7 +31,7 @@ java_immutables_library(
     name = "model",
     srcs = glob(
         ["*.java"],
-        excludes = BUILD_ID_SRCS + SIMPLE_TYPES_SRCS,
+        exclude = BUILD_ID_SRCS + SIMPLE_TYPES_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/model:model",

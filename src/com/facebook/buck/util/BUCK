@@ -130,9 +130,9 @@ java_library(
 java_immutables_library(
     name = "util",
     srcs = glob(
-        excludes = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
-                   PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
-        includes = ["*.java"],
+        include = ["*.java"],
+        exclude = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
+                  PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
     ),
     exported_deps = [
         "//third-party/java/guava:guava",

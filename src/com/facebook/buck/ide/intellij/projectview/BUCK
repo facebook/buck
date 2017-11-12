@@ -4,7 +4,7 @@ java_immutables_library(
     name = "projectview",
     srcs = glob(
         ["*.java"],
-        excludes = ["shared/*.*"],
+        exclude = ["shared/*.*"],
     ),
     visibility = [
         "//src/com/facebook/buck/ide/intellij:intellij",

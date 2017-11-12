@@ -37,7 +37,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = STANDARD_TEST_SRCS + UTILS_SRCS,
+        exclude = STANDARD_TEST_SRCS + UTILS_SRCS,
     ),
     visibility = [
         "PUBLIC",

@@ -8,7 +8,7 @@ java_test(
     name = "httpserver",
     srcs = glob(
         ["*.java"],
-        excludes = CACHE_INTEGRATION_SRCS,
+        exclude = CACHE_INTEGRATION_SRCS,
     ),
     resources = glob(["*.stg"]),
     deps = [

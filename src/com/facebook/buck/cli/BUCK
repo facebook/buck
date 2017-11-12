@@ -6,7 +6,7 @@ java_immutables_library(
     name = "cli",
     srcs = glob(
         ["*.java"],
-        excludes = CLI_EXCLUDES,
+        exclude = CLI_EXCLUDES,
     ),
     exported_deps = [
         "//third-party/java/pf4j:pf4j",

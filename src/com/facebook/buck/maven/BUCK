@@ -7,7 +7,7 @@ java_library(
     name = "maven",
     srcs = glob(
         ["*.java"],
-        excludes = UTIL_SRCS,
+        exclude = UTIL_SRCS,
     ),
     resources = [
         "build-file.st",

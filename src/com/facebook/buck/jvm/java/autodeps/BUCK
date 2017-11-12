@@ -20,7 +20,7 @@ java_library(
     name = "autodeps",
     srcs = glob(
         ["*.java"],
-        excludes = SYMBOL_EXTRACTOR_SRCS,
+        exclude = SYMBOL_EXTRACTOR_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/jvm/java/autodeps:autodeps",

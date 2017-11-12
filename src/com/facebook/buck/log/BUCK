@@ -31,7 +31,7 @@ java_immutables_library(
     name = "log",
     srcs = glob(
         ["*.java"],
-        excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES,
+        exclude = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES,
     ),
     tests = [
         "//test/com/facebook/buck/log:log",

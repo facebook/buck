@@ -87,7 +87,7 @@ java_immutables_library(
     name = "impl",
     srcs = glob(
         ["*.java"],
-        excludes = PUBLIC_API_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE,
+        exclude = PUBLIC_API_SOURCES + PROTOCOL_SOURCES + GENERATOR_SOURCE,
     ),
     tests = [
         "//test/com/facebook/buck/artifact_cache:artifact_cache",

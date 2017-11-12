@@ -30,7 +30,7 @@ java_library(
     name = "httpserver",
     srcs = glob(
         ["*.java"],
-        excludes = CACHE_HANDLER_SRCS + UTIL_SRCS,
+        exclude = CACHE_HANDLER_SRCS + UTIL_SRCS,
     ),
     resources = glob([
         "*.stg",

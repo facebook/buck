@@ -19,7 +19,7 @@ java_library(
     name = "query",
     srcs = glob(
         ["*.java"],
-        excludes = TYPES_SRCS,
+        exclude = TYPES_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/rules/query:query",

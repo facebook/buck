@@ -396,8 +396,8 @@ java_immutables_library(
     name = "steps",
     srcs = glob(
         ["*.java"],
-        excludes = CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
-                   SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS,
+        exclude = CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
+                  SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/android:integration1",

@@ -24,7 +24,7 @@ java_library(
     name = "modern",
     srcs = glob(
         ["**/*.java"],
-        excludes = TYPES,
+        exclude = TYPES,
     ),
     exported_deps = [
         ":types",

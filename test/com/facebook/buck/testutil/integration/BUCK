@@ -148,7 +148,7 @@ java_library(
     name = "util",
     srcs = glob(
         ["*.java"],
-        excludes = TEST_SRCS,
+        exclude = TEST_SRCS,
     ),
     visibility = [
         "//test/...",

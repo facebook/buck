@@ -51,7 +51,7 @@ java_library(
         [
             "src/**/*.java",
         ],
-        excludes = [
+        exclude = [
             "src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java",
             "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
             "src/com/facebook/buck/intellij/ideabuck/lang/psi/*.java",
@@ -110,7 +110,7 @@ java_library(
     name = "tests-lib",
     srcs = glob(
         ["tests/unit/**/*.java"],
-        excludes = TEST_SRC,
+        exclude = TEST_SRC,
     ),
     target = "1.8",
     visibility = ["//tools/ideabuck/tests/..."],

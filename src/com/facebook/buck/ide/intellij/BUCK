@@ -4,7 +4,7 @@ java_immutables_library(
     name = "intellij",
     srcs = glob(
         ["**/*.java"],
-        excludes = [
+        exclude = [
             "projectview/**",
         ],
     ),

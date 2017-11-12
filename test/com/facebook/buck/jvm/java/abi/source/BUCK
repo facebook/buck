@@ -32,7 +32,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = ["*Test.java"],
+        exclude = ["*Test.java"],
     ),
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;

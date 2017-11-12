@@ -21,7 +21,7 @@ java_immutables_library(
     name = "environment",
     srcs = glob(
         ["*.java"],
-        excludes = PLATFORM_SRCS,
+        exclude = PLATFORM_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/util/environment:environment",

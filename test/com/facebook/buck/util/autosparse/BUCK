@@ -4,7 +4,7 @@ java_immutables_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = ["*Test.java"],
+        exclude = ["*Test.java"],
     ),
     visibility = [
         "//test/...",

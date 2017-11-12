@@ -19,7 +19,7 @@ java_immutables_library(
     name = "autosparse",
     srcs = glob(
         ["*.java"],
-        excludes = CONFIG_SRCS,
+        exclude = CONFIG_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/util/autosparse:autosparse",

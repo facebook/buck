@@ -2,7 +2,7 @@ java_library(
     name = "abi",
     srcs = glob(
         ["*.java"],
-        excludes = [
+        exclude = [
             "ApiStubber.java",
             "AbiGenerationMode.java",
         ],

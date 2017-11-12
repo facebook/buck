@@ -48,7 +48,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = STANDARD_INTEGRATION_TEST_SRCS + STANDARD_TEST_SRCS + UTILS_SRCS,
+        exclude = STANDARD_INTEGRATION_TEST_SRCS + STANDARD_TEST_SRCS + UTILS_SRCS,
     ),
     exported_deps = [
         "//src/com/facebook/buck/toolchain:toolchain",
@@ -382,8 +382,8 @@ java_test(
     name = "unit",
     srcs = glob(
         STANDARD_TEST_SRCS,
-        excludes = STANDARD_INTEGRATION_TEST_SRCS +
-                   STEP_TEST_SRCS,
+        exclude = STANDARD_INTEGRATION_TEST_SRCS +
+                  STEP_TEST_SRCS,
     ),
     deps = [
         "//src-gen:thrift",
@@ -757,7 +757,7 @@ java_test(
     name = "binary-integration-2",
     srcs = glob(
         ANDROID_BINARY_INTEGRATION_TEST_SRCS,
-        excludes = [
+        exclude = [
             "AndroidBinaryIntegrationTest.java",
         ],
     ),
@@ -1112,22 +1112,22 @@ ANDROID_INTEGRATION_TEST_SRCS = [
 
 INTEGRATION_TEST1_SRCS = glob(
     STANDARD_INTEGRATION_TEST_SRCS,
-    excludes = ANDROID_INTEGRATION_TEST_SRCS,
+    exclude = ANDROID_INTEGRATION_TEST_SRCS,
 )
 
 INTEGRATION_TEST2_SRCS = glob(
     STANDARD_INTEGRATION_TEST_SRCS,
-    excludes = INTEGRATION_TEST1_SRCS,
+    exclude = INTEGRATION_TEST1_SRCS,
 )
 
 java_test(
     name = "integration1",
     srcs = glob(
         INTEGRATION_TEST1_SRCS,
-        excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS +
-                   ANDROID_BINARY_INTEGRATION_TEST_SRCS +
-                   ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
-                   ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
+        exclude = ANDROID_AAR_INTEGRATION_TEST_SRCS +
+                  ANDROID_BINARY_INTEGRATION_TEST_SRCS +
+                  ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
+                  ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
     ),
     fork_mode = "PER_TEST",
     labels = ["long_running"],
@@ -1302,10 +1302,10 @@ java_test(
     name = "integration2",
     srcs = glob(
         INTEGRATION_TEST2_SRCS,
-        excludes = ANDROID_AAR_INTEGRATION_TEST_SRCS +
-                   ANDROID_BINARY_INTEGRATION_TEST_SRCS +
-                   ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
-                   ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
+        exclude = ANDROID_AAR_INTEGRATION_TEST_SRCS +
+                  ANDROID_BINARY_INTEGRATION_TEST_SRCS +
+                  ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
+                  ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
     ),
     fork_mode = "PER_TEST",
     labels = ["long_running"],

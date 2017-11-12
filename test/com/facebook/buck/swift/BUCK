@@ -14,7 +14,7 @@ java_test(
     name = "unit",
     srcs = glob(
         STANDARD_TEST_SRCS,
-        excludes = STANDARD_INTEGRATION_TEST_SRCS,
+        exclude = STANDARD_INTEGRATION_TEST_SRCS,
     ),
     deps = [
         "//src-gen:thrift",

@@ -28,7 +28,7 @@ java_immutables_library(
     name = "distributed",
     srcs = glob(
         ["*.java"],
-        excludes = COMMON_FILES,
+        exclude = COMMON_FILES,
     ),
     tests = [
         "//test/com/facebook/buck/distributed:distributed",

@@ -39,7 +39,7 @@ java_immutables_library(
     name = "listener",
     srcs = glob(
         ["*.java"],
-        excludes = CACHE_RATE_STATS_SRCS + BROADCAST_EVENT_LISTENER_SCRS,
+        exclude = CACHE_RATE_STATS_SRCS + BROADCAST_EVENT_LISTENER_SCRS,
     ),
     tests = [
         "//test/com/facebook/buck/event/listener:listener",

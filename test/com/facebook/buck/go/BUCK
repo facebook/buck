@@ -147,7 +147,7 @@ java_test(
     name = "unit",
     srcs = glob(
         ["*Test.java"],
-        excludes = ["*IntegrationTest.java"],
+        exclude = ["*IntegrationTest.java"],
     ),
     deps = [
         "//src/com/facebook/buck/android:utils",

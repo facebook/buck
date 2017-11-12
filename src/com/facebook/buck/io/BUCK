@@ -76,7 +76,7 @@ java_immutables_library(
     name = "io",
     srcs = glob(
         ["*.java"],
-        excludes = (
+        exclude = (
             FINDER_SRCS +
             WATCHMAN_SRCS +
             TRANSPORT_SRCS

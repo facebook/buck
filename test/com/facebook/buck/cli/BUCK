@@ -8,7 +8,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = STANDARD_TEST_SRCS,
+        exclude = STANDARD_TEST_SRCS,
     ),
     visibility = [
         "//test/...",
@@ -330,7 +330,7 @@ java_test(
     name = "cli",
     srcs = glob(
         STANDARD_TEST_SRCS,
-        excludes = APPLE_INTEGRATION_TEST_SRCS,
+        exclude = APPLE_INTEGRATION_TEST_SRCS,
     ),
     has_immutable_types = True,
     labels = ["long_running"],

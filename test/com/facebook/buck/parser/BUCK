@@ -168,7 +168,7 @@ java_test(
     name = "unit",
     srcs = glob(
         ["*Test.java"],
-        excludes = PARSER_TEST_SRCS + ["*IntegrationTest.java"],
+        exclude = PARSER_TEST_SRCS + ["*IntegrationTest.java"],
     ),
     deps = [
         "//src-gen:thrift",

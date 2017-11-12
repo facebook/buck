@@ -42,7 +42,7 @@ java_immutables_library(
     name = "json",
     srcs = glob(
         ["*.java"],
-        excludes = RULES_SRCS + STEPS_SRCS,
+        exclude = RULES_SRCS + STEPS_SRCS,
     ),
     # Place the python package in the JAR root so the jar can be imported by
     # python's built in zip importer.

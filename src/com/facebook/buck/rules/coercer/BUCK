@@ -34,7 +34,7 @@ java_immutables_library(
     name = "coercer",
     srcs = glob(
         ["*.java"],
-        excludes = INTERFACE_SRCS,
+        exclude = INTERFACE_SRCS,
     ),
     visibility = ["PUBLIC"],
     deps = [

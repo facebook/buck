@@ -22,7 +22,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = TEST_FILES_GLOB,
+        exclude = TEST_FILES_GLOB,
     ),
     deps = [
         "//third-party/java/guava:guava",

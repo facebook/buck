@@ -62,7 +62,7 @@ java_immutables_library(
     name = "rules",
     srcs = glob(
         ["*.java"],
-        excludes = CONFIG_SRCS + SUPPORT_SRCS,
+        exclude = CONFIG_SRCS + SUPPORT_SRCS,
     ),
     resources = [
         "run_inplace.py.in",

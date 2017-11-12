@@ -61,7 +61,7 @@ public class GlobTest {
   }
 
   @Test
-  public void testGlobFindsIncludes() throws IOException, InterruptedException {
+  public void testGlobFindsIncludedFiles() throws IOException, InterruptedException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
@@ -73,12 +73,24 @@ public class GlobTest {
   }
 
   @Test
+  public void testGlobFindsIncludedFilesUsingKeyword() throws IOException, InterruptedException {
+    FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(include=['*.txt'])");
+    assertThat(
+        assertEvaluate(buildFile).lookup("txts"),
+        equalTo(SkylarkList.createImmutable(ImmutableList.of("bar.txt", "foo.txt"))));
+  }
+
+  @Test
   public void testGlobExcludedElementsAreNotReturned() throws IOException, InterruptedException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
     Path buildFile = root.getChild("BUCK");
-    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'], excludes=['bar.txt'])");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'], exclude=['bar.txt'])");
     assertThat(
         assertEvaluate(buildFile).lookup("txts"),
         equalTo(SkylarkList.createImmutable(ImmutableList.of("foo.txt"))));

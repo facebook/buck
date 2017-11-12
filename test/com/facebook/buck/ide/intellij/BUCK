@@ -6,7 +6,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = TEST_SRCS,
+        exclude = TEST_SRCS,
     ),
     visibility = [
         "//test/com/facebook/buck/ide/intellij/...",

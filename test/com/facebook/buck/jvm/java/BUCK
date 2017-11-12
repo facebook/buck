@@ -424,7 +424,7 @@ java_test(
     name = "java",
     srcs = glob(
         ["*Test.java"],
-        excludes = SLOW_INTEGRATION_TESTS,
+        exclude = SLOW_INTEGRATION_TESTS,
     ),
     has_immutable_types = True,
     labels = ["long_running"],

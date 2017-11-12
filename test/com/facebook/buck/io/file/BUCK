@@ -20,7 +20,7 @@ java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = [
+        exclude = [
             "*Test.java",
         ],
     ),
