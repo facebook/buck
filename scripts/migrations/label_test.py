@@ -41,7 +41,8 @@ class LabelTest(unittest.TestCase):
         self.assertEqual(l.cell, 'cell')
 
     def test_cannot_parse_invalid_label(self):
-        with self.assertRaisesRegex(AssertionError, "Invalid label 'cell/pkg:name'"):
+        with self.assertRaisesRegex(AssertionError,
+                                    "Invalid label 'cell/pkg:name'"):
             label.from_string('cell/pkg:name')
 
     def test_can_resolve_path_to_build_file(self):
@@ -49,13 +50,18 @@ class LabelTest(unittest.TestCase):
         cell_roots = {
             'cell': '/repo/cell',
         }
-        self.assertEqual('/repo/cell/pkg/BUCK', l.get_build_file_path(cell_roots, 'BUCK'))
+        self.assertEqual('/repo/cell/pkg/BUCK',
+                         l.get_build_file_path(cell_roots, 'BUCK'))
 
     def test_can_convert_to_import_string(self):
-        self.assertEqual('cell//pkg:name', label.from_string('cell//pkg:name').to_import_string())
+        self.assertEqual(
+            'cell//pkg:name',
+            label.from_string('cell//pkg:name').to_import_string())
 
     def test_can_convert_to_import_string_without_cell(self):
-        self.assertEqual('//pkg:name', label.from_string('//pkg:name').to_import_string())
+        self.assertEqual('//pkg:name',
+                         label.from_string('//pkg:name').to_import_string())
 
     def test_can_convert_to_import_string_without_name(self):
-        self.assertEqual('cell//pkg', label.from_string('cell//pkg').to_import_string())
+        self.assertEqual('cell//pkg',
+                         label.from_string('cell//pkg').to_import_string())
