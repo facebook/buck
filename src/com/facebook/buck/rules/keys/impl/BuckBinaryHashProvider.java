@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys.impl;
 import com.google.common.base.Preconditions;
 
 /** Provides the Buck binary hash key. */
-final class BuckBinaryHashProvider {
+public final class BuckBinaryHashProvider {
   private BuckBinaryHashProvider() {}
 
   private static String buckBinaryHash;
