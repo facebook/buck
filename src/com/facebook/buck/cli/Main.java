@@ -75,7 +75,6 @@ import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
@@ -96,6 +95,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
@@ -610,18 +610,21 @@ public final class Main {
       }
     }
 
+    RuleKeyConfiguration ruleKeyConfiguration =
+        ConfigRuleKeyConfigurationFactory.create(buckConfig);
+
     try (Closer closeables = Closer.create()) {
       if (commandSemaphoreAcquired) {
         commandSemaphoreNgClient = context;
       }
 
       if (!command.isReadOnly()) {
-        Optional<String> currentVersion =
+        Optional<String> currentBuckCoreKey =
             filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
         BuckPaths unconfiguredPaths =
             filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
-        if (!currentVersion.isPresent()
-            || !currentVersion.get().equals(BuckVersion.getVersion())
+        if (!currentBuckCoreKey.isPresent()
+            || !currentBuckCoreKey.get().equals(ruleKeyConfiguration.getCoreKey())
             || (filesystem.exists(unconfiguredPaths.getGenDir(), LinkOption.NOFOLLOW_LINKS)
                 && (filesystem.isSymLink(unconfiguredPaths.getGenDir())
                     ^ buckConfig.getBuckOutCompatLink()))) {
@@ -638,7 +641,7 @@ public final class Main {
           shouldCleanUpTrash = true;
           filesystem.mkdirs(filesystem.getBuckPaths().getCurrentVersionFile().getParent());
           filesystem.writeContentsToPath(
-              BuckVersion.getVersion(), filesystem.getBuckPaths().getCurrentVersionFile());
+              ruleKeyConfiguration.getCoreKey(), filesystem.getBuckPaths().getCurrentVersionFile());
         }
       }
 
@@ -1131,8 +1134,7 @@ public final class Main {
                         .setBuildInfoStoreManager(storeManager)
                         .setProjectFilesystemFactory(projectFilesystemFactory)
                         .setToolchainProvider(toolchainProvider)
-                        .setRuleKeyConfiguration(
-                            ConfigRuleKeyConfigurationFactory.create(buckConfig))
+                        .setRuleKeyConfiguration(ruleKeyConfiguration)
                         .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
