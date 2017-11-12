@@ -22,7 +22,6 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -39,6 +38,7 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
@@ -65,36 +65,47 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
   private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   private DefaultParserTargetNodeFactory(
       ConstructorArgMarshaller marshaller,
       Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
-      TargetNodeFactory targetNodeFactory) {
+      TargetNodeFactory targetNodeFactory,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     this.marshaller = marshaller;
     this.buildFileTrees = buildFileTrees;
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
   }
 
   public static ParserTargetNodeFactory<TargetNode<?, ?>> createForParser(
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
-      TargetNodeFactory targetNodeFactory) {
+      TargetNodeFactory targetNodeFactory,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
-        marshaller, Optional.of(buildFileTrees), nodeListener, targetNodeFactory);
+        marshaller,
+        Optional.of(buildFileTrees),
+        nodeListener,
+        targetNodeFactory,
+        ruleKeyConfiguration);
   }
 
   public static ParserTargetNodeFactory<TargetNode<?, ?>> createForDistributedBuild(
-      ConstructorArgMarshaller marshaller, TargetNodeFactory targetNodeFactory) {
+      ConstructorArgMarshaller marshaller,
+      TargetNodeFactory targetNodeFactory,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
         Optional.empty(),
         (buildFile, node) -> {
           // No-op.
         },
-        targetNodeFactory);
+        targetNodeFactory,
+        ruleKeyConfiguration);
   }
 
   @Override
@@ -178,7 +189,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
         Hasher hasher = Hashing.sha1().newHasher();
-        hasher.putString(BuckVersion.getVersion(), UTF_8);
+        hasher.putString(ruleKeyConfiguration.getCoreKey(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
         TargetNode<?, ?> node =
             targetNodeFactory.createFromObject(

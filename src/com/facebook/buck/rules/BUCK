@@ -145,6 +145,7 @@ java_immutables_library(
         "//src/com/facebook/buck/python:rules",
         "//src/com/facebook/buck/python:support",
         "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/rules/keys/impl:impl",
         "//src/com/facebook/buck/rust:rust",
         "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/shell:rules",

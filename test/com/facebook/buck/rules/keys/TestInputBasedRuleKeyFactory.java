@@ -36,7 +36,7 @@ public class TestInputBasedRuleKeyFactory extends InputBasedRuleKeyFactory {
   public TestInputBasedRuleKeyFactory(
       FileHashLoader hashLoader, SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
     super(
-        new RuleKeyFieldLoader(RuleKeyConfiguration.of(0)),
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
         hashLoader,
         pathResolver,
         ruleFinder,

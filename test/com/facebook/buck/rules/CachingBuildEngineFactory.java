@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
@@ -140,7 +140,7 @@ public class CachingBuildEngineFactory {
         resourceAwareSchedulingInfo,
         logBuildRuleFailuresInline,
         RuleKeyFactories.of(
-            RuleKeyConfiguration.of(0),
+            TestRuleKeyConfigurationFactory.create(),
             cachingBuildEngineDelegate.getFileHashCache(),
             buildRuleResolver,
             inputFileSizeLimit,

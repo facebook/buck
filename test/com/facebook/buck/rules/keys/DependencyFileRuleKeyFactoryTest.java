@@ -555,7 +555,8 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
       String failureMessage)
       throws Exception {
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeDepFileBuildRule rule1 = new FakeDepFileBuildRuleWithField(fieldValueBefore);
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
@@ -847,7 +848,8 @@ public class DependencyFileRuleKeyFactoryTest {
       ImmutableSet<SourcePath> expectedDepFileInputsAfter,
       String failureMessage)
       throws Exception {
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeDepFileBuildRule rule1 = new FakeDepFileBuildRuleWithField(fieldValueBefore);
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
@@ -876,7 +878,8 @@ public class DependencyFileRuleKeyFactoryTest {
   @Test
   public void testKeysGetHashed() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(RuleKeyConfiguration.of(0));
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     BuildRuleResolver ruleResolver = newRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);

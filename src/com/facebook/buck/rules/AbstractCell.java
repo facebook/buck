@@ -32,6 +32,7 @@ import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -79,6 +80,9 @@ abstract class AbstractCell {
   public Path getRoot() {
     return getFilesystem().getRootPath();
   }
+
+  @Value.Auxiliary
+  abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
   public boolean isCompatibleForCaching(Cell other) {
     return getFilesystem().equals(other.getFilesystem())

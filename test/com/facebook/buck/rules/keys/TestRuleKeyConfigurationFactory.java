@@ -16,18 +16,18 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.model.BuckVersion;
 
-/** Provides rule key configuration options. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRuleKeyConfiguration {
+public class TestRuleKeyConfigurationFactory {
 
-  /** The seed of all rule keys. */
-  @Value.Parameter
-  public abstract int getSeed();
+  public static RuleKeyConfiguration create() {
+    return RuleKeyConfiguration.builder().setSeed(0).setCoreKey(BuckVersion.getVersion()).build();
+  }
 
-  @Value.Parameter
-  public abstract String getCoreKey();
+  public static RuleKeyConfiguration createWithSeed(int seed) {
+    return RuleKeyConfiguration.builder()
+        .setSeed(seed)
+        .setCoreKey(BuckVersion.getVersion())
+        .build();
+  }
 }
