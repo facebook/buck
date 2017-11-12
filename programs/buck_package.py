@@ -135,8 +135,6 @@ class BuckPackage(BuckTool):
 
     def _get_extra_java_args(self):
         return [
-            "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
-            "-Dbuck.git_commit_timestamp={0}".format(self._get_buck_version_timestamp()),
             "-Dbuck.git_dirty=0",
             "-Dbuck.path_to_python_dsl="
         ]
