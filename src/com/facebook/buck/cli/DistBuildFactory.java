@@ -34,6 +34,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.rules.keys.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
@@ -125,9 +126,8 @@ public abstract class DistBuildFactory {
                 .setParser(params.getParser())
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
-                // TODO(alisdair,shivanker): Change this to
-                // state.getRootCell().getBuckConfig().getKeySeed()
-                .setCacheKeySeed(params.getBuckConfig().getKeySeed())
+                .setRuleKeyConfiguration(
+                    ConfigRuleKeyConfigurationFactory.create(state.getRootCell().getBuckConfig()))
                 .setConsole(params.getConsole())
                 .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)

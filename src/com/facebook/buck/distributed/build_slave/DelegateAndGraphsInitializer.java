@@ -148,7 +148,7 @@ public class DelegateAndGraphsInitializer {
                   /* checkActionGraphs */ false,
                   /* skipActionGraphCache */ false,
                   Preconditions.checkNotNull(targetGraph),
-                  args.getCacheKeySeed(),
+                  args.getRuleKeyConfiguration(),
                   ActionGraphParallelizationMode.DISABLED,
                   Optional.empty());
       return actionGraphAndResolver;

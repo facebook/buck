@@ -49,6 +49,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -242,7 +243,7 @@ public class DistBuildFileHashesIntegrationTest {
             true,
             false,
             targetGraph,
-            KEY_SEED,
+            RuleKeyConfiguration.of(KEY_SEED),
             ActionGraphParallelizationMode.DISABLED,
             Optional.empty());
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
@@ -272,7 +273,7 @@ public class DistBuildFileHashesIntegrationTest {
         stackedCache,
         cellIndexer,
         MoreExecutors.newDirectExecutorService(),
-        /* keySeed */ KEY_SEED,
+        RuleKeyConfiguration.of(KEY_SEED),
         rootCell);
   }
 }

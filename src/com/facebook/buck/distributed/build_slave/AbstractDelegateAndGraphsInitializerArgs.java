@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -47,7 +48,7 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
 
   public abstract BuckEventBus getBuckEventBus();
 
-  public abstract int getCacheKeySeed();
+  public abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 

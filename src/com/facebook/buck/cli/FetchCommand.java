@@ -38,7 +38,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.MoreExceptions;
@@ -129,7 +128,7 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                   cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
                   RuleKeyFactories.of(
-                      RuleKeyConfiguration.of(params.getBuckConfig().getKeySeed()),
+                      params.getRuleKeyConfiguration(),
                       localCachingBuildEngineDelegate.getFileHashCache(),
                       actionGraphAndResolver.getResolver(),
                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
