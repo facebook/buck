@@ -108,6 +108,8 @@ class BuckRepo(BuckTool):
                 classpath_entries.append(line)
         return self._pathsep.join([self._join_buck_dir(p) for p in classpath_entries])
 
+    def _get_buck_binary_hash(self):
+        return self.__read_file(BUCK_BINARY_HASH_LOCATION)
 
     def __enter__(self):
         return self

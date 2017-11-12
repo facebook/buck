@@ -26,6 +26,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,6 +45,7 @@ public class PythonBinaryBuilder
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonBinaryDescription(
+            TestRuleKeyConfigurationFactory.create(),
             pythonBuckConfig,
             pythonPlatforms,
             CxxPlatformUtils.DEFAULT_CONFIG,

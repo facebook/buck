@@ -27,6 +27,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +48,7 @@ public class PythonTestBuilder
     super(
         new PythonTestDescription(
             new PythonBinaryDescription(
+                TestRuleKeyConfigurationFactory.create(),
                 pythonBuckConfig,
                 pythonPlatforms,
                 CxxPlatformUtils.DEFAULT_CONFIG,

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -234,7 +235,7 @@ public class PythonBuckConfigTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     assertThat(
         config
-            .getPexTool(resolver)
+            .getPexTool(resolver, TestRuleKeyConfigurationFactory.create())
             .getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))),
         hasConsecutiveItems("--hello", "--world"));
   }

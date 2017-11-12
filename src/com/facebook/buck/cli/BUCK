@@ -346,9 +346,6 @@ java_binary(
 
 genrule(
     name = "main-fixed",
-    srcs = [
-        ":main",
-    ],
     out = "main-fixed.jar",
     cmd = " ".join([
         "$(exe //py/buck/zip:munger)",

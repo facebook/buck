@@ -556,6 +556,19 @@ public class BuckConfig implements ConfigPathGetter {
     return config.get("cache", "repository");
   }
 
+  /**
+   * Whether Buck should use Buck binary hash or git commit id as the core key in all rule keys.
+   *
+   * <p>The binary hash reflects the code that can affect the content of artifacts.
+   *
+   * <p>By default git commit id is used as the core key.
+   *
+   * @return <code>True</code> if binary hash should be used as the core key
+   */
+  public boolean useBuckBinaryHash() {
+    return getBooleanValue("cache", "use_buck_binary_hash", false);
+  }
+
   public Optional<ImmutableSet<PatternAndMessage>> getUnexpectedFlavorsMessages() {
     ImmutableMap<String, String> entries = config.get("unknown_flavors_messages");
     if (!entries.isEmpty()) {

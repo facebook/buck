@@ -24,9 +24,20 @@ import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 public class ConfigRuleKeyConfigurationFactory {
 
   public static RuleKeyConfiguration create(BuckConfig buckConfig) {
+
     return RuleKeyConfiguration.builder()
         .setSeed(buckConfig.getKeySeed())
-        .setCoreKey(BuckVersion.getVersion())
+        .setCoreKey(getCoreKey(buckConfig))
         .build();
+  }
+
+  private static String getCoreKey(BuckConfig buckConfig) {
+    String coreKey;
+    if (buckConfig.useBuckBinaryHash()) {
+      coreKey = BuckBinaryHashProvider.getBuckBinaryHash();
+    } else {
+      coreKey = BuckVersion.getVersion();
+    }
+    return coreKey;
   }
 }

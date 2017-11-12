@@ -59,6 +59,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.Genrule;
@@ -393,7 +394,8 @@ public class PythonBinaryDescriptionTest {
           }
 
           @Override
-          public Tool getPexTool(BuildRuleResolver resolver) {
+          public Tool getPexTool(
+              BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
             return new CommandTool.Builder()
                 .addArg(SourcePathArg.of(pexTool.getSourcePathToOutput()))
                 .build();

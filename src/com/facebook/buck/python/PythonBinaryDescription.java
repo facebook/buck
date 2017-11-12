@@ -43,6 +43,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
@@ -75,13 +76,16 @@ public class PythonBinaryDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   public PythonBinaryDescription(
+      RuleKeyConfiguration ruleKeyConfiguration,
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.pythonBuckConfig = pythonBuckConfig;
     this.pythonPlatforms = pythonPlatforms;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -227,7 +231,7 @@ public class PythonBinaryDescription
             params,
             ruleFinder,
             pythonPlatform,
-            pythonBuckConfig.getPexTool(resolver),
+            pythonBuckConfig.getPexTool(resolver, ruleKeyConfiguration),
             buildArgs,
             pythonBuckConfig.getPexExecutor(resolver).orElse(pythonPlatform.getEnvironment()),
             extension.orElse(pythonBuckConfig.getPexExtension()),

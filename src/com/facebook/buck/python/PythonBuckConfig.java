@@ -20,7 +20,6 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -30,6 +29,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
@@ -181,8 +181,9 @@ public class PythonBuckConfig {
     return delegate.getMaybeBuildTarget(SECTION, "path_to_pex");
   }
 
-  public Tool getPexTool(BuildRuleResolver resolver) {
-    CommandTool.Builder builder = new CommandTool.Builder(getRawPexTool(resolver));
+  public Tool getPexTool(BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
+    CommandTool.Builder builder =
+        new CommandTool.Builder(getRawPexTool(resolver, ruleKeyConfiguration));
     for (String flag :
         Splitter.on(' ')
             .omitEmptyStrings()
@@ -193,7 +194,8 @@ public class PythonBuckConfig {
     return builder.build();
   }
 
-  private Tool getRawPexTool(BuildRuleResolver resolver) {
+  private Tool getRawPexTool(
+      BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
     Optional<Tool> executable =
         delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
     if (executable.isPresent()) {
@@ -201,7 +203,7 @@ public class PythonBuckConfig {
     }
     return VersionedTool.builder()
         .setName("pex")
-        .setVersion(BuckVersion.getVersion())
+        .setVersion(ruleKeyConfiguration.getCoreKey())
         .setPath(getPythonInterpreter(SECTION))
         .addExtraArgs(DEFAULT_PATH_TO_PEX.toString())
         .build();

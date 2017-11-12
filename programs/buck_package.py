@@ -15,6 +15,7 @@ from buck_tool import BuckTool, Resource
 
 SERVER = Resource("buck_server")
 BOOTSTRAPPER = Resource("bootstrapper_jar")
+BUCK_BINARY_HASH = Resource("buck_binary_hash")
 
 PEX_ONLY_EXPORTED_RESOURCES = [
     Resource("external_executor_jar"),
@@ -148,6 +149,10 @@ class BuckPackage(BuckTool):
 
     def _get_java_classpath(self):
         return self._get_resource(SERVER)
+
+    def _get_buck_binary_hash(self):
+        with open(self._get_resource(BUCK_BINARY_HASH), 'r') as buck_binary_hash_file:
+            return buck_binary_hash_file.read().strip()
 
     def __enter__(self):
         return self

@@ -50,29 +50,55 @@ genrule(
     cmd_exe = "echo {0}> %OUT%".format(build_type),
 )
 
-BUCK_CORE_RESOURCES = {
+# These resources cannot affect the content of build artifacts.
+RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS = {
     "android_agent_path": "//assets/android:agent.apk",
-    "fix_script": "//programs/fixes/source_only_abi:fix",
-    "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
-    "buck_package_info": ":gen_buck_package_info",
-    "buck_server": "//src/com/facebook/buck/cli:main-fixed",
     "buck_build_type_info": ":gen_build_type_info",
-    "dx": "//third-party/java/dx:etc_dx",
+    "buck_package_info": ":gen_buck_package_info",
+    "external_executor_jar": "//src/com/facebook/buck/step/external:executor",
+    "fix_script": "//programs/fixes/source_only_abi:fix",
     "jacoco_agent_jar": "//third-party/java/jacoco:agent",
     # The name of this resource is important, since it needs to have this filename in the PEX.
     "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",
     "logging_config_file": "//config:logging.properties",
+    "report_generator_jar": "//src/com/facebook/buck/jvm/java/coverage:report-generator",
+    "testrunner_classes": "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
+}
+
+# These resources contain code that can affect the content of build artifacts.
+# This list needs to be updated whenever there are new libraries that can affect build artifacts.
+# Failing to do so can result in build artifacts that do not reflect changes in new libraries.
+# This logic is used only when Buck is runnig with the config option `cache.use_buck_binary_hash`
+# set to True.
+RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
+    "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
+    "buck_server": "//src/com/facebook/buck/cli:main-fixed",
+    "dx": "//third-party/java/dx:etc_dx",
+    "external_executor_jar": "//src/com/facebook/buck/step/external:executor",
     "native_exopackage_fake_path": "//assets/android:native-exopackage-fakes.apk",
-    "path_to_rawmanifest_py": "//src/com/facebook/buck/util/versioncontrol:rawmanifest",
     "path_to_pathlib_py": "//third-party/py/pathlib:pathlib.py",
     "path_to_pex": "//src/com/facebook/buck/python:pex",
     "path_to_pywatchman": "//third-party/py/pywatchman:pywatchman-archive",
-    "path_to_typing": "//third-party/py:typing-archive",
+    "path_to_rawmanifest_py": "//src/com/facebook/buck/util/versioncontrol:rawmanifest",
     "path_to_sh_binary_template": "//src/com/facebook/buck/shell:sh_binary_template",
-    "report_generator_jar": "//src/com/facebook/buck/jvm/java/coverage:report-generator",
-    "testrunner_classes": "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
-    "external_executor_jar": "//src/com/facebook/buck/step/external:executor",
+    "path_to_typing": "//third-party/py:typing-archive",
 }
+
+# This genrule generates a single hash of all resources listed in
+# RESOURCES_AFFECTING_BUILD_ARTIFACTS list. The hash is stored in the output file.
+genrule(
+    name = "calculate-buck-binary-hash",
+    out = "buck-binary-hash.txt",
+    cmd = " ".join([
+        "$(exe //py/hash:hash_files)",
+        " ".join(["$(location {})".format(resource) for resource in RESOURCES_AFFECTING_BUILD_ARTIFACTS.values()]),
+        "$(location //py/hash:hash_files.py)",
+        " > $OUT",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
+)
 
 python_library(
     name = "bucklib",
@@ -86,7 +112,9 @@ python_library(
         "timing.py",
         "tracing.py",
     ],
-    resources = BUCK_CORE_RESOURCES,
+    resources = dict(RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS.items() + RESOURCES_AFFECTING_BUILD_ARTIFACTS.items() + {
+        "buck_binary_hash": ":calculate-buck-binary-hash",
+    }.items()),
     deps = [
         ":buck_version",
         ":subprocutils",

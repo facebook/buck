@@ -196,6 +196,15 @@ class BuckTool(object):
     def _get_java_classpath(self):
         raise NotImplementedError()
 
+    def _get_buck_binary_hash(self):
+        """
+        Returns Buck binary hash
+
+        This hash reflects the code that can affect the content of artifacts.
+        """
+
+        raise NotImplementedError()
+
     def _get_extra_java_args(self):
         return []
 
@@ -531,6 +540,7 @@ class BuckTool(object):
                 "-Dbuck.version_uid={0}".format(version_uid),
                 "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
                 "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
+                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash())
             ]
 
             resource_lock_path = self._get_resource_lock_path()
