@@ -53,6 +53,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -102,6 +103,7 @@ public class XCodeProjectCommandHelper {
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Console console;
   private final Optional<ProcessManager> processManager;
   private final ImmutableMap<String, String> environment;
@@ -128,6 +130,7 @@ public class XCodeProjectCommandHelper {
       TypeCoercerFactory typeCoercerFactory,
       Cell cell,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      RuleKeyConfiguration ruleKeyConfiguration,
       Console console,
       Optional<ProcessManager> processManager,
       ImmutableMap<String, String> environment,
@@ -151,6 +154,7 @@ public class XCodeProjectCommandHelper {
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.console = console;
     this.processManager = processManager;
     this.environment = environment;
@@ -319,6 +323,7 @@ public class XCodeProjectCommandHelper {
             cell,
             knownBuildRuleTypesProvider,
             buckConfig,
+            ruleKeyConfiguration,
             executorService,
             targetGraphAndTargets,
             passedInTargetsSet,
@@ -370,6 +375,7 @@ public class XCodeProjectCommandHelper {
       Cell cell,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       BuckConfig buckConfig,
+      RuleKeyConfiguration ruleKeyConfiguration,
       ListeningExecutorService executorService,
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
@@ -438,6 +444,7 @@ public class XCodeProjectCommandHelper {
               buckConfig.getView(ParserConfig.class).getBuildFileName(),
               lazyActionGraph::getBuildRuleResolverWhileRequiringSubgraph,
               buckEventBus,
+              ruleKeyConfiguration,
               halideBuckConfig,
               cxxBuckConfig,
               swiftBuckConfig);

@@ -104,6 +104,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -4752,6 +4753,7 @@ public class ProjectGeneratorTest {
             PROJECT_NAME,
             "BUCK",
             ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
+            TestRuleKeyConfigurationFactory.create(),
             false, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
@@ -4795,6 +4797,7 @@ public class ProjectGeneratorTest {
             PROJECT_NAME,
             "BUCK",
             ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
+            TestRuleKeyConfigurationFactory.create(),
             true, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
@@ -4911,6 +4914,7 @@ public class ProjectGeneratorTest {
         PROJECT_NAME,
         "BUCK",
         projectGeneratorOptions,
+        TestRuleKeyConfigurationFactory.create(),
         false,
         Optional.empty(),
         ImmutableSet.of(),

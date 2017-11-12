@@ -24,6 +24,7 @@ import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
+import com.facebook.buck.apple.project_generator.ProjectGenerator.Option;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -95,6 +97,7 @@ public class WorkspaceAndProjectGenerator {
   private final String buildFileName;
   private final Function<TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode;
   private final BuckEventBus buckEventBus;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
@@ -111,7 +114,7 @@ public class WorkspaceAndProjectGenerator {
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescriptionArg workspaceArguments,
       BuildTarget workspaceBuildTarget,
-      Set<ProjectGenerator.Option> projectGeneratorOptions,
+      Set<Option> projectGeneratorOptions,
       boolean combinedProject,
       FocusedModuleTargetMatcher focusModules,
       boolean parallelizeBuild,
@@ -119,12 +122,14 @@ public class WorkspaceAndProjectGenerator {
       String buildFileName,
       Function<TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode,
       BuckEventBus buckEventBus,
+      RuleKeyConfiguration ruleKeyConfiguration,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig) {
     this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.dependenciesCache = new AppleDependenciesCache(projectGraph);
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.projGenerationStateCache = new ProjectGenerationStateCache();
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
@@ -461,6 +466,7 @@ public class WorkspaceAndProjectGenerator {
                 projectName,
                 buildFileName,
                 projectGeneratorOptions,
+                ruleKeyConfiguration,
                 isMainProject,
                 workspaceArguments.getSrcTarget(),
                 targetsInRequiredProjects,
@@ -515,6 +521,7 @@ public class WorkspaceAndProjectGenerator {
             workspaceName,
             buildFileName,
             projectGeneratorOptions,
+            ruleKeyConfiguration,
             true,
             workspaceArguments.getSrcTarget(),
             targetsInRequiredProjects,

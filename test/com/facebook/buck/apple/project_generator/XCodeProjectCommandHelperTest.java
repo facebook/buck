@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -448,6 +449,7 @@ public class XCodeProjectCommandHelperTest {
         cell,
         knownBuildRuleTypesProvider,
         FakeBuckConfig.builder().build(),
+        TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
         targetGraphAndTargets,
         passedInTargetsSet,

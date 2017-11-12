@@ -96,7 +96,6 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.js.JsBundleOutputsDescription;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -122,6 +121,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -279,6 +279,7 @@ public class ProjectGenerator {
   private final Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode;
   private final SourcePathResolver defaultPathResolver;
   private final BuckEventBus buckEventBus;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -308,6 +309,7 @@ public class ProjectGenerator {
       String projectName,
       String buildFileName,
       Set<Option> options,
+      RuleKeyConfiguration ruleKeyConfiguration,
       boolean isMainProject,
       Optional<BuildTarget> workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
@@ -328,6 +330,7 @@ public class ProjectGenerator {
     this.projectName = projectName;
     this.buildFileName = buildFileName;
     this.options = ImmutableSet.copyOf(options);
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.isMainProject = isMainProject;
     this.workspaceTarget = workspaceTarget;
     this.targetsInRequiredProjects = targetsInRequiredProjects;
@@ -2145,7 +2148,7 @@ public class ProjectGenerator {
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap) {
     Hasher hasher = Hashing.sha1().newHasher();
-    hasher.putBytes(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
+    hasher.putBytes(ruleKeyConfiguration.getCoreKey().getBytes(Charsets.UTF_8));
     String symlinkState = shouldCreateHeadersSymlinks ? "symlinks-enabled" : "symlinks-disabled";
     byte[] symlinkStateValue = symlinkState.getBytes(Charsets.UTF_8);
     hasher.putInt(symlinkStateValue.length);
