@@ -6,6 +6,7 @@ java_test(
     ],
     deps = [
         ":junit",
+        "//:foo",
     ],
 )
 

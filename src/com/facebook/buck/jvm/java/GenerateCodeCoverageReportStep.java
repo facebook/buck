@@ -115,7 +115,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   StepExecutionResult executeInternal(
       ExecutionContext context, Set<Path> extractedClassesDirectories)
       throws IOException, InterruptedException {
-    try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())) {
+    try (OutputStream propertyFileStream =
+        new FileOutputStream(filesystem.resolve(propertyFile).toFile())) {
       saveParametersToPropertyStream(filesystem, extractedClassesDirectories, propertyFileStream);
     }
 

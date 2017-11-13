@@ -16,4 +16,8 @@
 
 package buck.events;
 
-public class Foo {}
+public class Foo {
+  public static int add(int a, int b) {
+    return a + b;
+  }
+}

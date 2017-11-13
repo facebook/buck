@@ -3,6 +3,9 @@ java_library(
     srcs = glob(["*.java"]),
     resources = [
     ],
+    tests = [
+        "//test:simple_test",
+    ],
     visibility = [
         "PUBLIC",
     ],
