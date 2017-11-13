@@ -239,8 +239,10 @@ class BuckTool(object):
         Implicitly add command line arguments based on environmental variables. This is a bad
         practice and should be considered for infrastructure / debugging purposes only
         '''
-        if '--no-cache' not in argv and os.environ.get('BUCK_NO_CACHE') == '1':
+        if os.environ.get('BUCK_NO_CACHE') == '1' and '--no-cache' not in argv:
             argv = argv + ['--no-cache']
+        if os.environ.get('BUCK_CACHE_READONLY') == '1':
+            argv = argv + ['-c', 'cache.http_mode=readonly']
         return argv
 
     def _run_with_nailgun(self, argv, env):
