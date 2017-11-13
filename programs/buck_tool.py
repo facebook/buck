@@ -234,15 +234,25 @@ class BuckTool(object):
                 pass
         return env
 
+    def _add_args(self, argv, args):
+        '''
+        Add new arguments to the beginning of arguments string
+        Adding to the end will mess up with custom test runner params
+        '''
+        if (len(argv) < 2):
+            return argv + args
+        return [argv[0]] + args + argv[1:]
+
     def _add_args_from_env(self, argv):
         '''
         Implicitly add command line arguments based on environmental variables. This is a bad
         practice and should be considered for infrastructure / debugging purposes only
         '''
+
         if os.environ.get('BUCK_NO_CACHE') == '1' and '--no-cache' not in argv:
-            argv = argv + ['--no-cache']
+            argv = self._add_args(argv, ['--no-cache'])
         if os.environ.get('BUCK_CACHE_READONLY') == '1':
-            argv = argv + ['-c', 'cache.http_mode=readonly']
+            argv = self._add_args(argv, ['-c', 'cache.http_mode=readonly'])
         return argv
 
     def _run_with_nailgun(self, argv, env):
