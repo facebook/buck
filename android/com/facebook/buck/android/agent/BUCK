@@ -1,0 +1,25 @@
+java_library(
+    name = "manifest-as-resource",
+    resources = [
+        "AndroidManifest.xml",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+)
+
+android_binary(
+    name = "agent",
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android/com/facebook/buck/android/agent/native:native",
+        "//src/com/facebook/buck/android/agent:agent",
+    ],
+)
+
+keystore(
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+)

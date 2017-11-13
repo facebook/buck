@@ -43,7 +43,7 @@ public class AgentUtilTest {
                 ByteStreams.toByteArray(
                     getClass()
                         .getResourceAsStream(
-                            "/com/facebook/buck/android/agent/AndroidManifest.xml"))));
+                            "/android/com/facebook/buck/android/agent/AndroidManifest.xml"))));
 
     assertEquals(AgentUtil.AGENT_PACKAGE_NAME, manifest.getPackage());
     assertEquals(AgentUtil.AGENT_VERSION_CODE, manifest.getVersionCode());

@@ -9,7 +9,7 @@ java_library(
     ],
     visibility = [
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android/agent:agent-lib",
+        "//src/com/facebook/buck/android/agent:agent",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
         "//test/com/facebook/buck/android/...",
