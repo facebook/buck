@@ -472,10 +472,8 @@
             These patterns are excluded because they are compiled elsewhere
             and are deliberately isolated from Buck's core.
           -->
-          <exclude name="com/facebook/buck/android/support/**" />
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
           <exclude name="com/facebook/buck/event/api/**" />
-          <exclude name="com/facebook/buck/intellij/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
