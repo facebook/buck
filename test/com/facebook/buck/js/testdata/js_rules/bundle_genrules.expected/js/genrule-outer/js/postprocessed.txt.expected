@@ -1,10 +1,12 @@
 {"assetsDirPath":"@/buck-out/gen/js/fruit-with-extras/res","bundlePath":"@/buck-out/gen/js/fruit-with-extras/js/some-fruit-with-delicious-extras.js","command":"bundle","entryPoints":["yoghurt","banana","apple"],"libraryGroups":[],"libraries":["@/buck-out/gen/js/extras.jslib","@/buck-out/gen/js/fruit.jslib"],"release":false,"rootPath":"@","sourceMapPath":"@/buck-out/gen/js/fruit-with-extras/map/some-fruit-with-delicious-extras.js.map"}
-library --root @
+library-dependencies --root @
+library-files --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library --root @
+library-dependencies --root @
+library-files --root @
 transform --filename js/apple.js
 var apple;
 transform --filename js/banana.js

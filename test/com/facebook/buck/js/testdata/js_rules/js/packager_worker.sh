@@ -112,7 +112,7 @@ run_command() {
           fi
           shift
           ;;
-        --lib)
+        --lib|--files)
           args=$(concat $args "$1" "$(replace_root "$2")")
           infiles=$(concat $infiles "$2")
           shift

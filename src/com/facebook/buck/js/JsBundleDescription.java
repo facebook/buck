@@ -174,7 +174,7 @@ public class JsBundleDescription
                     group
                         .stream()
                         .map(lib -> libsResolver.requireLibrary(lib).getSourcePathToOutput())
-                        .collect(MoreCollectors.toImmutableSet()))
+                        .collect(MoreCollectors.<SourcePath>toImmutableSet()))
             .collect(MoreCollectors.toImmutableList());
 
     String bundleName = getBundleName(args, buildTarget.getFlavors());

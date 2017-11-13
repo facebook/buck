@@ -1,28 +1,33 @@
 {"assetsDirPath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#ios/res","bundlePath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#ios/js/fruit-salad-in-a-bundle.js","command":"bundle","entryPoints":["fruit-salad"],"libraryGroups":[],"libraries":["@/buck-out/gen/js/extras#ios.jslib","@/buck-out/gen/js/fruit#ios.jslib","@/buck-out/gen/js/fruit-salad#ios.jslib"],"platform":"ios","release":false,"rootPath":"@","sourceMapPath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#ios/map/fruit-salad-in-a-bundle.js.map"}
-library --platform ios --root @
+library-dependencies --platform ios --root @
+library-files --platform ios --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library --platform ios --root @
+library-dependencies --platform ios --root @
+library-files --platform ios --root @
 transform --filename js/apple.js
 var apple;
 transform --filename js/banana.js
 var banana;
 transform --filename js/pear.js
 var pear;
-library --platform ios --lib @/buck-out/gen/js/extras#ios.jslib --lib @/buck-out/gen/js/fruit#ios.jslib --root @
-library --platform ios --root @
+library-dependencies --platform ios --root @ --lib @/buck-out/gen/js/extras#ios.jslib --lib @/buck-out/gen/js/fruit#ios.jslib
+library-dependencies --platform ios --root @
+library-files --platform ios --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library --platform ios --root @
+library-dependencies --platform ios --root @
+library-files --platform ios --root @
 transform --filename js/apple.js
 var apple;
 transform --filename js/banana.js
 var banana;
 transform --filename js/pear.js
 var pear;
+library-files --platform ios --root @
 transform --filename js/fruit-salad.js
 var fruitSalad;
