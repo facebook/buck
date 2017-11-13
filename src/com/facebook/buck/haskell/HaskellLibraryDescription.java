@@ -68,7 +68,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -789,7 +788,9 @@ public class HaskellLibraryDescription
 
       @Override
       public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
-        return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
+        return RichStream.from(allDeps.get(resolver, cxxPlatform))
+            .filter(CxxPreprocessorDep.class)
+            .toImmutableList();
       }
 
       @Override
