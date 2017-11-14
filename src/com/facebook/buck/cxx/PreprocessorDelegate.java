@@ -20,10 +20,10 @@ import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -46,15 +46,18 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
-final class PreprocessorDelegate implements RuleKeyAppendable {
+final class PreprocessorDelegate implements AddsToRuleKey {
 
   // Fields that are added to rule key as is.
-  private final Preprocessor preprocessor;
+  @AddToRuleKey private final Preprocessor preprocessor;
+
+  @AddToRuleKey
   private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
-  private final HeaderVerification headerVerification;
+
+  @AddToRuleKey private final HeaderVerification headerVerification;
 
   // Fields that added to the rule key with some processing.
-  private final PreprocessorFlags preprocessorFlags;
+  @AddToRuleKey private final PreprocessorFlags preprocessorFlags;
 
   // Fields that are not added to the rule key.
   private final DebugPathSanitizer sanitizer;
@@ -134,14 +137,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
 
   public Preprocessor getPreprocessor() {
     return preprocessor;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("preprocessor", preprocessor);
-    sink.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
-    sink.setReflectively("headerVerification", headerVerification);
-    sink.setReflectively("preprocessorFlags", preprocessorFlags);
   }
 
   public HeaderPathNormalizer getHeaderPathNormalizer() {

@@ -964,18 +964,13 @@ public class RuleKeyTest {
   abstract class DerivedFromImplementsBadUseOfAddValueMethodsToRuleKey
       extends ImplementsBadUseOfAddValueMethodsToRuleKey {}
 
-  private static class TestRuleKeyAppendable implements RuleKeyAppendable {
-    private final String value;
+  private static class TestRuleKeyAppendable implements AddsToRuleKey {
+    @AddToRuleKey private final String value;
+    @AddToRuleKey private final String foo = "foo";
+    @AddToRuleKey private final String bar = "bar";
 
     public TestRuleKeyAppendable(String value) {
       this.value = value;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("value", value)
-          .setReflectively("foo", "foo")
-          .setReflectively("bar", "bar");
     }
   }
 

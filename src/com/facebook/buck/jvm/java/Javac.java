@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-public interface Javac extends RuleKeyAppendable, Tool {
+public interface Javac extends AddsToRuleKey, Tool {
 
   /** An escaper for arguments written to @argfiles. */
   Function<String, String> ARGFILES_ESCAPER = Escaper.javacEscaper();
