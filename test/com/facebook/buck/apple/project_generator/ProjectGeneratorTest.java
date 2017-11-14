@@ -4562,6 +4562,39 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testGeneratedProjectSettingForSwiftWholeModuleOptimizationForAppleLibrary()
+      throws IOException {
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "swift",
+            ImmutableMap.of(
+                "version", "3.0",
+                "project_wmo", "true"));
+
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    swiftBuckConfig = new SwiftBuckConfig(buckConfig);
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "Bar");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(node));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+
+    assertThat(buildSettings.get("COMPILER_INDEX_STORE_ENABLE"), equalTo("NO"));
+    assertThat(buildSettings.get("SWIFT_WHOLE_MODULE_OPTIMIZATION"), equalTo("YES"));
+  }
+
+  @Test
   public void testGeneratedProjectForAppleBinaryUsingAppleLibraryWithSwiftSources()
       throws IOException {
     BuildTarget libBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");

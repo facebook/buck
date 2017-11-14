@@ -1254,6 +1254,21 @@ public class ProjectGenerator {
       if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
         extraSettingsBuilder.put(
             "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTargetNode));
+
+        if (swiftBuckConfig.getProjectWMO()) {
+          // We must disable "Index While Building" as there's a bug in the LLVM infra which
+          // makes the compilation fail.
+          extraSettingsBuilder.put("COMPILER_INDEX_STORE_ENABLE", "NO");
+
+          // This is a hidden Xcode setting which is needed for two reasons:
+          // - Stops Xcode adding .o files for each Swift compilation unit to dependency db
+          //   which is used during linking (which will fail with WMO).
+          // - Turns on WMO itself.
+          //
+          // Note that setting SWIFT_OPTIMIZATION_LEVEL (which is public) to '-Owholemodule'
+          // ends up crashing the Swift compiler for some reason while this doesn't.
+          extraSettingsBuilder.put("SWIFT_WHOLE_MODULE_OPTIMIZATION", "YES");
+        }
       }
 
       Optional<SourcePath> prefixHeaderOptional =

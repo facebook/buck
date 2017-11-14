@@ -27,6 +27,7 @@ public class SwiftBuckConfig {
   public static final String VERSION_NAME = "version";
   public static final String COMPILE_FORCE_CACHE = "compile_force_cache";
   public static final String USE_FILELIST = "use_filelist";
+  public static final String PROJECT_WMO = "project_wmo";
 
   private final BuckConfig delegate;
 
@@ -53,5 +54,10 @@ public class SwiftBuckConfig {
 
   public boolean getUseFileList() {
     return delegate.getBooleanValue(SECTION_NAME, USE_FILELIST, false);
+  }
+
+  /** If enabled, turns on Whole Module Optimization for any targets that contain Swift. */
+  public boolean getProjectWMO() {
+    return delegate.getBooleanValue(SECTION_NAME, PROJECT_WMO, false);
   }
 }
