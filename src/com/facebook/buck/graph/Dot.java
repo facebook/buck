@@ -165,8 +165,8 @@ public class Dot<T> {
     // decide if node name should be escaped according to DOT specification
     // https://en.wikipedia.org/wiki/DOT_(graph_description_language)
     boolean needEscape =
-        str.startsWith("//")
-            || str.startsWith("#")
+        str.startsWith("#")
+            || str.contains("//") // May occur within string due to cross-cell.
             || str.contains(" ")
             || str.contains("\"")
             || str.contains("/*");
