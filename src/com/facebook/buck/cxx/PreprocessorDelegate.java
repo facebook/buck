@@ -35,7 +35,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -44,6 +43,7 @@ import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
 final class PreprocessorDelegate implements RuleKeyAppendable {

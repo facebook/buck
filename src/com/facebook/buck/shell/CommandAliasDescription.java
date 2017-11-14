@@ -42,7 +42,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -51,6 +50,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class CommandAliasDescription implements Description<CommandAliasDescriptionArg> {

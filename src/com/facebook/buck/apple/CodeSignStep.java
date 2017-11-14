@@ -26,7 +26,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -34,6 +33,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 class CodeSignStep implements Step {
   private final SourcePathResolver resolver;

@@ -21,7 +21,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -29,6 +28,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,7 +65,8 @@ public class CodeSignIdentityStore implements AddsToRuleKey {
             () -> {
               ProcessExecutorParams processExecutorParams =
                   ProcessExecutorParams.builder().addAllCommand(command).build();
-              // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
+              // Specify that stdout is expected, or else output may be wrapped in Ansi escape
+              // chars.
               Set<ProcessExecutor.Option> options =
                   EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
               ProcessExecutor.Result result;

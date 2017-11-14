@@ -66,7 +66,6 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -78,6 +77,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AppleTestDescription

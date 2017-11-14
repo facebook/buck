@@ -25,7 +25,6 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -34,6 +33,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * A step that invokes Apple's tool to scan the binary and copy any needed Swift standard libraries.

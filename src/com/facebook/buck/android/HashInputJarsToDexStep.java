@@ -28,7 +28,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
@@ -41,6 +40,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Step responsible for hashing dex inputs to be passed to {@link SmartDexingStep}. It goes through

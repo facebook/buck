@@ -24,7 +24,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +41,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** A collection of provisioning profiles. */

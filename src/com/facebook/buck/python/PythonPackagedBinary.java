@@ -36,12 +36,12 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {

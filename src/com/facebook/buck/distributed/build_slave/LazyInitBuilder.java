@@ -19,12 +19,12 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.rules.BuildEngineResult;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /** Decorates Builder to do lazy initialisation. */
 public class LazyInitBuilder implements BuildExecutor {
@@ -32,7 +32,7 @@ public class LazyInitBuilder implements BuildExecutor {
   private final Supplier<BuildExecutor> builderSupplier;
 
   public LazyInitBuilder(Supplier<BuildExecutor> builderSupplier) {
-    this.builderSupplier = Suppliers.memoize(builderSupplier);
+    this.builderSupplier = Suppliers.memoize(builderSupplier::get);
   }
 
   private BuildExecutor getBuilderNow() {

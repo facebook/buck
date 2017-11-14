@@ -28,12 +28,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
-import com.google.common.base.Supplier;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DistBuildSlaveExecutor {

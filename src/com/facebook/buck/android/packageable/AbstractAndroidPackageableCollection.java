@@ -22,13 +22,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /** A collection of Android content that should be included in an Android package (apk or aar). */

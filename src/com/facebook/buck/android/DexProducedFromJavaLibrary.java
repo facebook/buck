@@ -44,7 +44,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -60,6 +59,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**

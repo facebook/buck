@@ -39,7 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -51,6 +50,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class ExternalJavac implements Javac {

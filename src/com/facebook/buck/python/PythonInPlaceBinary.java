@@ -40,13 +40,13 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.stringtemplate.v4.ST;
 

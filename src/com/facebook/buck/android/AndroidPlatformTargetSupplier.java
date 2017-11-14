@@ -20,8 +20,8 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Supplier;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 // TODO(mbolin): Only one such Supplier should be created per Cell per Buck execution.

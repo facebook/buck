@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +27,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;

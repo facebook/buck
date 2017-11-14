@@ -42,7 +42,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +53,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 
 @BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps

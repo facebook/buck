@@ -27,11 +27,11 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescriptionArg> {

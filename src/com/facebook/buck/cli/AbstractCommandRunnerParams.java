@@ -46,7 +46,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.InputStream;
@@ -54,6 +53,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)

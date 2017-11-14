@@ -18,7 +18,6 @@ package com.facebook.buck.util.bsd;
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -29,6 +28,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 public class UnixArchive {
   private static final byte[] EXPECTED_GLOBAL_HEADER =

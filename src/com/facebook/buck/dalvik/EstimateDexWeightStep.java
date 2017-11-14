@@ -26,11 +26,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 public class EstimateDexWeightStep implements Step, Supplier<Integer> {
 
@@ -79,7 +79,8 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
 
           @Override
           public void visit(FileLike fileLike) throws IOException {
-            // When traversing a JAR file, it may have resources or directory entries that do not end
+            // When traversing a JAR file, it may have resources or directory entries that do not
+            // end
             // in .class, which should be ignored.
             if (!FileLikes.isClassFile(fileLike)) {
               return;

@@ -21,13 +21,13 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   @AddToRuleKey private final AbstractJavacPluginProperties inner;
@@ -53,8 +53,10 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
                           try {
                             return uri.toURL();
                           } catch (MalformedURLException e) {
-                            // The paths we're being given should have all been resolved from the file
-                            // system already. We'd need to be unfortunate to get here. Bubble up a runtime
+                            // The paths we're being given should have all been resolved from the
+                            // file
+                            // system already. We'd need to be unfortunate to get here. Bubble up a
+                            // runtime
                             // exception.
                             throw new RuntimeException(e);
                           }

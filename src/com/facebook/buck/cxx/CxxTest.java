@@ -43,7 +43,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +51,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /** A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests. */
@@ -90,10 +90,10 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, params);
     this.executable = executable;
     this.env = env;
-    this.args = Suppliers.memoize(args);
+    this.args = Suppliers.memoize(args::get);
     this.resources = resources;
     this.additionalCoverageTargets = additionalCoverageTargets;
-    this.additionalDeps = Suppliers.memoize(additionalDeps);
+    this.additionalDeps = Suppliers.memoize(additionalDeps::get);
     this.labels = labels;
     this.contacts = contacts;
     this.runTestSeparately = runTestSeparately;

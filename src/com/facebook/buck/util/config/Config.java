@@ -24,7 +24,6 @@ import com.facebook.buck.util.Optionals;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -62,11 +62,12 @@ public class Config {
   private final Supplier<Integer> hashCodeSupplier =
       Suppliers.memoize(
           new Supplier<Integer>() {
-            @Override
-            public Integer get() {
-              return Objects.hashCode(rawConfig);
-            }
-          });
+                @Override
+                public Integer get() {
+                  return Objects.hashCode(rawConfig);
+                }
+              }
+              ::get);
 
   /** Caches the expanded value lookups. */
   private final Map<Map.Entry<String, String>, Optional<String>> cache = new ConcurrentHashMap<>();

@@ -27,13 +27,13 @@ import com.facebook.buck.worker.WorkerProcess;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class OutOfProcessConnectionFactory {

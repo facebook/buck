@@ -18,11 +18,11 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Supplier;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 

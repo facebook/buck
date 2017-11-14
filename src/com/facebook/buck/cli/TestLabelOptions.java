@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
@@ -28,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -85,21 +85,18 @@ class TestLabelOptions {
 
   private Supplier<ImmutableList<LabelSelector>> supplier =
       Suppliers.memoize(
-          new Supplier<ImmutableList<LabelSelector>>() {
-            @Override
-            public ImmutableList<LabelSelector> get() {
-              TreeMap<Integer, LabelSelector> all = new TreeMap<>();
-              all.putAll(includedLabelSets);
+          () -> {
+            TreeMap<Integer, LabelSelector> all = new TreeMap<>();
+            all.putAll(includedLabelSets);
 
-              // Invert the sense of anything given to --exclude.
-              // This means we could --exclude !includeMe  ...lolololol
-              for (Integer ordinal : excludedLabelSets.keySet()) {
-                LabelSelector original = Preconditions.checkNotNull(excludedLabelSets.get(ordinal));
-                all.put(ordinal, original.invert());
-              }
-
-              return ImmutableList.copyOf(all.values());
+            // Invert the sense of anything given to --exclude.
+            // This means we could --exclude !includeMe  ...lolololol
+            for (Integer ordinal : excludedLabelSets.keySet()) {
+              LabelSelector original = Preconditions.checkNotNull(excludedLabelSets.get(ordinal));
+              all.put(ordinal, original.invert());
             }
+
+            return ImmutableList.copyOf(all.values());
           });
 
   public boolean shouldExcludeWin() {

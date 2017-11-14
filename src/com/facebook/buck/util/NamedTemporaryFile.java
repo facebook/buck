@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Supplier;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
+import java.util.function.Supplier;
 
 public class NamedTemporaryFile implements Closeable, Supplier<Path> {
   private final Path tempPath;

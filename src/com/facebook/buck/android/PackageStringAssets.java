@@ -33,7 +33,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +42,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Buildable responsible for compiling non-english string resources to {@code .fbstr} files stored

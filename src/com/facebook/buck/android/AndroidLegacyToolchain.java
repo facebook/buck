@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.toolchain.Toolchain;
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 /**
  * Toolchain that provides access to existing Android classes.

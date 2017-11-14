@@ -44,7 +44,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +52,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -147,7 +147,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         buildTarget,
         projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
-            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
+            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps::get)));
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
           "When the 'res' is specified for android_resource() %s, at least one of 'package' or "

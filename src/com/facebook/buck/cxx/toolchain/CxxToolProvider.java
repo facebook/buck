@@ -30,7 +30,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -39,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
@@ -89,9 +89,8 @@ public abstract class CxxToolProvider<T> {
   public CxxToolProvider(final Path path, Optional<Type> type) {
     this(
         new ConstantToolProvider(new HashedFileTool(path)),
-        type.isPresent()
-            ? Suppliers.ofInstance(type.get())
-            : Suppliers.memoize((Supplier<Type>) () -> getTypeFromPath(path)));
+        type.map(Suppliers::ofInstance)
+            .orElseGet(() -> Suppliers.memoize(() -> getTypeFromPath(path))));
   }
 
   private static Type getTypeFromPath(Path path) {

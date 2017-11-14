@@ -40,7 +40,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +47,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 

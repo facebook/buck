@@ -49,7 +49,6 @@ import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,6 +65,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")

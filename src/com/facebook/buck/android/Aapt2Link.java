@@ -37,7 +37,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.ZipScrubberStep;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +47,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Perform the "aapt2 link" step of building an Android app. */

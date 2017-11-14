@@ -50,7 +50,6 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,6 +68,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 

@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -40,6 +39,7 @@ import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class AndroidAppModularityVerification extends AbstractBuildRule {

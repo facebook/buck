@@ -23,7 +23,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -37,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -76,7 +76,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
     private <T> Supplier<T> cachingIfCacheable(Supplier<T> loader) {
       if (isCacheableFileType()) {
-        return Suppliers.memoize(loader);
+        return Suppliers.memoize(loader::get);
       }
       return loader;
     }

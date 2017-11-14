@@ -21,9 +21,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class DefaultAndroidLegacyToolchainFactory
     implements ToolchainFactory<AndroidLegacyToolchain> {

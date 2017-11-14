@@ -29,10 +29,10 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps

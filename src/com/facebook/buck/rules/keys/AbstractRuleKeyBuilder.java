@@ -28,7 +28,6 @@ import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {

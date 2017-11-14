@@ -20,11 +20,11 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class GroovyBuckConfig {
   private final BuckConfig delegate;

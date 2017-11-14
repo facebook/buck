@@ -22,7 +22,6 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
@@ -33,6 +32,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Supplier;
 
 /**
  * Represents a zip that has been packaged as a resource with Buck, but which should be expanded at

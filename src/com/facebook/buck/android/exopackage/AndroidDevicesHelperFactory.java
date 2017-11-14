@@ -22,7 +22,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 public class AndroidDevicesHelperFactory {
   protected AndroidDevicesHelperFactory() {}

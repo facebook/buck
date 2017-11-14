@@ -17,12 +17,12 @@
 package com.facebook.buck.build_type;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.function.Supplier;
 
 public enum BuildType {
   UNKNOWN,
@@ -40,22 +40,19 @@ public enum BuildType {
    */
   public static final Supplier<BuildType> CURRENT_BUILD_TYPE =
       Suppliers.memoize(
-          new Supplier<BuildType>() {
-            @Override
-            public BuildType get() {
-              String buildTypeFilename = System.getProperty("buck.buck_build_type_info");
-              if (buildTypeFilename == null) {
-                return UNKNOWN;
-              }
-              try {
-                String contents =
-                    Files.readFirstLine(
-                        Paths.get(buildTypeFilename).toFile(), StandardCharsets.UTF_8);
-                return BuildType.valueOf(contents);
-              } catch (IOException e) {
-                LOG.error(e, "Failed to read build type, using LOCAL_ANT type.");
-                return LOCAL_ANT;
-              }
+          () -> {
+            String buildTypeFilename = System.getProperty("buck.buck_build_type_info");
+            if (buildTypeFilename == null) {
+              return UNKNOWN;
+            }
+            try {
+              String contents =
+                  Files.readFirstLine(
+                      Paths.get(buildTypeFilename).toFile(), StandardCharsets.UTF_8);
+              return BuildType.valueOf(contents);
+            } catch (IOException e) {
+              LOG.error(e, "Failed to read build type, using LOCAL_ANT type.");
+              return LOCAL_ANT;
             }
           });
 }

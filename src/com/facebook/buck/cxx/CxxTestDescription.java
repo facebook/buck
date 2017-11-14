@@ -47,7 +47,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -60,6 +59,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class CxxTestDescription

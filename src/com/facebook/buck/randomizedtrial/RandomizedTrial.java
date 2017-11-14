@@ -21,13 +21,13 @@ import com.facebook.buck.model.BuildId;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.hash.Hashing;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import java.util.Random;
+import java.util.function.Supplier;
 
 /**
  * Simple implementation of A/B testing. Each RandomizedTrial selects a group to which buck instance

@@ -28,10 +28,11 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Option;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -41,6 +42,7 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
@@ -142,38 +144,34 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static Supplier<Optional<Path>> createAppleDeveloperDirectorySupplier(
       final ProcessExecutor processExecutor) {
     return Suppliers.memoize(
-        new Supplier<Optional<Path>>() {
-          @Override
-          public Optional<Path> get() {
-            ProcessExecutorParams processExecutorParams =
-                ProcessExecutorParams.builder()
-                    .setCommand(ImmutableList.of("xcode-select", "--print-path"))
-                    .build();
-            // Must specify that stdout is expected or else output may be wrapped in Ansi escape
-            // chars.
-            Set<ProcessExecutor.Option> options =
-                EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-            ProcessExecutor.Result result;
-            try {
-              result =
-                  processExecutor.launchAndExecute(
-                      processExecutorParams,
-                      options,
-                      /* stdin */ Optional.empty(),
-                      /* timeOutMs */ Optional.empty(),
-                      /* timeOutHandler */ Optional.empty());
-            } catch (InterruptedException | IOException e) {
-              LOG.warn("Could not execute xcode-select, continuing without developer dir.");
-              return Optional.empty();
-            }
-
-            if (result.getExitCode() != 0) {
-              throw new RuntimeException(
-                  result.getMessageForUnexpectedResult("xcode-select --print-path"));
-            }
-
-            return Optional.of(normalizePath(Paths.get(result.getStdout().get().trim())));
+        () -> {
+          ProcessExecutorParams processExecutorParams =
+              ProcessExecutorParams.builder()
+                  .setCommand(ImmutableList.of("xcode-select", "--print-path"))
+                  .build();
+          // Must specify that stdout is expected or else output may be wrapped in Ansi escape
+          // chars.
+          Set<Option> options = EnumSet.of(Option.EXPECTING_STD_OUT);
+          Result result;
+          try {
+            result =
+                processExecutor.launchAndExecute(
+                    processExecutorParams,
+                    options,
+                    /* stdin */ Optional.empty(),
+                    /* timeOutMs */ Optional.empty(),
+                    /* timeOutHandler */ Optional.empty());
+          } catch (InterruptedException | IOException e) {
+            LOG.warn("Could not execute xcode-select, continuing without developer dir.");
+            return Optional.empty();
           }
+
+          if (result.getExitCode() != 0) {
+            throw new RuntimeException(
+                result.getMessageForUnexpectedResult("xcode-select --print-path"));
+          }
+
+          return Optional.of(normalizePath(Paths.get(result.getStdout().get().trim())));
         });
   }
 

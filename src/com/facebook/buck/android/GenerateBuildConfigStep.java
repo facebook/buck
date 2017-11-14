@@ -24,9 +24,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Objects;
-import com.google.common.base.Supplier;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 public class GenerateBuildConfigStep implements Step {
 

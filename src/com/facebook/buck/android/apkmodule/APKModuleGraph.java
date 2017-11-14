@@ -30,7 +30,6 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Utility class for grouping sets of targets and their dependencies into APK Modules containing
@@ -71,24 +71,19 @@ public class APKModuleGraph implements AddsToRuleKey {
 
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
       Suppliers.memoize(
-          new Supplier<ImmutableMap<BuildTarget, APKModule>>() {
-            @Override
-            public ImmutableMap<BuildTarget, APKModule> get() {
-              final ImmutableMap.Builder<BuildTarget, APKModule> mapBuilder =
-                  ImmutableMap.builder();
-              new AbstractBreadthFirstTraversal<APKModule>(
-                  getGraph().getNodesWithNoIncomingEdges()) {
-                @Override
-                public ImmutableSet<APKModule> visit(final APKModule node) {
-                  if (node.equals(rootAPKModuleSupplier.get())) {
-                    return ImmutableSet.of();
-                  }
-                  getBuildTargets(node).forEach(input -> mapBuilder.put(input, node));
-                  return getGraph().getOutgoingNodesFor(node);
+          () -> {
+            final ImmutableMap.Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
+            new AbstractBreadthFirstTraversal<APKModule>(getGraph().getNodesWithNoIncomingEdges()) {
+              @Override
+              public ImmutableSet<APKModule> visit(final APKModule node) {
+                if (node.equals(rootAPKModuleSupplier.get())) {
+                  return ImmutableSet.of();
                 }
-              }.start();
-              return mapBuilder.build();
-            }
+                getBuildTargets(node).forEach(input -> mapBuilder.put(input, node));
+                return getGraph().getOutgoingNodesFor(node);
+              }
+            }.start();
+            return mapBuilder.build();
           });
 
   private final Supplier<APKModule> rootAPKModuleSupplier =
