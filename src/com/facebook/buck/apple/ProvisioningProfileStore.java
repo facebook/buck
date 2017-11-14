@@ -23,9 +23,11 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -230,10 +232,9 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
       final Path searchPath) {
     LOG.debug("Provisioning profile search path: " + searchPath);
     return new ProvisioningProfileStore(
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
-              final ImmutableList.Builder<ProvisioningProfileMetadata> profilesBuilder =
-                  ImmutableList.builder();
+              final Builder<ProvisioningProfileMetadata> profilesBuilder = ImmutableList.builder();
               try {
                 Files.walkFileTree(
                     searchPath.toAbsolutePath(),

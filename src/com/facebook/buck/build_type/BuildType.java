@@ -17,7 +17,7 @@
 package com.facebook.buck.build_type;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +39,7 @@ public enum BuildType {
    * <p>To run buck in different modes you can invoke: buck run buck --config build.type=enum_value
    */
   public static final Supplier<BuildType> CURRENT_BUILD_TYPE =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () -> {
             String buildTypeFilename = System.getProperty("buck.buck_build_type_info");
             if (buildTypeFilename == null) {

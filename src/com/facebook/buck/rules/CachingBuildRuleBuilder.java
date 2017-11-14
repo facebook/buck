@@ -66,7 +66,6 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -211,7 +210,7 @@ class CachingBuildRuleBuilder {
     this.buildRuleScopeManager = new BuildRuleScopeManager();
 
     this.defaultKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
-    this.inputBasedKey = Suppliers.memoize(this::calculateInputBasedRuleKey);
+    this.inputBasedKey = MoreSuppliers.memoize(this::calculateInputBasedRuleKey);
     this.manifestBasedKeySupplier =
         MoreSuppliers.weakMemoize(
             () -> {

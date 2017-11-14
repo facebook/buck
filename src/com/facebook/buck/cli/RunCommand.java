@@ -28,11 +28,12 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -71,9 +72,9 @@ public final class RunCommand extends AbstractCommand {
   private List<String> withDashArguments = new ArrayList<>();
 
   private final Supplier<ImmutableList<String>> arguments =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () -> {
-            ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+            Builder<String> builder = new Builder<>();
             builder.addAll(noDashArguments);
             builder.addAll(withDashArguments);
             return builder.build();

@@ -27,12 +27,12 @@ import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.windowsfs.WindowsFS;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -180,7 +180,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                     this.blackListedPaths, input -> input.getType() == PathOrGlobMatcher.Type.GLOB))
             .toSet();
     this.tmpDir =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               Path relativeTmpDir = DefaultProjectFilesystem.this.buckPaths.getTmpDir();
               try {

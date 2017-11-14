@@ -21,7 +21,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.net.MalformedURLException;
@@ -40,7 +40,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
     this.inner = inner;
 
     classpathSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 inner
                     .getClasspathEntries()

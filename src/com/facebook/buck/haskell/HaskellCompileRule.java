@@ -45,12 +45,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -166,7 +166,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       final HaskellSources sources,
       Preprocessor preprocessor) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(compiler.getDeps(ruleFinder))

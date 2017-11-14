@@ -29,6 +29,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
@@ -37,11 +38,11 @@ import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableMultimap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -128,9 +129,9 @@ public class SmartDexingStep implements Step {
     this.buildContext = buildContext;
     this.filesystem = filesystem;
     this.outputToInputsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
-              final ImmutableMultimap.Builder<Path, Path> map = ImmutableMultimap.builder();
+              final Builder<Path, Path> map = ImmutableMultimap.builder();
               map.putAll(primaryOutputPath, primaryInputsToDex.get());
               if (secondaryInputsToDex.isPresent()) {
                 map.putAll(secondaryInputsToDex.get().get());

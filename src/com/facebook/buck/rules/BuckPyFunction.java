@@ -20,7 +20,7 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
@@ -54,7 +54,7 @@ public class BuckPyFunction {
   public static final String BUCK_PY_FUNCTION_TEMPLATE = "BuckPyFunction.stg";
 
   private static final Supplier<STGroup> buckPyFunctionTemplate =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () ->
               new STGroupFile(
                   Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),

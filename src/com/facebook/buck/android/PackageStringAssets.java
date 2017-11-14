@@ -30,10 +30,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -80,7 +80,7 @@ public class PackageStringAssets extends AbstractBuildRule {
     this.rDotTxtPath = pathToRDotTxt;
 
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(pathToRDotTxt))

@@ -26,8 +26,8 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -79,7 +79,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         sandboxExecutionStrategy,
         resolver,
         params.withExtraDeps(
-            Suppliers.memoize(
+            MoreSuppliers.memoize(
                 () ->
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(originalExtraDeps.get())

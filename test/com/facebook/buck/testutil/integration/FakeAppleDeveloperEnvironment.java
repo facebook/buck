@@ -24,8 +24,8 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Suppliers;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,7 +45,7 @@ public class FakeAppleDeveloperEnvironment {
           .size();
 
   private static final boolean hasWildcardProvisioningProfile =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
               () -> {
                 ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
                 final Path searchPath =

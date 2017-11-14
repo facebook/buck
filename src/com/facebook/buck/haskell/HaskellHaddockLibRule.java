@@ -43,9 +43,9 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -142,7 +142,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
 
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(haddockTool.getDeps(ruleFinder))

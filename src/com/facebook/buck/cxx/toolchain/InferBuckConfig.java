@@ -24,11 +24,11 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -57,7 +57,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
   public InferBuckConfig(final BuckConfig delegate) {
     this.delegate = delegate;
     this.clangCompiler =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 new HashedFileTool(
                     Preconditions.checkNotNull(
@@ -65,7 +65,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
                         "clang_compiler path not found on the current configuration")));
 
     this.clangPlugin =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 new HashedFileTool(
                     Preconditions.checkNotNull(
@@ -73,14 +73,14 @@ public class InferBuckConfig implements RuleKeyAppendable {
                         "clang_plugin path not found on the current configuration")));
 
     this.inferVersion =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               Path topLevel = InferBuckConfig.this.getInferTopLevel();
               ProcessExecutorParams params =
                   ProcessExecutorParams.builder()
                       .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
                       .build();
-              ProcessExecutor.Result result;
+              Result result;
               try {
                 result =
                     new DefaultProcessExecutor(Console.createNullConsole())

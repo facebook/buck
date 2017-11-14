@@ -23,9 +23,9 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +46,7 @@ public final class DefaultInputPathResolver implements InputPathResolver {
 
   public DefaultInputPathResolver(SourcePathResolver pathResolver) {
     this.pathResolver = pathResolver;
-    this.limitedSourcePathResolver = Suppliers.memoize(LimitedSourcePathResolver::new);
+    this.limitedSourcePathResolver = MoreSuppliers.memoize(LimitedSourcePathResolver::new);
   }
 
   @Override

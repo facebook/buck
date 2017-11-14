@@ -20,11 +20,11 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroReplacer;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,14 +60,13 @@ public class Config {
   private final RawConfig rawConfig;
 
   private final Supplier<Integer> hashCodeSupplier =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           new Supplier<Integer>() {
-                @Override
-                public Integer get() {
-                  return Objects.hashCode(rawConfig);
-                }
-              }
-              ::get);
+            @Override
+            public Integer get() {
+              return Objects.hashCode(rawConfig);
+            }
+          });
 
   /** Caches the expanded value lookups. */
   private final Map<Map.Entry<String, String>, Optional<String>> cache = new ConcurrentHashMap<>();

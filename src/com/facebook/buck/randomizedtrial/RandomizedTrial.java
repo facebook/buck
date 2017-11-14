@@ -18,11 +18,12 @@ package com.facebook.buck.randomizedtrial;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.hash.Hashing;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
@@ -34,11 +35,12 @@ import java.util.function.Supplier;
  * belongs to.
  */
 public class RandomizedTrial {
+
   private static final Supplier<String> HOSTNAME_SUPPLIER =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () -> {
             try {
-              return java.net.InetAddress.getLocalHost().getHostName();
+              return InetAddress.getLocalHost().getHostName();
             } catch (UnknownHostException e) {
               return "unable.to.determine.host";
             }

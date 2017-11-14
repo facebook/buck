@@ -35,7 +35,7 @@ import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -137,7 +137,7 @@ public class ModernBuildRule<T extends Buildable>
       SourcePathRuleFinder ruleFinder) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
-    this.deps = Suppliers.memoize(this::computeDeps);
+    this.deps = MoreSuppliers.memoize(this::computeDeps);
     this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.outputPathResolver =

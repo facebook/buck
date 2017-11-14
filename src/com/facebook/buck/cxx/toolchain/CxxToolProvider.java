@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -90,7 +91,7 @@ public abstract class CxxToolProvider<T> {
     this(
         new ConstantToolProvider(new HashedFileTool(path)),
         type.map(Suppliers::ofInstance)
-            .orElseGet(() -> Suppliers.memoize(() -> getTypeFromPath(path))));
+            .orElseGet(() -> MoreSuppliers.memoize(() -> getTypeFromPath(path))::get));
   }
 
   private static Type getTypeFromPath(Path path) {

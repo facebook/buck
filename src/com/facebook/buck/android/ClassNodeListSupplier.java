@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,7 @@ class ClassNodeListSupplier implements Supplier<ImmutableList<ClassNode>> {
   }
 
   public static Supplier<ImmutableList<ClassNode>> createMemoized(Iterable<Path> jarPaths) {
-    return Suppliers.memoize(new ClassNodeListSupplier(jarPaths)::get);
+    return MoreSuppliers.memoize(new ClassNodeListSupplier(jarPaths));
   }
 
   @Override

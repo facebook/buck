@@ -40,12 +40,12 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -450,7 +450,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   private Supplier<KeystoreProperties> getKeystorePropertiesSupplier(
       SourcePathResolver resolver, Path pathToKeystore) {
-    return Suppliers.memoize(
+    return MoreSuppliers.memoize(
         () -> {
           try {
             return KeystoreProperties.createFromPropertiesFile(

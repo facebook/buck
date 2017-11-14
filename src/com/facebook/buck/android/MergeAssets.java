@@ -37,8 +37,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -88,7 +88,7 @@ public class MergeAssets extends AbstractBuildRule {
     this.baseApk = baseApk;
     this.assetsDirectories = assetsDirectories;
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(MoreCollectors.toImmutableSortedSet()));

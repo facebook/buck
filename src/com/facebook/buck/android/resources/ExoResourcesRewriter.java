@@ -18,9 +18,9 @@ package com.facebook.buck.android.resources;
 
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -272,7 +272,8 @@ public class ExoResourcesRewriter {
       this.entryContents = new HashMap<>();
       this.xmlEntries = new HashMap<>();
       this.resourceTable =
-          Suppliers.memoize(() -> ResourceTable.get(ResChunk.wrap(getContent("resources.arsc"))));
+          MoreSuppliers.memoize(
+              () -> ResourceTable.get(ResChunk.wrap(getContent("resources.arsc"))));
     }
 
     @Override

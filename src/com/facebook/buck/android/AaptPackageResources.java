@@ -36,9 +36,9 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -105,7 +105,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     this.includesVectorDrawables = includesVectorDrawables;
     this.manifestEntries = manifestEntries;
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 getAllDeps(
                     buildTarget,

@@ -32,7 +32,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -61,7 +61,7 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
         BuildTargets.getScratchPath(
             getProjectFilesystem(), buildTarget, "__merged_resources_%s_tmp__");
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(MoreCollectors.toImmutableSortedSet()));

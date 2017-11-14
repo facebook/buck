@@ -22,14 +22,14 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import java.util.function.Supplier;
 
 public class LazyDelegatingSymbolNameTool implements SymbolNameTool {
   private Supplier<SymbolNameTool> delegate;
 
   public LazyDelegatingSymbolNameTool(Supplier<SymbolNameTool> delegate) {
-    this.delegate = Suppliers.memoize(delegate::get);
+    this.delegate = MoreSuppliers.memoize(delegate::get);
   }
 
   @Override

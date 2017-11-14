@@ -31,7 +31,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -70,7 +70,7 @@ public class AndroidAppModularityVerification extends AbstractBuildRule {
             packageableCollection.getModuleMappedClasspathEntriesToDex());
     this.proguardTextFilesPath = proguardTextFilesPath;
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(MoreCollectors.toImmutableSortedSet()));

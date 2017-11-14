@@ -27,12 +27,13 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,13 +54,13 @@ public class ExternalKotlinc implements Kotlinc {
     this.pathToKotlinc = pathToKotlinc;
 
     this.version =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               ProcessExecutorParams params =
                   ProcessExecutorParams.builder()
                       .setCommand(ImmutableList.of(pathToKotlinc.toString(), "-version"))
                       .build();
-              ProcessExecutor.Result result;
+              Result result;
               try {
                 result = createProcessExecutor().launchAndExecute(params);
               } catch (InterruptedException | IOException e) {

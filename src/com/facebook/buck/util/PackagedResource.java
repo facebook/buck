@@ -22,7 +22,6 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 import java.io.BufferedInputStream;
@@ -56,7 +55,7 @@ public class PackagedResource implements Supplier<Path> {
     this.name = pathRelativeToClass;
     this.filename = Paths.get(pathRelativeToClass).getFileName();
 
-    this.supplier = Suppliers.memoize(this::unpack);
+    this.supplier = MoreSuppliers.memoize(this::unpack);
   }
 
   @Override

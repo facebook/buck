@@ -18,8 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Suppliers;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 public abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
-  private final Supplier<String> typeSupplier = Suppliers.memoize(this::getTypeForClass);
+  private final Supplier<String> typeSupplier = MoreSuppliers.memoize(this::getTypeForClass);
 
   protected AbstractBuildRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
     this.buildTarget = buildTarget;

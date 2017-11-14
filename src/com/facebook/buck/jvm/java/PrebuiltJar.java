@@ -41,8 +41,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -105,13 +105,13 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
     transitiveClasspathsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 JavaLibraryClasspathProvider.getClasspathsFromLibraries(
                     getTransitiveClasspathDeps()));
 
     this.transitiveClasspathDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               if (provided) {
                 return JavaLibraryClasspathProvider.getClasspathDeps(

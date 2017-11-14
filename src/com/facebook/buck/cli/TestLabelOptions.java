@@ -17,9 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,7 +84,7 @@ class TestLabelOptions {
   private boolean alwaysExclude;
 
   private Supplier<ImmutableList<LabelSelector>> supplier =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () -> {
             TreeMap<Integer, LabelSelector> all = new TreeMap<>();
             all.putAll(includedLabelSets);

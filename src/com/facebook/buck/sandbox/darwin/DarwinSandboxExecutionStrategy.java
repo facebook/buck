@@ -21,10 +21,10 @@ import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.facebook.buck.shell.programrunner.ProgramRunner;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Suppliers;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
@@ -43,7 +43,7 @@ public class DarwinSandboxExecutionStrategy implements SandboxExecutionStrategy 
     this.sandboxConfig = sandboxConfig;
 
     this.isSandboxExecutionVerified =
-        Suppliers.memoize(() -> verifySandboxExecution(processExecutor));
+        MoreSuppliers.memoize(() -> verifySandboxExecution(processExecutor));
   }
 
   @Override

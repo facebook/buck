@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -44,7 +44,7 @@ import org.kohsuke.args4j.spi.Setter;
 public class StringSetOptionHandler extends OptionHandler<Supplier<ImmutableSet<String>>> {
 
   private final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-  private final Supplier<ImmutableSet<String>> supplier = Suppliers.memoize(builder::build);
+  private final Supplier<ImmutableSet<String>> supplier = MoreSuppliers.memoize(builder::build);
 
   public StringSetOptionHandler(
       CmdLineParser parser, OptionDef option, Setter<? super Supplier<ImmutableSet<String>>> setter)

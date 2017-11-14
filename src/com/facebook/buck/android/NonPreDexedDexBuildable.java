@@ -45,6 +45,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
@@ -201,7 +202,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     this.shouldSplitDex = shouldSplitDex;
 
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(MoreCollectors.toImmutableSortedSet()));
@@ -543,7 +544,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
           }
         });
 
-    return Suppliers.memoize(builder::build);
+    return MoreSuppliers.memoize(builder::build);
   }
 
   /** @return the resulting set of ProGuarded classpath entries to dex. */

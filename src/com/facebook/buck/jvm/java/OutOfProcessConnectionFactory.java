@@ -23,11 +23,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.external.BundledExternalProcessLauncher;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.worker.WorkerProcess;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -45,9 +45,9 @@ public class OutOfProcessConnectionFactory {
   private static final BundledExternalProcessLauncher LAUNCHER =
       new BundledExternalProcessLauncher();
   private static final Supplier<ImmutableList<String>> COMMAND_SUPPLIER =
-      Suppliers.memoize(LAUNCHER::getCommandForOutOfProcessJavac);
+      MoreSuppliers.memoize(LAUNCHER::getCommandForOutOfProcessJavac);
   private static final Supplier<ImmutableMap<String, String>> ENV_SUPPLIER =
-      Suppliers.memoize(LAUNCHER::getEnvForOutOfProcessJavac);
+      MoreSuppliers.memoize(LAUNCHER::getEnvForOutOfProcessJavac);
 
   @Nullable
   public static Connection<OutOfProcessJavacConnectionInterface> connectionForOutOfProcessBuild(

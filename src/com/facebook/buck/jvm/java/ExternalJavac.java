@@ -32,14 +32,15 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +65,7 @@ public class ExternalJavac implements Javac {
     this.pathToJavac = pathToJavac;
 
     this.version =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               if (pathToJavac.isRight()
                   && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
@@ -81,7 +82,7 @@ public class ExternalJavac implements Javac {
                                       .toString(),
                               "-version"))
                       .build();
-              ProcessExecutor.Result result;
+              Result result;
               try {
                 result = createProcessExecutor().launchAndExecute(params);
               } catch (InterruptedException | IOException e) {

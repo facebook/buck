@@ -30,10 +30,11 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -70,9 +71,9 @@ public class APKModuleGraph implements AddsToRuleKey {
   private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
 
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () -> {
-            final ImmutableMap.Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
+            final Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
             new AbstractBreadthFirstTraversal<APKModule>(getGraph().getNodesWithNoIncomingEdges()) {
               @Override
               public ImmutableSet<APKModule> visit(final APKModule node) {
@@ -87,13 +88,13 @@ public class APKModuleGraph implements AddsToRuleKey {
           });
 
   private final Supplier<APKModule> rootAPKModuleSupplier =
-      Suppliers.memoize(this::generateRootModule);
+      MoreSuppliers.memoize(this::generateRootModule);
 
   private final Supplier<DirectedAcyclicGraph<APKModule>> graphSupplier =
-      Suppliers.memoize(this::generateGraph);
+      MoreSuppliers.memoize(this::generateGraph);
 
   private final Supplier<ImmutableSet<APKModule>> modulesSupplier =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () -> {
             final ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
             new AbstractBreadthFirstTraversal<APKModule>(getRootAPKModule()) {
@@ -107,10 +108,10 @@ public class APKModuleGraph implements AddsToRuleKey {
           });
 
   private final Supplier<ImmutableMultimap<BuildTarget, String>> sharedSeedsSupplier =
-      Suppliers.memoize(this::generateSharedSeeds);
+      MoreSuppliers.memoize(this::generateSharedSeeds);
 
   private final Supplier<Optional<Map<String, List<BuildTarget>>>> configMapSupplier =
-      Suppliers.memoize(this::generateSeedConfigMap);
+      MoreSuppliers.memoize(this::generateSeedConfigMap);
 
   /**
    * Constructor for the {@code APKModule} graph generator object

@@ -34,6 +34,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -176,7 +177,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
               getProjectFilesystem(),
               context.getSourcePathResolver().getAbsolutePath(valuesFile.get()));
       steps.add(readValuesStep);
-      totalFields = Suppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
+      totalFields = MoreSuppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
     } else {
       totalFields = Suppliers.ofInstance(defaultValues);
     }

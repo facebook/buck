@@ -38,9 +38,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -115,7 +115,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       final ImmutableSortedSet<SourcePath> interfaces,
       ImmutableSortedSet<SourcePath> objects) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ghcPkg.getDeps(ruleFinder))

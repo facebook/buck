@@ -35,9 +35,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.ZipScrubberStep;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -77,7 +77,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.manifestEntries = manifestEntries;
     this.noAutoVersion = noAutoVersion;
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(compileRules)

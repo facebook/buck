@@ -31,13 +31,13 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -102,7 +102,7 @@ public class RealAndroidDevice implements AndroidDevice {
     this.console = console;
     this.rapidInstallTypes = rapidInstallTypes;
     this.agent =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ExopackageAgent.installAgentIfNecessary(
                     eventBus,

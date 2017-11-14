@@ -45,12 +45,12 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -118,7 +118,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.rapidInstallTypes = rapidInstallTypes;
-    this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
+    this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
   }
 
   @VisibleForTesting

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
@@ -44,7 +45,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -119,7 +119,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     this.assertSingleThreadedParsing = new AssertScopeExclusiveAccess();
 
     this.rawConfigJson =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               try {
                 Path rawConfigJson1 = Files.createTempFile("raw_config", ".json");
@@ -134,7 +134,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
               }
             });
     this.ignorePathsJson =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               try {
                 Path ignorePathsJson1 = Files.createTempFile("ignore_paths", ".json");

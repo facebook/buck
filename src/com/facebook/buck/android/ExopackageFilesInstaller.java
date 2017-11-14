@@ -33,8 +33,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -73,7 +73,7 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
     this.exoSourcePaths = getExopackageSourcePaths(exopackageInfo);
 
     this.depsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(sourcePathRuleFinder.filterBuildRuleInputs(exoSourcePaths))

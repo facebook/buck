@@ -17,8 +17,8 @@ package com.facebook.buck.util.bsd;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -57,7 +57,7 @@ public class UnixArchive {
     if (!checkHeader(buffer)) {
       throw new IOException("Archive file has unexpected header");
     }
-    this.entries = Suppliers.memoize(this::loadEntries);
+    this.entries = MoreSuppliers.memoize(this::loadEntries);
     this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
   }
 

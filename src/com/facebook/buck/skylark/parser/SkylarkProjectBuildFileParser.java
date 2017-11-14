@@ -35,8 +35,8 @@ import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -112,10 +112,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // since Skylark parser is currently disabled by default, avoid creating functions in case
     // it's never used
     // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
-    this.buckRuleFunctionsSupplier = Suppliers.memoize(this::getBuckRuleFunctions);
+    this.buckRuleFunctionsSupplier = MoreSuppliers.memoize(this::getBuckRuleFunctions);
     this.nativeModuleSupplier =
-        Suppliers.memoize(() -> new NativeModule(buckRuleFunctionsSupplier.get(), Glob.create()));
-    this.buckGlobalsSupplier = Suppliers.memoize(this::getBuckGlobals);
+        MoreSuppliers.memoize(
+            () -> new NativeModule(buckRuleFunctionsSupplier.get(), Glob.create()));
+    this.buckGlobalsSupplier = MoreSuppliers.memoize(this::getBuckGlobals);
     this.readConfigFunction = ReadConfig.create();
   }
 

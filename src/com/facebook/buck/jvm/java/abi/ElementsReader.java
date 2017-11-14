@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,7 +55,7 @@ class ElementsReader implements LibraryReader {
     this.elements = elements;
     this.messager = messager;
     this.allElements =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               Map<Path, Element> allElements = new LinkedHashMap<>();
               topLevelElements.forEach(element -> addAllElements(element, allElements));

@@ -38,9 +38,9 @@ import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -124,7 +124,7 @@ public class JsBundleGenruleDescription
         sandboxExecutionStrategy,
         resolver,
         params.withExtraDeps(
-            Suppliers.memoize(
+            MoreSuppliers.memoize(
                 () ->
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(originalExtraDeps.get())

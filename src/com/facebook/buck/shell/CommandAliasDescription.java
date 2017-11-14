@@ -40,9 +40,9 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -208,7 +208,7 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       }
 
       return new PlatformSpecificTool(
-          tool.map(t -> Suppliers.memoize(() -> asTool(t, resolver)))
+          tool.map(t -> MoreSuppliers.memoize(() -> asTool(t, resolver)))
               .orElse(
                   () -> {
                     throw new UnsupportedPlatformException(buildTarget, targetPlatform);
