@@ -1057,21 +1057,22 @@ public class ProjectGenerator {
         mutator.setArchives(Sets.difference(targetNodeDeps, excludedDeps));
       }
 
-      if (!includeFrameworks && isFocusedOnTarget) {
-        // If the current target, which is non-shared (e.g., static lib), depends on other focused
-        // targets which include Swift code, we must ensure those are treated as dependencies so
-        // that Xcode builds the targets in the correct order. Unfortunately, those deps can be
-        // part of other projects which would require cross-project references.
-        //
-        // Thankfully, there's an easy workaround because we can just create a phony copy phase
-        // which depends on the outputs of the deps (i.e., the static libs). The copy phase
-        // will effectively say "Copy libX.a from Products Dir into Products Dir" which is a nop.
-        // To be on the safe side, we're explicitly marking the copy phase as only running for
-        // deployment postprocessing (i.e., "Copy only when installing") and disabling
-        // deployment postprocessing (it's enabled by default for release builds).
+      if (isFocusedOnTarget) {
         ImmutableSet<PBXFileReference> swiftDeps =
             collectRecursiveLibraryDependenciesWithSwiftSources(targetNode);
-        if (!swiftDeps.isEmpty()) {
+
+        if (!includeFrameworks && !swiftDeps.isEmpty()) {
+          // If the current target, which is non-shared (e.g., static lib), depends on other focused
+          // targets which include Swift code, we must ensure those are treated as dependencies so
+          // that Xcode builds the targets in the correct order. Unfortunately, those deps can be
+          // part of other projects which would require cross-project references.
+          //
+          // Thankfully, there's an easy workaround because we can just create a phony copy phase
+          // which depends on the outputs of the deps (i.e., the static libs). The copy phase
+          // will effectively say "Copy libX.a from Products Dir into Products Dir" which is a nop.
+          // To be on the safe side, we're explicitly marking the copy phase as only running for
+          // deployment postprocessing (i.e., "Copy only when installing") and disabling
+          // deployment postprocessing (it's enabled by default for release builds).
           CopyFilePhaseDestinationSpec.Builder destSpecBuilder =
               CopyFilePhaseDestinationSpec.builder();
           destSpecBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
