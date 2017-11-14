@@ -61,6 +61,11 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
   }
 
   @Override
+  protected String expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
+      throws MacroException {
+    return expand(resolver, rule);
+  }
+
   public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
     // TODO(mikekap): Pass environment variables through.
     return getTool(rule)

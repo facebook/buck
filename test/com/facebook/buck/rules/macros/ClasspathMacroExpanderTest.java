@@ -137,7 +137,7 @@ public class ClasspathMacroExpanderTest {
             .setSrc(FakeSourcePath.of("some-file.jar"))
             .build(ruleResolver);
 
-    expander.expand(pathResolver, rule);
+    expander.expand(pathResolver, ClasspathMacro.of(rule.getBuildTarget()), rule);
   }
 
   @Test
@@ -219,7 +219,9 @@ public class ClasspathMacroExpanderTest {
       throws MacroException {
     String classpath =
         expander.expand(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver)), rule);
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver)),
+            ClasspathMacro.of(rule.getBuildTarget()),
+            rule);
     String fileClasspath =
         expander.expandForFile(
             rule.getBuildTarget(),

@@ -237,6 +237,7 @@ java_immutables_library(
         "DependencyAggregation.java",
         "Description.java",
         "HasDeclaredAndExtraDeps.java",
+        "HasSupplementaryOutputs.java",
         "NodeCopier.java",
         "RulePipelineState.java",
         "SourcePathRuleFinder.java",

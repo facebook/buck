@@ -59,7 +59,8 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<Mave
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
+  public String expand(SourcePathResolver resolver, MavenCoordinatesMacro ignored, BuildRule rule)
+      throws MacroException {
     return getMavenCoordinates(rule);
   }
 }

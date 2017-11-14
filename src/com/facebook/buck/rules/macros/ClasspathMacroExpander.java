@@ -86,7 +86,8 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   }
 
   @Override
-  protected String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
+  protected String expand(SourcePathResolver resolver, ClasspathMacro ignored, BuildRule rule)
+      throws MacroException {
     return getHasClasspathEntries(rule)
         .getTransitiveClasspathDeps()
         .stream()

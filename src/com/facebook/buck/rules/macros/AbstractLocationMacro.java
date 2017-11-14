@@ -16,10 +16,52 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.annotations.VisibleForTesting;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 /** Macro that resolves to the output location of a build rule. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractLocationMacro extends BuildTargetMacro {}
+abstract class AbstractLocationMacro extends BuildTargetMacro {
+
+  private static Pattern BUILD_TARGET_WITH_SUPPLEMENTARY_OUTPUT_PATTERN =
+      Pattern.compile("^(?<target>.+?)(?:\\[(?<output>[A-Za-z0-9_./-]+)\\])?$");
+
+  @Value.Parameter(order = 2)
+  abstract Optional<String> getSupplementaryOutputIdentifier();
+
+  /** Shorthand for constructing a LocationMacro referring to the main output. */
+  @VisibleForTesting
+  public static LocationMacro of(BuildTarget buildTarget) {
+    return LocationMacro.of(buildTarget, Optional.empty());
+  }
+
+  /**
+   * Split a build target string with optional supplementary output pattern.
+   *
+   * @return The target part and the supplementary output part of the string.
+   *     <p>Note: this function simply looks for a trailing "[foo]", it does not validate that the
+   *     string starts with a valid build target.
+   */
+  public static SplitResult splitSupplementaryOutputPart(String targetish) {
+    Matcher matcher = BUILD_TARGET_WITH_SUPPLEMENTARY_OUTPUT_PATTERN.matcher(targetish);
+    String outputNamePart = matcher.matches() ? matcher.group("output") : null;
+    return new SplitResult(matcher.group("target"), Optional.ofNullable(outputNamePart));
+  }
+
+  /** Result object of {@link #splitSupplementaryOutputPart}. */
+  public static class SplitResult {
+    public final String target;
+    public final Optional<String> supplementaryOutput;
+
+    private SplitResult(String target, Optional<String> supplementaryOutput) {
+      this.target = target;
+      this.supplementaryOutput = supplementaryOutput;
+    }
+  }
+}

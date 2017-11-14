@@ -16,13 +16,29 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 
-public class LocationMacroTypeCoercer extends BuildTargetMacroTypeCoercer<LocationMacro> {
+class LocationMacroTypeCoercer implements MacroTypeCoercer<LocationMacro> {
+
+  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
 
   public LocationMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
-    super(buildTargetTypeCoercer);
+    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+  }
+
+  @Override
+  public boolean hasElementClass(Class<?>[] types) {
+    return buildTargetTypeCoercer.hasElementClass(types);
+  }
+
+  @Override
+  public void traverse(LocationMacro macro, TypeCoercer.Traversal traversal) {
+    buildTargetTypeCoercer.traverse(macro.getTarget(), traversal);
   }
 
   @Override
@@ -31,7 +47,20 @@ public class LocationMacroTypeCoercer extends BuildTargetMacroTypeCoercer<Locati
   }
 
   @Override
-  LocationMacro create(BuildTarget target) {
-    return LocationMacro.of(target);
+  public LocationMacro coerce(
+      CellPathResolver cellRoots,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      ImmutableList<String> args)
+      throws CoerceFailedException {
+    if (args.size() != 1) {
+      throw new CoerceFailedException(
+          String.format("expected exactly one argument (found %d)", args.size()));
+    }
+    LocationMacro.SplitResult parts = LocationMacro.splitSupplementaryOutputPart(args.get(0));
+    BuildTarget target =
+        buildTargetTypeCoercer.coerce(
+            cellRoots, filesystem, pathRelativeToProjectRoot, parts.target);
+    return LocationMacro.of(target, parts.supplementaryOutput);
   }
 }
