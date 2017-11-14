@@ -58,14 +58,13 @@ import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
+import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -939,37 +938,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       return;
     }
 
-    String buckClasspath = BuckClasspath.getBuckClasspathFromEnvVarOrNull();
-    if (Strings.isNullOrEmpty(buckClasspath)) {
-      LOG.error(
-          BuckClasspath.ENV_VAR_NAME + " env var is not set. Will not upload the trace file.");
-      return;
-    }
-
     Path fullPath = projectFilesystem.resolve(tracePath);
     Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
-    LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
 
-    try {
-      String[] args = {
-        "java",
-        "-cp",
-        buckClasspath,
-        "com.facebook.buck.util.trace.uploader.Main",
-        "--buildId",
-        buildId.toString(),
-        "--traceFilePath",
-        fullPath.toString(),
-        "--baseUrl",
-        traceUploadUri.get().toString(),
-        "--log",
-        logFile.toString()
-      };
-
-      Runtime.getRuntime().exec(args);
-    } catch (IOException e) {
-      LOG.error(e, e.getMessage());
-    }
+    UploaderLauncher.uploadInBackground(buildId, fullPath, traceUploadUri.get(), logFile);
   }
 
   private static class TracePathAndStream {
