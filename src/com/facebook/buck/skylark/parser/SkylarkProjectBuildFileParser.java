@@ -30,6 +30,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.NativeModule;
 import com.facebook.buck.skylark.function.ReadConfig;
+import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
@@ -280,6 +281,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         }
         Environment extensionEnv = envBuilder.useDefaultSemantics().build();
         extensionEnv.setup("native", nativeModuleSupplier.get());
+        Runtime.registerModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
         boolean success = extensionAst.exec(extensionEnv, eventHandler);
         if (!success) {
           throw BuildFileParseException.createForUnknownParseError(
