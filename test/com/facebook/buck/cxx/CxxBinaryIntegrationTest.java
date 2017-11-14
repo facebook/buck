@@ -53,6 +53,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
@@ -2470,6 +2471,16 @@ public class CxxBinaryIntegrationTest {
     workspace
         .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:simple")
         .assertSuccess();
+  }
+
+  @Test
+  public void targetsInPlatformSpecificFlagsDoNotBecomeDependencies() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_in_platform_specific_flags_do_not_become_dependencies", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckBuild(":bin");
+    result.assertSuccess();
   }
 
   private ImmutableSortedSet<Path> findFiles(Path root, final PathMatcher matcher)

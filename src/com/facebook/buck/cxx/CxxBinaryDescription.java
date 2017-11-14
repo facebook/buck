@@ -48,7 +48,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -56,7 +55,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
 import org.immutables.value.Value;
 
 public class CxxBinaryDescription
@@ -138,20 +136,13 @@ public class CxxBinaryDescription
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args) {
     return createBuildRule(
-        buildTarget,
-        projectFilesystem,
-        params.getExtraDeps(),
-        resolver,
-        cellRoots,
-        args,
-        ImmutableSortedSet.of());
+        buildTarget, projectFilesystem, resolver, cellRoots, args, ImmutableSortedSet.of());
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public BuildRule createBuildRule(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      Supplier<? extends SortedSet<BuildRule>> extraDepsFromOriginalParams,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args,
@@ -252,11 +243,7 @@ public class CxxBinaryDescription
         projectFilesystem,
         new BuildRuleParams(
             () -> cxxLinkAndCompileRules.deps,
-            () ->
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(extraDepsFromOriginalParams.get())
-                    .addAll(cxxLinkAndCompileRules.executable.getDeps(ruleFinder))
-                    .build(),
+            () -> ImmutableSortedSet.copyOf(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
             ImmutableSortedSet.of()),
         resolver,
         cxxPlatform,

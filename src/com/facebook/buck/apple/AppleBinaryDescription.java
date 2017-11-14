@@ -441,7 +441,6 @@ public class AppleBinaryDescription
             return delegate.createBuildRule(
                 buildTarget,
                 projectFilesystem,
-                resultParams.getExtraDeps(),
                 resolver,
                 cellRoots,
                 delegateArg.build(),
