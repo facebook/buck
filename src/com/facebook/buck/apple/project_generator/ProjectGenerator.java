@@ -991,7 +991,7 @@ public class ProjectGenerator {
     boolean isModularAppleLibrary = isModularAppleLibrary(targetNode) && isFocusedOnTarget;
     mutator.setFrameworkHeadersEnabled(isModularAppleLibrary);
 
-    Optional<ImmutableMap<String, String>> swiftDepsSettings = Optional.empty();
+    ImmutableMap.Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
 
     if (!shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
@@ -1085,7 +1085,7 @@ public class ProjectGenerator {
             copyFiles.getFiles().add(buildFile);
           }
 
-          swiftDepsSettings = Optional.of(ImmutableMap.of("DEPLOYMENT_POSTPROCESSING", "NO"));
+          swiftDepsSettingsBuilder.put("DEPLOYMENT_POSTPROCESSING", "NO");
 
           mutator.setSwiftDependenciesBuildPhase(copyFiles);
         }
@@ -1133,7 +1133,7 @@ public class ProjectGenerator {
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
 
-    swiftDepsSettings.ifPresent(settings -> extraSettingsBuilder.putAll(settings));
+    extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
 
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
     if (isModularAppleLibrary(targetNode) && isFrameworkProductType(productType)) {
