@@ -89,8 +89,11 @@ public class ReadConfigTest {
 
   private Environment evaluate(Path buildFile, Mutability mutability)
       throws IOException, InterruptedException {
+    byte[] buildFileContent =
+        FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(ParserInputSource.create(buildFile), eventHandler);
+        BuildFileAST.parseBuildFile(
+            ParserInputSource.create(buildFileContent, buildFile.asFragment()), eventHandler);
     Environment env =
         Environment.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)

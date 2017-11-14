@@ -56,6 +56,7 @@ import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.vfs.FileSystem;
+import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -189,8 +190,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
     // configured for terminals that support it.
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
+
     BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(ParserInputSource.create(buildFilePath), eventHandler);
+        BuildFileAST.parseBuildFile(createInputSource(buildFilePath), eventHandler);
     if (buildFileAst.containsErrors()) {
       throw BuildFileParseException.createForUnknownParseError(
           "Cannot parse build file " + buildFile);
@@ -213,6 +215,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           .setLoadedPaths(parseContext.getLoadedPaths())
           .build();
     }
+  }
+
+  /** Creates an instance of {@link ParserInputSource} for a file at {@code buildFilePath}. */
+  private ParserInputSource createInputSource(com.google.devtools.build.lib.vfs.Path buildFilePath)
+      throws IOException {
+    return ParserInputSource.create(
+        FileSystemUtils.readWithKnownFileSize(buildFilePath, buildFilePath.getFileSize(fileSystem)),
+        buildFilePath.asFragment());
   }
 
   /**
@@ -258,7 +268,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           Mutability.create("importing " + skylarkImport.getImportString())) {
         com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
         BuildFileAST extensionAst =
-            BuildFileAST.parseSkylarkFile(ParserInputSource.create(extensionPath), eventHandler);
+            BuildFileAST.parseSkylarkFile(createInputSource(extensionPath), eventHandler);
         if (extensionAst.containsErrors()) {
           throw BuildFileParseException.createForUnknownParseError(
               "Cannot parse extension file " + skylarkImport.getImportString());
