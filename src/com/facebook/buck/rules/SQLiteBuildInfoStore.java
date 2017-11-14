@@ -49,7 +49,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
     try {
       Class.forName("org.sqlite.JDBC");
       connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-      connection.createStatement().executeUpdate("PRAGMA SYNCHRONOUS = NORMAL");
+      connection.createStatement().executeUpdate("PRAGMA SYNCHRONOUS = OFF");
       connection.createStatement().executeUpdate("PRAGMA JOURNAL_MODE = WAL");
       connection
           .createStatement()
