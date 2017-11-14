@@ -16,10 +16,12 @@
 
 package com.facebook.buck.plugin;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import org.pf4j.CompoundPluginDescriptorFinder;
 import org.pf4j.DefaultPluginManager;
 import org.pf4j.ExtensionFinder;
+import org.pf4j.JarPluginLoader;
+import org.pf4j.ManifestPluginDescriptorFinder;
+import org.pf4j.PluginLoader;
 import org.pf4j.PluginManager;
 
 /**
@@ -29,20 +31,26 @@ import org.pf4j.PluginManager;
  */
 public class BuckPluginManagerFactory {
 
+  private static class BuckPluginManager extends DefaultPluginManager {
+    @Override
+    protected ExtensionFinder createExtensionFinder() {
+      return new BuckExtensionFinder(this);
+    }
+
+    @Override
+    protected CompoundPluginDescriptorFinder createPluginDescriptorFinder() {
+      return new CompoundPluginDescriptorFinder().add(new ManifestPluginDescriptorFinder());
+    }
+
+    @Override
+    protected PluginLoader createPluginLoader() {
+      return new JarPluginLoader(this);
+    }
+  }
+
+  /** Creates a {@link PluginManager} and loads plugins. */
   public static PluginManager createPluginManager() {
-    PluginManager pluginManager =
-        new DefaultPluginManager() {
-          @Override
-          protected ExtensionFinder createExtensionFinder() {
-            return new BuckExtensionFinder();
-          }
-
-          @Override
-          public Path getPluginsRoot() {
-            return Paths.get("buck-plugins");
-          }
-        };
-
+    PluginManager pluginManager = new BuckPluginManager();
     pluginManager.loadPlugins();
     pluginManager.startPlugins();
 

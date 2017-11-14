@@ -77,6 +77,8 @@
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
   <property name="buck.info.error.file" value="${build.dir}/buck-info-error.txt"/>
 
+  <property name="modules.dir.name" value="buck-modules" />
+
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
   <available property="jdk1.8" classname="java.util.stream.Stream"/>
   <condition
@@ -238,7 +240,7 @@
        do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
-  <target name="default" depends="clear-successful-build, compile, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, gen-buck-info, mark-successful-build" />
+  <target name="default" depends="clear-successful-build, compile, build-modules, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, gen-buck-info, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -477,9 +479,22 @@
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
+          <exclude name="com/facebook/buck/zip/rules/**" />
         </patternset>
       </javac-params>
     </ecj>
+  </target>
+
+  <target name="build-modules" depends="build-module-ziprules"/>
+
+  <target name="build-module-ziprules" depends="compile">
+    <build-buck-module-jar
+      module-name="ziprules"
+      module-manifest="src/com/facebook/buck/zip/rules/META-INF/MANIFEST.MF">
+      <module-javac-params>
+        <include name="com/facebook/buck/zip/rules/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
   </target>
 
   <fileset dir="${third-party.dir}/java" id="dx.jars">
@@ -891,6 +906,29 @@
       <arg value="programs/gen_buck_info.py"/>
     </exec>
   </target>
+
+  <macrodef name="build-buck-module-jar">
+    <attribute name="module-name" />
+    <attribute name="module-classes-dir" default="${build.dir}/classes/${modules.dir.name}/@{module-name}" />
+    <attribute name="module-jar" default="${build.dir}/${modules.dir.name}/@{module-name}.jar" />
+    <attribute name="module-manifest" />
+    <element name="module-javac-params" optional="true" />
+    <sequential>
+      <mkdir dir="@{module-classes-dir}" />
+      <path id="@{module-name}-classpath">
+        <pathelement location="${classes.dir}" />
+        <path refid="classpath-no-src" />
+      </path>
+      <ecj destdir="@{module-classes-dir}" classpathref="@{module-name}-classpath">
+        <javac-params>
+          <module-javac-params/>
+        </javac-params>
+      </ecj>
+      <jar destfile="@{module-jar}" manifest="@{module-manifest}">
+        <fileset dir="@{module-classes-dir}" />
+      </jar>
+    </sequential>
+  </macrodef>
 
   <target name="lint" depends="pmd, missing-test-files-check" />
 

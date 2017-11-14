@@ -81,6 +81,7 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "path_to_rawmanifest_py": "//src/com/facebook/buck/util/versioncontrol:rawmanifest",
     "path_to_sh_binary_template": "//src/com/facebook/buck/shell:sh_binary_template",
     "path_to_typing": "//third-party/py:typing-archive",
+    "buck-modules/ziprules.jar": "//src/com/facebook/buck/zip/rules:rules-module",
 }
 
 # This genrule generates a single hash of all resources listed in

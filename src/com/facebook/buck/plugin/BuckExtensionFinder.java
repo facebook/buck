@@ -17,13 +17,17 @@
 package com.facebook.buck.plugin;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import org.pf4j.Extension;
 import org.pf4j.ExtensionDescriptor;
 import org.pf4j.ExtensionFinder;
 import org.pf4j.ExtensionWrapper;
+import org.pf4j.PluginManager;
+import org.pf4j.PluginWrapper;
 
 /**
  * This {@link ExtensionFinder} tries to load extensions using {@link ServiceLoader}.
@@ -35,13 +39,31 @@ import org.pf4j.ExtensionWrapper;
  */
 class BuckExtensionFinder implements ExtensionFinder {
 
+  private final PluginManager pluginManager;
+
+  BuckExtensionFinder(PluginManager pluginManager) {
+    this.pluginManager = pluginManager;
+  }
+
   @Override
   public <T> List<ExtensionWrapper<T>> find(Class<T> type) {
-    ServiceLoader<T> serviceLoader = ServiceLoader.load(type);
+    Map<Class<?>, ExtensionWrapper<T>> extensions = new HashMap<>();
 
-    List<ExtensionWrapper<T>> extensions = new ArrayList<>();
-    serviceLoader.forEach(extension -> extensions.add(createExtensionWrapper(extension)));
-    return extensions;
+    ServiceLoader<T> serviceLoader = ServiceLoader.load(type);
+    serviceLoader.forEach(extension -> addExtension(extensions, extension));
+
+    for (PluginWrapper pluginWrapper : pluginManager.getPlugins()) {
+      ServiceLoader<T> pluginServiceLoader =
+          ServiceLoader.load(type, pluginWrapper.getPluginClassLoader());
+      pluginServiceLoader.forEach(extension -> addExtension(extensions, extension));
+    }
+
+    return new ArrayList<>(extensions.values());
+  }
+
+  private <T> void addExtension(Map<Class<?>, ExtensionWrapper<T>> extensions, T extension) {
+    ExtensionWrapper<T> extensionWrapper = createExtensionWrapper(extension);
+    extensions.put(extensionWrapper.getDescriptor().extensionClass, extensionWrapper);
   }
 
   @Override

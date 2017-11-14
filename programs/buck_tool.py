@@ -205,6 +205,9 @@ class BuckTool(object):
 
         raise NotImplementedError()
 
+    def _unpack_modules(self):
+        raise NotImplementedError()
+
     def _get_extra_java_args(self):
         return []
 
@@ -368,6 +371,8 @@ class BuckTool(object):
 
                 use_nailgun = use_buckd and self._is_buckd_running()
                 run_fn = self._run_with_nailgun if use_nailgun else self._run_without_nailgun
+
+                self._unpack_modules()
 
                 return self._execute_command_and_maybe_run_target(run_fn, env)
 

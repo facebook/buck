@@ -1,0 +1,10 @@
+java_library(
+    name = "module",
+    srcs = glob(
+        ["*.java"],
+    ),
+    exported_deps = [
+        "//third-party/java/pf4j:pf4j",
+    ],
+    visibility = ["PUBLIC"],
+)

@@ -90,10 +90,14 @@ class BuckRepo(BuckTool):
         with Tracing('BuckRepo._get_extra_java_args'):
             return [
                 "-Dbuck.git_dirty={0}".format(int(self._get_buck_repo_dirty())),
+                "-Dpf4j.pluginsDir={0}/build/buck-modules".format(self.buck_dir),
             ]
 
     def _get_bootstrap_classpath(self):
         return self._join_buck_dir("build/bootstrapper/bootstrapper.jar")
+
+    def _unpack_modules(self):
+        pass
 
     def _get_java_classpath(self):
         classpath_file_path = os.path.join(self.buck_dir, "build", "classpath", "classpaths")
