@@ -301,7 +301,6 @@ public class HaskellDescriptionUtils {
             new WriteFile(
                 emptyModuleTarget,
                 projectFilesystem,
-                baseParams,
                 "module Unused where",
                 BuildTargets.getGenPath(projectFilesystem, emptyModuleTarget, "%s/Unused.hs"),
                 /* executable */ false));
@@ -381,8 +380,8 @@ public class HaskellDescriptionUtils {
               depsBuilder.addAll(platform.getLinker().getParseTimeDeps());
               depsBuilder.addAll(platform.getPackager().getParseTimeDeps());
 
-              // We use the C/C++ linker's Linker object to find out how to pass in the soname, so just
-              // add all C/C++ platform parse time deps.
+              // We use the C/C++ linker's Linker object to find out how to pass in the soname, so
+              // just add all C/C++ platform parse time deps.
               depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
             });
   }

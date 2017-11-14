@@ -564,7 +564,6 @@ public class LuaBinaryDescription
   private Tool getInPlaceBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       final SourcePath starter,
@@ -584,8 +583,7 @@ public class LuaBinaryDescription
     if (!components.getPythonModules().isEmpty()) {
       // Add in any missing init modules into the python components.
       SourcePath emptyInit =
-          PythonBinaryDescription.createEmptyInitModule(
-              buildTarget, projectFilesystem, params, resolver);
+          PythonBinaryDescription.createEmptyInitModule(buildTarget, projectFilesystem, resolver);
       extraInputs.add(emptyInit);
       ImmutableMap<String, SourcePath> pythonModules =
           MoreMaps.transformKeys(
@@ -727,7 +725,6 @@ public class LuaBinaryDescription
         return getInPlaceBinary(
             buildTarget,
             projectFilesystem,
-            params,
             resolver,
             luaPlatform.getCxxPlatform(),
             starter,

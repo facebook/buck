@@ -87,7 +87,6 @@ abstract class AbstractLuaScriptStarter implements Starter {
                 new WriteFile(
                     templateTarget,
                     getProjectFilesystem(),
-                    getBaseParams().withoutDeclaredDeps().withoutExtraDeps(),
                     getPureStarterTemplate(),
                     BuildTargets.getGenPath(
                         getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),

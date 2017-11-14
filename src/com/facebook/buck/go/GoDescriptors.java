@@ -265,7 +265,6 @@ abstract class GoDescriptors {
                               new WriteFile(
                                   generatorSourceTarget,
                                   projectFilesystem,
-                                  sourceParams.withoutDeclaredDeps().withoutExtraDeps(),
                                   extractTestMainGenerator(),
                                   BuildTargets.getGenPath(
                                       projectFilesystem, generatorSourceTarget, "%s/main.go"),

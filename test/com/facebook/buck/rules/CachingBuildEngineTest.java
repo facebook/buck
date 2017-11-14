@@ -1209,10 +1209,8 @@ public class CachingBuildEngineTest {
 
       // Create a simple rule which just writes something new to the output file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-      BuildRuleParams params = TestBuildRuleParams.create();
       BuildRule rule =
-          new WriteFile(
-              target, filesystem, params, "something else", output, /* executable */ false);
+          new WriteFile(target, filesystem, "something else", output, /* executable */ false);
 
       // Create the build engine.
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
@@ -1428,12 +1426,7 @@ public class CachingBuildEngineTest {
       BuildTarget buildTarget = BuildTargetFactory.newInstance("//:rule");
       BuildRule rule =
           new WriteFile(
-              buildTarget,
-              filesystem,
-              TestBuildRuleParams.create(),
-              "data",
-              Paths.get("output/path"),
-              /* executable */ false);
+              buildTarget, filesystem, "data", Paths.get("output/path"), /* executable */ false);
 
       // Create the build engine with low cache artifact limit which prevents caching the above\
       // rule.
@@ -1458,10 +1451,8 @@ public class CachingBuildEngineTest {
       // Create a simple rule which just writes something new to the output file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       Path output = filesystem.getPath("output/path");
-      BuildRuleParams params = TestBuildRuleParams.create();
       BuildRule rule =
-          new WriteFile(
-              target, filesystem, params, "something else", output, /* executable */ false);
+          new WriteFile(target, filesystem, "something else", output, /* executable */ false);
 
       // Run an initial build to seed the cache.
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
@@ -3266,10 +3257,8 @@ public class CachingBuildEngineTest {
       // Create a noop simple rule.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       Path output = filesystem.getPath("output/path");
-      BuildRuleParams params = TestBuildRuleParams.create();
       BuildRule rule =
-          new WriteFile(
-              target, filesystem, params, "something else", output, /* executable */ false);
+          new WriteFile(target, filesystem, "something else", output, /* executable */ false);
 
       // Run the build and extract the event.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
@@ -3297,10 +3286,8 @@ public class CachingBuildEngineTest {
       // Create a noop simple rule.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       Path output = filesystem.getPath("output/path");
-      BuildRuleParams params = TestBuildRuleParams.create();
       BuildRule rule =
-          new WriteFile(
-              target, filesystem, params, "something else", output, /* executable */ false);
+          new WriteFile(target, filesystem, "something else", output, /* executable */ false);
 
       // Run an initial build to seed the cache.
       CachingBuildEngine cachingBuildEngine1 = cachingBuildEngineFactory().build();
@@ -3338,10 +3325,8 @@ public class CachingBuildEngineTest {
       // Create a noop simple rule.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       Path output = filesystem.getPath("output/path");
-      BuildRuleParams params = TestBuildRuleParams.create();
       BuildRule rule =
-          new WriteFile(
-              target, filesystem, params, "something else", output, /* executable */ false);
+          new WriteFile(target, filesystem, "something else", output, /* executable */ false);
 
       // Run an initial build to seed the cache.
       CachingBuildEngine cachingBuildEngine1 = cachingBuildEngineFactory().build();

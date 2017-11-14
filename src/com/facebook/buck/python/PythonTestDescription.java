@@ -141,7 +141,6 @@ public class PythonTestDescription
   private static BuildRule createTestModulesSourceBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       Path outputPath,
       ImmutableSet<String> testModules) {
 
@@ -152,12 +151,7 @@ public class PythonTestDescription
     String contents = getTestModulesListContents(testModules);
 
     return new WriteFile(
-        newBuildTarget,
-        projectFilesystem,
-        params.withoutDeclaredDeps().withoutExtraDeps(),
-        contents,
-        outputPath, /* executable */
-        false);
+        newBuildTarget, projectFilesystem, contents, outputPath, /* executable */ false);
   }
 
   private CxxPlatform getCxxPlatform(BuildTarget target, AbstractPythonTestDescriptionArg args) {
@@ -234,7 +228,6 @@ public class PythonTestDescription
         createTestModulesSourceBuildRule(
             buildTarget,
             projectFilesystem,
-            params,
             getTestModulesListPath(buildTarget, projectFilesystem),
             testModules);
     resolver.addToIndex(testModulesBuildRule);

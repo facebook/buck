@@ -103,21 +103,13 @@ public class PythonBinaryDescription
   }
 
   public static SourcePath createEmptyInitModule(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver resolver) {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleResolver resolver) {
     BuildTarget emptyInitTarget = getEmptyInitTarget(buildTarget);
     Path emptyInitPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/__init__.py");
     WriteFile rule =
         resolver.addToIndex(
             new WriteFile(
-                emptyInitTarget,
-                projectFilesystem,
-                params.withoutDeclaredDeps().withoutExtraDeps(),
-                "",
-                emptyInitPath,
-                /* executable */ false));
+                emptyInitTarget, projectFilesystem, "", emptyInitPath, /* executable */ false));
     return rule.getSourcePathToOutput();
   }
 
@@ -162,7 +154,7 @@ public class PythonBinaryDescription
     }
 
     // Add in any missing init modules into the python components.
-    SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, params, resolver);
+    SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, resolver);
     components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
 
     BuildTarget linkTreeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("link-tree"));

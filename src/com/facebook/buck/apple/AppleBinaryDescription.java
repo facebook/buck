@@ -390,7 +390,6 @@ public class AppleBinaryDescription
         buildTarget,
         ignored -> {
           ImmutableSortedSet<BuildTarget> extraCxxDeps;
-          BuildRuleParams resultParams;
           Optional<BuildRule> swiftCompanionBuildRule =
               swiftDelegate.flatMap(
                   swift ->
@@ -409,11 +408,8 @@ public class AppleBinaryDescription
           } else if (swiftCompanionBuildRule.isPresent()) {
             // otherwise, add this swift rule as a dependency.
             extraCxxDeps = ImmutableSortedSet.of(swiftCompanionBuildRule.get().getBuildTarget());
-            resultParams =
-                params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
           } else {
             extraCxxDeps = ImmutableSortedSet.of();
-            resultParams = params;
           }
 
           SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -425,7 +421,6 @@ public class AppleBinaryDescription
               return new WriteFile(
                   buildTarget,
                   projectFilesystem,
-                  resultParams,
                   Files.readAllBytes(stubBinaryPath.get()),
                   BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
                   true);

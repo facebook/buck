@@ -127,7 +127,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                               new WriteFile(
                                   templateTarget,
                                   getProjectFilesystem(),
-                                  getBaseParams().withoutDeclaredDeps().withoutExtraDeps(),
                                   getNativeStarterCxxSourceTemplate(),
                                   BuildTargets.getGenPath(
                                       getProjectFilesystem(),
