@@ -24,10 +24,12 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -113,6 +115,26 @@ public class MultiArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return storeToCaches(writableArtifactCaches, info, output);
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    ArrayList<ListenableFuture<CacheDeleteResult>> futures = new ArrayList<>();
+    for (ArtifactCache artifactCache : writableArtifactCaches) {
+      futures.add(artifactCache.deleteAsync(ruleKeys));
+    }
+
+    return Futures.transform(
+        Futures.allAsList(futures),
+        deleteResults -> {
+          Builder<String> cacheNames = ImmutableList.builder();
+          for (CacheDeleteResult deleteResult : deleteResults) {
+            cacheNames.addAll(deleteResult.getCacheNames());
+          }
+
+          return CacheDeleteResult.builder().setCacheNames(cacheNames.build()).build();
+        },
+        MoreExecutors.directExecutor());
   }
 
   @Override

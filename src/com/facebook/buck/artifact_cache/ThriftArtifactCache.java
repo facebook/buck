@@ -16,6 +16,8 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.thrift.ArtifactMetadata;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheDeleteRequest;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheDeleteResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchRequest;
@@ -48,6 +50,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -633,6 +636,79 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         });
 
     return builder;
+  }
+
+  @Override
+  protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
+    List<com.facebook.buck.artifact_cache.thrift.RuleKey> ruleKeysThrift =
+        ruleKeys
+            .stream()
+            .map(
+                r ->
+                    new com.facebook.buck.artifact_cache.thrift.RuleKey()
+                        .setHashString(r.toString()))
+            .collect(Collectors.toList());
+
+    BuckCacheDeleteRequest deleteRequest = new BuckCacheDeleteRequest();
+    deleteRequest.setDistributedBuildModeEnabledIsSet(distributedBuildModeEnabled);
+    deleteRequest.setRepository(getRepository());
+    deleteRequest.setRuleKeys(ruleKeysThrift);
+    deleteRequest.setScheduleType(scheduleType);
+    BuckCacheRequest cacheRequest = new BuckCacheRequest();
+    cacheRequest.setType(BuckCacheRequestType.DELETE_REQUEST);
+    cacheRequest.setDeleteRequest(deleteRequest);
+
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(String.format("Deleting rule keys: [%s].", ruleKeys));
+    }
+
+    final ThriftArtifactCacheProtocol.Request request =
+        ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
+    Request.Builder builder = toOkHttpRequest(request);
+    try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {
+      if (httpResponse.statusCode() != 200) {
+        throw new IOException(
+            String.format(
+                "Failed to delete cache artifacts with HTTP status code [%d:%s] " + " to url [%s].",
+                httpResponse.statusCode(),
+                httpResponse.statusMessage(),
+                httpResponse.requestUrl()));
+      }
+
+      try (ThriftArtifactCacheProtocol.Response response =
+          ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
+        BuckCacheResponse cacheResponse = response.getThriftData();
+        if (!cacheResponse.isWasSuccessful()) {
+          throw new IOException(
+              String.format(
+                  "Failed to store artifact with thriftErrorMessage=[%s] " + "url=[%s]",
+                  response.getThriftData().getErrorMessage(), httpResponse.requestUrl()));
+        }
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(
+              "Debug info for cache delete request: ruleKeys=[%s] response=[%s]",
+              ruleKeys, ThriftUtil.thriftToDebugJson(cacheResponse));
+        }
+
+        BuckCacheDeleteResponse deleteResponse = cacheResponse.deleteResponse;
+        if (deleteResponse == null) {
+          throw new IOException("Got response without deleteResponse object");
+        }
+
+        String storesCommaSeparated;
+        if (deleteResponse.debugInfo != null
+            && deleteResponse.debugInfo.storesDeletedFrom != null) {
+          storesCommaSeparated = String.join(", ", deleteResponse.debugInfo.storesDeletedFrom);
+        } else {
+          storesCommaSeparated = "";
+        }
+
+        String cacheName =
+            ThriftArtifactCache.class.getSimpleName() + "[" + storesCommaSeparated + "]";
+        ImmutableList<String> cacheNames = ImmutableList.of(cacheName);
+        return CacheDeleteResult.builder().setCacheNames(cacheNames).build();
+      }
+    }
   }
 
   private class PayloadReader {

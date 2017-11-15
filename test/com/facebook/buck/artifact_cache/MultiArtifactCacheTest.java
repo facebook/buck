@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -219,6 +220,11 @@ public class MultiArtifactCacheTest {
       }
       storedKey.set(Iterables.getFirst(info.getRuleKeys(), null));
       return Futures.immediateFuture(null);
+    }
+
+    @Override
+    public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+      throw new RuntimeException("Delete operation is not supported");
     }
 
     @Override

@@ -18,10 +18,12 @@ package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.artifact_cache.thrift.ArtifactMetadata;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheDeleteResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType;
@@ -55,11 +57,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import javax.annotation.Nullable;
 import okhttp3.Request;
 import org.apache.thrift.TBase;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -329,5 +333,59 @@ public class ThriftArtifactCacheTest {
     }
 
     EasyMock.verify(fetchClient);
+  }
+
+  private HttpResponse makeSuccessfulDeleteResponse() {
+    BuckCacheDeleteResponse deleteResponse = new BuckCacheDeleteResponse();
+
+    BuckCacheResponse response =
+        new BuckCacheResponse()
+            .setWasSuccessful(true)
+            .setType(BuckCacheRequestType.DELETE_REQUEST)
+            .setDeleteResponse(deleteResponse);
+
+    return new InMemoryThriftResponse(response);
+  }
+
+  @Test
+  public void testDelete() throws Exception {
+    HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
+    HttpService fetchClient = EasyMock.createMock(HttpService.class);
+    BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
+    ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
+    NetworkCacheArgs networkArgs =
+        NetworkCacheArgs.builder()
+            .setCacheName("default_cache_name")
+            .setRepository("default_repository")
+            .setCacheReadMode(CacheReadMode.READWRITE)
+            .setCacheMode(ArtifactCacheMode.thrift_over_http)
+            .setScheduleType("default_schedule_type")
+            .setProjectFilesystem(filesystem)
+            .setFetchClient(fetchClient)
+            .setStoreClient(storeClient)
+            .setBuckEventBus(eventBus)
+            .setHttpWriteExecutorService(service)
+            .setHttpFetchExecutorService(service)
+            .setErrorTextTemplate("unused test error message")
+            .build();
+
+    EasyMock.expect(storeClient.makeRequest(EasyMock.anyString(), EasyMock.anyObject()))
+        .andReturn(makeSuccessfulDeleteResponse())
+        .once();
+    storeClient.close();
+    EasyMock.expectLastCall().once();
+    EasyMock.replay(storeClient);
+
+    try (ThriftArtifactCache cache =
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 0, 0)) {
+      CacheDeleteResult result =
+          Futures.getUnchecked(
+              cache.deleteAsync(
+                  Collections.singletonList(
+                      new com.facebook.buck.rules.RuleKey(HashCode.fromInt(42)))));
+      assertThat(result.getCacheNames(), Matchers.hasSize(1));
+    }
   }
 }

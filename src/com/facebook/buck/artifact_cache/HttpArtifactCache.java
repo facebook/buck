@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -179,6 +180,11 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
       resultBuilder.setWasStoreSuccessful(!requestFailed);
     }
     return resultBuilder.build();
+  }
+
+  @Override
+  protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
+    throw new RuntimeException("Delete operation is not yet supported");
   }
 
   @Override

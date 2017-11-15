@@ -188,6 +188,11 @@ public class AbstractAsynchronousCacheTest {
     }
 
     @Override
+    protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
+      throw new RuntimeException("Delete operation is not supported");
+    }
+
+    @Override
     protected MultiFetchResult multiFetchImpl(
         Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
       List<FetchResult> result = new ArrayList<>();

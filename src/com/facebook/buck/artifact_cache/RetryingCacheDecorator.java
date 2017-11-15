@@ -101,6 +101,11 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
   }
 
   @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    return delegate.deleteAsync(ruleKeys);
+  }
+
+  @Override
   public CacheReadMode getCacheReadMode() {
     return delegate.getCacheReadMode();
   }

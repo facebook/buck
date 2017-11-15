@@ -199,6 +199,29 @@ public class DirArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
+  private void deleteSync(RuleKey ruleKey) {
+    Path artifactPath = getPathForRuleKey(ruleKey, Optional.empty());
+    Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
+
+    try {
+      filesystem.deleteFileAtPathIfExists(metadataPath);
+      filesystem.deleteFileAtPathIfExists(artifactPath);
+    } catch (IOException e) {
+      String message =
+          String.format("Failed to delete artifact for rule key [%s] from local cache", ruleKey);
+      LOG.warn(e, message);
+      throw new RuntimeException(message, e);
+    }
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    ruleKeys.forEach(this::deleteSync);
+
+    ImmutableList<String> cacheNames = ImmutableList.of(DirArtifactCache.class.getSimpleName());
+    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
+  }
+
   private Path getPathToTempFolder() {
     return cacheDir.resolve("tmp");
   }

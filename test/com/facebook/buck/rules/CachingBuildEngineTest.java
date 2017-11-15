@@ -34,6 +34,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
+import com.facebook.buck.artifact_cache.CacheDeleteResult;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
@@ -4082,6 +4083,11 @@ public class CachingBuildEngineTest {
     @Override
     public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
       throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+      throw new RuntimeException("Delete operation is not supported");
     }
 
     @Override

@@ -133,6 +133,7 @@ public class MainIntegrationTest {
             "  audit          lists the inputs for the specified target",
             "  build          builds the specified target",
             "  cache          makes calls to the artifact cache",
+            "  cachedelete    Delete artifacts from the local and remote cache",
             "  clean          deletes any generated files",
             "  distbuild      attaches to a distributed build (experimental)",
             "  doctor         debug and fix issues of Buck commands",

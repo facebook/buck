@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.List;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
@@ -58,6 +59,11 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
     ListenableFuture<Void> storeFuture = delegate.store(info, output);
     eventBus.post(eventFactory.newStoreFinishedEvent(started));
     return storeFuture;
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    return delegate.deleteAsync(ruleKeys);
   }
 
   @Override

@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -189,6 +190,13 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
           }
           return delegate.store(info, output);
         });
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    // Artifact can be stored as two-level entry (rule key -> hash -> content)
+    // and delete operation only deletes first level (rule key -> hash) in that case.
+    return delegate.deleteAsync(ruleKeys);
   }
 
   @Override

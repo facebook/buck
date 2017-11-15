@@ -37,6 +37,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -102,6 +103,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   protected abstract FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException;
 
   protected abstract StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException;
+
+  protected abstract CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException;
 
   /** The MultiFetchResult should contain results in the same order as the requests. */
   protected abstract MultiFetchResult multiFetchImpl(Iterable<FetchRequest> requests)
@@ -346,6 +349,19 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
             requestEvents.failed(e, msg);
             throw new RuntimeException(e);
           }
+        });
+  }
+
+  @Override
+  public final ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    if (!getCacheReadMode().isWritable()) {
+      throw new IllegalArgumentException(
+          "Cannot delete artifacts from cache, cache is not writable");
+    }
+
+    return storeExecutorService.submit(
+        () -> {
+          return deleteImpl(ruleKeys);
         });
   }
 
