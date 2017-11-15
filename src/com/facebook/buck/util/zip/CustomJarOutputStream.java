@@ -78,16 +78,16 @@ public class CustomJarOutputStream extends CustomZipOutputStream {
     public void actuallyPutNextEntry(ZipEntry entry) throws IOException {
       inner.actuallyPutNextEntry(entry);
 
+      if (shouldHashEntries && !entry.isDirectory() && hasher == null) {
+        hasher = HASH_FUNCTION.newHasher();
+      }
+
       currentEntry = entry;
     }
 
     @Override
     public void actuallyWrite(byte[] b, int off, int len) throws IOException {
       inner.actuallyWrite(b, off, len);
-
-      if (shouldHashEntries && hasher == null) {
-        hasher = HASH_FUNCTION.newHasher();
-      }
 
       if (hasher != null) {
         hasher.putBytes(b, off, len);
