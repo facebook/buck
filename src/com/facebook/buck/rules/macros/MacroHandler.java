@@ -35,8 +35,6 @@ import java.util.function.Function;
 /** Extracts macros from input strings and calls registered expanders to handle their input. */
 public class MacroHandler {
 
-  private static final MacroFinder MACRO_FINDER = new MacroFinder();
-
   private final ImmutableMap<String, MacroExpander> expanders;
 
   public MacroHandler(ImmutableMap<String, MacroExpander> expanders) {
@@ -92,7 +90,7 @@ public class MacroHandler {
       throws MacroException {
     ImmutableMap<String, MacroReplacer> replacers =
         getMacroReplacers(target, cellNames, resolver, precomputedWorkCache);
-    return MACRO_FINDER.replace(replacers, blob, true);
+    return MacroFinder.replace(replacers, blob, true);
   }
 
   public ImmutableMap<String, MacroReplacer> getMacroReplacers(
@@ -224,7 +222,7 @@ public class MacroHandler {
   }
 
   public ImmutableList<MacroMatchResult> getMacroMatchResults(String blob) throws MacroException {
-    return MACRO_FINDER.findAll(expanders.keySet(), blob);
+    return MacroFinder.findAll(expanders.keySet(), blob);
   }
 
   private static Object ensurePrecomputedWork(

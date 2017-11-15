@@ -29,9 +29,11 @@ import javax.annotation.Nullable;
  *
  * <p>Examples: $(exe //foo:bar) $(location :bar) $(platform)
  */
-public class MacroFinder {
+public final class MacroFinder {
 
-  public Optional<MacroMatchResult> match(ImmutableSet<String> macros, String blob)
+  private MacroFinder() {} // Static utility.
+
+  public static Optional<MacroMatchResult> match(ImmutableSet<String> macros, String blob)
       throws MacroException {
 
     MacroFinderAutomaton macroFinder = new MacroFinderAutomaton(blob);
@@ -57,7 +59,7 @@ public class MacroFinder {
    * @param resolveEscaping whether to drop characters used to escape literal uses of `$(...)`
    * @return a copy of the input string with all macros expanded
    */
-  public String replace(
+  public static String replace(
       ImmutableMap<String, MacroReplacer> replacers, String blob, boolean resolveEscaping)
       throws MacroException {
 
@@ -105,7 +107,7 @@ public class MacroFinder {
     return expanded.toString();
   }
 
-  public ImmutableList<MacroMatchResult> findAll(ImmutableSet<String> macros, String blob)
+  public static ImmutableList<MacroMatchResult> findAll(ImmutableSet<String> macros, String blob)
       throws MacroException {
 
     ImmutableList.Builder<MacroMatchResult> results = ImmutableList.builder();

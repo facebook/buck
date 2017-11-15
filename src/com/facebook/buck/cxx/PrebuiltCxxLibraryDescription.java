@@ -91,8 +91,6 @@ public class PrebuiltCxxLibraryDescription
             PrebuiltCxxLibraryDescription.AbstractPrebuiltCxxLibraryDescriptionArg>,
         VersionPropagator<PrebuiltCxxLibraryDescriptionArg> {
 
-  private static final MacroFinder MACRO_FINDER = new MacroFinder();
-
   enum Type implements FlavorConvertible {
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -173,7 +171,7 @@ public class PrebuiltCxxLibraryDescription
       BuildTarget target, CxxPlatform cxxPlatform) {
     return str -> {
       try {
-        return MACRO_FINDER.replace(
+        return MacroFinder.replace(
             ImmutableMap.of(
                 "platform", new FunctionMacroReplacer(f -> cxxPlatform.getFlavor().toString())),
             str,

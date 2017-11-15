@@ -103,8 +103,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         VersionPropagator<CxxGenruleDescriptionArg>,
         TargetTranslatorOverridingDescription<CxxGenruleDescriptionArg> {
 
-  private static final MacroFinder MACRO_FINDER = new MacroFinder();
-
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final ImmutableSet<Flavor> declaredPlatforms;
 
@@ -365,7 +363,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       String field,
       String cmd) {
     try {
-      return MACRO_FINDER.replace(
+      return MacroFinder.replace(
           getMacroReplacersForTargetTranslation(root, cellNames, translator), cmd, false);
     } catch (MacroException e) {
       throw new HumanReadableException(

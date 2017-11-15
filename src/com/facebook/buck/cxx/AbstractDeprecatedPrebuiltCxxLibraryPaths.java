@@ -47,8 +47,6 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryPaths {
 
-  private static final MacroFinder MACRO_FINDER = new MacroFinder();
-
   abstract BuildTarget getTarget();
 
   abstract Optional<String> getVersionSubdir();
@@ -76,7 +74,7 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
   private String expandMacros(
       BuildRuleResolver resolver, CellPathResolver cellRoots, CxxPlatform cxxPlatform, String str) {
     try {
-      return MACRO_FINDER.replace(
+      return MacroFinder.replace(
           getMacroHandler(Optional.of(cxxPlatform))
               .getMacroReplacers(getTarget(), cellRoots, resolver),
           str,

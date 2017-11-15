@@ -66,7 +66,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     implements Description<PrebuiltCxxLibraryGroupDescriptionArg>,
         VersionPropagator<PrebuiltCxxLibraryGroupDescriptionArg> {
 
-  private static final MacroFinder FINDER = new MacroFinder();
   private static final String LIB_MACRO = "lib";
   private static final String REL_LIB_MACRO = "rel-lib";
 
@@ -74,7 +73,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   private Optional<Pair<String, String>> getLibRef(ImmutableSet<String> macros, String arg) {
     Optional<MacroMatchResult> result;
     try {
-      result = FINDER.match(macros, arg);
+      result = MacroFinder.match(macros, arg);
     } catch (MacroException e) {
       throw new HumanReadableException(e, e.getMessage());
     }

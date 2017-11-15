@@ -54,8 +54,6 @@ public class Config {
   /** Used in a string representation of a map; separates keys from values */
   public static final String DEFAULT_KEY_VALUE_SEPARATOR = "=>";
 
-  private static final MacroFinder MACRO_FINDER = new MacroFinder();
-
   // rawConfig is the flattened configuration relevant to the current cell
   private final RawConfig rawConfig;
 
@@ -104,7 +102,7 @@ public class Config {
           return get(parts.get(0), parts.get(1), expandStack).orElse("");
         };
     try {
-      return MACRO_FINDER.replace(
+      return MacroFinder.replace(
           ImmutableMap.of(
               "config", macroReplacer,
               "exe", getMacroPreserver("exe"),
