@@ -591,6 +591,7 @@
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-tree-6.0.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-util-6.0.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-xml-6.0.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-23.3-jre.jar"/>
       <fileset dir="${classes.dir}">
           <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
       </fileset>
