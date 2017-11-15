@@ -47,6 +47,9 @@ public final class Main {
   @Option(name = "--traceFilePath", required = true)
   private Path traceFilePath;
 
+  @Option(name = "--traceFileKind", required = true)
+  private String traceFileKind;
+
   @Option(name = "--baseUrl", required = true)
   private URI baseUrl;
 
@@ -84,7 +87,12 @@ public final class Main {
     Stopwatch timer = Stopwatch.createStarted();
     try {
       OkHttpClient client = new OkHttpClient();
-      HttpUrl url = HttpUrl.get(baseUrl).newBuilder().addQueryParameter("uuid", this.uuid).build();
+      HttpUrl url =
+          HttpUrl.get(baseUrl)
+              .newBuilder()
+              .addQueryParameter("uuid", this.uuid)
+              .addQueryParameter("trace_file_kind", this.traceFileKind)
+              .build();
       Path compressedTracePath = gzip(traceFilePath);
 
       log.format("Build ID: %s\n", uuid);

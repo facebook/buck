@@ -30,7 +30,7 @@ public class UploaderLauncher {
 
   /** Upload chrome trace in background process which runs even after current process dies. */
   public static void uploadInBackground(
-      BuildId buildId, Path traceFilePath, URI traceUploadUri, Path logFile) {
+      BuildId buildId, Path traceFilePath, String traceFileKind, URI traceUploadUri, Path logFile) {
 
     LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
 
@@ -51,6 +51,8 @@ public class UploaderLauncher {
         buildId.toString(),
         "--traceFilePath",
         traceFilePath.toString(),
+        "--traceFileKind",
+        traceFileKind,
         "--baseUrl",
         traceUploadUri.toString(),
         "--log",

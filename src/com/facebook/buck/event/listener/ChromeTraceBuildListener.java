@@ -941,7 +941,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     Path fullPath = projectFilesystem.resolve(tracePath);
     Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
 
-    UploaderLauncher.uploadInBackground(buildId, fullPath, traceUploadUri.get(), logFile);
+    UploaderLauncher.uploadInBackground(
+        buildId, fullPath, "default", traceUploadUri.get(), logFile);
   }
 
   private static class TracePathAndStream {
