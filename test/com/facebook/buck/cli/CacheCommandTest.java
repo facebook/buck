@@ -69,9 +69,11 @@ public class CacheCommandTest extends EasyMockSupport {
     // "No cache keys specified." message is sent to event bus,
     // it is not available on test console.
 
-    assertThat(
-        console.getTextWrittenToStdErr(),
-        fetchPrefix ? not(containsString("deprecated")) : containsString("deprecated"));
+    if (!CacheCommand.MUTE_FETCH_SUBCOMMAND_WARNING) {
+      assertThat(
+          console.getTextWrittenToStdErr(),
+          fetchPrefix ? not(containsString("deprecated")) : containsString("deprecated"));
+    }
   }
 
   @Test
@@ -114,9 +116,12 @@ public class CacheCommandTest extends EasyMockSupport {
     assertThat(
         console.getTextWrittenToStdErr(),
         containsString("Successfully downloaded artifact with id " + ruleKeyHash + " at "));
-    assertThat(
-        console.getTextWrittenToStdErr(),
-        fetchPrefix ? not(containsString("deprecated")) : containsString("deprecated"));
+
+    if (!CacheCommand.MUTE_FETCH_SUBCOMMAND_WARNING) {
+      assertThat(
+          console.getTextWrittenToStdErr(),
+          fetchPrefix ? not(containsString("deprecated")) : containsString("deprecated"));
+    }
   }
 
   @Test

@@ -78,6 +78,9 @@ public class CacheCommand extends AbstractCommand {
     eventBus.post(ActionGraphEvent.finished(actionGraphStart));
   }
 
+  // TODO(nga): enable warning back
+  @VisibleForTesting static final boolean MUTE_FETCH_SUBCOMMAND_WARNING = true;
+
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
@@ -95,10 +98,12 @@ public class CacheCommand extends AbstractCommand {
     if (!arguments.isEmpty() && arguments.get(0).equals("fetch")) {
       arguments = arguments.subList(1, arguments.size());
     } else {
-      params
-          .getConsole()
-          .printErrorText(
-              "Using `cache` without a command is deprecated, use `cache fetch` instead");
+      if (!MUTE_FETCH_SUBCOMMAND_WARNING) {
+        params
+            .getConsole()
+            .printErrorText(
+                "Using `cache` without a command is deprecated, use `cache fetch` instead");
+      }
     }
 
     if (arguments.isEmpty()) {
