@@ -67,23 +67,25 @@ public final class Main {
     CmdLineParser parser = new CmdLineParser(main);
     try {
       parser.parseArgument(args);
-      main.run();
+      int exitCode = main.run();
+      System.exit(exitCode);
     } catch (CmdLineException e) {
       System.err.println(e.getMessage());
       parser.printUsage(System.err);
+      System.exit(1);
     }
   }
 
-  private void run() throws IOException {
+  private int run() throws IOException {
     log = new PrintWriter(logFile); // NOPMD this is just a log
     try {
-      upload();
+      return upload();
     } finally {
       log.close();
     }
   }
 
-  private void upload() {
+  private int upload() {
     Stopwatch timer = Stopwatch.createStarted();
     try {
       OkHttpClient client = new OkHttpClient();
@@ -121,12 +123,15 @@ public final class Main {
 
         if (root.get("success").asBoolean()) {
           log.format("Success!\nFind it at %s\n", root.get("content").get("uri").asText());
+          return 0;
         } else {
           log.format("Failed!\nMessage: %s\n", root.get("error").asText());
+          return 1;
         }
       }
     } catch (Exception e) {
       log.format("\nFailed to upload trace; %s\n", e.getMessage());
+      return 1;
     } finally {
       log.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));
     }
