@@ -27,4 +27,5 @@ public interface LinkableCxxConstructorArg extends CxxConstructorArg {
   default boolean getThinLto() {
     return false;
   }
+
 }

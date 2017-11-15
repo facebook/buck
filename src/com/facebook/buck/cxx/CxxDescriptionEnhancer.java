@@ -753,7 +753,10 @@ public class CxxDescriptionEnhancer {
     extraDeps.stream().map(resolver::getRule).forEach(depsBuilder::add);
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
-    CxxLinkOptions linkOptions = CxxLinkOptions.of(args.getThinLto());
+    CxxLinkOptions linkOptions =
+        CxxLinkOptions.of(
+            args.getThinLto()
+            );
     return createBuildRulesForCxxBinary(
         target,
         projectFilesystem,

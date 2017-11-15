@@ -25,6 +25,8 @@ abstract class AbstractCxxLinkOptions {
   public abstract boolean getThinLto();
 
   public static CxxLinkOptions of() {
-    return CxxLinkOptions.of(false);
+    return CxxLinkOptions.of(
+        false
+        );
   }
 }

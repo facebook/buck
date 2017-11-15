@@ -88,6 +88,7 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
     return Paths.get(output + "-lto");
   }
 
+
   @Override
   public Iterable<String> soname(String arg) {
     return Linkers.iXlinker("-install_name", "@rpath/" + arg);

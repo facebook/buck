@@ -97,6 +97,7 @@ public class CxxLinkableEnhancer {
       argsBuilder.addAll(((HasThinLTO) linker).thinLTO(output));
     }
 
+
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(

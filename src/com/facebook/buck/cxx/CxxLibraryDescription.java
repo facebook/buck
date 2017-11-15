@@ -490,7 +490,10 @@ public class CxxLibraryDescription
             .concat(RichStream.from(delegateNativeLinkables))
             .toImmutableList();
 
-    CxxLinkOptions linkOptions = CxxLinkOptions.of(args.getThinLto());
+    CxxLinkOptions linkOptions =
+        CxxLinkOptions.of(
+            args.getThinLto()
+            );
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
