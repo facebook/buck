@@ -1,3 +1,5 @@
+[repositories]
+    bazel_skylib = ./third-party/skylark/bazel-skylib
 [java]
     ; Indicates that any folder named src or test
     ; are folders that contain Java code.

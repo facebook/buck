@@ -49,6 +49,9 @@
 /third-party/py/pywatchman/pywatchman.egg-info/
 /third-party/py/pywatchman/dist/
 
+# From building skylib with buck
+/third-party/skylark/bazel-skylib/buck-out
+
 # OS X
 .DS_Store
 

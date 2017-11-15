@@ -1,14 +1,16 @@
+load("@bazel_skylib//lib:sets.bzl", "sets")
+
 def _add_immutables(deps_arg, **kwargs):
-    kwargs[deps_arg] = depset(kwargs.get(deps_arg, [])) + [
+    kwargs[deps_arg] = sets.union(kwargs.get(deps_arg, []), [
         '//src/com/facebook/buck/util/immutables:immutables',
         '//third-party/java/errorprone:error-prone-annotations',
         '//third-party/java/immutables:immutables',
         '//third-party/java/guava:guava',
         '//third-party/java/jsr:jsr305',
-    ]
-    kwargs['plugins'] = depset(kwargs.get('plugins', [])) + [
+    ])
+    kwargs['plugins'] = sets.union(kwargs.get('plugins', []), [
         '//third-party/java/immutables:processor'
-    ]
+    ])
     return kwargs
 
 def java_immutables_library(name, **kwargs):
@@ -128,15 +130,15 @@ def standard_java_test(
         )
 
 def _add_pf4j_plugin_framework(**kwargs):
-    kwargs["provided_deps"] = list(depset(kwargs.get("provided_deps", [])).union([
+    kwargs["provided_deps"] = sets.union(kwargs.get("provided_deps", []), [
         "//third-party/java/pf4j:pf4j",
-    ]))
-    kwargs["plugins"] = list(depset(kwargs.get("plugins", [])).union([
+    ])
+    kwargs["plugins"] = sets.union(kwargs.get("plugins", []), [
         "//third-party/java/pf4j:processor",
-    ]))
-    kwargs["annotation_processor_params"] = list(depset(kwargs.get("annotation_processor_params", [])).union([
+    ])
+    kwargs["annotation_processor_params"] = sets.union(kwargs.get("annotation_processor_params", []), [
         "pf4j.storageClassName=org.pf4j.processor.ServiceProviderExtensionStorage",
-    ]))
+    ])
     return kwargs
 
 def java_library_with_plugins(name, **kwargs):
