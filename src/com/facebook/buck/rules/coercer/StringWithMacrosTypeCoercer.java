@@ -18,7 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.macros.MacroFinder;
+import com.facebook.buck.model.macros.MacroFinderAutomaton;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
@@ -92,7 +92,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
 
     // Iterate over all macros found in the string, expanding each found macro.
     int lastEnd = 0;
-    MacroFinder.MacroFinderAutomaton matcher = new MacroFinder.MacroFinderAutomaton(blob);
+    MacroFinderAutomaton matcher = new MacroFinderAutomaton(blob);
     while (matcher.hasNext()) {
       MacroMatchResult matchResult = matcher.next();
 
