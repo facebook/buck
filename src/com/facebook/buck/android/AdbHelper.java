@@ -27,7 +27,6 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
-import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -150,7 +149,6 @@ public class AdbHelper implements AndroidDevicesHelper {
    * be used to install the apk if needed.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  @SuppressForbidden
   @Override
   public synchronized boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException {
@@ -261,7 +259,6 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   @Override
-  @SuppressForbidden
   public boolean installApk(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
@@ -296,7 +293,6 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   @Override
-  @SuppressForbidden
   public void startActivity(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
@@ -405,7 +401,6 @@ public class AdbHelper implements AndroidDevicesHelper {
    */
   @Nullable
   @VisibleForTesting
-  @SuppressForbidden
   List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
       printError("No devices are found.");
@@ -525,7 +520,6 @@ public class AdbHelper implements AndroidDevicesHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
-  @SuppressForbidden
   private ImmutableList<AndroidDevice> getDevicesImpl() {
     if (devicesSupplierForTests.isPresent()) {
       return devicesSupplierForTests.get().get();

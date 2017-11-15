@@ -66,7 +66,6 @@ java_test(
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-        "//src/com/facebook/buck/annotations:annotations",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:BroadcastEventListener",

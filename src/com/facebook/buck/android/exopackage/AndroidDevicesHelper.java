@@ -17,7 +17,6 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.HasInstallableApk;
-import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -85,7 +84,6 @@ public interface AndroidDevicesHelper extends Closeable {
   boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
       throws InterruptedException;
 
-  @SuppressForbidden
   void startActivity(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,

@@ -25,7 +25,6 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -276,7 +275,6 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   /** Installs apk on device, copying apk to external storage first. */
-  @SuppressForbidden
   @Nullable
   private String deviceInstallPackageViaSd(String apk) {
     try {
@@ -300,7 +298,6 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @VisibleForTesting
   @Nullable
-  @SuppressForbidden
   public String deviceStartActivity(String activityToRun, boolean waitForDebugger) {
     try {
       ErrorParsingReceiver receiver =
@@ -381,7 +378,6 @@ public class RealAndroidDevice implements AndroidDevice {
    * com.facebook.buck.cli.UninstallCommand}.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  @SuppressForbidden
   public boolean uninstallApkFromDevice(String packageName, boolean keepData) {
     String name;
     if (device.isEmulator()) {
@@ -431,7 +427,6 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   @VisibleForTesting
-  @SuppressForbidden
   private boolean isDeviceTempWritable(String name) {
     StringBuilder loggingInfo = new StringBuilder();
     try {

@@ -827,24 +827,6 @@
     </pmd>
   </target>
 
-  <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpath="third-party/java/forbiddenapis/forbiddenapis-1.8.jar"/>
-
-  <target name="forbidden-checks" depends="compile">
-    <forbiddenapis internalRuntimeForbidden="true" classpathref="classpath" dir="${classes.dir}" suppressAnnotation="**.SuppressForbidden">
-      <bundledsignatures name="jdk-unsafe-1.7"/>
-      <bundledsignatures name="jdk-deprecated-1.7"/>
-      <signaturesFileset file="config/forbiddenapis.txt"/>
-    </forbiddenapis>
-  </target>
-
-  <target name="forbidden-checks-tests" depends="compile-tests">
-    <forbiddenapis internalRuntimeForbidden="true" classpathref="tests.compile.classpath" dir="${testclasses.dir}" suppressAnnotation="**.SuppressForbidden">
-      <bundledsignatures name="jdk-unsafe-1.7"/>
-      <bundledsignatures name="jdk-deprecated-1.7"/>
-      <signaturesFileset file="config/forbiddenapis.txt"/>
-    </forbiddenapis>
-  </target>
-
   <target name="missing-test-files-check" depends="default">
     <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
       <arg line="verify-test-files.py" />

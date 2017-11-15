@@ -326,7 +326,6 @@ java_immutables_library(
         ":utils",
         "//src/com/facebook/buck/android/agent/util:util",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
-        "//src/com/facebook/buck/annotations:annotations",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -377,7 +376,6 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:config",
-        "//src/com/facebook/buck/annotations:annotations",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/model:model",

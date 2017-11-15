@@ -36,7 +36,6 @@ java_library(
         #"//src/com/facebook/buck/android:utils",
         #"//src/com/facebook/buck/android/aapt:aapt",
         #"//src/com/facebook/buck/android/redex:options",
-        #"//src/com/facebook/buck/annotations:annotations",
         #"//src/com/facebook/buck/apple/xcode:xcode",
         #"//src/com/facebook/buck/artifact_cache:artifact_cache",
         #"//src/com/facebook/buck/autodeps:model",

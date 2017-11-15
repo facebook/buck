@@ -12,7 +12,6 @@ java_test(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/redex:options",
-        "//src/com/facebook/buck/annotations:annotations",
         "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/apple/project_generator:project_generator",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
