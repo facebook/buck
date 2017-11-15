@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
+import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFactory;
 import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
@@ -28,6 +29,7 @@ import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
@@ -329,6 +331,16 @@ public class ProjectCommand extends BuildCommand {
                     params.getEnvironment(),
                     params.getExecutors().get(ExecutorPool.PROJECT),
                     getArguments(),
+                    AppleCxxPlatformsProviderFactory.create(
+                            params.getBuckConfig(),
+                            params.getCell().getFilesystem(),
+                            params.getSdkEnvironment().getAppleSdkPaths(),
+                            params.getSdkEnvironment().getAppleToolchains())
+                        .getAppleCxxPlatforms()
+                        .getFlavors()
+                        .stream()
+                        .map(Flavor::toString)
+                        .collect(MoreCollectors.toImmutableSet()),
                     getEnableParserProfiling(),
                     withTests,
                     withoutTests,

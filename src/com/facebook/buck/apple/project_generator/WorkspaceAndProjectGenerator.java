@@ -91,6 +91,7 @@ public class WorkspaceAndProjectGenerator {
   private final boolean combinedProject;
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
+  private final ImmutableSet<String> appleCxxFlavors;
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
   private final Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
@@ -119,6 +120,7 @@ public class WorkspaceAndProjectGenerator {
       FocusedModuleTargetMatcher focusModules,
       boolean parallelizeBuild,
       CxxPlatform defaultCxxPlatform,
+      ImmutableSet<String> appleCxxFlavors,
       String buildFileName,
       Function<TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode,
       BuckEventBus buckEventBus,
@@ -137,6 +139,7 @@ public class WorkspaceAndProjectGenerator {
     this.combinedProject = combinedProject;
     this.parallelizeBuild = parallelizeBuild;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.appleCxxFlavors = appleCxxFlavors;
     this.buildFileName = buildFileName;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.buckEventBus = buckEventBus;
@@ -472,6 +475,7 @@ public class WorkspaceAndProjectGenerator {
                 targetsInRequiredProjects,
                 focusModules,
                 defaultCxxPlatform,
+                appleCxxFlavors,
                 buildRuleResolverForNode,
                 buckEventBus,
                 halideBuckConfig,
@@ -527,6 +531,7 @@ public class WorkspaceAndProjectGenerator {
             targetsInRequiredProjects,
             focusModules,
             defaultCxxPlatform,
+            appleCxxFlavors,
             buildRuleResolverForNode,
             buckEventBus,
             halideBuckConfig,

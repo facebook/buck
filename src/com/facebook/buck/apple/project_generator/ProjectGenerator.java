@@ -99,7 +99,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
@@ -120,6 +119,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.macros.LocationMacro;
@@ -182,7 +182,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -288,6 +287,7 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
 
   private final GidGenerator gidGenerator;
+  private final ImmutableSet<String> appleCxxFlavors;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -315,6 +315,7 @@ public class ProjectGenerator {
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       FocusedModuleTargetMatcher focusModules,
       CxxPlatform defaultCxxPlatform,
+      ImmutableSet<String> appleCxxFlavors,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
@@ -335,6 +336,7 @@ public class ProjectGenerator {
     this.workspaceTarget = workspaceTarget;
     this.targetsInRequiredProjects = targetsInRequiredProjects;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.appleCxxFlavors = appleCxxFlavors;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.defaultPathResolver =
         DefaultSourcePathResolver.from(
@@ -937,6 +939,29 @@ public class ProjectGenerator {
     return result.build();
   }
 
+  private ImmutableMultimap<String, ImmutableList<String>> convertPlatformFlags(
+      TargetNode<?, ?> node,
+      Iterable<PatternMatchedCollection<ImmutableList<StringWithMacros>>> matchers) {
+    ImmutableMultimap.Builder<String, ImmutableList<String>> flagsBuilder =
+        ImmutableMultimap.builder();
+
+    for (PatternMatchedCollection<ImmutableList<StringWithMacros>> matcher : matchers) {
+      for (String platform : appleCxxFlavors) {
+        for (ImmutableList<StringWithMacros> flags : matcher.getMatchingValues(platform)) {
+          flagsBuilder.put(platform, convertStringWithMacros(node, flags));
+        }
+      }
+    }
+    return flagsBuilder.build();
+  }
+
+  private String generateConfigKey(String key, String platform) {
+    int index = platform.lastIndexOf('-');
+    String sdk = platform.substring(0, index);
+    String arch = platform.substring(index + 1);
+    return String.format("%s[sdk=%s*][arch=%s]", key, sdk, arch);
+  }
+
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields, ?>> bundle,
@@ -1409,60 +1434,46 @@ public class ProjectGenerator {
                 "OTHER_LDFLAGS",
                 otherLdFlags.stream().map(Escaper.BASH_ESCAPER).collect(Collectors.joining(" ")));
 
-        ImmutableMultimap.Builder<String, ImmutableList<String>> platformFlagsBuilder =
-            ImmutableMultimap.builder();
-        for (Pair<Pattern, ImmutableList<StringWithMacros>> flags :
-            Iterables.concat(
-                targetNode.getConstructorArg().getPlatformCompilerFlags().getPatternsAndValues(),
-                targetNode
-                    .getConstructorArg()
-                    .getPlatformPreprocessorFlags()
-                    .getPatternsAndValues(),
-                collectRecursiveExportedPlatformPreprocessorFlags(targetNode))) {
-          String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
-          platformFlagsBuilder.put(sdk, convertStringWithMacros(targetNode, flags.getSecond()));
-        }
         ImmutableMultimap<String, ImmutableList<String>> platformFlags =
-            platformFlagsBuilder.build();
-        for (String sdk : platformFlags.keySet()) {
+            convertPlatformFlags(
+                targetNode,
+                Iterables.concat(
+                    ImmutableList.of(targetNode.getConstructorArg().getPlatformCompilerFlags()),
+                    ImmutableList.of(targetNode.getConstructorArg().getPlatformPreprocessorFlags()),
+                    collectRecursiveExportedPlatformPreprocessorFlags(targetNode)));
+        for (String platform : platformFlags.keySet()) {
           appendConfigsBuilder
               .put(
-                  String.format("OTHER_CFLAGS[sdk=*%s*]", sdk),
+                  generateConfigKey("OTHER_CFLAGS", platform),
                   Streams.stream(
                           Iterables.transform(
                               Iterables.concat(
-                                  otherCFlags, Iterables.concat(platformFlags.get(sdk))),
+                                  otherCFlags, Iterables.concat(platformFlags.get(platform))),
                               Escaper.BASH_ESCAPER::apply))
                       .collect(Collectors.joining(" ")))
               .put(
-                  String.format("OTHER_CPLUSPLUSFLAGS[sdk=*%s*]", sdk),
+                  generateConfigKey("OTHER_CPLUSPLUSFLAGS", platform),
                   Streams.stream(
                           Iterables.transform(
                               Iterables.concat(
-                                  otherCxxFlags, Iterables.concat(platformFlags.get(sdk))),
+                                  otherCxxFlags, Iterables.concat(platformFlags.get(platform))),
                               Escaper.BASH_ESCAPER::apply))
                       .collect(Collectors.joining(" ")));
         }
 
-        ImmutableMultimap.Builder<String, ImmutableList<String>> platformLinkerFlagsBuilder =
-            ImmutableMultimap.builder();
-        for (Pair<Pattern, ImmutableList<StringWithMacros>> flags :
-            Iterables.concat(
-                targetNode.getConstructorArg().getPlatformLinkerFlags().getPatternsAndValues(),
-                collectRecursiveExportedPlatformLinkerFlags(targetNode))) {
-          String sdk = flags.getFirst().pattern().replaceAll("[*.]", "");
-          platformLinkerFlagsBuilder.put(
-              sdk, convertStringWithMacros(targetNode, flags.getSecond()));
-        }
         ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
-            platformLinkerFlagsBuilder.build();
-        for (String sdk : platformLinkerFlags.keySet()) {
+            convertPlatformFlags(
+                targetNode,
+                Iterables.concat(
+                    ImmutableList.of(targetNode.getConstructorArg().getPlatformLinkerFlags()),
+                    collectRecursiveExportedPlatformLinkerFlags(targetNode)));
+        for (String platform : platformLinkerFlags.keySet()) {
           appendConfigsBuilder.put(
-              String.format("OTHER_LDFLAGS[sdk=*%s*]", sdk),
+              generateConfigKey("OTHER_LDFLAGS", platform),
               Streams.stream(
                       Iterables.transform(
                           Iterables.concat(
-                              otherLdFlags, Iterables.concat(platformLinkerFlags.get(sdk))),
+                              otherLdFlags, Iterables.concat(platformLinkerFlags.get(platform))),
                           Escaper.BASH_ESCAPER::apply))
                   .collect(Collectors.joining(" ")));
         }
@@ -2790,7 +2801,7 @@ public class ProjectGenerator {
                     .orElse(ImmutableList.of()));
   }
 
-  private Iterable<Pair<Pattern, ImmutableList<StringWithMacros>>>
+  private Iterable<PatternMatchedCollection<ImmutableList<StringWithMacros>>>
       collectRecursiveExportedPlatformPreprocessorFlags(TargetNode<?, ?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -2806,10 +2817,8 @@ public class ProjectGenerator {
                     .castArg(CxxLibraryDescription.CommonArg.class)
                     .map(
                         input1 ->
-                            input1
-                                .getConstructorArg()
-                                .getExportedPlatformPreprocessorFlags()
-                                .getPatternsAndValues())
+                            ImmutableList.of(
+                                input1.getConstructorArg().getExportedPlatformPreprocessorFlags()))
                     .orElse(ImmutableList.of()));
   }
 
@@ -2835,7 +2844,7 @@ public class ProjectGenerator {
         .toList();
   }
 
-  private Iterable<Pair<Pattern, ImmutableList<StringWithMacros>>>
+  private Iterable<PatternMatchedCollection<ImmutableList<StringWithMacros>>>
       collectRecursiveExportedPlatformLinkerFlags(TargetNode<?, ?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -2854,10 +2863,8 @@ public class ProjectGenerator {
                     .castArg(CxxLibraryDescription.CommonArg.class)
                     .map(
                         input1 ->
-                            input1
-                                .getConstructorArg()
-                                .getExportedPlatformLinkerFlags()
-                                .getPatternsAndValues())
+                            ImmutableList.of(
+                                input1.getConstructorArg().getExportedPlatformLinkerFlags()))
                     .orElse(ImmutableList.of()));
   }
 

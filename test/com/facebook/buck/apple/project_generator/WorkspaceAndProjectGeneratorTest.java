@@ -111,9 +111,9 @@ public class WorkspaceAndProjectGeneratorTest {
   public void setUp() throws InterruptedException, IOException {
     rootCell = (new TestCellBuilder()).build();
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
-    halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
-    cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().build());
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
+    halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
+    cxxBuckConfig = new CxxBuckConfig(fakeBuckConfig);
     swiftBuckConfig = new SwiftBuckConfig(fakeBuckConfig);
     setUpWorkspaceAndProjects();
   }
@@ -242,6 +242,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -296,6 +297,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -343,6 +345,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -389,6 +392,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -455,6 +459,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -502,6 +507,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -652,6 +658,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -770,6 +777,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -843,6 +851,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),
@@ -896,6 +905,7 @@ public class WorkspaceAndProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             "BUCK",
             getBuildRuleResolverForNodeFunction(targetGraph),
             getFakeBuckEventBus(),

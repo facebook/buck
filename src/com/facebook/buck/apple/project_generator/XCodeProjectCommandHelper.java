@@ -103,6 +103,7 @@ public class XCodeProjectCommandHelper {
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final ImmutableSet<String> appleCxxFlavors;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Console console;
   private final Optional<ProcessManager> processManager;
@@ -136,6 +137,7 @@ public class XCodeProjectCommandHelper {
       ImmutableMap<String, String> environment,
       ListeningExecutorService executorService,
       List<String> arguments,
+      ImmutableSet<String> appleCxxFlavors,
       boolean enableParserProfiling,
       boolean withTests,
       boolean withoutTests,
@@ -154,6 +156,7 @@ public class XCodeProjectCommandHelper {
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.appleCxxFlavors = appleCxxFlavors;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.console = console;
     this.processManager = processManager;
@@ -328,6 +331,7 @@ public class XCodeProjectCommandHelper {
             targetGraphAndTargets,
             passedInTargetsSet,
             options,
+            appleCxxFlavors,
             getFocusModules(executor),
             new HashMap<>(),
             combinedProject,
@@ -380,6 +384,7 @@ public class XCodeProjectCommandHelper {
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ImmutableSet<ProjectGenerator.Option> options,
+      ImmutableSet<String> appleCxxFlavors,
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
@@ -441,6 +446,7 @@ public class XCodeProjectCommandHelper {
               focusModules,
               !appleConfig.getXcodeDisableParallelizeBuild(),
               defaultCxxPlatform,
+              appleCxxFlavors,
               buckConfig.getView(ParserConfig.class).getBuildFileName(),
               lazyActionGraph::getBuildRuleResolverWhileRequiringSubgraph,
               buckEventBus,

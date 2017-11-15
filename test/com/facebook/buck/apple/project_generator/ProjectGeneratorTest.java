@@ -2050,7 +2050,11 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator =
-        createProjectGeneratorForCombinedProject(ImmutableSet.of(node), ImmutableSet.of());
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(node),
+            ImmutableSet.of(node),
+            ImmutableSet.of(),
+            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
 
     projectGenerator.createXcodeProjects();
 
@@ -2072,12 +2076,14 @@ public class ProjectGeneratorTest {
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "
             + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
-        settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
-        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
-    assertEquals("-lbaz-iphone -lbaz-iphone", settings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertEquals(
+        "-lbaz-iphone -lbaz-iphone",
+        settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
   @Test
@@ -2164,7 +2170,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(node, dependentNode), ImmutableSet.of());
+            ImmutableSet.of(node, dependentNode),
+            ImmutableSet.of(node, dependentNode),
+            ImmutableSet.of(),
+            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
 
     projectGenerator.createXcodeProjects();
 
@@ -2176,12 +2185,12 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -fbar-iphone -Wno-deprecated -Wno-conversion -fbar-iphone",
-        settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
-        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
-    assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
 
     PBXTarget dependentTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
@@ -2193,12 +2202,12 @@ public class ProjectGeneratorTest {
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "
             + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
-        dependentSettings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+        dependentSettings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
-        dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
-    assertEquals(null, dependentSettings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+        dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertEquals(null, dependentSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
   @Test
@@ -4792,6 +4801,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(lib1Target, lib4Target),
             FocusedModuleTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             getBuildRuleResolverNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
@@ -4836,6 +4846,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(lib1Target, lib4Target),
             FocusedModuleTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             getBuildRuleResolverNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
@@ -4899,11 +4910,21 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
+    return createProjectGeneratorForCombinedProject(
+        allNodes, initialTargetNodes, projectGeneratorOptions, ImmutableSet.of());
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      Collection<TargetNode<?, ?>> allNodes,
+      Collection<TargetNode<?, ?>> initialTargetNodes,
+      ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
+      ImmutableSet<String> appleCxxFlavors) {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
         allNodes,
         initialTargetNodes,
         projectGeneratorOptions,
+        appleCxxFlavors,
         getBuildRuleResolverNodeFunction(targetGraph));
   }
 
@@ -4912,7 +4933,11 @@ public class ProjectGeneratorTest {
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
-        allNodes, allNodes, projectGeneratorOptions, getBuildRuleResolverNodeFunction(targetGraph));
+        allNodes,
+        allNodes,
+        projectGeneratorOptions,
+        ImmutableSet.of(),
+        getBuildRuleResolverNodeFunction(targetGraph));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
@@ -4920,13 +4945,14 @@ public class ProjectGeneratorTest {
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
     return createProjectGeneratorForCombinedProject(
-        allNodes, allNodes, projectGeneratorOptions, buildRuleResolverForNode);
+        allNodes, allNodes, projectGeneratorOptions, ImmutableSet.of(), buildRuleResolverForNode);
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
+      ImmutableSet<String> appleCxxFlavors,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets =
         initialTargetNodes
@@ -4953,6 +4979,7 @@ public class ProjectGeneratorTest {
         ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),
         DEFAULT_PLATFORM,
+        appleCxxFlavors,
         buildRuleResolverForNode,
         getFakeBuckEventBus(),
         halideBuckConfig,
