@@ -1,3 +1,5 @@
+"""Module containing java macros."""
+
 load("@bazel_skylib//lib:sets.bzl", "sets")
 
 def _add_immutables(deps_arg, **kwargs):
@@ -31,6 +33,7 @@ def java_test(
     # deps, provided_deps and plugins are handled in kwargs so that immutables can be handled there
     **kwargs
     ):
+  """java_test wrapper that provides sensible defaults for buck tests."""
   extra_labels = ['run_as_bundle']
   if run_test_separately:
     extra_labels.append('serialize')
