@@ -9,6 +9,8 @@ native_libs_env_var = <NATIVE_LIBS_ENV_VAR>
 native_libs_dir = <NATIVE_LIBS_DIR>
 native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
 native_libs_preload = <NATIVE_LIBS_PRELOAD>
+# The list of .whl, .egg, etc files that should be added to sys.path
+prebuilt_libs_dir = <PREBUILT_LIBS_DIR>
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -31,6 +33,7 @@ STARTUP = """\
 # Wrap everything in a private function to prevent globals being captured by
 # the `runpy._run_module_as_main` below.
 def __run():
+    import glob
     import os
     import runpy
     import sys
@@ -42,6 +45,9 @@ def __run():
     # Replace the working directory with location of the modules directory.
     assert sys.path[0] == ''
     sys.path[0] = {pythonpath!r}
+
+    for path in glob.glob(os.path.join({prebuilt_libs!r}, "*")):
+        sys.path.insert(1, path)
 
     def setenv(var, val):
         if val is None:
@@ -61,6 +67,7 @@ __run()
 """.format(
     arg0=sys.argv[0],
     pythonpath=os.path.join(dirpath, modules_dir),
+    prebuilt_libs=os.path.join(dirpath, prebuilt_libs_dir),
     env_vals=env_vals_to_restore,
     main_module=main_module)
 

@@ -318,6 +318,11 @@ public class PythonBinaryIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:bin");
   }
 
+  @Test
+  public void packagePrebuilLibrariesProperly() throws IOException {
+    workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
+  }
+
   /**
    * Test a bug where a C/C++ library that is transitively excluded by a `python_library` containing
    * native extensions (in this case, it has to be a 2nd-order dep of the `python_library`) but

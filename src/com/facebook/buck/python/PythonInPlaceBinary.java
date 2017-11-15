@@ -53,6 +53,7 @@ import org.stringtemplate.v4.ST;
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
   private static final String RUN_INPLACE_RESOURCE = "com/facebook/buck/python/run_inplace.py.in";
+  public static final String PREBUILT_PYTHON_RULES_SUBDIR = "prebuilt_rules";
 
   // TODO(agallagher): Task #8098647: This rule has no steps, so it
   // really doesn't need a rule key.
@@ -160,13 +161,17 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       final ImmutableSet<String> preloadLibraries) {
     final String relativeLinkTreeRootStr =
         Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
+    final String prebuiltLibsDirStr =
+        Escaper.escapeAsPythonString(
+            relativeLinkTreeRoot.resolve(PREBUILT_PYTHON_RULES_SUBDIR).toString());
     final Linker ld = cxxPlatform.getLd().resolve(resolver);
     return () -> {
       ST st =
           new ST(getRunInplaceResource())
               .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
               .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
-              .add("MODULES_DIR", relativeLinkTreeRootStr);
+              .add("MODULES_DIR", relativeLinkTreeRootStr)
+              .add("PREBUILT_LIBS_DIR", prebuiltLibsDirStr);
 
       // Only add platform-specific values when the binary includes native libraries.
       if (components.getNativeLibraries().isEmpty()) {

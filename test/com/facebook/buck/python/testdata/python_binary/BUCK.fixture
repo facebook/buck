@@ -150,3 +150,21 @@ python_binary(
         ":main_module",
     ],
 )
+
+python_library(
+    name = "main_module_with_prebuilt_dep",
+    srcs = [
+        "main_module_with_prebuilt_dep.py",
+    ],
+    deps = [
+        "//external_sources:whl_dep",
+    ],
+)
+
+python_binary(
+    name = "main_module_with_prebuilt_dep_bin",
+    main_module = "main_module_with_prebuilt_dep",
+    deps = [
+        ":main_module_with_prebuilt_dep",
+    ],
+)
