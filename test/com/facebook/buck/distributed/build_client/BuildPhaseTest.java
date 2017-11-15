@@ -42,6 +42,7 @@ import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionNotifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -93,7 +94,8 @@ public class BuildPhaseTest {
             distBuildClientStatsTracker,
             mockLogStateTracker,
             scheduler,
-            POLL_MILLIS);
+            POLL_MILLIS,
+            new NoOpRemoteBuildRuleCompletionNotifier());
   }
 
   @After

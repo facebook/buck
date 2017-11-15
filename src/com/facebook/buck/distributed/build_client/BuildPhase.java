@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildRuleFinishedEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
@@ -34,6 +35,9 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
+import com.facebook.buck.timing.Clock;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -43,8 +47,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +64,8 @@ import java.util.stream.Collectors;
 
 /** The build phase. */
 public class BuildPhase {
+  private static final int CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
+
   /** The result from a build. */
   public class BuildResult {
     private final BuildJob finalBuildJob;
@@ -77,6 +85,16 @@ public class BuildPhase {
     }
   }
 
+  private class TimestampedEvent<E> {
+    private long eventTimestampMillis;
+    private E event;
+
+    public TimestampedEvent(long eventTimestampMillis, E event) {
+      this.eventTimestampMillis = eventTimestampMillis;
+      this.event = event;
+    }
+  }
+
   private static final Logger LOG = Logger.get(BuildPhase.class);
 
   private static final int FETCH_FINAL_BUILD_JOB_TIMEOUT_SECONDS = 5;
@@ -86,22 +104,48 @@ public class BuildPhase {
   private final LogStateTracker distBuildLogStateTracker;
   private final ScheduledExecutorService scheduler;
   private final int statusPollIntervalMillis;
+  private RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier;
   private final Set<String> seenSlaveRunIds;
   private final Map<BuildSlaveRunId, Integer> nextEventIdBySlaveRunId;
+  private final List<TimestampedEvent<BuildRuleFinishedEvent>> pendingBuildRuleFinishedEvent =
+      new ArrayList<>();
+  private final Clock clock;
+
+  @VisibleForTesting
+  protected BuildPhase(
+      DistBuildService distBuildService,
+      ClientStatsTracker distBuildClientStats,
+      LogStateTracker distBuildLogStateTracker,
+      ScheduledExecutorService scheduler,
+      int statusPollIntervalMillis,
+      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
+      Clock clock) {
+    this.distBuildService = distBuildService;
+    this.distBuildClientStats = distBuildClientStats;
+    this.distBuildLogStateTracker = distBuildLogStateTracker;
+    this.scheduler = scheduler;
+    this.statusPollIntervalMillis = statusPollIntervalMillis;
+    this.remoteBuildRuleCompletionNotifier = remoteBuildRuleCompletionNotifier;
+    this.seenSlaveRunIds = new HashSet<>();
+    this.nextEventIdBySlaveRunId = new HashMap<>();
+    this.clock = clock;
+  }
 
   public BuildPhase(
       DistBuildService distBuildService,
       ClientStatsTracker distBuildClientStats,
       LogStateTracker distBuildLogStateTracker,
       ScheduledExecutorService scheduler,
-      int statusPollIntervalMillis) {
-    this.distBuildService = distBuildService;
-    this.distBuildClientStats = distBuildClientStats;
-    this.distBuildLogStateTracker = distBuildLogStateTracker;
-    this.scheduler = scheduler;
-    this.statusPollIntervalMillis = statusPollIntervalMillis;
-    this.seenSlaveRunIds = new HashSet<>();
-    this.nextEventIdBySlaveRunId = new HashMap<>();
+      int statusPollIntervalMillis,
+      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
+    this(
+        distBuildService,
+        distBuildClientStats,
+        distBuildLogStateTracker,
+        scheduler,
+        statusPollIntervalMillis,
+        remoteBuildRuleCompletionNotifier,
+        new DefaultClock());
   }
 
   /** Run the build while updating the console messages. */
@@ -117,7 +161,9 @@ public class BuildPhase {
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =
         scheduler.scheduleWithFixedDelay(
-            () -> fetchBuildInformationFromServer(job, eventSender, networkExecutorService),
+            () ->
+                fetchBuildInformationFromServerAndPublishPendingEvents(
+                    job, eventSender, networkExecutorService),
             0,
             statusPollIntervalMillis,
             TimeUnit.MILLISECONDS);
@@ -139,12 +185,15 @@ public class BuildPhase {
       }
     } finally {
       distBuildClientStats.stopTimer(PERFORM_DISTRIBUTED_BUILD);
+
+      // Remote build is now done, so ensure local build is unlocked for all build rules.
+      remoteBuildRuleCompletionNotifier.signalCompletionOfRemoteBuild();
     }
 
     return new BuildResult(finalJob, buildSlaveStatusList);
   }
 
-  private BuildJob fetchBuildInformationFromServer(
+  private BuildJob fetchBuildInformationFromServerAndPublishPendingEvents(
       BuildJob job, EventSender eventSender, ListeningExecutorService networkExecutorService) {
     final StampedeId stampedeId = job.getStampedeId();
 
@@ -170,6 +219,8 @@ public class BuildPhase {
       }
     }
 
+    // TODO(alisdair,shivanker): if job just completed (checkTerminateScheduledUpdates),
+    // we could have missed the final few events.
     ListenableFuture<?> slaveEventsFuture =
         fetchAndPostBuildSlaveEventsAsync(job, eventSender, networkExecutorService);
     ListenableFuture<List<BuildSlaveStatus>> slaveStatusesFuture =
@@ -189,8 +240,37 @@ public class BuildPhase {
       throw new RuntimeException(e);
     }
 
+    publishPendingBuildRuleFinishedEvents();
+
     checkTerminateScheduledUpdates(job, Optional.of(slaveStatuses));
     return job;
+  }
+
+  private void publishPendingBuildRuleFinishedEvents() {
+    if (pendingBuildRuleFinishedEvent.size() == 0) {
+      return;
+    }
+
+    LOG.info(String.format("Pending rules count: [%d]", pendingBuildRuleFinishedEvent.size()));
+    long currentTimestampMillis = clock.currentTimeMillis();
+    Iterator<TimestampedEvent<BuildRuleFinishedEvent>> eventsIterator =
+        pendingBuildRuleFinishedEvent.iterator();
+
+    while (eventsIterator.hasNext()) {
+      TimestampedEvent<BuildRuleFinishedEvent> timestampedEvent = eventsIterator.next();
+
+      long elapsedMillisSinceEvent = currentTimestampMillis - timestampedEvent.eventTimestampMillis;
+      if (elapsedMillisSinceEvent < CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS) {
+        break; // Events are time ordered, so all remaining events are also too new to be published
+      }
+
+      // Signal to the local build that build rule has completed remotely.
+      remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(
+          timestampedEvent.event.getBuildTarget());
+
+      // Ensure we don't signal the rule again in the future
+      eventsIterator.remove();
+    }
   }
 
   @VisibleForTesting
@@ -212,7 +292,14 @@ public class BuildPhase {
     }
     ListenableFuture<List<Pair<Integer, BuildSlaveEvent>>> fetchEventsFuture =
         networkExecutorService.submit(
-            () -> distBuildService.multiGetBuildSlaveEvents(fetchEventQueries));
+            () -> {
+              try {
+                return distBuildService.multiGetBuildSlaveEvents(fetchEventQueries);
+              } catch (IOException e) {
+                LOG.error(e, "Fetching build slave events failed. Returning empty list.");
+                return new ArrayList<>();
+              }
+            });
 
     ListenableFuture<?> postEventsFuture =
         Futures.transform(
@@ -241,6 +328,8 @@ public class BuildPhase {
                           })
                       .collect(Collectors.toList());
 
+              LOG.info(String.format("Processing [%d] slave events", sequenceIdAndEvents.size()));
+
               for (Pair<Integer, BuildSlaveEvent> sequenceIdAndEvent : sequenceIdAndEvents) {
                 BuildSlaveEvent slaveEvent = sequenceIdAndEvent.getSecond();
                 nextEventIdBySlaveRunId.put(
@@ -250,6 +339,15 @@ public class BuildPhase {
                     ConsoleEvent consoleEvent =
                         DistBuildUtil.createConsoleEvent(slaveEvent.getConsoleEvent());
                     eventSender.postConsoleEvent(consoleEvent);
+                    break;
+                  case BUILD_RULE_FINISHED_EVENT:
+                    LOG.info(
+                        String.format(
+                            "Creating new pending event for finished rule [%s]",
+                            slaveEvent.getBuildRuleFinishedEvent().buildTarget));
+                    pendingBuildRuleFinishedEvent.add(
+                        new TimestampedEvent<>(
+                            clock.currentTimeMillis(), slaveEvent.getBuildRuleFinishedEvent()));
                     break;
                   case UNKNOWN:
                   default:

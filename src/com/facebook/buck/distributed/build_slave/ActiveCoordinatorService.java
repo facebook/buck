@@ -21,6 +21,7 @@ import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -33,14 +34,17 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   private final MinionWorkloadAllocator allocator;
   private final CompletableFuture<Integer> exitCodeFuture;
   private final DistBuildTraceTracker chromeTraceTracker;
+  private BuildRuleFinishedPublisher buildRuleFinishedPublisher;
 
   public ActiveCoordinatorService(
       MinionWorkloadAllocator allocator,
       CompletableFuture<Integer> exitCodeFuture,
-      DistBuildTraceTracker chromeTraceTracker) {
+      DistBuildTraceTracker chromeTraceTracker,
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
     this.allocator = allocator;
     this.exitCodeFuture = exitCodeFuture;
     this.chromeTraceTracker = chromeTraceTracker;
+    this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
   }
 
   @Override
@@ -49,6 +53,9 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     GetWorkResponse response = new GetWorkResponse();
     response.setContinueBuilding(true);
     response.setWorkUnits(new ArrayList<>());
+
+    buildRuleFinishedPublisher.createBuildRuleCompletionEvents(
+        ImmutableList.copyOf(request.getFinishedTargets()));
 
     if (exitCodeFuture.isDone()) {
       // Tell any remaining minions that the build is finished and that they should shutdown.

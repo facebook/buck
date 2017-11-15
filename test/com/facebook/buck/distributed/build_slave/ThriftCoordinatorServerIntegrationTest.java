@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
@@ -135,7 +136,8 @@ public class ThriftCoordinatorServerIntegrationTest {
       ThriftCoordinatorServer.EventListener eventListener) {
     SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
     future.set(queue);
-    return new ThriftCoordinatorServer(port, future, STAMPEDE_ID, eventListener);
+    return new ThriftCoordinatorServer(
+        port, future, STAMPEDE_ID, eventListener, new NoOpBuildRuleFinishedPublisher());
   }
 
   @Test

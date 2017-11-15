@@ -156,6 +156,10 @@ public class Build implements Closeable {
     return exitCode;
   }
 
+  public void terminateBuildWithFailure(Throwable failure) {
+    buildEngine.terminateBuildWithFailure(failure);
+  }
+
   /**
    * When the user overrides the configured buck-out directory via the `.buckconfig` and also sets
    * the `project.buck_out_compat_link` setting to `true`, we symlink the original output path

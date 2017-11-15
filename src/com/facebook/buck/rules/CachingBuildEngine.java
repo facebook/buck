@@ -150,6 +150,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final boolean consoleLogBuildFailuresInline;
 
+  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
+
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService service,
@@ -163,7 +165,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
-      RuleKeyFactories ruleKeyFactories) {
+      RuleKeyFactories ruleKeyFactories,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
@@ -181,6 +184,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
+    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
 
@@ -226,6 +230,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       RuleKeyFactories ruleKeyFactories,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
@@ -245,6 +250,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
+    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
@@ -321,6 +327,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   @Override
   public RuleKey getRuleKey(BuildTarget buildTarget) {
     return Preconditions.checkNotNull(Futures.getUnchecked(ruleKeys.get(buildTarget)));
+  }
+
+  @Override
+  public void terminateBuildWithFailure(Throwable failure) {
+    firstFailure = failure;
   }
 
   // Dispatch and return a future resolving to a list of all results of this rules dependencies.
@@ -534,7 +545,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             onDiskBuildInfo,
             buildInfoRecorder,
             buildableContext,
-            pipelinesRunner)
+            pipelinesRunner,
+            remoteBuildRuleCompletionWaiter)
         .build();
   }
 

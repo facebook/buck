@@ -34,6 +34,7 @@ import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.MetadataChecker;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -132,7 +133,8 @@ public class FetchCommand extends BuildCommand {
                       localCachingBuildEngineDelegate.getFileHashCache(),
                       actionGraphAndResolver.getResolver(),
                       cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                      ruleKeyCacheScope.getCache()));
+                      ruleKeyCacheScope.getCache()),
+                  new NoOpRemoteBuildRuleCompletionWaiter());
           Build build =
               new Build(
                   actionGraphAndResolver.getResolver(),

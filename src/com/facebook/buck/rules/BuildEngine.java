@@ -53,6 +53,14 @@ public interface BuildEngine {
   /** This is a temporary hack to expose a build rule's rule key to the associated buildable. */
   RuleKey getRuleKey(BuildTarget buildTarget);
 
+  /**
+   * Marks build as failed with the given Throwable. If keepGoing == false, any pending steps will
+   * be terminated before starting.
+   *
+   * @param failure
+   */
+  void terminateBuildWithFailure(Throwable failure);
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract class AbstractBuildEngineResult {

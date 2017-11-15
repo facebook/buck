@@ -59,7 +59,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildService distBuildService,
       StampedeId stampedeId,
       boolean isLocalMinionAlsoRunning,
-      Path logDirectoryPath) {
+      Path logDirectoryPath,
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
     ListenableFuture<BuildTargetsQueue> queue =
         Futures.transform(
             actionGraphAndResolverFuture, x -> createBuildQueue(x, topLevelTargetsToBuild));
@@ -70,7 +71,8 @@ public class MultiSlaveBuildModeRunnerFactory {
     ThriftCoordinatorServer.EventListener listener =
         new CoordinatorEventListener(
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
-    return new CoordinatorModeRunner(queue, stampedeId, listener, logDirectoryPath);
+    return new CoordinatorModeRunner(
+        queue, stampedeId, listener, logDirectoryPath, buildRuleFinishedPublisher);
   }
 
   /**
@@ -122,7 +124,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       BuildExecutor localBuildExecutor,
-      Path logDirectoryPath) {
+      Path logDirectoryPath,
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             actionGraphAndResolverFuture,
@@ -131,7 +134,8 @@ public class MultiSlaveBuildModeRunnerFactory {
             distBuildService,
             stampedeId,
             true,
-            logDirectoryPath),
+            logDirectoryPath,
+            buildRuleFinishedPublisher),
         createMinion(
             localBuildExecutor,
             distBuildService,

@@ -42,6 +42,7 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.MetadataChecker;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -591,7 +592,8 @@ public class TestCommand extends BuildCommand {
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         actionGraphAndResolver.getResolver(),
                         cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                        ruleKeyCacheScope.getCache()));
+                        ruleKeyCacheScope.getCache()),
+                    new NoOpRemoteBuildRuleCompletionWaiter());
             Build build =
                 new Build(
                     actionGraphAndResolver.getResolver(),

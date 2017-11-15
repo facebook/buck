@@ -34,6 +34,7 @@ import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.MetadataChecker;
+import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -68,6 +69,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final BuildExecutorArgs args;
   private final Optional<RuleKeyCacheScope<RuleKey>> ruleKeyCacheScope;
+  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final Optional<CachingBuildEngine.BuildMode> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
@@ -86,7 +88,8 @@ public class LocalBuildExecutor implements BuildExecutor {
       boolean useDistributedBuildCache,
       Optional<RuleKeyCacheScope<RuleKey>> ruleKeyRuleKeyCacheScope,
       Optional<BuildMode> buildEngineMode,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.actionGraphAndResolver = actionGraphAndResolver;
     this.executorService = executorService;
     this.args = args;
@@ -94,6 +97,7 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.buildEngineMode = buildEngineMode;
     this.ruleKeyLogger = ruleKeyLogger;
     this.ruleKeyCacheScope = ruleKeyRuleKeyCacheScope;
+    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     // Init resources.
     this.cachingBuildEngine = createCachingBuildEngine();
@@ -204,7 +208,8 @@ public class LocalBuildExecutor implements BuildExecutor {
             actionGraphAndResolver.getResolver(),
             engineConfig.getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.map(RuleKeyCacheScope::getCache).orElse(new DefaultRuleKeyCache<>()),
-            ruleKeyLogger));
+            ruleKeyLogger),
+        remoteBuildRuleCompletionWaiter);
   }
 
   public Build getBuild() {

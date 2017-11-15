@@ -71,6 +71,11 @@ public class MinionLocalBuildStateTracker {
   public synchronized List<String> getTargetsToSignal() {
     // Make a copy of the finished targets set
     List<String> targets = Lists.newArrayList(uploadedTargetsToSignal);
+
+    for (String target : targets) {
+      LOG.info(String.format("Local minion is signalling: [%s]", target));
+    }
+
     uploadedTargetsToSignal.clear();
     return targets;
   }

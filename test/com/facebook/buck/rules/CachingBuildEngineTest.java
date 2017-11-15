@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
@@ -211,6 +212,7 @@ public class CachingBuildEngineTest {
     protected ProjectFilesystem filesystem;
     protected BuildInfoStoreManager buildInfoStoreManager;
     protected BuildInfoStore buildInfoStore;
+    protected RemoteBuildRuleCompletionWaiter defaultRemoteBuildRuleCompletionWaiter;
     protected FileHashCache fileHashCache;
     protected BuildEngineBuildContext buildContext;
     protected BuildRuleResolver resolver;
@@ -238,6 +240,7 @@ public class CachingBuildEngineTest {
       buildInfoStoreManager = new BuildInfoStoreManager();
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
       buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
+      defaultRemoteBuildRuleCompletionWaiter = new NoOpRemoteBuildRuleCompletionWaiter();
       fileHashCache =
           StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
       buildContext =
@@ -262,7 +265,13 @@ public class CachingBuildEngineTest {
     }
 
     protected CachingBuildEngineFactory cachingBuildEngineFactory() {
-      return new CachingBuildEngineFactory(resolver, buildInfoStoreManager)
+      return cachingBuildEngineFactory(defaultRemoteBuildRuleCompletionWaiter);
+    }
+
+    protected CachingBuildEngineFactory cachingBuildEngineFactory(
+        RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
+      return new CachingBuildEngineFactory(
+              resolver, buildInfoStoreManager, remoteBuildRuleCompletionWaiter)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
 
@@ -3687,6 +3696,66 @@ public class CachingBuildEngineTest {
           secondState);
     }
 
+    @Test
+    public void testBuildLocallyWithImmediateRemoteSynchronization() throws Exception {
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+
+      // Signal completion of the build rule before the caching build engine requests it.
+      // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
+      // ImmediateFuture with the completion handler executed on the caching build engine's thread.
+      synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput("new content");
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Building locally should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    @Test
+    public void testBuildLocallyWithDelayedRemoteSynchronization() throws Exception {
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+
+      // Signal the completion of the build rule asynchronously.
+      // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
+      // Future that later has its completion handler invoked by the Thread below.
+      Thread signalBuildRuleCompletedThread =
+          new Thread(
+              () -> {
+                try {
+                  Thread.sleep(10);
+                } catch (InterruptedException e) {
+                  fail("Test was interrupted");
+                }
+                synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+              });
+      signalBuildRuleCompletedThread.start();
+
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput("new content");
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Building locally should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+
+      signalBuildRuleCompletedThread.join(1000);
+    }
+
     private BuildEngineBuildContext createBuildContext(BuildId buildId) {
       return BuildEngineBuildContext.builder()
           .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
@@ -3737,9 +3806,13 @@ public class CachingBuildEngineTest {
     }
 
     private BuildResult doBuild() throws Exception {
+      return doBuild(defaultRemoteBuildRuleCompletionWaiter);
+    }
+
+    private BuildResult doBuild(RemoteBuildRuleCompletionWaiter synchronizer) throws Exception {
       fileHashCache.invalidateAll();
       try (CachingBuildEngine cachingBuildEngine =
-          cachingBuildEngineFactory()
+          cachingBuildEngineFactory(synchronizer)
               .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
               .setRuleKeyFactories(
                   RuleKeyFactories.of(

@@ -45,6 +45,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -102,7 +103,8 @@ public class BuildControllerTest {
             scheduler,
             0,
             1,
-            true);
+            true,
+            new RemoteBuildRuleSynchronizer());
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     fakeProjectFilesystem = new FakeProjectFilesystem();

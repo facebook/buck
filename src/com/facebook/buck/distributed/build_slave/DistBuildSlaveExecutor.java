@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import java.io.IOException;
@@ -59,7 +60,8 @@ public class DistBuildSlaveExecutor {
               args.getDistBuildService(),
               args.getStampedeId(),
               false,
-              args.getLogDirectoryPath())
+              args.getLogDirectoryPath(),
+              args.getBuildRuleFinishedPublisher())
           .runAndReturnExitCode();
     }
 
@@ -100,7 +102,8 @@ public class DistBuildSlaveExecutor {
                   args.getStampedeId(),
                   args.getBuildSlaveRunId(),
                   localBuildExecutor,
-                  args.getLogDirectoryPath());
+                  args.getLogDirectoryPath(),
+                  args.getBuildRuleFinishedPublisher());
           break;
 
         case COORDINATOR:
@@ -150,7 +153,10 @@ public class DistBuildSlaveExecutor {
               true,
               Optional.empty(),
               Optional.empty(),
-              Optional.empty());
+              Optional.empty(),
+              // Only the client side build needs to synchronize, not the slave.
+              // (as the co-ordinator synchronizes artifacts between slaves).
+              new NoOpRemoteBuildRuleCompletionWaiter());
         };
     return new LazyInitBuilder(builderSupplier);
   }

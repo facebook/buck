@@ -24,6 +24,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
+import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
@@ -33,6 +34,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
+import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutorPool;
@@ -92,6 +94,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private String buildSlaveRunId;
 
   @Nullable private DistBuildSlaveEventBusListener slaveEventListener;
+
+  private BuildRuleFinishedPublisher buildRuleFinishedPublisher =
+      new NoOpBuildRuleFinishedPublisher();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
@@ -167,9 +172,10 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   new DistBuildConfig(state.getRootCell().getBuckConfig()),
                   fileMaterializationStatsTracker,
                   params.getScheduledExecutor(),
-                  params.getExecutors().get(ExecutorPool.CPU),
+                  Preconditions.checkNotNull(params.getExecutors().get(ExecutorPool.CPU)),
                   params.getProjectFilesystemFactory(),
                   getGlobalCacheDirOptional());
+
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
                   state,
@@ -183,7 +189,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
                   distBuildConfig,
-                  timeStatsTracker);
+                  timeStatsTracker,
+                  getBuildRuleFinishedPublisher());
           timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
 
           // All preparation work is done, so start building.
@@ -300,7 +307,13 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               timeStatsTracker,
               fileMaterializationStatsTracker,
               scheduledExecutorService);
+
+      buildRuleFinishedPublisher = slaveEventListener;
     }
+  }
+
+  private BuildRuleFinishedPublisher getBuildRuleFinishedPublisher() {
+    return Preconditions.checkNotNull(buildRuleFinishedPublisher);
   }
 
   @Override

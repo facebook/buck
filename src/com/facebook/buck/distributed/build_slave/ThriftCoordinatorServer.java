@@ -65,6 +65,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final CompletableFuture<Integer> exitCodeFuture;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
+  private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
 
   private volatile OptionalInt port;
 
@@ -77,9 +78,11 @@ public class ThriftCoordinatorServer implements Closeable {
       OptionalInt port,
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
-      EventListener eventListener) {
+      EventListener eventListener,
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
+    this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
     this.chromeTraceTracker = new DistBuildTraceTracker(stampedeId);
@@ -168,7 +171,9 @@ public class ThriftCoordinatorServer implements Closeable {
     Preconditions.checkState(queue.isDone());
     try {
       MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
-      this.handler = new ActiveCoordinatorService(allocator, exitCodeFuture, chromeTraceTracker);
+      this.handler =
+          new ActiveCoordinatorService(
+              allocator, exitCodeFuture, chromeTraceTracker, buildRuleFinishedPublisher);
     } catch (InterruptedException | ExecutionException e) {
       String msg = "Failed to create the BuildTargetsQueue.";
       LOG.error(msg);

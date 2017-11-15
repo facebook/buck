@@ -104,9 +104,6 @@ public class ClientStatsTracker {
       Preconditions.checkNotNull(
           durationsMsByType.get(PERFORM_LOCAL_BUILD),
           "No time was recorded for stat: " + PERFORM_LOCAL_BUILD);
-      Preconditions.checkNotNull(
-          durationsMsByType.get(POST_BUILD_ANALYSIS),
-          "No time was recorded for stat: " + POST_BUILD_ANALYSIS);
     }
 
     for (DistBuildClientStat stat : REQUIRED_STATS) {

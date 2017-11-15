@@ -21,6 +21,7 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
+import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
@@ -61,7 +62,8 @@ import javax.annotation.concurrent.GuardedBy;
  * transmit every single update to BuildSlaveStatus, but we do promise to always transmit
  * BuildSlaveStatus with the latest updates.
  */
-public class DistBuildSlaveEventBusListener implements BuckEventListener, Closeable {
+public class DistBuildSlaveEventBusListener
+    implements BuildRuleFinishedPublisher, BuckEventListener, Closeable {
 
   private static final Logger LOG = Logger.get(DistBuildSlaveEventBusListener.class);
 
@@ -79,6 +81,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   @GuardedBy("consoleEventsLock")
   private final List<BuildSlaveConsoleEvent> consoleEvents = new LinkedList<>();
+
+  private final List<String> finishedTargetsToSignal = new LinkedList<>();
 
   private final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
 
@@ -245,6 +249,39 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     }
   }
 
+  private void sendBuildRuleCompletedEvents() {
+    if (distBuildService == null) {
+      return;
+    }
+
+    ImmutableList<String> finishedTargetsCopy;
+    synchronized (finishedTargetsToSignal) {
+      finishedTargetsCopy = ImmutableList.copyOf(finishedTargetsToSignal);
+    }
+
+    if (finishedTargetsCopy.size() == 0) {
+      return;
+    }
+
+    for (String target : finishedTargetsCopy) {
+      LOG.info(String.format("Publishing build rule finished event for target [%s]", target));
+    }
+
+    // TODO: consider batching if list is too big.
+    try {
+      distBuildService.uploadBuildRuleFinishedEvents(
+          stampedeId, buildSlaveRunId, finishedTargetsCopy);
+    } catch (IOException e) {
+      LOG.error(e, "Could not upload build rule finished events to frontend.");
+    }
+
+    // Only remove events once we are sure they have been sent to the client, otherwise
+    // client will freeze up waiting for targets until end of the build.
+    synchronized (finishedTargetsToSignal) {
+      finishedTargetsToSignal.removeAll(finishedTargetsCopy);
+    }
+  }
+
   private void sendConsoleEventsToFrontend() {
     if (distBuildService == null) {
       return;
@@ -253,7 +290,6 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     ImmutableList<BuildSlaveConsoleEvent> consoleEventsCopy;
     synchronized (consoleEventsLock) {
       consoleEventsCopy = ImmutableList.copyOf(consoleEvents);
-      consoleEvents.clear();
     }
 
     if (consoleEventsCopy.size() == 0) {
@@ -266,11 +302,21 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     } catch (IOException e) {
       LOG.error(e, "Could not upload slave console events to frontend.");
     }
+
+    synchronized (consoleEventsLock) {
+      consoleEvents.removeAll(consoleEventsCopy);
+    }
   }
 
   private void sendServerUpdates() {
-    sendStatusToFrontend();
-    sendConsoleEventsToFrontend();
+    try {
+      LOG.info("Sending server updates..");
+      sendStatusToFrontend();
+      sendConsoleEventsToFrontend();
+      sendBuildRuleCompletedEvents();
+    } catch (Exception ex) {
+      LOG.error(ex, "Failed to send slave server updates.");
+    }
   }
 
   public void publishBuildSlaveFinishedEvent(
@@ -355,5 +401,15 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   @Subscribe
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
     httpCacheUploadStats.processHttpArtifactCacheFinishedEvent(event);
+  }
+
+  @Override
+  public void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets) {
+    for (String target : finishedTargets) {
+      LOG.info(String.format("Queueing build rule finished event for target [%s]", target));
+    }
+    synchronized (finishedTargetsToSignal) {
+      finishedTargetsToSignal.addAll(finishedTargets);
+    }
   }
 }

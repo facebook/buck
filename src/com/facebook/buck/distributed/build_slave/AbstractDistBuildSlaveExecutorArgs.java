@@ -101,6 +101,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
 
+  public abstract BuildRuleFinishedPublisher getBuildRuleFinishedPublisher();
+
   public int getBuildThreadCount() {
     return getState()
         .getRemoteRootCellConfig()

@@ -38,6 +38,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   private final StampedeId stampedeId;
   private final Path logDirectoryPath;
   private final ThriftCoordinatorServer.EventListener eventListener;
+  private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
 
   /**
    * Constructor
@@ -49,21 +50,30 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener,
-      Path logDirectoryPath) {
+      Path logDirectoryPath,
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
     this.stampedeId = stampedeId;
     coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
     this.logDirectoryPath = logDirectoryPath;
     this.queue = queue;
     this.coordinatorPort = coordinatorPort;
     this.eventListener = eventListener;
+    this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
   }
 
   public CoordinatorModeRunner(
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener,
-      Path logDirectoryPath) {
-    this(OptionalInt.empty(), queue, stampedeId, eventListener, logDirectoryPath);
+      Path logDirectoryPath,
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+    this(
+        OptionalInt.empty(),
+        queue,
+        stampedeId,
+        eventListener,
+        logDirectoryPath,
+        buildRuleFinishedPublisher);
   }
 
   @Override
@@ -100,7 +110,9 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
     private final ThriftCoordinatorServer server;
 
     private AsyncCoordinatorRun(ListenableFuture<BuildTargetsQueue> queue) throws IOException {
-      this.server = new ThriftCoordinatorServer(coordinatorPort, queue, stampedeId, eventListener);
+      this.server =
+          new ThriftCoordinatorServer(
+              coordinatorPort, queue, stampedeId, eventListener, buildRuleFinishedPublisher);
       this.server.start();
     }
 

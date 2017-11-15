@@ -131,6 +131,7 @@ class CachingBuildRuleBuilder {
   private final BuildContext buildRuleBuildContext;
   private final ArtifactCache artifactCache;
   private final BuildId buildId;
+  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
 
   private final BuildRuleScopeManager buildRuleScopeManager;
 
@@ -179,7 +180,8 @@ class CachingBuildRuleBuilder {
       OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
       BuildableContext buildableContext,
-      BuildRulePipelinesRunner pipelinesRunner) {
+      BuildRulePipelinesRunner pipelinesRunner,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.buildInfoStoreManager = buildInfoStoreManager;
@@ -207,6 +209,7 @@ class CachingBuildRuleBuilder {
     this.buildRuleBuildContext = buildContext.getBuildContext();
     this.artifactCache = buildContext.getArtifactCache();
     this.buildId = buildContext.getBuildId();
+    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
     this.buildRuleScopeManager = new BuildRuleScopeManager();
 
     this.defaultKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
@@ -836,18 +839,26 @@ class CachingBuildRuleBuilder {
     AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
     ListenableFuture<Optional<BuildResult>> buildResultFuture;
 
+    // If this is a distributed build, wait for cachable rules to be marked as
+    // finished by the remote build before attempting to fetch from cache.
+    ListenableFuture<Void> remoteBuildRuleFinishedFuture =
+        remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule);
+
     // 2. Rule key cache lookup.
     buildResultFuture =
         // TODO(cjhopman): This should follow the same, simple pattern as everything else. With a
         // large ui.thread_line_limit, SuperConsole tries to redraw more lines than are available.
         // These cache threads make it more likely to hit that problem when SuperConsole is aware
         // of them.
-        Futures.transform(
-            performRuleKeyCacheCheck(),
-            cacheResult -> {
-              rulekeyCacheResult.set(cacheResult);
-              return getBuildResultForRuleKeyCacheResult(cacheResult);
-            });
+        Futures.transformAsync(
+            remoteBuildRuleFinishedFuture,
+            (Void v) ->
+                Futures.transform(
+                    performRuleKeyCacheCheck(),
+                    cacheResult -> {
+                      rulekeyCacheResult.set(cacheResult);
+                      return getBuildResultForRuleKeyCacheResult(cacheResult);
+                    }));
 
     // 3. Build deps.
     buildResultFuture =

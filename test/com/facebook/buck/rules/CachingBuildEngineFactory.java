@@ -47,9 +47,13 @@ public class CachingBuildEngineFactory {
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
   private boolean logBuildRuleFailuresInline = true;
   private BuildInfoStoreManager buildInfoStoreManager;
+  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
 
   public CachingBuildEngineFactory(
-      BuildRuleResolver buildRuleResolver, BuildInfoStoreManager buildInfoStoreManager) {
+      BuildRuleResolver buildRuleResolver,
+      BuildInfoStoreManager buildInfoStoreManager,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
+    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
     this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new DummyFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
@@ -122,6 +126,7 @@ public class CachingBuildEngineFactory {
           ruleFinder,
           DefaultSourcePathResolver.from(ruleFinder),
           ruleKeyFactories.get(),
+          remoteBuildRuleCompletionWaiter,
           resourceAwareSchedulingInfo,
           logBuildRuleFailuresInline);
     }
@@ -144,7 +149,8 @@ public class CachingBuildEngineFactory {
             cachingBuildEngineDelegate.getFileHashCache(),
             buildRuleResolver,
             inputFileSizeLimit,
-            new DefaultRuleKeyCache<>()));
+            new DefaultRuleKeyCache<>()),
+        remoteBuildRuleCompletionWaiter);
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

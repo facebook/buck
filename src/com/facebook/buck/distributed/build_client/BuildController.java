@@ -25,6 +25,7 @@ import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -59,7 +60,8 @@ public class BuildController {
       ScheduledExecutorService scheduler,
       long maxTimeoutWaitingForLogsMillis,
       int statusPollIntervalMillis,
-      boolean logMaterializationEnabled) {
+      boolean logMaterializationEnabled,
+      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
     this.preBuildPhase =
         new PreBuildPhase(
             distBuildService,
@@ -73,7 +75,8 @@ public class BuildController {
             distBuildClientStats,
             distBuildLogStateTracker,
             scheduler,
-            statusPollIntervalMillis);
+            statusPollIntervalMillis,
+            remoteBuildRuleCompletionNotifier);
     this.postBuildPhase =
         new PostBuildPhase(
             distBuildService,
@@ -92,7 +95,8 @@ public class BuildController {
       ClientStatsTracker distBuildClientStats,
       ScheduledExecutorService scheduler,
       long maxTimeoutWaitingForLogsMillis,
-      boolean logMaterializationEnabled) {
+      boolean logMaterializationEnabled,
+      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
     this(
         buildJobState,
         distBuildCellIndexer,
@@ -103,7 +107,8 @@ public class BuildController {
         scheduler,
         maxTimeoutWaitingForLogsMillis,
         DEFAULT_STATUS_POLL_INTERVAL_MILLIS,
-        logMaterializationEnabled);
+        logMaterializationEnabled,
+        remoteBuildRuleCompletionNotifier);
   }
 
   /** Executes the tbuild and prints failures to the event bus. */
