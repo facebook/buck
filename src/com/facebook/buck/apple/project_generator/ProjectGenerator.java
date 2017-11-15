@@ -1089,12 +1089,6 @@ public class ProjectGenerator {
 
           mutator.setSwiftDependenciesBuildPhase(copyFiles);
         }
-
-        if (includeFrameworks && !swiftDeps.isEmpty()) {
-          // This is a binary that transitively depends on a library that uses Swift. We must ensure
-          // that the Swift runtime is bundled.
-          swiftDepsSettingsBuilder.put("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
-        }
       }
 
       // TODO(Task #3772930): Go through all dependencies of the rule
