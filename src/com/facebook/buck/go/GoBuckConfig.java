@@ -162,12 +162,11 @@ public class GoBuckConfig {
 
   private Tool getGoTool(
       final String configName, final String toolName, final String extraFlagsConfigKey) {
-    Optional<Path> toolPath = delegate.getPath(SECTION, configName);
-    if (!toolPath.isPresent()) {
-      toolPath = Optional.of(goToolDirSupplier.get().resolve(toolName));
-    }
+    Path toolPath =
+        delegate.getPath(SECTION, configName).orElse(goToolDirSupplier.get().resolve(toolName));
 
-    CommandTool.Builder builder = new CommandTool.Builder(new HashedFileTool(toolPath.get()));
+    CommandTool.Builder builder =
+        new CommandTool.Builder(new HashedFileTool(() -> delegate.getPathSourcePath(toolPath)));
     if (!extraFlagsConfigKey.isEmpty()) {
       for (String arg : getFlags(extraFlagsConfigKey)) {
         builder.addArg(arg);

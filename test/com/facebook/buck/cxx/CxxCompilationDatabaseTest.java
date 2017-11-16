@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -125,7 +126,9 @@ public class CxxCompilationDatabaseTest {
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     filesystem.getRootPath(),
-                    new GccPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
+                    new GccPreprocessor(
+                        new HashedFileTool(
+                            PathSourcePath.of(filesystem, Paths.get("preprocessor")))),
                     preprocessorFlags,
                     new RuleKeyAppendableFunction<FrameworkPath, Path>() {
                       @Override
@@ -143,7 +146,8 @@ public class CxxCompilationDatabaseTest {
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
+                    new GccCompiler(
+                        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler")))),
                     CxxToolFlags.of()),
                 Paths.get("test.o"),
                 FakeSourcePath.of(filesystem, "test.cpp"),
@@ -184,7 +188,7 @@ public class CxxCompilationDatabaseTest {
                 root,
                 root + "/test.cpp",
                 ImmutableList.of(
-                    "compiler",
+                    "/Users/user/src/compiler",
                     "-x",
                     "c++",
                     "-isystem",

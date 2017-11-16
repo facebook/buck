@@ -63,6 +63,7 @@ public class HaskellBuckConfig {
             () ->
                 SystemToolProvider.builder()
                     .setExecutableFinder(finder)
+                    .setSourcePathConverter(delegate::getPathSourcePath)
                     .setName(Paths.get(systemName))
                     .setEnvironment(delegate.getEnvironment())
                     .setSource(String.format(".buckconfig (%s.%s)", section, configName))

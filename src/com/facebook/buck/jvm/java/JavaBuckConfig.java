@@ -26,6 +26,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -189,7 +190,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
                   .addArg(
                       path.isAbsolute()
                           ? StringArg.of(path.toString())
-                          : SourcePathArg.of(delegate.getSourcePath(path)))
+                          : SourcePathArg.of(
+                              Preconditions.checkNotNull(delegate.getPathSourcePath(path))))
                   .build();
             });
   }

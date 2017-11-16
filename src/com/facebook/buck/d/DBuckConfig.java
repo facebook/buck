@@ -46,7 +46,7 @@ public class DBuckConfig {
 
   /** @return a Tool representing the D compiler to be used. */
   Tool getDCompiler() {
-    return new HashedFileTool(getDCompilerPath());
+    return new HashedFileTool(delegate.getPathSourcePath(getDCompilerPath()));
   }
 
   /** @return a list of flags that must be passed to the compiler. */

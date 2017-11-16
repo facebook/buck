@@ -37,7 +37,7 @@ public abstract class AbstractPathSourcePath implements SourcePath {
   // A supplier providing the path.  Used to resolve to `Path` used to access the file.
   protected abstract Supplier<Path> getRelativePathSupplier();
 
-  public static AbstractPathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
+  public static PathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
     return PathSourcePath.of(
         filesystem, relativePath.toString(), Suppliers.ofInstance(relativePath));
   }

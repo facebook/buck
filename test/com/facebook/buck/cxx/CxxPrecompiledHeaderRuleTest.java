@@ -54,6 +54,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -94,35 +95,16 @@ public class CxxPrecompiledHeaderRuleTest {
   private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
       new CxxBuckConfig(FakeBuckConfig.builder().setSections("[cxx]", "pch_enabled=true").build());
 
-  private static final PreprocessorProvider PREPROCESSOR_SUPPORTING_PCH =
-      new PreprocessorProvider(Paths.get("foopp"), Optional.of(CxxToolProvider.Type.CLANG));
-
-  private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
-      CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(PREPROCESSOR_SUPPORTING_PCH);
-
-  private static final CxxBuckConfig CXX_CONFIG_PCH_DISABLED_GENERATE_ERROR =
-      new CxxBuckConfig(
-          FakeBuckConfig.builder()
-              .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=error\n")
-              .build());
-
-  private static final CxxPlatform PLATFORM_NOT_SUPPORTING_PCH_ERROR =
-      CxxPlatformUtils.build(CXX_CONFIG_PCH_DISABLED_GENERATE_ERROR)
-          .withCpp(PREPROCESSOR_SUPPORTING_PCH);
-
-  private static final CxxBuckConfig CXX_CONFIG_PCH_DISABLED_GENERATE_WARNING =
-      new CxxBuckConfig(
-          FakeBuckConfig.builder()
-              .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=warn\n")
-              .build());
-
-  private static final CxxPlatform PLATFORM_NOT_SUPPORTING_PCH_WARNING =
-      CxxPlatformUtils.build(CXX_CONFIG_PCH_DISABLED_GENERATE_WARNING)
-          .withCpp(PREPROCESSOR_SUPPORTING_PCH);
-
   @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
   private ProjectFilesystem filesystem;
   private ProjectWorkspace workspace;
+
+  private PreprocessorProvider preprocessorSupportingPch;
+  private CxxPlatform platformSupportingPch;
+  private CxxBuckConfig cxxConfigPchDisabledGenerateError;
+  private CxxPlatform platformNotSupportingPchError;
+  private CxxBuckConfig cxxConfigPchDisabledGenerateWarning;
+  private CxxPlatform platformNotSupportingPchWarning;
 
   @Before
   public void setUp() throws InterruptedException, IOException {
@@ -130,6 +112,34 @@ public class CxxPrecompiledHeaderRuleTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
     workspace.setUp();
+
+    preprocessorSupportingPch =
+        new PreprocessorProvider(
+            PathSourcePath.of(filesystem, Paths.get("foopp")),
+            Optional.of(CxxToolProvider.Type.CLANG));
+
+    platformSupportingPch =
+        CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(preprocessorSupportingPch);
+
+    cxxConfigPchDisabledGenerateError =
+        new CxxBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=error\n")
+                .build());
+
+    platformNotSupportingPchError =
+        CxxPlatformUtils.build(cxxConfigPchDisabledGenerateError)
+            .withCpp(preprocessorSupportingPch);
+
+    cxxConfigPchDisabledGenerateWarning =
+        new CxxBuckConfig(
+            FakeBuckConfig.builder()
+                .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=warn\n")
+                .build());
+
+    platformNotSupportingPchWarning =
+        CxxPlatformUtils.build(cxxConfigPchDisabledGenerateWarning)
+            .withCpp(preprocessorSupportingPch);
   }
 
   public final TargetNodeToBuildRuleTransformer transformer =
@@ -181,7 +191,7 @@ public class CxxPrecompiledHeaderRuleTest {
         .setResolver(ruleResolver)
         .setRuleFinder(ruleFinder)
         .setPathResolver(DefaultSourcePathResolver.from(ruleFinder))
-        .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
+        .setCxxPlatform(platformSupportingPch)
         .setPicType(AbstractCxxSourceRuleFactory.PicType.PIC)
         .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);
   }
@@ -444,7 +454,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxLink binLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CXX_CONFIG_PCH_ENABLED,
-            PLATFORM_SUPPORTING_PCH,
+            platformSupportingPch,
             filesystem,
             ruleResolver,
             pathResolver,
@@ -500,8 +510,8 @@ public class CxxPrecompiledHeaderRuleTest {
     try {
       newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
           .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-          .setCxxPlatform(PLATFORM_NOT_SUPPORTING_PCH_ERROR)
-          .setCxxBuckConfig(CXX_CONFIG_PCH_DISABLED_GENERATE_ERROR)
+          .setCxxPlatform(platformNotSupportingPchError)
+          .setCxxBuckConfig(cxxConfigPchDisabledGenerateError)
           .build()
           .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
       throw new Error("`requirePreprocessAndCompileBuildRule` should have failed");
@@ -520,8 +530,8 @@ public class CxxPrecompiledHeaderRuleTest {
     try {
       newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
           .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-          .setCxxPlatform(PLATFORM_NOT_SUPPORTING_PCH_WARNING)
-          .setCxxBuckConfig(CXX_CONFIG_PCH_DISABLED_GENERATE_WARNING)
+          .setCxxPlatform(platformNotSupportingPchWarning)
+          .setCxxBuckConfig(cxxConfigPchDisabledGenerateWarning)
           .build()
           .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
     } catch (PchUnavailableException e) {

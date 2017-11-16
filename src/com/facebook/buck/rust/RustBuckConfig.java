@@ -79,8 +79,9 @@ public class RustBuckConfig {
             () -> {
               HashedFileTool tool =
                   new HashedFileTool(
-                      new ExecutableFinder()
-                          .getExecutable(DEFAULT_RUSTC_COMPILER, delegate.getEnvironment()));
+                      delegate.getPathSourcePath(
+                          new ExecutableFinder()
+                              .getExecutable(DEFAULT_RUSTC_COMPILER, delegate.getEnvironment())));
               return new ConstantToolProvider(tool);
             });
   }

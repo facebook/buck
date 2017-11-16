@@ -223,8 +223,12 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     return new FakeProjectFilesystem(tempDir);
   }
 
-  public static ProjectFilesystem createJavaOnlyFilesystem() throws InterruptedException {
-    return createJavaOnlyFilesystem("/opt/src/buck");
+  public static ProjectFilesystem createJavaOnlyFilesystem() {
+    try {
+      return createJavaOnlyFilesystem("/opt/src/buck");
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath)

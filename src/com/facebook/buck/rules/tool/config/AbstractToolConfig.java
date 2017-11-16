@@ -27,6 +27,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -50,13 +51,7 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
     } else {
       return Optional.of(
           new ConstantToolProvider(
-              new HashedFileTool(
-                  () ->
-                      getDelegate()
-                          .checkPathExistsAndResolve(
-                              value.get(),
-                              String.format(
-                                  "Overridden %s:%s path not found: ", section, field)))));
+              new HashedFileTool(() -> getDelegate().getPathSourcePath(Paths.get(value.get())))));
     }
   }
 

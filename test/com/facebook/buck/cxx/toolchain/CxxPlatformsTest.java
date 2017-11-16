@@ -27,15 +27,18 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
@@ -52,10 +55,17 @@ public class CxxPlatformsTest {
   public void returnsKnownDefaultPlatformSetInConfig() {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("cxx", ImmutableMap.of("default_platform", "borland_cxx_452"));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CompilerProvider compiler =
-        new CompilerProvider(Paths.get("borland"), Optional.of(CxxToolProvider.Type.GCC));
+        new CompilerProvider(
+            Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))),
+            Optional.of(CxxToolProvider.Type.GCC));
     PreprocessorProvider preprocessor =
-        new PreprocessorProvider(Paths.get("borland"), Optional.of(CxxToolProvider.Type.GCC));
+        new PreprocessorProvider(
+            Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))),
+            Optional.of(CxxToolProvider.Type.GCC));
+    HashedFileTool borland =
+        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("borland")));
     CxxPlatform borlandCxx452Platform =
         CxxPlatform.builder()
             .setFlavor(InternalFlavor.of("borland_cxx_452"))
@@ -67,12 +77,11 @@ public class CxxPlatformsTest {
             .setCxxpp(preprocessor)
             .setLd(
                 new DefaultLinkerProvider(
-                    LinkerProvider.Type.GNU,
-                    new ConstantToolProvider(new HashedFileTool(Paths.get("borland")))))
-            .setStrip(new HashedFileTool(Paths.get("borland")))
-            .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
-            .setAr(ArchiverProvider.from(new GnuArchiver(new HashedFileTool(Paths.get("borland")))))
-            .setRanlib(new ConstantToolProvider(new HashedFileTool(Paths.get("borland"))))
+                    LinkerProvider.Type.GNU, new ConstantToolProvider(borland)))
+            .setStrip(borland)
+            .setSymbolNameTool(new PosixNmSymbolNameTool(borland))
+            .setAr(ArchiverProvider.from(new GnuArchiver(borland)))
+            .setRanlib(new ConstantToolProvider(borland))
             .setSharedLibraryExtension("so")
             .setSharedLibraryVersionedExtensionFormat(".so.%s")
             .setStaticLibraryExtension("a")

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -248,7 +249,11 @@ final class PreprocessorDelegate implements AddsToRuleKey {
 
   public Predicate<SourcePath> getCoveredByDepFilePredicate() {
     // TODO(jkeljo): I didn't know how to implement this, and didn't have time to figure it out.
-    return (SourcePath path) -> true;
+    // TODO(cjhopman): This should only include paths from the headers, not all the tools and other
+    // random things added to the rulekeys.
+    return (SourcePath path) ->
+        !(path instanceof PathSourcePath)
+            || !((PathSourcePath) path).getRelativePath().isAbsolute();
   }
 
   public HeaderVerification getHeaderVerification() {

@@ -46,10 +46,10 @@ public class KotlinBuckConfig {
     } else {
       ImmutableSet<SourcePath> classpathEntries =
           ImmutableSet.of(
-              delegate.getSourcePath(getPathToStdlibJar()),
-              delegate.getSourcePath(getPathToReflectJar()),
-              delegate.getSourcePath(getPathToScriptRuntimeJar()),
-              delegate.getSourcePath(getPathToCompilerJar()));
+              delegate.getPathSourcePath(getPathToStdlibJar()),
+              delegate.getPathSourcePath(getPathToReflectJar()),
+              delegate.getPathSourcePath(getPathToScriptRuntimeJar()),
+              delegate.getPathSourcePath(getPathToCompilerJar()));
 
       return new JarBackedReflectedKotlinc(classpathEntries);
     }
@@ -155,7 +155,9 @@ public class KotlinBuckConfig {
     }
 
     throw new HumanReadableException(
-        "Could not resolve kotlin script runtime JAR location (kotlin home:" + getKotlinHome() + ").");
+        "Could not resolve kotlin script runtime JAR location (kotlin home:"
+            + getKotlinHome()
+            + ").");
   }
 
   /**

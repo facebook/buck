@@ -58,20 +58,23 @@ public class InferBuckConfig implements RuleKeyAppendable {
     this.delegate = delegate;
     this.clangCompiler =
         MoreSuppliers.memoize(
-            () ->
-                new HashedFileTool(
-                    Preconditions.checkNotNull(
-                        getPathFromConfig(delegate, "clang_compiler").orElse(null),
-                        "clang_compiler path not found on the current configuration")));
+            () -> {
+              Optional<Path> clang_compiler = getPathFromConfig(delegate, "clang_compiler");
+              Preconditions.checkState(
+                  clang_compiler.isPresent(),
+                  "clang_compiler path not found on the current configuration");
+              return new HashedFileTool(() -> delegate.getPathSourcePath(clang_compiler.get()));
+            });
 
     this.clangPlugin =
         MoreSuppliers.memoize(
-            () ->
-                new HashedFileTool(
-                    Preconditions.checkNotNull(
-                        getPathFromConfig(delegate, "clang_plugin").orElse(null),
-                        "clang_plugin path not found on the current configuration")));
-
+            () -> {
+              Optional<Path> clang_compiler = getPathFromConfig(delegate, "clang_plugin");
+              Preconditions.checkState(
+                  clang_compiler.isPresent(),
+                  "clang_plugin path not found on the current configuration");
+              return new HashedFileTool(() -> delegate.getPathSourcePath(clang_compiler.get()));
+            });
     this.inferVersion =
         MoreSuppliers.memoize(
             () -> {

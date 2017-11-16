@@ -34,7 +34,6 @@ public class GroovyBuckConfig {
   }
 
   Supplier<Tool> getGroovyCompiler() {
-
     Optional<Path> path = delegate.getPath("groovy", "groovy_home");
     final Path groovyHomePath;
     if (path.isPresent()) {
@@ -54,6 +53,6 @@ public class GroovyBuckConfig {
         new ExecutableFinder()
             .getExecutable(groovyHomePath.resolve("bin/groovyc"), delegate.getEnvironment());
 
-    return Suppliers.ofInstance(new HashedFileTool(compiler));
+    return Suppliers.ofInstance(new HashedFileTool(delegate.getPathSourcePath(compiler)));
   }
 }

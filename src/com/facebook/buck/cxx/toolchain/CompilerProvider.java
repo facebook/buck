@@ -16,10 +16,12 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-import java.nio.file.Path;
+import com.google.common.base.Suppliers;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class CompilerProvider extends CxxToolProvider<Compiler> {
 
@@ -27,8 +29,12 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
     super(toolProvider, type);
   }
 
-  public CompilerProvider(Path path, Optional<Type> type) {
+  public CompilerProvider(Supplier<PathSourcePath> path, Optional<Type> type) {
     super(path, type);
+  }
+
+  public CompilerProvider(PathSourcePath path, Optional<Type> type) {
+    super(Suppliers.ofInstance(path), type);
   }
 
   @Override

@@ -83,12 +83,7 @@ public class FakeAppleRuleDescriptions {
   public static final ProjectFilesystem FAKE_PROJECT_FILESYSTEM =
       ((Supplier<ProjectFilesystem>)
               () -> {
-                ProjectFilesystem filesystem;
-                try {
-                  filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-                } catch (InterruptedException e) {
-                  throw new RuntimeException(e);
-                }
+                ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
                 Stream.of(
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",

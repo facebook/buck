@@ -46,6 +46,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -334,12 +335,13 @@ public class PythonBinaryDescriptionTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    final Path executor = Paths.get("executor");
+    final Path executor = Paths.get("/root/executor");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
           @Override
           public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
-            return Optional.of(new HashedFileTool(executor));
+            return Optional.of(new HashedFileTool(PathSourcePath.of(filesystem, executor)));
           }
         };
     PythonBinaryBuilder builder =

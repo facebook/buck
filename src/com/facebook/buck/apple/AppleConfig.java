@@ -202,7 +202,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     } else {
       Optional<Path> codesignPath = delegate.getPath(APPLE_SECTION, codesignField);
       Path defaultCodesignPath = Paths.get("/usr/bin/codesign");
-      HashedFileTool codesign = new HashedFileTool(codesignPath.orElse(defaultCodesignPath));
+      HashedFileTool codesign =
+          new HashedFileTool(delegate.getPathSourcePath(codesignPath.orElse(defaultCodesignPath)));
       return new ConstantToolProvider(codesign);
     }
   }

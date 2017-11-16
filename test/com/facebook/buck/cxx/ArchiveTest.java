@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -61,15 +62,18 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 public class ArchiveTest {
-
   private static final Path AR = Paths.get("ar");
-  private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(new HashedFileTool(AR));
   private static final Path RANLIB = Paths.get("ranlib");
-  private static final Tool DEFAULT_RANLIB = new HashedFileTool(RANLIB);
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.of(
           FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
+
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final Archiver DEFAULT_ARCHIVER =
+      new GnuArchiver(new HashedFileTool(PathSourcePath.of(projectFilesystem, AR)));
+  private final Tool DEFAULT_RANLIB =
+      new HashedFileTool(PathSourcePath.of(projectFilesystem, RANLIB));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
@@ -79,7 +83,6 @@ public class ArchiveTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>builder()
@@ -116,7 +119,9 @@ public class ArchiveTest {
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    new GnuArchiver(new HashedFileTool(Paths.get("different"))),
+                    new GnuArchiver(
+                        new HashedFileTool(
+                            PathSourcePath.of(projectFilesystem, Paths.get("different")))),
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
@@ -170,7 +175,7 @@ public class ArchiveTest {
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    new BsdArchiver(new HashedFileTool(AR)),
+                    new BsdArchiver(new HashedFileTool(PathSourcePath.of(projectFilesystem, AR))),
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),

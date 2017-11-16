@@ -30,6 +30,7 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -56,7 +57,6 @@ import org.junit.Test;
 
 public class CxxLinkTest {
 
-  private static final Linker DEFAULT_LINKER = new GnuLinker(new HashedFileTool(Paths.get("ld")));
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
   private static final ImmutableList<Arg> DEFAULT_ARGS =
       ImmutableList.of(
@@ -69,6 +69,10 @@ public class CxxLinkTest {
           StringArg.of("-L"),
           StringArg.of("/System/Libraries/libz.dynlib"),
           StringArg.of("-llibz.dylib"));
+
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final Linker DEFAULT_LINKER =
+      new GnuLinker(new HashedFileTool(PathSourcePath.of(projectFilesystem, Paths.get("ld"))));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
@@ -114,7 +118,9 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ImmutableSortedSet::of,
-                    new GnuLinker(new HashedFileTool(Paths.get("different"))),
+                    new GnuLinker(
+                        new HashedFileTool(
+                            PathSourcePath.of(projectFilesystem, Paths.get("different")))),
                     DEFAULT_OUTPUT,
                     DEFAULT_ARGS,
                     Optional.empty(),

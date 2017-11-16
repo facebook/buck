@@ -25,7 +25,9 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleScheduleInfo;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.MoreCollectors;
@@ -39,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** Contains platform independent settings for C/C++ rules. */
@@ -112,6 +115,15 @@ public class CxxBuckConfig {
     return delegate.getPath(cxxSection, name);
   }
 
+  @Nullable
+  public PathSourcePath getSourcePath(Path path) {
+    return delegate.getPathSourcePath(path);
+  }
+
+  public Optional<SourcePath> getSourcePath(String name) {
+    return delegate.getSourcePath(cxxSection, name);
+  }
+
   public Optional<String> getDefaultPlatform() {
     return delegate.getValue(cxxSection, "default_platform");
   }
@@ -180,7 +192,7 @@ public class CxxBuckConfig {
       return Optional.of(
           CxxToolProviderParams.builder()
               .setSource(source)
-              .setPath(delegate.getRequiredPath(cxxSection, field))
+              .setPath(delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, field)))
               .setType(type)
               .build());
     }
@@ -332,7 +344,7 @@ public class CxxBuckConfig {
 
     public abstract Optional<BuildTarget> getBuildTarget();
 
-    public abstract Optional<Path> getPath();
+    public abstract Optional<PathSourcePath> getPath();
 
     public abstract Optional<CxxToolProvider.Type> getType();
 

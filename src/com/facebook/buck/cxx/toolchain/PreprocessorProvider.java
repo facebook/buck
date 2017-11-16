@@ -16,14 +16,19 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-import java.nio.file.Path;
+import com.google.common.base.Suppliers;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
+  public PreprocessorProvider(PathSourcePath path, Optional<Type> type) {
+    super(Suppliers.ofInstance(path), type);
+  }
 
-  public PreprocessorProvider(Path path, Optional<Type> type) {
+  public PreprocessorProvider(Supplier<PathSourcePath> path, Optional<Type> type) {
     super(path, type);
   }
 

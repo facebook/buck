@@ -262,7 +262,7 @@ public class CxxPlatforms {
   }
 
   private static Optional<Tool> getTool(String name, CxxBuckConfig config) {
-    return config.getPath(name).map(HashedFileTool::new);
+    return config.getPath(name).map(config::getSourcePath).map(HashedFileTool::new);
   }
 
   public static Iterable<BuildTarget> getParseTimeDeps(CxxPlatform cxxPlatform) {

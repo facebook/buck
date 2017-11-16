@@ -341,9 +341,12 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   /** @return a {@link SourcePath} identified by a {@link Path}. */
-  public SourcePath getSourcePath(Path path) {
+  public PathSourcePath getPathSourcePath(@PropagatesNullable Path path) {
     if (path == null) {
       return null;
+    }
+    if (path.isAbsolute()) {
+      return PathSourcePath.of(projectFilesystem, path);
     }
     return PathSourcePath.of(
         projectFilesystem,

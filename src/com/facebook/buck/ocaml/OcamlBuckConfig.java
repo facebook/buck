@@ -116,9 +116,6 @@ public class OcamlBuckConfig {
 
   private Optional<Tool> getTool(String section, String label, Path defaultValue) {
     Optional<Path> executable = getExecutable(section, label, defaultValue);
-    if (!executable.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(new HashedFileTool(executable.get()));
+    return executable.map(path -> new HashedFileTool(() -> delegate.getPathSourcePath(path)));
   }
 }

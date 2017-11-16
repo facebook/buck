@@ -913,7 +913,8 @@ public class AppleCxxPlatformsTest {
   public void byDefaultCodesignToolIsConstant() {
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform();
     BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
-    SourcePathResolver sourcePathResolver = EasyMock.createMock(SourcePathResolver.class);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
@@ -951,7 +952,8 @@ public class AppleCxxPlatformsTest {
                 .setSections("[apple]", "codesign = " + codesignPath)
                 .build());
     BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
-    SourcePathResolver sourcePathResolver = EasyMock.createMock(SourcePathResolver.class);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()

@@ -35,6 +35,6 @@ public final class FakeSourcePath {
   }
 
   public static PathSourcePath of(ProjectFilesystem filesystem, Path path) {
-    return (PathSourcePath) AbstractPathSourcePath.of(filesystem, path);
+    return AbstractPathSourcePath.of(filesystem, path);
   }
 }
