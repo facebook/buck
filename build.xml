@@ -26,17 +26,11 @@
   <property name="javac-plugin.jar" value="${build.dir}/javac-plugin/${javac-plugin.jar.name}" />
   <property name="javac-plugin.location.dir.name" value="com/facebook/buck/jvm/java/plugin" />
   <property name="javac-plugin.location.dir" value="${classes.dir}/${javac-plugin.location.dir.name}" />
-  <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/make_pex.py" />
-  <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
   <property name="buck.logging_config_file" value="${basedir}/config/logging.properties.st" />
-  <property name="buck.test_logging_config_file" value="${basedir}/config/logging.test.properties" />
-  <property name="testclasses.dir" value="${build.dir}/testclasses" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="javadoc-with-android.dir" value="${build.dir}/javadoc-with-android" />
   <property name="javadoc-all.dir" value="${build.dir}/javadoc-all" />
-  <property name="test.class" value="Test" />
-  <property name="test.debug_port" value="8787" />
   <property name="lint.outputpath" value="${build.dir}/lint.output" />
 
   <property name="dx.base.dir" value="${basedir}/third-party/java/dx" />
@@ -49,13 +43,9 @@
   <property name="eclipse.dir" value="${basedir}/third-party/java/eclipse" />
 
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
-  <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
   <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
   <property name="typing.dir" value="${third-party.dir}/py/typing/python2" />
   <property name="nailgun.dir" value="${third-party.dir}/nailgun" />
-  <property name="testutil.integration.dir" value="${test.dir}/com/facebook/buck/testutil/integration" />
-
-  <property name="buck.pythonpath" value="${typing.dir}:${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${testutil.integration.dir}" />
 
   <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.5.7-SNAPSHOT.jar" />
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.5.7-SNAPSHOT.jar" />
@@ -66,7 +56,6 @@
   <property name="manual.gensrc.classes.dir" value="${build.dir}/${manual.gensrc.classes.dir.name}" />
 
   <property name="gensrc.dir" value="${build.dir}/gen" />
-  <property name="test.gensrc.dir" value="${build.dir}/test-gen" />
   <property name="aosp.gensrc.dir" value="${build.dir}/aosp-gen" />
 
   <property name="devbuild" value="0" />
@@ -216,14 +205,6 @@
 
   <pathconvert refid="processorpath" property="processorpath" />
 
-  <path id="junit">
-    <pathelement location="${third-party.dir}/java/junit/junit-4.12.jar" />
-    <pathelement location="${third-party.dir}/java/hamcrest/hamcrest-junit-2.0.0.0.jar" />
-    <pathelement location="${third-party.dir}/java/hamcrest/java-hamcrest-2.0.0.0.jar" />
-    <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
-    <pathelement location="${third-party.dir}/java/android/ddmlib-25.3.0.jar" />
-  </path>
-
   <target name="clean" description="remove all generated files" depends="clear-successful-build">
     <delete dir="${build.dir}" />
   </target>
@@ -246,13 +227,6 @@
     <!-- The function Function class was only introduced in Java 8. -->
     <available property="jdk8" classname="java.util.function.Function"/>
     <fail message="Require JDK 8 or higher" unless="jdk8"/>
-  </target>
-
-  <target name="python-get-prefix">
-    <exec executable="python" failonerror="true" outputproperty="python.prefix" logError="true">
-      <arg value="-c" />
-      <arg value="import distutils.sysconfig; print(distutils.sysconfig.PREFIX)" />
-    </exec>
   </target>
 
   <target name="compile-manual-gen-src" depends="checkversion">
@@ -601,188 +575,6 @@
     </jar>
   </target>
 
-  <path id="tests.run.classpath">
-    <path refid="classpath" />
-    <fileset dir="${third-party.dir}/java">
-      <include name="caliper/caliper-1.0-all.jar" />
-      <include name="cglib/cglib-nodep-2.2.jar" />
-      <include name="easymock/easymock-3.3.1.jar" />
-      <include name="hamcrest/hamcrest-junit-2.0.0.0.jar" />
-      <include name="hamcrest/java-hamcrest-2.0.0.0.jar" />
-      <include name="junit/junit-4.12.jar" />
-      <include name="objenesis/objenesis-1.2.jar" />
-    </fileset>
-
-    <pathelement location="${testclasses.dir}" />
-    <pathelement location="${test.dir}" />
-    <pathelement location="${testrunner.classes.dir}" />
-  </path>
-
-  <path id="tests.compile.classpath">
-    <path refid="tests.run.classpath" />
-    <pathelement location="${third-party.dir}/java/jdk/stub-compiler-tree-api.jar" />
-  </path>
-
-  <!-- The set of Immutables value type source files which have not
-       yet been run through the javac annotation processor. -->
-  <fileset dir="${test.dir}" id="immutables-test-srcs">
-    <!-- Speed up the build by only running javac on files containing Immutables. -->
-    <contains text="org.immutables" />
-    <exclude name="**/testdata/**" />
-    <!-- Only run javac on immutables files which have changed since the last build. -->
-    <modified>
-      <param name="cache.cachefile" value="${build.dir}/immutables.test.modified.properties" />
-    </modified>
-  </fileset>
-
-  <target name="compile-tests"
-          depends="compile"
-          >
-    <mkdir dir="${testclasses.dir}" />
-    <ecj srcdir="${test.dir}"
-         destdir="${testclasses.dir}"
-         classpathref="tests.compile.classpath"
-         gensrcdir="${test.gensrc.dir}"
-         >
-      <javac-params>
-        <exclude name="**/testdata/**" />
-      </javac-params>
-    </ecj>
-  </target>
-
-  <target name="java-test"
-          depends="compile-tests"
-          description="runs the Java tests"
-          >
-    <condition property="jvmArgs"
-               value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=${test.debug_port}"
-               else="-ea">
-      <istrue value="${debugTest}"/>
-    </condition>
-
-    <junit failureproperty="hasFailingTests"
-           showoutput="true"
-           forkmode="perBatch"
-           haltonfailure="on"
-           haltonerror="on">
-      <sysproperty key="buck.path_to_pex" value="${buck.path_to_pex}" />
-      <sysproperty key="buck.path_to_python_test_main" value="${buck.path_to_python_test_main}" />
-      <sysproperty key="buck.logging_config_file" value="${buck.test_logging_config_file}" />
-      <sysproperty key="java.util.logging.config.class" value="com.facebook.buck.log.LogConfig" />
-      <sysproperty key="org.eclipse.jetty.util.log.class" value="org.eclipse.jetty.util.log.JavaUtilLog" />
-
-      <!-- See DEFS for details on why this property is needed. -->
-      <sysproperty key="sun.zip.disableMemoryMapping" value="true" />
-
-      <jvmarg value="-Xmx512M" />
-      <jvmarg value="${jvmArgs}" />
-
-      <formatter type="plain" usefile="false" />
-
-      <!-- Java and android -->
-      <batchtest fork="yes">
-        <fileset dir="${test.dir}">
-          <include name="com/facebook/buck/jvm/java/**/*${test.class}.java" />
-          <include name="com/facebook/buck/android/**/*${test.class}.java" />
-          <include name="com/facebook/buck/dalvik/**/*${test.class}.java" />
-
-          <exclude name="**/testdata/**" />
-        </fileset>
-      </batchtest>
-
-      <!-- iOS -->
-      <batchtest fork="yes">
-        <fileset dir="${test.dir}">
-          <include name="com/facebook/buck/apple/**/*${test.class}.java" />
-          <include name="com/facebook/buck/ddplist/**/*${test.class}.java" />
-
-          <exclude name="**/testdata/**" />
-        </fileset>
-      </batchtest>
-
-      <!-- C++ and it's ilk -->
-      <batchtest fork="yes">
-        <fileset dir="${test.dir}">
-          <include name="com/facebook/buck/cxx/**/*${test.class}.java" />
-
-          <exclude name="**/testdata/**" />
-        </fileset>
-      </batchtest>
-
-      <!-- Catch-all test group -->
-      <batchtest fork="yes">
-        <fileset dir="${test.dir}">
-          <!--
-          Do not exclude tests that start with "Abstract", as there are some tests for abstract
-          classes.
-          -->
-          <include name="**/*${test.class}.java" />
-
-          <exclude name="**/testdata/**" />
-          <exclude name="com/facebook/buck/jvm/java/**" />
-          <exclude name="com/facebook/buck/android/**" />
-          <exclude name="com/facebook/buck/dalvik/**" />
-          <exclude name="com/facebook/buck/apple/**" />
-          <exclude name="com/facebook/buck/ddplist/**" />
-          <exclude name="com/facebook/buck/cxx/**" />
-        </fileset>
-      </batchtest>
-
-      <classpath refid="tests.run.classpath" />
-    </junit>
-    <fail if="hasFailingTests" />
-  </target>
-
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, log-rotation-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test" />
-
-  <target name="buck-py-test" description="tests the BUCK parser">
-    <exec executable="python" failonerror="true" dir="${basedir}/python-dsl">
-      <!-- The py folder is actually a python package, so use module import style here. -->
-      <env key="PYTHONPATH" path="${buck.pythonpath}" />
-      <arg value="-m" />
-      <arg value="unittest" />
-      <arg value="buck_parser.buck_test" />
-      <arg value="buck_parser.processor_test" />
-      <arg value="buck_parser.util_test" />
-    </exec>
-  </target>
-
-  <target name="class-loader-py-test" description="tests BUCK's class loader setup">
-      <exec executable="python" failonerror="true">
-          <env key="PYTHONPATH" path="${buck.pythonpath}" />
-          <arg value="test/com/facebook/buck/cli/bootstrapper/class_loader_test.py" />
-      </exec>
-  </target>
-
-  <target name="log-rotation-py-test" description="tests BUCK's logger setup">
-    <exec executable="python" failonerror="true">
-      <env key="PYTHONPATH" path="${buck.pythonpath}" />
-      <arg value="test/com/facebook/buck/log/test_log_rotation.py" />
-    </exec>
-  </target>
-
-  <target name="pathlib-py-test" description="tests pathlib.py">
-    <exec executable="python" failonerror="true" dir="${pathlib.dir}">
-      <!-- Needed on Python 2.6. -->
-      <env key="PYTHONPATH" path="${unittest2.dir}" />
-      <arg value="test_pathlib.py" />
-    </exec>
-  </target>
-
-  <target name="zip-munger-py-test" description="tests munger.py">
-    <exec executable="python" failonerror="true">
-      <env key="PYTHONPATH" path="${basedir}" />
-      <arg value="py/buck/zip/test_munger.py" />
-    </exec>
-  </target>
-
-  <target name="buck-tool-py-test" description="tests buck_tool.py">
-    <exec executable="python" failonerror="true">
-      <env key="PYTHONPATH" path="${buck.pythonpath}" />
-      <arg value="programs/test_buck_tool.py" />
-    </exec>
-  </target>
-
   <path id="pmd-classpath">
     <fileset dir="${basedir}/pmd" includes="*.jar" />
     <pathelement location="${third-party.dir}/java/guava/guava-23.3-jre.jar" />
@@ -915,8 +707,6 @@
 
   <target name="lint" depends="pmd, missing-test-files-check" />
 
-  <target name="test" depends="java-test, py-test" description="runs the unit tests" />
-
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />
     <attribute name="classpathref" />
@@ -1036,6 +826,6 @@
 
   <target name="travis" depends="verify-javadoc, verify-soydoc, lint" />
 
-  <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
-  <target name="all" depends="default, test, javadoc" />
+  <target name="pre-checkin" depends="clean, default, lint"/>
+  <target name="all" depends="default, javadoc" />
 </project>
