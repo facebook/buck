@@ -41,6 +41,7 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonPlatform;
+import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -617,22 +618,16 @@ public class LuaBinaryDescription
       nativeLibsLinktree.add(symlinkTree);
     }
 
-    return new Tool() {
+    return new AbstractTool() {
       @AddToRuleKey private final LuaPackageComponents toolComponents = components;
       @AddToRuleKey private final SourcePath toolStarter = starter;
-      // TODO(cjhopman): This should probably add all the other used stuff to its rulekey.
+      @AddToRuleKey private final SymlinkTree toolModulesLinkTree = modulesLinkTree;
+      @AddToRuleKey private final List<SymlinkTree> toolNativeLibsLinkTree = nativeLibsLinktree;
 
-      @Override
-      public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-        return ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(ruleFinder.filterBuildRuleInputs(starter))
-            .addAll(components.getDeps(ruleFinder))
-            .add(modulesLinkTree)
-            .addAll(nativeLibsLinktree)
-            .addAll(pythonModulesLinktree)
-            .addAll(ruleFinder.filterBuildRuleInputs(extraInputs))
-            .build();
-      }
+      @AddToRuleKey
+      private final List<SymlinkTree> toolPythonModulesLinktree = pythonModulesLinktree;
+
+      @AddToRuleKey private final List<SourcePath> toolExtraInputs = extraInputs;
 
       @Override
       public ImmutableCollection<SourcePath> getInputs() {
