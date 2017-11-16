@@ -756,8 +756,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     workspace.runBuckBuild("//:binary").assertSuccess("Successful build should exit with 0.");
 
-    workspace.replaceFileContents("BUCK", "provided_deps = [ ':junit' ],", "");
-    workspace.replaceFileContents("BUCK", "deps = [ ':guava' ]", "deps = [ ':guava', ':junit' ]");
+    workspace.replaceFileContents("BUCK", "provided_deps = [\":junit\"],", "");
+    workspace.replaceFileContents("BUCK", "deps = [\":guava\"]", "deps = [ ':guava', ':junit' ]");
     workspace.resetBuildLogFile();
 
     workspace.runBuckBuild("//:binary").assertSuccess();
