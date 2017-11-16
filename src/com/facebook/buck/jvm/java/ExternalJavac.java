@@ -25,6 +25,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -54,7 +55,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public class ExternalJavac implements Javac {
+/** javac implemented in a separate binary. */
+public class ExternalJavac implements Javac, RuleKeyAppendable {
 
   private static final JavacVersion DEFAULT_VERSION = JavacVersion.of("unknown version");
 

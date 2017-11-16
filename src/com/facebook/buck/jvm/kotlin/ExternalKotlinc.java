@@ -20,6 +20,7 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -43,7 +44,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class ExternalKotlinc implements Kotlinc {
+/** kotlinc implemented as a separate binary. */
+public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
 
   private static final KotlincVersion DEFAULT_VERSION = KotlincVersion.of("unknown version");
 

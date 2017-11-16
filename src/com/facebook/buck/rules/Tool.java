@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** An abstraction for describing some tools used as part of the build. */
-public interface Tool extends RuleKeyAppendable {
+public interface Tool extends AddsToRuleKey {
 
   /**
    * @return all {@link BuildRule}s this tool requires to run.
@@ -40,7 +40,4 @@ public interface Tool extends RuleKeyAppendable {
    * @param resolver
    */
   ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver);
-
-  @Override
-  default void appendToRuleKey(RuleKeyObjectSink sink) {}
 }
