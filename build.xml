@@ -9,6 +9,10 @@
   <property name="build.successful.file" value="${build.dir}/successful-build" />
   <property name="classes.dir.name" value="classes" />
   <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
+  <property name="buck.modules.annotation.processor.src.dir" value="com/facebook/buck/module/annotationprocessor" />
+  <property name="buck.modules.ap.classes.dir.name" value="buck-modules-ap-classes" />
+  <property name="buck.modules.annotation.processor.classes.dir" value="${build.dir}/${buck.modules.ap.classes.dir.name}" />
+  <property name="buck.modules.annotation.processor.jar" value="${build.dir}/buck-modules-ap.jar" />
   <property name="aosp.classes.dir.name" value="aosp/classes" />
   <property name="aosp.classes.dir" value="${build.dir}/${aosp.classes.dir.name}" />
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
@@ -205,6 +209,15 @@
   </path>
 
   <pathconvert refid="processorpath" property="processorpath" />
+
+  <path id="module.processorpath">
+    <pathelement location="${immutables-value-standalone.jar}"/>
+    <pathelement location="${immutables-builder-standalone.jar}"/>
+    <pathelement location="${pf4j-standalone.jar}"/>
+    <pathelement location="${buck.modules.annotation.processor.jar}"/>
+  </path>
+
+  <pathconvert refid="module.processorpath" property="module.processorpath" />
 
   <target name="clean" description="remove all generated files" depends="clear-successful-build">
     <delete dir="${build.dir}" />
@@ -435,7 +448,7 @@
   </target>
 
   <target name="compile"
-          depends="compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
+          depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -453,6 +466,7 @@
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
+          <exclude name="com/facebook/buck/module/annotationprocessor/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
           <exclude name="com/facebook/buck/zip/rules/**" />
         </patternset>
@@ -460,12 +474,29 @@
     </ecj>
   </target>
 
+  <target name="compile-buck-modules-annotation-processor">
+    <mkdir dir="${buck.modules.annotation.processor.classes.dir}" />
+    <ecj destdir="${buck.modules.annotation.processor.classes.dir}">
+      <javac-params>
+        <include name="${buck.modules.annotation.processor.src.dir}/**/*.java" />
+      </javac-params>
+    </ecj>
+
+    <jar destfile="${buck.modules.annotation.processor.jar}">
+      <fileset dir="${buck.modules.annotation.processor.classes.dir}" />
+      <fileset dir="src">
+        <include name="${buck.modules.annotation.processor.src.dir}/**/*.st"/>
+      </fileset>
+      <zipfileset src="${basedir}/third-party/java/stringtemplate/ST-4.0.8.jar" />
+      <service type="javax.annotation.processing.Processor"
+        provider="com.facebook.buck.module.annotationprocessor.BuckModuleAnnotationProcessor"/>
+    </jar>
+  </target>
+
   <target name="build-modules" depends="build-module-ziprules"/>
 
   <target name="build-module-ziprules" depends="compile">
-    <build-buck-module-jar
-      module-name="ziprules"
-      module-manifest="src/com/facebook/buck/zip/rules/META-INF/MANIFEST.MF">
+    <build-buck-module-jar module-name="ziprules">
       <module-javac-params>
         <include name="com/facebook/buck/zip/rules/**/*.java" />
       </module-javac-params>
@@ -687,7 +718,7 @@
     <attribute name="module-name" />
     <attribute name="module-classes-dir" default="${build.dir}/classes/${modules.dir.name}/@{module-name}" />
     <attribute name="module-jar" default="${build.dir}/${modules.dir.name}/@{module-name}.jar" />
-    <attribute name="module-manifest" />
+    <attribute name="module-gen-dir" default="${build.dir}/gen/buck-modules/@{module-name}"/>
     <element name="module-javac-params" optional="true" />
     <sequential>
       <mkdir dir="@{module-classes-dir}" />
@@ -695,15 +726,16 @@
         <pathelement location="${classes.dir}" />
         <path refid="classpath-no-src" />
       </path>
-      <ecj destdir="@{module-classes-dir}" classpathref="@{module-name}-classpath">
+      <ecj destdir="@{module-classes-dir}" classpathref="@{module-name}-classpath"
+        gensrcdir="@{module-gen-dir}">
         <javac-params>
           <compilerarg value="-processorpath" />
-          <compilerarg value="${processorpath}" />
+          <compilerarg value="${module.processorpath}" />
           <compilerarg value="${pf4j-annotation-processor-storage-config}" />
           <module-javac-params/>
         </javac-params>
       </ecj>
-      <jar destfile="@{module-jar}" manifest="@{module-manifest}">
+      <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
         <fileset dir="@{module-classes-dir}" />
       </jar>
     </sequential>

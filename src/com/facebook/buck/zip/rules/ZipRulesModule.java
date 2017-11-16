@@ -17,11 +17,7 @@
 package com.facebook.buck.zip.rules;
 
 import com.facebook.buck.module.BuckModule;
-import org.pf4j.PluginWrapper;
 
 /** A modules that provides `zip_rule` build rule. */
-public class ZipRulesModule extends BuckModule {
-  public ZipRulesModule(PluginWrapper wrapper) {
-    super(wrapper);
-  }
-}
+@BuckModule(id = "com.facebook.buck.zip.ziprules")
+public class ZipRulesModule {}

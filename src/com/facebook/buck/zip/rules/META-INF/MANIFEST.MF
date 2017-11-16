@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Plugin-Class: com.facebook.buck.zip.rules.ZipRulesModule
-Plugin-Id: com.facebook.buck.zip.rules
-Plugin-Version: 0.0.1

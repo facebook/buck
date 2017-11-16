@@ -37,7 +37,6 @@ java_library_with_plugins(
 
 java_binary(
     name = "rules-module",
-    manifest_file = "META-INF/MANIFEST.MF",
     visibility = [
         "//programs:bucklib",
         "//programs:calculate-buck-binary-hash",

@@ -144,12 +144,17 @@ def _add_pf4j_plugin_framework(**kwargs):
     ])
     return kwargs
 
-def java_library_with_plugins(name, **kwargs):
-    """
-    `java_library` that can contain plugins based on pf4j framework
-    """
+def _add_buck_modules_annotation_processor(**kwargs):
+    kwargs["plugins"] = list(depset(kwargs.get("plugins", [])).union([
+        "//src/com/facebook/buck/module/annotationprocessor:annotationprocessor",
+    ]))
+    return kwargs
 
+def java_library_with_plugins(name, **kwargs):
     kwargs_with_immutables = _add_immutables("provided_deps", **kwargs)
+    kawgs_with_plugins = _add_pf4j_plugin_framework(**kwargs_with_immutables)
+    kawgs_with_buck_modules_annotation_processor = _add_buck_modules_annotation_processor(**kawgs_with_plugins)
     return native.java_library(
       name=name,
-      **_add_pf4j_plugin_framework(**kwargs_with_immutables))
+      **kawgs_with_buck_modules_annotation_processor
+    )

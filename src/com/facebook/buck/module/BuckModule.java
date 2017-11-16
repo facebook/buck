@@ -16,16 +16,23 @@
 
 package com.facebook.buck.module;
 
-import org.pf4j.Plugin;
-import org.pf4j.PluginWrapper;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
  * A module in Buck application.
  *
  * <p>The main purpose of modules is to decouple the application into independent pieces.
  */
-public abstract class BuckModule extends Plugin {
-  public BuckModule(PluginWrapper wrapper) {
-    super(wrapper);
-  }
+@Retention(RUNTIME)
+@Target(TYPE)
+public @interface BuckModule {
+  /** ID of the module. */
+  String id();
+
+  /** IDs of the modules this module depend on. */
+  String[] dependencies() default {};
 }
