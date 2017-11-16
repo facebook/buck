@@ -766,7 +766,12 @@ class BuildFileProcessor(object):
 
         return value
 
-    def _glob(self, includes, excludes=None, include_dotfiles=False, search_base=None):
+    def _glob(self, includes, excludes=None, include_dotfiles=False, search_base=None,
+              exclude=None):
+        assert exclude is None or excludes is None, \
+            "Mixing 'exclude' and 'excludes' attributes is not allowed. Please replace your " \
+            "exclude and excludes arguments with a single 'excludes = %r'." % (exclude + excludes)
+        excludes = excludes or exclude
         build_env = self._current_build_env
         return glob(
             includes, excludes=excludes, include_dotfiles=include_dotfiles,

@@ -436,6 +436,50 @@ class BuckTest(unittest.TestCase):
         self.assertEqual('Nobody watches the watchmen', exception['value'])
         self.assertTrue(len(exception['traceback']) > 0)
 
+    def test_glob_exclude_is_supported(self):
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'foo_rule(',
+                '  name="foo",'
+                '  srcs=glob(["*.java"], exclude=[]),',
+                ')'
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        self.write_files(build_file, java_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('srcs'), ['Foo.java'])
+
+    def test_glob_exclude_cannot_be_mixed_with_excludes(self):
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'foo_rule(',
+                '  name="foo",'
+                '  srcs=glob(["*.java"], exclude=["e1"], excludes=["e2"]),',
+                ')'
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        self.write_files(build_file, java_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            self.assertRaisesRegexp(
+                AssertionError,
+                "Mixing 'exclude' and 'excludes' attributes is not allowed. Please replace your "
+                "exclude and excludes arguments with a single 'excludes = \['e1', 'e2'\]'.",
+                build_file_processor.process,
+                build_file.root,
+                build_file.prefix,
+                build_file.path,
+                diagnostics)
+
     def test_watchman_glob_warning_adds_diagnostic(self):
         class FakeWatchmanClient:
             def query(self, *args):
