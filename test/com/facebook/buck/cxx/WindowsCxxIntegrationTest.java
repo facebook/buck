@@ -107,6 +107,27 @@ public class WindowsCxxIntegrationTest {
     sharedLibResult.assertSuccess();
   }
 
+  @Test
+  public void simpleBinaryWithDll() throws IOException {
+    ProjectWorkspace.ProcessResult libResult =
+        workspace.runBuckCommand("build", "//implib:implib#windows-x86_64,shared");
+    libResult.assertSuccess();
+
+    ProjectWorkspace.ProcessResult appResult =
+        workspace.runBuckCommand("build", "//implib_usage:app#windows-x86_64");
+    appResult.assertSuccess();
+
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand("run", "//implib_usage:app#windows-x86_64");
+    runResult.assertSuccess();
+
+    ProjectWorkspace.ProcessResult logResult =
+        workspace.runBuckCommand("build", "//implib_usage:log");
+    logResult.assertSuccess();
+    Path outputPath = workspace.resolve("buck-out/gen/implib_usage/log/log.txt");
+    assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
+  }
+
   private ImmutableMap<String, String> getDevConsoleEnv(String vcvarsallBatArg)
       throws IOException, InterruptedException {
     workspace.writeContentsToPath(

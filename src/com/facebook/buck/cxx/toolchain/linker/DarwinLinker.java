@@ -159,6 +159,11 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
     return false;
   }
 
+  @Override
+  public SharedLibraryLoadingType getSharedLibraryLoadingType() {
+    return SharedLibraryLoadingType.RPATH;
+  }
+
   /**
    * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
    * linker via the `-u` argument.

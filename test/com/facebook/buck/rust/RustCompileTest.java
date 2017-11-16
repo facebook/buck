@@ -188,6 +188,11 @@ public class RustCompileTest {
       }
 
       @Override
+      public SharedLibraryLoadingType getSharedLibraryLoadingType() {
+        return SharedLibraryLoadingType.RPATH;
+      }
+
+      @Override
       public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
         return ImmutableSortedSet.of();
       }

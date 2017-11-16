@@ -22,6 +22,9 @@
   archiver_platform=windows
   ranlib=$LIB_EXE$
 
+[project]
+  windows_symlinks=yes
+
 [repositories]
   x = xplat
   d = default

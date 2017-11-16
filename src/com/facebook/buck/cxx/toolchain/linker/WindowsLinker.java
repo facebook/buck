@@ -30,11 +30,12 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A specialization of {@link Linker} containing information specific to the Windows implementation.
  */
-public class WindowsLinker extends DelegatingTool implements Linker {
+public class WindowsLinker extends DelegatingTool implements Linker, HasImportLibrary {
   public WindowsLinker(Tool tool) {
     super(tool);
   }
@@ -117,5 +118,20 @@ public class WindowsLinker extends DelegatingTool implements Linker {
   @Override
   public boolean hasFilePathSizeLimitations() {
     return true;
+  }
+
+  @Override
+  public SharedLibraryLoadingType getSharedLibraryLoadingType() {
+    return SharedLibraryLoadingType.THE_SAME_DIRECTORY;
+  }
+
+  @Override
+  public Iterable<Arg> importLibrary(Path output) {
+    return StringArg.from("/IMPLIB:" + importLibraryPath(output).toString());
+  }
+
+  @Override
+  public Path importLibraryPath(Path output) {
+    return Paths.get(output + ".imp.lib");
   }
 }

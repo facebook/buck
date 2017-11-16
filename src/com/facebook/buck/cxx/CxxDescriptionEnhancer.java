@@ -42,6 +42,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -104,6 +105,8 @@ public class CxxDescriptionEnhancer {
   public static final Flavor MACH_O_BUNDLE_FLAVOR = InternalFlavor.of("mach-o-bundle");
   public static final Flavor SHARED_LIBRARY_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("shared-library-symlink-tree");
+  public static final Flavor BINARY_WITH_SHARED_LIBRARIES_SYMLINK_TREE_FLAVOR =
+      InternalFlavor.of("binary-with-shared-libraries-symlink-tree");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = InternalFlavor.of("binary");
 
@@ -923,25 +926,25 @@ public class CxxDescriptionEnhancer {
         .map(f -> toStringWithMacrosArgs(target, cellRoots, resolver, cxxPlatform, f))
         .forEach(argsBuilder::add);
 
-    // Special handling for dynamically linked binaries.
-    if (linkStyle == Linker.LinkableDepType.SHARED) {
+    Linker linker = cxxPlatform.getLd().resolve(resolver);
 
+    // Special handling for dynamically linked binaries with rpath support
+    if (linkStyle == Linker.LinkableDepType.SHARED
+        && linker.getSharedLibraryLoadingType() == Linker.SharedLibraryLoadingType.RPATH) {
       // Create a symlink tree with for all shared libraries needed by this binary.
       SymlinkTree sharedLibraries =
           requireSharedLibrarySymlinkTree(target, projectFilesystem, resolver, cxxPlatform, deps);
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-
       Path absLinkOut = target.getCellPath().resolve(linkOutput);
-
       argsBuilder.addAll(
           StringArg.from(
               Linkers.iXlinker(
                   "-rpath",
                   String.format(
                       "%s/%s",
-                      cxxPlatform.getLd().resolve(resolver).origin(),
+                      linker.origin(),
                       absLinkOut.getParent().relativize(sharedLibraries.getRoot()).toString()))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
@@ -1012,8 +1015,38 @@ public class CxxDescriptionEnhancer {
       binaryRuleForExecutable = cxxLink;
     }
 
+    SourcePath sourcePathToExecutable = binaryRuleForExecutable.getSourcePathToOutput();
+
+    // Special handling for dynamically linked binaries requiring dependencies to be in the same
+    // directory
+    if (linkStyle == Linker.LinkableDepType.SHARED
+        && linker.getSharedLibraryLoadingType()
+            == Linker.SharedLibraryLoadingType.THE_SAME_DIRECTORY) {
+      Path binaryName = linkOutput.getFileName();
+      BuildTarget binaryWithSharedLibrariesTarget =
+          createBinaryWithSharedLibrariesSymlinkTreeTarget(target, cxxPlatform.getFlavor());
+      Path symlinkTreeRoot =
+          getBinaryWithSharedLibrariesSymlinkTreePath(
+              projectFilesystem, binaryWithSharedLibrariesTarget, cxxPlatform.getFlavor());
+      Path appPath = symlinkTreeRoot.resolve(binaryName);
+      SymlinkTree binaryWithSharedLibraries =
+          requireBinaryWithSharedLibrariesSymlinkTree(
+              target,
+              projectFilesystem,
+              resolver,
+              cxxPlatform,
+              deps,
+              binaryName,
+              sourcePathToExecutable);
+
+      executableBuilder.addDep(binaryWithSharedLibraries);
+      executableBuilder.addInputs(binaryWithSharedLibraries.getLinks().values());
+      sourcePathToExecutable =
+          ExplicitBuildTargetSourcePath.of(binaryWithSharedLibrariesTarget, appPath);
+    }
+
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.
-    executableBuilder.addArg(SourcePathArg.of(binaryRuleForExecutable.getSourcePathToOutput()));
+    executableBuilder.addArg(SourcePathArg.of(sourcePathToExecutable));
 
     return new CxxLinkAndCompileRules(
         cxxLink,
@@ -1166,6 +1199,59 @@ public class CxxDescriptionEnhancer {
             ignored ->
                 createSharedLibrarySymlinkTree(
                     buildTarget, filesystem, cxxPlatform, deps, n -> Optional.empty()));
+  }
+
+  private static BuildTarget createBinaryWithSharedLibrariesSymlinkTreeTarget(
+      BuildTarget target, Flavor platform) {
+    return target.withAppendedFlavors(BINARY_WITH_SHARED_LIBRARIES_SYMLINK_TREE_FLAVOR, platform);
+  }
+
+  private static Path getBinaryWithSharedLibrariesSymlinkTreePath(
+      ProjectFilesystem filesystem, BuildTarget target, Flavor platform) {
+    return BuildTargets.getGenPath(
+        filesystem, createBinaryWithSharedLibrariesSymlinkTreeTarget(target, platform), "%s");
+  }
+
+  private static SymlinkTree createBinaryWithSharedLibrariesSymlinkTree(
+      BuildTarget baseBuildTarget,
+      ProjectFilesystem filesystem,
+      CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> deps,
+      Path binaryName,
+      SourcePath binarySource) {
+
+    BuildTarget symlinkTreeTarget =
+        createBinaryWithSharedLibrariesSymlinkTreeTarget(baseBuildTarget, cxxPlatform.getFlavor());
+    Path symlinkTreeRoot =
+        getBinaryWithSharedLibrariesSymlinkTreePath(
+            filesystem, baseBuildTarget, cxxPlatform.getFlavor());
+
+    ImmutableSortedMap<String, SourcePath> libraries =
+        NativeLinkables.getTransitiveSharedLibraries(
+            cxxPlatform, deps, n -> Optional.empty(), false);
+
+    ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
+    for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
+      links.put(Paths.get(ent.getKey()), ent.getValue());
+    }
+    links.put(binaryName, binarySource);
+    return new SymlinkTree(symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
+  }
+
+  private static SymlinkTree requireBinaryWithSharedLibrariesSymlinkTree(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> deps,
+      Path binaryName,
+      SourcePath binarySource) {
+    return (SymlinkTree)
+        resolver.computeIfAbsent(
+            createBinaryWithSharedLibrariesSymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
+            ignored ->
+                createBinaryWithSharedLibrariesSymlinkTree(
+                    buildTarget, filesystem, cxxPlatform, deps, binaryName, binarySource));
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {

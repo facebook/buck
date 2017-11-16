@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -42,9 +43,11 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -105,6 +108,10 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (linker instanceof HasThinLTO && thinLto) {
       buildableContext.recordArtifact(((HasThinLTO) linker).thinLTOPath(output));
     }
+    if (isSharedLib() && linker instanceof HasImportLibrary) {
+      HasImportLibrary impLibLinker = (HasImportLibrary) this.linker;
+      buildableContext.recordArtifact(impLibLinker.importLibraryPath(output));
+    }
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
     Path argFilePath =
@@ -135,7 +142,8 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .distinct()
             .collect(MoreCollectors.toImmutableMap(x -> x, currentRuleCellRoot::relativize));
 
-    return new ImmutableList.Builder<Step>()
+    Builder<Step> builder = new Builder<>();
+    builder
         .add(
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
@@ -179,8 +187,17 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
                             getProjectFilesystem().resolve(linkOutput),
                             getProjectFilesystem().resolve(output)))
                 .orElse(ImmutableList.of()))
-        .add(new FileScrubberStep(getProjectFilesystem(), output, linker.getScrubbers(cellRootMap)))
-        .build();
+        .add(
+            new FileScrubberStep(getProjectFilesystem(), output, linker.getScrubbers(cellRootMap)));
+    if (isSharedLib() && linker instanceof HasImportLibrary) {
+      // In some case (when there are no `dll_export`s eg) an import library is not produced by
+      // link.exe. An empty file is produced in this case (since an import library was already
+      // promised to `buildableContext`).
+      HasImportLibrary hasImportLibraryLinker = (HasImportLibrary) this.linker;
+      builder.add(
+          new TouchStep(getProjectFilesystem(), hasImportLibraryLinker.importLibraryPath(output)));
+    }
+    return builder.build();
   }
 
   @Override
@@ -193,6 +210,20 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+  }
+
+  /** @return The source path to be used to link against this binary. */
+  SourcePath getSourcePathToOutputForLinking() {
+    if (isSharedLib() && linker instanceof HasImportLibrary) {
+      HasImportLibrary impLibLinker = (HasImportLibrary) this.linker;
+      return ExplicitBuildTargetSourcePath.of(
+          getBuildTarget(), impLibLinker.importLibraryPath(output));
+    }
+    return getSourcePathToOutput();
+  }
+
+  private boolean isSharedLib() {
+    return getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
   }
 
   @Override

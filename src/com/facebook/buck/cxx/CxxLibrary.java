@@ -323,8 +323,11 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                 cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
                     ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
                     : CxxLibraryDescription.Type.SHARED.getFlavor());
-        linkerArgsBuilder.add(
-            SourcePathArg.of(Preconditions.checkNotNull(rule.getSourcePathToOutput())));
+        SourcePath sourcePathForLinking =
+            rule instanceof CxxLink
+                ? ((CxxLink) rule).getSourcePathToOutputForLinking()
+                : rule.getSourcePathToOutput();
+        linkerArgsBuilder.add(SourcePathArg.of(Preconditions.checkNotNull(sourcePathForLinking)));
       }
     }
 

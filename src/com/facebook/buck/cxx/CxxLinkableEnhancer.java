@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -97,6 +98,9 @@ public class CxxLinkableEnhancer {
       argsBuilder.addAll(((HasThinLTO) linker).thinLTO(output));
     }
 
+    if (linker instanceof HasImportLibrary) {
+      argsBuilder.addAll(((HasImportLibrary) linker).importLibrary(output));
+    }
 
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(

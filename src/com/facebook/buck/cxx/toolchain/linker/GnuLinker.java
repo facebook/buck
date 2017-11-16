@@ -156,6 +156,11 @@ public class GnuLinker extends DelegatingTool implements Linker {
     return false;
   }
 
+  @Override
+  public SharedLibraryLoadingType getSharedLibraryLoadingType() {
+    return SharedLibraryLoadingType.RPATH;
+  }
+
   // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined
   // symbols.
   private static class UndefinedSymbolsLinkerScript

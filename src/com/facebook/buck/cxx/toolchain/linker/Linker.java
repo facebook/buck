@@ -117,6 +117,8 @@ public interface Linker extends Tool {
 
   boolean hasFilePathSizeLimitations();
 
+  SharedLibraryLoadingType getSharedLibraryLoadingType();
+
   /** The various ways to link an output file. */
   enum LinkType {
 
@@ -145,6 +147,14 @@ public interface Linker extends Tool {
     // Provide input suitable for dynamically linking this linkable (e.g. return references to
     // shared libraries, libfoo.so).
     SHARED
+  }
+
+  /** The various ways to load shared libraries on different platforms */
+  enum SharedLibraryLoadingType {
+    // Shared libraries are loaded via -rpath (*nix)
+    RPATH,
+    // Shared libraries are loaded from the same directory where a binary is located (windows)
+    THE_SAME_DIRECTORY,
   }
 
   /**
