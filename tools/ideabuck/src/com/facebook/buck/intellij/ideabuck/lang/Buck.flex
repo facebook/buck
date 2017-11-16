@@ -59,6 +59,7 @@ IDENTIFIER=[:jletter:] [:jletterdigit:]*
   "includes"                  { return GLOB_INCLUDES_KEYWORD; }
   "include_dotfiles"          { return GLOB_INCLUDE_DOTFILES_KEYWORD; }
   "excludes"                  { return GLOB_EXCLUDES_KEYWORD; }
+  "exclude"                   { return GLOB_EXCLUDE_KEYWORD; }
   "("                         { return L_PARENTHESES; }
   "["                         { return L_BRACKET; }
   ")"                         { return R_PARENTHESES; }

@@ -52,6 +52,10 @@ public class BuckParsingTest extends ParsingTestCase {
     doTest();
   }
 
+  public void testGlobExclude() {
+    doTest();
+  }
+
   public void testGlob2() {
     doTest();
   }
