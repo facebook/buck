@@ -87,7 +87,7 @@ public class CxxGtestTestTest {
             new CxxLink(
                 linkTarget,
                 filesystem,
-                TestBuildRuleParams.create(),
+                ImmutableSortedSet::of,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),
                 ImmutableList.of(),

@@ -26,11 +26,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.OverrideScheduleRule;
@@ -45,16 +44,21 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class CxxLink extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasAppleDebugSymbolDeps, OverrideScheduleRule {
+
+  private final Supplier<? extends SortedSet<BuildRule>> buildDeps;
 
   @AddToRuleKey private final Linker linker;
 
@@ -70,7 +74,7 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public CxxLink(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      Supplier<? extends SortedSet<BuildRule>> buildDepsSupplier,
       Linker linker,
       Path output,
       ImmutableList<Arg> args,
@@ -78,7 +82,8 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<RuleScheduleInfo> ruleScheduleInfo,
       boolean cacheable,
       boolean thinLto) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.buildDeps = MoreSuppliers.memoize(buildDepsSupplier);
     this.linker = linker;
     this.output = output;
     this.args = args;
@@ -250,5 +255,10 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public ImmutableList<Arg> getArgs() {
     return args;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps.get();
   }
 }

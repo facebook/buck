@@ -173,7 +173,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       .withAppendedFlavors(InternalFlavor.of("cxx-link"))
                       .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                   getProjectFilesystem(),
-                  buildRuleParams,
+                  buildRuleParams::getBuildDeps,
                   linker,
                   getLibFilePath(),
                   args,

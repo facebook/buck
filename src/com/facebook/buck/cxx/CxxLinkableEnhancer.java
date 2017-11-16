@@ -31,7 +31,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -132,7 +131,7 @@ public class CxxLinkableEnhancer {
         // Construct our link build rule params.  The important part here is combining the build
         // rules that construct our object file inputs and also the deps that build our
         // dependencies.
-        new BuildRuleParams(declaredDeps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+        declaredDeps,
         linker,
         output,
         allArgs,

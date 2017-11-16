@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -49,6 +47,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,7 +79,6 @@ public class CxxLinkTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create();
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of(
@@ -98,7 +96,7 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    params,
+                    ImmutableSortedSet::of,
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
                     DEFAULT_ARGS,
@@ -115,7 +113,7 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    params,
+                    ImmutableSortedSet::of,
                     new GnuLinker(new HashedFileTool(Paths.get("different"))),
                     DEFAULT_OUTPUT,
                     DEFAULT_ARGS,
@@ -133,7 +131,7 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    params,
+                    ImmutableSortedSet::of,
                     DEFAULT_LINKER,
                     Paths.get("different"),
                     DEFAULT_ARGS,
@@ -151,7 +149,7 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    params,
+                    ImmutableSortedSet::of,
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
                     ImmutableList.of(SourcePathArg.of(FakeSourcePath.of("different"))),
@@ -171,7 +169,6 @@ public class CxxLinkTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create();
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
@@ -209,7 +206,7 @@ public class CxxLinkTest {
             new CxxLink(
                 target,
                 projectFilesystem,
-                params,
+                ImmutableSortedSet::of,
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 args1,
@@ -229,7 +226,7 @@ public class CxxLinkTest {
             new CxxLink(
                 target,
                 projectFilesystem,
-                params,
+                ImmutableSortedSet::of,
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 args2,

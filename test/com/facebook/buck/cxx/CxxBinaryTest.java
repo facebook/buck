@@ -53,14 +53,13 @@ public class CxxBinaryTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
-    BuildRuleParams linkParams = TestBuildRuleParams.create();
     Path bin = Paths.get("path/to/exectuable");
     CxxLink cxxLink =
         ruleResolver.addToIndex(
             new CxxLink(
                 linkTarget,
                 new FakeProjectFilesystem(),
-                linkParams,
+                ImmutableSortedSet::of,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 bin,
                 ImmutableList.of(),
