@@ -159,6 +159,9 @@ struct BuildJob {
   8: optional string repository;
   9: optional string tenantId;
   10: optional string statusMessage;
+  // The build UUID of a buck client which initiated
+  // remote or distributed build.
+  11: optional string buckBuildUuid;
 }
 
 struct Announcement {
@@ -208,6 +211,8 @@ struct CreateBuildRequest {
   3: optional i32 numberOfMinions;
   4: optional string repository;
   5: optional string tenantId;
+  6: optional string buckBuildUuid;
+  7: optional string username;
 }
 
 struct CreateBuildResponse {

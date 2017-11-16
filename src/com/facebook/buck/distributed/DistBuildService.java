@@ -102,9 +102,12 @@ public class DistBuildService implements Closeable {
   private static final ThriftProtocol PROTOCOL_FOR_CLIENT_ONLY_STRUCTS = ThriftProtocol.COMPACT;
 
   private final FrontendService service;
+  private final String username;
 
-  public DistBuildService(FrontendService service) {
+  public DistBuildService(FrontendService service, String username) {
+    Preconditions.checkNotNull(username, "Username needs to be set for distributed build.");
     this.service = service;
+    this.username = username;
   }
 
   public MultiGetBuildSlaveRealTimeLogsResponse fetchSlaveLogLines(
@@ -326,7 +329,8 @@ public class DistBuildService implements Closeable {
     createBuildRequest
         .setCreateTimestampMillis(System.currentTimeMillis())
         .setBuildMode(buildMode)
-        .setNumberOfMinions(numberOfMinions);
+        .setNumberOfMinions(numberOfMinions)
+        .setUsername(username);
 
     if (repository != null && repository.length() > 0) {
       createBuildRequest.setRepository(repository);

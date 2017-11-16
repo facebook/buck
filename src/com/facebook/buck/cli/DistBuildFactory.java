@@ -54,7 +54,8 @@ public abstract class DistBuildFactory {
   }
 
   public static DistBuildService newDistBuildService(CommandRunnerParams params) {
-    return new DistBuildService(newFrontendService(params));
+    return new DistBuildService(
+        newFrontendService(params), params.getBuildEnvironmentDescription().getUser());
   }
 
   public static LogStateTracker newDistBuildLogStateTracker(
