@@ -22,14 +22,17 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.AbstractTool;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -56,48 +59,82 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** javac implemented in a separate binary. */
-public class ExternalJavac implements Javac, RuleKeyAppendable {
-
-  private static final JavacVersion DEFAULT_VERSION = JavacVersion.of("unknown version");
-
-  private final Either<Path, SourcePath> pathToJavac;
-  private final Supplier<JavacVersion> version;
+public class ExternalJavac implements Javac {
+  @AddToRuleKey private final Supplier<Tool> javac;
+  private final Optional<Path> externalInput;
+  private final String shortName;
 
   public ExternalJavac(final Either<Path, SourcePath> pathToJavac) {
-    this.pathToJavac = pathToJavac;
+    // TODO(cjhopman): This is weird. It shouldn't be taking in a Path, it should get that as a
+    // PathSourcePath instead.
+    if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
+      BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac.getRight();
+      this.externalInput = Optional.empty();
+      this.shortName = buildTargetPath.getTarget().toString();
+      this.javac =
+          MoreSuppliers.<Tool>memoize(
+              () ->
+                  new AbstractTool() {
+                    @AddToRuleKey
+                    private final NonHashableSourcePathContainer container =
+                        new NonHashableSourcePathContainer(buildTargetPath);
 
-    this.version =
-        MoreSuppliers.memoize(
-            () -> {
-              if (pathToJavac.isRight()
-                  && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
-                return DEFAULT_VERSION;
-              }
-              ProcessExecutorParams params =
-                  ProcessExecutorParams.builder()
-                      .setCommand(
-                          ImmutableList.of(
-                              pathToJavac.isLeft()
-                                  ? pathToJavac.getLeft().toString()
-                                  : ((PathSourcePath) pathToJavac.getRight())
-                                      .getRelativePath()
-                                      .toString(),
-                              "-version"))
-                      .build();
-              Result result;
-              try {
-                result = createProcessExecutor().launchAndExecute(params);
-              } catch (InterruptedException | IOException e) {
-                throw new RuntimeException(e);
-              }
-              Optional<String> stderr = result.getStderr();
-              String output = stderr.orElse("").trim();
-              if (Strings.isNullOrEmpty(output)) {
-                return DEFAULT_VERSION;
-              } else {
-                return JavacVersion.of(output);
-              }
-            });
+                    @Override
+                    public ImmutableCollection<SourcePath> getInputs() {
+                      return ImmutableList.of(container.getSourcePath());
+                    }
+
+                    @Override
+                    public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+                      return ImmutableList.of(
+                          resolver.getAbsolutePath(container.getSourcePath()).toString());
+                    }
+
+                    @Override
+                    public ImmutableMap<String, String> getEnvironment(
+                        SourcePathResolver resolver) {
+                      return ImmutableMap.of();
+                    }
+                  });
+    } else {
+      Path actualPath =
+          pathToJavac.transform(
+              path -> path,
+              path ->
+                  ((PathSourcePath) path)
+                      .getFilesystem()
+                      .resolve(((PathSourcePath) path).getRelativePath()));
+      this.externalInput = Optional.of(actualPath);
+      this.shortName = actualPath.toString();
+      this.javac =
+          MoreSuppliers.memoize(
+              () -> {
+                ProcessExecutorParams params =
+                    ProcessExecutorParams.builder()
+                        .setCommand(ImmutableList.of(actualPath.toString(), "-version"))
+                        .build();
+                Result result;
+                try {
+                  result = createProcessExecutor().launchAndExecute(params);
+                } catch (InterruptedException | IOException e) {
+                  throw new RuntimeException(e);
+                }
+                Optional<String> stderr = result.getStderr();
+                String output = stderr.orElse("").trim();
+                final String version;
+                if (Strings.isNullOrEmpty(output)) {
+                  version = actualPath.toString();
+                } else {
+                  version = JavacVersion.of(output).toString();
+                }
+                return VersionedTool.of(actualPath, "external_javac", version);
+              });
+    }
+  }
+
+  @VisibleForTesting
+  Optional<Path> getExternalInput() {
+    return externalInput;
   }
 
   @Override
@@ -107,31 +144,21 @@ public class ExternalJavac implements Javac, RuleKeyAppendable {
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
-    return pathToJavac.isRight()
-        ? ImmutableSortedSet.of(pathToJavac.getRight())
-        : ImmutableSortedSet.of();
+    return javac.get().getInputs();
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return ImmutableList.of(
-        pathToJavac.isRight()
-            ? resolver.getAbsolutePath(pathToJavac.getRight()).toString()
-            : pathToJavac.getLeft().toString());
+    return javac.get().getCommandPrefix(resolver);
   }
 
   @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return ImmutableMap.of();
+    return javac.get().getEnvironment(resolver);
   }
 
   public static Javac createJavac(Either<Path, SourcePath> pathToJavac) {
     return new ExternalJavac(pathToJavac);
-  }
-
-  @Override
-  public JavacVersion getVersion() {
-    return version.get();
   }
 
   @VisibleForTesting
@@ -144,7 +171,7 @@ public class ExternalJavac implements Javac, RuleKeyAppendable {
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList) {
-    StringBuilder builder = new StringBuilder(prettyPathToJavac());
+    StringBuilder builder = new StringBuilder(getShortName());
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, options);
     builder.append(" ");
@@ -155,27 +182,7 @@ public class ExternalJavac implements Javac, RuleKeyAppendable {
 
   @Override
   public String getShortName() {
-    return prettyPathToJavac();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    if (DEFAULT_VERSION.equals(getVersion())) {
-      // What we really want to do here is use a VersionedTool, however, this will suffice for now.
-      sink.setReflectively("javac", prettyPathToJavac());
-    } else {
-      sink.setReflectively("javac.version", getVersion().toString());
-    }
-  }
-
-  private String prettyPathToJavac() {
-    if (pathToJavac.isLeft()) {
-      return pathToJavac.getLeft().toString();
-    }
-    if (pathToJavac.getRight() instanceof BuildTargetSourcePath) {
-      return ((BuildTargetSourcePath) pathToJavac.getRight()).getTarget().toString();
-    }
-    return ((PathSourcePath) pathToJavac.getRight()).getRelativePath().toString();
+    return shortName;
   }
 
   @Override
@@ -208,9 +215,9 @@ public class ExternalJavac implements Javac, RuleKeyAppendable {
             "Cannot compile ABI jars with external javac");
         ImmutableList.Builder<String> command = ImmutableList.builder();
         command.add(
-            pathToJavac.isLeft()
-                ? pathToJavac.getLeft().toString()
-                : context.getAbsolutePathsForInputs().get(0).toString());
+            externalInput
+                .map(Object::toString)
+                .orElseGet(() -> context.getAbsolutePathsForInputs().get(0).toString()));
 
         ImmutableList<Path> expandedSources;
         try {

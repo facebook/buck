@@ -30,14 +30,6 @@ import javax.tools.JavaCompiler;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public abstract class Jsr199Javac implements Javac {
-
-  private static final JavacVersion VERSION = JavacVersion.of("in memory");
-
-  @Override
-  public JavacVersion getVersion() {
-    return VERSION;
-  }
-
   @Override
   public String getDescription(
       ImmutableList<String> options,

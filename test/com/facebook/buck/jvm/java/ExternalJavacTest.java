@@ -16,12 +16,20 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.VersionedTool;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -35,6 +43,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Supplier;
+import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,6 +85,8 @@ public class ExternalJavacTest extends EasyMockSupport {
   @Test
   public void externalJavacWillHashTheExternalIfNoVersionInformationIsReturned()
       throws IOException {
+    // TODO(cjhopman): This test name implies we should be hashing the external file not just
+    // adding its path.
     Path javac = Files.createTempFile("fake", "javac");
     javac.toFile().deleteOnExit();
     ProcessExecutorParams javacExe =
@@ -91,11 +103,17 @@ public class ExternalJavacTest extends EasyMockSupport {
             return executor;
           }
         };
-
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    expect(sink.setReflectively("javac", javac.toString())).andReturn(sink);
+    Capture<Supplier<Tool>> identifier = new Capture<>();
+    expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
+    expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
     replay(sink);
-    compiler.appendToRuleKey(sink);
+    AlterRuleKeys.amendKey(sink, compiler);
+    verify(sink);
+    Tool tool = identifier.getValue().get();
+
+    assertTrue(tool instanceof VersionedTool);
+    assertEquals(javac.toString(), ((VersionedTool) tool).getVersion());
   }
 
   @Test
@@ -121,9 +139,16 @@ public class ExternalJavacTest extends EasyMockSupport {
         };
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    expect(sink.setReflectively("javac.version", javacVersion.toString())).andReturn(sink);
+    Capture<Supplier<Tool>> identifier = new Capture<>();
+    expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
+    expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
     replay(sink);
-    compiler.appendToRuleKey(sink);
+    AlterRuleKeys.amendKey(sink, compiler);
+    verify(sink);
+    Tool tool = identifier.getValue().get();
+
+    assertTrue(tool instanceof VersionedTool);
+    assertEquals(javacVersion.toString(), ((VersionedTool) tool).getVersion());
   }
 
   private ImmutableList.Builder<String> getArgs() {

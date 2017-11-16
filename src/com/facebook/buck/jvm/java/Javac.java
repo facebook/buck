@@ -35,8 +35,6 @@ public interface Javac extends AbstractTool {
   String SRC_ZIP = ".src.zip";
   String SRC_JAR = "-sources.jar";
 
-  JavacVersion getVersion();
-
   /** Prepares an invocation of the compiler with the given parameters. */
   Invocation newBuildInvocation(
       JavacExecutionContext context,

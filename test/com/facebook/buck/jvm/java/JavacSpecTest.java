@@ -82,12 +82,13 @@ public class JavacSpecTest {
 
   @Test
   public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
-    SourcePath javacPath = FakeSourcePath.of("path/to/javac");
+    Path externalPath = Paths.get("/foo/bar/path/to/javac");
+    SourcePath javacPath = FakeSourcePath.of(externalPath);
 
     specBuilder.setJavacPath(Either.ofRight(javacPath));
     ExternalJavac javac = (ExternalJavac) getJavac();
-
-    assertThat(javac.getInputs(), Matchers.contains(javacPath));
+    assertTrue(javac.getExternalInput().isPresent());
+    assertEquals(externalPath, javac.getExternalInput().get());
   }
 
   @Test
@@ -99,7 +100,8 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either);
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(sourcePath));
+    assertTrue(javac.getExternalInput().isPresent());
+    assertEquals(externalJavac, javac.getExternalInput().get());
   }
 
   @Test
@@ -111,7 +113,8 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either).setJavacPath(Either.ofLeft(Paths.get("does-not-exist")));
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(sourcePath));
+    assertTrue(javac.getExternalInput().isPresent());
+    assertEquals(externalJavacPath, javac.getExternalInput().get());
   }
 
   @Test

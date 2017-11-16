@@ -48,11 +48,6 @@ public class FakeJavac implements Javac {
   }
 
   @Override
-  public JavacVersion getVersion() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public Javac.Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
