@@ -1,4 +1,4 @@
-library-dependencies --release --platform android --root @
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib"}
 library-files --release --platform android --root @
 optimize --platform android
 transform --filename js/apple.js

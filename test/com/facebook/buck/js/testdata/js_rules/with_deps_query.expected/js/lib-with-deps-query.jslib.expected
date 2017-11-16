@@ -1,13 +1,13 @@
-library-dependencies --root @ --lib @/buck-out/gen/js/build-target-output.jslib --lib @/buck-out/gen/js/native-js/photo-album-js.jslib --lib @/buck-out/gen/js/native-js/text-widget-js.jslib
-library-dependencies --root @
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/lib-with-deps-query.jslib","dependencyLibraryFilePaths":["@/buck-out/gen/js/build-target-output.jslib","@/buck-out/gen/js/native-js/photo-album-js.jslib","@/buck-out/gen/js/native-js/text-widget-js.jslib"],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/lib-with-deps-query#_files_.jslib"}
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/build-target-output.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/build-target-output#_files_.jslib"}
 library-files --root @
 transform --filename buck-out/gen/external/exported.js/exported.js
 var exported;
-library-dependencies --root @
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/native-js/photo-album-js.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/native-js/photo-album-js#_files_.jslib"}
 library-files --root @
 transform --filename js/native-js/photo-album.js
 var photoAlbum;
-library-dependencies --root @
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/native-js/text-widget-js.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/native-js/text-widget-js#_files_.jslib"}
 library-files --root @
 transform --filename js/native-js/text-widget.js
 var textWidget;

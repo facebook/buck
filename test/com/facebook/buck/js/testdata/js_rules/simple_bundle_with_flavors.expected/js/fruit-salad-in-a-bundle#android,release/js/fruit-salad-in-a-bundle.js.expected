@@ -1,5 +1,5 @@
 {"assetsDirPath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#_js_,android,release/res","bundlePath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#_js_,android,release/js/fruit-salad-in-a-bundle.js","command":"bundle","entryPoints":["fruit-salad"],"libraryGroups":[],"libraries":["@/buck-out/gen/js/extras#android,release.jslib","@/buck-out/gen/js/fruit#android,release.jslib","@/buck-out/gen/js/fruit-salad#android,release.jslib"],"platform":"android","release":true,"rootPath":"@","sourceMapPath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#_js_,android,release/map/fruit-salad-in-a-bundle.js.map"}
-library-dependencies --release --platform android --root @
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/extras#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,android,release.jslib"}
 library-files --release --platform android --root @
 optimize --arbitrary extra --flags --platform android
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
@@ -7,7 +7,7 @@ var choclateChips;
 optimize --arbitrary extra --flags --platform android
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library-dependencies --release --platform android --root @
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib"}
 library-files --release --platform android --root @
 optimize --platform android
 transform --filename js/apple.js
@@ -18,8 +18,8 @@ var banana;
 optimize --platform android
 transform --filename js/pear.js
 var pear;
-library-dependencies --release --platform android --root @ --lib @/buck-out/gen/js/extras#android,release.jslib --lib @/buck-out/gen/js/fruit#android,release.jslib
-library-dependencies --release --platform android --root @
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit-salad#android,release.jslib","dependencyLibraryFilePaths":["@/buck-out/gen/js/extras#android,release.jslib","@/buck-out/gen/js/fruit#android,release.jslib"],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit-salad#_files_,android,release.jslib"}
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/extras#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,android,release.jslib"}
 library-files --release --platform android --root @
 optimize --arbitrary extra --flags --platform android
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
@@ -27,7 +27,7 @@ var choclateChips;
 optimize --arbitrary extra --flags --platform android
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library-dependencies --release --platform android --root @
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib"}
 library-files --release --platform android --root @
 optimize --platform android
 transform --filename js/apple.js

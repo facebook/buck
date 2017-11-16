@@ -1,4 +1,4 @@
-library-dependencies --release --platform ios --root @
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"ios","outputPath":"@/buck-out/gen/js/fruit#ios,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,ios,release.jslib"}
 library-files --release --platform ios --root @
 optimize --platform ios
 transform --filename js/apple.js

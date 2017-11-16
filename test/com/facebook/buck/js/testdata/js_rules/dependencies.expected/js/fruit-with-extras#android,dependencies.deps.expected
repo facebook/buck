@@ -1,11 +1,11 @@
 dependencies --platform android --lib @/buck-out/gen/js/extras#android.jslib --lib @/buck-out/gen/js/fruit#android.jslib --root @ yoghurt banana apple
-library-dependencies --platform android --root @
+{"command":"library-dependencies","release":false,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/extras#android.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,android.jslib"}
 library-files --platform android --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library-dependencies --platform android --root @
+{"command":"library-dependencies","release":false,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android.jslib"}
 library-files --platform android --root @
 transform --filename js/apple.js
 var apple;

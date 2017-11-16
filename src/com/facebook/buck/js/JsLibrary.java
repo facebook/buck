@@ -20,6 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -32,8 +33,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.function.BiFunction;
 
@@ -67,15 +73,50 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         getSourcePathToOutput(),
         getProjectFilesystem(),
         worker,
-        (resolver, outputPath) ->
-            String.format(
-                "library-dependencies %s %s --root %s --out %s %s %s",
-                JsFlavors.OPTIMIZATION_DOMAIN.getValue(getBuildTarget().getFlavors()).orElse(""),
-                JsFlavors.PLATFORM_DOMAIN.getValue(getBuildTarget().getFlavors()).orElse(""),
-                getProjectFilesystem().getRootPath(),
-                outputPath,
-                JsUtil.resolveMapJoin(libraryDependencies, resolver, p -> "--lib " + p),
-                resolver.getAbsolutePath(filesDependency)));
+        (resolver, outputPath) -> {
+          try {
+            return getJobArgs(resolver, outputPath);
+          } catch (IOException ex) {
+            throw JsUtil.getJobArgsException(ex, getBuildTarget());
+          }
+        });
+  }
+
+  private String getJobArgs(SourcePathResolver resolver, Path outputPath) throws IOException {
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    JsonGenerator generator = ObjectMappers.createGenerator(stream);
+    BuildTarget target = getBuildTarget();
+    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
+
+    generator.writeStartObject();
+
+    generator.writeStringField("command", "library-dependencies");
+
+    generator.writeFieldName("release");
+    generator.writeBoolean(flavors.contains(JsFlavors.RELEASE));
+
+    generator.writeFieldName("rootPath");
+    generator.writeString(getProjectFilesystem().getRootPath().toString());
+
+    JsUtil.writePlatformFlavorToJson(generator, flavors, target);
+
+    generator.writeFieldName("outputPath");
+    generator.writeString(outputPath.toString());
+
+    generator.writeFieldName("dependencyLibraryFilePaths");
+    generator.writeStartArray();
+    for (SourcePath depPath : libraryDependencies) {
+      generator.writeString(resolver.getAbsolutePath(depPath).toString());
+    }
+    generator.writeEndArray();
+
+    generator.writeFieldName("aggregatedSourceFilesFilePath");
+    generator.writeString(resolver.getAbsolutePath(filesDependency).toString());
+
+    generator.writeEndObject();
+    generator.close();
+
+    return stream.toString(StandardCharsets.UTF_8.name());
   }
 
   @Override

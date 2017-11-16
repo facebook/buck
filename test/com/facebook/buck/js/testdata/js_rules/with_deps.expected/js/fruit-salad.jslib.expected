@@ -1,11 +1,11 @@
-library-dependencies --root @ --lib @/buck-out/gen/js/extras.jslib --lib @/buck-out/gen/js/fruit.jslib
-library-dependencies --root @
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/fruit-salad.jslib","dependencyLibraryFilePaths":["@/buck-out/gen/js/extras.jslib","@/buck-out/gen/js/fruit.jslib"],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit-salad#_files_.jslib"}
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/extras.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_.jslib"}
 library-files --root @
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
 var choclateChips;
 transform --arbitrary extra --flags --filename js/extras/yoghurt.js
 var yoghurt;
-library-dependencies --root @
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/fruit.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_.jslib"}
 library-files --root @
 transform --filename js/apple.js
 var apple;

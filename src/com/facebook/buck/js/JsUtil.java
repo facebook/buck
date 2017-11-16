@@ -19,6 +19,8 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,11 +31,16 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerTool;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
@@ -102,6 +109,36 @@ public class JsUtil {
     return ExplicitBuildTargetSourcePath.of(
         buildTarget,
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(subpath));
+  }
+
+  public static String getValueForFlavor(ImmutableMap<UserFlavor, String> map, Flavor flavor) {
+    return Preconditions.checkNotNull(map.get(flavor), "no string representation of the flavor");
+  }
+
+  private static final ImmutableMap<UserFlavor, String> PLATFORM_STRINGS =
+      ImmutableMap.of(
+          JsFlavors.ANDROID, "android",
+          JsFlavors.IOS, "ios");
+
+  static void writePlatformFlavorToJson(
+      JsonGenerator generator, ImmutableSortedSet<Flavor> flavors, BuildTarget target) {
+    JsFlavors.PLATFORM_DOMAIN
+        .getFlavor(flavors)
+        .ifPresent(
+            platform -> {
+              try {
+                generator.writeFieldName("platform");
+                generator.writeString(JsUtil.getValueForFlavor(PLATFORM_STRINGS, platform));
+              } catch (IOException ex) {
+                throw JsUtil.getJobArgsException(ex, target);
+              }
+            });
+  }
+
+  public static HumanReadableException getJobArgsException(
+      Throwable innerException, BuildTarget target) {
+    return new HumanReadableException(
+        innerException, "Failed to build args for the target: " + target.getFullyQualifiedName());
   }
 
   public static String getSourcemapPath(JsBundleOutputs jsBundleOutputs) {

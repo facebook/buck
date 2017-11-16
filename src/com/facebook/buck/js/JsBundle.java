@@ -32,10 +32,8 @@ import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,11 +53,6 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @AddToRuleKey private final ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups;
 
   @AddToRuleKey private final WorkerTool worker;
-
-  private static final ImmutableMap<UserFlavor, String> PLATFORM_STRINGS =
-      ImmutableMap.of(
-          JsFlavors.ANDROID, "android",
-          JsFlavors.IOS, "ios");
 
   private static final ImmutableMap<UserFlavor, String> RAM_BUNDLE_STRINGS =
       ImmutableMap.of(
@@ -95,7 +88,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     try {
       jobArgs = getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir);
     } catch (IOException ex) {
-      throw getArgsException(ex);
+      throw JsUtil.getJobArgsException(ex, getBuildTarget());
     }
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
@@ -140,8 +133,8 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       throws IOException {
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     JsonGenerator generator = ObjectMappers.createGenerator(stream);
-
-    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
+    BuildTarget target = getBuildTarget();
+    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
 
     generator.writeStartObject();
 
@@ -179,17 +172,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     }
     generator.writeEndArray();
 
-    JsFlavors.PLATFORM_DOMAIN
-        .getFlavor(flavors)
-        .ifPresent(
-            platform -> {
-              try {
-                generator.writeFieldName("platform");
-                generator.writeString(getEnforce(PLATFORM_STRINGS, platform));
-              } catch (IOException ex) {
-                throw getArgsException(ex);
-              }
-            });
+    JsUtil.writePlatformFlavorToJson(generator, flavors, target);
 
     JsFlavors.RAM_BUNDLE_DOMAIN
         .getFlavor(flavors)
@@ -197,9 +180,9 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             ramBundleMode -> {
               try {
                 generator.writeFieldName("ramBundle");
-                generator.writeString(getEnforce(RAM_BUNDLE_STRINGS, ramBundleMode));
+                generator.writeString(JsUtil.getValueForFlavor(RAM_BUNDLE_STRINGS, ramBundleMode));
               } catch (IOException ex) {
-                throw getArgsException(ex);
+                throw JsUtil.getJobArgsException(ex, target);
               }
             });
 
@@ -213,18 +196,8 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     generator.writeString(sourcePathResolver.getAbsolutePath(sourceMapFile).toString());
 
     generator.writeEndObject();
-
     generator.close();
     return stream.toString(StandardCharsets.UTF_8.name());
-  }
-
-  private String getEnforce(ImmutableMap<UserFlavor, String> map, Flavor flavor) {
-    return Preconditions.checkNotNull(map.get(flavor), "no string representation of the flavor");
-  }
-
-  private HumanReadableException getArgsException(Throwable ex) {
-    return new HumanReadableException(
-        ex, "Failed to build args for the JsBundle: " + getBuildTarget().getFullyQualifiedName());
   }
 
   @Override

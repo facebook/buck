@@ -82,14 +82,25 @@ run_command() {
     # if $ROOT contain any pipe character "|", that we use as `sed` delimiter.
     args=$(echo "$2" | sed "s|$ROOT|@|g")
 
-    infiles=$(echo "$2" | sed -n 's/.*"libraries":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
-    outfile=$(echo "$2" | sed -n 's/.*"bundlePath":"\([^"]*\)".*/\1/p')
-    platform=$(echo "$2" | sed -n 's/.*"platform":"\([^"]*\)".*/\1/p')
-    assets_dir=$(echo "$2" | sed -n 's/.*"assetsDirPath":"\([^"]*\)".*/\1/p')
+    local command=$(echo "$2" | sed -n 's/.*"command":"\([^"]*\)".*/\1/p')
 
-    local source_map_path=$(echo "$2" | sed -n 's/.*"sourceMapPath":"\([^"]*\)".*/\1/p')
-    if [[ -n "$source_map_path" ]]; then
-      write_sourcemap "$source_map_path"
+    if [[ "$command" == "bundle" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"libraries":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
+      outfile=$(echo "$2" | sed -n 's/.*"bundlePath":"\([^"]*\)".*/\1/p')
+      platform=$(echo "$2" | sed -n 's/.*"platform":"\([^"]*\)".*/\1/p')
+      assets_dir=$(echo "$2" | sed -n 's/.*"assetsDirPath":"\([^"]*\)".*/\1/p')
+
+      local source_map_path=$(echo "$2" | sed -n 's/.*"sourceMapPath":"\([^"]*\)".*/\1/p')
+      if [[ -n "$source_map_path" ]]; then
+        write_sourcemap "$source_map_path"
+      fi
+    fi
+
+    if [[ "$command" == "library-dependencies" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"aggregatedSourceFilesFilePath":"\([^"]*\)".*/\1/p')
+      local deps=$(echo "$2" | sed -n 's/.*"dependencyLibraryFilePaths":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
+      infiles="$deps $infiles"
+      outfile=$(echo "$2" | sed -n 's/.*"outputPath":"\([^"]*\)".*/\1/p')
     fi
 
   else

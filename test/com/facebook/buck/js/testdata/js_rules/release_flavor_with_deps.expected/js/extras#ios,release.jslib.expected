@@ -1,4 +1,4 @@
-library-dependencies --release --platform ios --root @
+{"command":"library-dependencies","release":true,"rootPath":"@","platform":"ios","outputPath":"@/buck-out/gen/js/extras#ios,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,ios,release.jslib"}
 library-files --release --platform ios --root @
 optimize --arbitrary extra --flags --platform ios
 transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
