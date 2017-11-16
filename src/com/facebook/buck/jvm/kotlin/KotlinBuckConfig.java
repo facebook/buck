@@ -47,6 +47,8 @@ public class KotlinBuckConfig {
       ImmutableSet<SourcePath> classpathEntries =
           ImmutableSet.of(
               delegate.getSourcePath(getPathToStdlibJar()),
+              delegate.getSourcePath(getPathToReflectJar()),
+              delegate.getSourcePath(getPathToScriptRuntimeJar()),
               delegate.getSourcePath(getPathToCompilerJar()));
 
       return new JarBackedReflectedKotlinc(classpathEntries);
@@ -104,6 +106,56 @@ public class KotlinBuckConfig {
 
     throw new HumanReadableException(
         "Could not resolve kotlin stdlib JAR location (kotlin home:" + getKotlinHome() + ").");
+  }
+
+  /**
+   * Get the path to the Kotlin reflection jar.
+   *
+   * @return the Kotlin reflection jar path
+   */
+  Path getPathToReflectJar() {
+    Path reflect = getKotlinHome().resolve("kotlin-reflect.jar");
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    reflect = getKotlinHome().resolve(Paths.get("lib", "kotlin-reflect.jar"));
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    reflect = getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-reflect.jar"));
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    throw new HumanReadableException(
+        "Could not resolve kotlin reflect JAR location (kotlin home:" + getKotlinHome() + ").");
+  }
+
+  /**
+   * Get the path to the Kotlin script runtime jar.
+   *
+   * @return the Kotlin script runtime jar path
+   */
+  Path getPathToScriptRuntimeJar() {
+    Path script = getKotlinHome().resolve("kotlin-script-runtime.jar");
+    if (Files.isRegularFile(script)) {
+      return script.normalize();
+    }
+
+    script = getKotlinHome().resolve(Paths.get("lib", "kotlin-script-runtime.jar"));
+    if (Files.isRegularFile(script)) {
+      return script.normalize();
+    }
+
+    script = getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-script-runtime.jar"));
+    if (Files.isRegularFile(script)) {
+      return script.normalize();
+    }
+
+    throw new HumanReadableException(
+        "Could not resolve kotlin script runtime JAR location (kotlin home:" + getKotlinHome() + ").");
   }
 
   /**
