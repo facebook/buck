@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -137,7 +138,7 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
         : Optional.empty();
   }
 
-  private static class PlatformSpecificTool implements Tool {
+  private static class PlatformSpecificTool implements AbstractTool {
     private final Supplier<Tool> tool;
     @AddToRuleKey private final Optional<BuildTarget> genericExe;
     @AddToRuleKey private final ImmutableSortedMap<Platform, BuildTarget> platformExe;

@@ -20,9 +20,7 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,11 +33,6 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
   private static final Logger LOG = Logger.get(OutOfProcessJdkProvidedInMemoryJavac.class);
 
   OutOfProcessJdkProvidedInMemoryJavac() {}
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableSortedSet.of();
-  }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {

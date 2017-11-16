@@ -356,6 +356,7 @@ java_immutables_library(
         "AbstractResourceAwareSchedulingInfo.java",
         "AbstractRuleScheduleInfo.java",
         "AbstractSystemToolProvider.java",
+        "AbstractTool.java",
         "AbstractVersionedTool.java",
         "ActionGraphCache.java",
         "BinaryBuildRuleToolProvider.java",

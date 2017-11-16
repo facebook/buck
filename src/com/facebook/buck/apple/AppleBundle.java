@@ -250,7 +250,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.swiftStdlibTool =
         appleCxxPlatform.getSwiftPlatform().isPresent()
             ? appleCxxPlatform.getSwiftPlatform().get().getSwiftStdlibTool()
-            : Optional.<Tool>empty();
+            : Optional.empty();
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {

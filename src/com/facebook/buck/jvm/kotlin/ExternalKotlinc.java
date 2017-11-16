@@ -19,12 +19,10 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -86,11 +84,6 @@ public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
     } else {
       sink.setReflectively("kotlinc.version", getVersion().toString());
     }
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
   }
 
   @Override

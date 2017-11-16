@@ -17,9 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
@@ -49,11 +47,6 @@ public class JarBackedJavac extends Jsr199Javac {
   public JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
     this.compilerClassName = compilerClassName;
     this.classpath = ImmutableSortedSet.copyOf(classpath);
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
   }
 
   @Override

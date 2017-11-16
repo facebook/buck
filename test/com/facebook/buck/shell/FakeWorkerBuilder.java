@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -85,12 +85,7 @@ public class FakeWorkerBuilder
     }
   }
 
-  private static class FakeTool implements Tool {
-    @Override
-    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-      return ImmutableList.of();
-    }
-
+  private static class FakeTool implements AbstractTool {
     @Override
     public ImmutableCollection<SourcePath> getInputs() {
       return ImmutableList.of();

@@ -21,9 +21,7 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -85,11 +83,6 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
                 .map(JavacPluginJsr199FieldsSerializer::serialize)
                 .collect(Collectors.toList()),
             abiGenerationMode.toString()));
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
   }
 
   @Override

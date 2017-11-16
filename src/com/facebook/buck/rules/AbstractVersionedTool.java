@@ -35,7 +35,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractVersionedTool implements Tool {
+abstract class AbstractVersionedTool implements AbstractTool {
 
   /** The path to the tool. The contents or path to the tool do not contribute to the rule key. */
   @Value.Parameter
@@ -51,11 +51,6 @@ abstract class AbstractVersionedTool implements Tool {
   @Value.Parameter
   @AddToRuleKey
   protected abstract String getVersion();
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableSortedSet.of();
-  }
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {

@@ -25,7 +25,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public class HashedFileTool implements Tool {
+/** A tool with a single file input. */
+public class HashedFileTool implements AbstractTool {
   @AddToRuleKey private final Supplier<? extends SourcePath> path;
 
   public HashedFileTool(Supplier<? extends SourcePath> path) {
@@ -34,11 +35,6 @@ public class HashedFileTool implements Tool {
 
   public HashedFileTool(@Nullable SourcePath path) {
     this(() -> Preconditions.checkNotNull(path));
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableSortedSet.of();
   }
 
   @Override

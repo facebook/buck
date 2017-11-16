@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** Implementation of a Tool that just delegates to another. */
-public abstract class DelegatingTool implements Tool {
+public abstract class DelegatingTool implements AbstractTool {
   @AddToRuleKey private final Tool tool;
 
   public DelegatingTool(Tool tool) {

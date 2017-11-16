@@ -23,7 +23,7 @@ import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -86,12 +86,7 @@ public class RustCompileTest {
   }
 
   private static Tool fakeTool() {
-    return new Tool() {
-      @Override
-      public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-        return ImmutableSortedSet.of();
-      }
-
+    return new AbstractTool() {
       @Override
       public ImmutableCollection<SourcePath> getInputs() {
         return ImmutableSortedSet.of();
@@ -190,11 +185,6 @@ public class RustCompileTest {
       @Override
       public SharedLibraryLoadingType getSharedLibraryLoadingType() {
         return SharedLibraryLoadingType.RPATH;
-      }
-
-      @Override
-      public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-        return ImmutableSortedSet.of();
       }
 
       @Override

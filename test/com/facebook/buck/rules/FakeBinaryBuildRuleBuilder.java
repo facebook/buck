@@ -73,23 +73,19 @@ public class FakeBinaryBuildRuleBuilder
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         FakeBinaryArg args) {
-
-      ImmutableSortedSet<BuildRule> deps = resolver.getAllRules(args.getDeps());
       return new FakeBinaryBuildRule(
           buildTarget,
           projectFilesystem,
-          new Tool() {
+          new AbstractTool() {
             @AddToRuleKey private final ImmutableList<String> command = args.getCommand();
+
+            @AddToRuleKey
+            private final ImmutableSortedSet<BuildRule> deps = resolver.getAllRules(args.getDeps());
 
             @AddToRuleKey
             private final ImmutableSortedMap<String, String> environment = args.getEnvironment();
 
             @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs = args.getInputs();
-
-            @Override
-            public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-              return deps;
-            }
 
             @Override
             public ImmutableCollection<SourcePath> getInputs() {
