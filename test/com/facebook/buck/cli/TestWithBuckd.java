@@ -43,6 +43,8 @@ public class TestWithBuckd extends ExternalResource {
     // this is one of the entries so it doesn't give up.
     temporaryPaths.newFolder(".git");
     temporaryPaths.newFile(".arcconfig");
+    // Create an empty watchman config file.
+    temporaryPaths.newFile(".watchmanconfig");
     Watchman watchman =
         Watchman.build(
             ImmutableSet.of(temporaryPaths.getRoot()),
