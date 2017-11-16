@@ -50,6 +50,7 @@
   <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.5.7-SNAPSHOT.jar" />
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.5.7-SNAPSHOT.jar" />
   <property name="pf4j-standalone.jar" value="${third-party.dir}/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
+  <property name="pf4j-annotation-processor-storage-config" value="-Apf4j.storageClassName=org.pf4j.processor.ServiceProviderExtensionStorage" />
 
   <property name="manual.gensrc.dir" value="${basedir}/src-gen" />
   <property name="manual.gensrc.classes.dir.name" value="src-gen/classes" />
@@ -413,9 +414,6 @@
         <compilerclasspath>
           <pathelement location="${eclipse.dir}/ecj-4.6.2.jar" />
         </compilerclasspath>
-        <compilerarg value="-processorpath" />
-        <compilerarg value="${processorpath}" />
-        <compilerarg value="-Apf4j.storageClassName=org.pf4j.processor.ServiceProviderExtensionStorage" />
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
         <ecj-params />
@@ -443,6 +441,9 @@
 
     <ecj>
       <javac-params>
+        <compilerarg value="-processorpath" />
+        <compilerarg value="${processorpath}" />
+        <compilerarg value="${pf4j-annotation-processor-storage-config}" />
         <patternset>
           <!--
             These patterns are excluded because they are compiled elsewhere
@@ -696,6 +697,9 @@
       </path>
       <ecj destdir="@{module-classes-dir}" classpathref="@{module-name}-classpath">
         <javac-params>
+          <compilerarg value="-processorpath" />
+          <compilerarg value="${processorpath}" />
+          <compilerarg value="${pf4j-annotation-processor-storage-config}" />
           <module-javac-params/>
         </javac-params>
       </ecj>
