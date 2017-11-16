@@ -791,7 +791,6 @@ public class CxxDescriptionEnhancer {
         args.getPlatformLinkerFlags(),
         args.getCxxRuntimeType(),
         args.getIncludeDirs(),
-        Optional.empty(),
         args.getRawHeaders());
   }
 
@@ -824,7 +823,6 @@ public class CxxDescriptionEnhancer {
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableList<String> includeDirs,
-      Optional<Boolean> xcodePrivateHeadersSymlinks,
       ImmutableSortedSet<SourcePath> rawHeaders) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -845,8 +843,7 @@ public class CxxDescriptionEnhancer {
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
-    boolean shouldCreatePrivateHeadersSymlinks =
-        xcodePrivateHeadersSymlinks.orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled());
+    boolean shouldCreatePrivateHeadersSymlinks = cxxBuckConfig.getPrivateHeadersSymlinksEnabled();
     HeaderSymlinkTree headerSymlinkTree =
         requireHeaderSymlinkTree(
             target,
