@@ -16,6 +16,8 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -32,14 +34,16 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractPythonVersion {
+abstract class AbstractPythonVersion implements AddsToRuleKey {
 
   private static final Pattern VERSION_RE = Pattern.compile("(?<name>[^ ]*) (?<version>[^ ]*)");
 
+  // TODO(cjhopman): This should add the interpreter name to the rulekey.
   @Value.Parameter
   public abstract String getInterpreterName();
 
   @Value.Parameter
+  @AddToRuleKey
   public abstract String getVersionString(); // X.Y
 
   @Override

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -31,7 +31,7 @@ import java.nio.file.Path;
 /** Tool based on a particular python configuration. */
 public class PythonEnvironment implements Tool {
   private final Path pythonPath;
-  private final PythonVersion pythonVersion;
+  @AddToRuleKey private final PythonVersion pythonVersion;
 
   public PythonEnvironment(Path pythonPath, PythonVersion pythonVersion) {
     this.pythonPath = pythonPath;
@@ -44,11 +44,6 @@ public class PythonEnvironment implements Tool {
 
   public PythonVersion getPythonVersion() {
     return pythonVersion;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("python-version", getPythonVersion().getVersionString());
   }
 
   @Override
