@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -27,7 +28,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -139,8 +139,8 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
 
   private static class PlatformSpecificTool implements Tool {
     private final Supplier<Tool> tool;
-    private final Optional<BuildTarget> genericExe;
-    private final ImmutableSortedMap<Platform, BuildTarget> platformExe;
+    @AddToRuleKey private final Optional<BuildTarget> genericExe;
+    @AddToRuleKey private final ImmutableSortedMap<Platform, BuildTarget> platformExe;
 
     private PlatformSpecificTool(
         Supplier<Tool> toolSupplier,
@@ -149,15 +149,6 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       this.tool = toolSupplier;
       this.genericExe = genericExe;
       this.platformExe = platformExe;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("genericExe", genericExe);
-      platformExe
-          .entrySet()
-          .forEach(
-              entry -> sink.setReflectively(entry.getKey().getPrintableName(), entry.getValue()));
     }
 
     @Override
