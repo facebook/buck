@@ -263,6 +263,47 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir());
   }
 
+  /** Resolves the real path to the lib and generates a symlink to it */
+  private class ResolveAndSymlinkStep extends AbstractExecutionStep {
+
+    private SourcePathResolver resolver;
+    private Path symlinkDir;
+    private String name;
+    private SourcePath lib;
+
+    public ResolveAndSymlinkStep(
+        SourcePathResolver resolver, Path symlinkDir, String name, SourcePath lib) {
+      super("symlinkLib_" + name);
+      this.resolver = resolver;
+      this.symlinkDir = symlinkDir;
+      this.name = name;
+      this.lib = lib;
+    }
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      Path src = resolver.getRelativePath(lib).toRealPath();
+      Path dest = symlinkDir.resolve(name);
+      SymlinkFileStep.Builder sl = SymlinkFileStep.builder();
+      return sl.setFilesystem(getProjectFilesystem())
+          .setExistingFile(src)
+          .setDesiredLink(dest)
+          .build()
+          .execute(context);
+    }
+  }
+
+  private void symlinkLibs(
+      SourcePathResolver resolver,
+      Path symlinkDir,
+      ImmutableList.Builder<Step> steps,
+      ImmutableSortedMap<String, SourcePath> libs) {
+    for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
+      steps.add(new ResolveAndSymlinkStep(resolver, symlinkDir, ent.getKey(), ent.getValue()));
+    }
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
@@ -274,6 +315,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
     Path packagesDir = dir.resolve(name + ".packages");
     Path symlinkDir = dir.resolve(name + ".so-symlinks");
+    Path symlinkPreloadDir = dir.resolve(name + ".preload-symlinks");
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
@@ -287,24 +329,16 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), symlinkPreloadDir)));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), packagesDir)));
 
     steps.add(CopyStep.forFile(getProjectFilesystem(), so, dir.resolve(so.getFileName())));
 
-    try {
-      for (Map.Entry<String, SourcePath> ent : solibs.entrySet()) {
-        Path src = resolver.getRelativePath(ent.getValue()).toRealPath();
-        Path dest = symlinkDir.resolve(ent.getKey());
-        steps.add(
-            SymlinkFileStep.builder()
-                .setFilesystem(getProjectFilesystem())
-                .setExistingFile(src)
-                .setDesiredLink(dest)
-                .build());
-      }
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
+    symlinkLibs(resolver, symlinkDir, steps, solibs);
+    symlinkLibs(resolver, symlinkPreloadDir, steps, preloadLibs);
 
     ImmutableSet.Builder<String> pkgdirs = ImmutableSet.builder();
     for (HaskellPackage pkg : prebuiltHaskellPackages) {
@@ -379,7 +413,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               ImmutableSet.Builder<String> preloadLibrariesB = ImmutableSet.builder();
               for (Map.Entry<String, SourcePath> ent : preloadLibs.entrySet()) {
                 preloadLibrariesB.add(
-                    resolver.getRelativePath(ent.getValue()).toRealPath().toString());
+                    "${DIR}/" + dir.relativize(symlinkPreloadDir.resolve(ent.getKey())));
               }
               ImmutableSet<String> preloadLibraries = preloadLibrariesB.build();
               st.add("name", name + "-iserv");
