@@ -41,6 +41,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
 import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.rules.macros.QueryPathsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -71,6 +72,9 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               .put("query_targets", new QueryTargetsMacroExpander(Optional.empty()))
               .put("query_outputs", new QueryOutputsMacroExpander(Optional.empty()))
               .put("query_paths", new QueryPathsMacroExpander(Optional.empty()))
+              .put(
+                  "query_targets_and_outputs",
+                  new QueryTargetsAndOutputsMacroExpander(Optional.empty()))
               .build());
 
   protected final ToolchainProvider toolchainProvider;
@@ -135,6 +139,9 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                 .put("query_targets", new QueryTargetsMacroExpander(Optional.of(targetGraph)))
                 .put("query_outputs", new QueryOutputsMacroExpander(Optional.of(targetGraph)))
                 .put("query_paths", new QueryPathsMacroExpander(Optional.of(targetGraph)))
+                .put(
+                    "query_targets_and_outputs",
+                    new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph)))
                 .build()));
   }
 

@@ -76,7 +76,11 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
                 return ((QueryBuildTarget) queryTarget).getBuildTarget();
               });
     } catch (QueryException e) {
-      throw new HumanReadableException(e, "Error executing query in macro for target %s", target);
+      throw new HumanReadableException(
+          e,
+          "Error executing query in macro for target %s: %s",
+          target,
+          e.getHumanReadableErrorMessage());
     }
   }
 
@@ -123,8 +127,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   abstract T fromQuery(Query query);
 
   @Override
-  protected final T parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
+  protected T parse(BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     if (input.size() != 1) {
       throw new MacroException("One quoted query expression is expected");

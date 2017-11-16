@@ -33,7 +33,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -52,10 +52,10 @@ import org.junit.Test;
  * Tests for the query macro. See {@link com.facebook.buck.shell.GenruleDescriptionIntegrationTest}
  * for some less contrived integration tests.
  */
-public class QueryOutputsMacroExpanderTest {
+public class QueryTargetsAndOutputsMacroExpanderTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private QueryOutputsMacroExpander expander;
+  private QueryTargetsAndOutputsMacroExpander expander;
   private ProjectFilesystem filesystem;
   private BuildRuleResolver ruleResolver;
   private CellPathResolver cellNames;
@@ -67,8 +67,8 @@ public class QueryOutputsMacroExpanderTest {
   @Before
   public void setUp() throws Exception {
     cache = new HashMapWithStats<>();
-    expander = new QueryOutputsMacroExpander(Optional.empty());
-    handler = new MacroHandler(ImmutableMap.of("query_outputs", expander));
+    expander = new QueryTargetsAndOutputsMacroExpander(Optional.empty());
+    handler = new MacroHandler(ImmutableMap.of("query_targets_and_outputs", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?, ?> depNode =
@@ -98,22 +98,39 @@ public class QueryOutputsMacroExpanderTest {
   @Test
   public void classpathFunction() throws Exception {
     assertExpandsTo(
-        "$(query_outputs 'classpath(//exciting:target)')",
+        "$(query_targets_and_outputs 'classpath(//exciting:target)')",
         rule,
         String.format(
-            "%s %s",
+            "%s %s %s %s",
+            "//exciting:dep",
             absolutify("exciting/lib__dep__output/dep.jar"),
+            "//exciting:target",
             absolutify("exciting/lib__target__output/target.jar")));
   }
 
   @Test
   public void literals() throws Exception {
     assertExpandsTo(
-        "$(query_outputs 'set(//exciting:target //exciting:dep)')",
+        "$(query_targets_and_outputs 'set(//exciting:target //exciting:dep)')",
         rule,
         String.format(
-            "%s %s",
+            "%s %s %s %s",
+            "//exciting:dep",
             absolutify("exciting/lib__dep__output/dep.jar"),
+            "//exciting:target",
+            absolutify("exciting/lib__target__output/target.jar")));
+  }
+
+  @Test
+  public void addsSeparator() throws MacroException {
+    assertExpandsTo(
+        "$(query_targets_and_outputs \" test \" 'set(//exciting:target //exciting:dep)')",
+        rule,
+        String.format(
+            "%s test %s test %s test %s",
+            "//exciting:dep",
+            absolutify("exciting/lib__dep__output/dep.jar"),
+            "//exciting:target",
             absolutify("exciting/lib__target__output/target.jar")));
   }
 
@@ -157,7 +174,7 @@ public class QueryOutputsMacroExpanderTest {
             dep.getBuildTarget(),
             cellNames,
             ruleResolver,
-            "$(query_outputs 'classpath(//exciting:target)')",
+            "$(query_targets_and_outputs 'classpath(//exciting:target)')",
             cache));
     // Cache should be populated at this point
     assertThat(cache.values(), Matchers.hasSize(1));
@@ -165,11 +182,13 @@ public class QueryOutputsMacroExpanderTest {
 
     int getsSoFar = cache.numGets();
     assertExpandsTo(
-        "$(query_outputs 'classpath(//exciting:target)')",
+        "$(query_targets_and_outputs 'classpath(//exciting:target)')",
         rule,
         String.format(
-            "%s %s",
+            "%s %s %s %s",
+            "//exciting:dep",
             absolutify("exciting/lib__dep__output/dep.jar"),
+            "//exciting:target",
             absolutify("exciting/lib__target__output/target.jar")));
     // No new cache entry should have appeared
     assertThat(cache.values(), Matchers.hasSize(1));
@@ -180,7 +199,9 @@ public class QueryOutputsMacroExpanderTest {
 
   private void assertExpandsTo(String input, BuildRule rule, String expected)
       throws MacroException {
+
     String results = handler.expand(rule.getBuildTarget(), cellNames, ruleResolver, input, cache);
+
     assertEquals(expected, results);
   }
 

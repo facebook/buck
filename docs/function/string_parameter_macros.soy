@@ -31,6 +31,7 @@ The following macros are supported:
   <li><code>$(maven_coords //:foo)</code> expands to the maven coordinates associated with the given target</li>
   <li><code>$(query_targets "deps(//:foo)")</code> executes the given query and expands to the list of targets that match. See more information below.</li>
   <li><code>$(query_outputs "deps(//:foo)")</code> executes the given query and expands to the output files of the list of targets that match. See more information below.</li>
+  <li><code>$(query_targets_and_outputs [SEPARATOR] "deps(//:foo)")</code> executes the given query and expands to the target name and the output files of the list of targets that match. Targets and paths are separated by SEPARATOR if provided, or a space if it is not.</li>
 </ul>
 {/literal}
 {/param}

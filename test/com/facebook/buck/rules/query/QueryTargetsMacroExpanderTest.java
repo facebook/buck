@@ -67,7 +67,7 @@ public class QueryTargetsMacroExpanderTest {
   public void setUp() throws Exception {
     cache = new HashMapWithStats<>();
     expander = new QueryTargetsMacroExpander(Optional.empty());
-    handler = new MacroHandler(ImmutableMap.of("query", expander));
+    handler = new MacroHandler(ImmutableMap.of("query_targets", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?, ?> depNode =
@@ -97,13 +97,15 @@ public class QueryTargetsMacroExpanderTest {
   @Test
   public void classpathFunction() throws Exception {
     assertExpandsTo(
-        "$(query 'classpath(//exciting:target)')", rule, "//exciting:dep //exciting:target");
+        "$(query_targets 'classpath(//exciting:target)')",
+        rule,
+        "//exciting:dep //exciting:target");
   }
 
   @Test
   public void literals() throws Exception {
     assertExpandsTo(
-        "$(query 'set(//exciting:target //exciting:dep)')",
+        "$(query_targets 'set(//exciting:target //exciting:dep)')",
         rule,
         "//exciting:dep //exciting:target");
   }
@@ -144,14 +146,18 @@ public class QueryTargetsMacroExpanderTest {
   @Test
   public void canUseCacheOfPrecomputedWork() throws Exception {
     assertExpandsTo(
-        "$(query 'classpath(//exciting:target)')", rule, "//exciting:dep //exciting:target");
+        "$(query_targets 'classpath(//exciting:target)')",
+        rule,
+        "//exciting:dep //exciting:target");
     // Cache should be populated at this point
     assertThat(cache.values(), Matchers.hasSize(1));
     assertEquals(1, cache.numPuts());
 
     int getsSoFar = cache.numGets();
     assertExpandsTo(
-        "$(query 'classpath(//exciting:target)')", rule, "//exciting:dep //exciting:target");
+        "$(query_targets 'classpath(//exciting:target)')",
+        rule,
+        "//exciting:dep //exciting:target");
     // No new cache entry should have appeared
     assertThat(cache.values(), Matchers.hasSize(1));
     assertEquals(1, cache.numPuts());

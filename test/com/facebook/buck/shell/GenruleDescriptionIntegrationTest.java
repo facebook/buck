@@ -208,6 +208,13 @@ public class GenruleDescriptionIntegrationTest {
         ":echo_labels_of_output", ImmutableList.of(getOutputFile("//other:hidden").toString()));
   }
 
+  @Test
+  public void testQueryTargetsAndOutputsCanGetOutputFromLabel() throws Exception {
+    expectGenruleOutput(
+        ":echo_labels_of_targets_and_output",
+        ImmutableList.of("//other:hidden", getOutputFile("//other:hidden").toString()));
+  }
+
   private void expectOutputPathsGenruleOutput(String genrule, List<String> expectedOutputs)
       throws Exception {
     expectGenruleOutput(
