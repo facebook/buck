@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.jvm.java.JavaLibrary.MAVEN_JAR;
-import static com.facebook.buck.jvm.java.JavaLibrary.SRC_JAR;
+import static com.facebook.buck.jvm.core.JavaLibrary.MAVEN_JAR;
+import static com.facebook.buck.jvm.core.JavaLibrary.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
 import com.facebook.buck.config.BuckConfig;

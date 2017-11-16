@@ -19,7 +19,7 @@ package com.facebook.buck.gwt;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.gwt.GwtBinary.Style;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;

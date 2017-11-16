@@ -7,8 +7,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/jvm/core:classhash",
-        "//src/com/facebook/buck/jvm/core:packagefinder",
+        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/model:model",

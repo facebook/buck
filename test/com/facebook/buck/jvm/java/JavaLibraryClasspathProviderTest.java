@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -72,7 +73,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     // Create our target graph. All nodes are JavaLibrary except b
     // (exports c) az (no exports)
     //            /  \
-    //(non java) b    c (exports e)
+    // (non java) b    c (exports e)
     //           |    |
     //           d    e
     dNode = makeRule("//foo:d", ImmutableSet.of("foo", "d.java"), ImmutableSet.of(), filesystem);

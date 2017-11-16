@@ -12,7 +12,7 @@ java_immutables_library(
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/jvm/core:classhash",
+        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",

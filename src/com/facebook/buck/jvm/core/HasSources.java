@@ -14,17 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.rules.BuildRule;
-import java.util.Optional;
+import com.facebook.buck.rules.SourcePath;
+import com.google.common.collect.ImmutableSortedSet;
 
-public interface HasMavenCoordinates extends BuildRule {
+public interface HasSources extends BuildRule {
 
-  /** Used to identify this library within a maven repository */
-  Optional<String> getMavenCoords();
-
-  static boolean isMavenCoordsPresent(HasMavenCoordinates input) {
-    return input.getMavenCoords().isPresent();
-  }
+  ImmutableSortedSet<SourcePath> getSources();
 }

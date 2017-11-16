@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.SourcePath;

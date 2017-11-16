@@ -28,7 +28,7 @@ import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.ActionGraphAndResolver;
