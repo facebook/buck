@@ -1501,7 +1501,7 @@ public class ProjectGenerator {
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
-        getSwiftPublicHeaderMapEntriesForTarget(targetNode, isFocusedOnTarget, hasSwiftVersionArg),
+        getSwiftPublicHeaderMapEntriesForTarget(targetNode),
         moduleName,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
@@ -1996,6 +1996,12 @@ public class ProjectGenerator {
         path = basePath.resolve(resolveSourcePath(entry.getValue()));
       }
       headerMapBuilder.add(entry.getKey().toString(), path);
+    }
+
+    ImmutableMap<Path, Path> swiftHeaderMapEntries =
+        getSwiftPublicHeaderMapEntriesForTarget(targetNode);
+    for (Map.Entry<Path, Path> entry : swiftHeaderMapEntries.entrySet()) {
+      headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
     }
   }
 
@@ -2493,11 +2499,9 @@ public class ProjectGenerator {
   }
 
   private ImmutableMap<Path, Path> getSwiftPublicHeaderMapEntriesForTarget(
-      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> node,
-      boolean isFocusedOnTarget,
-      boolean hasSwiftVersionArg) {
-
-    if (!isFocusedOnTarget || !hasSwiftVersionArg) {
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> node) {
+    boolean hasSwiftVersionArg = getSwiftVersionForTargetNode(node).isPresent();
+    if (!hasSwiftVersionArg) {
       return ImmutableMap.of();
     }
 
