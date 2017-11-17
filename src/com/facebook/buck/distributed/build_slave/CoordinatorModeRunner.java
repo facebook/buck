@@ -85,8 +85,8 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   }
 
   @Override
-  public int runAndReturnExitCode(HeartbeatService service) throws IOException {
-    try (AsyncCoordinatorRun run = new AsyncCoordinatorRun(service, queue)) {
+  public int runAndReturnExitCode(HeartbeatService heartbeatService) throws IOException {
+    try (AsyncCoordinatorRun run = new AsyncCoordinatorRun(heartbeatService, queue)) {
       return run.getExitCode();
     }
   }

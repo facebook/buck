@@ -52,10 +52,10 @@ public class RemoteBuildModeRunner implements DistBuildModeRunner {
   }
 
   @Override
-  public int runAndReturnExitCode(HeartbeatService service)
+  public int runAndReturnExitCode(HeartbeatService heartbeatService)
       throws IOException, InterruptedException {
     try (Closeable healthCheck =
-        service.addCallback(
+        heartbeatService.addCallback(
             "RemoteBuilderIsAlive",
             CoordinatorModeRunner.createHeartbeatCallback(stampedeId, distBuildService))) {
       int buildExitCode =

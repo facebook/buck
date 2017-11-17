@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -46,8 +47,6 @@ public class MinionModeRunnerIntegrationTest {
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 9;
-  private static final HeartbeatService HEARTBEAT_SERVICE =
-      EasyMock.createNiceMock(HeartbeatService.class);
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -67,8 +66,22 @@ public class MinionModeRunnerIntegrationTest {
             checker,
             POLL_LOOP_INTERVAL_MILLIS);
 
-    minion.runAndReturnExitCode(HEARTBEAT_SERVICE);
+    minion.runAndReturnExitCode(createFakeHeartbeatService());
     Assert.fail("The previous line should've thrown an exception.");
+  }
+
+  /** Returns a mock HeartbeatService that will always return valid Closeables. */
+  public static HeartbeatService createFakeHeartbeatService() {
+    HeartbeatService service = EasyMock.createNiceMock(HeartbeatService.class);
+    EasyMock.expect(service.addCallback(EasyMock.anyString(), EasyMock.anyObject()))
+        .andReturn(
+            new Closeable() {
+              @Override
+              public void close() throws IOException {}
+            })
+        .anyTimes();
+    EasyMock.replay(service);
+    return service;
   }
 
   @Test
@@ -87,13 +100,33 @@ public class MinionModeRunnerIntegrationTest {
             checker,
             POLL_LOOP_INTERVAL_MILLIS);
 
-    int exitCode = minion.runAndReturnExitCode(HEARTBEAT_SERVICE);
+    int exitCode = minion.runAndReturnExitCode(createFakeHeartbeatService());
     // Server does not exit because the build has already been marked as finished.
     Assert.assertEquals(0, exitCode);
   }
 
   @Test
   public void testDiamondGraphRun()
+      throws IOException, NoSuchBuildTargetException, InterruptedException {
+    runDiamondGraphRunWithService(createFakeHeartbeatService());
+  }
+
+  @Test
+  public void testMinionReportsAliveToCoordinator()
+      throws IOException, NoSuchBuildTargetException, InterruptedException {
+    Closeable closeable = EasyMock.createMock(Closeable.class);
+    closeable.close();
+    EasyMock.expectLastCall().once();
+    HeartbeatService service = EasyMock.createMock(HeartbeatService.class);
+    EasyMock.expect(service.addCallback(EasyMock.anyString(), EasyMock.notNull()))
+        .andReturn(closeable)
+        .once();
+    EasyMock.replay(service, closeable);
+    runDiamondGraphRunWithService(service);
+    EasyMock.verify(service, closeable);
+  }
+
+  private void runDiamondGraphRunWithService(HeartbeatService service)
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
     try (ThriftCoordinatorServer server = createServer()) {
@@ -109,7 +142,7 @@ public class MinionModeRunnerIntegrationTest {
               MAX_PARALLEL_WORK_UNITS,
               checker,
               POLL_LOOP_INTERVAL_MILLIS);
-      int exitCode = minion.runAndReturnExitCode(HEARTBEAT_SERVICE);
+      int exitCode = minion.runAndReturnExitCode(service);
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(4, localBuilder.getBuildTargets().size());
       Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));

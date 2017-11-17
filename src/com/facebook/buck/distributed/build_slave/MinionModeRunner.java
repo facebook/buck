@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.command.BuildExecutor;
+import com.facebook.buck.distributed.build_slave.HeartbeatService.HeartbeatCallback;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -32,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -131,16 +133,17 @@ public class MinionModeRunner implements DistBuildModeRunner {
   }
 
   @Override
-  public int runAndReturnExitCode(HeartbeatService service)
+  public int runAndReturnExitCode(HeartbeatService heartbeatService)
       throws IOException, InterruptedException {
-    // TODO(ruibm): Implement the HeartbeatCallback for the Minion.
     Preconditions.checkState(coordinatorPort.isPresent(), "Coordinator port has not been set.");
 
+    final String minionId = generateMinionId(buildSlaveRunId);
     try (ThriftCoordinatorClient client =
-        new ThriftCoordinatorClient(coordinatorAddress, stampedeId)) {
+            new ThriftCoordinatorClient(coordinatorAddress, stampedeId);
+        Closeable healthCheck =
+            heartbeatService.addCallback(
+                "MinionIsAlive", createHeartbeatCallback(client, minionId))) {
       completionCheckingThriftCall(() -> client.start(coordinatorPort.getAsInt()));
-
-      final String minionId = generateMinionId(buildSlaveRunId);
 
       while (!finished.get()) {
         signalFinishedTargetsAndFetchMoreWork(minionId, client);
@@ -157,6 +160,16 @@ public class MinionModeRunner implements DistBuildModeRunner {
     buildExecutor.shutdown();
 
     return exitCode.get();
+  }
+
+  private HeartbeatCallback createHeartbeatCallback(
+      ThriftCoordinatorClient client, String minionId) {
+    return new HeartbeatCallback() {
+      @Override
+      public void runHeartbeat() throws IOException {
+        client.reportMinionAlive(minionId);
+      }
+    };
   }
 
   public void setCoordinatorPort(int coordinatorPort) {

@@ -48,11 +48,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   @Before
   public void setUp() {
-    heartbeatService = EasyMock.createNiceMock(HeartbeatService.class);
-    EasyMock.expect(heartbeatService.addCallback(EasyMock.anyString(), EasyMock.anyObject()))
-        .andReturn(() -> {})
-        .anyTimes();
-    EasyMock.replay(heartbeatService);
+    heartbeatService = MinionModeRunnerIntegrationTest.createFakeHeartbeatService();
   }
 
   @Test

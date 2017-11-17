@@ -19,6 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
+import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
@@ -35,6 +36,7 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransportException;
 
 public class ThriftCoordinatorClient implements Closeable {
+
   private static final Logger LOG = Logger.get(ThriftCoordinatorClient.class);
 
   private final String remoteHost;
@@ -93,6 +95,22 @@ public class ThriftCoordinatorClient implements Closeable {
       return client.getWork(request);
     } catch (TException e) {
       throw new ThriftException(e);
+    }
+  }
+
+  /** Reports back to the Coordinator that the current Minion is alive and healthy. */
+  public void reportMinionAlive(String minionId) throws ThriftException {
+    ReportMinionAliveRequest request =
+        new ReportMinionAliveRequest().setMinionId(minionId).setStampedeId(stampedeId);
+    try {
+      client.reportMinionAlive(request);
+    } catch (TException e) {
+      String msg =
+          String.format(
+              "Failed to report Minion [%s] is alive for stampedeId [%s].",
+              minionId, stampedeId.toString());
+      LOG.error(e, msg);
+      throw new ThriftException(msg, e);
     }
   }
 
