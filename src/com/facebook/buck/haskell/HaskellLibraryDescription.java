@@ -24,7 +24,6 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
@@ -32,6 +31,7 @@ import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -194,9 +194,7 @@ public class HaskellLibraryDescription
             projectFilesystem,
             target.withoutFlavors(HaskellDescriptionUtils.PROF),
             platform.getFlavor(),
-            depType == Linker.LinkableDepType.STATIC
-                ? CxxSourceRuleFactory.PicType.PDC
-                : CxxSourceRuleFactory.PicType.PIC,
+            depType == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC,
             platform.getCxxPlatform().getStaticLibraryExtension(),
             hsProfile ? "_p" : "",
             cxxBuckConfig.isUniqueLibraryNameEnabled()),

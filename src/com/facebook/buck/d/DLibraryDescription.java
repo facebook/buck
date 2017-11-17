@@ -18,9 +18,9 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -100,7 +100,7 @@ public class DLibraryDescription
           /* compilerFlags */ ImmutableList.of(),
           args.getSrcs(),
           dIncludes,
-          CxxSourceRuleFactory.PicType.PDC);
+          PicType.PDC);
     }
 
     return new DLibrary(buildTarget, projectFilesystem, params, buildRuleResolver, dIncludes);
@@ -117,7 +117,7 @@ public class DLibraryDescription
       ImmutableList<String> compilerFlags,
       SourceList sources,
       DIncludes dIncludes,
-      CxxSourceRuleFactory.PicType pic) {
+      PicType pic) {
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(

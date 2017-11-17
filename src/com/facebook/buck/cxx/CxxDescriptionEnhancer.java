@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
@@ -562,9 +563,9 @@ public class CxxDescriptionEnhancer {
   }
 
   public static BuildTarget createStaticLibraryBuildTarget(
-      BuildTarget target, Flavor platform, CxxSourceRuleFactory.PicType pic) {
+      BuildTarget target, Flavor platform, PicType pic) {
     return target.withAppendedFlavors(
-        platform, pic == CxxSourceRuleFactory.PicType.PDC ? STATIC_FLAVOR : STATIC_PIC_FLAVOR);
+        platform, pic == PicType.PDC ? STATIC_FLAVOR : STATIC_PIC_FLAVOR);
   }
 
   public static BuildTarget createSharedLibraryBuildTarget(
@@ -589,7 +590,7 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform,
-      CxxSourceRuleFactory.PicType pic,
+      PicType pic,
       String extension,
       boolean uniqueLibraryNameEnabled) {
     return getStaticLibraryPath(
@@ -618,7 +619,7 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem filesystem,
       BuildTarget target,
       Flavor platform,
-      CxxSourceRuleFactory.PicType pic,
+      PicType pic,
       String extension,
       String suffix,
       boolean uniqueLibraryNameEnabled) {
@@ -895,10 +896,7 @@ public class CxxDescriptionEnhancer {
 
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
-    CxxSourceRuleFactory.PicType pic =
-        linkStyle == Linker.LinkableDepType.STATIC
-            ? CxxSourceRuleFactory.PicType.PDC
-            : CxxSourceRuleFactory.PicType.PIC;
+    PicType pic = linkStyle == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC;
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.of(
                 projectFilesystem,

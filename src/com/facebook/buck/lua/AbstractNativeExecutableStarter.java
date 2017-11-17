@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
@@ -217,7 +218,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 ImmutableMultimap.of(),
                 Optional.empty(),
                 Optional.empty(),
-                CxxSourceRuleFactory.PicType.PDC,
+                PicType.PDC,
                 Optional.empty())
             .requirePreprocessAndCompileRules(
                 ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()));

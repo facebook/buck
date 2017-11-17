@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -243,7 +244,7 @@ public class CxxLibraryDescription
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType pic,
+      PicType pic,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
@@ -285,7 +286,7 @@ public class CxxLibraryDescription
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType pic,
+      PicType pic,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
@@ -393,7 +394,7 @@ public class CxxLibraryDescription
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
-            CxxSourceRuleFactory.PicType.PIC,
+            PicType.PIC,
             arg,
             deps,
             transitiveCxxPreprocessorInputFunction,
@@ -458,7 +459,7 @@ public class CxxLibraryDescription
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
-            CxxSourceRuleFactory.PicType.PIC,
+            PicType.PIC,
             args,
             deps,
             transitiveCxxPreprocessorInputFunction,
@@ -613,7 +614,7 @@ public class CxxLibraryDescription
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      CxxSourceRuleFactory.PicType pic,
+      PicType pic,
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -816,7 +817,7 @@ public class CxxLibraryDescription
               cellRoots,
               cxxBuckConfig,
               cxxPlatform,
-              CxxSourceRuleFactory.PicType.PIC,
+              PicType.PIC,
               args,
               cxxDeps.get(resolver, cxxPlatform),
               transitiveCxxPreprocessorInputFunction,
@@ -913,7 +914,7 @@ public class CxxLibraryDescription
               platform.get(),
               args,
               cxxDeps.get(resolver, platform.get()),
-              CxxSourceRuleFactory.PicType.PDC,
+              PicType.PDC,
               transitiveCxxPreprocessorInputFunction,
               delegate);
         case STATIC_PIC:
@@ -926,7 +927,7 @@ public class CxxLibraryDescription
               platform.get(),
               args,
               cxxDeps.get(resolver, platform.get()),
-              CxxSourceRuleFactory.PicType.PIC,
+              PicType.PIC,
               transitiveCxxPreprocessorInputFunction,
               delegate);
         case SANDBOX_TREE:

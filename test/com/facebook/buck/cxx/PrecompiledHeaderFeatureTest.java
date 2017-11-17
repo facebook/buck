@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.model.BuildTarget;
@@ -409,7 +410,7 @@ public class PrecompiledHeaderFeatureTest {
         .setResolver(ruleResolver)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
-        .setPicType(AbstractCxxSourceRuleFactory.PicType.PDC);
+        .setPicType(PicType.PDC);
   }
 
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(

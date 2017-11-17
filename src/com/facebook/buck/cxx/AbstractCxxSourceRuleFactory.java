@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.PchUnavailableException;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -861,27 +862,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private BuildRuleParams buildRuleParamsWithAndDeps(SortedSet<BuildRule> deps) {
     return new BuildRuleParams(() -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
-  }
-
-  public enum PicType {
-
-    // Generate position-independent code (e.g. for use in shared libraries).
-    PIC {
-      @Override
-      public ImmutableList<String> getFlags(Compiler compiler) {
-        return compiler.getPicFlags();
-      }
-    },
-
-    // Generate position-dependent code.
-    PDC {
-      @Override
-      public ImmutableList<String> getFlags(Compiler compiler) {
-        return compiler.getPdcFlags();
-      }
-    };
-
-    abstract ImmutableList<String> getFlags(Compiler compiler);
   }
 
   @Value.Immutable

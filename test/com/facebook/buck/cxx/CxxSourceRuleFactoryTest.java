@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -124,7 +125,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       String name = "foo/bar.cpp";
@@ -174,7 +175,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       String name = "source.cpp";
@@ -230,7 +231,7 @@ public class CxxSourceRuleFactoryTest {
               .setRuleFinder(ruleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       String nameCompile = "foo/bar.ii";
@@ -271,9 +272,9 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM);
       CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
-          cxxSourceRuleFactoryBuilder.setPicType(CxxSourceRuleFactory.PicType.PDC).build();
+          cxxSourceRuleFactoryBuilder.setPicType(PicType.PDC).build();
       CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
-          cxxSourceRuleFactoryBuilder.setPicType(CxxSourceRuleFactory.PicType.PIC).build();
+          cxxSourceRuleFactoryBuilder.setPicType(PicType.PIC).build();
 
       String name = "foo/bar.ii";
       CxxSource cxxSource =
@@ -362,7 +363,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(cxxBuckConfig)
               .setCxxPlatform(platform)
               .setPrefixHeader(prefixHeaderSourcePath)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       String objcSourceName = "test.m";
@@ -401,7 +402,7 @@ public class CxxSourceRuleFactoryTest {
               .setRuleFinder(ruleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       String objcSourceName = "test.m";
@@ -456,7 +457,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(cxxPlatform)
               .addCxxPreprocessorInput(CxxPreprocessorInput.of())
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       String name = "foo/bar.cpp";
@@ -539,7 +540,7 @@ public class CxxSourceRuleFactoryTest {
               .setRuleFinder(ruleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       String[] sourceNames = testExampleSourceSets.get(testExampleSourceSet);
@@ -665,7 +666,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       List<String> perFileFlags = ImmutableList.of("-per-file-flag", "-and-another-per-file-flag");
@@ -714,7 +715,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .setCompilerFlags(CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)))
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       List<String> perFileFlags = ImmutableList.of("-per-file-flag");
@@ -776,7 +777,7 @@ public class CxxSourceRuleFactoryTest {
               .setCxxPlatform(platform)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
               .setCompilerFlags(CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)))
-              .setPicType(CxxSourceRuleFactory.PicType.PIC)
+              .setPicType(PicType.PIC)
               .build();
 
       CxxSource source =
@@ -841,7 +842,7 @@ public class CxxSourceRuleFactoryTest {
               .setRuleFinder(ruleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM)
-              .setPicType(CxxSourceRuleFactory.PicType.PDC)
+              .setPicType(PicType.PDC)
               .build();
 
       SourcePath input = FakeSourcePath.of(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));

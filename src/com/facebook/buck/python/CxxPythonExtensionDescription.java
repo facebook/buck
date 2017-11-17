@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
@@ -228,7 +229,7 @@ public class CxxPythonExtensionDescription
                 compilerFlags,
                 args.getPrefixHeader(),
                 args.getPrecompiledHeader(),
-                CxxSourceRuleFactory.PicType.PIC,
+                PicType.PIC,
                 sandboxTree)
             .requirePreprocessAndCompileRules(srcs);
 

@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -54,15 +55,12 @@ public class CxxSourceRuleFactoryHelper {
         .setRuleFinder(ruleFinder)
         .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
-        .setPicType(CxxSourceRuleFactory.PicType.PDC)
+        .setPicType(PicType.PDC)
         .build();
   }
 
   public static CxxSourceRuleFactory of(
-      Path cellRoot,
-      BuildTarget target,
-      CxxPlatform cxxPlatform,
-      AbstractCxxSourceRuleFactory.PicType picType) {
+      Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, PicType picType) {
     return of(cellRoot, target, cxxPlatform, CxxPlatformUtils.DEFAULT_CONFIG, picType);
   }
 
@@ -71,7 +69,7 @@ public class CxxSourceRuleFactoryHelper {
       BuildTarget target,
       CxxPlatform cxxPlatform,
       CxxBuckConfig cxxBuckConfig,
-      AbstractCxxSourceRuleFactory.PicType picType) {
+      PicType picType) {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -395,7 +396,7 @@ public final class CxxInferEnhancer {
                         target, cellRoots, ruleResolver, cxxPlatform, f)),
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
-            CxxSourceRuleFactory.PicType.PDC,
+            PicType.PDC,
             sandboxTree);
     return factory.requireInferCaptureBuildRules(sources, inferBuckConfig);
   }

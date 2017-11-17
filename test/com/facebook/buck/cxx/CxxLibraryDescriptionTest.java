@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -286,7 +287,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule archiveRule =
         resolver.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-                target, cxxPlatform.getFlavor(), CxxSourceRuleFactory.PicType.PDC));
+                target, cxxPlatform.getFlavor(), PicType.PDC));
     assertNotNull(archiveRule);
     assertEquals(
         ImmutableSet.of(
@@ -469,11 +470,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
         CxxSourceRuleFactoryHelper.of(
-            filesystem.getRootPath(),
-            target,
-            cxxPlatform,
-            cxxBuckConfig,
-            CxxSourceRuleFactory.PicType.PDC);
+            filesystem.getRootPath(), target, cxxPlatform, cxxBuckConfig, PicType.PDC);
 
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(target, cxxBuckConfig)
@@ -533,7 +530,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule staticRule =
         resolver.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-                target, cxxPlatform.getFlavor(), CxxSourceRuleFactory.PicType.PDC));
+                target, cxxPlatform.getFlavor(), PicType.PDC));
     assertNotNull(staticRule);
     assertEquals(
         ImmutableSet.of(
@@ -583,11 +580,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
         CxxSourceRuleFactoryHelper.of(
-            filesystem.getRootPath(),
-            target,
-            cxxPlatform,
-            cxxBuckConfig,
-            CxxSourceRuleFactory.PicType.PIC);
+            filesystem.getRootPath(), target, cxxPlatform, cxxBuckConfig, PicType.PIC);
     rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED);
     BuildRule sharedRule =
         resolver.getRule(

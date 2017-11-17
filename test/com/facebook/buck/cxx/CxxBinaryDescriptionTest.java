@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -202,7 +203,7 @@ public class CxxBinaryDescriptionTest {
             .setRuleFinder(ruleFinder)
             .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
             .setCxxPlatform(cxxPlatform)
-            .setPicType(CxxSourceRuleFactory.PicType.PDC)
+            .setPicType(PicType.PDC)
             .build();
 
     // Check that link rule has the expected deps: the object files for our sources and the

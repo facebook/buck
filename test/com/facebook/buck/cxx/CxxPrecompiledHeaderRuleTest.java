@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PchUnavailableException;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -192,7 +193,7 @@ public class CxxPrecompiledHeaderRuleTest {
         .setRuleFinder(ruleFinder)
         .setPathResolver(DefaultSourcePathResolver.from(ruleFinder))
         .setCxxPlatform(platformSupportingPch)
-        .setPicType(AbstractCxxSourceRuleFactory.PicType.PIC)
+        .setPicType(PicType.PIC)
         .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);
   }
 
