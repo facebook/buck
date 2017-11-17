@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -107,6 +108,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    super.addToCollector(collector);
+    manifestFile.ifPresent(collector::addManifestPiece);
   }
 
   public static class Builder {

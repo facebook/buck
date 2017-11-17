@@ -94,6 +94,9 @@ interface AbstractAndroidPackageableCollection {
   /** Java classes (jars) to include in the package. */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
+  /** Android manifests to merge with the manifest skeleton. */
+  ImmutableSet<SourcePath> getAndroidManifestPieces();
+
   /** Java classes to include in the package sorted into modules */
   ImmutableMultimap<APKModule, SourcePath> getModuleMappedClasspathEntriesToDex();
 

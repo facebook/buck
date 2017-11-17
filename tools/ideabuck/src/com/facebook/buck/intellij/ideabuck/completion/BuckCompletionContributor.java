@@ -40,6 +40,7 @@ public class BuckCompletionContributor extends CompletionContributor {
           "srcs",
           "deps",
           "manifest",
+          "manifest_skeleton",
           "package_type",
           "glob",
           "visibility",

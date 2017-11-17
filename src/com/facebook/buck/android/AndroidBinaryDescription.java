@@ -304,6 +304,7 @@ public class AndroidBinaryDescription
               args.getResourceUnionPackage(),
               addFallbackLocales(args.getLocales()),
               args.getManifest(),
+              args.getManifestSkeleton(),
               packageType,
               ImmutableSet.copyOf(args.getCpuFilters()),
               args.isBuildStringSourceMap(),
@@ -548,7 +549,9 @@ public class AndroidBinaryDescription
   @Value.Immutable
   interface AbstractAndroidBinaryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
-    SourcePath getManifest();
+    Optional<SourcePath> getManifest();
+
+    Optional<SourcePath> getManifestSkeleton();
 
     BuildTarget getKeystore();
 

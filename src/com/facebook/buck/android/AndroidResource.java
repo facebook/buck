@@ -403,5 +403,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (assets != null) {
       collector.addAssetsDirectory(getBuildTarget(), assets);
     }
+    if (manifestFile != null) {
+      collector.addManifestPiece(manifestFile);
+    }
   }
 }

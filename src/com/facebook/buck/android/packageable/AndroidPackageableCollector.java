@@ -214,6 +214,11 @@ public class AndroidPackageableCollector {
     return this;
   }
 
+  public AndroidPackageableCollector addManifestPiece(SourcePath manifest) {
+    collectionBuilder.addAndroidManifestPieces(manifest);
+    return this;
+  }
+
   public AndroidPackageableCollector addPathToThirdPartyJar(
       BuildTarget owner, SourcePath pathToThirdPartyJar) {
     if (buildTargetsToExcludeFromDex.contains(owner)) {

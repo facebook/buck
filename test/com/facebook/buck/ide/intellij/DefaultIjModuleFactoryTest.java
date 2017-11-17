@@ -710,7 +710,7 @@ public class DefaultIjModuleFactoryTest {
               @Override
               public Path getAndroidManifestPath(
                   TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
-                return ((PathSourcePath) targetNode.getConstructorArg().getManifest())
+                return ((PathSourcePath) targetNode.getConstructorArg().getManifest().get())
                     .getRelativePath();
               }
 

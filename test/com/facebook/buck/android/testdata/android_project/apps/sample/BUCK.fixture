@@ -881,3 +881,24 @@ android_binary(
         "//res/com/sample/with_generated_strings:res",  # [ res/com/sample/with_generate_strings/res/values/strings.xml ]
     ],
 )
+
+android_binary(
+    name = "app_with_merged_manifest",
+    keystore = "//keystores:debug",
+    manifest_skeleton = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//manifests:lib1",
+        "//manifests:lib2",
+        "//res/com/sample/base:base",
+    ],
+)
+
+genrule(
+    name = "dump_merged_manifest",
+    out = "dump_merged_manifest.txt",
+    # Using the DX environment variable here is a total hack.
+    # Ideally, we'd have a special genrule that made the Android
+    # tools available.
+    bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_merged_manifest) AndroidManifest.xml > $OUT",
+)

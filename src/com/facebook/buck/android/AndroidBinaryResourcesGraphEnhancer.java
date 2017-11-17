@@ -47,6 +47,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 class AndroidBinaryResourcesGraphEnhancer {
+  static final Flavor MANIFEST_MERGE_FLAVOR = InternalFlavor.of("manifest_merge");
   static final Flavor RESOURCES_FILTER_FLAVOR = InternalFlavor.of("resources_filter");
   static final Flavor AAPT_PACKAGE_FLAVOR = InternalFlavor.of("aapt_package");
   static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
@@ -71,7 +72,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ProjectFilesystem projectFilesystem;
   private final BuildRuleResolver ruleResolver;
   private final AndroidBinary.AaptMode aaptMode;
-  private final SourcePath manifest;
+  private final Optional<SourcePath> rawManifest;
+  private final Optional<SourcePath> manifestSkeleton;
   private final Optional<String> resourceUnionPackage;
   private final boolean shouldBuildStringSourceMap;
   private final boolean skipCrunchPngs;
@@ -90,7 +92,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       BuildRuleResolver ruleResolver,
       BuildTarget originalBuildTarget,
       boolean exopackageForResources,
-      SourcePath manifest,
+      Optional<SourcePath> rawManifest,
+      Optional<SourcePath> manifestSkeleton,
       AndroidBinary.AaptMode aaptMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
@@ -113,7 +116,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
     this.aaptMode = aaptMode;
-    this.manifest = manifest;
+    this.rawManifest = rawManifest;
+    this.manifestSkeleton = manifestSkeleton;
     this.resourceUnionPackage = resourceUnionPackage;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.skipCrunchPngs = skipCrunchPngs;
@@ -174,13 +178,35 @@ class AndroidBinaryResourcesGraphEnhancer {
           new IdentityResourcesProvider(resourceDetails.getResourceDirectories());
     }
 
+    SourcePath realManifest;
+    if (rawManifest.isPresent()) {
+      if (manifestSkeleton.isPresent()) {
+        throw new HumanReadableException(
+            "android_binary " + buildTarget + " specified both manifest and manifest_skeleton.");
+      }
+      realManifest = rawManifest.get();
+    } else if (manifestSkeleton.isPresent()) {
+      AndroidManifest manifestMergeRule =
+          new AndroidManifest(
+              buildTarget.withAppendedFlavors(MANIFEST_MERGE_FLAVOR),
+              projectFilesystem,
+              ruleFinder,
+              manifestSkeleton.get(),
+              packageableCollection.getAndroidManifestPieces());
+      ruleResolver.addToIndex(manifestMergeRule);
+      realManifest = manifestMergeRule.getSourcePathToOutput();
+    } else {
+      throw new HumanReadableException(
+          "android_binary " + buildTarget + " did not specify manifest or manifest_skeleton.");
+    }
+
     AaptOutputInfo aaptOutputInfo;
     switch (aaptMode) {
       case AAPT1:
         {
           // Create the AaptPackageResourcesBuildable.
           AaptPackageResources aaptPackageResources =
-              createAaptPackageResources(resourceDetails, filteredResourcesProvider);
+              createAaptPackageResources(realManifest, resourceDetails, filteredResourcesProvider);
           ruleResolver.addToIndex(aaptPackageResources);
           aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
         }
@@ -190,6 +216,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         {
           Aapt2Link aapt2Link =
               createAapt2Link(
+                  realManifest,
                   resourceDetails,
                   needsResourceFiltering
                       ? Optional.of(filteredResourcesProvider)
@@ -340,6 +367,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private Aapt2Link createAapt2Link(
+      SourcePath realManifest,
       AndroidPackageableCollection.ResourceDetails resourceDetails,
       Optional<FilteredResourcesProvider> filteredResourcesProvider) {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
@@ -380,7 +408,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         ruleFinder,
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
-        manifest,
+        realManifest,
         manifestEntries,
         noAutoVersionResources);
   }
@@ -428,6 +456,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private AaptPackageResources createAaptPackageResources(
+      SourcePath realManifest,
       AndroidPackageableCollection.ResourceDetails resourceDetails,
       FilteredResourcesProvider filteredResourcesProvider) {
     return new AaptPackageResources(
@@ -436,7 +465,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         androidLegacyToolchain,
         ruleFinder,
         ruleResolver,
-        manifest,
+        realManifest,
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         skipCrunchPngs,

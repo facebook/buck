@@ -174,6 +174,7 @@ public class AndroidInstrumentationApkDescription
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
             args.getManifest(),
+            args.getManifestSkeleton(),
             PackageType.INSTRUMENTED,
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,
@@ -236,7 +237,9 @@ public class AndroidInstrumentationApkDescription
   @Value.Immutable
   interface AbstractAndroidInstrumentationApkDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps {
-    SourcePath getManifest();
+    Optional<SourcePath> getManifest();
+
+    Optional<SourcePath> getManifestSkeleton();
 
     BuildTarget getApk();
 

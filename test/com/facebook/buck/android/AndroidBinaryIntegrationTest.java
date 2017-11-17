@@ -718,4 +718,12 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         1,
         matchCount);
   }
+
+  @Test
+  public void testAutomaticManifestMerge() throws IOException {
+    Path dumpPath = workspace.buildAndReturnOutput("//apps/sample:dump_merged_manifest");
+    String contents = workspace.getFileContents(dumpPath);
+
+    assertThat(contents, containsString("READ_CALENDAR"));
+  }
 }
