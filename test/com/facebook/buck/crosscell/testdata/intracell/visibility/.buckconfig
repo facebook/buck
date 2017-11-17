@@ -2,3 +2,6 @@
 [repositories]
 child = child-repo
 parent = .
+
+[project]
+embedded_cell_buck_out_enabled = true

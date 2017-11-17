@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,18 +16,18 @@
 
 package com.facebook.buck.io.filesystem;
 
-import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;
-import java.util.Optional;
+import org.immutables.value.Value;
 
-public interface ProjectFilesystemFactory {
-  ProjectFilesystem createProjectFilesystem(
-      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo)
-      throws InterruptedException;
+/**
+ * Information to create the buck-out of cell when it's going to be embedded in the root cell
+ * buck-out.
+ */
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractEmbeddedCellBuckOutInfo {
+  public abstract Path getRootCellBuckOut();
 
-  ProjectFilesystem createProjectFilesystem(Path root, Config config) throws InterruptedException;
-
-  ProjectFilesystem createProjectFilesystem(Path root) throws InterruptedException;
-
-  ProjectFilesystem createOrThrow(Path path) throws InterruptedException;
+  public abstract String getCellName();
 }

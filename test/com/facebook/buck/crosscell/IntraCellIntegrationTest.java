@@ -16,6 +16,7 @@
 
 package com.facebook.buck.crosscell;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -118,4 +119,20 @@ public class IntraCellIntegrationTest {
   @Test
   @Ignore
   public void allOutputsShouldBePlacedInTheSameRootOutputDirectory() {}
+
+  @Test
+  public void testEmbeddedBuckOut() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "intracell/visibility", tmp);
+    workspace.setUp();
+    Cell cell = workspace.asCell();
+    assertEquals(cell.getFilesystem().getBuckPaths().getGenDir().toString(), "buck-out/gen");
+    Cell childCell =
+        cell.getCell(
+            BuildTargetFactory.newInstance(
+                workspace.getDestPath().resolve("child-repo"), "//:child-target"));
+    assertEquals(
+        childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
+        "../buck-out/cells/child/gen");
+  }
 }

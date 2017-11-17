@@ -17,6 +17,7 @@
 package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -41,19 +42,27 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
 
   @Override
-  public ProjectFilesystem createProjectFilesystem(Path root, Config config)
+  public ProjectFilesystem createProjectFilesystem(
+      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo)
       throws InterruptedException {
+    BuckPaths buckPaths = getConfiguredBuckPaths(root, config, embeddedCellBuckOutInfo);
     return new DefaultProjectFilesystem(
         root.getFileSystem(),
         root,
-        extractIgnorePaths(root, config, getConfiguredBuckPaths(root, config)),
-        getConfiguredBuckPaths(root, config),
+        extractIgnorePaths(root, config, buckPaths),
+        buckPaths,
         ProjectFilesystemDelegateFactory.newInstance(
             root,
-            getConfiguredBuckPaths(root, config).getBuckOut(),
+            buckPaths.getBuckOut(),
             config.getValue("version_control", "hg_cmd").orElse("hg"),
             config),
         config.getBooleanValue("project", "windows_symlinks", false));
+  }
+
+  @Override
+  public ProjectFilesystem createProjectFilesystem(Path root, Config config)
+      throws InterruptedException {
+    return createProjectFilesystem(root, config, Optional.empty());
   }
 
   @Override
@@ -108,10 +117,19 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     return builder.build();
   }
 
-  public static BuckPaths getConfiguredBuckPaths(Path rootPath, Config config) {
+  private static BuckPaths getConfiguredBuckPaths(
+      Path rootPath, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(rootPath);
     Optional<String> configuredBuckOut = config.getValue("project", "buck_out");
-    if (configuredBuckOut.isPresent()) {
+    if (embeddedCellBuckOutInfo.isPresent()) {
+      Path cellBuckOut =
+          embeddedCellBuckOutInfo
+              .get()
+              .getRootCellBuckOut()
+              .resolve("cells")
+              .resolve(embeddedCellBuckOutInfo.get().getCellName());
+      buckPaths = buckPaths.withConfiguredBuckOut(rootPath.relativize(cellBuckOut));
+    } else if (configuredBuckOut.isPresent()) {
       buckPaths =
           buckPaths.withConfiguredBuckOut(
               rootPath.getFileSystem().getPath(configuredBuckOut.get()));

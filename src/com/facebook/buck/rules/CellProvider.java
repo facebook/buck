@@ -17,6 +17,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.rules.keys.impl.ConfigRuleKeyConfigurationFactory;
@@ -154,8 +155,19 @@ public final class CellProvider {
                     new CellPathResolverView(
                         rootCellCellPathResolver, cellMapping.keySet(), cellPath);
 
+                Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
+                Optional<String> canonicalCellName =
+                    cellPathResolver.getCanonicalCellName(normalizedCellPath);
+                if (rootConfig.isEmbeddedCellBuckOutEnabled() && canonicalCellName.isPresent()) {
+                  embeddedCellBuckOutInfo =
+                      Optional.of(
+                          EmbeddedCellBuckOutInfo.of(
+                              rootFilesystem.resolve(rootFilesystem.getBuckPaths().getBuckOut()),
+                              canonicalCellName.get()));
+                }
                 ProjectFilesystem cellFilesystem =
-                    projectFilesystemFactory.createProjectFilesystem(normalizedCellPath, config);
+                    projectFilesystemFactory.createProjectFilesystem(
+                        normalizedCellPath, config, embeddedCellBuckOutInfo);
 
                 BuckConfig buckConfig =
                     new BuckConfig(
@@ -170,7 +182,7 @@ public final class CellProvider {
 
                 return Cell.of(
                     getKnownRoots(cellPathResolver),
-                    cellPathResolver.getCanonicalCellName(normalizedCellPath),
+                    canonicalCellName,
                     cellFilesystem,
                     watchman,
                     buckConfig,

@@ -992,4 +992,8 @@ public class BuckConfig implements ConfigPathGetter {
   public boolean createBuildOutputSymLinksEnabled() {
     return getBooleanValue("build", "create_build_output_symlinks_enabled", false);
   }
+
+  public boolean isEmbeddedCellBuckOutEnabled() {
+    return getBooleanValue("project", "embedded_cell_buck_out_enabled", false);
+  }
 }
