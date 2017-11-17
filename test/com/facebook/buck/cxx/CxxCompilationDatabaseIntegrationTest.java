@@ -110,7 +110,7 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
@@ -189,7 +189,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path headerSymlinkTreeFolder =
@@ -269,7 +269,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
