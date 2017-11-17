@@ -53,19 +53,21 @@ public class ThriftCoordinatorServer implements Closeable {
   public static class ExitState {
 
     private final int exitCode;
+    private final String exitMessage;
     private final boolean wasExitCodeSetByServers;
 
-    private ExitState(int exitCode, boolean wasExitCodeSetByServers) {
+    private ExitState(int exitCode, String exitMessage, boolean wasExitCodeSetByServers) {
       this.exitCode = exitCode;
+      this.exitMessage = exitMessage;
       this.wasExitCodeSetByServers = wasExitCodeSetByServers;
     }
 
-    public static ExitState setLocally(int exitCode) {
-      return new ExitState(exitCode, false);
+    public static ExitState setLocally(int exitCode, String exitMessage) {
+      return new ExitState(exitCode, exitMessage, false);
     }
 
-    public static ExitState setByServers(int exitCode) {
-      return new ExitState(exitCode, true);
+    public static ExitState setByServers(int exitCode, String exitMessage) {
+      return new ExitState(exitCode, exitMessage, true);
     }
 
     public int getExitCode() {
@@ -76,11 +78,18 @@ public class ThriftCoordinatorServer implements Closeable {
       return wasExitCodeSetByServers;
     }
 
+    public String getExitMessage() {
+      return exitMessage;
+    }
+
     @Override
     public String toString() {
       return "ExitState{"
           + "exitCode="
           + exitCode
+          + ", exitMessage='"
+          + exitMessage
+          + '\''
           + ", wasExitCodeSetByServers="
           + wasExitCodeSetByServers
           + '}';
@@ -176,7 +185,7 @@ public class ThriftCoordinatorServer implements Closeable {
           String.format(
               "Failing the build due to dead minions: [%s].", Joiner.on(", ").join(deadMinions));
       LOG.error(msg);
-      exitCodeFuture.complete(ExitState.setLocally(DEAD_MINION_FOUND_EXIT_CODE));
+      exitCodeFuture.complete(ExitState.setLocally(DEAD_MINION_FOUND_EXIT_CODE, msg));
     }
   }
 
@@ -184,12 +193,17 @@ public class ThriftCoordinatorServer implements Closeable {
   public void checkBuildStatusIsNotTerminated() throws IOException {
     BuildJob buildJob = distBuildService.getCurrentBuildJobState(stampedeId);
     if (buildJob.isSetStatus() && BuildStatusUtil.isTerminalBuildStatus(buildJob.getStatus())) {
-      exitCodeFuture.complete(ExitState.setByServers(BUILD_TERMINATED_REMOTELY_EXIT_CODE));
+      exitCodeFuture.complete(
+          ExitState.setByServers(
+              BUILD_TERMINATED_REMOTELY_EXIT_CODE, "Build finalised externally."));
     }
   }
 
   private ThriftCoordinatorServer stop() throws IOException {
-    ExitState exitState = exitCodeFuture.getNow(ExitState.setLocally(UNEXPECTED_STOP_EXIT_CODE));
+    ExitState exitState =
+        exitCodeFuture.getNow(
+            ExitState.setLocally(
+                UNEXPECTED_STOP_EXIT_CODE, "Forced unexpected Coordinator shutdown."));
     eventListener.onThriftServerClosing(exitState);
     synchronized (lock) {
       Preconditions.checkNotNull(server, "Server has already been stopped.").stop();
@@ -273,7 +287,11 @@ public class ThriftCoordinatorServer implements Closeable {
       } catch (Throwable e) {
         LOG.error(
             "reportIAmAlive() failed: internal state may be corrupted, so exiting coordinator.", e);
-        exitCodeFuture.complete(ExitState.setLocally(I_AM_ALIVE_FAILED_EXIT_CODE));
+        String msg =
+            String.format(
+                "Failed to handle ReportMinionAliveRequest for minion [%s].",
+                request.getMinionId());
+        exitCodeFuture.complete(ExitState.setLocally(I_AM_ALIVE_FAILED_EXIT_CODE, msg));
         throw e;
       }
     }
@@ -284,7 +302,10 @@ public class ThriftCoordinatorServer implements Closeable {
         return getWorkUnsafe(request);
       } catch (Throwable e) {
         LOG.error("getWork() failed: internal state may be corrupted, so exiting coordinator.", e);
-        exitCodeFuture.complete(ExitState.setLocally(GET_WORK_FAILED_EXIT_CODE));
+        String msg =
+            String.format(
+                "Failed to handle GetWorkRequest for minion [%s].", request.getMinionId());
+        exitCodeFuture.complete(ExitState.setLocally(GET_WORK_FAILED_EXIT_CODE, msg));
         throw e;
       }
     }

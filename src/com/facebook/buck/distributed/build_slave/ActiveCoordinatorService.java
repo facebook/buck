@@ -74,11 +74,12 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
 
     // If the minion died, then kill the whole build.
     if (request.getLastExitCode() != 0) {
-      LOG.error(
+      String msg =
           String.format(
               "Got non zero exit code in GetWorkRequest from minion [%s]. Exit code [%s]",
-              request.getMinionId(), request.getLastExitCode()));
-      exitCodeFuture.complete(ExitState.setLocally(request.getLastExitCode()));
+              request.getMinionId(), request.getLastExitCode());
+      LOG.error(msg);
+      exitCodeFuture.complete(ExitState.setLocally(request.getLastExitCode(), msg));
       response.setContinueBuilding(false);
       return response;
     }
@@ -93,7 +94,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     // If the build is already finished (or just finished with this update, then signal this to
     // the minion.
     if (allocator.isBuildFinished()) {
-      exitCodeFuture.complete(ExitState.setLocally(0));
+      exitCodeFuture.complete(ExitState.setLocally(0, "Build finished successfully."));
       LOG.info(
           String.format(
               "Minion [%s] is being told to exit because the build has finished.",

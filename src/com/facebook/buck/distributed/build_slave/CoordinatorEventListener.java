@@ -76,8 +76,11 @@ public class CoordinatorEventListener implements ThriftCoordinatorServer.EventLi
     BuildStatus status = BuildStatusUtil.exitCodeToBuildStatus(buildExitCode);
     String message =
         String.format(
-            "Coordinator [%s] exited with code=[%d] and status=[%s].",
-            HostnameFetching.getHostname(), buildExitCode, status.toString());
+            "Coordinator [%s] exited with code=[%d] message=[%s] and status=[%s].",
+            HostnameFetching.getHostname(),
+            buildExitCode,
+            exitState.getExitMessage(),
+            BuildStatusUtil.exitCodeToBuildStatus(buildExitCode).toString());
     service.setFinalBuildStatus(stampedeId, status, message);
   }
 }
