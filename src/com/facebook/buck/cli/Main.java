@@ -613,6 +613,7 @@ public final class Main {
     RuleKeyConfiguration ruleKeyConfiguration =
         ConfigRuleKeyConfigurationFactory.create(buckConfig);
 
+    String previousBuckCoreKey;
     try (Closer closeables = Closer.create()) {
       if (commandSemaphoreAcquired) {
         commandSemaphoreNgClient = context;
@@ -623,6 +624,9 @@ public final class Main {
             filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
         BuckPaths unconfiguredPaths =
             filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
+
+        previousBuckCoreKey = currentBuckCoreKey.orElse("<NOT_FOUND>");
+
         if (!currentBuckCoreKey.isPresent()
             || !currentBuckCoreKey.get().equals(ruleKeyConfiguration.getCoreKey())
             || (filesystem.exists(unconfiguredPaths.getGenDir(), LinkOption.NOFOLLOW_LINKS)
@@ -643,7 +647,11 @@ public final class Main {
           filesystem.writeContentsToPath(
               ruleKeyConfiguration.getCoreKey(), filesystem.getBuckPaths().getCurrentVersionFile());
         }
+      } else {
+        previousBuckCoreKey = "";
       }
+
+      LOG.verbose("Buck core key from the previous Buck instance: %s", previousBuckCoreKey);
 
       ToolchainProvider toolchainProvider =
           new DefaultToolchainProvider(clientEnvironment, buckConfig, filesystem);
