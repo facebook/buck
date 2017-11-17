@@ -77,7 +77,8 @@ public class JsBundleGenrule extends Genrule
         cmdExe,
         args.getType(),
         JsBundleOutputs.JS_DIR_NAME,
-        false);
+        false,
+        true);
     this.jsBundle = jsBundle;
     jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();

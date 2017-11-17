@@ -115,7 +115,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         cmdExe,
         args.getType(),
         args.getOut(),
-        args.getEnableSandbox().orElse(enableSandbox));
+        args.getEnableSandbox().orElse(enableSandbox),
+        true);
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {

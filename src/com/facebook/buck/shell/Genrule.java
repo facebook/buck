@@ -142,6 +142,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final String out;
   @AddToRuleKey private final String type;
   @AddToRuleKey private final boolean enableSandboxingInGenrule;
+  @AddToRuleKey private final boolean isCacheable;
 
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final BuildRuleResolver buildRuleResolver;
@@ -165,7 +166,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out,
-      boolean enableSandboxingInGenrule) {
+      boolean enableSandboxingInGenrule,
+      boolean isCacheable) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.buildRuleResolver = buildRuleResolver;
@@ -178,6 +180,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.out = out;
     this.pathToOutDirectory = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
+    this.isCacheable = isCacheable;
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
@@ -506,5 +509,10 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @VisibleForTesting
   public Optional<Arg> getCmd() {
     return cmd;
+  }
+
+  @Override
+  public final boolean isCacheable() {
+    return isCacheable;
   }
 }

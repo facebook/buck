@@ -91,6 +91,33 @@ public class GenruleTest {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
+  /**
+   * Quick class to create a self contained genrule (and the infra needed to get a rulekey), and to
+   * get the rulekey. This doesn't let multiple targets in the same cache/graph, it's solely to help
+   * generate standalone genrules
+   */
+  private class StandaloneGenruleBuilder {
+
+    private final BuildRuleResolver resolver;
+    private final DefaultRuleKeyFactory ruleKeyFactory;
+    final GenruleBuilder genruleBuilder;
+
+    StandaloneGenruleBuilder(String targetName) {
+      resolver =
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      ruleKeyFactory =
+          new TestDefaultRuleKeyFactory(new DummyFileHashCache(), pathResolver, ruleFinder);
+      genruleBuilder = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(targetName));
+    }
+
+    RuleKey getRuleKey() {
+      return ruleKeyFactory.build(genruleBuilder.build(resolver));
+    }
+  }
+
   @Test
   public void testCreateAndRunGenrule() throws IOException, NoSuchBuildTargetException {
     /*
@@ -681,30 +708,30 @@ public class GenruleTest {
 
   @Test
   public void thatChangingOutChangesRuleKey() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    DefaultRuleKeyFactory ruleKeyFactory =
-        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), pathResolver, ruleFinder);
+    StandaloneGenruleBuilder builder1 = new StandaloneGenruleBuilder("//:genrule1");
+    StandaloneGenruleBuilder builder2 = new StandaloneGenruleBuilder("//:genrule1");
 
-    // Get a rule key for two genrules using two different output names, but are otherwise the
-    // same.
+    builder1.genruleBuilder.setOut("foo");
+    RuleKey key1 = builder1.getRuleKey();
 
-    RuleKey key1 =
-        ruleKeyFactory.build(
-            GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule1"))
-                .setOut("foo")
-                .build(resolver));
-
-    RuleKey key2 =
-        ruleKeyFactory.build(
-            GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
-                .setOut("bar")
-                .build(resolver));
+    builder2.genruleBuilder.setOut("bar");
+    RuleKey key2 = builder2.getRuleKey();
 
     // Verify that just the difference in output name is enough to make the rule key different.
+    assertNotEquals(key1, key2);
+  }
+
+  @Test
+  public void thatChangingCacheabilityChangesRuleKey() {
+    StandaloneGenruleBuilder builder1 = new StandaloneGenruleBuilder("//:genrule1");
+    StandaloneGenruleBuilder builder2 = new StandaloneGenruleBuilder("//:genrule1");
+
+    builder1.genruleBuilder.setOut("foo").setCacheable(true);
+    RuleKey key1 = builder1.getRuleKey();
+
+    builder2.genruleBuilder.setOut("foo").setCacheable(false);
+    RuleKey key2 = builder2.getRuleKey();
+
     assertNotEquals(key1, key2);
   }
 
@@ -969,5 +996,61 @@ public class GenruleTest {
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
+  }
+
+  @Test
+  public void isCacheableIsRespected() {
+    BuildRuleResolver ruleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget buildTarget1 =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//katana:katana_manifest1");
+    BuildTarget buildTarget2 =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//katana:katana_manifest2");
+    BuildTarget buildTarget3 =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//katana:katana_manifest3");
+
+    Genrule genrule1 =
+        GenruleBuilder.newGenruleBuilder(buildTarget1)
+            .setBash("python convert_to_katana.py AndroidManifest.xml > $OUT")
+            .setOut("AndroidManifest.xml")
+            .setSrcs(
+                ImmutableList.of(
+                    PathSourcePath.of(
+                        filesystem, filesystem.getPath("katana/convert_to_katana.py")),
+                    PathSourcePath.of(
+                        filesystem, filesystem.getPath("katana/AndroidManifest.xml"))))
+            .setCacheable(null)
+            .build(ruleResolver, filesystem);
+
+    Genrule genrule2 =
+        GenruleBuilder.newGenruleBuilder(buildTarget2)
+            .setBash("python convert_to_katana.py AndroidManifest.xml > $OUT")
+            .setOut("AndroidManifest.xml")
+            .setSrcs(
+                ImmutableList.of(
+                    PathSourcePath.of(
+                        filesystem, filesystem.getPath("katana/convert_to_katana.py")),
+                    PathSourcePath.of(
+                        filesystem, filesystem.getPath("katana/AndroidManifest.xml"))))
+            .setCacheable(true)
+            .build(ruleResolver, filesystem);
+
+    Genrule genrule3 =
+        GenruleBuilder.newGenruleBuilder(buildTarget3)
+            .setBash("python convert_to_katana.py AndroidManifest.xml > $OUT")
+            .setOut("AndroidManifest.xml")
+            .setSrcs(
+                ImmutableList.of(
+                    PathSourcePath.of(
+                        filesystem, filesystem.getPath("katana/convert_to_katana.py")),
+                    PathSourcePath.of(
+                        filesystem, filesystem.getPath("katana/AndroidManifest.xml"))))
+            .setCacheable(false)
+            .build(ruleResolver, filesystem);
+
+    assertTrue(genrule1.isCacheable());
+    assertTrue(genrule2.isCacheable());
+    assertFalse(genrule3.isCacheable());
   }
 }

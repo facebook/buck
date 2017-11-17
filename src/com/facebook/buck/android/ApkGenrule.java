@@ -57,7 +57,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
 
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
-  private final boolean isCacheable;
 
   ApkGenrule(
       BuildTarget buildTarget,
@@ -87,14 +86,14 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
         cmdExe,
         type,
         /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk",
-        false);
+        false,
+        isCacheable);
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
     BuildRule rule = ruleFinder.getRule(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
-    this.isCacheable = isCacheable;
   }
 
   public HasInstallableApk getInstallableApk() {
@@ -107,11 +106,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
         .from(hasInstallableApk.getApkInfo())
         .setApkPath(getSourcePathToOutput())
         .build();
-  }
-
-  @Override
-  public boolean isCacheable() {
-    return isCacheable;
   }
 
   @Override

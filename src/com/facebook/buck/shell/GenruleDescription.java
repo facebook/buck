@@ -77,7 +77,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getType(),
           args.getOut(),
           sandboxConfig.isSandboxEnabledForCurrentPlatform()
-              && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()));
+              && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
+          args.getCacheable().orElse(true));
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -91,7 +92,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           bash,
           cmdExe,
           args.getType(),
-          args.getOut());
+          args.getOut(),
+          args.getCacheable().orElse(true));
     }
   }
 
@@ -99,5 +101,13 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
   @Value.Immutable
   interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     Optional<Boolean> getExecutable();
+
+    /**
+     * This functionality only exists to get around the lack of extensibility in our current build
+     * rule / build file apis. It may go away at some point. Also, make sure that you understand
+     * what {@link BuildRule.isCacheable} does with respect to caching if you decide to use this
+     * attribute
+     */
+    Optional<Boolean> getCacheable();
   }
 }
