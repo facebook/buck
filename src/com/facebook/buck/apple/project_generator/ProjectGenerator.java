@@ -962,6 +962,12 @@ public class ProjectGenerator {
     return String.format("%s[sdk=%s*][arch=%s]", key, sdk, arch);
   }
 
+  private Optional<String> getSwiftVersionForTargetNode(TargetNode<?, ?> targetNode) {
+    Optional<TargetNode<SwiftCommonArg, ?>> targetNodeWithSwiftArgs =
+        targetNode.castArg(SwiftCommonArg.class);
+    return targetNodeWithSwiftArgs.flatMap(t -> t.getConstructorArg().getSwiftVersion());
+  }
+
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields, ?>> bundle,
@@ -997,10 +1003,7 @@ public class ProjectGenerator {
         targetNode.getConstructorArg().getLangPreprocessorFlags();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
 
-    Optional<String> swiftVersion =
-        (arg instanceof SwiftCommonArg)
-            ? ((SwiftCommonArg) arg).getSwiftVersion()
-            : Optional.empty();
+    Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
     final boolean hasSwiftVersionArg = swiftVersion.isPresent();
     if (!swiftVersion.isPresent()) {
       swiftVersion = swiftBuckConfig.getVersion();
