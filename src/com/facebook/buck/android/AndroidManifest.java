@@ -20,14 +20,15 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -35,6 +36,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 
 /**
  * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
@@ -63,7 +66,7 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class AndroidManifest extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class AndroidManifest extends AbstractBuildRule {
 
   @AddToRuleKey private final SourcePath skeletonFile;
 
@@ -71,18 +74,25 @@ public class AndroidManifest extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
 
   private final Path pathToOutputFile;
+  private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   protected AndroidManifest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder finder,
       SourcePath skeletonFile,
       Set<SourcePath> manifestFiles) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     this.pathToOutputFile =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "AndroidManifest__%s__.xml");
+    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, finder);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   @Override
