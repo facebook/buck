@@ -211,6 +211,19 @@
 {/template}
 
 /***/
+{template .linker_extra_outputs_arg}
+{call buck.arg}
+  {param name : 'linker_extra_outputs' /}
+  {param default : '[]' /}
+  {param desc}
+  Declares extra outputs that the linker emits. These identifiers can be used in
+  {sp}<code>$(output ...)</code> macros in <code>linker_flags</code> to interpolate the output path
+  into the linker command line. Useful for custom linkers that emit extra output files.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .linker_flags_arg}
 {call buck.arg}
   {param name : 'linker_flags' /}
