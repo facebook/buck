@@ -69,7 +69,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             eventListener,
             logDirectoryPath,
             new NoOpBuildRuleFinishedPublisher(),
-            MOCK_SERVICE);
+            MOCK_SERVICE,
+            EasyMock.createNiceMock(MinionHealthTracker.class));
     FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(

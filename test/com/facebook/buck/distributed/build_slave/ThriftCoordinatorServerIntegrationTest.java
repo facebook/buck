@@ -137,7 +137,12 @@ public class ThriftCoordinatorServerIntegrationTest {
     SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
     future.set(queue);
     return new ThriftCoordinatorServer(
-        port, future, STAMPEDE_ID, eventListener, new NoOpBuildRuleFinishedPublisher());
+        port,
+        future,
+        STAMPEDE_ID,
+        eventListener,
+        new NoOpBuildRuleFinishedPublisher(),
+        EasyMock.createNiceMock(MinionHealthTracker.class));
   }
 
   @Test

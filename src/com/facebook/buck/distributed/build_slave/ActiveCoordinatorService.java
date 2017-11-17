@@ -38,16 +38,19 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   private final CompletableFuture<Integer> exitCodeFuture;
   private final DistBuildTraceTracker chromeTraceTracker;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final MinionHealthTracker minionHealthTracker;
 
   public ActiveCoordinatorService(
       MinionWorkloadAllocator allocator,
       CompletableFuture<Integer> exitCodeFuture,
       DistBuildTraceTracker chromeTraceTracker,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      MinionHealthTracker minionHealthTracker) {
     this.allocator = allocator;
     this.exitCodeFuture = exitCodeFuture;
     this.chromeTraceTracker = chromeTraceTracker;
     this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
+    this.minionHealthTracker = minionHealthTracker;
   }
 
   @Override
@@ -94,6 +97,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
           String.format(
               "Minion [%s] is being told to exit because the build has finished.",
               request.minionId));
+      minionHealthTracker.stopTrackingForever(request.minionId);
       response.setContinueBuilding(false);
     } else {
       response.setWorkUnits(newWorkUnitsForMinion);
@@ -105,7 +109,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   @Override
   public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
       throws TException {
-    // TODO(ruibm): Add logic tracking to diagnose dead Minions that are executing work.
+    minionHealthTracker.reportMinionAlive(request.minionId);
     return new ReportMinionAliveResponse();
   }
 }

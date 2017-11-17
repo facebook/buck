@@ -18,10 +18,12 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.HeartbeatService.HeartbeatCallback;
+import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.EventListener;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
@@ -43,21 +45,20 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   private final ThriftCoordinatorServer.EventListener eventListener;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
   private final DistBuildService distBuildService;
+  private final MinionHealthTracker minionHealthTracker;
 
-  /**
-   * Constructor
-   *
-   * @param coordinatorPort - Passing in an empty optional will pick up a random free port.
-   */
+  /** Constructor. */
   public CoordinatorModeRunner(
       OptionalInt coordinatorPort,
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
-      ThriftCoordinatorServer.EventListener eventListener,
+      EventListener eventListener,
       Path logDirectoryPath,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
-      DistBuildService distBuildService) {
+      DistBuildService distBuildService,
+      MinionHealthTracker minionHealthTracker) {
     this.stampedeId = stampedeId;
+    this.minionHealthTracker = minionHealthTracker;
     coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
     this.logDirectoryPath = logDirectoryPath;
     this.queue = queue;
@@ -70,10 +71,11 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   public CoordinatorModeRunner(
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
-      ThriftCoordinatorServer.EventListener eventListener,
+      EventListener eventListener,
       Path logDirectoryPath,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
-      DistBuildService distBuildService) {
+      DistBuildService distBuildService,
+      MinionHealthTracker minionHealthTracker) {
     this(
         OptionalInt.empty(),
         queue,
@@ -81,7 +83,8 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
         eventListener,
         logDirectoryPath,
         buildRuleFinishedPublisher,
-        distBuildService);
+        distBuildService,
+        minionHealthTracker);
   }
 
   @Override
@@ -127,16 +130,26 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
   public class AsyncCoordinatorRun implements Closeable {
 
-    private final Closeable healthCheck;
+    private final Closer closer;
     private final ThriftCoordinatorServer server;
 
     private AsyncCoordinatorRun(HeartbeatService service, ListenableFuture<BuildTargetsQueue> queue)
         throws IOException {
+      this.closer = Closer.create();
       this.server =
-          new ThriftCoordinatorServer(
-              coordinatorPort, queue, stampedeId, eventListener, buildRuleFinishedPublisher);
+          closer.register(
+              new ThriftCoordinatorServer(
+                  coordinatorPort,
+                  queue,
+                  stampedeId,
+                  eventListener,
+                  buildRuleFinishedPublisher,
+                  minionHealthTracker));
       this.server.start();
-      this.healthCheck = service.addCallback("ReportCoordinatorAlive", createHeartbeatCallback());
+      this.closer.register(
+          service.addCallback("ReportCoordinatorAlive", createHeartbeatCallback()));
+      this.closer.register(
+          service.addCallback("MinionLivenessCheck", () -> server.checkAllMinionsAreAlive()));
     }
 
     public int getExitCode() {
@@ -149,8 +162,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
     @Override
     public void close() throws IOException {
-      this.healthCheck.close();
-      this.server.close();
+      closer.close();
 
       try {
         this.server

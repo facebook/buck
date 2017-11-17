@@ -24,12 +24,14 @@ import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.List;
 import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -56,6 +58,7 @@ public class ThriftCoordinatorServer implements Closeable {
   public static final int GET_WORK_FAILED_EXIT_CODE = 43;
   public static final int TEXCEPTION_EXIT_CODE = 44;
   public static final int I_AM_ALIVE_FAILED_EXIT_CODE = 45;
+  public static final int DEAD_MINION_FOUND_EXIT_CODE = 46;
 
   private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
 
@@ -69,6 +72,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final MinionHealthTracker minionHealthTracker;
 
   private volatile OptionalInt port;
 
@@ -82,10 +86,12 @@ public class ThriftCoordinatorServer implements Closeable {
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       EventListener eventListener,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      MinionHealthTracker minionHealthTracker) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
+    this.minionHealthTracker = minionHealthTracker;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
     this.chromeTraceTracker = new DistBuildTraceTracker(stampedeId);
@@ -116,6 +122,18 @@ public class ThriftCoordinatorServer implements Closeable {
 
     eventListener.onThriftServerStarted(InetAddress.getLocalHost().getHostName(), port.getAsInt());
     return this;
+  }
+
+  /** Checks if all minions are alive. Fails the distributed build if they are not. */
+  public void checkAllMinionsAreAlive() {
+    List<String> deadMinions = minionHealthTracker.getDeadMinions();
+    if (!deadMinions.isEmpty()) {
+      String msg =
+          String.format(
+              "Failing the build due to dead minions: [%s].", Joiner.on(", ").join(deadMinions));
+      LOG.error(msg);
+      exitCodeFuture.complete(DEAD_MINION_FOUND_EXIT_CODE);
+    }
   }
 
   private ThriftCoordinatorServer stop() throws IOException {
@@ -176,7 +194,11 @@ public class ThriftCoordinatorServer implements Closeable {
       MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
       this.handler =
           new ActiveCoordinatorService(
-              allocator, exitCodeFuture, chromeTraceTracker, buildRuleFinishedPublisher);
+              allocator,
+              exitCodeFuture,
+              chromeTraceTracker,
+              buildRuleFinishedPublisher,
+              minionHealthTracker);
     } catch (InterruptedException | ExecutionException e) {
       String msg = "Failed to create the BuildTargetsQueue.";
       LOG.error(msg);

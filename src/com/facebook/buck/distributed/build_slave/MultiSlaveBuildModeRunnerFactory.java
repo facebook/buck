@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.timing.DefaultClock;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -74,13 +75,16 @@ public class MultiSlaveBuildModeRunnerFactory {
     ThriftCoordinatorServer.EventListener listener =
         new CoordinatorEventListener(
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
+    MinionHealthTracker minionHealthTracker =
+        new MinionHealthTracker(new DefaultClock(), distBuildConfig.getMaxMinionSilenceMillis());
     return new CoordinatorModeRunner(
         queue,
         stampedeId,
         listener,
         logDirectoryPath,
         buildRuleFinishedPublisher,
-        distBuildService);
+        distBuildService,
+        minionHealthTracker);
   }
 
   /**
