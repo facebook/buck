@@ -29,6 +29,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +64,9 @@ public class MultiSlaveBuildModeRunnerFactory {
       BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
     ListenableFuture<BuildTargetsQueue> queue =
         Futures.transform(
-            actionGraphAndResolverFuture, x -> createBuildQueue(x, topLevelTargetsToBuild));
+            actionGraphAndResolverFuture,
+            x -> createBuildQueue(x, topLevelTargetsToBuild),
+            MoreExecutors.directExecutor());
     Optional<String> minionQueue = distBuildConfig.getMinionQueue();
     Preconditions.checkArgument(
         minionQueue.isPresent(),

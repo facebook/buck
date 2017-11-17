@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,10 +65,12 @@ import java.util.stream.Collectors;
 
 /** The build phase. */
 public class BuildPhase {
+
   private static final int CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
 
   /** The result from a build. */
   public class BuildResult {
+
     private final BuildJob finalBuildJob;
     private final List<BuildSlaveStatus> buildSlaveStatusList;
 
@@ -86,6 +89,7 @@ public class BuildPhase {
   }
 
   private class TimestampedEvent<E> {
+
     private long eventTimestampMillis;
     private E event;
 
@@ -359,7 +363,8 @@ public class BuildPhase {
                 }
               }
               return null;
-            });
+            },
+            MoreExecutors.directExecutor());
 
     return postEventsFuture;
   }
@@ -488,6 +493,7 @@ public class BuildPhase {
                 .stream()
                 .filter(Optional::isPresent)
                 .map(x -> x.get())
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList()),
+        MoreExecutors.directExecutor());
   }
 }

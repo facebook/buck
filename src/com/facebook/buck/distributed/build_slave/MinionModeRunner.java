@@ -285,7 +285,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
             LOG.error(t, String.format("Cache upload failed for target %s", fullyQualifiedName));
             exitCode.set(1); // Fail the Stampede build, and ensure it doesn't deadlock.
           }
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   private void completionCheckingThriftCall(ThriftCall thriftCall) throws IOException {

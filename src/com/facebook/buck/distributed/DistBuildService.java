@@ -83,6 +83,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -537,7 +538,9 @@ public class DistBuildService implements Closeable {
 
     ListenableFuture<Void> resultFuture =
         Futures.transform(
-            Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)), input -> null);
+            Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)),
+            input -> null,
+            MoreExecutors.directExecutor());
 
     resultFuture.addListener(
         () -> distBuildClientStats.stopTimer(UPLOAD_BUCK_DOT_FILES), executorService);

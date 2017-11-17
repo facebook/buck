@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -128,7 +129,8 @@ public class PublicAnnouncementManager {
           public void onFailure(Throwable t) {
             LOG.warn("Failed to get public announcements. Reason: %s", t.getMessage());
           }
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   private String getBuckVersion() {
