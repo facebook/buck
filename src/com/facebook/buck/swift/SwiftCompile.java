@@ -337,7 +337,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return args.build();
   }
 
-  ImmutableList<Arg> getAstLinkArgs() {
+  public ImmutableList<Arg> getAstLinkArgs() {
     return ImmutableList.<Arg>builder()
         .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
         .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))

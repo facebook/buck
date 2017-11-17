@@ -63,6 +63,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -953,6 +954,20 @@ public class AppleLibraryDescription
     }
 
     return Optional.empty();
+  }
+
+  @Override
+  public ImmutableList<Arg> getAdditionalExportedLinkerFlags(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform cxxPlatform) {
+    if (!targetContainsSwift(target, resolver)) {
+      return ImmutableList.of();
+    }
+
+    BuildTarget swiftTarget =
+        AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, cxxPlatform);
+    SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftTarget);
+
+    return compile.getAstLinkArgs();
   }
 
   @Override

@@ -959,6 +959,11 @@ public class CxxLibraryDescription
         args.getExportedCxxDeps(),
         hasObjects.negate(),
         input -> {
+          ImmutableList<Arg> delegateExportedLinkerFlags =
+              delegate
+                  .map(d -> d.getAdditionalExportedLinkerFlags(buildTarget, resolver, input))
+                  .orElse(ImmutableList.of());
+
           ImmutableList<StringWithMacros> flags =
               CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                   args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input);
@@ -967,6 +972,7 @@ public class CxxLibraryDescription
                   f ->
                       CxxDescriptionEnhancer.toStringWithMacrosArgs(
                           buildTarget, cellRoots, resolver, input, f))
+              .concat(RichStream.from(delegateExportedLinkerFlags))
               .toImmutableList();
         },
         cxxPlatform -> {
