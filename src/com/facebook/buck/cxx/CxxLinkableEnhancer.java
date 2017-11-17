@@ -77,9 +77,8 @@ public class CxxLinkableEnhancer {
       BuildTarget target,
       Path output,
       ImmutableList<Arg> args,
-      Linker.LinkableDepType depType,
+      Linker.LinkableDepType runtimeDepType,
       CxxLinkOptions linkOptions,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<LinkOutputPostprocessor> postprocessor) {
 
     final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
@@ -110,10 +109,6 @@ public class CxxLinkableEnhancer {
     argsBuilder.addAll(args);
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    Linker.LinkableDepType runtimeDepType = depType;
-    if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
-      runtimeDepType = Linker.LinkableDepType.STATIC;
-    }
     argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
     final ImmutableList<Arg> allArgs = argsBuilder.build();
@@ -242,6 +237,11 @@ public class CxxLinkableEnhancer {
           argsBuilder);
     }
 
+    Linker.LinkableDepType runtimeDepType = depType;
+    if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
+      runtimeDepType = Linker.LinkableDepType.STATIC;
+    }
+
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 
     return createCxxLinkableBuildRule(
@@ -253,9 +253,8 @@ public class CxxLinkableEnhancer {
         target,
         output,
         allArgs,
-        depType,
+        runtimeDepType,
         linkOptions,
-        cxxRuntimeType,
         postprocessor);
   }
 
@@ -393,7 +392,6 @@ public class CxxLinkableEnhancer {
         linkArgs,
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
-        Optional.empty(),
         Optional.empty());
   }
 }

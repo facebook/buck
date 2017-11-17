@@ -389,7 +389,6 @@ public class Omnibus {
                   argsBuilder.build(),
                   Linker.LinkableDepType.SHARED,
                   CxxLinkOptions.of(),
-                  Optional.empty(),
                   Optional.empty());
           break;
         }
