@@ -312,6 +312,7 @@ public class CxxPythonExtensionDescription
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
+        args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),

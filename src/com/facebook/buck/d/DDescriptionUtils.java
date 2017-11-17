@@ -144,6 +144,7 @@ abstract class DDescriptionUtils {
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
+        ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
         CxxLinkOptions.of(),
         FluentIterable.from(params.getBuildDeps()).filter(NativeLinkable.class),

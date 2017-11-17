@@ -460,6 +460,7 @@ public class CxxPrecompiledHeaderRuleTest {
             Linker.LinkType.EXECUTABLE,
             Optional.empty(), // soname
             Paths.get("/tmp/bin.prog"),
+            ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
             nativeLinkableDeps,

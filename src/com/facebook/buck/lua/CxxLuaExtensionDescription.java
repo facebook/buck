@@ -240,6 +240,7 @@ public class CxxLuaExtensionDescription
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
+        args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
         RichStream.from(args.getCxxDeps().get(ruleResolver, cxxPlatform))

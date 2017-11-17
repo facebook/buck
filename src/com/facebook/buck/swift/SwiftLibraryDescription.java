@@ -232,7 +232,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                   input -> {
                     BuildTarget companionTarget =
                         input.getBuildTarget().withAppendedFlavors(SWIFT_COMPANION_FLAVOR);
-                    // Note, this is liable to race conditions. The presence or absence of the companion
+                    // Note, this is liable to race conditions. The presence or absence of the
+                    // companion
                     // rule should be determined by metadata query, not by assumptions.
                     return RichStream.from(
                         resolver
@@ -274,7 +275,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                       .addAll(swiftCompileRules)
                       .addAll(implicitSwiftCompileRules)
                       .addAll(cxxDeps.getDeps(ruleFinder))
-                      // This is only used for generating include args and may not be actually needed.
+                      // This is only used for generating include args and may not be actually
+                      // needed.
                       .addAll(preprocessor.getDeps(ruleFinder))
                       .build()),
           swiftPlatform.get().getSwiftc(),
@@ -358,6 +360,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             Linker.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),
             sharedLibOutput,
+            ImmutableList.of(),
             Linker.LinkableDepType.SHARED,
             CxxLinkOptions.of(),
             RichStream.from(params.getBuildDeps())

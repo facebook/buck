@@ -46,9 +46,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Objects;
@@ -76,6 +78,7 @@ public class CxxLinkableEnhancer {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
+      ImmutableMap<String, Path> extraOutputs,
       ImmutableList<Arg> args,
       Linker.LinkableDepType runtimeDepType,
       CxxLinkOptions linkOptions,
@@ -129,6 +132,7 @@ public class CxxLinkableEnhancer {
         declaredDeps,
         linker,
         output,
+        extraOutputs,
         allArgs,
         postprocessor,
         cxxBuckConfig.getLinkScheduleInfo(),
@@ -154,6 +158,7 @@ public class CxxLinkableEnhancer {
       Linker.LinkType linkType,
       Optional<String> soname,
       Path output,
+      ImmutableList<String> extraOutputNames,
       Linker.LinkableDepType depType,
       CxxLinkOptions linkOptions,
       Iterable<? extends NativeLinkable> nativeLinkableDeps,
@@ -252,6 +257,7 @@ public class CxxLinkableEnhancer {
         ruleFinder,
         target,
         output,
+        deriveSupplementaryOutputPathsFromMainOutputPath(output, extraOutputNames),
         allArgs,
         runtimeDepType,
         linkOptions,
@@ -371,6 +377,7 @@ public class CxxLinkableEnhancer {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
+      ImmutableMap<String, Path> extraOutputs,
       Optional<String> soname,
       ImmutableList<? extends Arg> args) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
@@ -389,9 +396,26 @@ public class CxxLinkableEnhancer {
         ruleFinder,
         target,
         output,
+        extraOutputs,
         linkArgs,
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
         Optional.empty());
+  }
+
+  /**
+   * Derive supplementary output paths based on the main output path.
+   *
+   * @param output main output path.
+   * @param supplementaryOutputNames supplementary output names.
+   * @return Map of names to supplementary output paths.
+   */
+  public static ImmutableMap<String, Path> deriveSupplementaryOutputPathsFromMainOutputPath(
+      Path output, Iterable<String> supplementaryOutputNames) {
+    return Streams.stream(supplementaryOutputNames)
+        .collect(
+            MoreCollectors.toImmutableMap(
+                name -> name,
+                name -> output.getParent().resolve(output.getFileName().toString() + "-" + name)));
   }
 }

@@ -280,6 +280,7 @@ public class HaskellGhciDescription
                 ruleTarget,
                 BuildTargets.getGenPath(projectFilesystem, ruleTarget, "%s")
                     .resolve("libghci_dependencies.so"),
+                ImmutableMap.of(),
                 Optional.of("libghci_dependencies.so"),
                 getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, body, deps).getArgs()));
   }

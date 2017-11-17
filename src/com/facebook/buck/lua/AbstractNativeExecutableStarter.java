@@ -258,6 +258,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                     Linker.LinkType.EXECUTABLE,
                     Optional.empty(),
                     getOutput(),
+                    ImmutableList.of(),
                     Linker.LinkableDepType.SHARED,
                     CxxLinkOptions.of(),
                     getNativeStarterDeps(),

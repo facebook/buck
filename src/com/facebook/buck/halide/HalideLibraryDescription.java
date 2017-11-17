@@ -177,6 +177,7 @@ public class HalideLibraryDescription
             Optional.empty(),
             Optional.empty(),
             linkerFlags,
+            ImmutableList.of(),
             platformLinkerFlags,
             Optional.empty(),
             includeDirs,

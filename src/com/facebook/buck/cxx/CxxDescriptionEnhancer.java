@@ -59,8 +59,11 @@ import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -789,6 +792,7 @@ public class CxxDescriptionEnhancer {
         args.getPrefixHeader(),
         args.getPrecompiledHeader(),
         args.getLinkerFlags(),
+        args.getLinkerExtraOutputs(),
         args.getPlatformLinkerFlags(),
         args.getCxxRuntimeType(),
         args.getIncludeDirs(),
@@ -821,6 +825,7 @@ public class CxxDescriptionEnhancer {
       Optional<SourcePath> prefixHeader,
       Optional<SourcePath> precompiledHeader,
       ImmutableList<StringWithMacros> linkerFlags,
+      ImmutableList<String> linkerExtraOutputs,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableList<String> includeDirs,
@@ -839,6 +844,7 @@ public class CxxDescriptionEnhancer {
                 : target,
             projectFilesystem,
             cxxPlatform.getBinaryExtension());
+
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -917,12 +923,24 @@ public class CxxDescriptionEnhancer {
                 sandboxTree)
             .requirePreprocessAndCompileRules(srcs);
 
+    BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
+
     // Build up the linker flags, which support macro expansion.
-    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-            linkerFlags, platformLinkerFlags, cxxPlatform)
-        .stream()
-        .map(f -> toStringWithMacrosArgs(target, cellRoots, resolver, cxxPlatform, f))
-        .forEach(argsBuilder::add);
+    {
+      Optional<Function<String, String>> sanitizer =
+          Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform));
+      ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>> expanders =
+          ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
+
+      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+              linkerFlags, platformLinkerFlags, cxxPlatform)
+          .stream()
+          .map(
+              f ->
+                  StringWithMacrosArg.of(
+                      f, expanders, sanitizer, linkRuleTarget, cellRoots, resolver))
+          .forEach(argsBuilder::add);
+    }
 
     Linker linker = cxxPlatform.getLd().resolve(resolver);
 
@@ -963,8 +981,6 @@ public class CxxDescriptionEnhancer {
             .collect(MoreCollectors.toImmutableList());
     argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
 
-    BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
-
     CxxLink cxxLink =
         (CxxLink)
             resolver.computeIfAbsent(
@@ -983,6 +999,7 @@ public class CxxDescriptionEnhancer {
                         Linker.LinkType.EXECUTABLE,
                         Optional.empty(),
                         linkOutput,
+                        linkerExtraOutputs,
                         linkStyle,
                         linkOptions,
                         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
@@ -1338,12 +1355,15 @@ public class CxxDescriptionEnhancer {
       StringWithMacros flag) {
     return StringWithMacrosArg.of(
         flag,
-        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform)),
-        Optional.of(
-            s -> cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()).apply(s)),
+        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander()),
+        Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform)),
         target,
         cellPathResolver,
         resolver);
+  }
+
+  private static Function<String, String> getStringWithMacrosArgSanitizer(CxxPlatform platform) {
+    return platform.getCompilerDebugPathSanitizer().sanitize(Optional.empty());
   }
 
   public static String normalizeModuleName(String moduleName) {

@@ -848,6 +848,7 @@ public class AppleCxxPlatformsTest {
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),
               projectFilesystem.getPath("output"),
+              ImmutableList.of(),
               Linker.LinkableDepType.SHARED,
               CxxLinkOptions.of(),
               ImmutableList.of(),

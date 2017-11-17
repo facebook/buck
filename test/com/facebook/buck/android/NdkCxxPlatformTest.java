@@ -186,6 +186,7 @@ public class NdkCxxPlatformTest {
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),
               Paths.get("output"),
+              ImmutableList.of(),
               Linker.LinkableDepType.SHARED,
               CxxLinkOptions.of(),
               ImmutableList.of(),

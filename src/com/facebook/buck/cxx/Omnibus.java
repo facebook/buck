@@ -256,6 +256,7 @@ public class Omnibus {
                 dummyOmnibusTarget,
                 BuildTargets.getGenPath(projectFilesystem, dummyOmnibusTarget, "%s")
                     .resolve(omnibusSoname),
+                ImmutableMap.of(),
                 Optional.of(omnibusSoname),
                 extraLdflags));
     return rule.getSourcePathToOutput();
@@ -367,6 +368,7 @@ public class Omnibus {
                                       "%s.%s",
                                       rootTarget.getShortName(),
                                       cxxPlatform.getSharedLibraryExtension())))),
+                  ImmutableMap.of(),
                   rootSoname,
                   argsBuilder.build());
           break;
@@ -386,6 +388,7 @@ public class Omnibus {
                   output.orElse(
                       BuildTargets.getGenPath(projectFilesystem, rootTarget, "%s")
                           .resolve(rootTarget.getShortName())),
+                  ImmutableMap.of(),
                   argsBuilder.build(),
                   Linker.LinkableDepType.SHARED,
                   CxxLinkOptions.of(),
@@ -583,6 +586,7 @@ public class Omnibus {
                 omnibusTarget,
                 BuildTargets.getGenPath(projectFilesystem, omnibusTarget, "%s")
                     .resolve(omnibusSoname),
+                ImmutableMap.of(),
                 Optional.of(omnibusSoname),
                 argsBuilder.build()));
 

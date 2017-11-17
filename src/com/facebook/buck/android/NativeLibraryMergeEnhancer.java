@@ -893,6 +893,7 @@ class NativeLibraryMergeEnhancer {
                       Optional.of(soname),
                       BuildTargets.getGenPath(
                           projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
+                      ImmutableList.of(),
                       // Android Binaries will use share deps by default.
                       Linker.LinkableDepType.SHARED,
                       CxxLinkOptions.of(),

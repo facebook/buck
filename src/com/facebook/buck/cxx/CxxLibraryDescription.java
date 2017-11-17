@@ -476,9 +476,6 @@ public class CxxLibraryDescription
     Path sharedLibraryPath =
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, sharedTarget, sharedLibrarySoname);
-    ImmutableList.Builder<StringWithMacros> extraLdFlagsBuilder = ImmutableList.builder();
-    extraLdFlagsBuilder.addAll(linkerFlags);
-    ImmutableList<StringWithMacros> extraLdFlags = extraLdFlagsBuilder.build();
 
     ImmutableList<NativeLinkable> delegateNativeLinkables =
         delegate
@@ -506,6 +503,7 @@ public class CxxLibraryDescription
         linkType,
         Optional.of(sharedLibrarySoname),
         sharedLibraryPath,
+        args.getLinkerExtraOutputs(),
         linkableDepType,
         linkOptions,
         allNativeLinkables,
@@ -515,15 +513,11 @@ public class CxxLibraryDescription
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(
-                RichStream.from(extraLdFlags)
+                RichStream.from(linkerFlags)
                     .map(
                         f ->
                             CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                                buildTargetMaybeWithLinkerMapMode,
-                                cellRoots,
-                                ruleResolver,
-                                cxxPlatform,
-                                f))
+                                sharedTarget, cellRoots, ruleResolver, cxxPlatform, f))
                     .toImmutableList())
             .addAllArgs(SourcePathArg.from(objects))
             .setFrameworks(frameworks)

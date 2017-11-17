@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -40,13 +41,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule,
         NativeTestable,
         HasRuntimeDeps,
         HasAppleDebugSymbolDeps,
-        SupportsInputBasedRuleKey {
+        SupportsInputBasedRuleKey,
+        HasSupplementaryOutputs {
 
   private final BuildRuleResolver ruleResolver;
   private final CxxPlatform cxxPlatform;
@@ -161,5 +164,18 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public CxxPlatform getCxxPlatform() {
     return cxxPlatform;
+  }
+
+  @Nullable
+  @Override
+  public SourcePath getSourcePathToSupplementaryOutput(String name) {
+    if (linkRule instanceof HasSupplementaryOutputs) {
+      SourcePath path =
+          ((HasSupplementaryOutputs) linkRule).getSourcePathToSupplementaryOutput(name);
+      if (path != null) {
+        return ForwardingBuildTargetSourcePath.of(getBuildTarget(), path);
+      }
+    }
+    return null;
   }
 }

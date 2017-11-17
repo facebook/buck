@@ -19,8 +19,10 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -45,11 +47,11 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -739,7 +741,7 @@ public class AppleBinaryIntegrationTest {
 
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
     String stdout = hasSymbol.getStdout().orElse("");
-    assertThat(stdout, Matchers.not(containsString("t -[AppDelegate window]")));
+    assertThat(stdout, not(containsString("t -[AppDelegate window]")));
     assertThat(stdout, containsString("U _UIApplicationMain"));
   }
 
@@ -1006,7 +1008,7 @@ public class AppleBinaryIntegrationTest {
 
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
     String stdout = hasSymbol.getStdout().orElse("");
-    assertThat(stdout, Matchers.not(containsString("t -[AppDelegate window]")));
+    assertThat(stdout, not(containsString("t -[AppDelegate window]")));
     assertThat(stdout, containsString("U _UIApplicationMain"));
   }
 
@@ -1170,6 +1172,24 @@ public class AppleBinaryIntegrationTest {
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
+  }
+
+  @Test
+  public void linkerExtraOutputsWork() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "linker_extra_outputs_work", tmp);
+    workspace.setUp();
+    Path result = workspace.buildAndReturnOutput(":map-extractor");
+    String contents;
+
+    contents = new String(Files.readAllBytes(result.resolve("bin")), StandardCharsets.UTF_8);
+    assertThat(contents, not(emptyString()));
+
+    contents = new String(Files.readAllBytes(result.resolve("shared_lib")), StandardCharsets.UTF_8);
+    assertThat(contents, not(emptyString()));
   }
 
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
