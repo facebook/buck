@@ -28,6 +28,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -35,6 +36,8 @@ import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransportException;
 
+/** This class is ThreadSafe. No more than one RPC request is allowed at a time. */
+@ThreadSafe
 public class ThriftCoordinatorClient implements Closeable {
 
   private static final Logger LOG = Logger.get(ThriftCoordinatorClient.class);
@@ -42,6 +45,8 @@ public class ThriftCoordinatorClient implements Closeable {
   private final String remoteHost;
   private final StampedeId stampedeId;
 
+  // NOTE(ruibm): Thrift Transport/Client is not thread safe so we can not interleave requests.
+  //              All RPC calls from the client need to be synchronised.
   @Nullable private TFramedTransport transport;
   @Nullable private CoordinatorService.Client client;
 
@@ -51,7 +56,7 @@ public class ThriftCoordinatorClient implements Closeable {
   }
 
   /** Starts the thrift client. */
-  public ThriftCoordinatorClient start(int remotePort) throws ThriftException {
+  public synchronized ThriftCoordinatorClient start(int remotePort) throws ThriftException {
     transport = new TFramedTransport(new TSocket(remoteHost, remotePort));
 
     try {
@@ -65,7 +70,8 @@ public class ThriftCoordinatorClient implements Closeable {
     return this;
   }
 
-  public ThriftCoordinatorClient stop() {
+  /** Orderly stops the thrift client. */
+  public synchronized ThriftCoordinatorClient stop() {
     Preconditions.checkNotNull(transport, "The client has already been stopped.");
     transport.close();
     transport = null;
@@ -99,7 +105,7 @@ public class ThriftCoordinatorClient implements Closeable {
   }
 
   /** Reports back to the Coordinator that the current Minion is alive and healthy. */
-  public void reportMinionAlive(String minionId) throws ThriftException {
+  public synchronized void reportMinionAlive(String minionId) throws ThriftException {
     ReportMinionAliveRequest request =
         new ReportMinionAliveRequest().setMinionId(minionId).setStampedeId(stampedeId);
     try {
@@ -115,7 +121,7 @@ public class ThriftCoordinatorClient implements Closeable {
   }
 
   @Override
-  public void close() throws ThriftException {
+  public synchronized void close() throws ThriftException {
     if (client != null) {
       stop();
     }
