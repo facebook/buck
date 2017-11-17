@@ -50,11 +50,9 @@ public final class BuildableSupport {
    * BuildableSupport.deriveDeps().
    */
   public static Supplier<SortedSet<BuildRule>> buildDepsSupplier(
-      BuildRule mergeThirdPartyJarResources, SourcePathRuleFinder ruleFinder) {
+      BuildRule rule, SourcePathRuleFinder ruleFinder) {
     return MoreSuppliers.memoize(
-        () ->
-            deriveDeps(mergeThirdPartyJarResources, ruleFinder)
-                .collect(MoreCollectors.toImmutableSortedSet()));
+        () -> deriveDeps(rule, ruleFinder).collect(MoreCollectors.toImmutableSortedSet()));
   }
 
   private static class Builder extends AbstractRuleKeyBuilder<Stream<BuildRule>> {
