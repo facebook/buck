@@ -19,12 +19,15 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
+import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
+import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.apache.thrift.TException;
 
 /** Handles Coordinator requests while the build is actively running. */
 public class ActiveCoordinatorService implements CoordinatorService.Iface {
@@ -97,5 +100,12 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     }
 
     return response;
+  }
+
+  @Override
+  public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
+      throws TException {
+    // TODO(ruibm): Add logic tracking to diagnose dead Minions that are executing work.
+    return new ReportMinionAliveResponse();
   }
 }

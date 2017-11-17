@@ -19,6 +19,8 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
+import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
+import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
@@ -53,6 +55,7 @@ public class ThriftCoordinatorServer implements Closeable {
   public static final int UNEXPECTED_STOP_EXIT_CODE = 42;
   public static final int GET_WORK_FAILED_EXIT_CODE = 43;
   public static final int TEXCEPTION_EXIT_CODE = 44;
+  public static final int I_AM_ALIVE_FAILED_EXIT_CODE = 45;
 
   private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
 
@@ -184,20 +187,32 @@ public class ThriftCoordinatorServer implements Closeable {
   private class CoordinatorServiceHandler implements CoordinatorService.Iface {
 
     @Override
-    public GetWorkResponse getWork(GetWorkRequest request) {
+    public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
+        throws TException {
+      try {
+        checkBuildId(request.getStampedeId());
+        Preconditions.checkArgument(request.isSetMinionId());
+        return handler.reportMinionAlive(request);
+      } catch (Throwable e) {
+        LOG.error(
+            "reportIAmAlive() failed: internal state may be corrupted, so exiting coordinator.", e);
+        exitCodeFuture.complete(I_AM_ALIVE_FAILED_EXIT_CODE);
+        throw e;
+      }
+    }
+
+    @Override
+    public GetWorkResponse getWork(GetWorkRequest request) throws TException {
       try {
         return getWorkUnsafe(request);
       } catch (Throwable e) {
-        LOG.error(
-            "getWork failed, but it shouldn't;"
-                + " internal state may be corrupted, so exiting coordinator",
-            e);
+        LOG.error("getWork() failed: internal state may be corrupted, so exiting coordinator.", e);
         exitCodeFuture.complete(GET_WORK_FAILED_EXIT_CODE);
         throw e;
       }
     }
 
-    private GetWorkResponse getWorkUnsafe(GetWorkRequest request) {
+    private GetWorkResponse getWorkUnsafe(GetWorkRequest request) throws TException {
       LOG.info(
           String.format(
               "Got GetWorkRequest from minion [%s]. [%s] targets finished. [%s] units requested",
@@ -210,12 +225,7 @@ public class ThriftCoordinatorServer implements Closeable {
       Preconditions.checkArgument(request.isSetLastExitCode());
 
       synchronized (lock) {
-        try {
-          return handler.getWork(request);
-        } catch (TException e) {
-          exitCodeFuture.complete(TEXCEPTION_EXIT_CODE);
-          throw new RuntimeException(e);
-        }
+        return handler.getWork(request);
       }
     }
 

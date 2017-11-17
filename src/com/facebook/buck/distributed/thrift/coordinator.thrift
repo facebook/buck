@@ -49,15 +49,21 @@ struct GetWorkResponse {
   2: optional list<WorkUnit> workUnits;
 }
 
+struct ReportMinionAliveRequest {
+  1: optional string minionId;
+  2: optional stampede.StampedeId stampedeId;
+}
+
+struct ReportMinionAliveResponse {
+}
 
 ##############################################################################
 ## Service
 ##############################################################################
 service CoordinatorService {
   // Called by Minions to request work from the Coordinator.
-  GetWorkResponse getWork(
-      1:GetWorkRequest request);
+  GetWorkResponse getWork(1:GetWorkRequest request);
 
-  // TODO(ruibm): Some form of heartbeat protocol needs to exist between Minions and Coordinator to
-  // make sure if some Minion has silently died, the workload is picked up by a different machine.
+  // Called regularly by minions to report to the Coordinator they are still alive.
+  ReportMinionAliveResponse reportMinionAlive(1:ReportMinionAliveRequest request);
 }

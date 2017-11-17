@@ -19,7 +19,10 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
+import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
+import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.google.common.collect.Lists;
+import org.apache.thrift.TException;
 
 /**
  * Handles Coordinator requests while the build is still idle waiting for everything to be
@@ -34,5 +37,11 @@ public class IdleCoordinatorService implements CoordinatorService.Iface {
     response.setContinueBuilding(true);
     response.setWorkUnits(Lists.newArrayList());
     return response;
+  }
+
+  @Override
+  public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
+      throws TException {
+    return new ReportMinionAliveResponse();
   }
 }
