@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
@@ -35,14 +36,14 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   private static final Logger LOG = Logger.get(ActiveCoordinatorService.class);
 
   private final MinionWorkloadAllocator allocator;
-  private final CompletableFuture<Integer> exitCodeFuture;
+  private final CompletableFuture<ExitState> exitCodeFuture;
   private final DistBuildTraceTracker chromeTraceTracker;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
   private final MinionHealthTracker minionHealthTracker;
 
   public ActiveCoordinatorService(
       MinionWorkloadAllocator allocator,
-      CompletableFuture<Integer> exitCodeFuture,
+      CompletableFuture<ExitState> exitCodeFuture,
       DistBuildTraceTracker chromeTraceTracker,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
       MinionHealthTracker minionHealthTracker) {
@@ -77,7 +78,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
           String.format(
               "Got non zero exit code in GetWorkRequest from minion [%s]. Exit code [%s]",
               request.getMinionId(), request.getLastExitCode()));
-      exitCodeFuture.complete(request.getLastExitCode());
+      exitCodeFuture.complete(ExitState.setLocally(request.getLastExitCode()));
       response.setContinueBuilding(false);
       return response;
     }
@@ -92,7 +93,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     // If the build is already finished (or just finished with this update, then signal this to
     // the minion.
     if (allocator.isBuildFinished()) {
-      exitCodeFuture.complete(0);
+      exitCodeFuture.complete(ExitState.setLocally(0));
       LOG.info(
           String.format(
               "Minion [%s] is being told to exit because the build has finished.",

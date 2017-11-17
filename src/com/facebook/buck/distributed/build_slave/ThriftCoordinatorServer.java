@@ -49,17 +49,54 @@ import org.apache.thrift.transport.TTransportException;
 
 public class ThriftCoordinatorServer implements Closeable {
 
+  /** Information about the exit state of the Coordinator. */
+  public static class ExitState {
+
+    private final int exitCode;
+    private final boolean wasExitCodeSetByServers;
+
+    private ExitState(int exitCode, boolean wasExitCodeSetByServers) {
+      this.exitCode = exitCode;
+      this.wasExitCodeSetByServers = wasExitCodeSetByServers;
+    }
+
+    public static ExitState setLocally(int exitCode) {
+      return new ExitState(exitCode, false);
+    }
+
+    public static ExitState setByServers(int exitCode) {
+      return new ExitState(exitCode, true);
+    }
+
+    public int getExitCode() {
+      return exitCode;
+    }
+
+    public boolean wasExitCodeSetByServers() {
+      return wasExitCodeSetByServers;
+    }
+
+    @Override
+    public String toString() {
+      return "ExitState{"
+          + "exitCode="
+          + exitCode
+          + ", wasExitCodeSetByServers="
+          + wasExitCodeSetByServers
+          + '}';
+    }
+  }
+
   /** Listen to ThriftCoordinatorServer events. */
   public interface EventListener {
 
     void onThriftServerStarted(String address, int port) throws IOException;
 
-    void onThriftServerClosing(int buildExitCode) throws IOException;
+    void onThriftServerClosing(ThriftCoordinatorServer.ExitState exitState) throws IOException;
   }
 
   public static final int UNEXPECTED_STOP_EXIT_CODE = 42;
   public static final int GET_WORK_FAILED_EXIT_CODE = 43;
-  public static final int TEXCEPTION_EXIT_CODE = 44;
   public static final int I_AM_ALIVE_FAILED_EXIT_CODE = 45;
   public static final int DEAD_MINION_FOUND_EXIT_CODE = 46;
   public static final int BUILD_TERMINATED_REMOTELY_EXIT_CODE = 47;
@@ -72,7 +109,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final DistBuildTraceTracker chromeTraceTracker;
   private final CoordinatorService.Processor<CoordinatorService.Iface> processor;
   private final Object lock;
-  private final CompletableFuture<Integer> exitCodeFuture;
+  private final CompletableFuture<ExitState> exitCodeFuture;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
@@ -139,7 +176,7 @@ public class ThriftCoordinatorServer implements Closeable {
           String.format(
               "Failing the build due to dead minions: [%s].", Joiner.on(", ").join(deadMinions));
       LOG.error(msg);
-      exitCodeFuture.complete(DEAD_MINION_FOUND_EXIT_CODE);
+      exitCodeFuture.complete(ExitState.setLocally(DEAD_MINION_FOUND_EXIT_CODE));
     }
   }
 
@@ -147,12 +184,13 @@ public class ThriftCoordinatorServer implements Closeable {
   public void checkBuildStatusIsNotTerminated() throws IOException {
     BuildJob buildJob = distBuildService.getCurrentBuildJobState(stampedeId);
     if (buildJob.isSetStatus() && BuildStatusUtil.isTerminalBuildStatus(buildJob.getStatus())) {
-      exitCodeFuture.complete(BUILD_TERMINATED_REMOTELY_EXIT_CODE);
+      exitCodeFuture.complete(ExitState.setByServers(BUILD_TERMINATED_REMOTELY_EXIT_CODE));
     }
   }
 
   private ThriftCoordinatorServer stop() throws IOException {
-    eventListener.onThriftServerClosing(exitCodeFuture.getNow(UNEXPECTED_STOP_EXIT_CODE));
+    ExitState exitState = exitCodeFuture.getNow(ExitState.setLocally(UNEXPECTED_STOP_EXIT_CODE));
+    eventListener.onThriftServerClosing(exitState);
     synchronized (lock) {
       Preconditions.checkNotNull(server, "Server has already been stopped.").stop();
       server = null;
@@ -189,14 +227,16 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
-  public Future<Integer> getExitCode() {
+  public Future<ExitState> getExitState() {
     return exitCodeFuture;
   }
 
   public int waitUntilBuildCompletesAndReturnExitCode() {
     try {
       LOG.verbose("Coordinator going into blocking wait mode...");
-      return getExitCode().get(MAX_DIST_BUILD_DURATION_MILLIS, TimeUnit.MILLISECONDS);
+      return getExitState()
+          .get(MAX_DIST_BUILD_DURATION_MILLIS, TimeUnit.MILLISECONDS)
+          .getExitCode();
     } catch (ExecutionException | TimeoutException | InterruptedException e) {
       LOG.error(e);
       throw new RuntimeException("The distributed build Coordinator was interrupted.", e);
@@ -233,7 +273,7 @@ public class ThriftCoordinatorServer implements Closeable {
       } catch (Throwable e) {
         LOG.error(
             "reportIAmAlive() failed: internal state may be corrupted, so exiting coordinator.", e);
-        exitCodeFuture.complete(I_AM_ALIVE_FAILED_EXIT_CODE);
+        exitCodeFuture.complete(ExitState.setLocally(I_AM_ALIVE_FAILED_EXIT_CODE));
         throw e;
       }
     }
@@ -244,7 +284,7 @@ public class ThriftCoordinatorServer implements Closeable {
         return getWorkUnsafe(request);
       } catch (Throwable e) {
         LOG.error("getWork() failed: internal state may be corrupted, so exiting coordinator.", e);
-        exitCodeFuture.complete(GET_WORK_FAILED_EXIT_CODE);
+        exitCodeFuture.complete(ExitState.setLocally(GET_WORK_FAILED_EXIT_CODE));
         throw e;
       }
     }

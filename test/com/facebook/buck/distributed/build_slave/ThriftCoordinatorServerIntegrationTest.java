@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
@@ -25,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.OptionalInt;
+import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,11 +55,12 @@ public class ThriftCoordinatorServerIntegrationTest {
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
     BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();
 
+    Capture<ExitState> exitState = EasyMock.newCapture();
     ThriftCoordinatorServer.EventListener eventListener =
         EasyMock.createMock(ThriftCoordinatorServer.EventListener.class);
     eventListener.onThriftServerStarted(EasyMock.anyString(), EasyMock.gt(0));
     EasyMock.expectLastCall().once();
-    eventListener.onThriftServerClosing(0);
+    eventListener.onThriftServerClosing(EasyMock.capture(exitState));
     EasyMock.expectLastCall().once();
     EasyMock.replay(eventListener);
 
@@ -116,6 +119,8 @@ public class ThriftCoordinatorServerIntegrationTest {
       Assert.assertFalse(responseFive.isContinueBuilding());
     }
 
+    Assert.assertEquals(1, exitState.getValues().size());
+    Assert.assertEquals(0, exitState.getValue().getExitCode());
     EasyMock.verify(eventListener);
   }
 

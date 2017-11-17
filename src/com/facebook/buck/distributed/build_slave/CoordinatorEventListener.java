@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildModeInfo;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -65,7 +66,13 @@ public class CoordinatorEventListener implements ThriftCoordinatorServer.EventLi
   }
 
   @Override
-  public void onThriftServerClosing(int buildExitCode) throws IOException {
+  public void onThriftServerClosing(ExitState exitState) throws IOException {
+    if (exitState.wasExitCodeSetByServers()) {
+      // No point in trying to set the final build status again.
+      return;
+    }
+
+    int buildExitCode = exitState.getExitCode();
     BuildStatus status = BuildStatusUtil.exitCodeToBuildStatus(buildExitCode);
     String message =
         String.format(
