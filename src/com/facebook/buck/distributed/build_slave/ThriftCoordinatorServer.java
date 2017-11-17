@@ -16,6 +16,9 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.BuildStatusUtil;
+import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
@@ -59,6 +62,7 @@ public class ThriftCoordinatorServer implements Closeable {
   public static final int TEXCEPTION_EXIT_CODE = 44;
   public static final int I_AM_ALIVE_FAILED_EXIT_CODE = 45;
   public static final int DEAD_MINION_FOUND_EXIT_CODE = 46;
+  public static final int BUILD_TERMINATED_REMOTELY_EXIT_CODE = 47;
 
   private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
 
@@ -73,6 +77,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final ThriftCoordinatorServer.EventListener eventListener;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
   private final MinionHealthTracker minionHealthTracker;
+  private final DistBuildService distBuildService;
 
   private volatile OptionalInt port;
 
@@ -87,11 +92,13 @@ public class ThriftCoordinatorServer implements Closeable {
       StampedeId stampedeId,
       EventListener eventListener,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
-      MinionHealthTracker minionHealthTracker) {
+      MinionHealthTracker minionHealthTracker,
+      DistBuildService distBuildService) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
     this.minionHealthTracker = minionHealthTracker;
+    this.distBuildService = distBuildService;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
     this.chromeTraceTracker = new DistBuildTraceTracker(stampedeId);
@@ -133,6 +140,14 @@ public class ThriftCoordinatorServer implements Closeable {
               "Failing the build due to dead minions: [%s].", Joiner.on(", ").join(deadMinions));
       LOG.error(msg);
       exitCodeFuture.complete(DEAD_MINION_FOUND_EXIT_CODE);
+    }
+  }
+
+  /** Checks whether the BuildStatus has not been set to terminated remotely. */
+  public void checkBuildStatusIsNotTerminated() throws IOException {
+    BuildJob buildJob = distBuildService.getCurrentBuildJobState(stampedeId);
+    if (buildJob.isSetStatus() && BuildStatusUtil.isTerminalBuildStatus(buildJob.getStatus())) {
+      exitCodeFuture.complete(BUILD_TERMINATED_REMOTELY_EXIT_CODE);
     }
   }
 

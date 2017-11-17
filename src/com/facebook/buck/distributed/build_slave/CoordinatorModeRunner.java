@@ -144,12 +144,15 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
                   stampedeId,
                   eventListener,
                   buildRuleFinishedPublisher,
-                  minionHealthTracker));
+                  minionHealthTracker,
+                  distBuildService));
       this.server.start();
       this.closer.register(
           service.addCallback("ReportCoordinatorAlive", createHeartbeatCallback()));
       this.closer.register(
           service.addCallback("MinionLivenessCheck", () -> server.checkAllMinionsAreAlive()));
+      this.closer.register(
+          service.addCallback("BuildStatusCheck", () -> server.checkBuildStatusIsNotTerminated()));
     }
 
     public int getExitCode() {

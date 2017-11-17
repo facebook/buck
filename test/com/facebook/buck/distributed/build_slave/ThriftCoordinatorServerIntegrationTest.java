@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
@@ -142,7 +143,8 @@ public class ThriftCoordinatorServerIntegrationTest {
         STAMPEDE_ID,
         eventListener,
         new NoOpBuildRuleFinishedPublisher(),
-        EasyMock.createNiceMock(MinionHealthTracker.class));
+        EasyMock.createNiceMock(MinionHealthTracker.class),
+        EasyMock.createNiceMock(DistBuildService.class));
   }
 
   @Test
