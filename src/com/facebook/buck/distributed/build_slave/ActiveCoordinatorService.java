@@ -34,7 +34,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   private final MinionWorkloadAllocator allocator;
   private final CompletableFuture<Integer> exitCodeFuture;
   private final DistBuildTraceTracker chromeTraceTracker;
-  private BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
 
   public ActiveCoordinatorService(
       MinionWorkloadAllocator allocator,
