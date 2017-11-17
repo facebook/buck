@@ -19,5 +19,5 @@ package com.facebook.buck.distributed.build_slave;
 import java.io.IOException;
 
 public interface DistBuildModeRunner {
-  int runAndReturnExitCode() throws IOException, InterruptedException;
+  int runAndReturnExitCode(HeartbeatService service) throws IOException, InterruptedException;
 }

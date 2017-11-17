@@ -131,7 +131,9 @@ public class MinionModeRunner implements DistBuildModeRunner {
   }
 
   @Override
-  public int runAndReturnExitCode() throws IOException, InterruptedException {
+  public int runAndReturnExitCode(HeartbeatService service)
+      throws IOException, InterruptedException {
+    // TODO(ruibm): Implement the HeartbeatCallback for the Minion.
     Preconditions.checkState(coordinatorPort.isPresent(), "Coordinator port has not been set.");
 
     try (ThriftCoordinatorClient client =

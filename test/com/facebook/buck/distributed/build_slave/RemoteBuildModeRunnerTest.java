@@ -17,6 +17,8 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.command.BuildExecutor;
+import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import org.easymock.EasyMock;
@@ -24,6 +26,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class RemoteBuildModeRunnerTest {
+
+  private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+  private static final DistBuildService MOCK_SERVICE =
+      EasyMock.createNiceMock(DistBuildService.class);
+  private static final HeartbeatService HEARTBEAT_SERVICE =
+      EasyMock.createNiceMock(HeartbeatService.class);
+
   @Test
   public void testFinalBuildStatusIsSet() throws IOException, InterruptedException {
     int expectedExitCode = 4221;
@@ -40,8 +49,9 @@ public class RemoteBuildModeRunnerTest {
     EasyMock.replay(buildExecutor, setter);
 
     RemoteBuildModeRunner runner =
-        new RemoteBuildModeRunner(buildExecutor, Lists.newArrayList(), setter);
-    int actualExitCode = runner.runAndReturnExitCode();
+        new RemoteBuildModeRunner(
+            buildExecutor, Lists.newArrayList(), setter, MOCK_SERVICE, STAMPEDE_ID);
+    int actualExitCode = runner.runAndReturnExitCode(HEARTBEAT_SERVICE);
     Assert.assertEquals(expectedExitCode, actualExitCode);
 
     EasyMock.verify(buildExecutor, setter);

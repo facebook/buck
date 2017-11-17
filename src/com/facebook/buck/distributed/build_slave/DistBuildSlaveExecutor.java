@@ -52,8 +52,10 @@ public class DistBuildSlaveExecutor {
   }
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
+    DistBuildModeRunner runner = null;
     if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
-      return MultiSlaveBuildModeRunnerFactory.createCoordinator(
+      runner =
+          MultiSlaveBuildModeRunnerFactory.createCoordinator(
               initializer.getActionGraphAndResolver(),
               getTopLevelTargetsToBuild(),
               args.getDistBuildConfig(),
@@ -61,11 +63,10 @@ public class DistBuildSlaveExecutor {
               args.getStampedeId(),
               false,
               args.getLogDirectoryPath(),
-              args.getBuildRuleFinishedPublisher())
-          .runAndReturnExitCode();
+              args.getBuildRuleFinishedPublisher());
+      return runWithHeartbeatService(runner);
     }
 
-    DistBuildModeRunner runner = null;
     BuildExecutorArgs builderArgs = args.createBuilderArgs();
     try (ExecutionContext executionContext =
         LocalBuildExecutor.createExecutionContext(builderArgs)) {
@@ -77,7 +78,9 @@ public class DistBuildSlaveExecutor {
               new RemoteBuildModeRunner(
                   localBuildExecutor,
                   args.getState().getRemoteState().getTopLevelTargets(),
-                  createRemoteBuildFinalBuildStatusSetter());
+                  createRemoteBuildFinalBuildStatusSetter(),
+                  args.getDistBuildService(),
+                  args.getStampedeId());
           break;
 
         case MINION:
@@ -114,7 +117,16 @@ public class DistBuildSlaveExecutor {
           return -1;
       }
     }
-    return runner.runAndReturnExitCode();
+
+    return runWithHeartbeatService(runner);
+  }
+
+  private int runWithHeartbeatService(DistBuildModeRunner runner)
+      throws IOException, InterruptedException {
+    try (HeartbeatService service =
+        new HeartbeatService(args.getDistBuildConfig().getHearbeatServiceRateMillis())) {
+      return runner.runAndReturnExitCode(service);
+    }
   }
 
   private FinalBuildStatusSetter createRemoteBuildFinalBuildStatusSetter() {

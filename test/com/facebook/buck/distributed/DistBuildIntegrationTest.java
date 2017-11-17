@@ -19,6 +19,7 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.ReportCoordinatorAliveResponse;
 import com.facebook.buck.distributed.thrift.SetFinalBuildStatusResponse;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.testutil.integration.FakeFrontendHttpServer;
@@ -36,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class DistBuildIntegrationTest {
+
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private void runSimpleDistBuildScenario(String scenario, String targetToBuild)
@@ -153,13 +155,25 @@ public class DistBuildIntegrationTest {
 
     @Override
     public FrontendResponse handleRequest(FrontendRequest request) {
-      Assert.assertEquals(FrontendRequestType.SET_FINAL_BUILD_STATUS, request.getType());
-      FrontendResponse response =
-          new FrontendResponse()
+      switch (request.getType()) {
+        case REPORT_COORDINATOR_ALIVE:
+          return new FrontendResponse()
+              .setType(FrontendRequestType.REPORT_COORDINATOR_ALIVE)
+              .setWasSuccessful(true)
+              .setReportCoordinatorAliveResponse(new ReportCoordinatorAliveResponse());
+
+        case SET_FINAL_BUILD_STATUS:
+          return new FrontendResponse()
               .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)
               .setWasSuccessful(true)
               .setSetFinalBuildStatusResponse(new SetFinalBuildStatusResponse());
-      return response;
+
+          // $CASES-OMITTED$
+        default:
+          Assert.fail("Unexpected request type: " + request.getType());
+          // Never gets here.
+          return new FrontendResponse();
+      }
     }
   }
 }

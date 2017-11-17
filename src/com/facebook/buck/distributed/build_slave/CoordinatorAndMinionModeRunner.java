@@ -32,15 +32,16 @@ public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
   }
 
   @Override
-  public int runAndReturnExitCode() throws IOException, InterruptedException {
+  public int runAndReturnExitCode(HeartbeatService service)
+      throws IOException, InterruptedException {
     LOG.debug("Running the Coordinator in async mode...");
     try (CoordinatorModeRunner.AsyncCoordinatorRun coordinatorRun =
-        coordinatorModeRunner.runAsyncAndReturnExitCode()) {
+        coordinatorModeRunner.runAsyncAndReturnExitCode(service)) {
       LOG.debug("Running the Minion with the Coordinator in the background...");
       minionModeRunner.setCoordinatorPort(coordinatorRun.getPort());
       try {
         // We only care about the Coordinator exit code that is controlling this process.
-        minionModeRunner.runAndReturnExitCode();
+        minionModeRunner.runAndReturnExitCode(service);
       } catch (IOException | InterruptedException e) {
         LOG.error(e, "Minion crashed with an exception.");
       }

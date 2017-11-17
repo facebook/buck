@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,6 +46,8 @@ public class MinionModeRunnerIntegrationTest {
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 9;
+  private static final HeartbeatService HEARTBEAT_SERVICE =
+      EasyMock.createNiceMock(HeartbeatService.class);
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -64,7 +67,7 @@ public class MinionModeRunnerIntegrationTest {
             checker,
             POLL_LOOP_INTERVAL_MILLIS);
 
-    minion.runAndReturnExitCode();
+    minion.runAndReturnExitCode(HEARTBEAT_SERVICE);
     Assert.fail("The previous line should've thrown an exception.");
   }
 
@@ -84,7 +87,7 @@ public class MinionModeRunnerIntegrationTest {
             checker,
             POLL_LOOP_INTERVAL_MILLIS);
 
-    int exitCode = minion.runAndReturnExitCode();
+    int exitCode = minion.runAndReturnExitCode(HEARTBEAT_SERVICE);
     // Server does not exit because the build has already been marked as finished.
     Assert.assertEquals(0, exitCode);
   }
@@ -106,7 +109,7 @@ public class MinionModeRunnerIntegrationTest {
               MAX_PARALLEL_WORK_UNITS,
               checker,
               POLL_LOOP_INTERVAL_MILLIS);
-      int exitCode = minion.runAndReturnExitCode();
+      int exitCode = minion.runAndReturnExitCode(HEARTBEAT_SERVICE);
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(4, localBuilder.getBuildTargets().size());
       Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));

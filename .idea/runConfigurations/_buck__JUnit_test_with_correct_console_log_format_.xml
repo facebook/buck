@@ -2,7 +2,7 @@
   <configuration default="false" name="[buck] JUnit test with correct console log format." type="JUnit" factoryName="JUnit">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
       <pattern>
-        <option name="PATTERN" value="com.facebook.buck.distributed.*" />
+        <option name="PATTERN" value="com.facebook.buck.distributed.build_slave.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

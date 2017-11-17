@@ -16,7 +16,10 @@
 
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.SET_BUCK_VERSION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_BUCK_DOT_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_MISSING_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_TARGET_GRAPH;
 
 import com.facebook.buck.distributed.thrift.AppendBuildSlaveEventsRequest;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -56,6 +59,7 @@ import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.PathInfo;
+import com.facebook.buck.distributed.thrift.ReportCoordinatorAliveRequest;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
@@ -791,6 +795,18 @@ public class DistBuildService implements Closeable {
 
     FrontendResponse response = makeRequestChecked(frontendRequest);
     Preconditions.checkState(response.isSetEnqueueMinionsResponse());
+  }
+
+  /** Reports that the coordinator is alive to the stampede servers. */
+  public void reportCoordinatorIsAlive(StampedeId stampedeId) throws IOException {
+    ReportCoordinatorAliveRequest request = new ReportCoordinatorAliveRequest();
+    request.setStampedeId(stampedeId);
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.REPORT_COORDINATOR_ALIVE);
+    frontendRequest.setReportCoordinatorAliveRequest(request);
+    FrontendResponse response = makeRequestChecked(frontendRequest);
+    Preconditions.checkState(response.isSetReportCoordinatorAliveResponse());
   }
 
   private FrontendResponse makeRequestChecked(FrontendRequest request) throws IOException {

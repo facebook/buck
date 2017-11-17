@@ -75,7 +75,12 @@ public class MultiSlaveBuildModeRunnerFactory {
         new CoordinatorEventListener(
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
     return new CoordinatorModeRunner(
-        queue, stampedeId, listener, logDirectoryPath, buildRuleFinishedPublisher);
+        queue,
+        stampedeId,
+        listener,
+        logDirectoryPath,
+        buildRuleFinishedPublisher,
+        distBuildService);
   }
 
   /**

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.build_slave.HeartbeatService.HeartbeatCallback;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
@@ -27,6 +29,7 @@ import java.nio.file.Path;
 import java.util.OptionalInt;
 
 public class CoordinatorModeRunner implements DistBuildModeRunner {
+
   private static final Logger LOG = Logger.get(CoordinatorModeRunner.class);
 
   // Note that this is only the port specified by the caller.
@@ -39,6 +42,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   private final Path logDirectoryPath;
   private final ThriftCoordinatorServer.EventListener eventListener;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final DistBuildService distBuildService;
 
   /**
    * Constructor
@@ -51,7 +55,8 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      DistBuildService distBuildService) {
     this.stampedeId = stampedeId;
     coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
     this.logDirectoryPath = logDirectoryPath;
@@ -59,6 +64,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
     this.coordinatorPort = coordinatorPort;
     this.eventListener = eventListener;
     this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
+    this.distBuildService = distBuildService;
   }
 
   public CoordinatorModeRunner(
@@ -66,28 +72,41 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
       StampedeId stampedeId,
       ThriftCoordinatorServer.EventListener eventListener,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      DistBuildService distBuildService) {
     this(
         OptionalInt.empty(),
         queue,
         stampedeId,
         eventListener,
         logDirectoryPath,
-        buildRuleFinishedPublisher);
+        buildRuleFinishedPublisher,
+        distBuildService);
   }
 
   @Override
-  public int runAndReturnExitCode() throws IOException {
-    try (AsyncCoordinatorRun run = new AsyncCoordinatorRun(queue)) {
+  public int runAndReturnExitCode(HeartbeatService service) throws IOException {
+    try (AsyncCoordinatorRun run = new AsyncCoordinatorRun(service, queue)) {
       return run.getExitCode();
     }
   }
 
-  /**
-   * Function to verify that the specified port lies in the non-kernel-reserved port range.
-   *
-   * @throws IllegalStateException
-   */
+  /** Reports back to the servers that the coordinator is healthy and alive. */
+  public static HeartbeatCallback createHeartbeatCallback(
+      final StampedeId stampedeId, final DistBuildService service) {
+    return new HeartbeatCallback() {
+      @Override
+      public void runHeartbeat() throws IOException {
+        service.reportCoordinatorIsAlive(stampedeId);
+      }
+    };
+  }
+
+  private HeartbeatCallback createHeartbeatCallback() {
+    return createHeartbeatCallback(stampedeId, distBuildService);
+  }
+
+  /** Function to verify that the specified port lies in the non-kernel-reserved port range. */
   public static void validatePort(int port) {
     Preconditions.checkState(
         port != 0,
@@ -101,19 +120,23 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
         port);
   }
 
-  public AsyncCoordinatorRun runAsyncAndReturnExitCode() throws IOException {
-    return new AsyncCoordinatorRun(queue);
+  public AsyncCoordinatorRun runAsyncAndReturnExitCode(HeartbeatService service)
+      throws IOException {
+    return new AsyncCoordinatorRun(service, queue);
   }
 
   public class AsyncCoordinatorRun implements Closeable {
 
+    private final Closeable healthCheck;
     private final ThriftCoordinatorServer server;
 
-    private AsyncCoordinatorRun(ListenableFuture<BuildTargetsQueue> queue) throws IOException {
+    private AsyncCoordinatorRun(HeartbeatService service, ListenableFuture<BuildTargetsQueue> queue)
+        throws IOException {
       this.server =
           new ThriftCoordinatorServer(
               coordinatorPort, queue, stampedeId, eventListener, buildRuleFinishedPublisher);
       this.server.start();
+      this.healthCheck = service.addCallback("ReportCoordinatorAlive", createHeartbeatCallback());
     }
 
     public int getExitCode() {
@@ -126,6 +149,7 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
     @Override
     public void close() throws IOException {
+      this.healthCheck.close();
       this.server.close();
 
       try {

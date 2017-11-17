@@ -17,6 +17,9 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.command.BuildExecutor;
+import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.thrift.StampedeId;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -25,27 +28,41 @@ public class RemoteBuildModeRunner implements DistBuildModeRunner {
 
   /** Sets the final BuildStatus of the BuildJob. */
   public interface FinalBuildStatusSetter {
+
     void setFinalBuildStatus(int exitCode) throws IOException;
   }
 
   private final BuildExecutor localBuildExecutor;
   private final Iterable<String> topLevelTargetsToBuild;
   private final FinalBuildStatusSetter setter;
+  private final DistBuildService distBuildService;
+  private final StampedeId stampedeId;
 
   public RemoteBuildModeRunner(
       BuildExecutor localBuildExecutor,
       Iterable<String> topLevelTargetsToBuild,
-      FinalBuildStatusSetter setter) {
+      FinalBuildStatusSetter setter,
+      DistBuildService distBuildService,
+      StampedeId stampedeId) {
     this.localBuildExecutor = localBuildExecutor;
     this.topLevelTargetsToBuild = topLevelTargetsToBuild;
     this.setter = setter;
+    this.distBuildService = distBuildService;
+    this.stampedeId = stampedeId;
   }
 
   @Override
-  public int runAndReturnExitCode() throws IOException, InterruptedException {
-    int buildExitCode =
-        localBuildExecutor.buildLocallyAndReturnExitCode(topLevelTargetsToBuild, Optional.empty());
-    setter.setFinalBuildStatus(buildExitCode);
-    return buildExitCode;
+  public int runAndReturnExitCode(HeartbeatService service)
+      throws IOException, InterruptedException {
+    try (Closeable healthCheck =
+        service.addCallback(
+            "RemoteBuilderIsAlive",
+            CoordinatorModeRunner.createHeartbeatCallback(stampedeId, distBuildService))) {
+      int buildExitCode =
+          localBuildExecutor.buildLocallyAndReturnExitCode(
+              topLevelTargetsToBuild, Optional.empty());
+      setter.setFinalBuildStatus(buildExitCode);
+      return buildExitCode;
+    }
   }
 }

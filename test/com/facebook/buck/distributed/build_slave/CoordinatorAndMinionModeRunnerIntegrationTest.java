@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest.FakeBuildExecutorImpl;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -28,6 +29,7 @@ import java.nio.file.Path;
 import java.util.OptionalInt;
 import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -37,8 +39,21 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 8;
+  private static final DistBuildService MOCK_SERVICE =
+      EasyMock.createNiceMock(DistBuildService.class);
+
+  private HeartbeatService heartbeatService;
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
+
+  @Before
+  public void setUp() {
+    heartbeatService = EasyMock.createNiceMock(HeartbeatService.class);
+    EasyMock.expect(heartbeatService.addCallback(EasyMock.anyString(), EasyMock.anyObject()))
+        .andReturn(() -> {})
+        .anyTimes();
+    EasyMock.replay(heartbeatService);
+  }
 
   @Test
   public void testDiamondGraphRun()
@@ -57,7 +72,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             STAMPEDE_ID,
             eventListener,
             logDirectoryPath,
-            new NoOpBuildRuleFinishedPublisher());
+            new NoOpBuildRuleFinishedPublisher(),
+            MOCK_SERVICE);
     FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
@@ -71,7 +87,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             POLL_LOOP_INTERVAL_MILLIS);
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
-    int exitCode = jointRunner.runAndReturnExitCode();
+    int exitCode = jointRunner.runAndReturnExitCode(heartbeatService);
     Assert.assertEquals(0, exitCode);
     Assert.assertEquals(4, localBuilder.getBuildTargets().size());
     Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));
