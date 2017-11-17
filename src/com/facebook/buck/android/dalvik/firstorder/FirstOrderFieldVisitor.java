@@ -14,38 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik.firstorder;
+package com.facebook.buck.android.dalvik.firstorder;
 
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
 
-class FirstOrderAnnotationVisitor extends AnnotationVisitor {
+class FirstOrderFieldVisitor extends FieldVisitor {
 
-  private final FirstOrderTypeInfo.Builder mBuilder;
+  private final FirstOrderVisitorContext mContext;
+  // Unused by dexopt: private final FirstOrderTypeInfo.Builder mBuilder;
 
-  public FirstOrderAnnotationVisitor(FirstOrderVisitorContext context) {
+  public FirstOrderFieldVisitor(FirstOrderVisitorContext context) {
     super(Opcodes.ASM5);
-    mBuilder = context.builder;
+    mContext = context;
+    // Unused by dexopt: mBuilder = context.builder;
   }
 
   @Override
-  public void visit(String name, Object value) {
-    mBuilder.addValue(value);
-  }
-
-  @Override
-  public void visitEnum(String name, String desc, String value) {
-    mBuilder.addDependencyDesc(desc);
-  }
-
-  @Override
-  public AnnotationVisitor visitAnnotation(String name, String desc) {
-    //Unused by dexopt: mBuilder.addDependencyDesc(desc);
-    return this;
-  }
-
-  @Override
-  public AnnotationVisitor visitArray(String name) {
-    return this;
+  public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+    // Unused by dexopt: mBuilder.addDependencyDesc(desc);
+    return mContext.annotationVisitor;
   }
 }

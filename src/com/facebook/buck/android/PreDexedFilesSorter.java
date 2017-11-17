@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.dalvik.CanaryFactory;
+import com.facebook.buck.android.dalvik.CanaryFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -257,7 +257,7 @@ public class PreDexedFilesSorter {
       throw new HumanReadableException(message.toString());
     }
 
-    /** @see com.facebook.buck.dalvik.CanaryFactory#create(String, int) */
+    /** @see com.facebook.buck.android.dalvik.CanaryFactory#create(String, int) */
     private DexWithClasses createCanary(
         final ProjectFilesystem filesystem,
         String storeName,

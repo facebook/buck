@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
+package com.facebook.buck.android.dalvik;
 
 import static com.facebook.buck.io.file.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.dalvik.EstimateDexWeightStep.DexWeightEstimator;
+import com.facebook.buck.android.dalvik.EstimateDexWeightStep.DexWeightEstimator;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.classes.FileLike;

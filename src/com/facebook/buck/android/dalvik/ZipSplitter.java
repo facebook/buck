@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
+package com.facebook.buck.android.dalvik;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.google.common.collect.ImmutableMultimap;

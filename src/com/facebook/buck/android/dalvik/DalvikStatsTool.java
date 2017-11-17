@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
+package com.facebook.buck.android.dalvik;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

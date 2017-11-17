@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
+package com.facebook.buck.android.dalvik;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

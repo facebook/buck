@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik.firstorder;
+package com.facebook.buck.android.dalvik.firstorder;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

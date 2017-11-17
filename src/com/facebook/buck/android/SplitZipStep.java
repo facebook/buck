@@ -18,10 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.dalvik.DalvikAwareZipSplitterFactory;
-import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.dalvik.ZipSplitterFactory;
-import com.facebook.buck.dalvik.firstorder.FirstOrderHelper;
+import com.facebook.buck.android.dalvik.DalvikAwareZipSplitterFactory;
+import com.facebook.buck.android.dalvik.ZipSplitter;
+import com.facebook.buck.android.dalvik.ZipSplitterFactory;
+import com.facebook.buck.android.dalvik.firstorder.FirstOrderHelper;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;

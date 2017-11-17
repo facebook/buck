@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik.firstorder;
+package com.facebook.buck.android.dalvik.firstorder;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Handle;
@@ -40,13 +40,13 @@ class FirstOrderMethodVisitor extends MethodVisitor {
 
   @Override
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-    //Unused by dexopt: mBuilder.addDependencyDesc(desc);
+    // Unused by dexopt: mBuilder.addDependencyDesc(desc);
     return mContext.annotationVisitor;
   }
 
   @Override
   public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-    //Unused by dexopt: mBuilder.addDependencyDesc(desc);
+    // Unused by dexopt: mBuilder.addDependencyDesc(desc);
     return mContext.annotationVisitor;
   }
 

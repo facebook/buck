@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik;
+package com.facebook.buck.android.dalvik;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;

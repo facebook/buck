@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik.firstorder;
+package com.facebook.buck.android.dalvik.firstorder;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;

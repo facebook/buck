@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dalvik.firstorder;
+package com.facebook.buck.android.dalvik.firstorder;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -50,7 +50,7 @@ class FirstOrderClassVisitor extends ClassVisitor {
 
   @Override
   public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-    //Unused by dexopt: mBuilder.addDependencyDesc(desc);
+    // Unused by dexopt: mBuilder.addDependencyDesc(desc);
     return mContext.annotationVisitor;
   }
 
@@ -76,17 +76,17 @@ class FirstOrderClassVisitor extends ClassVisitor {
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
-    //Unused by dexopt: mBuilder.addDependencyInternalName(name);
-    //Unused by dexopt: mBuilder.addDependencyInternalName(outerName);
+    // Unused by dexopt: mBuilder.addDependencyInternalName(name);
+    // Unused by dexopt: mBuilder.addDependencyInternalName(outerName);
 
     // There is a question in RemappingClassAdapter.visitInnerClass about innerName,
     // but it currently does not transform innerName.
-    //Unused by dexopt: mBuilder.addDependencyInternalName(innerName);
+    // Unused by dexopt: mBuilder.addDependencyInternalName(innerName);
   }
 
   @Override
   public void visitOuterClass(String owner, String name, String desc) {
-    //Unused by dexopt: mBuilder.addDependencyInternalName(owner);
-    //Unused by dexopt: mBuilder.addDependencyDesc(desc);
+    // Unused by dexopt: mBuilder.addDependencyInternalName(owner);
+    // Unused by dexopt: mBuilder.addDependencyDesc(desc);
   }
 }

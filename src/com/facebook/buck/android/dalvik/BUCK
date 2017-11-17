@@ -7,7 +7,7 @@ java_immutables_library(
         "DalvikStatsTool.java",
     ],
     tests = [
-        "//test/com/facebook/buck/dalvik:dalvik",
+        "//test/com/facebook/buck/android/dalvik:dalvik",
     ],
     visibility = [
         "PUBLIC",
@@ -21,7 +21,7 @@ java_immutables_library(
 
 java_binary(
     name = "cli_dalvik_stats_tool",
-    main_class = "com.facebook.buck.dalvik.DalvikStatsTool",
+    main_class = "com.facebook.buck.android.dalvik.DalvikStatsTool",
     deps = [
         ":dalvik",
         "//src/com/facebook/buck/android:utils",
@@ -84,7 +84,7 @@ java_library(
         "ZipSplitterFactory.java",
     ],
     tests = [
-        "//test/com/facebook/buck/dalvik:dalvik",
+        "//test/com/facebook/buck/android/dalvik:dalvik",
     ],
     visibility = [
         "PUBLIC",
@@ -109,7 +109,7 @@ java_library(
         "EstimateDexWeightStep.java",
     ],
     tests = [
-        "//test/com/facebook/buck/dalvik:dalvik",
+        "//test/com/facebook/buck/android/dalvik:dalvik",
     ],
     visibility = [
         "PUBLIC",

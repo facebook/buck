@@ -2,7 +2,7 @@ java_library(
     name = "firstorder",
     srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/dalvik/firstorder:firstorder",
+        "//test/com/facebook/buck/android/dalvik/firstorder:firstorder",
     ],
     visibility = ["PUBLIC"],
     deps = [
