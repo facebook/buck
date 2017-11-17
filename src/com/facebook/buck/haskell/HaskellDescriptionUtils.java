@@ -17,6 +17,7 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.Archive;
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
@@ -26,12 +27,15 @@ import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables.SharedLibrariesBuilder;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,19 +43,27 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,6 +79,8 @@ import java.util.stream.Stream;
 public class HaskellDescriptionUtils {
 
   private HaskellDescriptionUtils() {}
+
+  static final Flavor GHCI_FLAV = UserFlavor.of("ghci", "Open a ghci session on this target");
 
   static final Flavor PROF = InternalFlavor.of("prof");
   static final ImmutableList<String> PROF_FLAGS =
@@ -384,5 +398,169 @@ public class HaskellDescriptionUtils {
               // just add all C/C++ platform parse time deps.
               depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
             });
+  }
+
+  /** Give a rule that will result in a ghci session for the target */
+  public static HaskellGhciRule requireGhciRule(
+      BuildTarget buildTarget,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      HaskellPlatform platform,
+      CxxBuckConfig cxxBuckConfig,
+      ImmutableSortedSet<BuildTarget> argDeps,
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> argPlatformDeps,
+      SourceList argSrcs,
+      ImmutableSortedSet<BuildTarget> argPreloadDeps,
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> argPlatformPreloadDeps,
+      ImmutableList<String> argCompilerFlags,
+      Optional<BuildTarget> argGhciBinDep,
+      Optional<SourcePath> argGhciInit) {
+    boolean hsProfile = true; // Always build profiled for ghci
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
+    depsBuilder.addAll(
+        CxxDeps.builder()
+            .addDeps(argDeps)
+            .addPlatformDeps(argPlatformDeps)
+            .build()
+            .get(resolver, platform.getCxxPlatform()));
+    ImmutableSet<BuildRule> deps = depsBuilder.build();
+
+    ImmutableSet.Builder<BuildRule> preloadDepsBuilder = ImmutableSet.builder();
+    preloadDepsBuilder.addAll(
+        CxxDeps.builder()
+            .addDeps(argPreloadDeps)
+            .addPlatformDeps(argPlatformPreloadDeps)
+            .build()
+            .get(resolver, platform.getCxxPlatform()));
+    ImmutableSet<BuildRule> preloadDeps = preloadDepsBuilder.build();
+
+    // Haskell visitor
+    ImmutableSet.Builder<HaskellPackage> haskellPackages = ImmutableSet.builder();
+    ImmutableSet.Builder<HaskellPackage> prebuiltHaskellPackages = ImmutableSet.builder();
+    ImmutableSet.Builder<HaskellPackage> firstOrderHaskellPackages = ImmutableSet.builder();
+    AbstractBreadthFirstTraversal<BuildRule> haskellVisitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(deps) {
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+            ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
+            if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
+              HaskellCompileDep haskellRule = (HaskellCompileDep) rule;
+              HaskellCompileInput ci =
+                  haskellRule.getCompileInput(platform, Linker.LinkableDepType.STATIC, hsProfile);
+
+              if (params.getBuildDeps().contains(rule)) {
+                firstOrderHaskellPackages.addAll(ci.getPackages());
+              }
+
+              if (rule instanceof HaskellLibrary) {
+                haskellPackages.addAll(ci.getPackages());
+              } else if (rule instanceof PrebuiltHaskellLibrary) {
+                prebuiltHaskellPackages.addAll(ci.getPackages());
+              }
+
+              traverse.addAll(haskellRule.getCompileDeps(platform));
+            }
+
+            return traverse.build();
+          }
+        };
+    haskellVisitor.start();
+
+    // Build the omnibus composition spec.
+    HaskellGhciOmnibusSpec omnibusSpec =
+        HaskellGhciDescription.getOmnibusSpec(
+            buildTarget,
+            platform.getCxxPlatform(),
+            NativeLinkables.getNativeLinkableRoots(
+                RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+                n ->
+                    n instanceof HaskellLibrary || n instanceof PrebuiltHaskellLibrary
+                        ? Optional.of(
+                            n.getNativeLinkableExportedDepsForPlatform(platform.getCxxPlatform()))
+                        : Optional.empty()),
+            // The preloaded deps form our excluded roots, which we need to keep them separate from
+            // the omnibus library so that they can be `LD_PRELOAD`ed early.
+            RichStream.from(preloadDeps)
+                .filter(NativeLinkable.class)
+                .collect(MoreCollectors.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
+
+    // Construct the omnibus shared library.
+    BuildRule omnibusSharedObject =
+        HaskellGhciDescription.requireOmnibusSharedObject(
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            platform.getCxxPlatform(),
+            cxxBuckConfig,
+            omnibusSpec.getBody().values(),
+            omnibusSpec.getDeps().values());
+
+    // Build up a map of all transitive shared libraries the the monolithic omnibus library depends
+    // on (basically, stuff we couldn't statically link in).  At this point, this should *not* be
+    // pulling in any excluded deps.
+    SharedLibrariesBuilder sharedLibsBuilder = new SharedLibrariesBuilder();
+    ImmutableMap<BuildTarget, NativeLinkable> transitiveDeps =
+        NativeLinkables.getTransitiveNativeLinkables(
+            platform.getCxxPlatform(), omnibusSpec.getDeps().values());
+    transitiveDeps
+        .values()
+        .stream()
+        // Skip statically linked libraries.
+        .filter(l -> l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC)
+        .forEach(l -> sharedLibsBuilder.add(platform.getCxxPlatform(), l));
+    ImmutableSortedMap<String, SourcePath> sharedLibs = sharedLibsBuilder.build();
+
+    // Build up a set of all transitive preload libs, which are the ones that have been "excluded"
+    // from the omnibus link.  These are the ones we need to LD_PRELOAD.
+    SharedLibrariesBuilder preloadLibsBuilder = new SharedLibrariesBuilder();
+    omnibusSpec
+        .getExcludedTransitiveDeps()
+        .values()
+        .stream()
+        // Don't include shared libs for static libraries -- except for preload roots, which we
+        // always link dynamically.
+        .filter(
+            l ->
+                l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC
+                    || omnibusSpec.getExcludedRoots().containsKey(l.getBuildTarget()))
+        .forEach(l -> preloadLibsBuilder.add(platform.getCxxPlatform(), l));
+    ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
+
+    HaskellSources srcs =
+        HaskellSources.from(
+            buildTarget, resolver, pathResolver, ruleFinder, platform, "srcs", argSrcs);
+
+    return HaskellGhciRule.from(
+        buildTarget,
+        projectFilesystem,
+        params,
+        ruleFinder,
+        srcs,
+        argCompilerFlags,
+        argGhciBinDep.map(
+            target -> Preconditions.checkNotNull(resolver.getRule(target).getSourcePathToOutput())),
+        argGhciInit,
+        omnibusSharedObject,
+        sharedLibs,
+        preloadLibs,
+        firstOrderHaskellPackages.build(),
+        haskellPackages.build(),
+        prebuiltHaskellPackages.build(),
+        hsProfile,
+        platform.getGhciScriptTemplate().get(),
+        platform.getGhciIservScriptTemplate().get(),
+        platform.getGhciBinutils().get(),
+        platform.getGhciGhc().get(),
+        platform.getGhciIServ().get(),
+        platform.getGhciIServProf().get(),
+        platform.getGhciLib().get(),
+        platform.getGhciCxx().get(),
+        platform.getGhciCc().get(),
+        platform.getGhciCpp().get());
   }
 }

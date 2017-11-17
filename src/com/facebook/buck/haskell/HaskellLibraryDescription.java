@@ -92,11 +92,15 @@ public class HaskellLibraryDescription
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Haskell Library Type", Type.class);
 
+  private final HaskellPlatform defaultPlatform;
   private final FlavorDomain<HaskellPlatform> platforms;
   private final CxxBuckConfig cxxBuckConfig;
 
   public HaskellLibraryDescription(
-      FlavorDomain<HaskellPlatform> platforms, CxxBuckConfig cxxBuckConfig) {
+      HaskellPlatform defaultPlatform,
+      FlavorDomain<HaskellPlatform> platforms,
+      CxxBuckConfig cxxBuckConfig) {
+    this.defaultPlatform = defaultPlatform;
     this.platforms = platforms;
     this.cxxBuckConfig = cxxBuckConfig;
   }
@@ -624,6 +628,14 @@ public class HaskellLibraryDescription
                     hsProfile));
   }
 
+  private HaskellPlatform getPlatform(BuildTarget buildTarget) {
+    Optional<HaskellPlatform> platform = platforms.getValue(buildTarget);
+    if (platform.isPresent()) {
+      return platform.get();
+    }
+    return defaultPlatform;
+  }
+
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -642,15 +654,13 @@ public class HaskellLibraryDescription
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<HaskellPlatform> platform = platforms.getValue(buildTarget);
+    HaskellPlatform platform = getPlatform(buildTarget);
     if (type.isPresent()) {
-      Preconditions.checkState(platform.isPresent());
-
       // Get the base build, without any flavors referring to the library type or platform.
       BuildTarget baseTarget =
           buildTarget.withoutFlavors(Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()));
 
-      ImmutableSet<BuildRule> deps = allDeps.get(resolver, platform.get().getCxxPlatform());
+      ImmutableSet<BuildRule> deps = allDeps.get(resolver, platform.getCxxPlatform());
 
       switch (type.get().getValue()) {
         case PACKAGE_SHARED:
@@ -671,7 +681,7 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              platform,
               args,
               deps,
               depType,
@@ -684,7 +694,7 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              platform,
               args,
               deps,
               args.isEnableProfiling());
@@ -697,7 +707,7 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              platform,
               args,
               deps,
               type.get().getValue() == Type.STATIC
@@ -712,8 +722,24 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              platform,
               args);
+        case GHCI:
+          return HaskellDescriptionUtils.requireGhciRule(
+              baseTarget,
+              projectFilesystem,
+              params,
+              resolver,
+              platform,
+              cxxBuckConfig,
+              args.getDeps(),
+              args.getPlatformDeps(),
+              args.getSrcs(),
+              args.getGhciPreloadDeps(),
+              args.getGhciPlatformPreloadDeps(),
+              args.getCompilerFlags(),
+              Optional.empty(),
+              Optional.empty());
       }
 
       throw new IllegalStateException(
@@ -935,6 +961,7 @@ public class HaskellLibraryDescription
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
 
+    GHCI(HaskellDescriptionUtils.GHCI_FLAV),
     HADDOCK(InternalFlavor.of("haddock"));
 
     public static final ImmutableSet<Flavor> FLAVOR_VALUES =
@@ -990,6 +1017,16 @@ public class HaskellLibraryDescription
     @Value.Default
     default ImmutableList<String> getHaddockFlags() {
       return ImmutableList.of();
+    }
+
+    @Value.Default
+    default ImmutableSortedSet<BuildTarget> getGhciPreloadDeps() {
+      return ImmutableSortedSet.of();
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getGhciPlatformPreloadDeps() {
+      return PatternMatchedCollection.of();
     }
   }
 }

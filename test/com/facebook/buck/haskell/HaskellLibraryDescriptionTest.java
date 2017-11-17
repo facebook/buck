@@ -213,7 +213,11 @@ public class HaskellLibraryDescriptionTest {
         new CxxBuckConfig(
             FakeBuckConfig.builder().setSections("[cxx]", "archive_contents=thin").build());
     HaskellLibraryBuilder builder =
-        new HaskellLibraryBuilder(target, HaskellTestUtils.DEFAULT_PLATFORMS, cxxBuckConfig)
+        new HaskellLibraryBuilder(
+                target,
+                HaskellTestUtils.DEFAULT_PLATFORM,
+                HaskellTestUtils.DEFAULT_PLATFORMS,
+                cxxBuckConfig)
             .setSrcs(
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("Test.hs"))))
             .setLinkWhole(true);

@@ -33,12 +33,19 @@ public class HaskellLibraryBuilder
         HaskellLibraryDescription, HaskellLibrary> {
 
   public HaskellLibraryBuilder(
-      BuildTarget target, FlavorDomain<HaskellPlatform> platforms, CxxBuckConfig cxxBuckConfig) {
-    super(new HaskellLibraryDescription(platforms, cxxBuckConfig), target);
+      BuildTarget target,
+      HaskellPlatform defaultPlatform,
+      FlavorDomain<HaskellPlatform> platforms,
+      CxxBuckConfig cxxBuckConfig) {
+    super(new HaskellLibraryDescription(defaultPlatform, platforms, cxxBuckConfig), target);
   }
 
   public HaskellLibraryBuilder(BuildTarget target) {
-    this(target, HaskellTestUtils.DEFAULT_PLATFORMS, CxxPlatformUtils.DEFAULT_CONFIG);
+    this(
+        target,
+        HaskellTestUtils.DEFAULT_PLATFORM,
+        HaskellTestUtils.DEFAULT_PLATFORMS,
+        CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
   public HaskellLibraryBuilder setSrcs(SourceList srcs) {

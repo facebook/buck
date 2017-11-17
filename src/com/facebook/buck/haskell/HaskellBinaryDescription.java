@@ -19,6 +19,7 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -80,11 +81,15 @@ public class HaskellBinaryDescription
 
   private final HaskellPlatform defaultPlatform;
   private final FlavorDomain<HaskellPlatform> platforms;
+  private final CxxBuckConfig cxxBuckConfig;
 
   public HaskellBinaryDescription(
-      HaskellPlatform defaultPlatform, FlavorDomain<HaskellPlatform> platforms) {
+      HaskellPlatform defaultPlatform,
+      FlavorDomain<HaskellPlatform> platforms,
+      CxxBuckConfig cxxBuckConfig) {
     this.defaultPlatform = defaultPlatform;
     this.platforms = platforms;
+    this.cxxBuckConfig = cxxBuckConfig;
   }
 
   @Override
@@ -92,8 +97,8 @@ public class HaskellBinaryDescription
     return HaskellBinaryDescriptionArg.class;
   }
 
-  private Linker.LinkableDepType getLinkStyle(BuildTarget target, HaskellBinaryDescriptionArg arg) {
-    Optional<Type> type = BINARY_TYPE.getValue(target);
+  private Linker.LinkableDepType getLinkStyle(
+      HaskellBinaryDescriptionArg arg, Optional<Type> type) {
     if (type.isPresent()) {
       return type.get().getLinkStyle();
     }
@@ -128,10 +133,31 @@ public class HaskellBinaryDescription
       CellPathResolver cellRoots,
       HaskellBinaryDescriptionArg args) {
 
+    HaskellPlatform platform = getPlatform(buildTarget, args);
+
+    Optional<Type> type = BINARY_TYPE.getValue(buildTarget);
+    // Handle #ghci flavor
+    if (type.isPresent() && type.get() == Type.GHCI) {
+      return HaskellDescriptionUtils.requireGhciRule(
+          buildTarget,
+          projectFilesystem,
+          params,
+          resolver,
+          platform,
+          cxxBuckConfig,
+          args.getDeps(),
+          args.getPlatformDeps(),
+          args.getSrcs(),
+          args.getGhciPreloadDeps(),
+          args.getGhciPlatformPreloadDeps(),
+          args.getCompilerFlags(),
+          Optional.empty(),
+          Optional.empty());
+    }
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    HaskellPlatform platform = getPlatform(buildTarget, args);
-    Linker.LinkableDepType depType = getLinkStyle(buildTarget, args);
+    Linker.LinkableDepType depType = getLinkStyle(args, type);
 
     // The target to use for the link rule.
     BuildTarget binaryTarget = buildTarget.withFlavors(InternalFlavor.of("binary"));
@@ -319,6 +345,7 @@ public class HaskellBinaryDescription
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR, Linker.LinkableDepType.SHARED),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Linker.LinkableDepType.STATIC_PIC),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR, Linker.LinkableDepType.STATIC),
+    GHCI(HaskellDescriptionUtils.GHCI_FLAV, Linker.LinkableDepType.STATIC),
     ;
 
     private final Flavor flavor;
@@ -371,6 +398,16 @@ public class HaskellBinaryDescription
     @Value.Default
     default boolean isEnableProfiling() {
       return false;
+    }
+
+    @Value.Default
+    default ImmutableSortedSet<BuildTarget> getGhciPreloadDeps() {
+      return ImmutableSortedSet.of();
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getGhciPlatformPreloadDeps() {
+      return PatternMatchedCollection.of();
     }
   }
 }
