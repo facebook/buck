@@ -26,7 +26,6 @@ java_binary(
         ":dalvik",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/graph:graph",
