@@ -200,6 +200,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
+        "-serialize-debugging-options",
         "-module-name",
         moduleName,
         "-emit-module",
