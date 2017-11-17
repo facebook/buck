@@ -39,6 +39,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testAndroidBinaryProject() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("android_binary");
+  }
+
+  @Test
   public void testVersion2BuckProject() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project1");
   }
