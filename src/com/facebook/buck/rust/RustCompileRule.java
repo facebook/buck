@@ -260,9 +260,10 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 cmd.add(String.format("-Clinker=%s", linkerCmd.get(0)))
                     .add(String.format("-Clink-arg=@%s", argFilePath))
                     .add(String.format("-Cmetadata=%s", metadata))
+                    .add(String.format("-Cextra-filename=-%s", metadata))
                     .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
                     .addAll(dedupArgs.build())
-                    .add("-o", output.toString())
+                    .add("--out-dir", output.getParent().toString())
                     .add(src.toString());
 
                 return cmd.build();

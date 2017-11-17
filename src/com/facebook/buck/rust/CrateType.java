@@ -37,10 +37,21 @@ public enum CrateType {
   LIB(
       "lib",
       RustDescriptionEnhancer.RFLIB,
-      (target, n, p) -> String.format("lib%s.rlib", n)), // XXX how to tell?
-  RLIB("rlib", RustDescriptionEnhancer.RFRLIB, (target, n, p) -> String.format("lib%s.rlib", n)),
+      (target, crate, plat) -> {
+        return rlib_filename(target, crate);
+      }), // XXX how to tell?
+  RLIB(
+      "rlib",
+      RustDescriptionEnhancer.RFRLIB,
+      (target, crate, plat) -> {
+        return rlib_filename(target, crate);
+      }),
   RLIB_PIC(
-      "rlib", RustDescriptionEnhancer.RFRLIB_PIC, (target, n, p) -> String.format("lib%s.rlib", n)),
+      "rlib",
+      RustDescriptionEnhancer.RFRLIB_PIC,
+      (target, crate, plat) -> {
+        return rlib_filename(target, crate);
+      }),
   DYLIB("dylib", RustDescriptionEnhancer.RFDYLIB, CrateType::dylib_filename),
   CDYLIB("cdylib", CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType::dylib_filename),
   STATIC(
@@ -57,6 +68,11 @@ public enum CrateType {
   private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {
     String hash = RustCompileUtils.hashForTarget(target);
     return String.format("lib%s-%s.%s", crate, hash, plat.getSharedLibraryExtension());
+  }
+
+  private static String rlib_filename(BuildTarget target, String crate) {
+    String hash = RustCompileUtils.hashForTarget(target);
+    return String.format("lib%s-%s.rlib", crate, hash);
   }
 
   // Crate type as passed to `rustc --crate-type=`
