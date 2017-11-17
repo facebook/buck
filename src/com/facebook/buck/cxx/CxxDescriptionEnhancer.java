@@ -896,7 +896,10 @@ public class CxxDescriptionEnhancer {
 
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
-    PicType pic = linkStyle == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC;
+    PicType pic =
+        linkStyle == Linker.LinkableDepType.STATIC
+            ? PicType.PDC
+            : cxxPlatform.getPicTypeForSharedLinking();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.of(
                 projectFilesystem,

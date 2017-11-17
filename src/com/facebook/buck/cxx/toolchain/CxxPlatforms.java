@@ -96,7 +96,8 @@ public class CxxPlatforms {
       DebugPathSanitizer assemblerDebugPathSanitizer,
       ImmutableMap<String, String> flagMacros,
       Optional<String> binaryExtension,
-      HeaderVerification headerVerification) {
+      HeaderVerification headerVerification,
+      PicType picTypeForSharedLinking) {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
@@ -127,7 +128,8 @@ public class CxxPlatforms {
         .setBinaryExtension(binaryExtension)
         .setHeaderVerification(headerVerification)
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
-        .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());
+        .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled())
+        .setPicTypeForSharedLinking(picTypeForSharedLinking);
 
     builder.setSymbolNameTool(
         new LazyDelegatingSymbolNameTool(
@@ -186,7 +188,8 @@ public class CxxPlatforms {
         defaultPlatform.getAssemblerDebugPathSanitizer(),
         defaultPlatform.getFlagMacros(),
         defaultPlatform.getBinaryExtension(),
-        defaultPlatform.getHeaderVerification());
+        defaultPlatform.getHeaderVerification(),
+        defaultPlatform.getPicTypeForSharedLinking());
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {

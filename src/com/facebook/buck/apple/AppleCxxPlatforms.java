@@ -37,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -460,7 +461,8 @@ public class AppleCxxPlatforms {
             assemblerDebugPathSanitizer,
             macros,
             Optional.empty(),
-            headerVerification);
+            headerVerification,
+            PicType.PIC);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();

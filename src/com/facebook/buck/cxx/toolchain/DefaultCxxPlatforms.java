@@ -78,6 +78,7 @@ public class DefaultCxxPlatforms {
     ImmutableMap<String, String> env = config.getEnvironment();
     Optional<CxxToolProvider.Type> defaultToolType = Optional.empty();
     String ranlibCommand;
+    PicType picTypeForSharedLinking;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
@@ -92,6 +93,7 @@ public class DefaultCxxPlatforms {
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
+        picTypeForSharedLinking = PicType.PIC;
         break;
       case MACOS:
         sharedLibraryExtension = "dylib";
@@ -106,6 +108,7 @@ public class DefaultCxxPlatforms {
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
+        picTypeForSharedLinking = PicType.PIC;
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
@@ -129,6 +132,7 @@ public class DefaultCxxPlatforms {
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
         ranlibCommand = DEFAULT_WINDOWS_RANLIB;
+        picTypeForSharedLinking = PicType.PDC;
         break;
       case FREEBSD:
         sharedLibraryExtension = "so";
@@ -143,6 +147,7 @@ public class DefaultCxxPlatforms {
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
+        picTypeForSharedLinking = PicType.PIC;
         break;
         // $CASES-OMITTED$
       default:
@@ -200,7 +205,8 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of()),
         ImmutableMap.of(),
         binaryExtension,
-        config.getHeaderVerification());
+        config.getHeaderVerification(),
+        picTypeForSharedLinking);
   }
 
   private static Tool getHashedFileTool(

@@ -134,4 +134,10 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   /** When building or creating a project, create symlinks for the public headers if it's true. */
   boolean getPrivateHeadersSymlinksEnabled();
+
+  /** *nix platforms use PIC object files for shared libraries, while windows doesn't. */
+  @Value.Default
+  default PicType getPicTypeForSharedLinking() {
+    return PicType.PIC;
+  }
 }

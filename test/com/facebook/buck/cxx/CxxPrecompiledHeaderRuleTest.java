@@ -109,6 +109,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
+    assumeTrue(platformOkForPCHTests());
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
@@ -269,8 +270,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void samePchIffSameFlags() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
     ruleResolver.addToIndex(pch);
@@ -334,8 +333,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void userRuleChangesDependencyPCHRuleFlags() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
     ruleResolver.addToIndex(pch);
@@ -373,8 +370,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void pchDepsNotRepeatedInLinkArgs() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//test:header");
     final BuildTarget publicHeaderSymlinkTreeTarget =
         BuildTargetFactory.newInstance("//test:symlink");
@@ -542,8 +537,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void userRuleIncludePathsChangedByPCH() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     CxxPreprocessorInput cxxPreprocessorInput =
         CxxPreprocessorInput.builder()
             .addIncludes(
@@ -609,20 +602,16 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void successfulBuildWithPchHavingNoDeps() throws Exception {
-    assumeTrue(platformOkForPCHTests());
     workspace.runBuckBuild("//basic_tests:main").assertSuccess();
   }
 
   @Test
   public void successfulBuildWithPchHavingDeps() throws Exception {
-    assumeTrue(platformOkForPCHTests());
     workspace.runBuckBuild("//deps_test:bin").assertSuccess();
   }
 
   @Test
   public void changingPrecompilableHeaderCausesRecompile() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuckBuildLog buildLog;
 
     workspace.writeContentsToPath(
@@ -656,8 +645,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void changingHeaderIncludedByPCHPrefixHeaderCausesRecompile() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuckBuildLog buildLog;
 
     workspace.writeContentsToPath(
@@ -716,8 +703,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void deterministicHashesForSharedPCHs() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     Sha1HashCode pchHashA = null;
     workspace.runBuckBuild("//determinism/a:main").assertSuccess();
     BuckBuildLog buildLogA = workspace.getBuildLog();
