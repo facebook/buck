@@ -26,13 +26,28 @@ import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
-public class NdkCxxPlatformsProviderFactory {
-  public static NdkCxxPlatformsProvider create(
+public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPlatformsProvider> {
+
+  @Override
+  public Optional<NdkCxxPlatformsProvider> createToolchain(
+      ToolchainProvider toolchainProvider,
+      ImmutableMap<String, String> environment,
+      BuckConfig buckConfig,
+      ProjectFilesystem filesystem) {
+
+    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
+        getNdkCxxPlatforms(buckConfig, filesystem, toolchainProvider);
+
+    return Optional.of(NdkCxxPlatformsProvider.of(ndkCxxPlatforms));
+  }
+
+  private static ImmutableMap<TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms(
       BuckConfig config, ProjectFilesystem filesystem, ToolchainProvider toolchainProvider) {
 
     Platform platform = Platform.detect();
@@ -51,6 +66,6 @@ public class NdkCxxPlatformsProviderFactory {
         NdkCxxPlatforms.getPlatforms(
             cxxBuckConfig, androidConfig, filesystem, platform, toolchainProvider, ndkVersion);
 
-    return new NdkCxxPlatformsProvider(ndkCxxPlatforms);
+    return ndkCxxPlatforms;
   }
 }

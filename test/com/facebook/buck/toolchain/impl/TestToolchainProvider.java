@@ -17,13 +17,20 @@
 package com.facebook.buck.toolchain.impl;
 
 import com.facebook.buck.android.toolchain.AndroidToolchain;
+import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
+import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TestToolchainProvider extends BaseToolchainProvider {
   private final Map<String, Toolchain> toolchains = new HashMap<>();
+
+  public TestToolchainProvider() {
+    addToolchain(
+        NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(ImmutableMap.of()));
+  }
 
   @Override
   public Toolchain getByName(String toolchainName) {

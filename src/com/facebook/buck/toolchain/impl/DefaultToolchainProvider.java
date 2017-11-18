@@ -19,7 +19,9 @@ package com.facebook.buck.toolchain.impl;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
+import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchainFactory;
+import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
@@ -36,7 +38,9 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   enum ToolchainDescriptor {
     ANDROID(AndroidToolchain.DEFAULT_NAME, DefaultAndroidToolchainFactory.class),
-    ANDROID_LEGACY(AndroidLegacyToolchain.DEFAULT_NAME, DefaultAndroidLegacyToolchainFactory.class);
+    ANDROID_LEGACY(AndroidLegacyToolchain.DEFAULT_NAME, DefaultAndroidLegacyToolchainFactory.class),
+    NDK_CXX_PLATFORMS_PROVIDER(
+        NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProviderFactory.class);
 
     @VisibleForTesting final String name;
     private final Class<? extends ToolchainFactory<?>> toolchainFactoryClass;

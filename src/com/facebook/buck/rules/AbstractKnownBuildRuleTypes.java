@@ -38,7 +38,6 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.android.SmartDexingStep;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
-import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
@@ -266,21 +265,17 @@ abstract class AbstractKnownBuildRuleTypes {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
     // Setup the NDK C/C++ platforms.
-    NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
-        NdkCxxPlatformsProviderFactory.create(config, filesystem, toolchainProvider);
+    NdkCxxPlatformsProvider ndkCxxPlatformsToolchain =
+        toolchainProvider.getByName(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
 
     ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
-        ndkCxxPlatformsProvider.getNdkCxxPlatforms();
+        ndkCxxPlatformsToolchain.getNdkCxxPlatforms();
 
     // Create a map of system platforms.
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
 
-    // If an Android NDK is present, add platforms for that.  This is mostly useful for
-    // testing our Android NDK support for right now.
-    for (NdkCxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
-      cxxSystemPlatformsBuilder.put(
-          ndkCxxPlatform.getCxxPlatform().getFlavor(), ndkCxxPlatform.getCxxPlatform());
-    }
+    cxxSystemPlatformsBuilder.putAll(ndkCxxPlatformsToolchain.getCxxPlatforms());
 
     for (AppleCxxPlatform appleCxxPlatform : platformFlavorsToAppleCxxPlatforms.getValues()) {
       cxxSystemPlatformsBuilder.put(
