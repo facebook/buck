@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.event;
+package com.facebook.buck.event.chrome_trace;
 
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;

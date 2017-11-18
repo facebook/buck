@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.event;
+package com.facebook.buck.event.chrome_trace;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;

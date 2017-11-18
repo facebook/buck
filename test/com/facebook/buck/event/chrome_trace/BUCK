@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "event",
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/event/chrome_trace:chrome_trace",
+        "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
+    ],
+)
