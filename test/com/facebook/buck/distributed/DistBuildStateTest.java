@@ -120,7 +120,6 @@ public class DistBuildStateTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor,
-                sdkEnvironment,
                 toolchainProvider,
                 pluginManager,
                 new TestSandboxExecutionStrategyFactory()));

@@ -80,7 +80,6 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 executor,
-                SdkEnvironment.create(toolchainProvider),
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -175,7 +174,6 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
-                sdkEnvironment,
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -194,7 +192,6 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
-                sdkEnvironment,
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -220,7 +217,6 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
-                sdkEnvironment,
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -240,7 +236,6 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
-                sdkEnvironment,
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -294,7 +289,6 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
-                sdkEnvironment1,
                 toolchainProvider1,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -308,7 +302,6 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 fakeProcessExecutor,
-                sdkEnvironment2,
                 toolchainProvider2,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));

@@ -440,7 +440,6 @@ public class XCodeProjectCommandHelperTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 new DefaultProcessExecutor(new TestConsole()),
-                cell.getSdkEnvironment(),
                 new TestToolchainProvider(),
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));

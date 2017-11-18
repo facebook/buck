@@ -34,8 +34,6 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
 
   abstract ProcessExecutor getExecutor();
 
-  abstract SdkEnvironment getSdkEnvironment();
-
   abstract ToolchainProvider getToolchainProvider();
 
   abstract PluginManager getPluginManager();
@@ -49,7 +47,6 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
         cell.getFilesystem(),
         getExecutor(),
         getToolchainProvider(),
-        getSdkEnvironment(),
         getPluginManager(),
         cell.getRuleKeyConfiguration(),
         getSandboxExecutionStrategyFactory());

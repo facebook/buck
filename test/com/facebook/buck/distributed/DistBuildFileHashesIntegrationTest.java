@@ -104,7 +104,6 @@ public class DistBuildFileHashesIntegrationTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 new DefaultProcessExecutor(new TestConsole()),
-                rootCell.getSdkEnvironment(),
                 new TestToolchainProvider(),
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -181,7 +180,6 @@ public class DistBuildFileHashesIntegrationTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 new DefaultProcessExecutor(new TestConsole()),
-                rootCell.getSdkEnvironment(),
                 new TestToolchainProvider(),
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));

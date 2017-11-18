@@ -27,8 +27,10 @@ import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
+import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -107,13 +109,10 @@ public class KnownBuildRuleTypesIntegrationTest {
 
     assumeThat(appleSdkPaths, is(not(anEmptyMap())));
 
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.of(
-            Optional.of(appleSdkPaths),
-            Optional.of(appleToolchains),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
+    toolchainProvider.addToolchain(
+        AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.of(appleSdkPaths));
+    toolchainProvider.addToolchain(
+        AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(appleToolchains));
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
@@ -126,7 +125,6 @@ public class KnownBuildRuleTypesIntegrationTest {
         projectFilesystem,
         processExecutor,
         toolchainProvider,
-        sdkEnvironment,
         pluginManager,
         TestRuleKeyConfigurationFactory.create(),
         new TestSandboxExecutionStrategyFactory());

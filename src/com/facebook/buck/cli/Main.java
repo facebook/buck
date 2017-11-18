@@ -335,7 +335,6 @@ public final class Main {
   public interface KnownBuildRuleTypesFactoryFactory {
     KnownBuildRuleTypesFactory create(
         ProcessExecutor processExecutor,
-        SdkEnvironment sdkEnvironment,
         ToolchainProvider toolchainProvider,
         PluginManager pluginManager,
         SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory);
@@ -688,7 +687,6 @@ public final class Main {
             KnownBuildRuleTypesProvider.of(
                 knownBuildRuleTypesFactoryFactory.create(
                     processExecutor,
-                    sdkEnvironment,
                     toolchainProvider,
                     pluginManager,
                     sandboxExecutionStrategyFactory));

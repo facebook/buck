@@ -69,11 +69,7 @@ public class InstallTriggerIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor,
-            sdkEnvironment,
-            toolchainProvider,
-            pluginManager,
-            sandboxExecutionStrategyFactory) ->
+        (processExecutor, toolchainProvider, pluginManager, sandboxExecutionStrategyFactory) ->
             cell -> {
               FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
               CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;

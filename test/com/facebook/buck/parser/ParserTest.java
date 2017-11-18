@@ -287,7 +287,6 @@ public class ParserTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor,
-                cell.getSdkEnvironment(),
                 testToolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));

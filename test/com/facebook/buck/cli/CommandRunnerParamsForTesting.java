@@ -104,7 +104,6 @@ public class CommandRunnerParamsForTesting {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 new DefaultProcessExecutor(new TestConsole()),
-                sdkEnvironment,
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));

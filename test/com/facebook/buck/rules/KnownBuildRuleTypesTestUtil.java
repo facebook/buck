@@ -109,8 +109,6 @@ public final class KnownBuildRuleTypesTestUtil {
       throws InterruptedException, IOException {
 
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment = AbstractSdkEnvironment.create(toolchainProvider);
-
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
     SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
@@ -121,7 +119,6 @@ public final class KnownBuildRuleTypesTestUtil {
         filesystem,
         processExecutor,
         toolchainProvider,
-        sdkEnvironment,
         pluginManager,
         TestRuleKeyConfigurationFactory.create(),
         sandboxExecutionStrategyFactory);

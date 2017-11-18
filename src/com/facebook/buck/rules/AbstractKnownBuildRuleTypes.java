@@ -49,6 +49,11 @@ import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkLocation;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.apple.toolchain.AppleToolchain;
+import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
@@ -239,7 +244,6 @@ abstract class AbstractKnownBuildRuleTypes {
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
-      SdkEnvironment sdkEnvironment,
       PluginManager pluginManager,
       RuleKeyConfiguration ruleKeyConfiguration,
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory)
@@ -247,12 +251,19 @@ abstract class AbstractKnownBuildRuleTypes {
 
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
+    Optional<AppleSdkLocation> appleSdkLocation =
+        toolchainProvider.getByNameIfPresent(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.class);
+    Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths =
+        appleSdkLocation.map(AppleSdkLocation::getAppleSdkPaths);
+
+    Optional<AppleToolchainProvider> appleToolchainProvider =
+        toolchainProvider.getByNameIfPresent(
+            AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.class);
+    Optional<ImmutableMap<String, AppleToolchain>> appleToolchains =
+        appleToolchainProvider.map(AppleToolchainProvider::getAppleToolchains);
+
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        AppleCxxPlatformsProviderFactory.create(
-            config,
-            filesystem,
-            sdkEnvironment.getAppleSdkPaths(),
-            sdkEnvironment.getAppleToolchains());
+        AppleCxxPlatformsProviderFactory.create(config, filesystem, appleSdkPaths, appleToolchains);
 
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         appleCxxPlatformsProvider.getAppleCxxPlatforms();

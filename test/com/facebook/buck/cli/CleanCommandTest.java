@@ -175,7 +175,6 @@ public class CleanCommandTest extends EasyMockSupport {
             KnownBuildRuleTypesProvider.of(
                 DefaultKnownBuildRuleTypesFactory.of(
                     processExecutor,
-                    sdkEnvironment,
                     toolchainProvider,
                     pluginManager,
                     new TestSandboxExecutionStrategyFactory())))
