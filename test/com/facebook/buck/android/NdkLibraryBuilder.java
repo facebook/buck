@@ -16,6 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
@@ -61,7 +62,7 @@ public class NdkLibraryBuilder
 
   public NdkLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
-        new NdkLibraryDescription(createToolchainProvider(), NDK_PLATFORMS) {
+        new NdkLibraryDescription(createToolchainProvider()) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {
@@ -75,7 +76,7 @@ public class NdkLibraryBuilder
 
   public NdkLibraryBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
     super(
-        new NdkLibraryDescription(toolchainProvider, NDK_PLATFORMS) {
+        new NdkLibraryDescription(toolchainProvider) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {
@@ -90,6 +91,8 @@ public class NdkLibraryBuilder
   private static ToolchainProvider createToolchainProvider() {
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+    toolchainProvider.addToolchain(
+        NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS));
     return toolchainProvider;
   }
 

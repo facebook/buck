@@ -24,8 +24,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -49,7 +48,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -66,7 +64,6 @@ public class AndroidInstrumentationApkDescription
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
-  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
@@ -76,7 +73,6 @@ public class AndroidInstrumentationApkDescription
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
@@ -84,7 +80,6 @@ public class AndroidInstrumentationApkDescription
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
-    this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
@@ -160,6 +155,10 @@ public class AndroidInstrumentationApkDescription
         toolchainProvider.getByName(
             AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
 
+    NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             buildTarget,
@@ -197,7 +196,7 @@ public class AndroidInstrumentationApkDescription
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            nativePlatforms,
+            ndkCxxPlatformsProvider.getNdkCxxPlatforms(),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),

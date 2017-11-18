@@ -36,9 +36,7 @@ import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.android.SmartDexingStep;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
-import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -269,9 +267,6 @@ abstract class AbstractKnownBuildRuleTypes {
         toolchainProvider.getByName(
             NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
 
-    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
-        ndkCxxPlatformsToolchain.getNdkCxxPlatforms();
-
     // Create a map of system platforms.
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
 
@@ -450,11 +445,11 @@ abstract class AbstractKnownBuildRuleTypes {
 
     builder.addDescriptions(
         new AndroidAarDescription(
+            toolchainProvider,
             new AndroidManifestDescription(),
             cxxBuckConfig,
             javaConfig,
-            defaultJavacOptions,
-            ndkCxxPlatforms));
+            defaultJavacOptions));
     builder.addDescriptions(new AndroidAppModularityDescription());
     builder.addDescriptions(
         new AndroidBinaryDescription(
@@ -463,7 +458,6 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultJavaOptions,
             defaultJavacOptions,
             proGuardConfig,
-            ndkCxxPlatforms,
             dxExecutorService,
             config,
             cxxBuckConfig,
@@ -475,7 +469,6 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             proGuardConfig,
             defaultJavacOptions,
-            ndkCxxPlatforms,
             dxExecutorService,
             cxxBuckConfig,
             dxConfig));
@@ -596,7 +589,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new LuaBinaryDescription(defaultLuaPlatform, luaPlatforms, cxxBuckConfig, pythonPlatforms));
     builder.addDescriptions(new LuaLibraryDescription());
-    builder.addDescriptions(new NdkLibraryDescription(toolchainProvider, ndkCxxPlatforms));
+    builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);
     builder.addDescriptions(new OcamlBinaryDescription(ocamlBuckConfig));
     builder.addDescriptions(new OcamlLibraryDescription(ocamlBuckConfig));

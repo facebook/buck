@@ -22,8 +22,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -43,6 +42,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -77,23 +77,23 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR =
       InternalFlavor.of("aar_android_resource");
 
+  private final ToolchainProvider toolchainProvider;
   private final AndroidManifestDescription androidManifestDescription;
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions javacOptions;
-  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
+      ToolchainProvider toolchainProvider,
       AndroidManifestDescription androidManifestDescription,
       CxxBuckConfig cxxBuckConfig,
       JavaBuckConfig javaBuckConfig,
-      JavacOptions javacOptions,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
+      JavacOptions javacOptions) {
+    this.toolchainProvider = toolchainProvider;
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
     this.javacOptions = javacOptions;
-    this.nativePlatforms = nativePlatforms;
   }
 
   @Override
@@ -238,6 +238,10 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               .collect(Collectors.toList()));
     }
 
+    NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+
     /* native_libraries */
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -245,7 +249,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
             buildTarget,
             projectFilesystem,
             originalBuildRuleParams,
-            nativePlatforms,
+            ndkCxxPlatformsProvider.getNdkCxxPlatforms(),
             ImmutableSet.of(),
             cxxBuckConfig,
             /* nativeLibraryMergeMap */ Optional.empty(),

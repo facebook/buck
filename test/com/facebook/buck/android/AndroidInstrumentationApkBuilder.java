@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidInstrumentationApkBuilder
@@ -40,7 +39,6 @@ public class AndroidInstrumentationApkBuilder
             DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ANDROID_JAVAC_OPTIONS,
-            ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
             new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
             new DxConfig(FakeBuckConfig.builder().build())),

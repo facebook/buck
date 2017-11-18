@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidNdk;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -57,7 +58,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -87,13 +87,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
           ImmutableMap.of("env", new EnvironmentVariableMacroExpander(Platform.detect())));
 
   private final ToolchainProvider toolchainProvider;
-  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms;
 
-  public NdkLibraryDescription(
-      ToolchainProvider toolchainProvider,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
+  public NdkLibraryDescription(ToolchainProvider toolchainProvider) {
     this.toolchainProvider = toolchainProvider;
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -167,7 +163,12 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+    NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+
+    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry :
+        ndkCxxPlatformsProvider.getNdkCxxPlatforms().entrySet()) {
       CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
