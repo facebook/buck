@@ -80,11 +80,6 @@ public class ExternalJavac implements Javac {
                         new NonHashableSourcePathContainer(buildTargetPath);
 
                     @Override
-                    public ImmutableCollection<SourcePath> getInputs() {
-                      return ImmutableList.of(container.getSourcePath());
-                    }
-
-                    @Override
                     public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
                       return ImmutableList.of(
                           resolver.getAbsolutePath(container.getSourcePath()).toString());

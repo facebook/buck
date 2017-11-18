@@ -18,10 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -35,11 +33,6 @@ public class HashedFileTool implements AbstractTool {
 
   public HashedFileTool(@Nullable SourcePath path) {
     this(() -> Preconditions.checkNotNull(path));
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
   }
 
   @Override

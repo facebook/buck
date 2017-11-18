@@ -28,4 +28,9 @@ public interface AbstractTool extends Tool {
   default ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return BuildableSupport.deriveDeps(this, ruleFinder).collect(MoreCollectors.toImmutableList());
   }
+
+  @Override
+  default ImmutableCollection<SourcePath> getInputs() {
+    return BuildableSupport.deriveInputs(this).collect(MoreCollectors.toImmutableList());
+  }
 }

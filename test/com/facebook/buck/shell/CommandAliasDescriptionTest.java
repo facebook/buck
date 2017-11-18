@@ -24,9 +24,11 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBinaryBuildRuleBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
@@ -44,6 +46,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -310,16 +313,26 @@ public class CommandAliasDescriptionTest {
 
   @Test
   public void exposesInputsOfTheUsedTool() {
-    BiConsumer<Platform, String[]> test =
+    BiConsumer<Platform, Set<SourcePath>> test =
         (platform, inputs) -> {
-          CommandAliasBuilder.BuildResult result = multiPlatformScenario(platform);
           assertEquals(
-              Stream.of(inputs).map(FakeSourcePath::of).collect(Collectors.toSet()),
-              result.commandAlias().getExecutableCommand().getInputs());
+              inputs,
+              multiPlatformScenario(platform).commandAlias().getExecutableCommand().getInputs());
         };
 
-    test.accept(Platform.LINUX, new String[] {"a2", "b2"});
-    test.accept(Platform.UNKNOWN, new String[] {"a0", "b0"});
+    SourcePath aDep2 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//a:dep2"));
+    SourcePath bDep2 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//b:dep2"));
+    SourcePath a2 = FakeSourcePath.of("a2");
+    SourcePath b2 = FakeSourcePath.of("b2");
+
+    test.accept(Platform.LINUX, ImmutableSet.of(aDep2, bDep2, a2, b2));
+
+    SourcePath aDep0 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//a:dep0"));
+    SourcePath bDep0 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//b:dep0"));
+    SourcePath a0 = FakeSourcePath.of("a0");
+    SourcePath b0 = FakeSourcePath.of("b0");
+
+    test.accept(Platform.UNKNOWN, ImmutableSet.of(aDep0, bDep0, a0, b0));
   }
 
   @Test

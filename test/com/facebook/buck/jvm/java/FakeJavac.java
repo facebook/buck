@@ -19,10 +19,8 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,11 +30,6 @@ import javax.annotation.Nullable;
 
 /** Fake implementation of {@link com.facebook.buck.jvm.java.Javac} for tests. */
 public class FakeJavac implements Javac {
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.of();
-  }
-
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     throw new UnsupportedOperationException();

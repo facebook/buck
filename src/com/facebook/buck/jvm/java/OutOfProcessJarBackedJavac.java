@@ -22,7 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -83,10 +82,5 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
                 .map(JavacPluginJsr199FieldsSerializer::serialize)
                 .collect(Collectors.toList()),
             abiGenerationMode.toString()));
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return classpath;
   }
 }

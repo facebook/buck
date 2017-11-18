@@ -25,12 +25,16 @@ import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class FakeBinaryBuildRule extends AbstractBuildRule implements BinaryBuildRule {
-
-  private final Tool tool;
+  @AddToRuleKey private final Tool tool;
+  @AddToRuleKey private final ImmutableSortedSet<BuildRule> deps;
 
   protected FakeBinaryBuildRule(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, Tool tool) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ImmutableSortedSet<BuildRule> deps,
+      Tool tool) {
     super(buildTarget, projectFilesystem);
+    this.deps = deps;
     this.tool = tool;
   }
 

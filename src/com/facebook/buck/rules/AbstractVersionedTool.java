@@ -17,10 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -51,11 +49,6 @@ abstract class AbstractVersionedTool implements AbstractTool {
   @Value.Parameter
   @AddToRuleKey
   protected abstract String getVersion();
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
-  }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
