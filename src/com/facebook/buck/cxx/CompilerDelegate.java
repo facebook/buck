@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
@@ -30,7 +29,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 
 /** Helper class for generating compiler invocations for a cxx compilation rule. */
@@ -84,10 +82,6 @@ class CompilerDelegate implements AddsToRuleKey {
 
   public ImmutableMap<String, String> getEnvironment() {
     return compiler.getEnvironment(resolver);
-  }
-
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
-    return Ordering.natural().immutableSortedCopy(compiler.getInputs());
   }
 
   public boolean isArgFileSupported() {

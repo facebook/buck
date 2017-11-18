@@ -63,7 +63,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
   abstract BuildTarget getBuildTarget();
 
   @Override
-  public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
+  public void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder) {
     builder.addSymlinkTree(getRoot(), getNameToPathMap());
   }
 

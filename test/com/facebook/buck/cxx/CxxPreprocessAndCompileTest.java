@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
@@ -31,13 +32,10 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
@@ -49,7 +47,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
@@ -412,14 +409,11 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void compilerAndPreprocessorAreAlwaysReturnedFromGetInputsAfterBuildingLocally()
-      throws Exception {
-    CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
+  public void compilerAndPreprocessorAreNotCoveredByDepfile() throws Exception {
     SourcePath preprocessor = FakeSourcePath.of(projectFilesystem, "preprocessor");
     Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();
 
     SourcePath compiler = FakeSourcePath.of(projectFilesystem, "compiler");
-    Tool compilerTool = new CommandTool.Builder().addInput(compiler).build();
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
@@ -428,7 +422,6 @@ public class CxxPreprocessAndCompileTest {
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = TestBuildRuleParams.create();
-    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     projectFilesystem.writeContentsToPath(
         "test.o: " + pathResolver.getRelativePath(DEFAULT_INPUT) + " ",
@@ -461,27 +454,8 @@ public class CxxPreprocessAndCompileTest {
             Optional.empty(),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             Optional.empty());
-    assertThat(
-        cxxPreprocess.getInputsAfterBuildingLocally(context, cellPathResolver),
-        hasItem(preprocessor));
-
-    CxxPreprocessAndCompile cxxCompile =
-        CxxPreprocessAndCompile.compile(
-            target,
-            projectFilesystem,
-            params,
-            new CompilerDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                new GccCompiler(compilerTool),
-                CxxToolFlags.of()),
-            DEFAULT_OUTPUT,
-            fakeInput,
-            DEFAULT_INPUT_TYPE,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            Optional.empty());
-    assertThat(
-        cxxCompile.getInputsAfterBuildingLocally(context, cellPathResolver), hasItem(compiler));
+    assertFalse(cxxPreprocess.getCoveredByDepFilePredicate(pathResolver).test(preprocessor));
+    assertFalse(cxxPreprocess.getCoveredByDepFilePredicate(pathResolver).test(compiler));
   }
 
   @Test

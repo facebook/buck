@@ -60,7 +60,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   /**
    * Add this header pack to the given {@link com.facebook.buck.cxx.HeaderPathNormalizer.Builder}.
    */
-  public abstract void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder);
+  public abstract void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder);
 
   /** @return all deps required by this header pack. */
   public abstract Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);

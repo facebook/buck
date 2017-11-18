@@ -187,7 +187,7 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return preprocessorDelegate.getCoveredByDepFilePredicate();
+    return preprocessorDelegate.getCoveredByDepfilePredicate();
   }
 
   @Override
@@ -199,10 +199,7 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     try {
-      return ImmutableList.<SourcePath>builder()
-          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context)))
-          .add(input)
-          .build();
+      return preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context));
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);
     }
@@ -229,7 +226,8 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   preprocessorDelegate.getHeaderPathNormalizer(),
                   preprocessorDelegate.getHeaderVerification(),
                   getDepFilePath(context.getSourcePathResolver()),
-                  // TODO(10194465): This uses relative path so as to get relative paths in the dep file
+                  // TODO(10194465): This uses relative path so as to get relative paths in the dep
+                  // file
                   getRelativeInputPath(context.getSourcePathResolver()),
                   output,
                   compilerDelegate.getDependencyTrackingMode()));

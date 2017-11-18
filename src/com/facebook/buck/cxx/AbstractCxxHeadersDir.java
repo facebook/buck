@@ -49,7 +49,7 @@ abstract class AbstractCxxHeadersDir extends CxxHeaders {
   }
 
   @Override
-  public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
+  public void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder) {
     builder.addHeaderDir(getRoot());
   }
 

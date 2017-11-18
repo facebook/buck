@@ -310,15 +310,22 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    if (preprocessDelegate.isPresent()) {
-      return preprocessDelegate.get().getCoveredByDepFilePredicate();
-    }
-    return (SourcePath path) -> true;
-  }
-
-  @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    return (SourcePath path) -> false;
+    // This should acquire and retain the two predicates.
+    Predicate<SourcePath> preprocessorPredicate =
+        preprocessDelegate
+            .map(PreprocessorDelegate::getCoveredByDepfilePredicate)
+            .orElse(path -> false);
+    Predicate<SourcePath> precompiledHeaderPredicate =
+        precompiledHeaderRule
+            .map(header -> header.getCoveredByDepFilePredicate(pathResolver))
+            .orElse(path -> false);
+    // TODO(cjhopman): Move this to PreprocessorDelegate somehow.
+    // In the case of sandboxed cxx sources, the preprocessorDelegate has the input within one of
+    // its header trees and so it believes that it can be covered by the depfile.
+    SourcePath originalInput = getOriginalInput(pathResolver);
+    return path ->
+        !path.equals(originalInput)
+            && (preprocessorPredicate.test(path) || precompiledHeaderPredicate.test(path));
   }
 
   // see com.facebook.buck.cxx.AbstractCxxSourceRuleFactory.getSandboxedCxxSource()
@@ -338,6 +345,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       }
     }
     return input;
+  }
+
+  @Override
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+    return (SourcePath path) -> false;
   }
 
   @Override
@@ -362,21 +374,13 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       } catch (Depfiles.HeaderVerificationException e) {
         throw new HumanReadableException(e);
       }
-
       inputs.addAll(preprocessDelegate.get().getInputsAfterBuildingLocally(dependencies));
     }
 
-    // If present, include all inputs coming from the compiler tool.
-    inputs.addAll(compilerDelegate.getInputsAfterBuildingLocally());
-
     if (precompiledHeaderRule.isPresent()) {
-      CxxPrecompiledHeader pch = precompiledHeaderRule.get();
-      inputs.addAll(pch.getInputsAfterBuildingLocally(context, cellPathResolver));
+      inputs.addAll(
+          precompiledHeaderRule.get().getInputsAfterBuildingLocally(context, cellPathResolver));
     }
-
-    // Add the input.
-    inputs.add(getOriginalInput(context.getSourcePathResolver()));
-
     return inputs.build();
   }
 }

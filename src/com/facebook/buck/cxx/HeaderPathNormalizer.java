@@ -104,8 +104,27 @@ class HeaderPathNormalizer {
     return prefixMap;
   }
 
-  public static class Builder {
+  /** Simple interface for collecting headers from CxxHeaders and others. */
+  interface HeaderCollector {
+    HeaderCollector addSymlinkTree(SourcePath root, ImmutableMap<Path, SourcePath> headerMap);
 
+    HeaderCollector addHeader(SourcePath sourcePath, Path... unnormalizedPaths);
+
+    default HeaderCollector addHeaderDir(SourcePath sourcePath) {
+      return addHeader(sourcePath);
+    }
+
+    default HeaderCollector addPrefixHeader(SourcePath sourcePath) {
+      return addHeader(sourcePath);
+    }
+
+    default HeaderCollector addBridgingHeader(SourcePath sourcePath) {
+      return addHeader(sourcePath);
+    }
+  }
+
+  /** Collects headers for building a HeaderPathNormalizer. */
+  public static class Builder implements HeaderCollector {
     private final SourcePathResolver pathResolver;
 
     private final Map<Path, SourcePath> headers = new LinkedHashMap<>();
@@ -134,6 +153,7 @@ class HeaderPathNormalizer {
           value);
     }
 
+    @Override
     public Builder addSymlinkTree(SourcePath root, ImmutableMap<Path, SourcePath> headerMap) {
 
       // Add the headers from the symlink tree.
@@ -170,6 +190,7 @@ class HeaderPathNormalizer {
       return this;
     }
 
+    @Override
     public Builder addHeader(SourcePath sourcePath, Path... unnormalizedPaths) {
 
       // Map the relative path of the header path to the header, as we serialize the source path
@@ -189,14 +210,17 @@ class HeaderPathNormalizer {
       return this;
     }
 
+    @Override
     public Builder addHeaderDir(SourcePath sourcePath) {
       return addHeader(sourcePath);
     }
 
+    @Override
     public Builder addPrefixHeader(SourcePath sourcePath) {
       return addHeader(sourcePath);
     }
 
+    @Override
     public Builder addBridgingHeader(SourcePath sourcePath) {
       return addHeader(sourcePath);
     }
