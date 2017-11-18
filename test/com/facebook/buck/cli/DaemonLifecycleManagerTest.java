@@ -28,6 +28,7 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -211,6 +212,8 @@ public class DaemonLifecycleManagerTest {
     toolchainProvider.addToolchain(
         AppleDeveloperDirectoryProvider.DEFAULT_NAME,
         AppleDeveloperDirectoryProvider.of(appleDeveloperDirectory.get()));
+    toolchainProvider.addToolchain(
+        AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(ImmutableMap.of()));
 
     sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
     knownBuildRuleTypesProvider =

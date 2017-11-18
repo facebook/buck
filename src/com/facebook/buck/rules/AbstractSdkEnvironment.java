@@ -20,11 +20,11 @@ import com.facebook.buck.android.toolchain.AndroidNdk;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleSdkDiscovery;
-import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
+import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -52,35 +52,30 @@ abstract class AbstractSdkEnvironment {
   public abstract Optional<String> getNdkVersion();
 
   public static SdkEnvironment create(BuckConfig config, ToolchainProvider toolchainProvider) {
-    Optional<Path> appleDeveloperDir =
-        toolchainProvider
-            .getByNameIfPresent(
-                AppleDeveloperDirectoryProvider.DEFAULT_NAME, AppleDeveloperDirectoryProvider.class)
-            .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
-
-    AppleConfig appleConfig = config.getView(AppleConfig.class);
     Optional<ImmutableMap<String, AppleToolchain>> appleToolchains = Optional.empty();
-    try {
-      appleToolchains =
-          Optional.of(
-              AppleToolchainDiscovery.discoverAppleToolchains(
-                  appleDeveloperDir, appleConfig.getExtraToolchainPaths()));
-    } catch (IOException e) {
-      LOG.error(
-          e,
-          "Couldn't find the Apple build toolchain.\nPlease check that the SDK is installed properly.");
-    }
-
     Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths = Optional.empty();
-    if (appleToolchains.isPresent()) {
+
+    if (toolchainProvider.isToolchainPresent(AppleToolchainProvider.DEFAULT_NAME)) {
+      Optional<Path> appleDeveloperDir =
+          toolchainProvider
+              .getByNameIfPresent(
+                  AppleDeveloperDirectoryProvider.DEFAULT_NAME,
+                  AppleDeveloperDirectoryProvider.class)
+              .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
+
+      AppleConfig appleConfig = config.getView(AppleConfig.class);
+      AppleToolchainProvider appleToolchainProvider =
+          toolchainProvider.getByName(
+              AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.class);
       try {
         appleSdkPaths =
             Optional.of(
                 AppleSdkDiscovery.discoverAppleSdkPaths(
                     appleDeveloperDir,
                     appleConfig.getExtraPlatformPaths(),
-                    appleToolchains.get(),
+                    appleToolchainProvider.getAppleToolchains(),
                     appleConfig));
+        appleToolchains = Optional.of(appleToolchainProvider.getAppleToolchains());
       } catch (IOException e) {
         LOG.error(
             e, "Couldn't find the Apple SDK.\nPlease check that the SDK is installed properly.");

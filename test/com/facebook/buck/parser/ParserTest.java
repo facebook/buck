@@ -34,7 +34,9 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
+import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -246,20 +248,27 @@ public class ParserTest {
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
 
+    ToolchainCreationContext toolchainCreationContext =
+        ToolchainCreationContext.builder()
+            .setProcessExecutor(processExecutor)
+            .setFilesystem(filesystem)
+            .setBuckConfig(config)
+            .build();
+
     TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(
-                testToolchainProvider,
-                ToolchainCreationContext.builder()
-                    .setProcessExecutor(processExecutor)
-                    .setFilesystem(filesystem)
-                    .setBuckConfig(config)
-                    .build());
+            .createToolchain(testToolchainProvider, toolchainCreationContext);
     appleDeveloperDirectoryProvider.ifPresent(
         provider ->
             testToolchainProvider.addToolchain(
                 AppleDeveloperDirectoryProvider.DEFAULT_NAME, provider));
+    Optional<AppleToolchainProvider> appleToolchainProvider =
+        new AppleToolchainProviderFactory()
+            .createToolchain(testToolchainProvider, toolchainCreationContext);
+    appleToolchainProvider.ifPresent(
+        provider ->
+            testToolchainProvider.addToolchain(AppleToolchainProvider.DEFAULT_NAME, provider));
 
     cell =
         new TestCellBuilder()
