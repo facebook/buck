@@ -653,18 +653,17 @@ public final class Main {
 
       LOG.verbose("Buck core key from the previous Buck instance: %s", previousBuckCoreKey);
 
+      ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+
       ToolchainProvider toolchainProvider =
-          new DefaultToolchainProvider(clientEnvironment, buckConfig, filesystem);
+          new DefaultToolchainProvider(clientEnvironment, buckConfig, filesystem, processExecutor);
 
       AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
       AndroidDirectoryResolver androidDirectoryResolver =
           new DefaultAndroidDirectoryResolver(
               filesystem.getRootPath().getFileSystem(), clientEnvironment, androidBuckConfig);
 
-      ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
-
-      SdkEnvironment sdkEnvironment =
-          SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
+      SdkEnvironment sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
 
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
           new PlatformSandboxExecutionStrategyFactory();

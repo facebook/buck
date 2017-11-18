@@ -24,10 +24,8 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
-import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
 import javax.annotation.Nullable;
 
@@ -38,6 +36,7 @@ public class TestCellBuilder {
   private Watchman watchman = NULL_WATCHMAN;
   private CellConfig cellConfig;
   private SdkEnvironment sdkEnvironment;
+  private ToolchainProvider toolchainProvider;
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
@@ -69,19 +68,23 @@ public class TestCellBuilder {
     return this;
   }
 
-  public Cell build() throws IOException, InterruptedException {
-    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+  public TestCellBuilder setToolchainProvider(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
+    return this;
+  }
 
+  public Cell build() throws IOException, InterruptedException {
     BuckConfig config =
         buckConfig == null
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
             : buckConfig;
 
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    ToolchainProvider toolchainProvider =
+        this.toolchainProvider == null ? new TestToolchainProvider() : this.toolchainProvider;
 
     SdkEnvironment sdkEnvironment =
         this.sdkEnvironment == null
-            ? SdkEnvironment.create(config, executor, toolchainProvider)
+            ? SdkEnvironment.create(config, toolchainProvider)
             : this.sdkEnvironment;
 
     return CellProvider.createForLocalBuild(

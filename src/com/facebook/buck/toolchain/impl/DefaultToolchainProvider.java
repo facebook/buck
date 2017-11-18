@@ -22,6 +22,8 @@ import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
+import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
@@ -29,6 +31,7 @@ import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
@@ -41,7 +44,9 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     ANDROID(AndroidToolchain.DEFAULT_NAME, DefaultAndroidToolchainFactory.class),
     ANDROID_LEGACY(AndroidLegacyToolchain.DEFAULT_NAME, DefaultAndroidLegacyToolchainFactory.class),
     NDK_CXX_PLATFORMS_PROVIDER(
-        NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProviderFactory.class);
+        NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProviderFactory.class),
+    APPLE_DEVELOPER_DIRECTORY_PROVIDER(
+        AppleDeveloperDirectoryProvider.DEFAULT_NAME, AppleDeveloperDirectoryProviderFactory.class);
 
     @VisibleForTesting final String name;
     private final Class<? extends ToolchainFactory<?>> toolchainFactoryClass;
@@ -60,12 +65,14 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   public DefaultToolchainProvider(
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor) {
     toolchainCreationContext =
         ToolchainCreationContext.builder()
             .setBuckConfig(buckConfig)
             .setFilesystem(projectFilesystem)
             .setEnvironment(environment)
+            .setProcessExecutor(processExecutor)
             .build();
 
     ImmutableMap.Builder<String, Class<? extends ToolchainFactory<?>>> toolchainFactoriesBuilder =

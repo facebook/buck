@@ -18,6 +18,7 @@ package com.facebook.buck.toolchain;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
@@ -31,4 +32,6 @@ interface AbstractToolchainCreationContext {
   BuckConfig getBuckConfig();
 
   ProjectFilesystem getFilesystem();
+
+  ProcessExecutor getProcessExecutor();
 }

@@ -32,7 +32,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -75,10 +77,12 @@ import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -240,11 +244,33 @@ public class ParserTest {
             .setSections(configSectionsBuilder.build())
             .build();
 
-    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =
+        new AppleDeveloperDirectoryProviderFactory()
+            .createToolchain(
+                testToolchainProvider,
+                ToolchainCreationContext.builder()
+                    .setProcessExecutor(processExecutor)
+                    .setFilesystem(filesystem)
+                    .setBuckConfig(config)
+                    .build());
+    appleDeveloperDirectoryProvider.ifPresent(
+        provider ->
+            testToolchainProvider.addToolchain(
+                AppleDeveloperDirectoryProvider.DEFAULT_NAME, provider));
+
+    cell =
+        new TestCellBuilder()
+            .setFilesystem(filesystem)
+            .setBuckConfig(config)
+            .setToolchainProvider(testToolchainProvider)
+            .build();
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                new DefaultProcessExecutor(new TestConsole()),
+                processExecutor,
                 cell.getSdkEnvironment(),
                 new TestToolchainProvider(),
                 BuckPluginManagerFactory.createPluginManager(),

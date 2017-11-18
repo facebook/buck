@@ -19,16 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.toolchain.AndroidNdk;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -52,10 +51,12 @@ abstract class AbstractSdkEnvironment {
 
   public abstract Optional<String> getNdkVersion();
 
-  public static SdkEnvironment create(
-      BuckConfig config, ProcessExecutor executor, ToolchainProvider toolchainProvider) {
+  public static SdkEnvironment create(BuckConfig config, ToolchainProvider toolchainProvider) {
     Optional<Path> appleDeveloperDir =
-        AppleCxxPlatforms.getAppleDeveloperDirectory(config, executor);
+        toolchainProvider
+            .getByNameIfPresent(
+                AppleDeveloperDirectoryProvider.DEFAULT_NAME, AppleDeveloperDirectoryProvider.class)
+            .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
     Optional<ImmutableMap<String, AppleToolchain>> appleToolchains = Optional.empty();

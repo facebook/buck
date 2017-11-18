@@ -759,9 +759,7 @@ public class ProjectWorkspace {
     ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;
     Config config = filesystemAndConfig.config;
 
-    TestConsole console = new TestConsole();
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
     BuckConfig buckConfig =
         new BuckConfig(
             config,
@@ -771,8 +769,7 @@ public class ProjectWorkspace {
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
+    SdkEnvironment sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
 
     return CellProvider.createForLocalBuild(
             filesystem,

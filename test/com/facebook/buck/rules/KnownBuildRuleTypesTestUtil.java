@@ -109,8 +109,7 @@ public final class KnownBuildRuleTypesTestUtil {
       throws InterruptedException, IOException {
 
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        AbstractSdkEnvironment.create(config, processExecutor, toolchainProvider);
+    SdkEnvironment sdkEnvironment = AbstractSdkEnvironment.create(config, toolchainProvider);
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 

@@ -142,8 +142,7 @@ public class CleanCommandTest extends EasyMockSupport {
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ProcessExecutor processExecutor = new FakeProcessExecutor();
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
+    SdkEnvironment sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 

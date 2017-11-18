@@ -54,8 +54,6 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
@@ -100,10 +98,8 @@ public class CommandRunnerParamsForTesting {
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ProcessExecutor processExecutor = new FakeProcessExecutor();
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(config, processExecutor, toolchainProvider);
+    SdkEnvironment sdkEnvironment = SdkEnvironment.create(config, toolchainProvider);
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(

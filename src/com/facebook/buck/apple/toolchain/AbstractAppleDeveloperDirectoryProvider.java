@@ -14,18 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.toolchain;
+package com.facebook.buck.apple.toolchain;
 
-import java.util.Optional;
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import java.nio.file.Path;
+import org.immutables.value.Value;
 
-/** An interface that give access to specific toolchains by toolchain name. */
-public interface ToolchainProvider {
-  Toolchain getByName(String toolchainName);
+/** Provides access to Apple developer directory. */
+@Value.Immutable(builder = false, copy = false)
+@BuckStyleImmutable
+public interface AbstractAppleDeveloperDirectoryProvider extends Toolchain {
 
-  <T extends Toolchain> T getByName(String toolchainName, Class<T> toolchainClass);
+  String DEFAULT_NAME = "apple-developer-directory";
 
-  <T extends Toolchain> Optional<T> getByNameIfPresent(
-      String toolchainName, Class<T> toolchainClass);
-
-  boolean isToolchainPresent(String toolchainName);
+  @Value.Parameter
+  Path getAppleDeveloperDirectory();
 }

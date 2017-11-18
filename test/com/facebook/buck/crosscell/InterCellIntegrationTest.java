@@ -398,8 +398,7 @@ public class InterCellIntegrationTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor,
-                SdkEnvironment.create(
-                    FakeBuckConfig.builder().build(), processExecutor, toolchainProvider),
+                SdkEnvironment.create(FakeBuckConfig.builder().build(), toolchainProvider),
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));

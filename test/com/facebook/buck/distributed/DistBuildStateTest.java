@@ -112,7 +112,7 @@ public class DistBuildStateTest {
   private void setUp(BuckConfig buckConfig) {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    sdkEnvironment = SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
+    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 

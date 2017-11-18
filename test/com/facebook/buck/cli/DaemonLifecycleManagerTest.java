@@ -26,6 +26,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -78,8 +79,7 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 executor,
-                SdkEnvironment.create(
-                    FakeBuckConfig.builder().build(), executor, toolchainProvider),
+                SdkEnvironment.create(FakeBuckConfig.builder().build(), toolchainProvider),
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -165,39 +165,11 @@ public class DaemonLifecycleManagerTest {
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     Optional<Path> appleDeveloperDirectory = getAppleDeveloperDir(buckConfig);
-    ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
-        ImmutableList.builder();
-    ProcessExecutorParams processExecutorParams =
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of("xcode-select", "--print-path"))
-            .build();
-    // First KnownBuildRuleTypes resolution.
-    fakeProcessesBuilder.add(
-        new SimpleImmutableEntry<>(processExecutorParams, new FakeProcess(0, "/dev/null", "")));
-    // Check SDK.
-    fakeProcessesBuilder.add(
-        new SimpleImmutableEntry<>(processExecutorParams, new FakeProcess(0, "/dev/null", "")));
-    // Check SDK.
-    fakeProcessesBuilder.add(
-        new SimpleImmutableEntry<>(
-            processExecutorParams,
-            new FakeProcess(0, appleDeveloperDirectory.get().toString(), "")));
-    // KnownBuildRuleTypes resolution.
-    fakeProcessesBuilder.add(
-        new SimpleImmutableEntry<>(
-            processExecutorParams,
-            new FakeProcess(0, appleDeveloperDirectory.get().toString(), "")));
-    // Check SDK.
-    fakeProcessesBuilder.add(
-        new SimpleImmutableEntry<>(
-            processExecutorParams,
-            new FakeProcess(0, appleDeveloperDirectory.get().toString(), "")));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor();
 
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
+    SdkEnvironment sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -216,7 +188,7 @@ public class DaemonLifecycleManagerTest {
                 .build(),
             knownBuildRuleTypesProvider);
 
-    sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
+    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -236,7 +208,11 @@ public class DaemonLifecycleManagerTest {
             knownBuildRuleTypesProvider);
     assertEquals("Apple SDK should still be not found", daemon1, daemon2);
 
-    sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
+    toolchainProvider.addToolchain(
+        AppleDeveloperDirectoryProvider.DEFAULT_NAME,
+        AppleDeveloperDirectoryProvider.of(appleDeveloperDirectory.get()));
+
+    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -256,7 +232,7 @@ public class DaemonLifecycleManagerTest {
             knownBuildRuleTypesProvider);
     assertNotEquals("Apple SDK should be found", daemon2, daemon3);
 
-    sdkEnvironment = SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider);
+    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -309,8 +285,7 @@ public class DaemonLifecycleManagerTest {
     TestToolchainProvider toolchainProvider1 = new TestToolchainProvider();
     toolchainProvider1.addAndroidToolchain(
         new TestAndroidToolchain(filesystem.getPath("/path/to/sdkv1")));
-    SdkEnvironment sdkEnvironment1 =
-        SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider1);
+    SdkEnvironment sdkEnvironment1 = SdkEnvironment.create(buckConfig, toolchainProvider1);
 
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider1 =
         KnownBuildRuleTypesProvider.of(
@@ -324,8 +299,7 @@ public class DaemonLifecycleManagerTest {
     TestToolchainProvider toolchainProvider2 = new TestToolchainProvider();
     toolchainProvider2.addAndroidToolchain(
         new TestAndroidToolchain(filesystem.getPath("/path/to/sdkv2")));
-    SdkEnvironment sdkEnvironment2 =
-        SdkEnvironment.create(buckConfig, fakeProcessExecutor, toolchainProvider2);
+    SdkEnvironment sdkEnvironment2 = SdkEnvironment.create(buckConfig, toolchainProvider2);
 
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider2 =
         KnownBuildRuleTypesProvider.of(
