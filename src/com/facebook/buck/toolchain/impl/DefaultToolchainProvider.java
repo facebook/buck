@@ -26,6 +26,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,9 +52,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     }
   }
 
-  private final ImmutableMap<String, String> environment;
-  private final BuckConfig buckConfig;
-  private final ProjectFilesystem projectFilesystem;
+  private final ToolchainCreationContext toolchainCreationContext;
   private final ImmutableMap<String, Class<? extends ToolchainFactory<?>>> toolchainFactories;
 
   private final Map<String, Optional<? extends Toolchain>> toolchains = new HashMap<>();
@@ -62,9 +61,12 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
       ProjectFilesystem projectFilesystem) {
-    this.environment = environment;
-    this.buckConfig = buckConfig;
-    this.projectFilesystem = projectFilesystem;
+    toolchainCreationContext =
+        ToolchainCreationContext.builder()
+            .setBuckConfig(buckConfig)
+            .setFilesystem(projectFilesystem)
+            .setEnvironment(environment)
+            .build();
 
     ImmutableMap.Builder<String, Class<? extends ToolchainFactory<?>>> toolchainFactoriesBuilder =
         ImmutableMap.builder();
@@ -114,6 +116,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     } catch (IllegalAccessException | InstantiationException e) {
       throw new RuntimeException(e);
     }
-    return toolchainFactory.createToolchain(this, environment, buckConfig, projectFilesystem);
+    return toolchainFactory.createToolchain(this, toolchainCreationContext);
   }
 }

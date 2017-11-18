@@ -26,6 +26,7 @@ import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
@@ -36,13 +37,10 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
 
   @Override
   public Optional<NdkCxxPlatformsProvider> createToolchain(
-      ToolchainProvider toolchainProvider,
-      ImmutableMap<String, String> environment,
-      BuckConfig buckConfig,
-      ProjectFilesystem filesystem) {
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
 
     ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
-        getNdkCxxPlatforms(buckConfig, filesystem, toolchainProvider);
+        getNdkCxxPlatforms(context.getBuckConfig(), context.getFilesystem(), toolchainProvider);
 
     return Optional.of(NdkCxxPlatformsProvider.of(ndkCxxPlatforms));
   }

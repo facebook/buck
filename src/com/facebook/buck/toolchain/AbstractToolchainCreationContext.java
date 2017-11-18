@@ -16,9 +16,19 @@
 
 package com.facebook.buck.toolchain;
 
-import java.util.Optional;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableMap;
+import org.immutables.value.Value;
 
-public interface ToolchainFactory<T extends Toolchain> {
-  Optional<T> createToolchain(
-      ToolchainProvider toolchainProvider, ToolchainCreationContext context);
+/** Contains objects that can be used during the creation of a toolchain. */
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractToolchainCreationContext {
+  ImmutableMap<String, String> getEnvironment();
+
+  BuckConfig getBuckConfig();
+
+  ProjectFilesystem getFilesystem();
 }

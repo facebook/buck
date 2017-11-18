@@ -16,12 +16,10 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -30,16 +28,16 @@ public class DefaultAndroidLegacyToolchainFactory
 
   @Override
   public Optional<AndroidLegacyToolchain> createToolchain(
-      ToolchainProvider toolchainProvider,
-      ImmutableMap<String, String> environment,
-      BuckConfig buckConfig,
-      ProjectFilesystem filesystem) {
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
 
-    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    AndroidBuckConfig androidBuckConfig =
+        new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(), environment, androidBuckConfig);
+            context.getFilesystem().getRootPath().getFileSystem(),
+            context.getEnvironment(),
+            androidBuckConfig);
 
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         new AndroidPlatformTargetSupplier(androidDirectoryResolver, androidBuckConfig);
