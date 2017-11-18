@@ -46,6 +46,8 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -883,6 +885,36 @@ public class RuleKeyTest {
 
     assertEquals(first, second);
     assertNotEquals(first, third);
+  }
+
+  @Value.Immutable
+  @BuckStylePackageVisibleTuple
+  abstract static class AbstractTestPackageVisibleTuple implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract int getValue();
+  }
+
+  @Value.Immutable
+  @BuckStylePackageVisibleImmutable
+  abstract static class AbstractTestPackageVisibleImmutable implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract int getValue();
+  }
+
+  @Test
+  public void packageVisibleImmutablesCanUseAddToRuleKey() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    createBuilder(resolver, ruleFinder)
+        .setReflectively("value", TestPackageVisibleTuple.of(0))
+        .build(RuleKey::new);
+
+    createBuilder(resolver, ruleFinder)
+        .setReflectively("value", TestPackageVisibleImmutable.builder().setValue(0).build())
+        .build(RuleKey::new);
   }
 
   @Value.Immutable
