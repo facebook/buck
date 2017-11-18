@@ -16,14 +16,9 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -32,27 +27,12 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractStringArg implements Arg {
-
+  @AddToRuleKey
   abstract String getArg();
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
     consumer.accept(getArg());
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("arg", getArg());
   }
 
   public static Iterable<Arg> from(Iterable<String> args) {

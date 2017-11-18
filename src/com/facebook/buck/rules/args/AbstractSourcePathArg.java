@@ -16,14 +16,11 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -33,8 +30,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
-
   @Override
+  @AddToRuleKey
   public abstract SourcePath getPath();
 
   @Override
@@ -51,21 +48,6 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
     } else {
       appendToCommandLine(consumer, pathResolver);
     }
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getPath());
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.of(getPath());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("arg", getPath());
   }
 
   public static ImmutableList<Arg> from(Iterable<SourcePath> paths) {

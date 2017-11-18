@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
@@ -29,8 +29,7 @@ import java.util.Objects;
 
 /** A base class for {@link Arg}s which wrap a {@link FrameworkPath}. */
 abstract class FrameworkPathArg implements Arg {
-
-  protected final ImmutableCollection<FrameworkPath> frameworkPaths;
+  @AddToRuleKey protected final ImmutableCollection<FrameworkPath> frameworkPaths;
 
   public FrameworkPathArg(ImmutableCollection<FrameworkPath> frameworkPaths) {
     this.frameworkPaths = frameworkPaths;
@@ -71,10 +70,5 @@ abstract class FrameworkPathArg implements Arg {
   @Override
   public int hashCode() {
     return Objects.hash(frameworkPaths);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("frameworkPaths", frameworkPaths);
   }
 }

@@ -16,12 +16,8 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -44,38 +40,22 @@ import java.util.function.Function;
  * }</pre>
  */
 public class SanitizedArg implements Arg {
+  private final String unsanitized;
+  @AddToRuleKey private final String sanitized;
 
-  private final Function<? super String, String> sanitizer;
-  private final String unsanitzed;
-
-  public SanitizedArg(Function<? super String, String> sanitizer, String unsanitzed) {
-    this.sanitizer = sanitizer;
-    this.unsanitzed = unsanitzed;
+  public SanitizedArg(Function<? super String, String> sanitizer, String unsanitized) {
+    this.unsanitized = unsanitized;
+    this.sanitized = sanitizer.apply(unsanitized);
   }
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-    consumer.accept(unsanitzed);
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("arg", sanitizer.apply(unsanitzed));
+    consumer.accept(unsanitized);
   }
 
   @Override
   public String toString() {
-    return unsanitzed;
+    return unsanitized;
   }
 
   @Override
@@ -87,13 +67,13 @@ public class SanitizedArg implements Arg {
       return false;
     }
     SanitizedArg sanitizedArg = (SanitizedArg) o;
-    return Objects.equals(sanitizer, sanitizedArg.sanitizer)
-        && Objects.equals(unsanitzed, sanitizedArg.unsanitzed);
+    return Objects.equals(sanitized, sanitizedArg.sanitized)
+        && Objects.equals(unsanitized, sanitizedArg.unsanitized);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(sanitizer, unsanitzed);
+    return Objects.hash(sanitized, unsanitized);
   }
 
   public static ImmutableList<Arg> from(Function<String, String> sanitizer, Iterable<String> args) {

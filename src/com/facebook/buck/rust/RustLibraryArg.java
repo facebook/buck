@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rust;
 
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -32,10 +32,12 @@ import java.util.function.Consumer;
 
 /** Generate linker command line for Rust library when used as a dependency. */
 public class RustLibraryArg implements Arg, HasSourcePath {
+  // TODO(cjhopman): This shouldn't hold a SourcePathResolver.
   private final SourcePathResolver resolver;
-  private final String crate;
+  @AddToRuleKey private final String crate;
+  @AddToRuleKey private final SourcePath rlib;
+  // TODO(cjhopman): These should either be added to the rulekey or removed.
   private final SortedSet<BuildRule> deps;
-  private final SourcePath rlib;
   private final boolean direct;
 
   public RustLibraryArg(
@@ -118,12 +120,6 @@ public class RustLibraryArg implements Arg, HasSourcePath {
     result = 31 * result + rlib.hashCode();
     result = 31 * result + (direct ? 1 : 0);
     return result;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("crate", crate);
-    sink.setReflectively("rlib", rlib);
   }
 
   @Override

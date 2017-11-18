@@ -21,6 +21,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -46,7 +47,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractStringWithMacrosArg implements Arg {
+abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
 
   abstract StringWithMacros getStringWithMacros();
 

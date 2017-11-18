@@ -30,9 +30,9 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -270,17 +270,11 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<FrameworkPath> allLibraries,
       ImmutableList.Builder<Arg> argsBuilder) {
 
-    final Function<FrameworkPath, Path> frameworkPathToSearchPath =
-        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
-
     argsBuilder.add(
         new FrameworkPathArg(allLibraries) {
-
-          @Override
-          public void appendToRuleKey(RuleKeyObjectSink sink) {
-            super.appendToRuleKey(sink);
-            sink.setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
-          }
+          @AddToRuleKey
+          final Function<FrameworkPath, Path> frameworkPathToSearchPath =
+              CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
           @Override
           public void appendToCommandLine(
@@ -326,16 +320,11 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<FrameworkPath> allFrameworks,
       ImmutableList.Builder<Arg> argsBuilder) {
 
-    final Function<FrameworkPath, Path> frameworkPathToSearchPath =
-        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
-
     argsBuilder.add(
         new FrameworkPathArg(allFrameworks) {
-          @Override
-          public void appendToRuleKey(RuleKeyObjectSink sink) {
-            super.appendToRuleKey(sink);
-            sink.setReflectively("frameworkPathToSearchPath", frameworkPathToSearchPath);
-          }
+          @AddToRuleKey
+          final Function<FrameworkPath, Path> frameworkPathToSearchPath =
+              CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
           @Override
           public void appendToCommandLine(

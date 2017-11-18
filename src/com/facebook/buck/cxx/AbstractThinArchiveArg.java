@@ -16,15 +16,12 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
 import org.immutables.value.Value;
@@ -39,27 +36,14 @@ import org.immutables.value.Value;
 abstract class AbstractThinArchiveArg implements Arg, HasSourcePath {
 
   @Override
+  @AddToRuleKey
   public abstract SourcePath getPath();
 
+  @AddToRuleKey
   protected abstract ImmutableList<SourcePath> getContents();
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
     consumer.accept(pathResolver.getAbsolutePath(getPath()).toString());
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.<SourcePath>builder().add(getPath()).addAll(getContents()).build();
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("archive", getPath()).setReflectively("inputs", getContents());
   }
 }

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.args;
 
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -29,15 +29,10 @@ import java.util.function.Consumer;
  * of the functions of the underlying Arg.
  */
 public class ProxyArg implements Arg {
-  protected final Arg arg;
+  @AddToRuleKey protected final Arg arg;
 
   public ProxyArg(Arg arg) {
     this.arg = arg;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    arg.appendToRuleKey(sink);
   }
 
   @Override

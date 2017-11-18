@@ -21,11 +21,10 @@ import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DelegatingTool;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -34,7 +33,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -173,21 +171,10 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
    * contains the undefined symbols listed in the symbol files).
    */
   private static class UndefinedSymbolsArg implements Arg {
-
-    private final Iterable<? extends SourcePath> symbolFiles;
+    @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
 
     public UndefinedSymbolsArg(Iterable<? extends SourcePath> symbolFiles) {
       this.symbolFiles = symbolFiles;
-    }
-
-    @Override
-    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-      return ruleFinder.filterBuildRuleInputs(symbolFiles);
-    }
-
-    @Override
-    public ImmutableCollection<SourcePath> getInputs() {
-      return ImmutableList.copyOf(symbolFiles);
     }
 
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
@@ -227,11 +214,6 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
     @Override
     public int hashCode() {
       return Objects.hash(symbolFiles);
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("symbolFiles", symbolFiles);
     }
   }
 }

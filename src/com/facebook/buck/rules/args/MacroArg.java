@@ -22,6 +22,7 @@ import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -39,7 +40,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /** An {@link Arg} which contains macros that need to be expanded. */
-public class MacroArg implements Arg {
+public class MacroArg implements Arg, RuleKeyAppendable {
 
   protected final MacroHandler expander;
   protected final BuildTarget target;

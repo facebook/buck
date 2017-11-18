@@ -16,11 +16,13 @@
 
 package com.facebook.buck.rules.args;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +35,7 @@ import java.util.function.Consumer;
  * An abstraction for modeling the arguments that contribute to a command run by a {@link
  * BuildRule}, and also carry information for computing a rule key.
  */
-public interface Arg extends RuleKeyAppendable {
+public interface Arg extends AddsToRuleKey {
 
   static Optional<String> flattenToSpaceSeparatedString(
       Optional<Arg> arg, SourcePathResolver pathResolver) {
@@ -42,10 +44,14 @@ public interface Arg extends RuleKeyAppendable {
   }
 
   /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
-  ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
+  default ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return BuildableSupport.deriveDeps(this, ruleFinder).collect(MoreCollectors.toImmutableList());
+  }
 
   /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
-  ImmutableCollection<SourcePath> getInputs();
+  default ImmutableCollection<SourcePath> getInputs() {
+    return BuildableSupport.deriveInputs(this).collect(MoreCollectors.toImmutableList());
+  }
 
   /**
    * Feed the contents of the Arg to the supplied consumer. This call may feed any number of

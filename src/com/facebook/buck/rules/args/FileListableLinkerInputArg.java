@@ -15,12 +15,9 @@
  */
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -34,8 +31,7 @@ import java.util.function.Consumer;
  * linker.
  */
 public class FileListableLinkerInputArg implements Arg, HasSourcePath {
-
-  private final SourcePathArg value;
+  @AddToRuleKey private final SourcePathArg value;
 
   public static Arg withSourcePathArg(SourcePathArg value) {
     return new FileListableLinkerInputArg(value);
@@ -51,16 +47,6 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
 
   private FileListableLinkerInputArg(SourcePathArg value) {
     this.value = value;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return value.getDeps(ruleFinder);
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return value.getInputs();
   }
 
   @Override
@@ -91,11 +77,6 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
   @Override
   public int hashCode() {
     return value.hashCode();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    value.appendToRuleKey(sink);
   }
 
   @Override

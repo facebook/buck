@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
@@ -77,8 +78,8 @@ public class SanitizedArgTest {
     SanitizedArg arg2 = new SanitizedArg(Functions.constant("sanitized"), "unsanitized 2");
     RuleKeyBuilder<HashCode> builder1 = createRuleKeyBuilder();
     RuleKeyBuilder<HashCode> builder2 = createRuleKeyBuilder();
-    arg1.appendToRuleKey(builder1);
-    arg2.appendToRuleKey(builder2);
+    AlterRuleKeys.amendKey(builder1, arg1);
+    AlterRuleKeys.amendKey(builder2, arg2);
     assertThat(builder1.build(), Matchers.equalTo(builder2.build()));
   }
 }
