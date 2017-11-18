@@ -109,10 +109,10 @@ public class DistBuildStateTest {
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private SdkEnvironment sdkEnvironment;
 
-  private void setUp(BuckConfig buckConfig) {
+  private void setUp() {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
+    sdkEnvironment = SdkEnvironment.create(toolchainProvider);
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
@@ -144,7 +144,7 @@ public class DistBuildStateTest {
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
-    setUp(buckConfig);
+    setUp();
 
     BuildJobState dump =
         DistBuildState.dump(
@@ -195,7 +195,7 @@ public class DistBuildStateTest {
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
-    setUp(buckConfig);
+    setUp();
 
     Config serverConfig =
         ConfigBuilder.createFromText(
@@ -245,7 +245,7 @@ public class DistBuildStateTest {
     ProjectFilesystem projectFilesystem = cell.getFilesystem();
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getBuckOut());
     BuckConfig buckConfig = cell.getBuckConfig();
-    setUp(buckConfig);
+    setUp();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
@@ -340,7 +340,7 @@ public class DistBuildStateTest {
             DefaultCellPathResolver.of(cell1Root, config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(cell1Filesystem).setBuckConfig(buckConfig).build();
-    setUp(buckConfig);
+    setUp();
 
     BuildJobState dump =
         DistBuildState.dump(

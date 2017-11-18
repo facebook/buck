@@ -18,19 +18,14 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.toolchain.AndroidNdk;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
-import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleSdkDiscovery;
-import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -38,8 +33,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractSdkEnvironment {
-  private static final Logger LOG = Logger.get(AbstractSdkEnvironment.class);
-
   // iOS
   public abstract Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> getAppleSdkPaths();
 
@@ -51,36 +44,17 @@ abstract class AbstractSdkEnvironment {
 
   public abstract Optional<String> getNdkVersion();
 
-  public static SdkEnvironment create(BuckConfig config, ToolchainProvider toolchainProvider) {
-    Optional<ImmutableMap<String, AppleToolchain>> appleToolchains = Optional.empty();
-    Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths = Optional.empty();
+  public static SdkEnvironment create(ToolchainProvider toolchainProvider) {
+    Optional<AppleToolchainProvider> appleToolchainProvider =
+        toolchainProvider.getByNameIfPresent(
+            AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.class);
+    Optional<ImmutableMap<String, AppleToolchain>> appleToolchains =
+        appleToolchainProvider.map(AppleToolchainProvider::getAppleToolchains);
 
-    if (toolchainProvider.isToolchainPresent(AppleToolchainProvider.DEFAULT_NAME)) {
-      Optional<Path> appleDeveloperDir =
-          toolchainProvider
-              .getByNameIfPresent(
-                  AppleDeveloperDirectoryProvider.DEFAULT_NAME,
-                  AppleDeveloperDirectoryProvider.class)
-              .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
-
-      AppleConfig appleConfig = config.getView(AppleConfig.class);
-      AppleToolchainProvider appleToolchainProvider =
-          toolchainProvider.getByName(
-              AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.class);
-      try {
-        appleSdkPaths =
-            Optional.of(
-                AppleSdkDiscovery.discoverAppleSdkPaths(
-                    appleDeveloperDir,
-                    appleConfig.getExtraPlatformPaths(),
-                    appleToolchainProvider.getAppleToolchains(),
-                    appleConfig));
-        appleToolchains = Optional.of(appleToolchainProvider.getAppleToolchains());
-      } catch (IOException e) {
-        LOG.error(
-            e, "Couldn't find the Apple SDK.\nPlease check that the SDK is installed properly.");
-      }
-    }
+    Optional<AppleSdkLocation> appleSdkLocation =
+        toolchainProvider.getByNameIfPresent(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.class);
+    Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths =
+        appleSdkLocation.map(AppleSdkLocation::getAppleSdkPaths);
 
     Optional<Path> androidSdkRoot;
     Optional<Path> androidNdkRoot;

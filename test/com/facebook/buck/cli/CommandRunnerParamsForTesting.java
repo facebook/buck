@@ -99,7 +99,7 @@ public class CommandRunnerParamsForTesting {
       throws IOException, InterruptedException {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment = SdkEnvironment.create(config, toolchainProvider);
+    SdkEnvironment sdkEnvironment = SdkEnvironment.create(toolchainProvider);
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(

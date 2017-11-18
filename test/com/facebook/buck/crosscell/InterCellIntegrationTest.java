@@ -33,7 +33,6 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.android.AndroidNdkHelper;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
@@ -398,7 +397,7 @@ public class InterCellIntegrationTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor,
-                SdkEnvironment.create(FakeBuckConfig.builder().build(), toolchainProvider),
+                SdkEnvironment.create(toolchainProvider),
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));

@@ -84,7 +84,7 @@ public class TestCellBuilder {
 
     SdkEnvironment sdkEnvironment =
         this.sdkEnvironment == null
-            ? SdkEnvironment.create(config, toolchainProvider)
+            ? SdkEnvironment.create(toolchainProvider)
             : this.sdkEnvironment;
 
     return CellProvider.createForLocalBuild(

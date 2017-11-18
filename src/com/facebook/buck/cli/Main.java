@@ -663,7 +663,7 @@ public final class Main {
           new DefaultAndroidDirectoryResolver(
               filesystem.getRootPath().getFileSystem(), clientEnvironment, androidBuckConfig);
 
-      SdkEnvironment sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
+      SdkEnvironment sdkEnvironment = SdkEnvironment.create(toolchainProvider);
 
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
           new PlatformSandboxExecutionStrategyFactory();

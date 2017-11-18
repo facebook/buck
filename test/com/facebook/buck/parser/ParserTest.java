@@ -34,8 +34,10 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
+import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
@@ -269,6 +271,11 @@ public class ParserTest {
     appleToolchainProvider.ifPresent(
         provider ->
             testToolchainProvider.addToolchain(AppleToolchainProvider.DEFAULT_NAME, provider));
+    Optional<AppleSdkLocation> appleSdkLocation =
+        new AppleSdkLocationFactory()
+            .createToolchain(testToolchainProvider, toolchainCreationContext);
+    appleSdkLocation.ifPresent(
+        provider -> testToolchainProvider.addToolchain(AppleSdkLocation.DEFAULT_NAME, provider));
 
     cell =
         new TestCellBuilder()
@@ -281,7 +288,7 @@ public class ParserTest {
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor,
                 cell.getSdkEnvironment(),
-                new TestToolchainProvider(),
+                testToolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 

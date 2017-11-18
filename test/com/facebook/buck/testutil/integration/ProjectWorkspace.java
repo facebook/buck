@@ -769,7 +769,7 @@ public class ProjectWorkspace {
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
+    SdkEnvironment sdkEnvironment = SdkEnvironment.create(toolchainProvider);
 
     return CellProvider.createForLocalBuild(
             filesystem,

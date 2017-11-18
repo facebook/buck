@@ -80,7 +80,7 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 executor,
-                SdkEnvironment.create(FakeBuckConfig.builder().build(), toolchainProvider),
+                SdkEnvironment.create(toolchainProvider),
                 toolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
@@ -170,7 +170,7 @@ public class DaemonLifecycleManagerTest {
     FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor();
 
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
+    SdkEnvironment sdkEnvironment = SdkEnvironment.create(toolchainProvider);
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -189,7 +189,7 @@ public class DaemonLifecycleManagerTest {
                 .build(),
             knownBuildRuleTypesProvider);
 
-    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
+    sdkEnvironment = SdkEnvironment.create(toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -215,7 +215,7 @@ public class DaemonLifecycleManagerTest {
     toolchainProvider.addToolchain(
         AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(ImmutableMap.of()));
 
-    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
+    sdkEnvironment = SdkEnvironment.create(toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -235,7 +235,7 @@ public class DaemonLifecycleManagerTest {
             knownBuildRuleTypesProvider);
     assertNotEquals("Apple SDK should be found", daemon2, daemon3);
 
-    sdkEnvironment = SdkEnvironment.create(buckConfig, toolchainProvider);
+    sdkEnvironment = SdkEnvironment.create(toolchainProvider);
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
@@ -288,7 +288,7 @@ public class DaemonLifecycleManagerTest {
     TestToolchainProvider toolchainProvider1 = new TestToolchainProvider();
     toolchainProvider1.addAndroidToolchain(
         new TestAndroidToolchain(filesystem.getPath("/path/to/sdkv1")));
-    SdkEnvironment sdkEnvironment1 = SdkEnvironment.create(buckConfig, toolchainProvider1);
+    SdkEnvironment sdkEnvironment1 = SdkEnvironment.create(toolchainProvider1);
 
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider1 =
         KnownBuildRuleTypesProvider.of(
@@ -302,7 +302,7 @@ public class DaemonLifecycleManagerTest {
     TestToolchainProvider toolchainProvider2 = new TestToolchainProvider();
     toolchainProvider2.addAndroidToolchain(
         new TestAndroidToolchain(filesystem.getPath("/path/to/sdkv2")));
-    SdkEnvironment sdkEnvironment2 = SdkEnvironment.create(buckConfig, toolchainProvider2);
+    SdkEnvironment sdkEnvironment2 = SdkEnvironment.create(toolchainProvider2);
 
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider2 =
         KnownBuildRuleTypesProvider.of(
