@@ -26,6 +26,7 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -47,17 +48,19 @@ public class RustBuckConfig {
     YES, // remap using stable command-line option
     ;
 
-    public void addRemapOption(ImmutableList.Builder<String> cmd, String basedir) {
+    public void addRemapOption(Builder<String> cmd, String cwd, String basedir) {
       switch (this) {
         case NO:
           break;
         case UNSTABLE:
           cmd.add("-Zremap-path-prefix-from=" + basedir);
           cmd.add("-Zremap-path-prefix-to=");
+          cmd.add("-Zremap-path-prefix-from=" + cwd);
+          cmd.add("-Zremap-path-prefix-to=./");
           break;
         case YES:
-          cmd.add("--remap-path-prefix");
-          cmd.add(basedir + "=");
+          cmd.add("--remap-path-prefix", basedir + "=");
+          cmd.add("--remap-path-prefix", cwd + "=./");
           break;
         default:
           throw new RuntimeException("addRemapOption() not implemented for " + this);

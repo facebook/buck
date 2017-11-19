@@ -250,7 +250,8 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   cmd.add("--color=always");
                 }
 
-                remapSrcPaths.addRemapOption(cmd, scratchDir.toString() + "/");
+                remapSrcPaths.addRemapOption(
+                    cmd, workingDirectory.toString(), scratchDir.toString() + "/");
 
                 // Generate a target-unique string to distinguish distinct crates with the same
                 // name.
