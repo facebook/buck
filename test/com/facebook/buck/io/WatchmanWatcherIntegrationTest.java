@@ -61,7 +61,7 @@ public class WatchmanWatcherIntegrationTest {
     Files.write(tmp.getRoot().resolve(".watchmanconfig"), new byte[0]);
 
     watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             ImmutableSet.of(tmp.getRoot()),
             ImmutableMap.copyOf(System.getenv()),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),

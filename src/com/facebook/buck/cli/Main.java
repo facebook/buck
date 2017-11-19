@@ -60,6 +60,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticEventListener;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.WatchmanWatcherException;
 import com.facebook.buck.io.file.MoreFiles;
@@ -702,7 +703,7 @@ public final class Main {
                 .getCellByPath(filesystem.getRootPath());
 
         Optional<Daemon> daemon =
-            context.isPresent() && (watchman != Watchman.NULL_WATCHMAN)
+            context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
                 ? Optional.of(
                     daemonLifecycleManager.getDaemon(rootCell, knownBuildRuleTypesProvider))
                 : Optional.empty();
@@ -1276,7 +1277,7 @@ public final class Main {
     Watchman watchman;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
       watchman =
-          Watchman.build(
+          WatchmanFactory.build(
               projectWatchList,
               clientEnvironment,
               console,
@@ -1292,7 +1293,7 @@ public final class Main {
           parserConfig.getWatchmanQueryTimeoutMs());
 
     } else {
-      watchman = Watchman.NULL_WATCHMAN;
+      watchman = WatchmanFactory.NULL_WATCHMAN;
       LOG.debug(
           "Not using Watchman, context present: %s, glob handler: %s",
           context.isPresent(), parserConfig.getGlobHandler());

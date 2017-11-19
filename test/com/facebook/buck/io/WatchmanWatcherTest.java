@@ -377,7 +377,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("path/to/repo", Optional.of("project")),
             ImmutableSet.of(),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
 
     assertThat(query.toList(""), hasItem(hasEntry("relative_root", "project")));
   }
@@ -390,7 +390,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(
                 new PathOrGlobMatcher(Paths.get("foo")),
                 new PathOrGlobMatcher(Paths.get("bar/baz"))),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(
             "/path/to/repo",
@@ -447,7 +447,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(
                 new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
                 new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(
             watchRoot,
@@ -472,7 +472,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(new PathOrGlobMatcher("*.pbxproj")),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(
             "/path/to/repo",

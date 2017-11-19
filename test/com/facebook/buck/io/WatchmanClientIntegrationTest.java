@@ -64,7 +64,7 @@ public class WatchmanClientIntegrationTest {
   private void startWatchman() throws IOException, InterruptedException {
     Optional<Path> watchmanExe =
         new ExecutableFinder()
-            .getOptionalExecutable(Watchman.WATCHMAN, ImmutableMap.copyOf(System.getenv()));
+            .getOptionalExecutable(WatchmanFactory.WATCHMAN, ImmutableMap.copyOf(System.getenv()));
 
     if (!isSupportedPlatform() || !watchmanExe.isPresent()) {
       return;
@@ -114,7 +114,7 @@ public class WatchmanClientIntegrationTest {
     while (System.currentTimeMillis() < deadline) {
       try {
         Optional<WatchmanClient> optClient =
-            Watchman.localWatchmanConnector(new TestConsole(), new DefaultClock())
+            WatchmanFactory.localWatchmanConnector(new TestConsole(), new DefaultClock())
                 .apply(watchmanSockFile);
         try {
           if (optClient.isPresent()) {
@@ -152,7 +152,7 @@ public class WatchmanClientIntegrationTest {
   @Test
   public void testWatchmanGlob() throws InterruptedException, IOException {
     Optional<WatchmanClient> clientOpt =
-        Watchman.localWatchmanConnector(new TestConsole(), new DefaultClock())
+        WatchmanFactory.localWatchmanConnector(new TestConsole(), new DefaultClock())
             .apply(watchmanSockFile);
     Assert.assertTrue(clientOpt.isPresent());
 
@@ -163,9 +163,9 @@ public class WatchmanClientIntegrationTest {
             "version",
             ImmutableMap.of(
                 "required",
-                Watchman.REQUIRED_CAPABILITIES,
+                WatchmanFactory.REQUIRED_CAPABILITIES,
                 "optional",
-                Watchman.ALL_CAPABILITIES.keySet()));
+                WatchmanFactory.ALL_CAPABILITIES.keySet()));
     Assert.assertTrue(versionResponse.isPresent());
 
     Path rootPath = workspace.getDestPath();
@@ -202,7 +202,7 @@ public class WatchmanClientIntegrationTest {
       case MACOS:
       case WINDOWS:
         return true;
-        //$CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         return false;
     }

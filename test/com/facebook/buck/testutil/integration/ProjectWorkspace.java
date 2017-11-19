@@ -30,7 +30,7 @@ import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePaths;
@@ -773,7 +773,7 @@ public class ProjectWorkspace {
 
     return CellProvider.createForLocalBuild(
             filesystem,
-            Watchman.NULL_WATCHMAN,
+            WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
             sdkEnvironment,

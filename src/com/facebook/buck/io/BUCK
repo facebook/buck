@@ -19,6 +19,7 @@ WATCHMAN_SRCS = [
     "WatchmanDiagnosticEvent.java",
     "WatchmanDiagnosticEventListener.java",
     "WatchmanEvent.java",
+    "WatchmanFactory.java",
     "WatchmanTransportClient.java",
     "WatchmanWatcher.java",
     "WatchmanWatcherException.java",

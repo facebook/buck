@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.FakeClock;
@@ -46,7 +47,7 @@ public class TestWithBuckd extends ExternalResource {
     // Create an empty watchman config file.
     temporaryPaths.newFile(".watchmanconfig");
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             ImmutableSet.of(temporaryPaths.getRoot()),
             getWatchmanEnv(),
             new TestConsole(),
@@ -55,7 +56,7 @@ public class TestWithBuckd extends ExternalResource {
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
-    assumeFalse(watchman == Watchman.NULL_WATCHMAN);
+    assumeFalse(watchman == WatchmanFactory.NULL_WATCHMAN);
   }
 
   private static ImmutableMap<String, String> getWatchmanEnv() {

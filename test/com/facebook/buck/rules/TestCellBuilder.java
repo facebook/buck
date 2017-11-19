@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.io.Watchman.NULL_WATCHMAN;
+import static com.facebook.buck.io.WatchmanFactory.NULL_WATCHMAN;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;

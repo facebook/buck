@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.options;
 
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -72,7 +73,7 @@ abstract class AbstractProjectBuildFileParserOptions {
 
   @Value.Default
   Watchman getWatchman() {
-    return Watchman.NULL_WATCHMAN;
+    return WatchmanFactory.NULL_WATCHMAN;
   }
 
   @Value.Default

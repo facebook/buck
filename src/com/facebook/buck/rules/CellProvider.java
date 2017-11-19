@@ -17,6 +17,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -223,7 +224,7 @@ public final class CellProvider {
                       // will show up if it actually does care about them.
                       cellParam.getCanonicalName(),
                       cellParam.getFilesystem(),
-                      Watchman.NULL_WATCHMAN,
+                      WatchmanFactory.NULL_WATCHMAN,
                       cellParam.getConfig(),
                       cellProvider,
                       sdkEnvironment,

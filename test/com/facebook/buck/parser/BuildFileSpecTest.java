@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.Cell;
@@ -139,9 +140,9 @@ public class BuildFileSpecTest {
                         filesystem.getRootPath(),
                         ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
                     ImmutableSet.of(
-                        Watchman.Capability.SUPPORTS_PROJECT_WATCH,
-                        Watchman.Capability.DIRNAME,
-                        Watchman.Capability.WILDMATCH_GLOB),
+                        WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
+                        WatchmanFactory.Capability.DIRNAME,
+                        WatchmanFactory.Capability.WILDMATCH_GLOB),
                     ImmutableMap.of(),
                     Optional.of(Paths.get(".watchman-sock")),
                     Optional.of(fakeWatchmanClient)))
@@ -188,9 +189,9 @@ public class BuildFileSpecTest {
                         filesystem.getRootPath(),
                         ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
                     ImmutableSet.of(
-                        Watchman.Capability.SUPPORTS_PROJECT_WATCH,
-                        Watchman.Capability.DIRNAME,
-                        Watchman.Capability.WILDMATCH_GLOB),
+                        WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
+                        WatchmanFactory.Capability.DIRNAME,
+                        WatchmanFactory.Capability.WILDMATCH_GLOB),
                     ImmutableMap.of(),
                     Optional.of(Paths.get(".watchman-sock")),
                     Optional.of(fakeWatchmanClient)))
@@ -245,9 +246,9 @@ public class BuildFileSpecTest {
                         filesystem.getRootPath(),
                         ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
                     ImmutableSet.of(
-                        Watchman.Capability.SUPPORTS_PROJECT_WATCH,
-                        Watchman.Capability.DIRNAME,
-                        Watchman.Capability.WILDMATCH_GLOB),
+                        WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
+                        WatchmanFactory.Capability.DIRNAME,
+                        WatchmanFactory.Capability.WILDMATCH_GLOB),
                     ImmutableMap.of(),
                     Optional.of(Paths.get(".watchman-sock")),
                     Optional.of(timingOutWatchmanClient)))

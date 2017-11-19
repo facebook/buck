@@ -99,7 +99,7 @@ public class WatchmanTest {
             clock);
 
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             NULL_WATCHMAN_CONNECTOR,
             rootPaths,
@@ -109,7 +109,7 @@ public class WatchmanTest {
             clock,
             Optional.empty());
 
-    assertEquals(Watchman.NULL_WATCHMAN, watchman);
+    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
 
   @Test
@@ -131,7 +131,7 @@ public class WatchmanTest {
             clock);
 
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             fakeWatchmanConnector(
                 Paths.get("/path/to/sock"),
@@ -148,7 +148,7 @@ public class WatchmanTest {
             clock,
             Optional.empty());
 
-    assertEquals(Watchman.NULL_WATCHMAN, watchman);
+    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
 
   @Test
@@ -169,7 +169,7 @@ public class WatchmanTest {
             clock);
 
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             fakeWatchmanConnector(
                 Paths.get("/path/to/sock"),
@@ -196,7 +196,7 @@ public class WatchmanTest {
             clock,
             Optional.empty());
 
-    assertEquals(Watchman.NULL_WATCHMAN, watchman);
+    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
 
   @Test
@@ -218,7 +218,7 @@ public class WatchmanTest {
                 .build(),
             clock);
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             fakeWatchmanConnector(
                 Paths.get("/path/to/sock"),
@@ -244,7 +244,7 @@ public class WatchmanTest {
             clock,
             Optional.of(TimeUnit.SECONDS.toMillis(5)));
 
-    assertEquals(Watchman.NULL_WATCHMAN, watchman);
+    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
 
   @Test
@@ -264,7 +264,7 @@ public class WatchmanTest {
                 .build(),
             clock);
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             fakeWatchmanConnector(
                 Paths.get("/path/to/sock"),
@@ -292,7 +292,7 @@ public class WatchmanTest {
             clock,
             Optional.of(TimeUnit.SECONDS.toMillis(5)));
 
-    assertEquals(Watchman.NULL_WATCHMAN, watchman);
+    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
 
   @Test
@@ -312,7 +312,7 @@ public class WatchmanTest {
                 .build(),
             clock);
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             fakeWatchmanConnector(
                 Paths.get("/path/to/sock"),
@@ -344,10 +344,10 @@ public class WatchmanTest {
 
     assertEquals(
         ImmutableSet.of(
-            Watchman.Capability.DIRNAME,
-            Watchman.Capability.SUPPORTS_PROJECT_WATCH,
-            Watchman.Capability.WILDMATCH_GLOB,
-            Watchman.Capability.WILDMATCH_MULTISLASH),
+            WatchmanFactory.Capability.DIRNAME,
+            WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
+            WatchmanFactory.Capability.WILDMATCH_GLOB,
+            WatchmanFactory.Capability.WILDMATCH_MULTISLASH),
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
@@ -370,7 +370,7 @@ public class WatchmanTest {
                 .build(),
             clock);
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             fakeWatchmanConnector(
                 Paths.get("/path/to/sock"),
@@ -402,12 +402,12 @@ public class WatchmanTest {
 
     assertEquals(
         ImmutableSet.of(
-            Watchman.Capability.DIRNAME,
-            Watchman.Capability.SUPPORTS_PROJECT_WATCH,
-            Watchman.Capability.WILDMATCH_GLOB,
-            Watchman.Capability.WILDMATCH_MULTISLASH,
-            Watchman.Capability.GLOB_GENERATOR,
-            Watchman.Capability.CLOCK_SYNC_TIMEOUT),
+            WatchmanFactory.Capability.DIRNAME,
+            WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
+            WatchmanFactory.Capability.WILDMATCH_GLOB,
+            WatchmanFactory.Capability.WILDMATCH_MULTISLASH,
+            WatchmanFactory.Capability.GLOB_GENERATOR,
+            WatchmanFactory.Capability.CLOCK_SYNC_TIMEOUT),
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
@@ -430,7 +430,7 @@ public class WatchmanTest {
                 .build(),
             clock);
     Watchman watchman =
-        Watchman.build(
+        WatchmanFactory.build(
             executor,
             fakeWatchmanConnector(
                 Paths.get("/path/to/sock"),

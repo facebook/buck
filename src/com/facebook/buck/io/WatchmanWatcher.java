@@ -20,7 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.io.Watchman.Capability;
+import com.facebook.buck.io.WatchmanFactory.Capability;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.log.Logger;
@@ -154,7 +154,7 @@ public class WatchmanWatcher {
           if (ignorePath.isAbsolute()) {
             ignorePath = MorePaths.relativize(projectRoot, ignorePath);
           }
-          if (watchmanCapabilities.contains(Capability.DIRNAME)) {
+          if (watchmanCapabilities.contains(WatchmanFactory.Capability.DIRNAME)) {
             excludeAnyOf.add(Lists.newArrayList("dirname", ignorePath.toString()));
           } else {
             excludeAnyOf.add(
@@ -285,7 +285,8 @@ public class WatchmanWatcher {
         if (cursor.get().startsWith("c:")) {
           // Update the clockId
           String newCursor =
-              Optional.ofNullable((String) response.get("clock")).orElse(Watchman.NULL_CLOCK);
+              Optional.ofNullable((String) response.get("clock"))
+                  .orElse(WatchmanFactory.NULL_CLOCK);
           LOG.debug("Updating Watchman Cursor from %s to %s", cursor.get(), newCursor);
           cursor.set(newCursor);
         }
