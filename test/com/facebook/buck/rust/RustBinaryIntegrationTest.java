@@ -207,7 +207,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_flags=--this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -221,7 +221,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_binary_flags=--this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -247,7 +247,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_flags=--verbose --this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -258,7 +258,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:xyzzy_flags").getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
