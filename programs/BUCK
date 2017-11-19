@@ -1,3 +1,5 @@
+load("//tools/build_rules:module_rules.bzl", "convert_modules_to_resources", "get_module_binary")
+
 python_library(
     name = "subprocutils",
     srcs = [
@@ -81,7 +83,10 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "path_to_rawmanifest_py": "//src/com/facebook/buck/util/versioncontrol:rawmanifest",
     "path_to_sh_binary_template": "//src/com/facebook/buck/shell:sh_binary_template",
     "path_to_typing": "//third-party/py:typing-archive",
-    "buck-modules/ziprules.jar": "//src/com/facebook/buck/zip/rules:rules-module",
+}
+
+BUCK_MODULES = {
+    "ziprules": "//src/com/facebook/buck/zip/rules:rules",
 }
 
 # This genrule generates a single hash of all resources listed in
@@ -92,6 +97,7 @@ genrule(
     cmd = " ".join([
         "$(exe //py/hash:hash_files)",
         " ".join(["$(location {})".format(resource) for resource in RESOURCES_AFFECTING_BUILD_ARTIFACTS.values()]),
+        " ".join(["$(location {})".format(get_module_binary(buck_module)) for buck_module in BUCK_MODULES.values()]),
         "$(location //py/hash:hash_files.py)",
         " > $OUT",
     ]),
@@ -112,7 +118,7 @@ python_library(
         "timing.py",
         "tracing.py",
     ],
-    resources = dict(RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS.items() + RESOURCES_AFFECTING_BUILD_ARTIFACTS.items() + {
+    resources = dict(RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS.items() + RESOURCES_AFFECTING_BUILD_ARTIFACTS.items() + convert_modules_to_resources(BUCK_MODULES).items() + {
         "buck_binary_hash": ":calculate-buck-binary-hash",
     }.items()),
     deps = [

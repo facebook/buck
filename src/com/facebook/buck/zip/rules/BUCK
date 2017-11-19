@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "rules",
     srcs = glob(["*.java"]),
     provided_deps = [
@@ -32,16 +32,5 @@ java_library_with_plugins(
     visibility = [
         "//test/com/facebook/buck/ide/intellij:intellij",
         "//test/com/facebook/buck/zip/rules:rules",
-    ],
-)
-
-java_binary(
-    name = "rules-module",
-    visibility = [
-        "//programs:bucklib",
-        "//programs:calculate-buck-binary-hash",
-    ],
-    deps = [
-        ":rules",
     ],
 )
