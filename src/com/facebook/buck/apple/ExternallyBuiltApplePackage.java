@@ -49,7 +49,8 @@ public class ExternallyBuiltApplePackage extends Genrule {
       BuildRuleParams params,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
-      boolean cacheable) {
+      boolean cacheable,
+      Optional<String> environmentExpansionSeparator) {
     super(
         buildTarget,
         projectFilesystem,
@@ -64,7 +65,8 @@ public class ExternallyBuiltApplePackage extends Genrule {
         /* type */ Optional.empty(),
         buildTarget.getShortName() + "." + packageConfigAndPlatformInfo.getConfig().getExtension(),
         false,
-        cacheable);
+        cacheable,
+        environmentExpansionSeparator);
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
   }
 

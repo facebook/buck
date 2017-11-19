@@ -78,7 +78,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOut(),
           sandboxConfig.isSandboxEnabledForCurrentPlatform()
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
-          args.getCacheable().orElse(true));
+          args.getCacheable().orElse(true),
+          args.getEnvironmentExpansionSeparator());
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -93,7 +94,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmdExe,
           args.getType(),
           args.getOut(),
-          args.getCacheable().orElse(true));
+          args.getCacheable().orElse(true),
+          args.getEnvironmentExpansionSeparator());
     }
   }
 

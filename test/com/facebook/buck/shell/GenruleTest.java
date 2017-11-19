@@ -44,6 +44,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -321,6 +322,65 @@ public class GenruleTest {
             .setType("xxxxx")
             .build(ruleResolver, filesystem);
     assertTrue(genrule.getType().contains("xxxxx"));
+  }
+
+  @Test
+  public void testGenruleUsesSpacesForSrcsVariableDelimiterByDefault() {
+    BuildRuleResolver ruleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path1.txt"));
+    SourcePath path2 = PathSourcePath.of(filesystem, filesystem.getPath("dir", "path2.txt"));
+
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+            .setSrcs(ImmutableList.of(path1, path2))
+            .setCmd("echo \"Hello, world\" >> $OUT")
+            .setOut("output.txt")
+            .build(ruleResolver);
+
+    String expected =
+        String.format(
+            "%s %s", pathResolver.getAbsolutePath(path1), pathResolver.getAbsolutePath(path2));
+    ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
+
+    genrule.addEnvironmentVariables(pathResolver, actualEnvVarsBuilder);
+
+    assertEquals(expected, actualEnvVarsBuilder.build().get("SRCS"));
+  }
+
+  @Test
+  public void testGenruleUsesProvidedDelimiterForSrcsVariable() {
+    BuildRuleResolver ruleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path 1.txt"));
+    SourcePath path2 = PathSourcePath.of(filesystem, filesystem.getPath("dir name", "path 2.txt"));
+
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+            .setSrcs(ImmutableList.of(path1, path2))
+            .setCmd("echo \"Hello, world\" >> $OUT")
+            .setOut("output.txt")
+            .setEnvironmentExpansionSeparator("//")
+            .build(ruleResolver);
+
+    String expected =
+        String.format(
+            "%s//%s", pathResolver.getAbsolutePath(path1), pathResolver.getAbsolutePath(path2));
+    ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
+
+    genrule.addEnvironmentVariables(pathResolver, actualEnvVarsBuilder);
+
+    assertEquals(expected, actualEnvVarsBuilder.build().get("SRCS"));
   }
 
   private GenruleBuilder createGenruleBuilderThatUsesWorkerMacro(BuildRuleResolver resolver)

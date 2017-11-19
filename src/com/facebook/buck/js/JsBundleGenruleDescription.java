@@ -134,7 +134,8 @@ public class JsBundleGenruleDescription
         cmd,
         bash,
         cmdExe,
-        (JsBundleOutputs) jsBundle);
+        (JsBundleOutputs) jsBundle,
+        args.getEnvironmentExpansionSeparator());
   }
 
   @Override

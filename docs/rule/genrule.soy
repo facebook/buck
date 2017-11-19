@@ -40,6 +40,8 @@
 
 {call genrule_common.out_arg /}
 
+{call genrule_common.environment_expansion_separator /}
+
 {call buck.arg}
   {param name: 'enable_sandbox' /}
   {param default : 'False' /}

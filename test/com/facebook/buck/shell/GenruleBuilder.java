@@ -124,4 +124,11 @@ public class GenruleBuilder
     getArgForPopulating().setCacheable(Optional.ofNullable(isCacheable));
     return this;
   }
+
+  public GenruleBuilder setEnvironmentExpansionSeparator(
+      @Nullable String environmentExpansionSeparator) {
+    getArgForPopulating()
+        .setEnvironmentExpansionSeparator(Optional.ofNullable(environmentExpansionSeparator));
+    return this;
+  }
 }

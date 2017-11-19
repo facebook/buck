@@ -123,7 +123,8 @@ public class ApplePackageDescription
                       .build()),
           applePackageConfigAndPlatformInfo.get(),
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
-          bundle.isCacheable());
+          bundle.isCacheable(),
+          Optional.empty());
     } else {
       return new BuiltinApplePackage(buildTarget, projectFilesystem, params, bundle);
     }

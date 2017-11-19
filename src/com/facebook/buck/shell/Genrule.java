@@ -56,10 +56,9 @@ import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
 import java.nio.file.Path;
@@ -143,6 +142,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final String type;
   @AddToRuleKey private final boolean enableSandboxingInGenrule;
   @AddToRuleKey private final boolean isCacheable;
+  @AddToRuleKey private final String environmentExpansionSeparator;
 
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final BuildRuleResolver buildRuleResolver;
@@ -167,7 +167,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> type,
       String out,
       boolean enableSandboxingInGenrule,
-      boolean isCacheable) {
+      boolean isCacheable,
+      Optional<String> environmentExpansionSeparator) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.buildRuleResolver = buildRuleResolver;
@@ -181,6 +182,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.pathToOutDirectory = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     this.isCacheable = isCacheable;
+    this.environmentExpansionSeparator = environmentExpansionSeparator.orElse(" ");
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
@@ -214,15 +216,13 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   protected void addEnvironmentVariables(
-      SourcePathResolver pathResolver,
-      ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
+      SourcePathResolver pathResolver, Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
-        Joiner.on(' ')
-            .join(
-                FluentIterable.from(srcs)
-                    .transform(pathResolver::getAbsolutePath)
-                    .transform(Object::toString)));
+        srcs.stream()
+            .map(pathResolver::getAbsolutePath)
+            .map(Object::toString)
+            .collect(Collectors.joining(this.environmentExpansionSeparator)));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath(pathResolver));
 
     environmentVariablesBuilder.put(
@@ -318,8 +318,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         programRunner) {
       @Override
       protected void addEnvironmentVariables(
-          ExecutionContext executionContext,
-          ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
+          ExecutionContext executionContext, Builder<String, String> environmentVariablesBuilder) {
         Genrule.this.addEnvironmentVariables(sourcePathResolver, environmentVariablesBuilder);
       }
     };
@@ -385,7 +384,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables() {
-        ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
+        Builder<String, String> envVarBuilder = ImmutableMap.builder();
         Genrule.this.addEnvironmentVariables(context.getSourcePathResolver(), envVarBuilder);
         return envVarBuilder.build();
       }

@@ -116,7 +116,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getType(),
         args.getOut(),
         args.getEnableSandbox().orElse(enableSandbox),
-        true);
+        true,
+        args.getEnvironmentExpansionSeparator());
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
@@ -290,5 +291,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     ImmutableList<SourcePath> getSrcs();
 
     Optional<Boolean> getEnableSandbox();
+
+    Optional<String> getEnvironmentExpansionSeparator();
   }
 }

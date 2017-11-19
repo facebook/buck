@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,7 +96,8 @@ public class ExternallyBuiltApplePackageTest {
             params,
             config,
             FakeSourcePath.of(bundleLocation),
-            true);
+            true,
+            Optional.empty());
     resolver.addToIndex(rule);
     ShellStep step =
         Iterables.getOnlyElement(
@@ -124,7 +126,8 @@ public class ExternallyBuiltApplePackageTest {
             params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
-            true);
+            true,
+            Optional.empty());
     resolver.addToIndex(rule);
     assertThat(
         pathResolver
@@ -147,7 +150,8 @@ public class ExternallyBuiltApplePackageTest {
             params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
-            true);
+            true,
+            Optional.empty());
     resolver.addToIndex(rule);
     AbstractGenruleStep step =
         Iterables.getOnlyElement(
@@ -174,7 +178,8 @@ public class ExternallyBuiltApplePackageTest {
                 params,
                 config.withPlatform(config.getPlatform().withBuildVersion(input)),
                 FakeSourcePath.of("Fake/Bundle/Location"),
-                true);
+                true,
+                Optional.empty());
     assertNotEquals(
         newRuleKeyFactory().build(packageWithVersion.apply("real")),
         newRuleKeyFactory().build(packageWithVersion.apply("fake")));
@@ -196,7 +201,8 @@ public class ExternallyBuiltApplePackageTest {
                         .getPlatform()
                         .withAppleSdk(config.getPlatform().getAppleSdk().withVersion(input))),
                 FakeSourcePath.of("Fake/Bundle/Location"),
-                true);
+                true,
+                Optional.empty());
     assertNotEquals(
         newRuleKeyFactory().build(packageWithSdkVersion.apply("real")),
         newRuleKeyFactory().build(packageWithSdkVersion.apply("fake")));

@@ -46,7 +46,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out,
-      boolean isCacheable) {
+      boolean isCacheable,
+      Optional<String> environmentExpansionSeparator) {
     super(
         buildTarget,
         projectFilesystem,
@@ -61,7 +62,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
         type,
         out,
         false,
-        isCacheable);
+        isCacheable,
+        environmentExpansionSeparator);
   }
 
   @Override

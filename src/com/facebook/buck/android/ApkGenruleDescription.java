@@ -92,7 +92,8 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         cmdExe,
         args.getType(),
         apk.getSourcePathToOutput(),
-        args.getIsCacheable());
+        args.getIsCacheable(),
+        args.getEnvironmentExpansionSeparator());
   }
 
   @BuckStyleImmutable
