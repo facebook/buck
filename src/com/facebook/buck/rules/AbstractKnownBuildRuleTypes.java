@@ -380,9 +380,9 @@ abstract class AbstractKnownBuildRuleTypes {
 
     AppleBinaryDescription appleBinaryDescription =
         new AppleBinaryDescription(
+            toolchainProvider,
             cxxBinaryDescription,
             swiftLibraryDescription,
-            platformFlavorsToAppleCxxPlatforms,
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig);
