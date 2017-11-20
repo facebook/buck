@@ -140,8 +140,9 @@ public class AgentMain {
     doRawReceiveFile(path, size, input);
   }
 
-  private static InputStream acceptAuthenticConnectionFromClient(int port) throws IOException {
-    InputStream input;
+  private static BufferedInputStream acceptAuthenticConnectionFromClient(int port)
+      throws IOException {
+    BufferedInputStream input;
     ServerSocket serverSocket = null;
     try {
       // First make sure we can bind to the port.
@@ -153,7 +154,7 @@ public class AgentMain {
       serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
       Socket connectionSocket = serverSocket.accept();
       connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
-      input = connectionSocket.getInputStream();
+      input = new BufferedInputStream(connectionSocket.getInputStream());
 
       // Report that the socket has been opened.
       System.out.write(new byte[] {'z', '1', '\n'});
