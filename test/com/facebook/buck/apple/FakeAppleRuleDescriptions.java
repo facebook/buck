@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
@@ -221,14 +222,14 @@ public class FakeAppleRuleDescriptions {
   /** A fake apple_library description with an iOS platform for use in tests. */
   public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
       new AppleLibraryDescription(
-          createTestToolchainProvider(DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
+          createTestToolchainProvider(
+              DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN, DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
           new CxxLibraryDescription(
               CxxPlatformUtils.DEFAULT_CONFIG,
               DEFAULT_PLATFORM.getFlavor(),
               new InferBuckConfig(DEFAULT_BUCK_CONFIG),
               DEFAULT_APPLE_FLAVOR_DOMAIN),
           SWIFT_LIBRARY_DESCRIPTION,
-          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM.getFlavor(),
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
@@ -275,10 +276,22 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_TIMEOUT);
 
   private static TestToolchainProvider createTestToolchainProvider(
-      FlavorDomain<SwiftPlatform> flavorDomain) {
+      FlavorDomain<SwiftPlatform> swiftFlavorDomain) {
     TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
     testToolchainProvider.addToolchain(
-        SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.of(flavorDomain));
+        SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.of(swiftFlavorDomain));
+    return testToolchainProvider;
+  }
+
+  private static TestToolchainProvider createTestToolchainProvider(
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
+      FlavorDomain<SwiftPlatform> swiftFlavorDomain) {
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    testToolchainProvider.addToolchain(
+        AppleCxxPlatformsProvider.DEFAULT_NAME,
+        AppleCxxPlatformsProvider.of(appleCxxPlatformFlavorDomain));
+    testToolchainProvider.addToolchain(
+        SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.of(swiftFlavorDomain));
     return testToolchainProvider;
   }
 }

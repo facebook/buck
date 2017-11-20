@@ -368,7 +368,6 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider,
             cxxLibraryDescription,
             swiftLibraryDescription,
-            platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
