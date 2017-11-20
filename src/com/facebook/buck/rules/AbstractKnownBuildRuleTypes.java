@@ -47,7 +47,6 @@ import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
@@ -245,9 +244,6 @@ abstract class AbstractKnownBuildRuleTypes {
         toolchainProvider.getByName(
             AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
 
-    FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        appleCxxPlatformsProvider.getAppleCxxPlatforms();
-
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
     // Setup the NDK C/C++ platforms.
@@ -259,11 +255,7 @@ abstract class AbstractKnownBuildRuleTypes {
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
 
     cxxSystemPlatformsBuilder.putAll(ndkCxxPlatformsToolchain.getCxxPlatforms());
-
-    for (AppleCxxPlatform appleCxxPlatform : platformFlavorsToAppleCxxPlatforms.getValues()) {
-      cxxSystemPlatformsBuilder.put(
-          appleCxxPlatform.getCxxPlatform().getFlavor(), appleCxxPlatform.getCxxPlatform());
-    }
+    cxxSystemPlatformsBuilder.putAll(appleCxxPlatformsProvider.getCxxPlatforms());
 
     CxxPlatformsProvider cxxPlatformsProvider =
         CxxPlatformsProvider.create(config, cxxSystemPlatformsBuilder.build());

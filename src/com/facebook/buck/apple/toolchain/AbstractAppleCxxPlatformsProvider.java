@@ -16,17 +16,31 @@
 
 package com.facebook.buck.apple.toolchain;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
-public interface AbstractAppleCxxPlatformsProvider extends Toolchain {
+public abstract class AbstractAppleCxxPlatformsProvider implements Toolchain {
 
-  String DEFAULT_NAME = "apple-cxx-platforms";
+  public static final String DEFAULT_NAME = "apple-cxx-platforms";
 
   @Value.Parameter
-  FlavorDomain<AppleCxxPlatform> getAppleCxxPlatforms();
+  public abstract FlavorDomain<AppleCxxPlatform> getAppleCxxPlatforms();
+
+  /** @return {@link CxxPlatform} of all {@link AppleCxxPlatform}s */
+  public ImmutableMap<Flavor, CxxPlatform> getCxxPlatforms() {
+    ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
+
+    for (AppleCxxPlatform appleCxxPlatform : getAppleCxxPlatforms().getValues()) {
+      cxxSystemPlatformsBuilder.put(
+          appleCxxPlatform.getCxxPlatform().getFlavor(), appleCxxPlatform.getCxxPlatform());
+    }
+    return cxxSystemPlatformsBuilder.build();
+  }
 }
