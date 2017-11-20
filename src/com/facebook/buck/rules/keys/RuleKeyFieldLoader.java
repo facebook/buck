@@ -38,6 +38,9 @@ public class RuleKeyFieldLoader {
     builder.setReflectively(".build_rule_type", buildRule.getType());
     builder.setReflectively(".buck_core_key", ruleKeyConfiguration.getCoreKey());
     builder.setReflectively(".rule_key_type", ruleKeyType);
+    builder.setReflectively(
+        ".input_rule_key_file_size_limit",
+        ruleKeyConfiguration.getBuildInputRuleKeyFileSizeLimit());
 
     // We currently cache items using their full buck-out path, so make sure this is reflected in
     // the rule key.

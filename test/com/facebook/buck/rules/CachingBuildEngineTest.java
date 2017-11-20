@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -1551,6 +1552,154 @@ public class CachingBuildEngineTest {
         assertThat(
             onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY),
             equalTo(Optional.of(inputRuleKey)));
+      }
+    }
+
+    @Test
+    public void inputBasedRuleKeyLimit() throws Exception {
+      // Create a simple rule which just writes a file.
+      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+      BuildRuleParams params = TestBuildRuleParams.create();
+      final RuleKey inputRuleKey = new RuleKey("aaaa");
+      final Path output = Paths.get("output");
+      final BuildRule rule =
+          new InputRuleKeyBuildRule(target, filesystem, params) {
+            @Override
+            public ImmutableList<Step> getBuildSteps(
+                BuildContext context, BuildableContext buildableContext) {
+              buildableContext.recordArtifact(output);
+              return ImmutableList.of(
+                  new WriteFileStep(filesystem, "12345", output, /* executable */ false));
+            }
+
+            @Override
+            public SourcePath getSourcePathToOutput() {
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+            }
+          };
+
+      FakeRuleKeyFactory fakeInputRuleKeyFactory =
+          new FakeRuleKeyFactory(
+              ImmutableMap.of(rule.getBuildTarget(), inputRuleKey),
+              ImmutableSet.of(rule.getBuildTarget())) {
+            @Override
+            public Optional<Long> getInputSizeLimit() {
+              return Optional.of(2L);
+            }
+          };
+      // Create the build engine.
+      try (CachingBuildEngine cachingBuildEngine =
+          cachingBuildEngineFactory()
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      NOOP_RULE_KEY_FACTORY,
+                      fakeInputRuleKeyFactory,
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY))
+              .build()) {
+        // Run the build.
+        BuildResult result =
+            cachingBuildEngine
+                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .getResult()
+                .get();
+        assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+
+        // Verify that the artifact was indexed in the cache by the input rule key.
+        assertFalse(cache.hasArtifact(inputRuleKey));
+
+        // Verify the input rule key was written to disk.
+        OnDiskBuildInfo onDiskBuildInfo =
+            buildContext.createOnDiskBuildInfoFor(target, filesystem, buildInfoStore);
+        assertThat(
+            onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY),
+            equalTo(Optional.empty()));
+        assertThat(
+            onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE), equalTo(Optional.of("6")));
+        assertThat(
+            onDiskBuildInfo.getHash(BuildInfo.MetadataKey.OUTPUT_HASH), equalTo(Optional.empty()));
+      }
+    }
+
+    @Test
+    public void inputBasedRuleKeyLimitCacheHit() throws Exception {
+      // Create a simple rule which just writes a file.
+      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+      BuildRuleParams params = TestBuildRuleParams.create();
+      final RuleKey ruleKey = new RuleKey("ba5e");
+      final RuleKey inputRuleKey = new RuleKey("ba11");
+      final Path output = Paths.get("output");
+      final BuildRule rule =
+          new InputRuleKeyBuildRule(target, filesystem, params) {
+            @Override
+            public ImmutableList<Step> getBuildSteps(
+                BuildContext context, BuildableContext buildableContext) {
+              buildableContext.recordArtifact(output);
+              return ImmutableList.of(
+                  new WriteFileStep(filesystem, "12345", output, /* executable */ false));
+            }
+
+            @Override
+            public SourcePath getSourcePathToOutput() {
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+            }
+          };
+
+      // Prepopulate the cache with an artifact indexed by the input-based rule key.  Pretend
+      // OUTPUT_HASH and RECORDED_PATH_HASHES are missing b/c we exceeded the input based
+      // threshold.
+      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
+      filesystem.mkdirs(metadataDirectory);
+      Path outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
+      filesystem.writeContentsToPath(
+          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
+          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+
+      Path artifact = tmp.newFile("artifact.zip");
+      writeEntriesToZip(
+          artifact,
+          ImmutableMap.of(
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
+              "123",
+              outputPath,
+              "stuff"),
+          ImmutableList.of(metadataDirectory));
+      cache.store(
+          ArtifactInfo.builder()
+              .addRuleKeys(ruleKey)
+              .putMetadata(BuildInfo.MetadataKey.BUILD_ID, buildContext.getBuildId().toString())
+              .putMetadata(
+                  BuildInfo.MetadataKey.ORIGIN_BUILD_ID, buildContext.getBuildId().toString())
+              .putMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleKey.toString())
+              .putMetadata(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString())
+              .build(),
+          BorrowablePath.notBorrowablePath(artifact));
+
+      FakeRuleKeyFactory fakeInputRuleKeyFactory =
+          new FakeRuleKeyFactory(
+              ImmutableMap.of(rule.getBuildTarget(), inputRuleKey),
+              ImmutableSet.of(rule.getBuildTarget())) {
+            @Override
+            public Optional<Long> getInputSizeLimit() {
+              return Optional.of(2L);
+            }
+          };
+      try (CachingBuildEngine cachingBuildEngine =
+          cachingBuildEngineFactory()
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      new FakeRuleKeyFactory(ImmutableMap.of(target, ruleKey)),
+                      fakeInputRuleKeyFactory,
+                      NOOP_DEP_FILE_RULE_KEY_FACTORY))
+              .build()) {
+        // Run the build.
+        BuildResult result =
+            cachingBuildEngine
+                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .getResult()
+                .get();
+        assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
       }
     }
 

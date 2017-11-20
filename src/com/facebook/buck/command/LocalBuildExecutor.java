@@ -206,7 +206,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getRuleKeyConfiguration(),
             cachingBuildEngineDelegate.getFileHashCache(),
             actionGraphAndResolver.getResolver(),
-            engineConfig.getBuildInputRuleKeyFileSizeLimit(),
+            args.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.map(RuleKeyCacheScope::getCache).orElse(new DefaultRuleKeyCache<>()),
             ruleKeyLogger),
         remoteBuildRuleCompletionWaiter);

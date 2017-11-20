@@ -239,10 +239,10 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public void validateArtifact(ZipFile artifact) {
-    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
+    // TODO(bertrand): It would be good to validate OUTPUT_HASH and RECORDED_PATH_HASHES, but we
+    // don't compute them if the artifact size exceeds the input rule key threshold.
     validateArtifactHasKey(artifact, BuildInfo.MetadataKey.RECORDED_PATHS);
     validateArtifactHasKey(artifact, BuildInfo.MetadataKey.OUTPUT_SIZE);
-    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.OUTPUT_HASH);
   }
 
   private void validateArtifactHasKey(ZipFile artifact, String key) {

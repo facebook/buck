@@ -141,7 +141,7 @@ final class JavaBuildGraphProcessor {
                   params.getRuleKeyConfiguration(),
                   cachingBuildEngineDelegate.getFileHashCache(),
                   buildRuleResolver,
-                  cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                  params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                   new DefaultRuleKeyCache<>()),
               new NoOpRemoteBuildRuleCompletionWaiter()); ) {
         // Create a BuildEngine because we store symbol information as build artifacts.

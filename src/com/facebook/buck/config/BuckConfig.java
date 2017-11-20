@@ -732,6 +732,11 @@ public class BuckConfig implements ConfigPathGetter {
     return config.getLong("build", "scheduler_threads").orElse((long) 2).intValue();
   }
 
+  /** @return the maximum size of files input based rule keys will be willing to hash. */
+  public long getBuildInputRuleKeyFileSizeLimit() {
+    return config.getLong("build", "input_rule_key_file_size_limit").orElse(Long.MAX_VALUE);
+  }
+
   public int getDefaultMaximumNumberOfThreads() {
     return getDefaultMaximumNumberOfThreads(Runtime.getRuntime().availableProcessors());
   }

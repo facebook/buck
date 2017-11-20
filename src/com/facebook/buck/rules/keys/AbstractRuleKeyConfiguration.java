@@ -30,4 +30,7 @@ abstract class AbstractRuleKeyConfiguration {
 
   @Value.Parameter
   public abstract String getCoreKey();
+
+  @Value.Parameter
+  public abstract long getBuildInputRuleKeyFileSizeLimit();
 }

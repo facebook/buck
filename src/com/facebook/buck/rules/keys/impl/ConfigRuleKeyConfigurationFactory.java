@@ -24,10 +24,11 @@ import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 public class ConfigRuleKeyConfigurationFactory {
 
   public static RuleKeyConfiguration create(BuckConfig buckConfig) {
-
+    long inputKeySizeLimit = buckConfig.getBuildInputRuleKeyFileSizeLimit();
     return RuleKeyConfiguration.builder()
         .setSeed(buckConfig.getKeySeed())
         .setCoreKey(getCoreKey(buckConfig))
+        .setBuildInputRuleKeyFileSizeLimit(inputKeySizeLimit)
         .build();
   }
 

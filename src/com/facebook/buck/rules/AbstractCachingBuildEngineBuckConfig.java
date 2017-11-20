@@ -67,11 +67,6 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
     return getDelegate().getLong("build", "artifact_cache_size_limit");
   }
 
-  /** @return the maximum size of files input based rule keys will be willing to hash. */
-  public long getBuildInputRuleKeyFileSizeLimit() {
-    return getDelegate().getLong("build", "input_rule_key_file_size_limit").orElse(Long.MAX_VALUE);
-  }
-
   public ResourceAwareSchedulingInfo getResourceAwareSchedulingInfo() {
     ResourcesConfig resourcesConfig = getDelegate().getView(ResourcesConfig.class);
     return ResourceAwareSchedulingInfo.of(

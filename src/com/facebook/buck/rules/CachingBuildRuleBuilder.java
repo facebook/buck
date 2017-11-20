@@ -483,15 +483,20 @@ class CachingBuildRuleBuilder {
     }
 
     // If this rule was fetched from cache, seed the file hash cache with the recorded
-    // output hashes from the build metadata.
-    Optional<ImmutableMap<String, String>> hashes =
-        onDiskBuildInfo.getMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
-    Preconditions.checkState(hashes.isPresent());
-    // Seed the cache with the hashes.
-    for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
-      Path path = rule.getProjectFilesystem().getPath(ent.getKey());
-      HashCode hashCode = HashCode.fromString(ent.getValue());
-      fileHashCache.set(rule.getProjectFilesystem().resolve(path), hashCode);
+    // output hashes from the build metadata.  Skip this if the output size is too big for
+    // input-based rule keys.
+    long outputSize =
+        Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
+    if (shouldWriteOutputHashes(outputSize)) {
+      Optional<ImmutableMap<String, String>> hashes =
+          onDiskBuildInfo.getMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
+      Preconditions.checkState(hashes.isPresent());
+      // Seed the cache with the hashes.
+      for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
+        Path path = rule.getProjectFilesystem().getPath(ent.getKey());
+        HashCode hashCode = HashCode.fromString(ent.getValue());
+        fileHashCache.set(rule.getProjectFilesystem().resolve(path), hashCode);
+      }
     }
 
     switch (success) {
@@ -646,7 +651,14 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    onDiskBuildInfo.writeOutputHashes(fileHashCache);
+    if (shouldWriteOutputHashes(outputSize.get())) {
+      onDiskBuildInfo.writeOutputHashes(fileHashCache);
+    }
+  }
+
+  private boolean shouldWriteOutputHashes(long outputSize) {
+    Optional<Long> sizeLimit = ruleKeyFactories.getInputBasedRuleKeyFactory().getInputSizeLimit();
+    return !sizeLimit.isPresent() || (outputSize <= sizeLimit.get());
   }
 
   private BuildInfoRecorder getBuildInfoRecorder() {
@@ -727,8 +739,10 @@ class CachingBuildRuleBuilder {
               Optional.of(
                   Long.parseLong(
                       onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get()));
-          String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
-          outputHash = Optional.of(HashCode.fromString(hashString));
+          if (shouldWriteOutputHashes(outputSize.get())) {
+            String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
+            outputHash = Optional.of(HashCode.fromString(hashString));
+          }
         }
 
         // Determine if this is rule is cacheable.

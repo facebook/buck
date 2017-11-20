@@ -21,13 +21,18 @@ import com.facebook.buck.model.BuckVersion;
 public class TestRuleKeyConfigurationFactory {
 
   public static RuleKeyConfiguration create() {
-    return RuleKeyConfiguration.builder().setSeed(0).setCoreKey(BuckVersion.getVersion()).build();
+    return RuleKeyConfiguration.builder()
+        .setSeed(0)
+        .setCoreKey(BuckVersion.getVersion())
+        .setBuildInputRuleKeyFileSizeLimit(Long.MAX_VALUE)
+        .build();
   }
 
   public static RuleKeyConfiguration createWithSeed(int seed) {
     return RuleKeyConfiguration.builder()
         .setSeed(seed)
         .setCoreKey(BuckVersion.getVersion())
+        .setBuildInputRuleKeyFileSizeLimit(Long.MAX_VALUE)
         .build();
   }
 }

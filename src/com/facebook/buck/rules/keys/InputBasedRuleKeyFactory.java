@@ -72,6 +72,11 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     this.ruleKeyLogger = ruleKeyLogger;
   }
 
+  @Override
+  public Optional<Long> getInputSizeLimit() {
+    return Optional.of(inputSizeLimit);
+  }
+
   private Result<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {
     Builder<HashCode> builder = newVerifyingBuilder(buildRule);
     ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.INPUT);
