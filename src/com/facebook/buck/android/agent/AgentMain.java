@@ -160,6 +160,9 @@ public class AgentMain {
       System.out.write(new byte[] {'z', '1', '\n'});
       System.out.flush();
 
+      // NOTE: We leak the client socket if this validation fails,
+      // but this is a short-lived program, so it's probably
+      // not worth the complexity to clean it up.
       receiveAndValidateSessionKey(secretKey, input);
     } finally {
       if (serverSocket != null) {
