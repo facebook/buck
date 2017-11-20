@@ -474,8 +474,7 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider,
             sandboxExecutionStrategy,
             appleConfig,
-            defaultCxxPlatform.getFlavor(),
-            platformFlavorsToAppleCxxPlatforms));
+            defaultCxxPlatform.getFlavor()));
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
             appleBinaryDescription,

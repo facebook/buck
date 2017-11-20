@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -63,19 +64,16 @@ public class ApplePackageDescription
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
   private final Flavor defaultCxxFlavor;
   private final AppleConfig config;
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public ApplePackageDescription(
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       AppleConfig config,
-      Flavor defaultCxxFlavor,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+      Flavor defaultCxxFlavor) {
     this.toolchainProvider = toolchainProvider;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.config = config;
-    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
   }
 
   @Override
@@ -153,7 +151,7 @@ public class ApplePackageDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(appleCxxPlatformFlavorDomain));
+    return Optional.of(ImmutableSet.of(getAppleCxxPlatformFlavorDomain()));
   }
 
   @Override
@@ -178,7 +176,8 @@ public class ApplePackageDescription
    */
   private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(
       BuildTarget target, Function<String, com.facebook.buck.rules.args.Arg> macroExpander) {
-    Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target);
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain = getAppleCxxPlatformFlavorDomain();
+    Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target, appleCxxPlatformFlavorDomain);
 
     // Ensure that different platforms generate the same config.
     // The value of this map is just for error reporting.
@@ -219,6 +218,7 @@ public class ApplePackageDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
       BuildTarget target,
       CellPathResolver cellNames) {
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain = getAppleCxxPlatformFlavorDomain();
     // Add all macro expanded dependencies for these platforms.
     for (Flavor flavor : appleCxxPlatformFlavorDomain.getFlavors()) {
       AppleCxxPlatform platform = appleCxxPlatformFlavorDomain.getValue(flavor);
@@ -245,7 +245,8 @@ public class ApplePackageDescription
     }
   }
 
-  private ImmutableSet<Flavor> getPlatformFlavorsOrDefault(BuildTarget target) {
+  private ImmutableSet<Flavor> getPlatformFlavorsOrDefault(
+      BuildTarget target, FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
     Sets.SetView<Flavor> intersection =
         Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
     if (intersection.isEmpty()) {
@@ -253,5 +254,12 @@ public class ApplePackageDescription
     } else {
       return intersection.immutableCopy();
     }
+  }
+
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
+    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 }
