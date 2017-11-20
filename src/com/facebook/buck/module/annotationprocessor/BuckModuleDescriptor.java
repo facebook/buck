@@ -26,19 +26,19 @@ class BuckModuleDescriptor {
   public final String packageName;
   public final String className;
   public final String name;
-  public final List<String> dependentModules;
+  public final List<String> dependencies;
 
   public BuckModuleDescriptor(
       TypeElement buckModuleAnnotation,
       String packageName,
       String className,
       String name,
-      List<String> dependentModules) {
+      List<String> dependencies) {
     this.buckModuleAnnotation = buckModuleAnnotation;
     this.packageName = packageName;
     this.className = className;
     this.name = name;
-    this.dependentModules = dependentModules;
+    this.dependencies = dependencies;
   }
 
   @Override

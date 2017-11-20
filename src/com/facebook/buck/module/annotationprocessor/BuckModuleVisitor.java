@@ -100,12 +100,12 @@ class BuckModuleVisitor extends SimpleElementVisitor6<Void, TypeElement> {
     String packageName = getPackageName(type);
     String className = type.getSimpleName().toString();
     String buckModuleName = getParamsFromAnnotationOrFail(type, buckModuleAnnotation, "id");
-    List<String> dependentModules =
+    List<String> dependencies =
         getAnnotationParameterAsOptionalListOfStrings(buckModuleAnnotation, "dependencies");
 
     buckModuleDescriptors.add(
         new BuckModuleDescriptor(
-            buckModuleAnnotationType, packageName, className, buckModuleName, dependentModules));
+            buckModuleAnnotationType, packageName, className, buckModuleName, dependencies));
   }
 
   private String getParamsFromAnnotationOrFail(
