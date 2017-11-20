@@ -1048,10 +1048,13 @@ public class RealAndroidDevice implements AndroidDevice {
           SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
         // Slurp the file into RAM to make sure we know how many bytes we are getting.
         byte[] bytes = Files.readAllBytes(source);
-        stream.write((bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8));
+        byte[] restOfHeader = (bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8);
+        byte[] headerPrefix = String.format("%04X ", restOfHeader.length).getBytes(Charsets.UTF_8);
+        stream.write(headerPrefix);
+        stream.write(restOfHeader);
         stream.write(bytes);
       }
     }
-    stream.write("0 --complete\n".getBytes(Charsets.UTF_8));
+    stream.write("000D 0 --complete\n".getBytes(Charsets.UTF_8));
   }
 }

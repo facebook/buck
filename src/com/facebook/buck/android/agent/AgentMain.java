@@ -311,8 +311,14 @@ public class AgentMain {
       if (space == -1) {
         throw new IllegalStateException("No space in metadata line.");
       }
-      int size = Integer.parseInt(header.substring(0, space));
-      String fileName = header.substring(space + 1, header.length());
+      // Skip past the hex header size that is only needed for the native agent.
+      String rest = header.substring(space + 1);
+      space = rest.indexOf(' ');
+      if (space == -1) {
+        throw new IllegalStateException("No second space in metadata line.");
+      }
+      int size = Integer.parseInt(rest.substring(0, space));
+      String fileName = rest.substring(space + 1);
 
       if (size == 0 && fileName.equals("--continue")) {
         continue;
