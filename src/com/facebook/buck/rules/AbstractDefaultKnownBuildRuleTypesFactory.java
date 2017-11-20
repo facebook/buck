@@ -44,7 +44,6 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
   public KnownBuildRuleTypes create(Cell cell) throws IOException, InterruptedException {
     return KnownBuildRuleTypes.createInstance(
         cell.getBuckConfig(),
-        cell.getFilesystem(),
         getExecutor(),
         getToolchainProvider(),
         getPluginManager(),

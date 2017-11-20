@@ -20,13 +20,18 @@ import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
+import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,8 +40,38 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class AppleCxxPlatformsProviderFactory {
-  public static AppleCxxPlatformsProvider create(
+public class AppleCxxPlatformsProviderFactory
+    implements ToolchainFactory<AppleCxxPlatformsProvider> {
+
+  @Override
+  public Optional<AppleCxxPlatformsProvider> createToolchain(
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+
+    Optional<AppleSdkLocation> appleSdkLocation =
+        toolchainProvider.getByNameIfPresent(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.class);
+    Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths =
+        appleSdkLocation.map(AppleSdkLocation::getAppleSdkPaths);
+
+    Optional<AppleToolchainProvider> appleToolchainProvider =
+        toolchainProvider.getByNameIfPresent(
+            AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.class);
+    Optional<ImmutableMap<String, AppleToolchain>> appleToolchains =
+        appleToolchainProvider.map(AppleToolchainProvider::getAppleToolchains);
+
+    try {
+      return Optional.of(
+          AppleCxxPlatformsProvider.of(
+              create(
+                  context.getBuckConfig(),
+                  context.getFilesystem(),
+                  appleSdkPaths,
+                  appleToolchains)));
+    } catch (IOException e) {
+      throw new HumanReadableException(e, "Cannot detect Apple cxx platforms");
+    }
+  }
+
+  private static FlavorDomain<AppleCxxPlatform> create(
       BuckConfig config,
       ProjectFilesystem filesystem,
       Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths,
@@ -49,7 +84,7 @@ public class AppleCxxPlatformsProviderFactory {
     checkApplePlatforms(appleCxxPlatforms);
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
-    return new AppleCxxPlatformsProvider(platformFlavorsToAppleCxxPlatforms);
+    return platformFlavorsToAppleCxxPlatforms;
   }
 
   private static void checkApplePlatforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {

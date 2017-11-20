@@ -116,7 +116,6 @@ public final class KnownBuildRuleTypesTestUtil {
 
     return KnownBuildRuleTypes.createInstance(
         config,
-        filesystem,
         processExecutor,
         toolchainProvider,
         pluginManager,

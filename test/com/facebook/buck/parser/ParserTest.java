@@ -32,10 +32,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
+import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
@@ -276,6 +278,12 @@ public class ParserTest {
             .createToolchain(testToolchainProvider, toolchainCreationContext);
     appleSdkLocation.ifPresent(
         provider -> testToolchainProvider.addToolchain(AppleSdkLocation.DEFAULT_NAME, provider));
+    Optional<AppleCxxPlatformsProvider> appleCxxPlatformsProvider =
+        new AppleCxxPlatformsProviderFactory()
+            .createToolchain(testToolchainProvider, toolchainCreationContext);
+    appleCxxPlatformsProvider.ifPresent(
+        provider ->
+            testToolchainProvider.addToolchain(AppleCxxPlatformsProvider.DEFAULT_NAME, provider));
 
     cell =
         new TestCellBuilder()

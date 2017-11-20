@@ -10,6 +10,7 @@
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables-test" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/src-gen" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/config/testdata" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/toolchain/impl/testdata" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/build" />

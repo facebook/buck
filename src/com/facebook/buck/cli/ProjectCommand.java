@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
-import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFactory;
 import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
@@ -316,6 +316,11 @@ public class ProjectCommand extends BuildCommand {
             result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
             break;
           case XCODE:
+            AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+                params
+                    .getToolchainProvider()
+                    .getByName(
+                        AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
             XCodeProjectCommandHelper xcodeProjectCommandHelper =
                 new XCodeProjectCommandHelper(
                     params.getBuckEventBus(),
@@ -331,11 +336,7 @@ public class ProjectCommand extends BuildCommand {
                     params.getEnvironment(),
                     params.getExecutors().get(ExecutorPool.PROJECT),
                     getArguments(),
-                    AppleCxxPlatformsProviderFactory.create(
-                            params.getBuckConfig(),
-                            params.getCell().getFilesystem(),
-                            params.getSdkEnvironment().getAppleSdkPaths(),
-                            params.getSdkEnvironment().getAppleToolchains())
+                    appleCxxPlatformsProvider
                         .getAppleCxxPlatforms()
                         .getFlavors()
                         .stream()

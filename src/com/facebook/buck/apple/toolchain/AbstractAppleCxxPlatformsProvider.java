@@ -17,16 +17,16 @@
 package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-public class AppleCxxPlatformsProvider {
+@Value.Immutable(copy = false, builder = false)
+@BuckStyleImmutable
+public interface AbstractAppleCxxPlatformsProvider extends Toolchain {
 
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatforms;
+  String DEFAULT_NAME = "apple-cxx-platforms";
 
-  public AppleCxxPlatformsProvider(FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
-    this.appleCxxPlatforms = appleCxxPlatforms;
-  }
-
-  public FlavorDomain<AppleCxxPlatform> getAppleCxxPlatforms() {
-    return appleCxxPlatforms;
-  }
+  @Value.Parameter
+  FlavorDomain<AppleCxxPlatform> getAppleCxxPlatforms();
 }

@@ -49,12 +49,6 @@ import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.apple.toolchain.AppleSdk;
-import com.facebook.buck.apple.toolchain.AppleSdkLocation;
-import com.facebook.buck.apple.toolchain.AppleSdkPaths;
-import com.facebook.buck.apple.toolchain.AppleToolchain;
-import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
-import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -94,7 +88,6 @@ import com.facebook.buck.haskell.HaskellLibraryDescription;
 import com.facebook.buck.haskell.HaskellPlatform;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
@@ -241,7 +234,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
   static KnownBuildRuleTypes createInstance(
       BuckConfig config,
-      ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
       PluginManager pluginManager,
@@ -251,19 +243,9 @@ abstract class AbstractKnownBuildRuleTypes {
 
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
-    Optional<AppleSdkLocation> appleSdkLocation =
-        toolchainProvider.getByNameIfPresent(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.class);
-    Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths =
-        appleSdkLocation.map(AppleSdkLocation::getAppleSdkPaths);
-
-    Optional<AppleToolchainProvider> appleToolchainProvider =
-        toolchainProvider.getByNameIfPresent(
-            AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.class);
-    Optional<ImmutableMap<String, AppleToolchain>> appleToolchains =
-        appleToolchainProvider.map(AppleToolchainProvider::getAppleToolchains);
-
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        AppleCxxPlatformsProviderFactory.create(config, filesystem, appleSdkPaths, appleToolchains);
+        toolchainProvider.getByName(
+            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
 
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         appleCxxPlatformsProvider.getAppleCxxPlatforms();

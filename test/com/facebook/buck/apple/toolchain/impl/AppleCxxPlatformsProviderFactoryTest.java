@@ -14,14 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.apple.toolchain.impl;
 
 import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
@@ -31,13 +31,9 @@ import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
-import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.plugin.BuckPluginManagerFactory;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -58,10 +54,8 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.pf4j.PluginManager;
 
-public class KnownBuildRuleTypesIntegrationTest {
-
+public class AppleCxxPlatformsProviderFactoryTest {
   @Rule public TemporaryPaths temp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -77,7 +71,6 @@ public class KnownBuildRuleTypesIntegrationTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
@@ -114,19 +107,14 @@ public class KnownBuildRuleTypesIntegrationTest {
     toolchainProvider.addToolchain(
         AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(appleToolchains));
 
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         Matchers.containsString(
             "There are two conflicting SDKs providing the same platform \"macosx-i386\":\n"));
-    KnownBuildRuleTypes.createInstance(
-        buckConfig,
-        projectFilesystem,
-        processExecutor,
-        toolchainProvider,
-        pluginManager,
-        TestRuleKeyConfigurationFactory.create(),
-        new TestSandboxExecutionStrategyFactory());
+
+    new AppleCxxPlatformsProviderFactory()
+        .createToolchain(toolchainProvider, toolchainCreationContext);
+
+    fail("AppleCxxPlatformsProviderFactory.createToolchain should fail");
   }
 }

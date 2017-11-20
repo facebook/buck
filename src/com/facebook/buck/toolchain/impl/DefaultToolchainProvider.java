@@ -22,9 +22,11 @@ import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
+import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
@@ -53,7 +55,9 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
         AppleDeveloperDirectoryProvider.DEFAULT_NAME, AppleDeveloperDirectoryProviderFactory.class),
     APPLE_TOOLCHAIN_PROVIDER(
         AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProviderFactory.class),
-    APPLE_SDK_LOCATION(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocationFactory.class);
+    APPLE_SDK_LOCATION(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocationFactory.class),
+    APPLE_CXX_PLATFORMS_PROVIDER(
+        AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProviderFactory.class);
 
     @VisibleForTesting final String name;
     private final Class<? extends ToolchainFactory<?>> toolchainFactoryClass;
