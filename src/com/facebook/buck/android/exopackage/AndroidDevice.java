@@ -46,14 +46,7 @@ public interface AndroidDevice {
 
   AutoCloseable createForward() throws Exception;
 
-  void installFile(Path targetDevicePath, Path source) throws Exception;
-
-  @SuppressWarnings("unused")
-  default void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
-    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
-      installFile(entry.getKey(), entry.getValue());
-    }
-  }
+  void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception;
 
   void mkDirP(String dirpath) throws Exception;
 

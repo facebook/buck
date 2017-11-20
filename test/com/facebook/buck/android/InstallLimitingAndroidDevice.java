@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** This allows limiting the number of apks/dexes/etc that are installed to a device. Useful */
 class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
@@ -88,8 +89,7 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     return super.installApkOnDevice(apk, installViaSd, quiet, verifyTempWritable);
   }
 
-  @Override
-  public void installFile(Path targetDevicePath, Path source) throws Exception {
+  private void validateInstallFile(Path targetDevicePath, Path source) throws Exception {
     assertTrue(
         String.format(
             "Exopackage should only install files to the install root (%s, %s)",
@@ -135,7 +135,14 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     } else {
       fail("Unrecognized target path (" + relativePath + ")");
     }
-    super.installFile(targetDevicePath, source);
+  }
+
+  @Override
+  public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      validateInstallFile(entry.getKey(), entry.getValue());
+    }
+    super.installFiles(filesType, installPaths);
   }
 
   public void setAllowedInstallCounts(

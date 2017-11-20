@@ -195,13 +195,17 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public void installFile(Path targetDevicePath, Path source) throws Exception {
-    // TODO(cjhopman): verify port and agentCommand
-    assertTrue(targetDevicePath.isAbsolute());
-    assertTrue(source.isAbsolute());
-    Path targetPath = resolve(targetDevicePath);
-    assertTrue(targetPath.getParent().toFile().exists());
-    Files.copy(source, targetPath);
+  public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      Path targetDevicePath = entry.getKey();
+      Path source = entry.getValue();
+      // TODO(cjhopman): verify port and agentCommand
+      assertTrue(targetDevicePath.isAbsolute());
+      assertTrue(source.isAbsolute());
+      Path targetPath = resolve(targetDevicePath);
+      assertTrue(targetPath.getParent().toFile().exists());
+      Files.copy(source, targetPath);
+    }
   }
 
   @Override

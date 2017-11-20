@@ -662,8 +662,7 @@ public class RealAndroidDevice implements AndroidDevice {
     }
   }
 
-  @Override
-  public void installFile(final Path targetDevicePath, final Path source) throws Exception {
+  private void installFile(final Path targetDevicePath, final Path source) throws Exception {
     Preconditions.checkArgument(source.isAbsolute());
     Preconditions.checkArgument(targetDevicePath.isAbsolute());
     Closer closer = Closer.create();
