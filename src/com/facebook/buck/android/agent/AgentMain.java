@@ -141,19 +141,7 @@ public class AgentMain {
     try {
       serverSocket = new ServerSocket(port);
 
-      byte[] secretKey = createAndSendSessionKey();
-
-      // Open the connection with appropriate timeouts.
-      serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
-      Socket connectionSocket = serverSocket.accept();
-      connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
-      InputStream input = connectionSocket.getInputStream();
-
-      // Report that the socket has been opened.
-      System.out.write(new byte[] {'z', '1', '\n'});
-      System.out.flush();
-
-      receiveAndValidateSessionKey(secretKey, input);
+      InputStream input = acceptAuthenticConnectionFromClient(serverSocket);
 
       doRawReceiveFile(path, size, input);
     } finally {
@@ -161,6 +149,24 @@ public class AgentMain {
         serverSocket.close();
       }
     }
+  }
+
+  private static InputStream acceptAuthenticConnectionFromClient(ServerSocket serverSocket)
+      throws IOException {
+    byte[] secretKey = createAndSendSessionKey();
+
+    // Open the connection with appropriate timeouts.
+    serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
+    Socket connectionSocket = serverSocket.accept();
+    connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
+    InputStream input = connectionSocket.getInputStream();
+
+    // Report that the socket has been opened.
+    System.out.write(new byte[] {'z', '1', '\n'});
+    System.out.flush();
+
+    receiveAndValidateSessionKey(secretKey, input);
+    return input;
   }
 
   private static byte[] createAndSendSessionKey() throws IOException {
@@ -264,7 +270,11 @@ public class AgentMain {
     String ip = userArgs.get(0);
     int port = Integer.parseInt(userArgs.get(1));
     int nonce = Integer.parseInt(userArgs.get(2));
+    multiReceiveFileFromServer(ip, port, nonce);
+  }
 
+  private static void multiReceiveFileFromServer(String ip, int port, int nonce)
+      throws IOException {
     // Send a byte to trigger the installer to accept our connection.
     System.out.println();
     System.out.flush();
@@ -285,28 +295,32 @@ public class AgentMain {
 
       BufferedInputStream stream = new BufferedInputStream(clientSocket.getInputStream());
 
-      while (true) {
-        String header = readLine(stream);
-        int space = header.indexOf(' ');
-        if (space == -1) {
-          throw new IllegalStateException("No space in metadata line.");
-        }
-        int size = Integer.parseInt(header.substring(0, space));
-        String fileName = header.substring(space + 1, header.length());
-
-        if (size == 0 && fileName.equals("--continue")) {
-          continue;
-        }
-        if (size == 0 && fileName.equals("--complete")) {
-          break;
-        }
-
-        doRawReceiveFile(new File(fileName), size, stream);
-      }
+      multiReceiveFileFromStream(stream);
     } finally {
       if (clientSocket != null) {
         clientSocket.close();
       }
+    }
+  }
+
+  private static void multiReceiveFileFromStream(BufferedInputStream stream) throws IOException {
+    while (true) {
+      String header = readLine(stream);
+      int space = header.indexOf(' ');
+      if (space == -1) {
+        throw new IllegalStateException("No space in metadata line.");
+      }
+      int size = Integer.parseInt(header.substring(0, space));
+      String fileName = header.substring(space + 1, header.length());
+
+      if (size == 0 && fileName.equals("--continue")) {
+        continue;
+      }
+      if (size == 0 && fileName.equals("--complete")) {
+        break;
+      }
+
+      doRawReceiveFile(new File(fileName), size, stream);
     }
   }
 
