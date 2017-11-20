@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
@@ -76,9 +78,17 @@ class BuckModuleAdapterPluginGenerator {
   private void writePluginManifest() throws IOException {
     Writer writer = createResourceWriter();
 
+    List<String> dependenciesWithoutQuotes =
+        buckModuleDescriptor
+            .dependencies
+            .stream()
+            .map(module -> module.substring(1, module.length() - 1))
+            .collect(Collectors.toList());
+
     ST template =
         getStringTemplate(MANIFEST_TEMPLATE)
             .add("fullClassName", fullAdapterPluginClassName)
+            .add("pluginDependencies", String.join(", ", dependenciesWithoutQuotes))
             .add("pluginId", buckModuleDescriptor.name);
 
     writeStringTemplateToWriter(writer, template);

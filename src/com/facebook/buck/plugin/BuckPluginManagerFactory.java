@@ -23,6 +23,7 @@ import org.pf4j.JarPluginLoader;
 import org.pf4j.ManifestPluginDescriptorFinder;
 import org.pf4j.PluginLoader;
 import org.pf4j.PluginManager;
+import org.pf4j.VersionManager;
 
 /**
  * Creates instances of {@link PluginManager} that are able to find extensions in Buck.
@@ -45,6 +46,12 @@ public class BuckPluginManagerFactory {
     @Override
     protected PluginLoader createPluginLoader() {
       return new JarPluginLoader(this);
+    }
+
+    @Override
+    protected VersionManager createVersionManager() {
+      // Buck modules do not support versions
+      return (__, ___) -> true;
     }
   }
 

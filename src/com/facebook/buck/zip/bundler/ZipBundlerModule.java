@@ -14,15 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.rules;
+package com.facebook.buck.zip.bundler;
 
 import com.facebook.buck.module.BuckModule;
 
-/** A modules that provides `zip_rule` build rule. */
-@BuckModule(
-  id = "com.facebook.buck.zip.ziprules",
-  dependencies = {
-    "com.facebook.buck.zip.bundler",
-  }
-)
-public class ZipRulesModule {}
+@BuckModule(id = "com.facebook.buck.zip.bundler")
+public class ZipBundlerModule {}
