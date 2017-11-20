@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -42,6 +43,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Predicates;
@@ -67,28 +69,28 @@ public class AppleBundleDescription
 
   private static final Flavor WATCH = InternalFlavor.of("watch");
 
+  private final ToolchainProvider toolchainProvider;
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
   private final Flavor defaultCxxFlavor;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
 
   public AppleBundleDescription(
+      ToolchainProvider toolchainProvider,
       AppleBinaryDescription appleBinaryDescription,
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
       Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.appleCxxPlatformsFlavorDomain = appleCxxPlatformsFlavorDomain;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -157,7 +159,7 @@ public class AppleBundleDescription
     return AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
         defaultCxxFlavor,
-        appleCxxPlatformsFlavorDomain,
+        getAppleCxxPlatformFlavorDomain(),
         targetGraph,
         buildTarget,
         projectFilesystem,
@@ -196,6 +198,8 @@ public class AppleBundleDescription
       buildTarget = buildTarget.withAppendedFlavors(defaultCxxFlavor);
     }
 
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
+        getAppleCxxPlatformFlavorDomain();
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     CxxPlatform cxxPlatform;
@@ -298,6 +302,13 @@ public class AppleBundleDescription
       return Optional.empty();
     }
     return resolver.requireMetadata(args.getBinary(), metadataClass);
+  }
+
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
+    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 
   @BuckStyleImmutable

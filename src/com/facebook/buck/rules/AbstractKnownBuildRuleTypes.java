@@ -477,10 +477,10 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultCxxPlatform.getFlavor()));
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
+            toolchainProvider,
             appleBinaryDescription,
             appleLibraryDescription,
             cxxPlatforms,
-            platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
