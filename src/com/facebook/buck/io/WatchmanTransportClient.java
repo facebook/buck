@@ -91,7 +91,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     listeningExecutorService.shutdown();
   }
 
-  private synchronized void showDisabledWarning(Console console, long timeoutNanos) {
+  private synchronized void showDisabledWarning(long timeoutNanos) {
     if (disabledWarningShown) {
       return;
     }
@@ -135,7 +135,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       LOG.warn(
           "Watchman did not respond within %d ms, disabling.",
           TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
-      showDisabledWarning(console, timeoutNanos);
+      showDisabledWarning(timeoutNanos);
       return Optional.empty();
     }
   }
