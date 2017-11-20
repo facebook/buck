@@ -375,7 +375,7 @@ abstract class AbstractKnownBuildRuleTypes {
             swiftBuckConfig);
     builder.addDescriptions(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
-        new PrebuiltAppleFrameworkDescription(cxxBuckConfig, platformFlavorsToAppleCxxPlatforms);
+        new PrebuiltAppleFrameworkDescription(toolchainProvider, cxxBuckConfig);
     builder.addDescriptions(appleFrameworkDescription);
 
     AppleBinaryDescription appleBinaryDescription =
