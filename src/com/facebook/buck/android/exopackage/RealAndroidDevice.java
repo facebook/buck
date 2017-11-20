@@ -653,30 +653,24 @@ public class RealAndroidDevice implements AndroidDevice {
     if (rapidInstallMode.isPresent()) {
       doRapidInstall(rapidInstallMode.get(), filesType, installPaths);
     } else {
-      for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
-        try (SimplePerfEvent.Scope ignored =
-            SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-          installFile(entry.getKey(), entry.getValue());
-        }
-      }
+      doMultiInstall(filesType, installPaths);
     }
   }
 
-  private void installFile(final Path targetDevicePath, final Path source) throws Exception {
-    Preconditions.checkArgument(source.isAbsolute());
-    Preconditions.checkArgument(targetDevicePath.isAbsolute());
+  private void doMultiInstall(String filesType, Map<Path, Path> installPaths) throws Exception {
     Closer closer = Closer.create();
-    FileInstallReceiver receiver = new FileInstallReceiver(closer, source);
+    BuckInitiatedInstallReceiver receiver =
+        new BuckInitiatedInstallReceiver(closer, filesType, installPaths);
 
     String command =
         "umask 022 && "
             + agent.get().getAgentCommand()
-            + "receive-file "
+            + "multi-receive-file "
+            + "-"
+            + " "
             + agentPort
             + " "
-            + Files.size(source)
-            + " "
-            + targetDevicePath
+            + "1"
             + ECHO_COMMAND_SUFFIX;
     LOG.debug("Executing %s", command);
 
@@ -713,7 +707,9 @@ public class RealAndroidDevice implements AndroidDevice {
       throw shellException;
     }
 
-    chmod644(targetDevicePath);
+    for (Path targetFileName : installPaths.keySet()) {
+      chmod644(targetFileName);
+    }
   }
 
   void doRapidInstall(
@@ -721,12 +717,12 @@ public class RealAndroidDevice implements AndroidDevice {
       throws Exception {
     Exception failure = null;
     String command;
-    MultiFileInstallReceiver receiver;
+    AgentInitiatedInstallReceiver receiver;
 
     try (ServerSocket serverSocket = new ServerSocket(0)) {
       int port = serverSocket.getLocalPort();
       int nonce = (int) System.currentTimeMillis() & 0x7FFFFFFF;
-      receiver = new MultiFileInstallReceiver(serverSocket, nonce, filesType, installPaths);
+      receiver = new AgentInitiatedInstallReceiver(serverSocket, nonce, filesType, installPaths);
       command =
           "umask 022 && "
               + agent.get().getAgentCommand()
@@ -885,17 +881,37 @@ public class RealAndroidDevice implements AndroidDevice {
     }
   }
 
-  private class FileInstallReceiver extends CollectingOutputReceiver {
+  private class BuckInitiatedInstallReceiver extends CollectingOutputReceiver {
+    /*
+    The buck-initiated protocol:
+
+    Buck will invoke the agent with a port, and the agent will begin listening on the port.
+    The agent will generate a random session key of AgentUtil.TEXT_SECRET_KEY_SIZE hex characters.
+    The agent will send the session key to stdout, followed by a newline.
+    Buck will connect to the port.
+    Recent versions of ADB on Linux will not properly forward data that Buck sends immediately,
+    so the agent will accept the connection, then print "z1" (followed by a newline) to stdout
+    to confirm that the connection has been initiated.
+    Buck will send the session key to the agent, *without* a trailing newline.
+    At this point, the connection is authenticated and can be used for multi-file transfer.
+
+    Note that the secret key is meant to protect against a very specific attack:
+    a malicious Android app on the device quickly connecting to the agent
+    and sending infected files for installation.
+     */
+
     private final Closer closer;
-    private final Path source;
+    private final String filesType;
+    private final Map<Path, Path> installPaths;
     private boolean startedPayload;
     private boolean wrotePayload;
     @Nullable private OutputStream outToDevice;
     private Optional<Exception> error;
 
-    public FileInstallReceiver(Closer closer, Path source) {
+    BuckInitiatedInstallReceiver(Closer closer, String filesType, Map<Path, Path> installPaths) {
       this.closer = closer;
-      this.source = source;
+      this.filesType = filesType;
+      this.installPaths = installPaths;
       this.startedPayload = false;
       this.wrotePayload = false;
       this.error = Optional.empty();
@@ -932,9 +948,8 @@ public class RealAndroidDevice implements AndroidDevice {
           wrotePayload = true;
           outToDevice.write(getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
           LOG.verbose("Wrote key");
-          com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-          outToDevice.flush();
-          LOG.verbose("Wrote file");
+          multiInstallFilesToStream(outToDevice, filesType, installPaths);
+          LOG.verbose("Wrote files");
         }
       } catch (IOException e) {
         error = Optional.of(e);
@@ -946,24 +961,15 @@ public class RealAndroidDevice implements AndroidDevice {
     }
   }
 
-  private class MultiFileInstallReceiver extends CollectingOutputReceiver {
+  private class AgentInitiatedInstallReceiver extends CollectingOutputReceiver {
     /*
-    The multi-file install protocol:
+    The agent-initiated protocol:
 
     Buck will invoke the agent with an IP, port, and nonce (31-bit).
     The agent will write a byte to stdout to trigger the ddmlib output receiver.
     The agent will connect to the IP and port (where Buck or a proxy will already be listening).
     The agent will write the nonce to the connection as a 4-byte big endian value.
-    Buck will transmit a sequence of files to the agent.
-    Each file is preceded by a header.
-    The header starts with file size as ASCII text followed by a space.
-    Next is the name of the file that the agent should write to, followed by a newline.
-    The full file contents follows the newline immediately, with no terminator.
-    The next file header begins immediately.
-    The agent recognizes two special file names, which must always have size 0.
-    "--continue" indicates that no file should be written.
-    This might be used in the future to avoid read timeouts.
-    "--complete" indicates that the transmission is complete, and the agent should exit.
+    The connection will then be used for a multi-file transfer.
 
     Note that the nonce is not meant for security purposes.
     It will be used to avoid confusing streams when tunnelling the connection over USB.
@@ -979,7 +985,7 @@ public class RealAndroidDevice implements AndroidDevice {
     private Optional<Exception> error = Optional.empty();
     private boolean startedSend = false;
 
-    MultiFileInstallReceiver(
+    AgentInitiatedInstallReceiver(
         ServerSocket serverSocket, int nonce, String filesType, Map<Path, Path> installPaths) {
       this.serverSocket = serverSocket;
       this.nonce = nonce;
@@ -1035,6 +1041,23 @@ public class RealAndroidDevice implements AndroidDevice {
     }
   }
 
+  /*
+  The multi-file install protocol:
+
+  First, a trusted byte stream from Buck to the agent will be established.
+  Buck will transmit a sequence of files to the agent.
+  Each file is preceded by a header.
+  The header starts with a 4-character uppercase hex number,  which is the size of the header
+  in bytes, starting from after the first space, followed by a space.
+  Next is file size as ASCII text followed by a space.
+  Next is the name of the file that the agent should write to, followed by a newline.
+  The full file contents follows the newline immediately, with no terminator.
+  The next file header begins immediately.
+  The agent recognizes two special file names, which must always have size 0.
+  "--continue" indicates that no file should be written.
+  This might be used in the future to avoid read timeouts.
+  "--complete" indicates that the transmission is complete, and the agent should exit.
+   */
   private void multiInstallFilesToStream(
       OutputStream stream, String filesType, Map<Path, Path> installPaths) throws IOException {
     for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
@@ -1052,5 +1075,6 @@ public class RealAndroidDevice implements AndroidDevice {
       }
     }
     stream.write("000D 0 --complete\n".getBytes(Charsets.UTF_8));
+    stream.flush();
   }
 }

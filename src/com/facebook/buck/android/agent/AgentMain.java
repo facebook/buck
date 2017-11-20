@@ -67,8 +67,6 @@ public class AgentMain {
         doGetSignature(userArgs);
       } else if (command.equals("mkdir-p")) {
         doMkdirP(userArgs);
-      } else if (command.equals("receive-file")) {
-        doReceiveFile(userArgs);
       } else if (command.equals("multi-receive-file")) {
         doMultiReceiveFile(userArgs);
       } else {
@@ -110,34 +108,6 @@ public class AgentMain {
     if (!success) {
       throw new IOException("Creating directory failed.");
     }
-  }
-
-  /**
-   * Receive a file over the network and write it to disk.
-   *
-   * <p>Arguments are
-   *
-   * <ol>
-   *   <li>The port to listen on.
-   *   <li>The size of the file to receive.
-   *   <li>The path to write it to.
-   * </ol>
-   *
-   * <p>At startup, the agent will print a textual secret key to stdout. It consists of exactly
-   * {@link AgentUtil#TEXT_SECRET_KEY_SIZE} bytes. The caller must prepend those bytes to the file
-   * being transmitted, in order to prevent another process from sending a malicious payload.
-   */
-  private static void doReceiveFile(List<String> userArgs) throws IOException {
-    if (userArgs.size() != 3) {
-      throw new IllegalArgumentException("usage: receive-file PORT SIZE PATH");
-    }
-
-    int port = Integer.parseInt(userArgs.get(0));
-    int size = Integer.parseInt(userArgs.get(1));
-    File path = new File(userArgs.get(2));
-
-    InputStream input = acceptAuthenticConnectionFromClient(port);
-    doRawReceiveFile(path, size, input);
   }
 
   private static BufferedInputStream acceptAuthenticConnectionFromClient(int port)
@@ -274,7 +244,14 @@ public class AgentMain {
     String ip = userArgs.get(0);
     int port = Integer.parseInt(userArgs.get(1));
     int nonce = Integer.parseInt(userArgs.get(2));
-    multiReceiveFileFromServer(ip, port, nonce);
+
+    if (ip.equals("-")) {
+      BufferedInputStream connection = acceptAuthenticConnectionFromClient(port);
+      // TODO: Maybe don't leak connection.
+      multiReceiveFileFromStream(connection);
+    } else {
+      multiReceiveFileFromServer(ip, port, nonce);
+    }
   }
 
   private static void multiReceiveFileFromServer(String ip, int port, int nonce)

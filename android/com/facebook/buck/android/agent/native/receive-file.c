@@ -14,36 +14,7 @@
 
 
 // Return 0 on success
-static int parse_args_single(int num_args, char** args, uint16_t* out_port, int* out_size, const char** out_path) {
-  if (num_args != 3) {
-    fprintf(stderr, "usage: receive-file PORT SIZE PATH\n");
-    return -1;
-  }
-
-  char* endptr;
-
-  const char* port_str = args[0];
-  long port = strtol(port_str, &endptr, 10);
-  if (*port_str == '\0' || *endptr != '\0' || port <= 0 || port > USHRT_MAX) {
-    fprintf(stderr, "Invalid port: %s\n", port_str);
-    return -1;
-  }
-
-  const char* size_str = args[1];
-  long size = strtol(size_str, &endptr, 10);
-  if (*size_str == '\0' || *endptr != '\0' || size <= 0 || size > INT_MAX) {
-    fprintf(stderr, "Invalid size: %s\n", size_str);
-    return -1;
-  }
-
-  *out_port = (uint16_t)port;
-  *out_size = (int)size;
-  *out_path = args[2];
-  return 0;
-}
-
-// Return 0 on success
-static int parse_args_multi(int num_args, char** args, char** out_ip_str, uint16_t* out_port, uint32_t* out_nonce) {
+static int parse_args(int num_args, char** args, char** out_ip_str, uint16_t* out_port, uint32_t* out_nonce) {
   if (num_args != 3) {
     fprintf(stderr, "usage: multi-receive-file IP PORT NONCE\n");
     return -1;
@@ -425,14 +396,8 @@ static int multi_receive_file_from_socket(int sock) {
   return 0;
 }
 
-int do_receive_file(int num_args, char** args) {
-  uint16_t port;
-  int size;
-  const char* path;
-  if (parse_args_single(num_args, args, &port, &size, &path) != 0) {
-    return 1;
-  }
-
+// Return socket fd on success, -1 on failure.
+static int accept_authentic_connection_from_client(uint16_t port) {
   int listen_socket = -1;
   int client_socket = -1;
 
@@ -459,12 +424,7 @@ int do_receive_file(int num_args, char** args) {
     goto fail1;
   }
 
-  if (raw_receive_file(path, size, client_socket) != 0) {
-    goto fail1;
-  }
-
-  return 0;
-
+  return client_socket;
 
 fail1:
   if (client_socket >= 0) {
@@ -473,17 +433,11 @@ fail1:
   if (listen_socket >= 0) {
     close(listen_socket);
   }
-  return 1;
+  return -1;
 }
 
-int do_multi_receive_file(int num_args, char** args) {
-  char* ip_str;
-  uint16_t port;
-  uint32_t nonce;
-  if (parse_args_multi(num_args, args, &ip_str, &port, &nonce) != 0) {
-    return 1;
-  }
-
+// Returns an appropriate process exit code.
+static int multi_receive_file_from_server(const char* ip_str, uint16_t port, uint32_t nonce) {
   // Send a byte to trigger the installer to accept our connection.
   printf("\n");
   fflush(stdout);
@@ -513,11 +467,34 @@ int do_multi_receive_file(int num_args, char** args) {
 
   return 0;
 
-
 fail1:
   if (client_socket >= 0) {
     close(client_socket);
   }
   return 1;
+}
+
+int do_multi_receive_file(int num_args, char** args) {
+  char* ip_str;
+  uint16_t port;
+  uint32_t nonce;
+  if (parse_args(num_args, args, &ip_str, &port, &nonce) != 0) {
+    return 1;
+  }
+
+  if (strcmp(ip_str, "-") == 0) {
+    int socket = accept_authentic_connection_from_client(port);
+    if (socket < 0) {
+      return 1;
+    }
+    int ret = multi_receive_file_from_socket(socket);
+    close(socket);
+    if (ret != 0) {
+      return 1;
+    }
+    return 0;
+  } else {
+    return multi_receive_file_from_server(ip_str, port, nonce);
+  }
 }
 
