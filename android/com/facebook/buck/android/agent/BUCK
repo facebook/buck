@@ -1,17 +1,18 @@
-java_library(
-    name = "manifest-as-resource",
-    resources = [
-        "AndroidManifest.xml",
+genrule(
+    name = "manifest",
+    srcs = [
+        "AndroidManifest-template.xml",
     ],
-    visibility = [
-        "//test/...",
-    ],
+    out = "AndroidManifest.xml",
+    bash = "VERSION=`sed -ne '/AGENT_VERSION_CODE/s/[^0-9]//gp' < " +
+           "$(location //src/com/facebook/buck/android/agent/util:util_src)` && " +
+           "sed s/{version}/$VERSION/g < $SRCDIR/AndroidManifest-template.xml > $OUT",
 )
 
 android_binary(
     name = "agent",
     keystore = ":debug_keystore",
-    manifest = "AndroidManifest.xml",
+    manifest = ":manifest",
     deps = [
         "//android/com/facebook/buck/android/agent/native:native",
         "//src/com/facebook/buck/android/agent:agent",

@@ -19,3 +19,11 @@ java_library(
         # Do not add other deps here.  The agent should remain very small.
     ],
 )
+
+export_file(
+    name = "util_src",
+    src = "AgentUtil.java",
+    visibility = [
+        "//android/com/facebook/buck/android/agent/...",
+    ],
+)

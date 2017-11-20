@@ -4,7 +4,6 @@ java_test(
     name = "util",
     srcs = glob(["*.java"]),
     deps = [
-        "//android/com/facebook/buck/android/agent:manifest-as-resource",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/agent/util:util",
         "//test/com/facebook/buck/testutil/integration:util",
