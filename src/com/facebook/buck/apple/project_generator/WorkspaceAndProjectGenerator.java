@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
@@ -108,6 +109,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableList.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
 
   public WorkspaceAndProjectGenerator(
@@ -127,6 +129,7 @@ public class WorkspaceAndProjectGenerator {
       RuleKeyConfiguration ruleKeyConfiguration,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
+      AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
     this.rootCell = cell;
     this.projectGraph = projectGraph;
@@ -147,6 +150,7 @@ public class WorkspaceAndProjectGenerator {
     this.combinedProjectGenerator = Optional.empty();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.appleConfig = appleConfig;
 
     this.focusModules =
         focusModules.map(
@@ -480,6 +484,7 @@ public class WorkspaceAndProjectGenerator {
                 buckEventBus,
                 halideBuckConfig,
                 cxxBuckConfig,
+                appleConfig,
                 swiftBuckConfig);
         projectGenerators.put(projectDirectory, generator);
         shouldGenerateProjects = true;
@@ -536,6 +541,7 @@ public class WorkspaceAndProjectGenerator {
             buckEventBus,
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     combinedProjectGenerator = Optional.of(generator);
     generator.createXcodeProjects();

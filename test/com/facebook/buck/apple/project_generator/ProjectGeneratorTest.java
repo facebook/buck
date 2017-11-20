@@ -38,6 +38,7 @@ import com.facebook.buck.apple.AppleAssetCatalogBuilder;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
@@ -168,6 +169,7 @@ public class ProjectGeneratorTest {
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
+  private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -199,6 +201,7 @@ public class ProjectGeneratorTest {
             "swift", ImmutableMap.of("version", "1.23"));
     BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
+    appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
   }
 
@@ -1841,7 +1844,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1897,7 +1900,8 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        String.format("$(inherited) -force_load %s %s", generatedLibraryPath, exportedLibraryPath),
+        String.format(
+            "$(inherited) -ObjC -force_load %s %s", generatedLibraryPath, exportedLibraryPath),
         settings.get("OTHER_LDFLAGS"));
   }
 
@@ -1927,7 +1931,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) ", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1951,7 +1955,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1983,7 +1987,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2015,7 +2019,7 @@ public class ProjectGeneratorTest {
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("-lbaz -lbaz", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-ObjC -lbaz -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2071,7 +2075,7 @@ public class ProjectGeneratorTest {
         "-Wundeclared-selector -Wno-objc-designated-initializers "
             + "-Wundeclared-selector -Wno-objc-designated-initializers",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("$(inherited) ", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-ObjC -ObjC", settings.get("OTHER_LDFLAGS"));
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "
@@ -2082,7 +2086,7 @@ public class ProjectGeneratorTest {
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-lbaz-iphone -lbaz-iphone",
+        "-ObjC -lbaz-iphone -ObjC -lbaz-iphone",
         settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
@@ -4873,6 +4877,7 @@ public class ProjectGeneratorTest {
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
 
     projectGeneratorLib2.createXcodeProjects();
@@ -4918,6 +4923,7 @@ public class ProjectGeneratorTest {
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
 
     projectGeneratorLib1.createXcodeProjects();
@@ -5051,6 +5057,7 @@ public class ProjectGeneratorTest {
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
+        appleConfig,
         swiftBuckConfig);
   }
 

@@ -453,6 +453,7 @@ public class XCodeProjectCommandHelper {
               ruleKeyConfiguration,
               halideBuckConfig,
               cxxBuckConfig,
+              appleConfig,
               swiftBuckConfig);
       Preconditions.checkNotNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");

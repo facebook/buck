@@ -30,6 +30,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleTestBuilder;
@@ -97,6 +98,7 @@ public class WorkspaceAndProjectGeneratorTest {
   private Cell rootCell;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
+  private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
 
   private TargetGraph targetGraph;
@@ -114,6 +116,7 @@ public class WorkspaceAndProjectGeneratorTest {
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
     cxxBuckConfig = new CxxBuckConfig(fakeBuckConfig);
+    appleConfig = fakeBuckConfig.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(fakeBuckConfig);
     setUpWorkspaceAndProjects();
   }
@@ -249,6 +252,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -304,6 +308,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -352,6 +357,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -399,6 +405,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -466,6 +473,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -514,6 +522,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -665,6 +674,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -784,6 +794,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -858,6 +869,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
@@ -912,6 +924,7 @@ public class WorkspaceAndProjectGeneratorTest {
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(

@@ -28,6 +28,7 @@ import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
@@ -291,6 +292,7 @@ public class ProjectGenerator {
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final AppleConfig appleConfig;
   private final FocusedModuleTargetMatcher focusModules;
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
@@ -320,6 +322,7 @@ public class ProjectGenerator {
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
+      AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
@@ -373,6 +376,7 @@ public class ProjectGenerator {
     targetConfigNamesBuilder = ImmutableSet.builder();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.focusModules = focusModules;
 
@@ -1419,12 +1423,14 @@ public class ProjectGenerator {
                     targetNode, targetNode.getConstructorArg().getCompilerFlags()),
                 convertStringWithMacros(
                     targetNode, targetNode.getConstructorArg().getPreprocessorFlags()));
-        ImmutableList<String> otherLdFlags =
-            convertStringWithMacros(
-                targetNode,
-                Iterables.concat(
-                    targetNode.getConstructorArg().getLinkerFlags(),
-                    collectRecursiveExportedLinkerFlags(targetNode)));
+        Iterable<String> otherLdFlags =
+            Iterables.concat(
+                appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of(),
+                convertStringWithMacros(
+                    targetNode,
+                    Iterables.concat(
+                        targetNode.getConstructorArg().getLinkerFlags(),
+                        collectRecursiveExportedLinkerFlags(targetNode))));
 
         appendConfigsBuilder
             .put(
@@ -1444,7 +1450,9 @@ public class ProjectGenerator {
                     .collect(Collectors.joining(" ")))
             .put(
                 "OTHER_LDFLAGS",
-                otherLdFlags.stream().map(Escaper.BASH_ESCAPER).collect(Collectors.joining(" ")));
+                Streams.stream(otherLdFlags)
+                    .map(Escaper.BASH_ESCAPER)
+                    .collect(Collectors.joining(" ")));
 
         ImmutableMultimap<String, ImmutableList<String>> platformFlags =
             convertPlatformFlags(
