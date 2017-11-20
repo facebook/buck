@@ -7,14 +7,14 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-//#include <netinet/ip.h>
+#include <arpa/inet.h>
 
 
 #include "constants.h"
 
 
 // Return 0 on success
-static int parse_args(int num_args, char** args, uint16_t* out_port, int* out_size, const char** out_path) {
+static int parse_args_single(int num_args, char** args, uint16_t* out_port, int* out_size, const char** out_path) {
   if (num_args != 3) {
     fprintf(stderr, "usage: receive-file PORT SIZE PATH\n");
     return -1;
@@ -39,6 +39,49 @@ static int parse_args(int num_args, char** args, uint16_t* out_port, int* out_si
   *out_port = (uint16_t)port;
   *out_size = (int)size;
   *out_path = args[2];
+  return 0;
+}
+
+// Return 0 on success
+static int parse_args_multi(int num_args, char** args, char** out_ip_str, uint16_t* out_port, uint32_t* out_nonce) {
+  if (num_args != 3) {
+    fprintf(stderr, "usage: multi-receive-file IP PORT NONCE\n");
+    return -1;
+  }
+
+  *out_ip_str = args[0];
+
+  char* endptr;
+
+  const char* port_str = args[1];
+  long port = strtol(port_str, &endptr, 10);
+  if (*port_str == '\0' || *endptr != '\0' || port <= 0 || port > USHRT_MAX) {
+    fprintf(stderr, "Invalid port: %s\n", port_str);
+    return -1;
+  }
+
+  const char* nonce_str = args[2];
+  long nonce = strtol(nonce_str, &endptr, 10);
+  if (*nonce_str == '\0' || *endptr != '\0' || nonce <= 0 || nonce > INT_MAX) {
+    fprintf(stderr, "Invalid nonce: %s\n", nonce_str);
+    return -1;
+  }
+
+  *out_port = (uint16_t)port;
+  *out_nonce = (uint32_t)nonce;
+  return 0;
+}
+
+// Returns 0 on success.
+static int set_socket_timeout(int sock) {
+  struct timeval timeout;
+  timeout.tv_sec = RECEIVE_TIMEOUT_SEC;
+  timeout.tv_usec = 0;
+  int ret = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+  if (ret != 0) {
+    perror("setsockopt(SO_RCVTIMEO)");
+    return ret;
+  }
   return 0;
 }
 
@@ -116,13 +159,45 @@ static int get_client(int listen_socket, int* out_client_socket) {
   // Set this here so it will be closed if the timeout has an error.
   *out_client_socket = client_socket;
 
-  struct timeval timeout;
-  timeout.tv_sec = RECEIVE_TIMEOUT_SEC;
-  timeout.tv_usec = 0;
-  ret = setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+  ret = set_socket_timeout(client_socket);
   if (ret != 0) {
-    perror("setsockopt(SO_RCVTIMEO)");
-    return ret;
+    return -1;
+  }
+
+  return 0;
+}
+
+// On success, returns 0 and sets *out_client_socket to the socket fd.
+static int connect_client(const char* ip_str, uint16_t port, int* out_client_socket) {
+  int ret;
+  struct sockaddr_in addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(port);
+  ret = inet_aton(ip_str, &addr.sin_addr);
+  if (ret != 1) {
+    fprintf(stderr, "Invalid IP address: %s\n", ip_str);
+    return -1;
+  }
+
+  int sock = socket(AF_INET, SOCK_STREAM, 0);
+  if (sock < 0) {
+    perror("socket");
+    return -1;
+  }
+
+  // Set this here so it will be closed if we have an error.
+  *out_client_socket = sock;
+
+  ret = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+  if (ret < 0) {
+    perror("connect");
+    return -1;
+  }
+
+  ret = set_socket_timeout(sock);
+  if (ret != 0) {
+    return -1;
   }
 
   return 0;
@@ -276,11 +351,85 @@ error:
   return -1;
 }
 
+// Returns 0 on success.
+static int multi_receive_file_from_socket(int sock) {
+  for (;;) {
+    ssize_t got;
+    char* endptr;
+
+    char header_size_buf[5];
+    got = read_all(sock, header_size_buf, sizeof(header_size_buf));
+    if (got < 0) {
+      return -1;
+    }
+    if (got < sizeof(header_size_buf)) {
+      fprintf(stderr, "Did not receive full-length header size.\n");
+      return -1;
+    }
+    if (header_size_buf[4] != ' ') {
+      fprintf(stderr, "Header size not followed by space.\n");
+      return -1;
+    }
+    header_size_buf[4] = '\0';
+
+    long header_size = strtol(header_size_buf, &endptr, 16);
+    if (*header_size_buf == '\0' || *endptr != '\0' || header_size <= 0 || header_size > HEADER_SIZE_MAX) {
+      fprintf(stderr, "Invalid header size: %s\n", header_size_buf);
+      return -1;
+    }
+
+    char header_buf[HEADER_SIZE_MAX];
+    got = read_all(sock, header_buf, header_size);
+    if (got < 0) {
+      return -1;
+    }
+    if (got < header_size) {
+      fprintf(stderr, "Did not receive full-length header.\n");
+      return -1;
+    }
+
+    char* space = strchr(header_buf, ' ');
+    if (space == NULL) {
+      fprintf(stderr, "No space in header.\n");
+      return -1;
+    }
+    *space = '\0';
+
+    long file_size = strtol(header_buf, &endptr, 10);
+    if (*header_buf == '\0' || *endptr != '\0' || file_size < 0 || file_size > INT_MAX) {
+      fprintf(stderr, "Invalid file size: %s\n", header_buf);
+      return -1;
+    }
+
+    char* file_name = space + 1;
+    char* newline = strchr(file_name, '\n');
+    if (newline == NULL) {
+      fprintf(stderr, "No newline in header.\n");
+      return -1;
+    }
+    *newline = '\0';
+
+    if (file_size == 0 && strcmp(file_name, "--continue") == 0) {
+      continue;
+    }
+    if (file_size == 0 && strcmp(file_name, "--complete") == 0) {
+      break;
+    }
+
+    int ret = raw_receive_file(file_name, file_size, sock);
+    if (ret != 0) {
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
 int do_receive_file(int num_args, char** args) {
   uint16_t port;
   int size;
   const char* path;
-  if (parse_args(num_args, args, &port, &size, &path) != 0) {
+  if (parse_args_single(num_args, args, &port, &size, &path) != 0) {
     return 1;
   }
 
@@ -323,6 +472,51 @@ fail1:
   }
   if (listen_socket >= 0) {
     close(listen_socket);
+  }
+  return 1;
+}
+
+int do_multi_receive_file(int num_args, char** args) {
+  char* ip_str;
+  uint16_t port;
+  uint32_t nonce;
+  if (parse_args_multi(num_args, args, &ip_str, &port, &nonce) != 0) {
+    return 1;
+  }
+
+  // Send a byte to trigger the installer to accept our connection.
+  printf("\n");
+  fflush(stdout);
+
+  int client_socket = -1;
+  if (connect_client(ip_str, port, &client_socket) != 0) {
+    goto fail1;
+  }
+
+  uint8_t nonce_buffer[4];
+  nonce_buffer[0] = nonce >> 24;
+  nonce_buffer[1] = nonce >> 16;
+  nonce_buffer[2] = nonce >> 8;
+  nonce_buffer[3] = nonce;
+  ssize_t wrote = write(client_socket, nonce_buffer, sizeof(nonce_buffer));
+  if (wrote != sizeof(nonce_buffer)) {
+    perror("write(nonce)");
+    goto fail1;
+  }
+
+  int ret = multi_receive_file_from_socket(client_socket);
+  if (ret != 0) {
+    goto fail1;
+  }
+
+  close(client_socket);
+
+  return 0;
+
+
+fail1:
+  if (client_socket >= 0) {
+    close(client_socket);
   }
   return 1;
 }

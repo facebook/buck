@@ -3,3 +3,4 @@
 #define TEMP_PREFIX ("exopackage_temp-")
 #define CONNECT_TIMEOUT_MS (5000)
 #define RECEIVE_TIMEOUT_SEC (20)
+#define HEADER_SIZE_MAX (4096)

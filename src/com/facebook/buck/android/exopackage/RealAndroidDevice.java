@@ -638,9 +638,6 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   private Optional<RapidInstallMode> getRapidInstallMode() {
-    if (!agent.get().supportsRapidInstall()) {
-      return Optional.empty();
-    }
     if (device.isEmulator() && rapidInstallTypes.contains("emu")) {
       return Optional.of(RapidInstallMode.builder().setIpAddress("10.0.2.2").build()); // NOPMD
     } else if (isLocalTransport() && rapidInstallTypes.contains("tcp")) {

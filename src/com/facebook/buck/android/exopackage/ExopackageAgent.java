@@ -60,11 +60,6 @@ class ExopackageAgent {
     return true;
   }
 
-  boolean supportsRapidInstall() {
-    // Rapid install is only implemented in the Java agent (for now).
-    return !useNativeAgent;
-  }
-
   String getAgentCommand() {
     if (useNativeAgent) {
       return nativeAgentPath + "/libagent.so ";
