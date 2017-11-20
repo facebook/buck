@@ -145,8 +145,6 @@ import com.facebook.buck.shell.ShTestDescription;
 import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
-import com.facebook.buck.swift.toolchain.impl.SwiftPlatformsProviderFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -250,9 +248,6 @@ abstract class AbstractKnownBuildRuleTypes {
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         appleCxxPlatformsProvider.getAppleCxxPlatforms();
 
-    SwiftPlatformsProvider swiftPlatformsProvider =
-        SwiftPlatformsProviderFactory.create(appleCxxPlatformsProvider);
-
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
     // Setup the NDK C/C++ platforms.
@@ -355,10 +350,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
-            cxxBuckConfig,
-            swiftBuckConfig,
-            cxxPlatforms,
-            swiftPlatformsProvider.getSwiftCxxPlatforms());
+            toolchainProvider, cxxBuckConfig, swiftBuckConfig, cxxPlatforms);
     builder.addDescriptions(swiftLibraryDescription);
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
@@ -373,6 +365,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
+            toolchainProvider,
             cxxLibraryDescription,
             swiftLibraryDescription,
             platformFlavorsToAppleCxxPlatforms,
@@ -380,8 +373,7 @@ abstract class AbstractKnownBuildRuleTypes {
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig,
-            swiftBuckConfig,
-            swiftPlatformsProvider.getSwiftCxxPlatforms());
+            swiftBuckConfig);
     builder.addDescriptions(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
         new PrebuiltAppleFrameworkDescription(cxxBuckConfig, platformFlavorsToAppleCxxPlatforms);

@@ -22,11 +22,26 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
-public class SwiftPlatformsProviderFactory {
+public class SwiftPlatformsProviderFactory implements ToolchainFactory<SwiftPlatformsProvider> {
 
-  public static SwiftPlatformsProvider create(AppleCxxPlatformsProvider appleCxxPlatformsProvider) {
+  @Override
+  public Optional<SwiftPlatformsProvider> createToolchain(
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+
+    return Optional.of(SwiftPlatformsProvider.of(createSwiftPlatforms(appleCxxPlatformsProvider)));
+  }
+
+  private static FlavorDomain<SwiftPlatform> createSwiftPlatforms(
+      AppleCxxPlatformsProvider appleCxxPlatformsProvider) {
 
     FlavorDomain<AppleCxxPlatform> appleCxxPlatforms =
         appleCxxPlatformsProvider.getAppleCxxPlatforms();
@@ -41,6 +56,6 @@ public class SwiftPlatformsProviderFactory {
     FlavorDomain<SwiftPlatform> swiftPlatformDomain =
         new FlavorDomain<>("Swift Platform", swiftPlatforms.build());
 
-    return new SwiftPlatformsProvider(swiftPlatformDomain);
+    return swiftPlatformDomain;
   }
 }

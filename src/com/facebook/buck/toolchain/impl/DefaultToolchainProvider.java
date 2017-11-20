@@ -32,6 +32,8 @@ import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.swift.toolchain.impl.SwiftPlatformsProviderFactory;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
@@ -57,7 +59,9 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
         AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProviderFactory.class),
     APPLE_SDK_LOCATION(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocationFactory.class),
     APPLE_CXX_PLATFORMS_PROVIDER(
-        AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProviderFactory.class);
+        AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProviderFactory.class),
+    SWIFT_PLATFORMS_PROVIDER(
+        SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProviderFactory.class);
 
     @VisibleForTesting final String name;
     private final Class<? extends ToolchainFactory<?>> toolchainFactoryClass;

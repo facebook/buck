@@ -58,6 +58,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -104,20 +106,20 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Swift Library Type", Type.class);
 
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
 
   public SwiftLibraryDescription(
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain) {
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
   }
 
   @Override
@@ -178,6 +180,13 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                         .equals(unflavoredBuildTarget))
             .collect(MoreCollectors.toImmutableSortedSet());
     params = params.withExtraDeps(filteredExtraDeps);
+
+    SwiftPlatformsProvider swiftPlatformsProvider =
+        toolchainProvider.getByName(
+            SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.class);
+
+    FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
+        swiftPlatformsProvider.getSwiftCxxPlatforms();
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();

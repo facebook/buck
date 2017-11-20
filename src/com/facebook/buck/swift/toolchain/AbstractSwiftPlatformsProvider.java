@@ -17,16 +17,16 @@
 package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-public class SwiftPlatformsProvider {
+@Value.Immutable(copy = false, builder = false)
+@BuckStyleImmutable
+public interface AbstractSwiftPlatformsProvider extends Toolchain {
 
-  private final FlavorDomain<SwiftPlatform> swiftCxxPlatforms;
+  String DEFAULT_NAME = "swift-platforms";
 
-  public SwiftPlatformsProvider(FlavorDomain<SwiftPlatform> swiftCxxPlatforms) {
-    this.swiftCxxPlatforms = swiftCxxPlatforms;
-  }
-
-  public FlavorDomain<SwiftPlatform> getSwiftCxxPlatforms() {
-    return swiftCxxPlatforms;
-  }
+  @Value.Parameter
+  FlavorDomain<SwiftPlatform> getSwiftCxxPlatforms();
 }

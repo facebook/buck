@@ -69,6 +69,8 @@ import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -171,6 +173,7 @@ public class AppleLibraryDescription
   public static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
+  private final ToolchainProvider toolchainProvider;
   private final CxxLibraryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
@@ -179,9 +182,9 @@ public class AppleLibraryDescription
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
-  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
 
   public AppleLibraryDescription(
+      ToolchainProvider toolchainProvider,
       CxxLibraryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
@@ -189,8 +192,8 @@ public class AppleLibraryDescription
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig,
-      SwiftBuckConfig swiftBuckConfig,
-      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain) {
+      SwiftBuckConfig swiftBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
@@ -200,7 +203,6 @@ public class AppleLibraryDescription
     this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
-    this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
   }
 
   @Override
@@ -946,6 +948,12 @@ public class AppleLibraryDescription
     if (!targetContainsSwift(target, resolver)) {
       return Optional.empty();
     }
+
+    SwiftPlatformsProvider swiftPlatformsProvider =
+        toolchainProvider.getByName(
+            SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.class);
+    FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
+        swiftPlatformsProvider.getSwiftCxxPlatforms();
 
     BuildTarget targetWithPlatform = target.withAppendedFlavors(platform.getFlavor());
     Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(targetWithPlatform);

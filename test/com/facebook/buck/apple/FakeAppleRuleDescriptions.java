@@ -34,7 +34,9 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -212,13 +214,14 @@ public class FakeAppleRuleDescriptions {
 
   public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
       new SwiftLibraryDescription(
+          createTestToolchainProvider(DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
           CxxPlatformUtils.DEFAULT_CONFIG,
           new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
-          DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN);
+          DEFAULT_APPLE_FLAVOR_DOMAIN);
   /** A fake apple_library description with an iOS platform for use in tests. */
   public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
       new AppleLibraryDescription(
+          createTestToolchainProvider(DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
           new CxxLibraryDescription(
               CxxPlatformUtils.DEFAULT_CONFIG,
               DEFAULT_PLATFORM.getFlavor(),
@@ -230,8 +233,7 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
-          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
-          DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN);
+          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
 
   /** A fake apple_binary description with an iOS platform for use in tests. */
   public static final AppleBinaryDescription BINARY_DESCRIPTION =
@@ -271,4 +273,12 @@ public class FakeAppleRuleDescriptions {
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           Suppliers.ofInstance(Optional.empty()),
           DEFAULT_TIMEOUT);
+
+  private static TestToolchainProvider createTestToolchainProvider(
+      FlavorDomain<SwiftPlatform> flavorDomain) {
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    testToolchainProvider.addToolchain(
+        SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.of(flavorDomain));
+    return testToolchainProvider;
+  }
 }

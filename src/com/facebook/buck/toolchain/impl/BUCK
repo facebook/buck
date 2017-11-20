@@ -10,6 +10,7 @@ java_library(
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/apple/toolchain/impl:impl",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/swift/toolchain/impl:impl",
         "//src/com/facebook/buck/util:exceptions",
     ],
 )
