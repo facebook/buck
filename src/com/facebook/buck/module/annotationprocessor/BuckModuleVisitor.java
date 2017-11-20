@@ -27,7 +27,9 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleElementVisitor6;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 /**
@@ -100,8 +102,7 @@ class BuckModuleVisitor extends SimpleElementVisitor6<Void, TypeElement> {
     String packageName = getPackageName(type);
     String className = type.getSimpleName().toString();
     String buckModuleName = getParamsFromAnnotationOrFail(type, buckModuleAnnotation, "id");
-    List<String> dependencies =
-        getAnnotationParameterAsOptionalListOfStrings(buckModuleAnnotation, "dependencies");
+    List<String> dependencies = extractDependencies(buckModuleAnnotation);
 
     buckModuleDescriptors.add(
         new BuckModuleDescriptor(
@@ -127,20 +128,65 @@ class BuckModuleVisitor extends SimpleElementVisitor6<Void, TypeElement> {
     return value;
   }
 
-  private static List<String> getAnnotationParameterAsOptionalListOfStrings(
-      AnnotationMirror annotation, String parameterName) {
-    final List<?> parameters = (List<?>) getAnnotationParameter(annotation, parameterName);
+  private List<String> extractDependencies(AnnotationMirror buckModuleAnnotation) {
+    List<TypeElement> dependenciesTypes =
+        getAnnotationParameterAsOptionalListOfTypeElements(buckModuleAnnotation, "dependencies");
 
-    if (parameters == null) {
+    List<String> dependenciesIds = new ArrayList<>();
+
+    for (TypeElement dependencyType : dependenciesTypes) {
+      AnnotationMirror dependencyBuckModuleAnnotation =
+          getAnnotation(
+              dependencyType, BuckModuleAnnotationProcessorConstants.BUCK_MODULE_ANNOTATION);
+
+      if (dependencyBuckModuleAnnotation == null) {
+        throw new RuntimeException("Could not find BuckModule annotation in " + dependencyType);
+      }
+
+      String dependencyBuckModuleId =
+          getParamsFromAnnotationOrFail(dependencyType, dependencyBuckModuleAnnotation, "id");
+
+      dependenciesIds.add(dependencyBuckModuleId);
+    }
+
+    return dependenciesIds;
+  }
+
+  private List<TypeElement> getAnnotationParameterAsOptionalListOfTypeElements(
+      AnnotationMirror annotation, String parameterName) {
+    Object parameter = getAnnotationParameter(annotation, parameterName);
+
+    if (parameter == null) {
       return Collections.emptyList();
     }
 
-    List<String> parametersAsStrings = new ArrayList<>();
-    for (Object obj : parameters) {
-      parametersAsStrings.add(obj.toString());
+    if (!(parameter instanceof List)) {
+      throw new RuntimeException("Invalid type of " + parameter + ". Need to be a List");
     }
 
-    return parametersAsStrings;
+    @SuppressWarnings("unchecked")
+    final List<AnnotationValue> parameters = (List<AnnotationValue>) parameter;
+
+    Types types = processingEnv.getTypeUtils();
+    List<TypeElement> typeElements = new ArrayList<>();
+    for (AnnotationValue annotationValue : parameters) {
+      typeElements.add(convertAnnotationValueToTypeElement(types, annotationValue));
+    }
+
+    return typeElements;
+  }
+
+  private static TypeElement convertAnnotationValueToTypeElement(
+      Types types, AnnotationValue annotationValue) {
+    if (!(annotationValue.getValue() instanceof TypeMirror)) {
+      throw new RuntimeException(
+          "Invalid type of " + annotationValue + ". Need to be a TypeMirror");
+    }
+    Element element = types.asElement((TypeMirror) annotationValue.getValue());
+    if (!(element instanceof TypeElement)) {
+      throw new RuntimeException("Invalid type of " + element + ". Need to be a TypeElement");
+    }
+    return (TypeElement) element;
   }
 
   @Nullable

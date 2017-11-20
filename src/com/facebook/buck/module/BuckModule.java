@@ -34,5 +34,5 @@ public @interface BuckModule {
   String id();
 
   /** IDs of the modules this module depend on. */
-  String[] dependencies() default {};
+  Class<?>[] dependencies() default {};
 }

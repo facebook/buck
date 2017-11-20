@@ -52,9 +52,7 @@ import javax.tools.Diagnostic.Kind;
  *   }
  * </pre>
  */
-@SupportedAnnotationTypes({
-  "com.facebook.buck.module.BuckModule",
-})
+@SupportedAnnotationTypes({BuckModuleAnnotationProcessorConstants.BUCK_MODULE_ANNOTATION})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class BuckModuleAnnotationProcessor extends AbstractProcessor {
 

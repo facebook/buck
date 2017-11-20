@@ -14,16 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.rules;
+package com.facebook.buck.module.annotationprocessor;
 
-import com.facebook.buck.module.BuckModule;
-import com.facebook.buck.zip.bundler.ZipBundlerModule;
-
-/** A modules that provides `zip_rule` build rule. */
-@BuckModule(
-  id = "com.facebook.buck.zip.ziprules",
-  dependencies = {
-    ZipBundlerModule.class,
-  }
-)
-public class ZipRulesModule {}
+/** Contains some common constants which do not belong to other classes. */
+public class BuckModuleAnnotationProcessorConstants {
+  public static final String BUCK_MODULE_ANNOTATION = "com.facebook.buck.module.BuckModule";
+}
