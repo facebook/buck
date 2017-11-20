@@ -1117,6 +1117,15 @@ public class ProjectGenerator {
 
           mutator.setSwiftDependenciesBuildPhase(copyFiles);
         }
+
+        if (includeFrameworks
+            && !swiftDeps.isEmpty()
+            && shouldEmbedSwiftRuntimeInBundleTarget(bundle)
+            && swiftBuckConfig.getProjectEmbedRuntime()) {
+          // This is a binary that transitively depends on a library that uses Swift. We must ensure
+          // that the Swift runtime is bundled.
+          swiftDepsSettingsBuilder.put("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+        }
       }
 
       // TODO(Task #3772930): Go through all dependencies of the rule
@@ -1539,6 +1548,37 @@ public class ProjectGenerator {
     }
 
     return target;
+  }
+
+  private boolean shouldEmbedSwiftRuntimeInBundleTarget(
+      Optional<? extends TargetNode<? extends HasAppleBundleFields, ?>> bundle) {
+    return bundle
+        .map(
+            b ->
+                b.getConstructorArg()
+                    .getExtension()
+                    .transform(
+                        bundleExtension -> {
+                          switch (bundleExtension) {
+                            case APP:
+                            case APPEX:
+                            case PLUGIN:
+                            case BUNDLE:
+                            case XCTEST:
+                            case XPC:
+                              // All of the above bundles can have loaders which do not contain
+                              // a Swift runtime, so it must get bundled to ensure they run.
+                              return true;
+
+                            case FRAMEWORK:
+                            case DSYM:
+                              return false;
+                          }
+
+                          return false;
+                        },
+                        stringExtension -> false))
+        .orElse(false);
   }
 
   private boolean isFrameworkProductType(ProductType productType) {

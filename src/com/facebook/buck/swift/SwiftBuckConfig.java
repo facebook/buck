@@ -28,6 +28,7 @@ public class SwiftBuckConfig {
   public static final String COMPILE_FORCE_CACHE = "compile_force_cache";
   public static final String USE_FILELIST = "use_filelist";
   public static final String PROJECT_WMO = "project_wmo";
+  public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
 
   private final BuckConfig delegate;
 
@@ -54,6 +55,14 @@ public class SwiftBuckConfig {
 
   public boolean getUseFileList() {
     return delegate.getBooleanValue(SECTION_NAME, USE_FILELIST, false);
+  }
+
+  /**
+   * If enabled, automatically emebds the Swift runtime if a relevant target depends on any
+   * libraries that use Swift.
+   */
+  public boolean getProjectEmbedRuntime() {
+    return delegate.getBooleanValue(SECTION_NAME, PROJECT_EMBED_RUNTIME, true);
   }
 
   /** If enabled, turns on Whole Module Optimization for any targets that contain Swift. */
