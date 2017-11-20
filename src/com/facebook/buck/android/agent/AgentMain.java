@@ -136,36 +136,36 @@ public class AgentMain {
     int size = Integer.parseInt(userArgs.get(1));
     File path = new File(userArgs.get(2));
 
-    // First make sure we can bind to the port.
+    InputStream input = acceptAuthenticConnectionFromClient(port);
+    doRawReceiveFile(path, size, input);
+  }
+
+  private static InputStream acceptAuthenticConnectionFromClient(int port) throws IOException {
+    InputStream input;
     ServerSocket serverSocket = null;
     try {
+      // First make sure we can bind to the port.
       serverSocket = new ServerSocket(port);
 
-      InputStream input = acceptAuthenticConnectionFromClient(serverSocket);
+      byte[] secretKey = createAndSendSessionKey();
 
-      doRawReceiveFile(path, size, input);
+      // Open the connection with appropriate timeouts.
+      serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
+      Socket connectionSocket = serverSocket.accept();
+      connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
+      input = connectionSocket.getInputStream();
+
+      // Report that the socket has been opened.
+      System.out.write(new byte[] {'z', '1', '\n'});
+      System.out.flush();
+
+      receiveAndValidateSessionKey(secretKey, input);
     } finally {
       if (serverSocket != null) {
         serverSocket.close();
       }
     }
-  }
 
-  private static InputStream acceptAuthenticConnectionFromClient(ServerSocket serverSocket)
-      throws IOException {
-    byte[] secretKey = createAndSendSessionKey();
-
-    // Open the connection with appropriate timeouts.
-    serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
-    Socket connectionSocket = serverSocket.accept();
-    connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
-    InputStream input = connectionSocket.getInputStream();
-
-    // Report that the socket has been opened.
-    System.out.write(new byte[] {'z', '1', '\n'});
-    System.out.flush();
-
-    receiveAndValidateSessionKey(secretKey, input);
     return input;
   }
 
