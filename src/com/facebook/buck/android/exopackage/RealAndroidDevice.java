@@ -1030,23 +1030,28 @@ public class RealAndroidDevice implements AndroidDevice {
 
         // TODO(dreiss): Use write timeouts.
         OutputStream stream = connectionSocket.getOutputStream();
-        for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
-          Path destination = entry.getKey();
-          Path source = entry.getValue();
-          try (SimplePerfEvent.Scope ignored =
-              SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-            // Slurp the file into RAM to make sure we know how many bytes we are getting.
-            byte[] bytes = Files.readAllBytes(source);
-            stream.write((bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8));
-            stream.write(bytes);
-          }
-        }
-        stream.write("0 --complete\n".getBytes(Charsets.UTF_8));
+        multiInstallFilesToStream(stream, filesType, installPaths);
       }
     }
 
     Optional<Exception> getError() {
       return error;
     }
+  }
+
+  private void multiInstallFilesToStream(
+      OutputStream stream, String filesType, Map<Path, Path> installPaths) throws IOException {
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      Path destination = entry.getKey();
+      Path source = entry.getValue();
+      try (SimplePerfEvent.Scope ignored =
+          SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+        // Slurp the file into RAM to make sure we know how many bytes we are getting.
+        byte[] bytes = Files.readAllBytes(source);
+        stream.write((bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8));
+        stream.write(bytes);
+      }
+    }
+    stream.write("0 --complete\n".getBytes(Charsets.UTF_8));
   }
 }
