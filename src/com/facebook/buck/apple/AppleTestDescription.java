@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -59,6 +60,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -108,10 +110,10 @@ public class AppleTestDescription
           CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
           CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
 
+  private final ToolchainProvider toolchainProvider;
   private final AppleConfig appleConfig;
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final Flavor defaultCxxFlavor;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
@@ -119,19 +121,19 @@ public class AppleTestDescription
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public AppleTestDescription(
+      ToolchainProvider toolchainProvider,
       AppleConfig appleConfig,
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
       Optional<Long> defaultTestRuleTimeoutMs) {
+    this.toolchainProvider = toolchainProvider;
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -196,6 +198,12 @@ public class AppleTestDescription
     if (addDefaultPlatform) {
       extraFlavorsBuilder.add(defaultCxxFlavor);
     }
+
+    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain =
+        appleCxxPlatformsProvider.getAppleCxxPlatforms();
 
     Optional<MultiarchFileInfo> multiarchFileInfo =
         MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, buildTarget);

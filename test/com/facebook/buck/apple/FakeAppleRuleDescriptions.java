@@ -265,10 +265,10 @@ public class FakeAppleRuleDescriptions {
   /** A fake apple_test description with an iOS platform for use in tests. */
   public static final AppleTestDescription TEST_DESCRIPTION =
       new AppleTestDescription(
+          createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM.getFlavor(),
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),

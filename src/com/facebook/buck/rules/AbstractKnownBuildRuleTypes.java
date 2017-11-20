@@ -488,10 +488,10 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(appleBundleDescription);
     builder.addDescriptions(
         new AppleTestDescription(
+            toolchainProvider,
             appleConfig,
             appleLibraryDescription,
             cxxPlatforms,
-            platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
