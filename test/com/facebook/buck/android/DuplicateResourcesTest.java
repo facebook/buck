@@ -249,7 +249,8 @@ public class DuplicateResourcesTest {
                 new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph,
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(

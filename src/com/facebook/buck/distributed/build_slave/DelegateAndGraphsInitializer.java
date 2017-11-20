@@ -150,7 +150,8 @@ public class DelegateAndGraphsInitializer {
                   Preconditions.checkNotNull(targetGraph),
                   args.getRuleKeyConfiguration(),
                   ActionGraphParallelizationMode.DISABLED,
-                  Optional.empty());
+                  Optional.empty(),
+                  args.getShouldInstrumentActionGraph());
       return actionGraphAndResolver;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);

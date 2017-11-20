@@ -94,7 +94,8 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckEventBus(),
                     ruleGenerator,
                     result.getTargetGraph(),
-                    params.getBuckConfig().getActionGraphParallelizationMode()));
+                    params.getBuckConfig().getActionGraphParallelizationMode(),
+                    params.getBuckConfig().getShouldInstrumentActionGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildTargetException | BuildFileParseException | VersionException e) {
         params

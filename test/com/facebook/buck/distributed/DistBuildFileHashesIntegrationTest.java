@@ -241,7 +241,8 @@ public class DistBuildFileHashesIntegrationTest {
             targetGraph,
             TestRuleKeyConfigurationFactory.create(),
             ActionGraphParallelizationMode.DISABLED,
-            Optional.empty());
+            Optional.empty(),
+            false);
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

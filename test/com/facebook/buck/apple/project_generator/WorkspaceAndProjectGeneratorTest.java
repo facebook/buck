@@ -954,7 +954,8 @@ public class WorkspaceAndProjectGeneratorTest {
         ActionGraphCache.getFreshActionGraph(
                 BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
-                ActionGraphParallelizationMode.DISABLED)
+                ActionGraphParallelizationMode.DISABLED,
+                false)
             .getResolver();
   }
 }

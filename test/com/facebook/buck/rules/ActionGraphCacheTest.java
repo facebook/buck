@@ -118,7 +118,8 @@ public class ActionGraphCacheTest {
             false,
             targetGraph1,
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
     // The 1st time you query the ActionGraph it's a cache miss.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
@@ -130,7 +131,8 @@ public class ActionGraphCacheTest {
             false,
             targetGraph1,
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
@@ -197,7 +199,8 @@ public class ActionGraphCacheTest {
           false,
           run.getFirst(),
           TestRuleKeyConfigurationFactory.create(),
-          ActionGraphParallelizationMode.DISABLED);
+          ActionGraphParallelizationMode.DISABLED,
+          false);
 
       assertEquals(
           countEventsOf(ActionGraphEvent.Cache.Hit.class), (int) run.getSecond().getFirst());
@@ -216,7 +219,8 @@ public class ActionGraphCacheTest {
             false,
             targetGraph1,
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
     // Each time you call it for a different TargetGraph so all calls should be misses.
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -229,7 +233,8 @@ public class ActionGraphCacheTest {
             /* skipActionGraphCache */ false,
             targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.MissWithTargetGraphDifference.class));
@@ -242,7 +247,8 @@ public class ActionGraphCacheTest {
             false,
             targetGraph1,
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
@@ -268,14 +274,16 @@ public class ActionGraphCacheTest {
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
 
     ActionGraphAndResolver resultRun2 =
         ActionGraphCache.getFreshActionGraph(
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
-            ActionGraphParallelizationMode.DISABLED);
+            ActionGraphParallelizationMode.DISABLED,
+            false);
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys =
@@ -300,7 +308,8 @@ public class ActionGraphCacheTest {
               false,
               targetGraph1,
               TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-              mode);
+              mode,
+              false);
       experimentEvents =
           RichStream.from(trackedEvents.stream())
               .filter(ExperimentEvent.class)
@@ -317,7 +326,8 @@ public class ActionGraphCacheTest {
             false,
             targetGraph1,
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-            ActionGraphParallelizationMode.EXPERIMENT);
+            ActionGraphParallelizationMode.EXPERIMENT,
+            false);
     experimentEvents =
         RichStream.from(trackedEvents.stream())
             .filter(ExperimentEvent.class)
@@ -338,7 +348,8 @@ public class ActionGraphCacheTest {
             false,
             targetGraph1,
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
-            ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE);
+            ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE,
+            false);
     experimentEvents =
         RichStream.from(trackedEvents.stream())
             .filter(ExperimentEvent.class)

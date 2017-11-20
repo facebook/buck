@@ -1001,4 +1001,9 @@ public class BuckConfig implements ConfigPathGetter {
   public boolean isEmbeddedCellBuckOutEnabled() {
     return getBooleanValue("project", "embedded_cell_buck_out_enabled", false);
   }
+
+  /** Whether to instrument the action graph and record performance */
+  public boolean getShouldInstrumentActionGraph() {
+    return getBooleanValue("instrumentation", "action_graph", false);
+  }
 }

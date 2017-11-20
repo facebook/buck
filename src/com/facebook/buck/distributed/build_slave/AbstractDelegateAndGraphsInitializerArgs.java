@@ -59,4 +59,6 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
   public abstract FileContentsProvider getProvider();
 
   public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
+
+  public abstract boolean getShouldInstrumentActionGraph();
 }

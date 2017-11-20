@@ -146,6 +146,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setExecutors(this.getExecutors())
         .setProvider(this.getProvider())
         .setKnownBuildRuleTypesProvider(this.getKnownBuildRuleTypesProvider())
+        .setShouldInstrumentActionGraph(
+            this.getDistBuildConfig().getBuckConfig().getShouldInstrumentActionGraph())
         .build();
   }
 
