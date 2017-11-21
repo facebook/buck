@@ -52,7 +52,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.versions.VersionPropagator;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,7 +68,7 @@ import org.immutables.value.Value;
 public class HaskellGhciDescription
     implements Description<HaskellGhciDescriptionArg>,
         ImplicitDepsInferringDescription<HaskellGhciDescription.AbstractHaskellGhciDescriptionArg>,
-        VersionPropagator<HaskellGhciDescriptionArg> {
+        VersionRoot<HaskellGhciDescriptionArg> {
 
   private static final Logger LOG = Logger.get(HaskellGhciDescription.class);
 
