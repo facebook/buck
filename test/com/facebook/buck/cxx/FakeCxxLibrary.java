@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -98,6 +99,8 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                     Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget))
                 .setBuildTarget(publicHeaderSymlinkTreeTarget)
                 .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
+                .setIncludeRoot(
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
                 .build())
         .build();
   }
@@ -110,6 +113,8 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                 .setBuildTarget(privateHeaderSymlinkTreeTarget)
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                 .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
+                .setIncludeRoot(
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
                 .putNameToPathMap(
                     Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget))
                 .build())

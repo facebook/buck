@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -103,6 +104,9 @@ public class CxxLibraryTest {
                     .putNameToPathMap(
                         Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget))
                     .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
+                    .setIncludeRoot(
+                        Either.ofRight(
+                            DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
                     .build())
             .build();
     assertEquals(
@@ -115,6 +119,9 @@ public class CxxLibraryTest {
                     .setBuildTarget(privateHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                     .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
+                    .setIncludeRoot(
+                        Either.ofRight(
+                            DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
                     .putNameToPathMap(
                         Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget))
                     .build())

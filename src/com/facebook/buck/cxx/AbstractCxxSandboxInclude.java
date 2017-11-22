@@ -39,11 +39,6 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
   @Value.Parameter
   public abstract SourcePath getRoot();
 
-  @Override
-  public SourcePath getIncludeRoot() {
-    return getRoot();
-  }
-
   @Value.Parameter
   public abstract String getIncludeDir();
 

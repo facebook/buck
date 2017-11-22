@@ -40,11 +40,6 @@ abstract class AbstractCxxBridgingHeaders extends CxxHeaders {
   }
 
   @Override
-  public SourcePath getIncludeRoot() {
-    return getRoot();
-  }
-
-  @Override
   public Optional<SourcePath> getHeaderMap() {
     return Optional.empty();
   }

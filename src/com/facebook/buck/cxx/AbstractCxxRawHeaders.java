@@ -19,9 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -48,9 +50,8 @@ abstract class AbstractCxxRawHeaders extends CxxHeaders {
   }
 
   @Override
-  @Nullable
-  public SourcePath getIncludeRoot() {
-    return null;
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+    return Optional.empty();
   }
 
   @Override

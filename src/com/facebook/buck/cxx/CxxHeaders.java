@@ -51,19 +51,20 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public abstract Optional<SourcePath> getHeaderMap();
 
   /**
-   * @return the path to add to the preprocessor search path to find the includes. This defaults to
-   *     the root, but can be overridden to use an alternate path.
-   */
-  @Nullable
-  public abstract SourcePath getIncludeRoot();
-
-  /**
    * Add this header pack to the given {@link com.facebook.buck.cxx.HeaderPathNormalizer.Builder}.
    */
   public abstract void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder);
 
   /** @return all deps required by this header pack. */
   public abstract Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
+
+  /**
+   * @return the path to add to the preprocessor search path to find the includes. This defaults to
+   *     the root, but can be overridden to use an alternate path.
+   */
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+    return Optional.of(resolver.getAbsolutePath(Preconditions.checkNotNull(getRoot())));
+  }
 
   private static Path resolveSourcePathAndShorten(
       SourcePathResolver resolver, SourcePath path, Optional<PathShortener> pathShortener) {
@@ -94,12 +95,16 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
             cxxHeaders.getIncludeType(),
             resolveSourcePathAndShorten(resolver, headerMap.get(), pathMinimizer).toString());
       }
-      if (cxxHeaders.getIncludeRoot() != null) {
-        roots.put(
-            cxxHeaders.getIncludeType(),
-            resolveSourcePathAndShorten(resolver, cxxHeaders.getIncludeRoot(), pathMinimizer)
-                .toString());
-      }
+      cxxHeaders
+          .getResolvedIncludeRoot(resolver)
+          .ifPresent(
+              resolvedPath ->
+                  roots.put(
+                      cxxHeaders.getIncludeType(),
+                      pathMinimizer
+                          .map(min -> min.shorten(resolvedPath))
+                          .orElse(resolvedPath)
+                          .toString()));
     }
 
     // Define the include type ordering.  We always add local ("-I") include paths first so that

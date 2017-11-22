@@ -39,11 +39,6 @@ abstract class AbstractCxxHeadersDir extends CxxHeaders {
   public abstract SourcePath getRoot();
 
   @Override
-  public SourcePath getIncludeRoot() {
-    return getRoot();
-  }
-
-  @Override
   public Optional<SourcePath> getHeaderMap() {
     return Optional.empty();
   }

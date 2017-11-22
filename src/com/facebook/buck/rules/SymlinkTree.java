@@ -241,6 +241,14 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
     return getProjectFilesystem().resolve(root);
   }
 
+  public SourcePath getRootSourcePath() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), root);
+  }
+
+  public SourcePath getRootSourcePath(String subdir) {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), root.resolve(subdir));
+  }
+
   public ImmutableSortedMap<Path, SourcePath> getLinks() {
     return links;
   }
