@@ -4,7 +4,7 @@ java_immutables_library(
     name = "dotnet",
     srcs = glob(["*.java"]),
     visibility = [
-        "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/cli:main",
         "//test/com/facebook/buck/dotnet:",
     ],
     deps = [

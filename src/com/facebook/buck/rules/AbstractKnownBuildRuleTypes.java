@@ -63,8 +63,6 @@ import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
 import com.facebook.buck.d.DTestDescription;
-import com.facebook.buck.dotnet.CsharpLibraryDescription;
-import com.facebook.buck.dotnet.PrebuiltDotnetLibraryDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
@@ -462,7 +460,6 @@ abstract class AbstractKnownBuildRuleTypes {
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
             defaultTestRuleTimeoutMs));
     builder.addDescriptions(new CommandAliasDescription(Platform.detect()));
-    builder.addDescriptions(new CsharpLibraryDescription());
     builder.addDescriptions(cxxBinaryDescription);
     builder.addDescriptions(cxxLibraryDescription);
     builder.addDescriptions(
@@ -543,7 +540,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new PrebuiltCxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
-    builder.addDescriptions(new PrebuiltDotnetLibraryDescription());
     builder.addDescriptions(new PrebuiltNativeLibraryDescription());
     builder.addDescriptions(new PrebuiltOcamlLibraryDescription());
     builder.addDescriptions(new PrebuiltPythonLibraryDescription());
