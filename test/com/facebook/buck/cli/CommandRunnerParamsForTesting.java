@@ -50,9 +50,9 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
@@ -96,13 +96,12 @@ public class CommandRunnerParamsForTesting {
       JavaPackageFinder javaPackageFinder,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                new DefaultProcessExecutor(new TestConsole()),
-                toolchainProvider,
+                processExecutor,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 
@@ -144,8 +143,8 @@ public class CommandRunnerParamsForTesting {
         .setActionGraphCache(new ActionGraphCache(config.getMaxActionGraphCacheEntries()))
         .setKnownBuildRuleTypesProvider(knownBuildRuleTypesProvider)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setToolchainProvider(toolchainProvider)
         .setRuleKeyConfiguration(TestRuleKeyConfigurationFactory.create())
+        .setProcessExecutor(processExecutor)
         .build();
   }
 

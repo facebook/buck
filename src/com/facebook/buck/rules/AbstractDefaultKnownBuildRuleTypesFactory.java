@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.io.IOException;
@@ -34,8 +33,6 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
 
   abstract ProcessExecutor getExecutor();
 
-  abstract ToolchainProvider getToolchainProvider();
-
   abstract PluginManager getPluginManager();
 
   abstract SandboxExecutionStrategyFactory getSandboxExecutionStrategyFactory();
@@ -45,7 +42,7 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
     return KnownBuildRuleTypes.createInstance(
         cell.getBuckConfig(),
         getExecutor(),
-        getToolchainProvider(),
+        cell.getToolchainProvider(),
         getPluginManager(),
         cell.getRuleKeyConfiguration(),
         getSandboxExecutionStrategyFactory());

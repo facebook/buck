@@ -37,7 +37,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -79,7 +78,6 @@ public class PythonDslProjectBuildFileParserTest {
     KnownBuildRuleTypesFactory knownBuildRuleTypesFactory =
         DefaultKnownBuildRuleTypesFactory.of(
             new DefaultProcessExecutor(new TestConsole()),
-            new TestToolchainProvider(),
             BuckPluginManagerFactory.createPluginManager(),
             new TestSandboxExecutionStrategyFactory());
     knownBuildRuleTypes = knownBuildRuleTypesFactory.create(cell);

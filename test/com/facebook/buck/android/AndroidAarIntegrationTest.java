@@ -233,7 +233,7 @@ public class AndroidAarIntegrationTest {
   @Test
   public void testNativeLibraryDependent() throws InterruptedException, IOException {
     Main.KnownBuildRuleTypesFactoryFactory factoryFactory =
-        (processExecutor, toolchainProvider, pluginManager, sandboxExecutionStrategyFactory) -> {
+        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) -> {
           AndroidDirectoryResolver androidDirectoryResolver =
               new DefaultAndroidDirectoryResolver(
                   filesystem.getRootPath().getFileSystem(),
@@ -251,10 +251,7 @@ public class AndroidAarIntegrationTest {
               new DefaultAndroidLegacyToolchain(
                   () -> androidPlatformTarget, androidDirectoryResolver));
           return DefaultKnownBuildRuleTypesFactory.of(
-              processExecutor,
-              testToolchainProvider,
-              pluginManager,
-              sandboxExecutionStrategyFactory);
+              processExecutor, pluginManager, sandboxExecutionStrategyFactory);
         };
 
     AssumeAndroidPlatform.assumeNdkIsAvailable();

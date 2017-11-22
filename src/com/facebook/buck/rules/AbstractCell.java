@@ -35,6 +35,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -77,6 +78,9 @@ abstract class AbstractCell {
 
   @Value.Auxiliary
   abstract SdkEnvironment getSdkEnvironment();
+
+  @Value.Auxiliary
+  abstract ToolchainProvider getToolchainProvider();
 
   public Path getRoot() {
     return getFilesystem().getRootPath();

@@ -45,7 +45,6 @@ import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -140,7 +139,6 @@ public class CleanCommandTest extends EasyMockSupport {
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ProcessExecutor processExecutor = new FakeProcessExecutor();
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
@@ -172,13 +170,10 @@ public class CleanCommandTest extends EasyMockSupport {
         .setKnownBuildRuleTypesProvider(
             KnownBuildRuleTypesProvider.of(
                 DefaultKnownBuildRuleTypesFactory.of(
-                    processExecutor,
-                    toolchainProvider,
-                    pluginManager,
-                    new TestSandboxExecutionStrategyFactory())))
+                    processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())))
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setToolchainProvider(toolchainProvider)
         .setRuleKeyConfiguration(TestRuleKeyConfigurationFactory.create())
+        .setProcessExecutor(processExecutor)
         .build();
   }
 }

@@ -318,6 +318,7 @@ public class ProjectCommand extends BuildCommand {
           case XCODE:
             AppleCxxPlatformsProvider appleCxxPlatformsProvider =
                 params
+                    .getCell()
                     .getToolchainProvider()
                     .getByName(
                         AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);

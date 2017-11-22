@@ -91,7 +91,6 @@ import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -106,8 +105,6 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.NanosAdjustedClock;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.AsyncCloseable;
@@ -338,7 +335,6 @@ public final class Main {
   public interface KnownBuildRuleTypesFactoryFactory {
     KnownBuildRuleTypesFactory create(
         ProcessExecutor processExecutor,
-        ToolchainProvider toolchainProvider,
         PluginManager pluginManager,
         SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory);
   }
@@ -657,15 +653,10 @@ public final class Main {
 
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
-      ToolchainProvider toolchainProvider =
-          new DefaultToolchainProvider(clientEnvironment, buckConfig, filesystem, processExecutor);
-
       AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
       AndroidDirectoryResolver androidDirectoryResolver =
           new DefaultAndroidDirectoryResolver(
               filesystem.getRootPath().getFileSystem(), clientEnvironment, androidBuckConfig);
-
-      SdkEnvironment sdkEnvironment = SdkEnvironment.create(toolchainProvider);
 
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
           new PlatformSandboxExecutionStrategyFactory();
@@ -689,10 +680,7 @@ public final class Main {
         KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
             KnownBuildRuleTypesProvider.of(
                 knownBuildRuleTypesFactoryFactory.create(
-                    processExecutor,
-                    toolchainProvider,
-                    pluginManager,
-                    sandboxExecutionStrategyFactory));
+                    processExecutor, pluginManager, sandboxExecutionStrategyFactory));
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
@@ -700,7 +688,8 @@ public final class Main {
                     watchman,
                     buckConfig,
                     command.getConfigOverrides(),
-                    sdkEnvironment,
+                    clientEnvironment,
+                    processExecutor,
                     projectFilesystemFactory)
                 .getCellByPath(filesystem.getRootPath());
 
@@ -1092,8 +1081,8 @@ public final class Main {
                             parserAndCaches.getDefaultRuleKeyFactoryCacheRecycler())
                         .setBuildInfoStoreManager(storeManager)
                         .setProjectFilesystemFactory(projectFilesystemFactory)
-                        .setToolchainProvider(toolchainProvider)
                         .setRuleKeyConfiguration(ruleKeyConfiguration)
+                        .setProcessExecutor(processExecutor)
                         .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));

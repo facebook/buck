@@ -47,9 +47,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -157,6 +155,7 @@ public class ProjectWorkspace {
   private final Path templatePath;
   private final Path destPath;
   private final boolean addBuckRepoCell;
+  private final ProcessExecutor processExecutor;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
   @Nullable private Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
 
@@ -176,6 +175,7 @@ public class ProjectWorkspace {
     this.templatePath = templateDir;
     this.destPath = targetFolder;
     this.addBuckRepoCell = addBuckRepoCell;
+    this.processExecutor = new DefaultProcessExecutor(new TestConsole());
   }
 
   @VisibleForTesting
@@ -456,8 +456,7 @@ public class ProjectWorkspace {
             .setCommand(command)
             .setDirectory(destPath.toAbsolutePath())
             .build();
-    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-    return executor.launchAndExecute(params);
+    return processExecutor.launchAndExecute(params);
   }
 
   /**
@@ -768,15 +767,14 @@ public class ProjectWorkspace {
             Platform.detect(),
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment = SdkEnvironment.create(toolchainProvider);
 
     return CellProvider.createForLocalBuild(
             filesystem,
             WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            sdkEnvironment,
+            env,
+            processExecutor,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }

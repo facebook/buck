@@ -35,8 +35,8 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -114,9 +114,9 @@ public abstract class AbstractCommandRunnerParams {
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
-  public abstract ToolchainProvider getToolchainProvider();
-
   public abstract RuleKeyConfiguration getRuleKeyConfiguration();
+
+  public abstract ProcessExecutor getProcessExecutor();
 
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.

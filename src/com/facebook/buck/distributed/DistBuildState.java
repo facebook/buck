@@ -30,9 +30,9 @@ import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DistBuildCellParams;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
@@ -98,7 +98,8 @@ public class DistBuildState {
       BuckConfig localBuckConfig, // e.g. the slave's .buckconfig
       BuildJobState jobState,
       Cell rootCell,
-      SdkEnvironment sdkEnvironment,
+      ImmutableMap<String, String> environment,
+      ProcessExecutor processExecutor,
       ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
@@ -131,12 +132,14 @@ public class DistBuildState {
           remoteCell.getCanonicalName().isEmpty()
               ? Optional.empty()
               : Optional.of(remoteCell.getCanonicalName());
-      cellParams.put(cellRoot, DistBuildCellParams.of(buckConfig, projectFilesystem, cellName));
+      cellParams.put(
+          cellRoot,
+          DistBuildCellParams.of(
+              buckConfig, projectFilesystem, cellName, environment, processExecutor));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 
-    CellProvider cellProvider =
-        CellProvider.createForDistributedBuild(cellParams.build(), sdkEnvironment);
+    CellProvider cellProvider = CellProvider.createForDistributedBuild(cellParams.build());
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));

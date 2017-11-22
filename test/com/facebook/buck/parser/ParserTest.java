@@ -285,17 +285,11 @@ public class ParserTest {
         provider ->
             testToolchainProvider.addToolchain(AppleCxxPlatformsProvider.DEFAULT_NAME, provider));
 
-    cell =
-        new TestCellBuilder()
-            .setFilesystem(filesystem)
-            .setBuckConfig(config)
-            .setToolchainProvider(testToolchainProvider)
-            .build();
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor,
-                testToolchainProvider,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 

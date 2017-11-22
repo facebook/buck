@@ -24,9 +24,12 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 public class TestCellBuilder {
@@ -35,8 +38,7 @@ public class TestCellBuilder {
   private BuckConfig buckConfig;
   private Watchman watchman = NULL_WATCHMAN;
   private CellConfig cellConfig;
-  private SdkEnvironment sdkEnvironment;
-  private ToolchainProvider toolchainProvider;
+  private Map<String, String> environment = new HashMap<>();
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
@@ -63,13 +65,8 @@ public class TestCellBuilder {
     return this;
   }
 
-  public TestCellBuilder setSdkEnvironment(SdkEnvironment sdkEnvironment) {
-    this.sdkEnvironment = sdkEnvironment;
-    return this;
-  }
-
-  public TestCellBuilder setToolchainProvider(ToolchainProvider toolchainProvider) {
-    this.toolchainProvider = toolchainProvider;
+  public TestCellBuilder addEnvironmentVariable(String variableName, String value) {
+    environment.put(variableName, value);
     return this;
   }
 
@@ -79,20 +76,13 @@ public class TestCellBuilder {
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
             : buckConfig;
 
-    ToolchainProvider toolchainProvider =
-        this.toolchainProvider == null ? new TestToolchainProvider() : this.toolchainProvider;
-
-    SdkEnvironment sdkEnvironment =
-        this.sdkEnvironment == null
-            ? SdkEnvironment.create(toolchainProvider)
-            : this.sdkEnvironment;
-
     return CellProvider.createForLocalBuild(
             filesystem,
             watchman,
             config,
             cellConfig,
-            sdkEnvironment,
+            ImmutableMap.copyOf(environment),
+            new DefaultProcessExecutor(new TestConsole()),
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }

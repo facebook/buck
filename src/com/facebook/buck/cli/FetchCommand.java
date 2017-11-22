@@ -170,7 +170,8 @@ public class FetchCommand extends BuildCommand {
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
     Downloader downloader =
-        StackedDownloader.createFromConfig(params.getBuckConfig(), params.getToolchainProvider());
+        StackedDownloader.createFromConfig(
+            params.getBuckConfig(), params.getCell().getToolchainProvider());
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(ImmutableSet.of(description));
   }

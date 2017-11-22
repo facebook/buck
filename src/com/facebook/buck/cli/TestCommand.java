@@ -662,6 +662,7 @@ public class TestCommand extends BuildCommand {
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
                 params
+                    .getCell()
                     .getToolchainProvider()
                     .getByName(AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class),
                 this::getExecutionContext,

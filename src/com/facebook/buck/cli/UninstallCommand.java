@@ -162,6 +162,7 @@ public class UninstallCommand extends AbstractCommand {
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
                 params
+                    .getCell()
                     .getToolchainProvider()
                     .getByName(AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class),
                 this::getExecutionContext,
