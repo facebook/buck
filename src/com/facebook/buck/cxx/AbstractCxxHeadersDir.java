@@ -16,26 +16,25 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /** Wraps a header directory to add to the preprocessors search path. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxHeadersDir extends CxxHeaders {
-
+  // TODO(cjhopman): This should probably be adding more to its rulekey.
   @Override
   @Value.Parameter
+  @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
   @Override
   @Value.Parameter
+  @AddToRuleKey
   public abstract SourcePath getRoot();
 
   @Override
@@ -46,16 +45,5 @@ abstract class AbstractCxxHeadersDir extends CxxHeaders {
   @Override
   public void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder) {
     builder.addHeaderDir(getRoot());
-  }
-
-  @Override
-  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.getRule(getRoot()).map(Stream::of).orElseGet(Stream::empty);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("type", getIncludeType());
-    sink.setReflectively("root", getRoot());
   }
 }

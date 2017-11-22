@@ -19,8 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -28,7 +30,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -37,9 +39,27 @@ import org.immutables.value.Value;
 @Value.Immutable(prehash = true)
 @BuckStyleImmutable
 abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
-
   @Override
+  @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
+
+  @AddToRuleKey
+  @Value.Lazy
+  public AddsToRuleKey getCustomRuleKeyLogic() {
+    return (RuleKeyAppendable)
+        sink -> {
+          // This needs to be done with direct calls to setReflectively for depfiles to work
+          // correctly.
+          getNameToPathMap()
+              .entrySet()
+              .stream()
+              .sorted(Comparator.comparing(Entry::getKey))
+              .forEachOrdered(
+                  entry ->
+                      sink.setReflectively(
+                          "include(" + entry.getKey().toString() + ")", entry.getValue()));
+        };
+  }
 
   @Override
   public abstract SourcePath getRoot();
@@ -72,6 +92,8 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
 
   /** @return all deps required by this header pack. */
   @Override
+  // This has custom getDeps() logic because the way that the name to path map is added to the
+  // rulekey is really slow to compute.
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildRule> builder = Stream.builder();
     getNameToPathMap().values().forEach(value -> ruleFinder.getRule(value).ifPresent(builder));
@@ -81,19 +103,6 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
     }
     getHeaderMap().flatMap(ruleFinder::getRule).ifPresent(builder);
     return builder.build().distinct();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("type", getIncludeType());
-    getNameToPathMap()
-        .entrySet()
-        .stream()
-        .sorted(Comparator.comparing(Map.Entry::getKey))
-        .forEachOrdered(
-            entry ->
-                sink.setReflectively(
-                    "include(" + entry.getKey().toString() + ")", entry.getValue()));
   }
 
   /** @return a {@link CxxHeaders} constructed from the given {@link HeaderSymlinkTree}. */

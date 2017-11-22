@@ -16,22 +16,20 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /** Encapsulates a Swift bridging header */
 @Value.Immutable(prehash = true)
 @BuckStyleImmutable
 abstract class AbstractCxxBridgingHeaders extends CxxHeaders {
-
+  // TODO(cjhopman): This should probably be adding all the other paths to its rulekey.
   @Override
   @Value.Parameter
+  @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
   @Override
@@ -45,23 +43,12 @@ abstract class AbstractCxxBridgingHeaders extends CxxHeaders {
   }
 
   @Value.Parameter
+  @AddToRuleKey
   public abstract SourcePath getBridgingHeader();
 
   @Override
   public void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder) {
     builder.addBridgingHeader(getBridgingHeader());
-  }
-
-  /** @return all deps required by this header pack. */
-  @Override
-  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.getRule(getBridgingHeader()).map(Stream::of).orElse(Stream.empty());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("type", getIncludeType());
-    sink.setReflectively("bridgingHeader", getBridgingHeader());
   }
 
   /** @return a {@link CxxHeaders} constructed from the given {@link HeaderSymlinkTree}. */

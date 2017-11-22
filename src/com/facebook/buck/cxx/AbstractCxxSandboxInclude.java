@@ -16,15 +16,11 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -33,6 +29,7 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
 
   @Override
   @Value.Parameter
+  @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
   @Override
@@ -40,6 +37,7 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
   public abstract SourcePath getRoot();
 
   @Value.Parameter
+  @AddToRuleKey
   public abstract String getIncludeDir();
 
   @Override
@@ -52,28 +50,11 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
     builder.addHeaderDir(getRoot());
   }
 
-  @Override
-  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.getRule(getRoot()).map(Stream::of).orElseGet(Stream::empty);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("type", getIncludeType());
-    sink.setReflectively("includeDir", getIncludeDir());
-  }
-
   public static CxxSandboxInclude from(
       SymlinkTree symlinkTree, String includeDir, CxxPreprocessables.IncludeType includeType) {
-
     CxxSandboxInclude.Builder builder = CxxSandboxInclude.builder();
     builder.setIncludeType(includeType);
-    builder.setRoot(
-        ExplicitBuildTargetSourcePath.of(
-            symlinkTree.getBuildTarget(),
-            symlinkTree
-                .getProjectFilesystem()
-                .relativize(symlinkTree.getRoot().resolve(includeDir))));
+    builder.setRoot(symlinkTree.getRootSourcePath(includeDir));
     builder.setIncludeDir(includeDir);
     return builder.build();
   }

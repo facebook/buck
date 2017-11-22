@@ -155,7 +155,7 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
-            ",default->preprocessDelegate->preprocessorFlags->includes]",
+            ",default->preprocessDelegate->preprocessorFlags->includes->customRuleKeyLogic]",
             "(include(cxx/a.h)):",
             "-[path(cxx/a.h:", /*hash*/
             ")]",
