@@ -18,8 +18,6 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -77,13 +75,7 @@ public class BuildCommandErrorsIntegrationTest {
     mockDescription = new MockDescription();
     workspace.setKnownBuildRuleTypesFactoryFactory(
         (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
-            cell -> {
-              CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-
-              KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-              buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
-              return buildRuleTypesBuilder.addDescriptions(mockDescription).build();
-            });
+            cell -> KnownBuildRuleTypes.builder().addDescriptions(mockDescription).build());
   }
 
   // TODO(cjhopman): Add cases for errors in other phases of the build (watchman, parsing,

@@ -330,7 +330,6 @@ public class ProjectCommand extends BuildCommand {
                     params.getVersionedTargetGraphCache(),
                     params.getTypeCoercerFactory(),
                     params.getCell(),
-                    params.getKnownBuildRuleTypesProvider(),
                     params.getRuleKeyConfiguration(),
                     params.getConsole(),
                     params.getProcessManager(),

@@ -172,14 +172,6 @@ abstract class AbstractKnownBuildRuleTypes {
   @Value.Parameter
   abstract ImmutableList<Description<?>> getDescriptions();
 
-  // TODO(agallagher): We shouldn't be making `KnownBuildRuleTypes` the carrier of C/C++ platform
-  // information, as we do below by providing accessor methods to `getCxxPlatforms()` and
-  // `getDefaultCxxPlatform()`.  If we want to access these, we should return a tuple of the C/C++
-  // platform info and `KnownBuildRuleTypes`, so that the latter can be a thing wrapper around just
-  // `Descriptions`.
-
-  abstract Optional<CxxPlatform> getDefaultCxxPlatform();
-
   // Verify that there are no duplicate rule types being defined.
   @Value.Check
   protected void check() {
@@ -607,8 +599,6 @@ abstract class AbstractKnownBuildRuleTypes {
         builder.addDescriptions(description);
       }
     }
-
-    builder.setDefaultCxxPlatform(defaultCxxPlatform);
 
     builder.addDescriptions(VersionedAliasDescription.of());
 
