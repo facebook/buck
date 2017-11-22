@@ -937,9 +937,6 @@ public class RealAndroidDevice implements AndroidDevice {
           closer.register(outToDevice);
           // Need to wait for client to acknowledge that we've connected.
         }
-        if (outToDevice == null) {
-          throw new NullPointerException();
-        }
         if (!wrotePayload && getOutput().contains("z1")) {
           if (outToDevice == null) {
             throw new NullPointerException("outToDevice was null when protocol says it cannot be");
