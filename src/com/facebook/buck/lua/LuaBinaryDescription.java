@@ -53,6 +53,7 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -621,11 +622,24 @@ public class LuaBinaryDescription
     return new AbstractTool() {
       @AddToRuleKey private final LuaPackageComponents toolComponents = components;
       @AddToRuleKey private final SourcePath toolStarter = starter;
-      @AddToRuleKey private final SymlinkTree toolModulesLinkTree = modulesLinkTree;
-      @AddToRuleKey private final List<SymlinkTree> toolNativeLibsLinkTree = nativeLibsLinktree;
 
       @AddToRuleKey
-      private final List<SymlinkTree> toolPythonModulesLinktree = pythonModulesLinktree;
+      private final NonHashableSourcePathContainer toolModulesLinkTree =
+          new NonHashableSourcePathContainer(modulesLinkTree.getSourcePathToOutput());
+
+      @AddToRuleKey
+      private final List<NonHashableSourcePathContainer> toolNativeLibsLinkTree =
+          nativeLibsLinktree
+              .stream()
+              .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
+              .collect(MoreCollectors.toImmutableList());
+
+      @AddToRuleKey
+      private final List<NonHashableSourcePathContainer> toolPythonModulesLinktree =
+          pythonModulesLinktree
+              .stream()
+              .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
+              .collect(MoreCollectors.toImmutableList());;
 
       @AddToRuleKey private final List<SourcePath> toolExtraInputs = extraInputs;
 

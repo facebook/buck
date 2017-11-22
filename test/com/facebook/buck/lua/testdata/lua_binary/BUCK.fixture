@@ -70,3 +70,18 @@ python_library(
         "packager.py",
     ],
 )
+
+lua_binary(
+    name = "simple_with_native",
+    main_module = "simple",
+    deps = [
+        ":foo",
+        ":simple-lib",
+    ],
+)
+
+genrule(
+    name = "genrule",
+    out = "something",
+    cmd = "$(exe :simple_with_native) >> $OUT",
+)

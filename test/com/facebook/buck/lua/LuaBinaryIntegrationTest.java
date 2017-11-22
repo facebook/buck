@@ -17,6 +17,7 @@
 package com.facebook.buck.lua;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -315,6 +316,14 @@ public class LuaBinaryIntegrationTest {
         workspace.runBuckBuild("//with_includes:native_with_extension");
     luaBinaryResult.assertFailure();
     assertThat(luaBinaryResult.getStderr(), containsString("extension.h"));
+  }
+
+  @Test
+  public void usedInGenruleCommand() throws IOException {
+    assumeTrue(luaDevel);
+    workspace.writeContentsToPath("require 'os'; io.stdout:write('okay')", "simple.lua");
+    Path output = workspace.buildAndReturnOutput("//:genrule");
+    assertEquals("okay", workspace.getFileContents(output));
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws InterruptedException, IOException {
