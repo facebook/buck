@@ -88,6 +88,7 @@ import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -353,8 +354,17 @@ public class BuildCommand extends AbstractCommand {
       return exitCode;
     }
 
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     try (CommandThreadManager pool =
-        new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()));
+        BuildPrehook prehook =
+            new BuildPrehook(
+                processExecutor,
+                params.getCell(),
+                params.getBuckEventBus(),
+                params.getBuckConfig(),
+                params.getEnvironment()); ) {
+      prehook.startPrehookScript();
       return run(params, pool, ImmutableSet.of());
     }
   }

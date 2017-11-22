@@ -1006,4 +1006,8 @@ public class BuckConfig implements ConfigPathGetter {
   public boolean getShouldInstrumentActionGraph() {
     return getBooleanValue("instrumentation", "action_graph", false);
   }
+
+  public Optional<String> getPathToBuildPrehookScript() {
+    return getValue("build", "prehook_script");
+  }
 }

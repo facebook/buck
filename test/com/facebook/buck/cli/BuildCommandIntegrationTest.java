@@ -219,4 +219,14 @@ public class BuildCommandIntegrationTest {
     assertTrue(ruleKeys.size() >= 3);
     assertTrue(ruleKeys.stream().anyMatch(ruleKey -> ruleKey.name.equals("//:bar")));
   }
+
+  @Test
+  public void buildWithPrehook() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild("//:bar", "-c", "build.prehook_script=prehook.sh").assertSuccess();
+    assertThat(result.getStderr(), Matchers.containsString("The prehook script ran."));
+  }
 }
