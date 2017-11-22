@@ -64,6 +64,7 @@ import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsResponse
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusResponse;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -259,7 +260,9 @@ public class DistBuildServiceTest {
         .once();
     EasyMock.replay(frontendService);
 
-    BuildJob job = distBuildService.createBuild(BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID);
+    BuildJob job =
+        distBuildService.createBuild(
+            new BuildId("33-44"), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.CREATE_BUILD);
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());

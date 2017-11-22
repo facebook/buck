@@ -45,6 +45,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -164,12 +165,16 @@ public class BuildControllerTest {
    */
   @Test
   public void testOrderlyExecution() throws IOException, InterruptedException {
+    BuildId buildId = new BuildId("44-55");
+
     final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
     buildSlaveRunId.setId("my-fav-runid");
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
-    expect(mockDistBuildService.createBuild(BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+    expect(
+            mockDistBuildService.createBuild(
+                buildId, BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
         .andReturn(job);
     expect(
             mockDistBuildService.uploadMissingFilesAsync(
@@ -290,6 +295,7 @@ public class BuildControllerTest {
         fakeProjectFilesystem,
         fakeFileHashCache,
         mockEventBus,
+        buildId,
         BuildMode.REMOTE_BUILD,
         1,
         REPOSITORY,

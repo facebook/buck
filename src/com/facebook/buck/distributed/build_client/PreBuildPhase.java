@@ -31,6 +31,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -70,6 +71,7 @@ public class PreBuildPhase {
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
       BuckEventBus eventBus,
+      BuildId buildId,
       BuildMode buildMode,
       int numberOfMinions,
       String repository,
@@ -78,7 +80,8 @@ public class PreBuildPhase {
     EventSender eventSender = new EventSender(eventBus);
 
     distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);
-    BuildJob job = distBuildService.createBuild(buildMode, numberOfMinions, repository, tenantId);
+    BuildJob job =
+        distBuildService.createBuild(buildId, buildMode, numberOfMinions, repository, tenantId);
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     final StampedeId stampedeId = job.getStampedeId();

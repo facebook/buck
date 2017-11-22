@@ -783,6 +783,7 @@ public class BuildCommand extends AbstractCommand {
                 filesystem,
                 fileHashCache,
                 params.getBuckEventBus(),
+                params.getInvocationInfo().get().getBuildId(),
                 distBuildConfig.getBuildMode(),
                 distBuildConfig.getNumberOfMinions(),
                 distBuildConfig.getRepository(),

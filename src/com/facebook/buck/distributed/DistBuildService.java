@@ -74,6 +74,7 @@ import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
@@ -317,7 +318,7 @@ public class DistBuildService implements Closeable {
   }
 
   public BuildJob createBuild(
-      BuildMode buildMode, int numberOfMinions, String repository, String tenantId)
+      BuildId buildId, BuildMode buildMode, int numberOfMinions, String repository, String tenantId)
       throws IOException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
@@ -333,6 +334,7 @@ public class DistBuildService implements Closeable {
     CreateBuildRequest createBuildRequest = new CreateBuildRequest();
     createBuildRequest
         .setCreateTimestampMillis(System.currentTimeMillis())
+        .setBuckBuildUuid(buildId.toString())
         .setBuildMode(buildMode)
         .setNumberOfMinions(numberOfMinions)
         .setUsername(username);

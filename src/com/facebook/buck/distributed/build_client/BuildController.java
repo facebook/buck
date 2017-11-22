@@ -25,6 +25,7 @@ import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -117,6 +118,7 @@ public class BuildController {
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
       BuckEventBus eventBus,
+      BuildId buildId,
       BuildMode buildMode,
       int numberOfMinions,
       String repository,
@@ -129,6 +131,7 @@ public class BuildController {
             projectFilesystem,
             fileHashCache,
             eventBus,
+            buildId,
             buildMode,
             numberOfMinions,
             repository,
