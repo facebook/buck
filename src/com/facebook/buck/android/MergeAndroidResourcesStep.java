@@ -59,6 +59,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -169,25 +170,18 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
-    if (skipPrebuiltRDotJava) {
-      return
-          FluentIterable.from(unionPackage
-              .map(Collections::singletonList)
-              .orElse(Collections.emptyList())
-          )
-          .transform(this::getPathToRDotJava)
-          .toSortedSet(natural());
+    FluentIterable<String> packages = FluentIterable.from(
+        unionPackage.map(Collections::singletonList).orElse(Collections.emptyList()));
 
-    } else {
-      return FluentIterable.from(androidResourceDeps)
-          .transform(HasAndroidResourceDeps::getRDotJavaPackage)
-          .append(unionPackage
-              .map(Collections::singletonList)
-              .orElse(Collections.emptyList())
-          )
-          .transform(this::getPathToRDotJava)
-          .toSortedSet(natural());
+    if (!skipPrebuiltRDotJava) {
+      packages = packages.append(
+          FluentIterable.from(androidResourceDeps)
+              .transform(HasAndroidResourceDeps::getRDotJavaPackage));
     }
+
+    return packages
+        .transform(this::getPathToRDotJava)
+        .toSortedSet(natural());
   }
 
   @Override
@@ -252,41 +246,33 @@ public class MergeAndroidResourcesStep implements Step {
 
       ImmutableSet.Builder<String> requiredPackages = ImmutableSet.<String>builder();
 
+      // Create a temporary list to avoid concurrent modification problems.
+      ArrayList<Entry<String, RDotTxtEntry>> entries =
+          new ArrayList<>(rDotJavaPackageToResources.entries());
+
       if (skipPrebuiltRDotJava) {
-        // If a resource_union_package was specified and skip_prebuilt_r_dot_java is true,
-        // copy all resource into that package and remove all other packages.
+        // If skip_prebuilt_r_dot_java is true remove all packages except union package
         Preconditions.checkArgument(
             unionPackage.isPresent(),
             "union_package should be specified if skip_prebuilt_r_dot_java is set");
+        rDotJavaPackageToResources = TreeMultimap.create();
 
+      } else {
+        requiredPackages.addAll(symbolsFileToRDotJavaPackage.values());
+      }
+
+      // If a resource_union_package was specified, copy all resource into that package,
+      // unless they are already present.
+      if (unionPackage.isPresent()) {
         String unionPackageName = unionPackage.get();
         requiredPackages.add(unionPackageName);
 
-        Set<Map.Entry<String, RDotTxtEntry>> entries = rDotJavaPackageToResources.entries();
-        rDotJavaPackageToResources = TreeMultimap.create();
-
+        // Create a temporary list to avoid concurrent modification problems.
         for (Map.Entry<String, RDotTxtEntry> entry : entries) {
           if (!rDotJavaPackageToResources.containsEntry(unionPackageName, entry.getValue())) {
             rDotJavaPackageToResources.put(unionPackageName, entry.getValue());
           }
         }
-
-      } else {
-        // If a resource_union_package was specified, copy all resource into that package,
-        // unless they are already present.
-        if (unionPackage.isPresent()) {
-          String unionPackageName = unionPackage.get();
-          requiredPackages.add(unionPackageName);
-
-          for (Map.Entry<String, RDotTxtEntry> entry :
-              new ArrayList<>(rDotJavaPackageToResources.entries())) {
-            if (!rDotJavaPackageToResources.containsEntry(unionPackageName, entry.getValue())) {
-              rDotJavaPackageToResources.put(unionPackageName, entry.getValue());
-            }
-          }
-        }
-
-        requiredPackages.addAll(symbolsFileToRDotJavaPackage.values());
       }
 
       writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
