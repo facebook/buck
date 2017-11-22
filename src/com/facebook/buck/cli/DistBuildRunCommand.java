@@ -152,7 +152,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 params.getBuckConfig(),
                 jobState,
                 params.getCell(),
-                params.getSdkEnvironment(),
+                params.getCell().getSdkEnvironment(),
                 params.getProjectFilesystemFactory());
         timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
 

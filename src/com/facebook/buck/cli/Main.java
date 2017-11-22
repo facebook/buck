@@ -1087,7 +1087,6 @@ public final class Main {
                             parserAndCaches.getVersionedTargetGraphCache())
                         .setActionGraphCache(parserAndCaches.getActionGraphCache())
                         .setKnownBuildRuleTypesProvider(knownBuildRuleTypesProvider)
-                        .setSdkEnvironment(sdkEnvironment)
                         .setInvocationInfo(Optional.of(invocationInfo))
                         .setDefaultRuleKeyFactoryCacheRecycler(
                             parserAndCaches.getDefaultRuleKeyFactoryCacheRecycler())

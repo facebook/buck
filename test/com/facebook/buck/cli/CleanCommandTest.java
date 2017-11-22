@@ -37,7 +37,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
@@ -142,7 +141,6 @@ public class CleanCommandTest extends EasyMockSupport {
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ProcessExecutor processExecutor = new FakeProcessExecutor();
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment = SdkEnvironment.create(toolchainProvider);
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
@@ -178,7 +176,6 @@ public class CleanCommandTest extends EasyMockSupport {
                     toolchainProvider,
                     pluginManager,
                     new TestSandboxExecutionStrategyFactory())))
-        .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setToolchainProvider(toolchainProvider)
         .setRuleKeyConfiguration(TestRuleKeyConfigurationFactory.create())
