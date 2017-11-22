@@ -623,6 +623,16 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void appBundleWithConflictingResources() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_conflicting_resources", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertFailure();
+  }
+
+  @Test
   public void appBundleVariantDirectoryMustEndInLproj() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

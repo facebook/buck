@@ -79,6 +79,7 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -430,6 +431,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             resources.getResourceDirs(),
             resources.getDirsContainingResourceDirs(),
             resources.getResourceFiles()))) {
+      verifyResourceConflicts(resources, context.getSourcePathResolver());
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -672,6 +674,24 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return stepsBuilder.build();
+  }
+
+  private void verifyResourceConflicts(AppleBundleResources resources,
+                                       SourcePathResolver resolver) {
+    // Ensure there are no resources that will overwrite each other
+    Set<Path> filenames = new HashSet<>();
+    for (SourcePath path : Iterables.concat(
+        resources.getResourceDirs(),
+        resources.getDirsContainingResourceDirs(),
+        resources.getResourceFiles())) {
+      Path filename = resolver.getRelativePath(path).getFileName();
+      if (filenames.contains(filename)) {
+        throw new HumanReadableException(
+            "Bundle contains multiple resources with filename %s", filename);
+      } else {
+        filenames.add(filename);
+      }
+    }
   }
 
   private boolean needsPkgInfoFile() {
