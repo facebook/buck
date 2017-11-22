@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -155,13 +157,17 @@ public class KnownBuildRuleTypesTest {
     BuckConfig buckConfig =
         FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();
 
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
+
     KnownBuildRuleTypes buildRuleTypes =
-        KnownBuildRuleTypesTestUtil.getDefaultKnownBuildRuleTypes(filesystem, environment);
+        KnownBuildRuleTypesTestUtil.getDefaultKnownBuildRuleTypes(
+            filesystem, toolchainProvider, environment);
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
     KnownBuildRuleTypes configuredBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, processExecutor);
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
     SourcePathRuleFinder ruleFinder =
@@ -194,20 +200,25 @@ public class KnownBuildRuleTypesTest {
       throws Exception {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
+
     KnownBuildRuleTypes knownBuildRuleTypes1 =
-        KnownBuildRuleTypesTestUtil.createInstance(
-            FakeBuckConfig.builder().build(), filesystem, createExecutor());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
 
     final Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();
+    buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
+    toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
+
     KnownBuildRuleTypes knownBuildRuleTypes2 =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, processExecutor);
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
   }
@@ -220,8 +231,30 @@ public class KnownBuildRuleTypesTest {
         ImmutableMap.of("cxx", ImmutableMap.of("default_platform", "default"));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
+
     // This would throw if "default" weren't available as a platform.
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
+  }
+
+  @Test
+  public void canOverrideDefaultHostPlatform() throws Exception {
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
+    Flavor flavor = InternalFlavor.of("flavor");
+    String flag = "-flag";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    assertThat(
+        cxxPlatformsProvider.getCxxPlatforms().getValue(flavor).getCflags(),
+        Matchers.contains(flag));
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
   }
 
   @Test
@@ -234,26 +267,12 @@ public class KnownBuildRuleTypesTest {
             "cxx#macosx-x86_64", ImmutableMap.of("cache_links", "true"),
             "cxx#windows-x86_64", ImmutableMap.of("cache_links", "true"));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
-  }
-
-  @Test
-  public void canOverrideDefaultHostPlatform() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Flavor flavor = InternalFlavor.of("flavor");
-    String flag = "-flag";
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
-    assertThat(
-        knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor).getCflags(),
-        Matchers.contains(flag));
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
   }
 
   @Test
@@ -268,22 +287,26 @@ public class KnownBuildRuleTypesTest {
             "cxx#" + flavor,
             ImmutableMap.of());
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
     OcamlLibraryDescription ocamlLibraryDescription =
         (OcamlLibraryDescription)
             knownBuildRuleTypes.getDescription(
                 knownBuildRuleTypes.getBuildRuleType("ocaml_library"));
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     assertThat(
         ocamlLibraryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
+        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
     OcamlBinaryDescription ocamlBinaryDescription =
         (OcamlBinaryDescription)
             knownBuildRuleTypes.getDescription(
                 knownBuildRuleTypes.getBuildRuleType("ocaml_binary"));
     assertThat(
         ocamlBinaryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
+        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
   }
 
   @Test
@@ -298,20 +321,24 @@ public class KnownBuildRuleTypesTest {
             "java",
             ImmutableMap.of("default_cxx_platform", flavor.toString()));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(environment, buckConfig, filesystem, createExecutor());
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
     JavaBinaryDescription javaBinaryDescription =
         (JavaBinaryDescription)
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     assertThat(
         javaBinaryDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
+        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
     JavaTestDescription javaTestDescription =
         (JavaTestDescription)
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_test"));
     assertThat(
         javaTestDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().get().getValue(flavor)));
+        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
   }
 
   private ProcessExecutor createExecutor() throws IOException {

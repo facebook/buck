@@ -178,8 +178,6 @@ abstract class AbstractKnownBuildRuleTypes {
   // platform info and `KnownBuildRuleTypes`, so that the latter can be a thing wrapper around just
   // `Descriptions`.
 
-  abstract Optional<FlavorDomain<CxxPlatform>> getCxxPlatforms();
-
   abstract Optional<CxxPlatform> getDefaultCxxPlatform();
 
   // Verify that there are no duplicate rule types being defined.
@@ -610,7 +608,6 @@ abstract class AbstractKnownBuildRuleTypes {
       }
     }
 
-    builder.setCxxPlatforms(cxxPlatforms);
     builder.setDefaultCxxPlatform(defaultCxxPlatform);
 
     builder.addDescriptions(VersionedAliasDescription.of());

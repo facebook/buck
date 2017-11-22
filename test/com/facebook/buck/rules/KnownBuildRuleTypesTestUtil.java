@@ -23,7 +23,7 @@ import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
-import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -89,7 +89,9 @@ public final class KnownBuildRuleTypesTestUtil {
   }
 
   public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(
-      ProjectFilesystem filesystem, ImmutableMap<String, String> environment)
+      ProjectFilesystem filesystem,
+      ToolchainProvider toolchainProvider,
+      ImmutableMap<String, String> environment)
       throws InterruptedException, IOException {
     BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     List<String> paths = getPaths(environment);
@@ -100,16 +102,13 @@ public final class KnownBuildRuleTypesTestUtil {
                 .putAll(getPythonProcessMap(paths))
                 .build());
 
-    return createInstance(config, filesystem, executor);
+    return createInstance(config, toolchainProvider, executor);
   }
 
   @VisibleForTesting
   static KnownBuildRuleTypes createInstance(
-      BuckConfig config, ProjectFilesystem filesystem, ProcessExecutor processExecutor)
+      BuckConfig config, ToolchainProvider toolchainProvider, ProcessExecutor processExecutor)
       throws InterruptedException, IOException {
-
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(ImmutableMap.of(), config, filesystem, processExecutor);
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 

@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -79,11 +78,9 @@ public class BuildCommandErrorsIntegrationTest {
     workspace.setKnownBuildRuleTypesFactoryFactory(
         (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
             cell -> {
-              FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
               CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
               KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-              buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
               buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
               return buildRuleTypesBuilder.addDescriptions(mockDescription).build();
             });
