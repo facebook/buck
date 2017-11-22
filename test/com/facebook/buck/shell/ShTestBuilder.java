@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,12 +39,12 @@ public class ShTestBuilder
     return this;
   }
 
-  public ShTestBuilder setArgs(ImmutableList<String> args) {
+  public ShTestBuilder setArgs(ImmutableList<StringWithMacros> args) {
     getArgForPopulating().setArgs(args);
     return this;
   }
 
-  public ShTestBuilder setEnv(ImmutableMap<String, String> env) {
+  public ShTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
     getArgForPopulating().setEnv(env);
     return this;
   }
