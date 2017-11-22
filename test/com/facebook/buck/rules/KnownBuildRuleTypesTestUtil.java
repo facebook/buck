@@ -23,7 +23,7 @@ import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -108,7 +108,9 @@ public final class KnownBuildRuleTypesTestUtil {
       BuckConfig config, ProjectFilesystem filesystem, ProcessExecutor processExecutor)
       throws InterruptedException, IOException {
 
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(ImmutableMap.of(), config, filesystem, processExecutor);
+
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
     SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =

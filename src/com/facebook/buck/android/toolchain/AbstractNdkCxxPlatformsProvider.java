@@ -18,6 +18,7 @@ package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.toolchain.BaseToolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -27,7 +28,8 @@ import org.immutables.value.Value;
 /** Provides all {@link NdkCxxPlatform}s by {@link TargetCpuType}. */
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
-public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain {
+public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
+    implements CxxPlatformsSupplier {
   public static final String DEFAULT_NAME = "ndk-cxx-platforms";
 
   /** @return all {@link NdkCxxPlatform}s by {@link TargetCpuType}. */
@@ -35,6 +37,7 @@ public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain {
   public abstract ImmutableMap<TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms();
 
   /** @return {@link CxxPlatform} of all {@link NdkCxxPlatform}s */
+  @Override
   public ImmutableMap<Flavor, CxxPlatform> getCxxPlatforms() {
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
 

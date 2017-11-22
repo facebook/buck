@@ -19,9 +19,17 @@ package com.facebook.buck.toolchain.impl;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.toolchain.ToolchainWithCapability;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +45,17 @@ public class TestToolchainProvider extends BaseToolchainProvider {
         AppleCxxPlatformsProvider.DEFAULT_NAME,
         AppleCxxPlatformsProvider.of(
             FlavorDomain.from("Apple C++ Platform", Collections.emptyList())));
+
+    CxxPlatform defaultCxxPlatform =
+        DefaultCxxPlatforms.build(
+            Platform.detect(), new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    addToolchain(
+        CxxPlatformsProvider.DEFAULT_NAME,
+        CxxPlatformsProvider.of(
+            defaultCxxPlatform,
+            new FlavorDomain<>(
+                "C/C++ platform",
+                ImmutableMap.of(DefaultCxxPlatforms.FLAVOR, defaultCxxPlatform))));
   }
 
   @Override
@@ -47,6 +66,20 @@ public class TestToolchainProvider extends BaseToolchainProvider {
   @Override
   public boolean isToolchainPresent(String toolchainName) {
     return toolchains.containsKey(toolchainName);
+  }
+
+  @Override
+  public <T extends ToolchainWithCapability> Iterable<String> getToolchainsWithCapability(
+      Class<T> capability) {
+    ImmutableList.Builder<String> featureSupportingToolchains = ImmutableList.builder();
+
+    for (Map.Entry<String, Toolchain> toolchainEntry : toolchains.entrySet()) {
+      if (capability.isAssignableFrom(toolchainEntry.getValue().getClass())) {
+        featureSupportingToolchains.add(toolchainEntry.getKey());
+      }
+    }
+
+    return featureSupportingToolchains.build();
   }
 
   public void addToolchain(String name, Toolchain toolchain) {

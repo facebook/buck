@@ -36,7 +36,6 @@ import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.android.SmartDexingStep;
-import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -47,7 +46,6 @@ import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -114,7 +112,6 @@ import com.facebook.buck.lua.LuaBinaryDescription;
 import com.facebook.buck.lua.LuaBuckConfig;
 import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.lua.LuaPlatform;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
@@ -240,31 +237,16 @@ abstract class AbstractKnownBuildRuleTypes {
 
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
-    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
-
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
-    // Setup the NDK C/C++ platforms.
-    NdkCxxPlatformsProvider ndkCxxPlatformsToolchain =
-        toolchainProvider.getByName(
-            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
-
-    // Create a map of system platforms.
-    ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
-
-    cxxSystemPlatformsBuilder.putAll(ndkCxxPlatformsToolchain.getCxxPlatforms());
-    cxxSystemPlatformsBuilder.putAll(appleCxxPlatformsProvider.getCxxPlatforms());
-
-    CxxPlatformsProvider cxxPlatformsProvider =
-        CxxPlatformsProvider.create(config, cxxSystemPlatformsBuilder.build());
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
 
     // Build up the final list of C/C++ platforms.
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
 
     // Get the default target platform from config.
-    CxxPlatform defaultCxxPlatform = cxxPlatformsProvider.getDefaultCxxPlatform();
+    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
 
     DBuckConfig dBuckConfig = new DBuckConfig(config);
 

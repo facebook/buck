@@ -21,34 +21,36 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
 import java.util.Optional;
 
-public class CxxPlatformsProvider {
+public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatformsProvider> {
 
-  private static final Logger LOG = Logger.get(CxxPlatformsProvider.class);
+  private static final Logger LOG = Logger.get(CxxPlatformsProviderFactory.class);
 
-  private final CxxPlatform defaultCxxPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  @Override
+  public Optional<CxxPlatformsProvider> createToolchain(
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+    Iterable<String> toolchainNames =
+        toolchainProvider.getToolchainsWithCapability(CxxPlatformsSupplier.class);
 
-  public CxxPlatformsProvider(
-      CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
+    ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatforms = ImmutableMap.builder();
+    for (String toolchainName : toolchainNames) {
+      CxxPlatformsSupplier cxxPlatformsSupplier =
+          toolchainProvider.getByName(toolchainName, CxxPlatformsSupplier.class);
+      cxxSystemPlatforms.putAll(cxxPlatformsSupplier.getCxxPlatforms());
+    }
+
+    return Optional.of(createProvider(context.getBuckConfig(), cxxSystemPlatforms.build()));
   }
 
-  public CxxPlatform getDefaultCxxPlatform() {
-    return defaultCxxPlatform;
-  }
-
-  public FlavorDomain<CxxPlatform> getCxxPlatforms() {
-    return cxxPlatforms;
-  }
-
-  public static CxxPlatformsProvider create(
+  private static CxxPlatformsProvider createProvider(
       BuckConfig config, ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatforms) {
     Platform platform = Platform.detect();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
@@ -127,6 +129,6 @@ public class CxxPlatformsProvider {
     CxxPlatform defaultCxxPlatform =
         CxxPlatforms.getConfigDefaultCxxPlatform(cxxBuckConfig, cxxPlatformsMap, hostCxxPlatform);
 
-    return new CxxPlatformsProvider(defaultCxxPlatform, cxxPlatforms);
+    return CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms);
   }
 }
