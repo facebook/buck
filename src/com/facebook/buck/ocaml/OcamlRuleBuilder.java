@@ -242,12 +242,8 @@ public class OcamlRuleBuilder {
       allDepsBuilder.addAll(library.getNativeCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
     }
-    allDepsBuilder.addAll(
-        ruleFinder.filterBuildRuleInputs(
-            ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()));
-    allDepsBuilder.addAll(
-        ruleFinder.filterBuildRuleInputs(
-            ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()));
+    allDepsBuilder.addAll(ocamlBuckConfig.getCCompiler().resolve(resolver).getDeps(ruleFinder));
+    allDepsBuilder.addAll(ocamlBuckConfig.getCxxCompiler().resolve(resolver).getDeps(ruleFinder));
     allDepsBuilder.addAll(
         argFlags.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()).iterator());
 
@@ -406,12 +402,8 @@ public class OcamlRuleBuilder {
                             .stream()
                             .flatMap(arg -> arg.getDeps(ruleFinder).stream())
                             .iterator())
-                    .addAll(
-                        ruleFinder.filterBuildRuleInputs(
-                            ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
-                    .addAll(
-                        ruleFinder.filterBuildRuleInputs(
-                            ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
+                    .addAll(ocamlBuckConfig.getCCompiler().resolve(resolver).getDeps(ruleFinder))
+                    .addAll(ocamlBuckConfig.getCxxCompiler().resolve(resolver).getDeps(ruleFinder))
                     .build())
             .withoutExtraDeps();
 
