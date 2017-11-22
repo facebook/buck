@@ -463,6 +463,7 @@
             and are deliberately isolated from Buck's core.
           -->
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
+          <exclude name="com/facebook/buck/dotnet/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -494,7 +495,15 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-zipbundler, build-module-ziprules"/>
+  <target name="build-modules" depends="build-module-dotnet, build-module-zipbundler, build-module-ziprules"/>
+
+  <target name="build-module-dotnet" depends="compile">
+    <build-buck-module-jar module-name="dotnet">
+      <module-javac-params>
+        <include name="com/facebook/buck/dotnet/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
 
   <target name="build-module-zipbundler" depends="compile">
     <build-buck-module-jar module-name="zipbundler">

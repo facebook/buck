@@ -86,6 +86,7 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
 }
 
 BUCK_MODULES = {
+    "dotnet": "//src/com/facebook/buck/dotnet:dotnet",
     "zipbundler": "//src/com/facebook/buck/zip/bundler:bundler",
     "ziprules": "//src/com/facebook/buck/zip/rules:rules",
 }
