@@ -60,9 +60,6 @@ public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
         case IN_PROCESS:
           javac = new JarBackedJavac(compilerClassName, fullJavacClasspath);
           break;
-        case OUT_OF_PROCESS:
-          javac = new OutOfProcessJarBackedJavac(compilerClassName, fullJavacClasspath);
-          break;
         default:
           throw new AssertionError("Unknown javac location: " + javacLocation);
       }

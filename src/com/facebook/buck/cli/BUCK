@@ -106,8 +106,6 @@ java_immutables_library(
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
-        # Include oop_javac so we can start buck with different entry point for oop javac functionality
-        "//src/com/facebook/buck/oop_javac:oop_javac",
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",

@@ -369,15 +369,6 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void testJavaLocationOutOfProcess()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    String content = Joiner.on('\n').join("[java]", "    location = OUT_OF_PROCESS");
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    assertThat(
-        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.OUT_OF_PROCESS));
-  }
-
-  @Test
   public void testJavaLocationInProcessByDefault()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));

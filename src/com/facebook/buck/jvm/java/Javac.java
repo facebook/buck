@@ -57,11 +57,10 @@ public interface Javac extends AbstractTool {
 
   String getShortName();
 
+  // TODO(cjhopman): Delete this.
   enum Location {
     /** Perform compilation inside main process. */
     IN_PROCESS,
-    /** Delegate compilation into separate process. */
-    OUT_OF_PROCESS,
   }
 
   enum Source {

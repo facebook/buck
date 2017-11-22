@@ -174,10 +174,6 @@ public class JavacStep implements Step {
       name = getJavac().getShortName();
     }
 
-    if (getJavac() instanceof OutOfProcessJsr199Javac) {
-      name += "(oop)";
-    }
-
     return name;
   }
 

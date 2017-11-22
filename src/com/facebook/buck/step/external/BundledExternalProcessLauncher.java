@@ -22,7 +22,6 @@ import com.facebook.buck.util.env.BuckClasspath;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -31,14 +30,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /** Provides methods for launching a java binary bundled within the buck binary. */
 public class BundledExternalProcessLauncher {
 
   enum EntryPoints {
     EXTERNAL_STEP_EXECUTOR("com.facebook.buck.step.external.executor.ExternalStepExecutorMain"),
-    OOP_JAVAC("com.facebook.buck.oop_javac.Main"),
     ;
 
     private final String entryPointName;
@@ -54,35 +51,6 @@ public class BundledExternalProcessLauncher {
 
   public ImmutableList<String> getCommandForStepExecutor() {
     return getCommand(EntryPoints.EXTERNAL_STEP_EXECUTOR);
-  }
-
-  public ImmutableList<String> getCommandForOutOfProcessJavac() {
-    return getCommand(EntryPoints.OOP_JAVAC);
-  }
-
-  public ImmutableMap<String, String> getEnvForOutOfProcessJavac() {
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    Map<String, String> environment = System.getenv();
-    if (environment.containsKey("JAVA_HOME")) {
-      builder.put("JAVA_HOME", environment.get("JAVA_HOME"));
-    }
-
-    BuildType buildType = BuildType.CURRENT_BUILD_TYPE.get();
-    switch (buildType) {
-      case LOCAL_ANT:
-        return builder.put(BuckClasspath.ENV_VAR_NAME, getClassPathForAntBuild()).build();
-      case UNKNOWN:
-        return builder
-            .put(
-                BuckClasspath.ENV_VAR_NAME,
-                getClasspathArgumentForUnknownBuild(EntryPoints.OOP_JAVAC))
-            .build();
-      case RELEASE_PEX:
-      case LOCAL_PEX:
-        return builder.build();
-      default:
-        throw new RuntimeException("Unknown build type " + buildType.toString());
-    }
   }
 
   private ImmutableList<String> getCommand(EntryPoints entryPoint) {

@@ -73,14 +73,6 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsOutOfProcJavacIfRequested() {
-    specBuilder.setJavacLocation(Javac.Location.OUT_OF_PROCESS);
-    Javac javac = getJavac();
-
-    assertTrue(javac instanceof OutOfProcessJdkProvidedInMemoryJavac);
-  }
-
-  @Test
   public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
     Path externalPath = Paths.get("/foo/bar/path/to/javac");
     SourcePath javacPath = FakeSourcePath.of(externalPath);
@@ -158,16 +150,6 @@ public class JavacSpecTest {
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
     assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
-  }
-
-  @Test
-  public void returnsOutOfProcessJarBackedJavacIfRequested() throws IOException {
-    SourcePath javacJarPath = FakeSourcePath.of("path/to/javac.jar");
-
-    specBuilder.setJavacJarPath(javacJarPath).setJavacLocation(Javac.Location.OUT_OF_PROCESS);
-    OutOfProcessJarBackedJavac javac = (OutOfProcessJarBackedJavac) getJavac();
-
-    assertThat(javac.getInputs(), Matchers.contains(javacJarPath));
   }
 
   @Test

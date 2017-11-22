@@ -4,10 +4,8 @@ java_library(
         ["*.java"],
         exclude = [
             "ApiStubber.java",
-            "AbiGenerationMode.java",
         ],
     ),
-    exported_deps = [":abi-generation-mode"],
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",
     ],
@@ -36,14 +34,6 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jsr:jsr305",
-    ],
-)
-
-java_library(
-    name = "abi-generation-mode",
-    srcs = ["AbiGenerationMode.java"],
-    visibility = [
-        "//src/com/facebook/buck/oop_javac:oop_javac",
     ],
 )
 

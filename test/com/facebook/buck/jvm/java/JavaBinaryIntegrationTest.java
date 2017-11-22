@@ -84,16 +84,6 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testOOPFatJarWithOutput() throws IOException, InterruptedException {
-    setUpProjectWorkspaceForScenario("fat_jar");
-    Path jar =
-        workspace.buildAndReturnOutput("//:bin-output", "--config", "java.location=OUT_OF_PROCESS");
-    ProcessExecutor.Result result = workspace.runJar(jar);
-    assertEquals("output", result.getStdout().get().trim());
-    assertEquals("error", result.getStderr().get().trim());
-  }
-
-  @Test
   public void disableCachingForBinaries() throws IOException {
     setUpProjectWorkspaceForScenario("java_binary_with_blacklist");
     workspace.enableDirCache();

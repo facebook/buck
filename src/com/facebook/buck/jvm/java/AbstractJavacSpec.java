@@ -64,8 +64,6 @@ abstract class AbstractJavacSpec implements AddsToRuleKey {
         switch (javacLocation) {
           case IN_PROCESS:
             return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
-          case OUT_OF_PROCESS:
-            return new ConstantJavacProvider(new OutOfProcessJdkProvidedInMemoryJavac());
         }
         break;
     }
