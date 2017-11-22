@@ -61,6 +61,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
@@ -78,7 +79,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       MoreExecutors.listeningDecorator(
           Executors.newCachedThreadPool(new NamedThreadFactory("javac")));
 
-  private final Function<JavacExecutionContext, JavaCompiler> compilerConstructor;
+  private final Supplier<JavaCompiler> compilerConstructor;
   private final JavacExecutionContext context;
   private final BuildTarget invokingRule;
   private final BuildTarget libraryTarget;
@@ -96,7 +97,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   @Nullable private CompilerWorker worker;
 
   public Jsr199JavacInvocation(
-      Function<JavacExecutionContext, JavaCompiler> compilerConstructor,
+      Supplier<JavaCompiler> compilerConstructor,
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
@@ -454,7 +455,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     }
 
     private BuckJavacTaskProxy newJavacTask(boolean generatingSourceOnlyAbi) throws IOException {
-      JavaCompiler compiler = compilerConstructor.apply(context);
+      JavaCompiler compiler = compilerConstructor.get();
 
       StandardJavaFileManager standardFileManager =
           compiler.getStandardFileManager(null, null, null);

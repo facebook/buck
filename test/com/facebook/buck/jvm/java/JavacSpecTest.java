@@ -79,8 +79,8 @@ public class JavacSpecTest {
 
     specBuilder.setJavacPath(Either.ofRight(javacPath));
     ExternalJavac javac = (ExternalJavac) getJavac();
-    assertTrue(javac.getExternalInput().isPresent());
-    assertEquals(externalPath, javac.getExternalInput().get());
+    assertTrue(javac.getActualPath().isLeft());
+    assertEquals(externalPath, javac.getActualPath().getLeft());
   }
 
   @Test
@@ -92,8 +92,8 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either);
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertTrue(javac.getExternalInput().isPresent());
-    assertEquals(externalJavac, javac.getExternalInput().get());
+    assertTrue(javac.getActualPath().isLeft());
+    assertEquals(externalJavac, javac.getActualPath().getLeft());
   }
 
   @Test
@@ -105,8 +105,8 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either).setJavacPath(Either.ofLeft(Paths.get("does-not-exist")));
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertTrue(javac.getExternalInput().isPresent());
-    assertEquals(externalJavacPath, javac.getExternalInput().get());
+    assertTrue(javac.getActualPath().isLeft());
+    assertEquals(externalJavacPath, javac.getActualPath().getLeft());
   }
 
   @Test

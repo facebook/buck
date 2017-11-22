@@ -18,9 +18,10 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.net.MalformedURLException;
@@ -49,15 +50,18 @@ public class JarBackedJavac extends Jsr199Javac {
   }
 
   @Override
-  protected JavaCompiler createCompiler(JavacExecutionContext context) {
+  protected JavaCompiler createCompiler(
+      JavacExecutionContext context, SourcePathResolver resolver) {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     ClassLoader compilerClassLoader =
         classLoaderCache.getClassLoaderForClassPath(
             ClassLoader.getSystemClassLoader(),
-            FluentIterable.from(context.getAbsolutePathsForInputs())
-                .transform(PATH_TO_URL::apply)
+            resolver
+                .getAllAbsolutePaths(classpath)
+                .stream()
+                .map(PATH_TO_URL)
                 // Use "toString" since URL.equals does DNS lookups.
-                .toSortedSet(Ordering.usingToString())
+                .collect(MoreCollectors.toImmutableSortedSet(Ordering.usingToString()))
                 .asList());
     try {
       return (JavaCompiler) compilerClassLoader.loadClass(compilerClassName).newInstance();

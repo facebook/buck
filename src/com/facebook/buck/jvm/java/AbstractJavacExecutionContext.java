@@ -24,10 +24,8 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -52,6 +50,4 @@ abstract class AbstractJavacExecutionContext {
   public abstract ImmutableMap<String, String> getEnvironment();
 
   public abstract ProcessExecutor getProcessExecutor();
-
-  public abstract ImmutableList<Path> getAbsolutePathsForInputs();
 }

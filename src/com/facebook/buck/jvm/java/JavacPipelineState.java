@@ -23,7 +23,6 @@ import com.facebook.buck.rules.RulePipelineState;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -115,8 +114,7 @@ public class JavacPipelineState implements RulePipelineState {
               filesystem,
               context.getProjectFilesystemFactory(),
               firstOrderContext.getEnvironment(),
-              firstOrderContext.getProcessExecutor(),
-              getAbsolutePathsForJavacInputs(getJavac()));
+              firstOrderContext.getProcessExecutor());
 
       ImmutableList<JavacPluginJsr199Fields> pluginFields =
           ImmutableList.copyOf(
@@ -131,6 +129,7 @@ public class JavacPipelineState implements RulePipelineState {
           getJavac()
               .newBuildInvocation(
                   javacExecutionContext,
+                  resolver,
                   invokingRule,
                   getOptions(context, compilerParameters.getClasspathEntries()),
                   pluginFields,
@@ -173,14 +172,6 @@ public class JavacPipelineState implements RulePipelineState {
     stdout = null;
     stderr = null;
     invocation = null;
-  }
-
-  private ImmutableList<Path> getAbsolutePathsForJavacInputs(Javac javac) {
-    return javac
-        .getInputs()
-        .stream()
-        .map(resolver::getAbsolutePath)
-        .collect(MoreCollectors.toImmutableList());
   }
 
   @VisibleForTesting

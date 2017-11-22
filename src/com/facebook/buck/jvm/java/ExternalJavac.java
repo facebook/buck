@@ -61,7 +61,7 @@ import javax.annotation.Nullable;
 /** javac implemented in a separate binary. */
 public class ExternalJavac implements Javac {
   @AddToRuleKey private final Supplier<Tool> javac;
-  private final Optional<Path> externalInput;
+  private final Either<Path, BuildTargetSourcePath> actualPath;
   private final String shortName;
 
   public ExternalJavac(final Either<Path, SourcePath> pathToJavac) {
@@ -69,8 +69,8 @@ public class ExternalJavac implements Javac {
     // PathSourcePath instead.
     if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac.getRight();
-      this.externalInput = Optional.empty();
       this.shortName = buildTargetPath.getTarget().toString();
+      this.actualPath = Either.ofRight(buildTargetPath);
       this.javac =
           MoreSuppliers.<Tool>memoize(
               () ->
@@ -99,7 +99,7 @@ public class ExternalJavac implements Javac {
                   ((PathSourcePath) path)
                       .getFilesystem()
                       .resolve(((PathSourcePath) path).getRelativePath()));
-      this.externalInput = Optional.of(actualPath);
+      this.actualPath = Either.ofLeft(actualPath);
       this.shortName = actualPath.toString();
       this.javac =
           MoreSuppliers.memoize(
@@ -128,8 +128,8 @@ public class ExternalJavac implements Javac {
   }
 
   @VisibleForTesting
-  Optional<Path> getExternalInput() {
-    return externalInput;
+  Either<Path, BuildTargetSourcePath> getActualPath() {
+    return actualPath;
   }
 
   @Override
@@ -183,6 +183,7 @@ public class ExternalJavac implements Javac {
   @Override
   public Invocation newBuildInvocation(
       JavacExecutionContext context,
+      SourcePathResolver sourcePathResolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
@@ -210,10 +211,8 @@ public class ExternalJavac implements Javac {
             "Cannot compile ABI jars with external javac");
         ImmutableList.Builder<String> command = ImmutableList.builder();
         command.add(
-            externalInput
-                .map(Object::toString)
-                .orElseGet(() -> context.getAbsolutePathsForInputs().get(0).toString()));
-
+            actualPath.transform(
+                Object::toString, path -> sourcePathResolver.getAbsolutePath(path).toString()));
         ImmutableList<Path> expandedSources;
         try {
           expandedSources =
