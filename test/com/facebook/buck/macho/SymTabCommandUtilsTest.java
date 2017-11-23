@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.primitives.UnsignedInteger;
 import java.io.IOException;
 import java.nio.ByteBuffer;

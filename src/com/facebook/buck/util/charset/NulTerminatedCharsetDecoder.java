@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.charset;
+package com.facebook.buck.util.charset;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;

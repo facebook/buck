@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.equalToObject;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.base.Charsets;
 import java.io.FileWriter;
 import java.io.IOException;

@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.cli;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.macho.ObjectPathsAbsolutifier;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;

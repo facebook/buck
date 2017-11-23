@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.util.bsd;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

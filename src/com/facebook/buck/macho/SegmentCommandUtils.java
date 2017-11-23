@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.macho;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;

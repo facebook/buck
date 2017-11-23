@@ -62,7 +62,6 @@ java_test(
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/artifact_cache:impl",
-        "//src/com/facebook/buck/charset:charset",
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/counters:counters",

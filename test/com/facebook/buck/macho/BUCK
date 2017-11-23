@@ -11,7 +11,6 @@ java_library(
     ),
     visibility = ["//test/..."],
     deps = [
-        "//src/com/facebook/buck/charset:charset",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
@@ -57,7 +56,6 @@ standard_java_test(
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/charset:charset",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
@@ -136,6 +134,7 @@ standard_java_test(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/charset:charset",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",

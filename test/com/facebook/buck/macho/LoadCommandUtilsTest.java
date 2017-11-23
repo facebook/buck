@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.UnsignedInteger;
