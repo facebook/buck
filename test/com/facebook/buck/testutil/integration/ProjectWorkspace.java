@@ -45,7 +45,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
-import com.facebook.buck.rules.CellProvider;
+import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
@@ -768,7 +768,7 @@ public class ProjectWorkspace {
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
 
-    return CellProvider.createForLocalBuild(
+    return CellProviderFactory.createForLocalBuild(
             filesystem,
             WatchmanFactory.NULL_WATCHMAN,
             buckConfig,

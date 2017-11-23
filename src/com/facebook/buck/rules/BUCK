@@ -67,6 +67,7 @@ java_immutables_library(
         "AbstractKnownBuildRuleTypes.java",
         "AbstractKnownBuildRuleTypesProvider.java",
         "CellProvider.java",
+        "CellProviderFactory.java",
         "KnownBuildRuleTypesFactory.java",
         "MetadataChecker.java",
     ],

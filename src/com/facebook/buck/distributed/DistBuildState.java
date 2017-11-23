@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
+import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DistBuildCellParams;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
@@ -139,7 +140,7 @@ public class DistBuildState {
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 
-    CellProvider cellProvider = CellProvider.createForDistributedBuild(cellParams.build());
+    CellProvider cellProvider = CellProviderFactory.createForDistributedBuild(cellParams.build());
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));

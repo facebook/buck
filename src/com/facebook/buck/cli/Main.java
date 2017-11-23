@@ -84,7 +84,7 @@ import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CellProvider;
+import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
@@ -683,7 +683,7 @@ public final class Main {
                     processExecutor, pluginManager, sandboxExecutionStrategyFactory));
 
         Cell rootCell =
-            CellProvider.createForLocalBuild(
+            CellProviderFactory.createForLocalBuild(
                     filesystem,
                     watchman,
                     buckConfig,
