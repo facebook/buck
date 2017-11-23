@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.bser.BserDeserializer;
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
 import com.facebook.buck.io.windowspipe.WindowsNamedPipe;
 import com.facebook.buck.log.Logger;
@@ -26,6 +25,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.bser.BserDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;

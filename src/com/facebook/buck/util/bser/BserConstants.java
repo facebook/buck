@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.bser;
+package com.facebook.buck.util.bser;
 
 public class BserConstants {
   // Utility class, do not instantiate.

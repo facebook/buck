@@ -2,7 +2,7 @@ java_library(
     name = "bser",
     srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/bser:bser",
+        "//test/com/facebook/buck/util/bser:bser",
     ],
     visibility = ["PUBLIC"],
     deps = [

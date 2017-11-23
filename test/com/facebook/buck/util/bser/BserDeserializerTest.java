@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.bser;
+package com.facebook.buck.util.bser;
 
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.contains;

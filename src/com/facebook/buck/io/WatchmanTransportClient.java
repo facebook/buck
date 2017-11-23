@@ -19,10 +19,10 @@ package com.facebook.buck.io;
 import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExecutor;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
-import com.facebook.buck.bser.BserDeserializer;
-import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.bser.BserDeserializer;
+import com.facebook.buck.util.bser.BserSerializer;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
