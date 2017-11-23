@@ -44,12 +44,18 @@ import com.facebook.buck.toolchain.ToolchainWithCapability;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import javax.annotation.concurrent.ThreadSafe;
 
+@ThreadSafe
 public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   enum ToolchainDescriptor {
@@ -105,7 +111,19 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   private final ToolchainCreationContext toolchainCreationContext;
   private final ImmutableMap<String, Class<? extends ToolchainFactory<?>>> toolchainFactories;
 
-  private final Map<String, Optional<? extends Toolchain>> toolchains = new HashMap<>();
+  private final LoadingCache<String, Optional<? extends Toolchain>> toolchains =
+      CacheBuilder.newBuilder()
+          .maximumSize(1024)
+          .build(
+              new CacheLoader<String, Optional<? extends Toolchain>>() {
+                @Override
+                public Optional<? extends Toolchain> load(String toolchainName) throws Exception {
+                  if (!toolchainFactories.containsKey(toolchainName)) {
+                    throw new IllegalStateException("Unknown toolchain: " + toolchainName);
+                  }
+                  return createToolchain(toolchainFactories.get(toolchainName));
+                }
+              });
 
   public DefaultToolchainProvider(
       ImmutableMap<String, String> environment,
@@ -130,7 +148,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   }
 
   @Override
-  public synchronized Toolchain getByName(String toolchainName) {
+  public Toolchain getByName(String toolchainName) {
     Optional<? extends Toolchain> toolchain = getOrCreate(toolchainName);
     if (toolchain.isPresent()) {
       return toolchain.get();
@@ -159,19 +177,12 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   }
 
   private Optional<? extends Toolchain> getOrCreate(String toolchainName) {
-    Optional<? extends Toolchain> toolchain;
-    if (!toolchains.containsKey(toolchainName)) {
-      if (!toolchainFactories.containsKey(toolchainName)) {
-        throw new IllegalStateException("Unknown toolchain: " + toolchainName);
-      }
-      Class<? extends ToolchainFactory<?>> toolchainFactoryClass =
-          toolchainFactories.get(toolchainName);
-      toolchain = createToolchain(toolchainFactoryClass);
-      toolchains.put(toolchainName, toolchain);
-    } else {
-      toolchain = toolchains.get(toolchainName);
+    try {
+      return toolchains.get(toolchainName);
+    } catch (ExecutionException | UncheckedExecutionException e) {
+      Throwables.throwIfInstanceOf(e.getCause(), HumanReadableException.class);
+      throw new HumanReadableException(e, "Cannot create a toolchain: " + toolchainName);
     }
-    return toolchain;
   }
 
   private Optional<? extends Toolchain> createToolchain(
