@@ -34,7 +34,7 @@ import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.OkHttpResponseWrapper;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

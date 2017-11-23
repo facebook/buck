@@ -67,7 +67,7 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;

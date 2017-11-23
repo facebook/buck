@@ -17,7 +17,7 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URI;

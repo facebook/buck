@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.event;
 
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Supplier;
 
 /** Event Class containing the perf data regarding action graph building */

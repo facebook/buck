@@ -14,24 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.timing;
+package com.facebook.buck.util.timing;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+/**
+ * {@link Clock} implementation that invokes the {@link System} calls, adjusted to use the given
+ * nanos epoch.
+ */
+public class NanosAdjustedClock extends DefaultClock {
+  private final long nanosEpoch;
 
-import java.util.concurrent.TimeUnit;
-import org.junit.Test;
-
-public class IncrementingFakeClockTest {
-  @Test
-  public void millisAddsIncrementAfterCall() {
-    Clock clock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(64738));
-    assertThat(clock.currentTimeMillis(), is(64738L));
+  public NanosAdjustedClock(long nanosEpoch) {
+    this(nanosEpoch, true);
   }
 
-  @Test
-  public void nanosAddsIncrementAfterCall() {
-    Clock clock = new IncrementingFakeClock(49152);
-    assertThat(clock.nanoTime(), is(49152L));
+  public NanosAdjustedClock(long nanosEpoch, boolean enableThreadCpuTime) {
+    super(enableThreadCpuTime);
+    this.nanosEpoch = nanosEpoch - System.nanoTime();
+  }
+
+  @Override
+  public long nanoTime() {
+    return System.nanoTime() + nanosEpoch;
   }
 }

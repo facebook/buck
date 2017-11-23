@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.timing;
+package com.facebook.buck.util.timing;
 
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;

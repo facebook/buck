@@ -19,8 +19,8 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -97,7 +97,7 @@ public class NetworkStatsKeeper {
 
   private long getDownloadTimeForThisInterval() {
     long timeSpentDownloadingInThisInterval = currentIntervalDownloadTimeMillis;
-    //Downloads may be interleaved.
+    // Downloads may be interleaved.
     if (artifactDownloadInProgressCount != 0) {
       long currentTime = clock.currentTimeMillis();
       timeSpentDownloadingInThisInterval += (currentTime - firstDownloadStartTimestamp);
@@ -161,7 +161,7 @@ public class NetworkStatsKeeper {
     }
   }
 
-  //only for testing
+  // only for testing
   protected void setClock(Clock clock) {
     this.clock = clock;
   }

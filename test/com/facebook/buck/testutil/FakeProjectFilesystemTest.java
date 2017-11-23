@@ -25,7 +25,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.zip.Zip;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.base.Functions;
 import com.google.common.collect.Multimap;
 import java.io.ByteArrayOutputStream;

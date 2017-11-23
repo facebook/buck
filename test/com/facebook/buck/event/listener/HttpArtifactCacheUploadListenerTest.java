@@ -22,7 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.util.ArrayList;

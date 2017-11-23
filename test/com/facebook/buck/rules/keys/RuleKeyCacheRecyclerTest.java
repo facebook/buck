@@ -28,7 +28,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;

@@ -40,7 +40,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;

@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.timing.ClockDuration;
+import com.facebook.buck.util.timing.ClockDuration;
 import org.junit.Test;
 
 public class BuildRuleDurationTrackerTest {

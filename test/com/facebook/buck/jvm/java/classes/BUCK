@@ -16,7 +16,6 @@ standard_java_test(
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/test/result/type:type",
-        "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/autosparse:autosparse_config",

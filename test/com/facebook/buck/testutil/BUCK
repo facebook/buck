@@ -11,7 +11,6 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/io/filesystem/impl:impl",
-        "//src/com/facebook/buck/timing:timing",
     ],
     visibility = ["//test/..."],
     deps = [
@@ -54,7 +53,7 @@ java_library(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
-        "//test/com/facebook/buck/timing:testutil",
+        "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/immutables:immutables",
@@ -152,7 +151,6 @@ standard_java_test(
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
-        "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:packaged_resource",
@@ -180,7 +178,7 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
-        "//test/com/facebook/buck/timing:testutil",
+        "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:ddmlib",
         "//third-party/java/android:tools-sdk-common",

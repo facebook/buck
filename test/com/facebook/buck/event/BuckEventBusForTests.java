@@ -17,9 +17,9 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;

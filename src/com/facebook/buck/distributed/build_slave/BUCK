@@ -36,12 +36,12 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:constants",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/network/hostname:hostname",
+        "//src/com/facebook/buck/util/timing:timing",
         "//src/com/facebook/buck/versions:versions",
     ],
 )

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.timing;
+package com.facebook.buck.util.timing;
 
 import com.google.common.base.Preconditions;
 import java.util.concurrent.TimeUnit;

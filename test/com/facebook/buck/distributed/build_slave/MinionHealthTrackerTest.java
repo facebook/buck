@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;

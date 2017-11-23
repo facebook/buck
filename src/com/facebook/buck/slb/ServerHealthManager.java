@@ -19,7 +19,7 @@ package com.facebook.buck.slb;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;

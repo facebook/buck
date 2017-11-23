@@ -24,7 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;

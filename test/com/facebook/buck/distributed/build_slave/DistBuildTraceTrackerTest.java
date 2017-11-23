@@ -19,7 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.build_slave.DistBuildTrace.RuleTrace;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;

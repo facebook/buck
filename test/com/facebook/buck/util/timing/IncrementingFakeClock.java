@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.timing;
+package com.facebook.buck.util.timing;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;

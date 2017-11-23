@@ -45,7 +45,6 @@ java_binary(
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
-        "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",

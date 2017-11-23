@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;

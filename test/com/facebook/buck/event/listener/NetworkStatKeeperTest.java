@@ -20,7 +20,7 @@ import static org.easymock.EasyMock.expect;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class NetworkStatKeeperTest {
     EasyMock.replay(
         startEvent1, startEvent2, startEvent3, finishedEvent1, finishedEvent2, finishedEvent3);
 
-    //first interval
+    // first interval
     networkStatsKeeper.artifactDownloadedStarted(startEvent1);
     networkStatsKeeper.artifactDownloadedStarted(startEvent2);
     networkStatsKeeper.bytesReceived(new BytesReceivedEvent(10000));
@@ -74,7 +74,7 @@ public class NetworkStatKeeperTest {
     Assert.assertEquals(
         83333.33333333333, networkStatsKeeper.getAverageDownloadSpeed().getFirst(), delta);
 
-    //second interval
+    // second interval
     networkStatsKeeper.artifactDownloadedStarted(startEvent3);
     networkStatsKeeper.bytesReceived(new BytesReceivedEvent(10000));
     networkStatsKeeper.artifactDownloadFinished(finishedEvent3);

@@ -26,7 +26,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
