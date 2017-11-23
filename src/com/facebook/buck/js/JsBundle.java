@@ -83,12 +83,10 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     final SourcePath jsOutputDir = getSourcePathToOutput();
     final SourcePath sourceMapFile = getSourcePathToSourceMap();
     final SourcePath resourcesDir = getSourcePathToResources();
-    final SourcePath miscDirPath = getSourcePathToMisc();
 
     String jobArgs;
     try {
-      jobArgs =
-          getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
+      jobArgs = getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir);
     } catch (IOException ex) {
       throw JsUtil.getJobArgsException(ex, getBuildTarget());
     }
@@ -96,7 +94,6 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(resourcesDir));
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(miscDirPath));
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -123,11 +120,6 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     sourcePathResolver.getRelativePath(resourcesDir))),
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(miscDirPath))),
             JsUtil.workerShellStep(
                 worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
         .build();
@@ -137,8 +129,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       SourcePathResolver sourcePathResolver,
       SourcePath jsOutputDir,
       SourcePath sourceMapFile,
-      SourcePath resourcesDir,
-      SourcePath miscDirPath)
+      SourcePath resourcesDir)
       throws IOException {
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     JsonGenerator generator = ObjectMappers.createGenerator(stream);
@@ -203,9 +194,6 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
 
     generator.writeFieldName("sourceMapPath");
     generator.writeString(sourcePathResolver.getAbsolutePath(sourceMapFile).toString());
-
-    generator.writeFieldName("miscDirPath");
-    generator.writeString(sourcePathResolver.getAbsolutePath(miscDirPath).toString());
 
     generator.writeEndObject();
     generator.close();

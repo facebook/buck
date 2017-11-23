@@ -124,20 +124,6 @@ public class JsBundleDescription
           bundleOutputs.getSourcePathToSourceMap());
     }
 
-    if (flavors.contains(JsFlavors.MISC)) {
-      BuildTarget bundleTarget = buildTarget.withoutFlavors(JsFlavors.MISC);
-      resolver.requireRule(bundleTarget);
-      JsBundleOutputs bundleOutputs = resolver.getRuleWithType(bundleTarget, JsBundleOutputs.class);
-
-      return new ExportFile(
-          buildTarget,
-          projectFilesystem,
-          new SourcePathRuleFinder(resolver),
-          bundleOutputs.getBundleName() + "-misc",
-          ExportFileDescription.Mode.REFERENCE,
-          bundleOutputs.getSourcePathToMisc());
-    }
-
     // For Android, we bundle JS output as assets, and images etc. as resources.
     // To facilitate this, we return a build rule that in turn depends on a `JsBundle` and
     // an `AndroidResource`. The `AndroidResource` rule also depends on the `JsBundle`

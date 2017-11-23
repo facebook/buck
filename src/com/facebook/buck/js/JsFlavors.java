@@ -48,7 +48,6 @@ public class JsFlavors {
           "Output code as indexed RAM bundle. For iOS. Only use for Android if copied to disk on "
               + "first run");
   public static final UserFlavor SOURCE_MAP = UserFlavor.of("source_map", "Expose source map");
-  public static final UserFlavor MISC = UserFlavor.of("misc", "Expose misc directory");
   public static final UserFlavor DEPENDENCY_FILE =
       UserFlavor.of("dependencies", "Build dependency file");
 
@@ -69,7 +68,7 @@ public class JsFlavors {
   public static final FlavorDomain<Object> OUTPUT_OPTIONS_DOMAIN =
       new FlavorDomain<>(
           "Output options",
-          ImmutableMap.of(SOURCE_MAP, SOURCE_MAP, DEPENDENCY_FILE, DEPENDENCY_FILE, MISC, MISC));
+          ImmutableMap.of(SOURCE_MAP, SOURCE_MAP, DEPENDENCY_FILE, DEPENDENCY_FILE));
 
   public static final InternalFlavor ANDROID_RESOURCES = InternalFlavor.of("_res_");
   public static final InternalFlavor FORCE_JS_BUNDLE = InternalFlavor.of("_js_");
