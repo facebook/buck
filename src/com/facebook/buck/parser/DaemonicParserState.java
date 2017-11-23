@@ -33,6 +33,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
@@ -61,6 +62,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -74,6 +77,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class DaemonicParserState {
+
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
 
   /**
@@ -99,6 +103,9 @@ public class DaemonicParserState {
       "rules_invalidated_by_watch_events";
   private static final String PATHS_ADDED_OR_REMOVED_INVALIDATING_BUILD_FILES =
       "paths_added_or_removed_invalidating_build_files";
+  // pattern all implicit include paths from build file includes should match
+  // this should be kept in sync with pattern used in buck.py
+  private static final Pattern INCLUDE_PATH_PATTERN = Pattern.compile("^([A-Za-z0-9_]*)//(.*)$");
 
   /** Taken from {@link ConcurrentMap}. */
   static final int DEFAULT_INITIAL_CAPACITY = 16;
@@ -234,17 +241,31 @@ public class DaemonicParserState {
       Iterable<String> defaultIncludes =
           buckConfig.getView(ParserConfig.class).getDefaultIncludes();
       for (String include : defaultIncludes) {
-        // Default includes are given as "//path/to/file". They look like targets
-        // but they are not. However, I bet someone will try and treat it like a
-        // target, so find the owning cell if necessary, and then fully resolve
-        // the path against the owning cell's root.
-        Preconditions.checkState(include.startsWith("//"));
-        dependentsOfEveryNode.add(cell.getFilesystem().resolve(include.substring(2)));
+        dependentsOfEveryNode.add(
+            resolveIncludePath(cell, include, cell.getBuckConfig().getCellPathResolver()));
       }
 
       return getOrCreateCellState(cell)
           .putRawNodesIfNotPresentAndStripMetaEntries(
               buildFile, withoutMetaIncludes, dependentsOfEveryNode.build(), env);
+    }
+
+    /**
+     * Resolves a path of an include string like {@code repo//foo/macro_defs} to a filesystem path.
+     */
+    private Path resolveIncludePath(Cell cell, String include, CellPathResolver cellPathResolver) {
+      // Default includes are given as "cell//path/to/file". They look like targets
+      // but they are not. However, I bet someone will try and treat it like a
+      // target, so find the owning cell if necessary, and then fully resolve
+      // the path against the owning cell's root.
+      Matcher matcher = INCLUDE_PATH_PATTERN.matcher(include);
+      Preconditions.checkState(matcher.matches());
+      Optional<String> cellName = Optional.ofNullable(matcher.group(1));
+      String includePath = matcher.group(2);
+      return cellPathResolver
+          .getCellPath(cellName)
+          .map(cellPath -> cellPath.resolve(includePath))
+          .orElseGet(() -> cell.getFilesystem().resolve(includePath));
     }
   }
 
