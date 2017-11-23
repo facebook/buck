@@ -4,7 +4,7 @@ standard_java_test(
     name = "randomizedtrial",
     deps = [
         "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
+        "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/junit:junit",

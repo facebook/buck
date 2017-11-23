@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.randomizedtrial;
+package com.facebook.buck.util.randomizedtrial;
 
 import static org.junit.Assert.assertThat;
 

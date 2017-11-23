@@ -13,7 +13,6 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:source_path",
@@ -24,6 +23,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/network/hostname:hostname",
+        "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
 )
