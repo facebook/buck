@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.i18n;
+package com.facebook.buck.util.i18n;
 
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;

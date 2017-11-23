@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.i18n;
+package com.facebook.buck.util.i18n;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

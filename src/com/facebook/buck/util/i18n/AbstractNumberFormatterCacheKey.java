@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.i18n;
+package com.facebook.buck.util.i18n;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.util.Locale;
