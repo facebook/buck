@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.sqlite;
+package com.facebook.buck.util.sqlite;
 
 import java.sql.SQLException;
 import org.sqlite.BusyHandler;

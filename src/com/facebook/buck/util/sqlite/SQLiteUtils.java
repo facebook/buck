@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.sqlite;
+package com.facebook.buck.util.sqlite;
 
 import com.facebook.buck.util.HumanReadableException;
 import org.sqlite.SQLiteJDBCLoader;
