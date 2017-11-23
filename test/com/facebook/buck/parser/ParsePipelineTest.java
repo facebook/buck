@@ -403,7 +403,8 @@ public class ParsePipelineTest {
               input -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
-                        input.createBuildFileParser(
+                        ProjectBuildFileParserFactory.createBuildFileParser(
+                            input,
                             coercerFactory,
                             console,
                             eventBus,

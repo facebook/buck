@@ -18,27 +18,14 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
-import com.facebook.buck.json.HybridProjectBuildFileParser;
-import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.api.Syntax;
-import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
-import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
-import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.toolchain.ComparableToolchain;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -225,102 +212,6 @@ abstract class AbstractCell {
               .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
     }
     return buildFile;
-  }
-
-  /**
-   * Callers are responsible for managing the life-cycle of the created {@link
-   * ProjectBuildFileParser}.
-   */
-  public ProjectBuildFileParser createBuildFileParser(
-      TypeCoercerFactory typeCoercerFactory,
-      Console console,
-      BuckEventBus eventBus,
-      Iterable<Description<?>> descriptions) {
-    return createBuildFileParser(
-        typeCoercerFactory, console, eventBus, descriptions, /* enableProfiling */ false);
-  }
-
-  /**
-   * Same as @{{@link #createBuildFileParser(TypeCoercerFactory, Console, BuckEventBus, Iterable)}}
-   * but provides a way to configure whether parse profiling should be enabled
-   */
-  public ProjectBuildFileParser createBuildFileParser(
-      TypeCoercerFactory typeCoercerFactory,
-      Console console,
-      BuckEventBus eventBus,
-      Iterable<Description<?>> descriptions,
-      boolean enableProfiling) {
-
-    ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
-
-    boolean useWatchmanGlob =
-        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN
-            && getWatchman().hasWildmatchGlob();
-    boolean watchmanGlobStatResults =
-        parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
-    boolean watchmanUseGlobGenerator =
-        getWatchman().getCapabilities().contains(WatchmanFactory.Capability.GLOB_GENERATOR);
-    boolean useMercurialGlob = parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
-    String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
-    Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
-
-    ProjectBuildFileParserOptions buildFileParserOptions =
-        ProjectBuildFileParserOptions.builder()
-            .setEnableProfiling(enableProfiling)
-            .setProjectRoot(getFilesystem().getRootPath())
-            .setCellRoots(getCellPathResolver().getCellPaths())
-            .setCellName(getCanonicalName().orElse(""))
-            .setFreezeGlobals(parserConfig.getFreezeGlobals())
-            .setPythonInterpreter(pythonInterpreter)
-            .setPythonModuleSearchPath(pythonModuleSearchPath)
-            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
-            .setIgnorePaths(getFilesystem().getIgnorePaths())
-            .setBuildFileName(getBuildFileName())
-            .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(descriptions)
-            .setUseWatchmanGlob(useWatchmanGlob)
-            .setWatchmanGlobStatResults(watchmanGlobStatResults)
-            .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
-            .setWatchman(getWatchman())
-            .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
-            .setUseMercurialGlob(useMercurialGlob)
-            .setRawConfig(getBuckConfig().getRawConfigForParser())
-            .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .build();
-    return EventReportingProjectBuildFileParser.of(
-        createProjectBuildFileParser(
-            typeCoercerFactory, console, eventBus, parserConfig, buildFileParserOptions),
-        eventBus);
-  }
-
-  /** Creates a project build file parser based on Buck configuration settings. */
-  private ProjectBuildFileParser createProjectBuildFileParser(
-      TypeCoercerFactory typeCoercerFactory,
-      Console console,
-      BuckEventBus eventBus,
-      ParserConfig parserConfig,
-      ProjectBuildFileParserOptions buildFileParserOptions) {
-    PythonDslProjectBuildFileParser pythonDslProjectBuildFileParser =
-        new PythonDslProjectBuildFileParser(
-            buildFileParserOptions,
-            typeCoercerFactory,
-            getBuckConfig().getEnvironment(),
-            eventBus,
-            new DefaultProcessExecutor(console));
-    if (parserConfig.isPolyglotParsingEnabled()) {
-      return HybridProjectBuildFileParser.using(
-          ImmutableMap.of(
-              Syntax.PYTHON_DSL,
-              pythonDslProjectBuildFileParser,
-              Syntax.SKYLARK,
-              SkylarkProjectBuildFileParser.using(
-                  buildFileParserOptions,
-                  eventBus,
-                  SkylarkFilesystem.using(getFilesystem()),
-                  typeCoercerFactory)),
-          parserConfig.getDefaultBuildFileSyntax());
-    }
-    return pythonDslProjectBuildFileParser;
   }
 
   public CellPathResolver getCellPathResolver() {

@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuckPyFunction;
@@ -95,13 +96,12 @@ public class AuditRulesCommand extends AbstractCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
-        params
-            .getCell()
-            .createBuildFileParser(
-                new DefaultTypeCoercerFactory(),
-                params.getConsole(),
-                params.getBuckEventBus(),
-                params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
+        ProjectBuildFileParserFactory.createBuildFileParser(
+            params.getCell(),
+            new DefaultTypeCoercerFactory(),
+            params.getConsole(),
+            params.getBuckEventBus(),
+            params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {
