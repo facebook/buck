@@ -15,19 +15,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "source_path_interface",
-    srcs = [
-        "SourcePath.java",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//third-party/java/guava:guava",
-    ],
-)
-
 java_immutables_library(
     name = "source_path",
     srcs = [
@@ -39,10 +26,10 @@ java_immutables_library(
         "AbstractSourceWithFlags.java",
         "BuildTargetSourcePath.java",
         "NonHashableSourcePathContainer.java",
+        "SourcePath.java",
         "SourcePathResolver.java",
     ],
     exported_deps = [
-        ":source_path_interface",
         "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
     visibility = ["PUBLIC"],
