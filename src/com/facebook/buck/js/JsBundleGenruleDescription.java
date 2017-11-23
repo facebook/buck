@@ -79,11 +79,15 @@ public class JsBundleGenruleDescription
     BuildTarget bundleTarget = args.getJsBundle().withAppendedFlavors(flavors);
     BuildRule jsBundle = resolver.requireRule(bundleTarget);
 
-    if (flavors.contains(JsFlavors.SOURCE_MAP) || flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
+    if (flavors.contains(JsFlavors.SOURCE_MAP)
+        || flavors.contains(JsFlavors.DEPENDENCY_FILE)
+        || flavors.contains(JsFlavors.MISC)) {
       // SOURCE_MAP is a special flavor that allows accessing the written source map, typically
       // via export_file in reference mode
       // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by
       // the worker)
+      // MISC_DIR allows accessing the "misc" directory that can contains diverse assets not meant
+      // to be part of the app being shipped.
 
       SourcePath output =
           args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)

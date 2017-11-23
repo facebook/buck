@@ -173,6 +173,11 @@ public class JsBundleGenrule extends Genrule
   }
 
   @Override
+  public SourcePath getSourcePathToMisc() {
+    return jsBundle.getSourcePathToMisc();
+  }
+
+  @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     return jsBundle instanceof AndroidPackageable
         ? ((AndroidPackageable) jsBundle).getRequiredPackageables()
