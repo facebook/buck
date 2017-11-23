@@ -158,6 +158,7 @@ class XctoolRunTestsStep implements Step {
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
       Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
@@ -170,10 +171,13 @@ class XctoolRunTestsStep implements Step {
       Optional<Long> timeoutInMs,
       Optional<String> snapshotReferenceImagesPath) {
     Preconditions.checkArgument(
-        !(logicTestBundlePaths.isEmpty() && appTestBundleToHostAppPaths.isEmpty()),
-        "Either logic tests (%s) or app tests (%s) must be present",
+        !(logicTestBundlePaths.isEmpty()
+            && appTestBundleToHostAppPaths.isEmpty()
+            && appTestPathsToTestHostAppPathsToTestTargetAppPaths.isEmpty()),
+        "Either logic tests (%s) or app tests (%s) or uitest (%s) must be present",
         logicTestBundlePaths,
-        appTestBundleToHostAppPaths);
+        appTestBundleToHostAppPaths,
+        appTestPathsToTestHostAppPathsToTestTargetAppPaths);
 
     this.filesystem = filesystem;
 
@@ -184,6 +188,7 @@ class XctoolRunTestsStep implements Step {
             destinationSpecifier,
             logicTestBundlePaths,
             appTestBundleToHostAppPaths,
+            appTestPathsToTestHostAppPathsToTestTargetAppPaths,
             waitForDebugger);
     this.environmentOverrides = environmentOverrides;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -481,6 +486,7 @@ class XctoolRunTestsStep implements Step {
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
       boolean waitForDebugger) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(xctoolPath.toString());
@@ -499,6 +505,20 @@ class XctoolRunTestsStep implements Step {
     for (Map.Entry<Path, Path> appTestBundleAndHostApp : appTestBundleToHostAppPaths.entrySet()) {
       args.add("-appTest");
       args.add(appTestBundleAndHostApp.getKey() + ":" + appTestBundleAndHostApp.getValue());
+    }
+
+    for (Map.Entry<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetApp :
+        appTestPathsToTestHostAppPathsToTestTargetAppPaths.entrySet()) {
+      for (Map.Entry<Path, Path> testHostAppToTestTargetApp :
+          appTestPathsToTestHostAppPathsToTestTargetApp.getValue().entrySet()) {
+        args.add("-uiTest");
+        args.add(
+            appTestPathsToTestHostAppPathsToTestTargetApp.getKey()
+                + ":"
+                + testHostAppToTestTargetApp.getKey()
+                + ":"
+                + testHostAppToTestTargetApp.getValue());
+      }
     }
     if (waitForDebugger) {
       args.add("-waitForDebugger");

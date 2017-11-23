@@ -1,14 +1,14 @@
 #import <XCTest/XCTest.h>
-#import <UIKit/UIKit.h>
 
 @interface AppTest : XCTestCase
 @end
 
 @implementation AppTest
 
-// xctool doesn't run xcuitests
-- (void)testNotExecuted {
-  XCTAssertEqual(42, 1);
+- (void)testTwoPlusTwoEqualsFour {
+  [[XCUIApplication new] launch];
+  XCTAssertEqualObjects([[XCUIApplication new] label], @"TestTargetApp");
+  XCTAssertEqual(2 + 2, 4, @"Two plus two equals four");
 }
 
 @end

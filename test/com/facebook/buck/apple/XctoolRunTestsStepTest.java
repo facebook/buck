@@ -65,6 +65,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
             ImmutableMap.of(),
+            ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
             Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
@@ -115,6 +116,7 @@ public class XctoolRunTestsStepTest {
             "iphonesimulator",
             Optional.empty(),
             ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
+            ImmutableMap.of(),
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
@@ -172,6 +174,7 @@ public class XctoolRunTestsStepTest {
             Optional.of("name=iPhone 5s"),
             ImmutableSet.of(),
             ImmutableMap.of(Paths.get("/path/to/FooAppTest.xctest"), Paths.get("/path/to/Foo.app")),
+            ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
             Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
@@ -214,6 +217,63 @@ public class XctoolRunTestsStepTest {
   }
 
   @Test
+  public void xctoolCommandWithOnlyUITests() throws Exception {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    XctoolRunTestsStep step =
+        new XctoolRunTestsStep(
+            projectFilesystem,
+            Paths.get("/path/to/xctool"),
+            ImmutableMap.of(),
+            Optional.empty(),
+            "iphonesimulator",
+            Optional.of("name=iPhone 5s"),
+            ImmutableSet.of(),
+            ImmutableMap.of(),
+            ImmutableMap.of(
+                Paths.get("/path/to/FooAppTest.xctest"),
+                ImmutableMap.of(Paths.get("/path/to/Foo.app"), Paths.get("/path/to/Target.app"))),
+            Paths.get("/path/to/output.json"),
+            Optional.empty(),
+            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            TestSelectorList.EMPTY,
+            false,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+    ProcessExecutorParams xctoolParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    "/path/to/xctool",
+                    "-reporter",
+                    "json-stream",
+                    "-sdk",
+                    "iphonesimulator",
+                    "-destination",
+                    "name=iPhone 5s",
+                    "run-tests",
+                    "-uiTest",
+                    "/path/to/FooAppTest.xctest:/path/to/Foo.app:/path/to/Target.app"))
+            .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
+            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+            .build();
+    FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
+    FakeProcessExecutor processExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(processExecutor)
+            .setEnvironment(ImmutableMap.of())
+            .build();
+    assertThat(step.execute(executionContext).getExitCode(), equalTo(0));
+  }
+
+  @Test
   public void xctoolCommandWithAppAndLogicTests() throws Exception {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     XctoolRunTestsStep step =
@@ -226,6 +286,7 @@ public class XctoolRunTestsStepTest {
             Optional.of("name=iPhone 5s,OS=8.2"),
             ImmutableSet.of(Paths.get("/path/to/FooLogicTest.xctest")),
             ImmutableMap.of(Paths.get("/path/to/FooAppTest.xctest"), Paths.get("/path/to/Foo.app")),
+            ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
             Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
@@ -282,6 +343,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
             ImmutableMap.of(),
+            ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
             Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
@@ -336,6 +398,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
             ImmutableMap.of(),
+            ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
             Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
@@ -388,6 +451,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             ImmutableSet.of(
                 Paths.get("/path/to/FooTest.xctest"), Paths.get("/path/to/BarTest.xctest")),
+            ImmutableMap.of(),
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
@@ -479,6 +543,7 @@ public class XctoolRunTestsStepTest {
             ImmutableSet.of(
                 Paths.get("/path/to/FooTest.xctest"), Paths.get("/path/to/BarTest.xctest")),
             ImmutableMap.of(),
+            ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
             Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
@@ -544,6 +609,7 @@ public class XctoolRunTestsStepTest {
             ImmutableSet.of(
                 Paths.get("/path/to/FooTest.xctest"), Paths.get("/path/to/BarTest.xctest")),
             ImmutableMap.of(),
+            ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
             Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
@@ -604,6 +670,7 @@ public class XctoolRunTestsStepTest {
             "iphonesimulator",
             Optional.empty(),
             ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
+            ImmutableMap.of(),
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),

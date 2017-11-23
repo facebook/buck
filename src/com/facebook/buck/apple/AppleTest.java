@@ -63,6 +63,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
@@ -262,18 +263,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(testOutputPath);
 
-    Optional<Path> testHostAppPath = Optional.empty();
-    if (testHostApp.isPresent()) {
-      Path resolvedTestHostAppDirectory =
-          buildContext
-              .getSourcePathResolver()
-              .getAbsolutePath(
-                  Preconditions.checkNotNull(testHostApp.get().getSourcePathToOutput()));
-      testHostAppPath =
-          Optional.of(
-              resolvedTestHostAppDirectory.resolve(
-                  testHostApp.get().getUnzippedOutputFilePathToBinary()));
-    }
+    Optional<Path> testHostAppPath = extractBundlePathForBundle(testHostApp, buildContext);
+    Optional<Path> uiTestTargetAppPath = extractBundlePathForBundle(uiTestTargetApp, buildContext);
 
     if (!useXctest) {
       if (!xctool.isPresent()) {
@@ -284,9 +275,17 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       ImmutableSet.Builder<Path> logicTestPathsBuilder = ImmutableSet.builder();
       ImmutableMap.Builder<Path, Path> appTestPathsToHostAppsBuilder = ImmutableMap.builder();
+      ImmutableMap.Builder<Path, Map<Path, Path>>
+          appTestPathsToTestHostAppPathsToTestTargetAppsBuilder = ImmutableMap.builder();
 
       if (testHostAppPath.isPresent()) {
-        appTestPathsToHostAppsBuilder.put(resolvedTestBundleDirectory, testHostAppPath.get());
+        if (uiTestTargetAppPath.isPresent()) {
+          appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.put(
+              resolvedTestBundleDirectory,
+              ImmutableMap.of(testHostAppPath.get(), uiTestTargetAppPath.get()));
+        } else {
+          appTestPathsToHostAppsBuilder.put(resolvedTestBundleDirectory, testHostAppPath.get());
+        }
       } else {
         logicTestPathsBuilder.add(resolvedTestBundleDirectory);
       }
@@ -333,6 +332,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               destinationSpecifierArg,
               logicTestPathsBuilder.build(),
               appTestPathsToHostAppsBuilder.build(),
+              appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build(),
               resolvedTestOutputPath,
               xctoolStdoutReader,
               xcodeDeveloperDirSupplier,
@@ -345,7 +345,15 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               testRuleTimeoutMs,
               snapshotReferenceImagesPath);
       steps.add(xctoolStep);
-      externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
+      String xctoolTypeSuffix;
+      if (uiTestTargetApp.isPresent()) {
+        xctoolTypeSuffix = "uitest";
+      } else if (testHostApp.isPresent()) {
+        xctoolTypeSuffix = "application";
+      } else {
+        xctoolTypeSuffix = "logic";
+      }
+      externalSpec.setType("xctool-" + xctoolTypeSuffix);
       externalSpec.setCommand(xctoolStep.getCommand());
       externalSpec.setEnv(xctoolStep.getEnv(context));
     } else {
@@ -375,18 +383,30 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return new Pair<>(steps.build(), externalSpec.build());
   }
 
+  private Optional<Path> extractBundlePathForBundle(
+      Optional<AppleBundle> bundle, BuildContext buildContext) {
+    if (!bundle.isPresent()) {
+      return Optional.empty();
+    }
+    Path resolvedBundleDirectory =
+        buildContext
+            .getSourcePathResolver()
+            .getAbsolutePath(Preconditions.checkNotNull(bundle.get().getSourcePathToOutput()));
+    return Optional.of(
+        resolvedBundleDirectory.resolve(bundle.get().getUnzippedOutputFilePathToBinary()));
+  }
+
   @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
-    if (isUiTest()) {
+    if (isLegacyUITestConfiguration()) {
       return ImmutableList.of();
-    } else {
-      return getTestCommand(executionContext, options, buildContext, testReportingCallback)
-          .getFirst();
     }
+    return getTestCommand(executionContext, options, buildContext, testReportingCallback)
+        .getFirst();
   }
 
   @Override
@@ -404,7 +424,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         // We've already run the tests with 'xctest' and parsed
         // their output; no need to parse the same output again.
         testCaseSummaries = xctestOutputReader.get().getTestCaseSummaries();
-      } else if (isUiTest()) {
+      } else if (isLegacyUITestConfiguration()) {
         TestCaseSummary noTestsSummary =
             new TestCaseSummary(
                 "XCUITest runs not supported with buck test", Collections.emptyList());
@@ -510,5 +530,9 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @VisibleForTesting
   public boolean hasUiTestTarget() {
     return uiTestTargetApp.isPresent();
+  }
+
+  private boolean isLegacyUITestConfiguration() {
+    return isUiTest() && !hasUiTestTarget();
   }
 }
