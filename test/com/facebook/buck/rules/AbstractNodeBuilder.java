@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.rules.visibility.VisibilityPatternParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
