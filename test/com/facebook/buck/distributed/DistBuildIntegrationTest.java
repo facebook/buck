@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -167,6 +169,17 @@ public class DistBuildIntegrationTest {
               .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)
               .setWasSuccessful(true)
               .setSetFinalBuildStatusResponse(new SetFinalBuildStatusResponse());
+
+        case BUILD_STATUS:
+          return new FrontendResponse()
+              .setType(FrontendRequestType.BUILD_STATUS)
+              .setWasSuccessful(true)
+              .setBuildStatusResponse(
+                  new BuildStatusResponse()
+                      .setBuildJob(
+                          new BuildJob()
+                              .setBuckBuildUuid("11-22")
+                              .setStampedeId(request.getBuildStatusRequest().getStampedeId())));
 
           // $CASES-OMITTED$
         default:

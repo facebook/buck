@@ -21,13 +21,17 @@ import com.facebook.buck.distributed.build_slave.HeartbeatService.HeartbeatCallb
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.EventListener;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 public class CoordinatorModeRunner implements DistBuildModeRunner {
@@ -41,11 +45,13 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
   private final ListenableFuture<BuildTargetsQueue> queue;
   private final StampedeId stampedeId;
+  private final Optional<BuildId> clientBuildId;
   private final Path logDirectoryPath;
   private final ThriftCoordinatorServer.EventListener eventListener;
   private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
   private final DistBuildService distBuildService;
   private final MinionHealthTracker minionHealthTracker;
+  private final Optional<URI> traceUploadUri;
 
   /** Constructor. */
   public CoordinatorModeRunner(
@@ -54,10 +60,14 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
       StampedeId stampedeId,
       EventListener eventListener,
       Path logDirectoryPath,
+      Optional<BuildId> clientBuildId,
+      Optional<URI> traceUploadUri,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
       DistBuildService distBuildService,
       MinionHealthTracker minionHealthTracker) {
     this.stampedeId = stampedeId;
+    this.clientBuildId = clientBuildId;
+    this.traceUploadUri = traceUploadUri;
     this.minionHealthTracker = minionHealthTracker;
     coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
     this.logDirectoryPath = logDirectoryPath;
@@ -75,6 +85,8 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
       Path logDirectoryPath,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
       DistBuildService distBuildService,
+      Optional<BuildId> clientBuildId,
+      Optional<URI> traceUploadUri,
       MinionHealthTracker minionHealthTracker) {
     this(
         OptionalInt.empty(),
@@ -82,6 +94,8 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
         stampedeId,
         eventListener,
         logDirectoryPath,
+        clientBuildId,
+        traceUploadUri,
         buildRuleFinishedPublisher,
         distBuildService,
         minionHealthTracker);
@@ -167,12 +181,32 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
     public void close() throws IOException {
       closer.close();
 
+      dumpAndUploadChromeTrace();
+    }
+
+    private void dumpAndUploadChromeTrace() {
       try {
-        this.server
-            .traceSnapshot()
-            .dumpToChromeTrace(logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME));
+        Path traceFilePath = logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME);
+        this.server.traceSnapshot().dumpToChromeTrace(traceFilePath);
+
+        if (!clientBuildId.isPresent()) {
+          LOG.warn("Not uploading distbuild chrome trace because original build uuid is unset");
+          return;
+        }
+
+        if (!traceUploadUri.isPresent()) {
+          LOG.info("Not uploading distbuild chrome trace because traceUploadUri is unset");
+          return;
+        }
+
+        BuildId buildId = clientBuildId.get();
+        URI uploadUri = traceUploadUri.get();
+
+        Path uploadLogFile = logDirectoryPath.resolve("upload-dist-build-build-trace.log");
+        UploaderLauncher.uploadInBackground(
+            buildId, traceFilePath, "dist_build", uploadUri, uploadLogFile);
       } catch (Exception e) {
-        LOG.warn("Failed to write chrome trace", e);
+        LOG.warn("Failed to write or upload distbuild chrome trace", e);
       }
     }
   }

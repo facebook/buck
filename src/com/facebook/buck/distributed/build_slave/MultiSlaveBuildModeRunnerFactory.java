@@ -24,6 +24,8 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -31,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +63,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildConfig distBuildConfig,
       DistBuildService distBuildService,
       StampedeId stampedeId,
+      Optional<BuildId> clientBuildId,
       boolean isLocalMinionAlsoRunning,
       Path logDirectoryPath,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
@@ -77,6 +81,12 @@ public class MultiSlaveBuildModeRunnerFactory {
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
     MinionHealthTracker minionHealthTracker =
         new MinionHealthTracker(new DefaultClock(), distBuildConfig.getMaxMinionSilenceMillis());
+
+    ChromeTraceBuckConfig chromeTraceBuckConfig =
+        distBuildConfig.getBuckConfig().getView(ChromeTraceBuckConfig.class);
+
+    Optional<URI> traceUploadUri = chromeTraceBuckConfig.getTraceUploadUri();
+
     return new CoordinatorModeRunner(
         queue,
         stampedeId,
@@ -84,6 +94,8 @@ public class MultiSlaveBuildModeRunnerFactory {
         logDirectoryPath,
         buildRuleFinishedPublisher,
         distBuildService,
+        clientBuildId,
+        traceUploadUri,
         minionHealthTracker);
   }
 
@@ -134,6 +146,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildConfig distBuildConfig,
       DistBuildService distBuildService,
       StampedeId stampedeId,
+      Optional<BuildId> clientBuildId,
       BuildSlaveRunId buildSlaveRunId,
       BuildExecutor localBuildExecutor,
       Path logDirectoryPath,
@@ -145,6 +158,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             distBuildConfig,
             distBuildService,
             stampedeId,
+            clientBuildId,
             true,
             logDirectoryPath,
             buildRuleFinishedPublisher),

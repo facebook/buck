@@ -20,6 +20,7 @@ java_immutables_library(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/log/thrift:thrift",
+        "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
@@ -43,6 +44,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/timing:timing",
+        "//src/com/facebook/buck/util/trace/uploader/launcher:launcher",
         "//src/com/facebook/buck/versions:versions",
     ],
 )

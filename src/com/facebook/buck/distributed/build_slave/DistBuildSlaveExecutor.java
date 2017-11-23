@@ -22,8 +22,10 @@ import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.build_slave.RemoteBuildModeRunner.FinalBuildStatusSetter;
+import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
@@ -52,6 +54,8 @@ public class DistBuildSlaveExecutor {
   }
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
+    Optional<BuildId> clientBuildId = fetchClientBuildId();
+
     DistBuildModeRunner runner = null;
     if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
       runner =
@@ -61,6 +65,7 @@ public class DistBuildSlaveExecutor {
               args.getDistBuildConfig(),
               args.getDistBuildService(),
               args.getStampedeId(),
+              clientBuildId,
               false,
               args.getLogDirectoryPath(),
               args.getBuildRuleFinishedPublisher());
@@ -103,6 +108,7 @@ public class DistBuildSlaveExecutor {
                   args.getDistBuildConfig(),
                   args.getDistBuildService(),
                   args.getStampedeId(),
+                  clientBuildId,
                   args.getBuildSlaveRunId(),
                   localBuildExecutor,
                   args.getLogDirectoryPath(),
@@ -119,6 +125,23 @@ public class DistBuildSlaveExecutor {
     }
 
     return runWithHeartbeatService(runner);
+  }
+
+  private Optional<BuildId> fetchClientBuildId() {
+    BuildJob job;
+    try {
+      job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to fetch build job object", e);
+    }
+
+    if (job.getBuckBuildUuid() != null && !job.getBuckBuildUuid().isEmpty()) {
+      return Optional.of(new BuildId(job.getBuckBuildUuid()));
+    } else {
+      // TODO(nga): throw if unset after both client and server upgraded
+      LOG.warn("buckBuildUuid field is not set; need to update buck client or stampede frontend");
+      return Optional.empty();
+    }
   }
 
   private int runWithHeartbeatService(DistBuildModeRunner runner)

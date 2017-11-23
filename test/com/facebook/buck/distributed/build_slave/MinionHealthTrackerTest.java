@@ -21,7 +21,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class MinionHealthTrackerTest {
 
@@ -131,12 +130,12 @@ public class MinionHealthTrackerTest {
 
     @Override
     public long nanoTime() {
-      throw new NotImplementedException();
+      throw new RuntimeException("not implemented");
     }
 
     @Override
     public long threadUserNanoTime(long threadId) {
-      throw new NotImplementedException();
+      throw new RuntimeException("not implemented");
     }
   }
 }

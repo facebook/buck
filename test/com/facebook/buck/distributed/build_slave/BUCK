@@ -9,6 +9,7 @@ standard_java_test(
         "//src/com/facebook/buck/distributed:common",
         "//src/com/facebook/buck/distributed/build_slave:build_slave",
         "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
