@@ -4,6 +4,7 @@ PUBLIC_API_SOURCES = [
     "AbstractArtifactInfo.java",
     "AbstractCacheResult.java",
     "AbstractCacheCountersSummary.java",
+    "CacheCountersSummaryEvent.java",
     "AbstractCacheDeleteResult.java",
     "AbstractNetworkCacheArgs.java",
     "AbstractRuleKeyCacheResult.java",

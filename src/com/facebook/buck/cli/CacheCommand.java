@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.CacheCountersSummary;
+import com.facebook.buck.artifact_cache.CacheCountersSummaryEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -28,6 +30,7 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,6 +48,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -116,10 +120,8 @@ public class CacheCommand extends AbstractCommand {
       Files.createDirectories(outputPath.get());
     }
 
-    List<RuleKey> ruleKeys = new ArrayList<>();
-    for (String hash : arguments) {
-      ruleKeys.add(new RuleKey(hash));
-    }
+    ImmutableList<RuleKey> ruleKeys =
+        arguments.stream().map(RuleKey::new).collect(MoreCollectors.toImmutableList());
 
     Path tmpDir = Files.createTempDirectory("buck-cache-command");
 
@@ -160,11 +162,38 @@ public class CacheCommand extends AbstractCommand {
     int totalRuns = results.size();
     String resultString = "";
     int goodRuns = 0;
+
+    int cacheHits = 0;
+    int cacheMisses = 0;
+    int cacheErrors = 0;
+    int cacheIgnored = 0;
+    int localKeyUnchanged = 0;
+
     for (ArtifactRunner r : results) {
       if (r.completed) {
         goodRuns++;
       }
       resultString += r.resultString;
+
+      switch (r.cacheResultType) {
+        case ERROR:
+          ++cacheErrors;
+          break;
+        case HIT:
+          ++cacheHits;
+          break;
+        case MISS:
+          ++cacheMisses;
+          break;
+        case IGNORED:
+          ++cacheIgnored;
+          break;
+        case LOCAL_KEY_UNCHANGED_HIT:
+          ++localKeyUnchanged;
+          break;
+        case SKIPPED:
+          break;
+      }
 
       if (!outputPath.isPresent()) {
         // legacy output
@@ -183,6 +212,20 @@ public class CacheCommand extends AbstractCommand {
         }
       }
     }
+
+    params
+        .getBuckEventBus()
+        .post(
+            CacheCountersSummaryEvent.newSummary(
+                CacheCountersSummary.builder()
+                    .setTotalCacheErrors(cacheErrors)
+                    .setTotalCacheHits(cacheHits)
+                    .setTotalCacheMisses(cacheMisses)
+                    .setTotalCacheIgnores(cacheIgnored)
+                    .setTotalCacheLocalKeyUnchangedHits(localKeyUnchanged)
+                    .setFailureUploadCount(new AtomicInteger(0))
+                    .setSuccessUploadCount(new AtomicInteger(0))
+                    .build()));
 
     int exitCode = (totalRuns == goodRuns) ? 0 : 1;
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
@@ -285,6 +328,7 @@ public class CacheCommand extends AbstractCommand {
     RuleKey ruleKey;
     Path tmpDir;
     Path artifact;
+    CacheResultType cacheResultType;
     String statusString;
     String cacheResult;
     StringBuilder resultString;
@@ -305,6 +349,7 @@ public class CacheCommand extends AbstractCommand {
       this.cacheResult = "Unknown";
       this.resultString = new StringBuilder();
       this.completed = false;
+      this.cacheResultType = CacheResultType.IGNORED;
     }
 
     @Override
@@ -320,6 +365,7 @@ public class CacheCommand extends AbstractCommand {
       CacheResult success =
           Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(artifact)));
       cacheResult = cacheResultToString(success);
+      cacheResultType = success.getType();
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {
         statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);
