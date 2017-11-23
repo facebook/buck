@@ -87,7 +87,7 @@ public class RandomizedTrialTest {
     MutableEnum.probabilityGroup2 = 1.0 - point;
 
     assertThat(
-        RandomizedTrial.getGroup("name", buildId, MutableEnum.class),
+        RandomizedTrial.getGroup("name", buildId.toString(), MutableEnum.class),
         Matchers.equalTo(MutableEnum.GROUP2));
   }
 

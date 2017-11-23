@@ -260,7 +260,7 @@ public class ActionGraphCache {
         parallelizationMode =
             RandomizedTrial.getGroup(
                 "action_graph_parallelization",
-                eventBus.getBuildId(),
+                eventBus.getBuildId().toString(),
                 ActionGraphParallelizationMode.class);
         eventBus.post(
             new ExperimentEvent(

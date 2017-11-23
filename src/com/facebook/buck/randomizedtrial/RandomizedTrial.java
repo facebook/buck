@@ -17,7 +17,6 @@
 package com.facebook.buck.randomizedtrial;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -72,8 +71,8 @@ public class RandomizedTrial {
    * @param enumClass Class of an enum which conforms to {@link WithProbability} interface.
    */
   public static <T extends Enum<T> & WithProbability> T getGroup(
-      String name, BuildId buildId, Class<T> enumClass) {
-    return selectGroup(name, enumClass, getPoint(name, buildId.toString()));
+      String name, String buildId, Class<T> enumClass) {
+    return selectGroup(name, enumClass, getPoint(name, buildId));
   }
 
   private static <T extends Enum<T> & WithProbability> T selectGroup(
