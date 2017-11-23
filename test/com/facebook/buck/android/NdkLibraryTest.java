@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -85,10 +85,11 @@ public class NdkLibraryTest {
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
 
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
     toolchainProvider.addToolchain(
         AndroidLegacyToolchain.DEFAULT_NAME,
         TestAndroidLegacyToolchainFactory.create(androidPlatformTarget));
+    toolchainProvider.addToolchain(
+        AndroidNdk.DEFAULT_NAME, AndroidNdk.of("1", Paths.get("/android/ndk")));
 
     String basePath = "java/src/com/facebook/base";
     BuildTarget target = BuildTargetFactory.newInstance(String.format("//%s:base", basePath));

@@ -15,10 +15,9 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -346,8 +345,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     } else {
       sources = findSources(projectFilesystem, buildTarget.getBasePath());
     }
-    AndroidToolchain androidToolchain =
-        toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
+    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     AndroidLegacyToolchain androidLegacyToolchain =
         toolchainProvider.getByName(
             AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
@@ -362,7 +360,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
         sources,
         args.getFlags(),
         args.getIsAsset(),
-        androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkVersion),
+        androidNdk.getNdkVersion(),
         MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver));
   }
 

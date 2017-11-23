@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -245,7 +244,6 @@ public class AndroidAarIntegrationTest {
                   androidDirectoryResolver, Optional.empty(), Optional.empty());
 
           TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-          testToolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
           testToolchainProvider.addToolchain(
               AndroidLegacyToolchain.DEFAULT_NAME,
               new DefaultAndroidLegacyToolchain(

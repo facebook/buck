@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -87,7 +86,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final Optional<String> ndkVersion;
+  private final String ndkVersion;
 
   private final Function<String, String> macroExpander;
 
@@ -101,7 +100,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
-      Optional<String> ndkVersion,
+      String ndkVersion,
       Function<String, String> macroExpander) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;

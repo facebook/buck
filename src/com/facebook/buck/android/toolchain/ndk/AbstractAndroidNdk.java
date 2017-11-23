@@ -14,14 +14,22 @@
  * under the License.
  */
 
-package com.facebook.buck.android.toolchain;
+package com.facebook.buck.android.toolchain.ndk;
 
-import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchain;
-import java.util.Optional;
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import java.nio.file.Path;
+import org.immutables.value.Value;
 
-public class TestAndroidToolchain extends DefaultAndroidToolchain {
+/** Part of Android toolchain that provides access to Android NDK */
+@Value.Immutable(copy = false, builder = false)
+@BuckStyleImmutable
+public interface AbstractAndroidNdk extends Toolchain {
+  String DEFAULT_NAME = "android-ndk-location";
 
-  public TestAndroidToolchain() {
-    super(Optional.empty());
-  }
+  @Value.Parameter
+  String getNdkVersion();
+
+  @Value.Parameter
+  Path getNdkRootPath();
 }

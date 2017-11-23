@@ -16,9 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
@@ -203,15 +202,11 @@ public class NdkCxxPlatforms {
       Platform platform,
       ToolchainProvider toolchainProvider,
       Optional<String> ndkVersion) {
-    if (!toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
+    if (!toolchainProvider.isToolchainPresent(AndroidNdk.DEFAULT_NAME)) {
       return ImmutableMap.of();
     }
-    AndroidToolchain androidToolchain =
-        toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
-    Optional<Path> ndkRoot = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkRootPath);
-    if (!ndkRoot.isPresent()) {
-      return ImmutableMap.of();
-    }
+    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+    Path ndkRoot = androidNdk.getNdkRootPath();
 
     NdkCompilerType compilerType =
         androidConfig.getNdkCompiler().orElse(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
@@ -234,7 +229,7 @@ public class NdkCxxPlatforms {
         config,
         androidConfig,
         filesystem,
-        ndkRoot.get(),
+        ndkRoot,
         compiler,
         androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
         androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),

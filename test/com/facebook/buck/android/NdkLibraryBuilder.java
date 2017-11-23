@@ -17,7 +17,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -90,9 +90,10 @@ public class NdkLibraryBuilder
 
   private static ToolchainProvider createToolchainProvider() {
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
     toolchainProvider.addToolchain(
         NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS));
+    toolchainProvider.addToolchain(
+        AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12b", Paths.get("/android/ndk")));
     return toolchainProvider;
   }
 

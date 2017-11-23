@@ -19,11 +19,11 @@ package com.facebook.buck.toolchain.impl;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
-import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
@@ -61,16 +61,13 @@ import javax.annotation.concurrent.ThreadSafe;
 public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   enum ToolchainDescriptor {
-    ANDROID(
-        AndroidToolchain.DEFAULT_NAME,
-        AndroidToolchain.class,
-        DefaultAndroidToolchainFactory.class),
     ANDROID_LEGACY(
         AndroidLegacyToolchain.DEFAULT_NAME,
         AndroidLegacyToolchain.class,
         DefaultAndroidLegacyToolchainFactory.class),
     ANDROID_SDK_LOCATION(
         AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class, AndroidSdkLocationFactory.class),
+    ANDROID_NDK(AndroidNdk.DEFAULT_NAME, AndroidNdk.class, AndroidNdkFactory.class),
     NDK_CXX_PLATFORMS_PROVIDER(
         NdkCxxPlatformsProvider.DEFAULT_NAME,
         NdkCxxPlatformsProvider.class,

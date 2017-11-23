@@ -18,10 +18,9 @@ package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.NdkCxxPlatforms;
-import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -53,11 +52,11 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
     Optional<String> ndkVersion = androidConfig.getNdkVersion();
-    if (!ndkVersion.isPresent()
-        && toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
-      AndroidToolchain androidToolchain =
-          toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
-      ndkVersion = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkVersion);
+    if (!androidConfig.getNdkVersion().isPresent()
+        && toolchainProvider.isToolchainPresent(AndroidNdk.DEFAULT_NAME)) {
+      AndroidNdk androidNdk =
+          toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+      ndkVersion = Optional.of(androidNdk.getNdkVersion());
     }
 
     ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =

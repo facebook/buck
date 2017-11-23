@@ -16,7 +16,6 @@
 
 package com.facebook.buck.toolchain.impl;
 
-import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -84,9 +83,5 @@ public class TestToolchainProvider extends BaseToolchainProvider {
 
   public void addToolchain(String name, Toolchain toolchain) {
     toolchains.put(name, toolchain);
-  }
-
-  public void addAndroidToolchain(AndroidToolchain androidToolchain) {
-    toolchains.put(AndroidToolchain.DEFAULT_NAME, androidToolchain);
   }
 }

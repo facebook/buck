@@ -16,9 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.toolchain.AndroidNdk;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
@@ -68,11 +67,11 @@ abstract class AbstractSdkEnvironment {
 
     Optional<Path> androidNdkRoot;
     Optional<String> androidNdkVersion;
-    if (toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
-      AndroidToolchain androidToolchain =
-          toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
-      androidNdkRoot = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkRootPath);
-      androidNdkVersion = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkVersion);
+    if (toolchainProvider.isToolchainPresent(AndroidNdk.DEFAULT_NAME)) {
+      AndroidNdk androidNdk =
+          toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+      androidNdkRoot = Optional.of(androidNdk.getNdkRootPath());
+      androidNdkVersion = Optional.of(androidNdk.getNdkVersion());
     } else {
       androidNdkRoot = Optional.empty();
       androidNdkVersion = Optional.empty();

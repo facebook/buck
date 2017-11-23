@@ -14,46 +14,53 @@
  * under the License.
  */
 
-package com.facebook.buck.android.toolchain.impl;
+package com.facebook.buck.android.toolchain.ndk.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
 
-public class DefaultAndroidToolchainFactory implements ToolchainFactory<AndroidToolchain> {
+public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
+
   @Override
-  public Optional<AndroidToolchain> createToolchain(
+  public Optional<AndroidNdk> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
     AndroidLegacyToolchain androidLegacyToolchain =
         toolchainProvider.getByName(
             AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
 
-    AndroidBuckConfig androidBuckConfig =
-        new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
-    return createToolchain(androidBuckConfig, androidLegacyToolchain.getAndroidDirectoryResolver());
-  }
+    AndroidDirectoryResolver androidDirectoryResolver =
+        androidLegacyToolchain.getAndroidDirectoryResolver();
 
-  public Optional<AndroidToolchain> createToolchain(
-      AndroidBuckConfig androidBuckConfig, AndroidDirectoryResolver androidDirectoryResolver) {
-    if (!androidDirectoryResolver.getSdkOrAbsent().isPresent()) {
+    if (!androidDirectoryResolver.getNdkOrAbsent().isPresent()) {
       return Optional.empty();
     }
 
-    Optional<AndroidNdk> androidNdk;
+    AndroidBuckConfig androidBuckConfig =
+        new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
-    if (androidDirectoryResolver.getNdkOrAbsent().isPresent()) {
-      androidNdk = Optional.of(new DefaultAndroidNdk(androidBuckConfig, androidDirectoryResolver));
-    } else {
-      androidNdk = Optional.empty();
+    return Optional.of(
+        AndroidNdk.of(
+            detectNdkVersion(androidBuckConfig, androidDirectoryResolver),
+            androidDirectoryResolver.getNdkOrThrow()));
+  }
+
+  private String detectNdkVersion(
+      AndroidBuckConfig androidBuckConfig, AndroidDirectoryResolver androidDirectoryResolver) {
+    Optional<String> ndkVersion =
+        androidBuckConfig
+            .getNdkVersion()
+            .map(Optional::of)
+            .orElseGet(androidDirectoryResolver::getNdkVersion);
+    if (!ndkVersion.isPresent()) {
+      throw new IllegalStateException("Cannot detect NDK version");
     }
-
-    return Optional.of(new DefaultAndroidToolchain(androidNdk));
+    return ndkVersion.get();
   }
 }
