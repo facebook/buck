@@ -16,44 +16,26 @@
 
 package com.facebook.buck.android.toolchain.impl;
 
-import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
 
-public class DefaultAndroidToolchainFactory implements ToolchainFactory<AndroidToolchain> {
+public class AndroidSdkLocationFactory implements ToolchainFactory<AndroidSdkLocation> {
+
   @Override
-  public Optional<AndroidToolchain> createToolchain(
+  public Optional<AndroidSdkLocation> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
     AndroidLegacyToolchain androidLegacyToolchain =
         toolchainProvider.getByName(
             AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
 
-    AndroidBuckConfig androidBuckConfig =
-        new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
-    return createToolchain(androidBuckConfig, androidLegacyToolchain.getAndroidDirectoryResolver());
-  }
+    AndroidDirectoryResolver androidDirectoryResolver =
+        androidLegacyToolchain.getAndroidDirectoryResolver();
 
-  public Optional<AndroidToolchain> createToolchain(
-      AndroidBuckConfig androidBuckConfig, AndroidDirectoryResolver androidDirectoryResolver) {
-    if (!androidDirectoryResolver.getSdkOrAbsent().isPresent()) {
-      return Optional.empty();
-    }
-
-    Optional<AndroidNdk> androidNdk;
-
-    if (androidDirectoryResolver.getNdkOrAbsent().isPresent()) {
-      androidNdk = Optional.of(new DefaultAndroidNdk(androidBuckConfig, androidDirectoryResolver));
-    } else {
-      androidNdk = Optional.empty();
-    }
-
-    return Optional.of(new DefaultAndroidToolchain(androidNdk));
+    return androidDirectoryResolver.getSdkOrAbsent().map(AndroidSdkLocation::of);
   }
 }

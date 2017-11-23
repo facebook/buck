@@ -16,9 +16,17 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 /** Part of Android toolchain that provides access to Android SDK */
-public interface AndroidSdk {
+@Value.Immutable(copy = false, builder = false)
+@BuckStyleImmutable
+public interface AbstractAndroidSdkLocation extends Toolchain {
+  String DEFAULT_NAME = "android-sdk-location";
+
+  @Value.Parameter
   Path getSdkRootPath();
 }

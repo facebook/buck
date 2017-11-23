@@ -24,7 +24,5 @@ public abstract class AndroidToolchain extends BaseToolchain {
 
   public static final String DEFAULT_NAME = "android";
 
-  public abstract AndroidSdk getAndroidSdk();
-
   public abstract Optional<AndroidNdk> getAndroidNdk();
 }

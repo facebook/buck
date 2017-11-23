@@ -17,24 +17,15 @@
 package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidSdk;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import java.util.Optional;
 
 public class DefaultAndroidToolchain extends AndroidToolchain {
 
-  private final AndroidSdk androidSdk;
-
   private final Optional<AndroidNdk> androidNdk;
 
-  protected DefaultAndroidToolchain(AndroidSdk androidSdk, Optional<AndroidNdk> androidNdk) {
-    this.androidSdk = androidSdk;
+  protected DefaultAndroidToolchain(Optional<AndroidNdk> androidNdk) {
     this.androidNdk = androidNdk;
-  }
-
-  @Override
-  public AndroidSdk getAndroidSdk() {
-    return androidSdk;
   }
 
   @Override

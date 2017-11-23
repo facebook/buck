@@ -34,20 +34,6 @@ public class DefaultAndroidToolchainFactoryTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void testAndroidToolchainNotPresentWhenSdkRootNotPresent() throws Exception {
-    DefaultAndroidToolchainFactory factory = new DefaultAndroidToolchainFactory();
-
-    FakeAndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-
-    Optional<AndroidToolchain> toolchain =
-        factory.createToolchain(
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
-            androidDirectoryResolver);
-
-    assertFalse(toolchain.isPresent());
-  }
-
-  @Test
   public void testAndroidNdkNotPresentWhenSdkRootNotPresent() throws Exception {
     DefaultAndroidToolchainFactory factory = new DefaultAndroidToolchainFactory();
 

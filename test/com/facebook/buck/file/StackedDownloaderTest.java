@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -87,7 +87,8 @@ public class StackedDownloaderTest {
     Files.createDirectories(googleM2);
 
     TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addAndroidToolchain(new TestAndroidToolchain(sdkRoot));
+    testToolchainProvider.addToolchain(
+        AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkRoot));
     downloader =
         StackedDownloader.createFromConfig(FakeBuckConfig.builder().build(), testToolchainProvider);
     downloaders = unpackDownloaders(downloader);

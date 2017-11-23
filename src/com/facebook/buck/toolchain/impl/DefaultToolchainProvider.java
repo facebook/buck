@@ -18,8 +18,10 @@ package com.facebook.buck.toolchain.impl;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
@@ -67,6 +69,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
         AndroidLegacyToolchain.DEFAULT_NAME,
         AndroidLegacyToolchain.class,
         DefaultAndroidLegacyToolchainFactory.class),
+    ANDROID_SDK_LOCATION(
+        AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class, AndroidSdkLocationFactory.class),
     NDK_CXX_PLATFORMS_PROVIDER(
         NdkCxxPlatformsProvider.DEFAULT_NAME,
         NdkCxxPlatformsProvider.class,

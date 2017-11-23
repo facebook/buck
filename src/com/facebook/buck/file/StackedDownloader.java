@@ -16,7 +16,7 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.android.toolchain.AndroidToolchain;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -106,10 +106,10 @@ public class StackedDownloader implements Downloader {
       }
     }
 
-    if (toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
-      AndroidToolchain androidToolchain =
-          toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
-      Path androidSdkRootPath = androidToolchain.getAndroidSdk().getSdkRootPath();
+    if (toolchainProvider.isToolchainPresent(AndroidSdkLocation.DEFAULT_NAME)) {
+      AndroidSdkLocation androidSdkLocation =
+          toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+      Path androidSdkRootPath = androidSdkLocation.getSdkRootPath();
       Path androidMavenRepo = androidSdkRootPath.resolve("extras/android/m2repository");
       try {
         downloaders.add(new OnDiskMavenDownloader(androidMavenRepo));

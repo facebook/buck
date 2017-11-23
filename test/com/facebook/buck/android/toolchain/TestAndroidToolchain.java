@@ -16,23 +16,12 @@
 
 package com.facebook.buck.android.toolchain;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.android.toolchain.impl.DefaultAndroidSdk;
 import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchain;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class TestAndroidToolchain extends DefaultAndroidToolchain {
 
   public TestAndroidToolchain() {
-    super(new DefaultAndroidSdk(new FakeAndroidDirectoryResolver()), Optional.empty());
-  }
-
-  public TestAndroidToolchain(Path androidSdkRoot) {
-    super(
-        new DefaultAndroidSdk(
-            new FakeAndroidDirectoryResolver(
-                Optional.of(androidSdkRoot), Optional.empty(), Optional.empty(), Optional.empty())),
-        Optional.empty());
+    super(Optional.empty());
   }
 }
