@@ -67,6 +67,11 @@ public final class AppleTestBuilder
     return this;
   }
 
+  public AppleTestBuilder setUiTestTargetApp(Optional<BuildTarget> uiTestTargetApp) {
+    getArgForPopulating().setUiTestTargetApp(uiTestTargetApp);
+    return this;
+  }
+
   private static AppleTestDescription createDescription() {
     return FakeAppleRuleDescriptions.TEST_DESCRIPTION;
   }

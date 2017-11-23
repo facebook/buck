@@ -3899,6 +3899,97 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void uiTestUsesUiTestTargetAsTargetWithBothUiTestTargetAndTestHostPresent()
+      throws IOException {
+    BuildTarget hostAppBinaryTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    TargetNode<?, ?> hostAppBinaryNode =
+        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
+
+    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
+    TargetNode<?, ?> hostAppNode =
+        AppleBundleBuilder.createBuilder(hostAppTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    BuildTarget uiTestTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "uiTestTarget");
+    TargetNode<?, ?> uiTargetAppNode =
+        AppleBundleBuilder.createBuilder(uiTestTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setTestHostApp(Optional.of(hostAppTarget))
+            .setUiTestTargetApp(Optional.of(uiTestTarget))
+            .isUiTest(true)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(hostAppBinaryNode, hostAppNode, uiTargetAppNode, testNode),
+            ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+    assertEquals(testPBXTarget.getProductType(), ProductType.UI_TEST);
+    assertPBXTargetHasDependency(
+        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
+    // Check starts with as the remainder depends on the bundle style at build time.
+    assertEquals(settings.get("TEST_TARGET_NAME"), "//foo:uiTestTarget");
+  }
+
+  @Test
+  public void uiTestUsesUiTestTargetAsTargetWithOnlyUiTestTarget() throws IOException {
+    BuildTarget hostAppBinaryTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    TargetNode<?, ?> hostAppBinaryNode =
+        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
+
+    BuildTarget uiTestTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "uiTestTarget");
+    TargetNode<?, ?> uiTargetAppNode =
+        AppleBundleBuilder.createBuilder(uiTestTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setUiTestTargetApp(Optional.of(uiTestTarget))
+            .isUiTest(true)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(hostAppBinaryNode, uiTargetAppNode, testNode), ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+    assertEquals(testPBXTarget.getProductType(), ProductType.UI_TEST);
+    assertPBXTargetHasDependency(
+        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
+    // Check starts with as the remainder depends on the bundle style at build time.
+    assertEquals(settings.get("TEST_TARGET_NAME"), "//foo:uiTestTarget");
+  }
+
+  @Test
   public void applicationTestDoesNotCopyHostAppBundleIntoTestBundle() throws IOException {
     BuildTarget hostAppBinaryTarget =
         BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");

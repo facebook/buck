@@ -660,24 +660,30 @@ public class ProjectGenerator {
 
   private PBXTarget generateAppleTestTarget(TargetNode<AppleTestDescriptionArg, ?> testTargetNode)
       throws IOException {
+    AppleTestDescriptionArg args = testTargetNode.getConstructorArg();
+    Optional<BuildTarget> testTargetApp = extractTestTargetForTestDescriptionArg(args);
     Optional<TargetNode<AppleBundleDescriptionArg, ?>> testHostBundle =
-        testTargetNode
-            .getConstructorArg()
-            .getTestHostApp()
-            .map(
-                testHostBundleTarget -> {
-                  TargetNode<?, ?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
-                  return testHostBundleNode
-                      .castArg(AppleBundleDescriptionArg.class)
-                      .orElseGet(
-                          () -> {
-                            throw new HumanReadableException(
-                                "The test host target '%s' has the wrong type (%s), must be apple_bundle",
-                                testHostBundleTarget,
-                                testHostBundleNode.getDescription().getClass());
-                          });
-                });
+        testTargetApp.map(
+            testHostBundleTarget -> {
+              TargetNode<?, ?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
+              return testHostBundleNode
+                  .castArg(AppleBundleDescriptionArg.class)
+                  .orElseGet(
+                      () -> {
+                        throw new HumanReadableException(
+                            "The test host target '%s' has the wrong type (%s), must be apple_bundle",
+                            testHostBundleTarget, testHostBundleNode.getDescription().getClass());
+                      });
+            });
     return generateAppleBundleTarget(project, testTargetNode, testTargetNode, testHostBundle);
+  }
+
+  private Optional<BuildTarget> extractTestTargetForTestDescriptionArg(
+      AppleTestDescriptionArg args) {
+    if (args.getUiTestTargetApp().isPresent()) {
+      return args.getUiTestTargetApp();
+    }
+    return args.getTestHostApp();
   }
 
   private void checkAppleResourceTargetNodeReferencingValidContents(

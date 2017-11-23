@@ -95,12 +95,14 @@ public class AppleTestDescriptionTest {
   }
 
   @Test
-  public void uiTestHasTestHost() throws Exception {
+  public void uiTestHasTestHostAndUiTestTarget() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
     BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
     BuildTarget testHostBundleTarget =
         BuildTargetFactory.newInstance("//:testhostbundle#macosx-x86_64");
+    BuildTarget uiTestTargetAppBundleTarget =
+        BuildTargetFactory.newInstance("//:uitesttargetbundle#macosx-x86_64");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test#macosx-x86_64");
 
     AppleBinaryBuilder testHostBinaryBuilder =
@@ -113,24 +115,36 @@ public class AppleTestDescriptionTest {
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
             .setInfoPlist(FakeSourcePath.of(("Info.plist")));
 
+    AppleBundleBuilder uiTestTargetBundleBuilder =
+        AppleBundleBuilder.createBuilder(uiTestTargetAppBundleTarget)
+            .setBinary(testHostBinTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")));
+
     AppleTestBuilder testBuilder =
         AppleTestBuilder.createBuilder(testTarget)
             .setInfoPlist(FakeSourcePath.of(("Info.plist")))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))))
             .isUiTest(true)
-            .setTestHostApp(Optional.of(testHostBundleTarget));
+            .setTestHostApp(Optional.of(testHostBundleTarget))
+            .setUiTestTargetApp(Optional.of(uiTestTargetAppBundleTarget));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
-            testBuilder.build(), testHostBundleBuilder.build(), testHostBinaryBuilder.build());
+            testBuilder.build(),
+            testHostBundleBuilder.build(),
+            testHostBinaryBuilder.build(),
+            uiTestTargetBundleBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     resolver.requireRule(testHostBundleTarget);
+    resolver.requireRule(uiTestTargetAppBundleTarget);
     AppleTest test = testBuilder.build(resolver, targetGraph);
 
     assertTrue(test.isUiTest());
     assertTrue(test.hasTestHost());
+    assertTrue(test.hasUiTestTarget());
   }
 
   @Test
@@ -176,10 +190,12 @@ public class AppleTestDescriptionTest {
                 false,
                 resolver,
                 testHostBundleTarget,
+                Optional.empty(),
                 AppleDebugFormat.DWARF,
                 ImmutableSet.of(),
                 ImmutableList.of());
     assertTrue(testHostInfo.getTestHostAppBinarySourcePath().isPresent());
+    assertFalse(testHostInfo.getUiTestTargetAppBinarySourcePath().isPresent());
 
     // with UITests there is no binary to use as -bundle_loader linker arg
     testHostInfo =
@@ -190,9 +206,93 @@ public class AppleTestDescriptionTest {
                 true,
                 resolver,
                 testHostBundleTarget,
+                Optional.empty(),
                 AppleDebugFormat.DWARF,
                 ImmutableSet.of(),
                 ImmutableList.of());
     assertFalse(testHostInfo.getTestHostAppBinarySourcePath().isPresent());
+    assertFalse(testHostInfo.getUiTestTargetAppBinarySourcePath().isPresent());
+  }
+
+  @Test
+  public void testCreateTestHostInfoWithUiTestTarget() throws Exception {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+
+    BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
+    BuildTarget testHostBundleTarget =
+        BuildTargetFactory.newInstance("//:testhostbundle#macosx-x86_64");
+    AppleBinaryBuilder testHostBinaryBuilder =
+        AppleBinaryBuilder.createBuilder(testHostBinTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
+    AppleBundleBuilder testHostBundleBuilder =
+        AppleBundleBuilder.createBuilder(testHostBundleTarget)
+            .setBinary(testHostBinTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")));
+
+    BuildTarget uiTestTargetBinTarget =
+        BuildTargetFactory.newInstance("//:uitesttargetbin#macosx-x86_64");
+    BuildTarget uiTestTargetBundleTarget =
+        BuildTargetFactory.newInstance("//:uitesttargetbundle#macosx-x86_64");
+    AppleBinaryBuilder uiTestTargetBinaryBuilder =
+        AppleBinaryBuilder.createBuilder(uiTestTargetBinTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
+    AppleBundleBuilder uiTestTargetBundleBuilder =
+        AppleBundleBuilder.createBuilder(uiTestTargetBundleTarget)
+            .setBinary(uiTestTargetBinTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")));
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test#macosx-x86_64");
+
+    AppleTestBuilder testBuilder =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))))
+            .isUiTest(true)
+            .setTestHostApp(Optional.of(testHostBundleTarget))
+            .setUiTestTargetApp(Optional.of(uiTestTargetBundleTarget));
+
+    TargetNode<AppleTestDescriptionArg, AppleTestDescription> testNode = testBuilder.build();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            testNode,
+            testHostBundleBuilder.build(),
+            testHostBinaryBuilder.build(),
+            uiTestTargetBinaryBuilder.build(),
+            uiTestTargetBundleBuilder.build());
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    TestHostInfo testHostInfo =
+        testNode
+            .getDescription()
+            .createTestHostInfo(
+                testTarget,
+                false,
+                resolver,
+                testHostBundleTarget,
+                Optional.empty(),
+                AppleDebugFormat.DWARF,
+                ImmutableSet.of(),
+                ImmutableList.of());
+    assertTrue(testHostInfo.getTestHostAppBinarySourcePath().isPresent());
+    assertFalse(testHostInfo.getUiTestTargetAppBinarySourcePath().isPresent());
+
+    testHostInfo =
+        testNode
+            .getDescription()
+            .createTestHostInfo(
+                testTarget,
+                true,
+                resolver,
+                testHostBundleTarget,
+                Optional.of(uiTestTargetBundleTarget),
+                AppleDebugFormat.DWARF,
+                ImmutableSet.of(),
+                ImmutableList.of());
+    assertTrue(testHostInfo.getTestHostAppBinarySourcePath().isPresent());
+    assertTrue(testHostInfo.getUiTestTargetAppBinarySourcePath().isPresent());
   }
 }

@@ -89,6 +89,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final Optional<AppleBundle> testHostApp;
 
+  @AddToRuleKey private final Optional<AppleBundle> uiTestTargetApp;
+
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<String> labels;
 
@@ -176,6 +178,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       AppleBundle testBundle,
       Optional<AppleBundle> testHostApp,
+      Optional<AppleBundle> uiTestTargetApp,
       ImmutableSet<String> contacts,
       ImmutableSet<String> labels,
       boolean runTestSeparately,
@@ -196,6 +199,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.destinationSpecifier = destinationSpecifier;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
+    this.uiTestTargetApp = uiTestTargetApp;
     this.contacts = contacts;
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
@@ -451,14 +455,16 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Tests which run in the simulator must run separately from all other tests;
     // there's a 20 second timeout hard-coded in the iOS Simulator SpringBoard which
     // is hit any time the host is overloaded.
-    return runTestSeparately || testHostApp.isPresent();
+    return runTestSeparately || testHostApp.isPresent() || uiTestTargetApp.isPresent();
   }
 
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
-        Stream.concat(Stream.of(testBundle), Optionals.toStream(testHostApp))
+        Stream.concat(
+                Stream.of(testBundle),
+                Stream.concat(Optionals.toStream(testHostApp), Optionals.toStream(uiTestTargetApp)))
             .map(BuildRule::getBuildTarget),
         Optionals.toStream(xctool)
             .map(ruleFinder::filterBuildRuleInputs)
@@ -499,5 +505,10 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @VisibleForTesting
   public boolean hasTestHost() {
     return testHostApp.isPresent();
+  }
+
+  @VisibleForTesting
+  public boolean hasUiTestTarget() {
+    return uiTestTargetApp.isPresent();
   }
 }
