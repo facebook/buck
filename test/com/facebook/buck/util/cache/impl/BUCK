@@ -24,7 +24,6 @@ java_library(
     name = "cache_benchmark_lib",
     srcs = ["CacheBenchmark.java"],
     exported_deps = [
-        "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/util/cache:cache",
@@ -72,7 +71,6 @@ java_test(
 "//src/com/facebook/buck/file:downloader",
 "//src/com/facebook/buck/graph:graph",
 "//src/com/facebook/buck/halide:halide",
-"//src/com/facebook/buck/hashing:hashing",
 "//src/com/facebook/buck/io:executable-finder",
 "//src/com/facebook/buck/io:transport",
 "//src/com/facebook/buck/io:watchman",

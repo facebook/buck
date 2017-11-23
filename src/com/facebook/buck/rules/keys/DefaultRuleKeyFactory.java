@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -28,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;

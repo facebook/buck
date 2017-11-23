@@ -2,7 +2,7 @@ java_library(
     name = "hashing",
     srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/hashing:hashing",
+        "//test/com/facebook/buck/util/hashing:hashing",
     ],
     visibility = ["PUBLIC"],
     deps = [

@@ -23,8 +23,6 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleExceptio
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.hashing.FilePathHashLoader;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.log.Logger;
@@ -67,6 +65,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.hashing.FilePathHashLoader;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;

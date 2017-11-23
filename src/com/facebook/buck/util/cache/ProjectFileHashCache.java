@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.hashing.ProjectFileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.hashing.ProjectFileHashLoader;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;

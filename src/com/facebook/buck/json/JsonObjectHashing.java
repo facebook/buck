@@ -16,7 +16,7 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.hashing.StringHashing;
+import com.facebook.buck.util.hashing.StringHashing;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 import com.google.devtools.build.lib.syntax.SkylarkNestedSet;

@@ -17,7 +17,6 @@
 package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -27,6 +26,7 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.hashing.PathHashing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

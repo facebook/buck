@@ -20,7 +20,6 @@ import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
 
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -47,6 +46,7 @@ import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.ThriftRuleKeyHasher;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

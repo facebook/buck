@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.hashing;
+package com.facebook.buck.util.hashing;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
