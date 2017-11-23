@@ -35,6 +35,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
+import com.facebook.buck.toolchain.ComparableToolchain;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -46,8 +47,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Objects;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /**
@@ -77,9 +79,6 @@ abstract class AbstractCell {
   abstract CellProvider getCellProvider();
 
   @Value.Auxiliary
-  abstract SdkEnvironment getSdkEnvironment();
-
-  @Value.Auxiliary
   abstract ToolchainProvider getToolchainProvider();
 
   public Path getRoot() {
@@ -90,9 +89,47 @@ abstract class AbstractCell {
   abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
   public boolean isCompatibleForCaching(Cell other) {
-    return getFilesystem().equals(other.getFilesystem())
+    return (getFilesystem().equals(other.getFilesystem())
         && getBuckConfig().equalsForDaemonRestart(other.getBuckConfig())
-        && Objects.equals(getSdkEnvironment(), other.getSdkEnvironment());
+        && areToolchainsCompatibleForCaching(other));
+  }
+
+  private boolean areToolchainsCompatibleForCaching(Cell other) {
+    ToolchainProvider toolchainProvider = getToolchainProvider();
+    ToolchainProvider otherToolchainProvider = other.getToolchainProvider();
+
+    Set<String> toolchains = new HashSet<>();
+    toolchains.addAll(toolchainProvider.getToolchainsWithCapability(ComparableToolchain.class));
+    toolchains.addAll(
+        otherToolchainProvider.getToolchainsWithCapability(ComparableToolchain.class));
+
+    for (String toolchain : toolchains) {
+      if (!toolchainsStateEqual(toolchain, toolchainProvider, otherToolchainProvider)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private boolean toolchainsStateEqual(
+      String toolchain,
+      ToolchainProvider toolchainProvider,
+      ToolchainProvider otherToolchainProvider) {
+    boolean toolchainPresent = toolchainProvider.isToolchainPresent(toolchain);
+    boolean otherToolchainPresent = otherToolchainProvider.isToolchainPresent(toolchain);
+    if (!toolchainPresent && !otherToolchainPresent) {
+      return true;
+    }
+
+    if (toolchainPresent && otherToolchainPresent) {
+      return toolchainProvider
+          .getByName(toolchain)
+          .equals(otherToolchainProvider.getByName(toolchain));
+    }
+
+    // some toolchain is present and another is not
+    return false;
   }
 
   public String getBuildFileName() {

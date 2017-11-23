@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
-import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.toolchain.ComparableToolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -24,7 +24,7 @@ import org.immutables.value.Value;
 /** Part of Android toolchain that provides access to Android NDK */
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
-public interface AbstractAndroidNdk extends Toolchain {
+public interface AbstractAndroidNdk extends ComparableToolchain {
   String DEFAULT_NAME = "android-ndk-location";
 
   @Value.Parameter

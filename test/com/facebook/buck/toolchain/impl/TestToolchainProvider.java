@@ -30,6 +30,7 @@ import com.facebook.buck.toolchain.ToolchainWithCapability;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class TestToolchainProvider extends BaseToolchainProvider {
   }
 
   @Override
-  public <T extends ToolchainWithCapability> Iterable<String> getToolchainsWithCapability(
+  public <T extends ToolchainWithCapability> Collection<String> getToolchainsWithCapability(
       Class<T> capability) {
     ImmutableList.Builder<String> featureSupportingToolchains = ImmutableList.builder();
 

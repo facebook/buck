@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.toolchain.ComparableToolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
@@ -24,7 +24,7 @@ import org.immutables.value.Value.Parameter;
 
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public interface AbstractAppleSdkLocation extends Toolchain {
+public interface AbstractAppleSdkLocation extends ComparableToolchain {
 
   String DEFAULT_NAME = "apple-sdk-location";
 

@@ -196,7 +196,6 @@ public final class CellProvider {
                     watchman,
                     buckConfig,
                     cellProvider,
-                    SdkEnvironment.create(toolchainProvider),
                     toolchainProvider,
                     ConfigRuleKeyConfigurationFactory.create(buckConfig));
               }
@@ -217,7 +216,6 @@ public final class CellProvider {
               watchman,
               rootConfig,
               cellProvider,
-              SdkEnvironment.create(toolchainProvider),
               toolchainProvider,
               ConfigRuleKeyConfigurationFactory.create(rootConfig));
         });
@@ -248,7 +246,6 @@ public final class CellProvider {
                       WatchmanFactory.NULL_WATCHMAN,
                       cellParam.getConfig(),
                       cellProvider,
-                      SdkEnvironment.create(toolchainProvider),
                       toolchainProvider,
                       ConfigRuleKeyConfigurationFactory.create(cellParam.getConfig()));
                 }),

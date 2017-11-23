@@ -53,6 +53,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.concurrent.ThreadSafe;
@@ -164,7 +165,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   }
 
   @Override
-  public <T extends ToolchainWithCapability> Iterable<String> getToolchainsWithCapability(
+  public <T extends ToolchainWithCapability> Collection<String> getToolchainsWithCapability(
       Class<T> capability) {
     ImmutableList.Builder<String> toolchainsWithCapabilities = ImmutableList.builder();
 

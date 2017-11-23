@@ -14,18 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.toolchain;
+package com.facebook.buck.toolchain;
 
-import com.facebook.buck.toolchain.ComparableToolchain;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
-
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleImmutable
-public interface AbstractAppleToolchainProvider extends ComparableToolchain {
-  String DEFAULT_NAME = "apple-toolchain-provider";
-
-  @Value.Parameter
-  ImmutableMap<String, AppleToolchain> getAppleToolchains();
-}
+/** Interface that indicates that changes in a toolchain cause restarting {@code Daemon}. */
+public interface ComparableToolchain extends ToolchainWithCapability {}
