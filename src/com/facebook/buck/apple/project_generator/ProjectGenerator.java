@@ -2945,7 +2945,14 @@ public class ProjectGenerator {
 
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependenciesWithOptions(
       TargetNode<?, ?> targetNode, boolean containsSwiftSources) {
+    FluentIterable<TargetNode<?, ?>> libsWithSources =
+        collectRecursiveLibraryDepTargetsWithOptions(targetNode, containsSwiftSources);
 
+    return libsWithSources.transform(this::getLibraryFileReference).toSet();
+  }
+
+  private FluentIterable<TargetNode<?, ?>> collectRecursiveLibraryDepTargetsWithOptions(
+      TargetNode<?, ?> targetNode, boolean containsSwiftSources) {
     FluentIterable<TargetNode<?, ?>> libsWithSources =
         FluentIterable.from(
                 AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -2955,12 +2962,11 @@ public class ProjectGenerator {
                     targetNode,
                     AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
             .filter(this::isLibraryWithSourcesToCompile);
-
     if (containsSwiftSources) {
       libsWithSources = libsWithSources.filter(this::isLibraryWithSwiftSources);
     }
 
-    return libsWithSources.transform(this::getLibraryFileReference).toSet();
+    return libsWithSources;
   }
 
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(
