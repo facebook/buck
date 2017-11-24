@@ -16,22 +16,25 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxRawHeaders extends CxxHeaders {
+
   @Override
-  @AddToRuleKey
-  public final CxxPreprocessables.IncludeType getIncludeType() {
+  public CxxPreprocessables.IncludeType getIncludeType() {
     return CxxPreprocessables.IncludeType.RAW;
   }
 
@@ -58,7 +61,18 @@ abstract class AbstractCxxRawHeaders extends CxxHeaders {
     }
   }
 
+  @Override
+  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    // raw headers are used "as are" - no deps
+    return Stream.empty();
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("type", getIncludeType());
+    sink.setReflectively("headers", getHeaders());
+  }
+
   @Value.Parameter
-  @AddToRuleKey
   abstract ImmutableSortedSet<SourcePath> getHeaders();
 }
