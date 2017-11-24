@@ -1030,6 +1030,7 @@ public class ProjectGenerator {
     mutator.setFrameworkHeadersEnabled(isModularAppleLibrary);
 
     ImmutableMap.Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
+    ImmutableList.Builder<String> swiftDebugLinkerFlagsBuilder = ImmutableList.builder();
 
     if (!shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
@@ -1137,6 +1138,21 @@ public class ProjectGenerator {
           // This is a binary that transitively depends on a library that uses Swift. We must ensure
           // that the Swift runtime is bundled.
           swiftDepsSettingsBuilder.put("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+        }
+
+        if (includeFrameworks
+            && !swiftDepTargets.isEmpty()
+            && swiftBuckConfig.getProjectAddASTPaths()) {
+          for (TargetNode<?, ?> swiftNode : swiftDepTargets) {
+            String swiftModulePath =
+                String.format(
+                    "${BUILT_PRODUCTS_DIR}/%s.swiftmodule/${CURRENT_ARCH}.swiftmodule",
+                    getModuleName(swiftNode));
+            swiftDebugLinkerFlagsBuilder.add("-Xlinker");
+            swiftDebugLinkerFlagsBuilder.add("-add_ast_path");
+            swiftDebugLinkerFlagsBuilder.add("-Xlinker");
+            swiftDebugLinkerFlagsBuilder.add(swiftModulePath);
+          }
         }
       }
 
@@ -1438,7 +1454,8 @@ public class ProjectGenerator {
                     targetNode,
                     Iterables.concat(
                         targetNode.getConstructorArg().getLinkerFlags(),
-                        collectRecursiveExportedLinkerFlags(targetNode))));
+                        collectRecursiveExportedLinkerFlags(targetNode))),
+                swiftDebugLinkerFlagsBuilder.build());
 
         appendConfigsBuilder
             .put(

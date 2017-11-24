@@ -4900,6 +4900,63 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testSwiftAddASTPathsLinkerFlags() throws IOException {
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "swift",
+            ImmutableMap.of(
+                "version", "3.0",
+                "project_add_ast_paths", "true"));
+
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    swiftBuckConfig = new SwiftBuckConfig(buckConfig);
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    TargetNode<?, ?> binaryNode =
+        AppleBinaryBuilder.createBuilder(binaryTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
+            .setDeps(ImmutableSortedSet.of(libTarget))
+            .build();
+
+    TargetNode<?, ?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(binaryTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(libNode, binaryNode, bundleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget bundlePBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
+    ImmutableMap<String, String> bundleBuildSettings =
+        getBuildSettings(bundleTarget, bundlePBXTarget, "Debug");
+
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/lib.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+  }
+
+  @Test
   public void testMergedHeaderMap() throws IOException {
     BuildTarget lib1Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib1");
     BuildTarget lib2Target = BuildTargetFactory.newInstance(rootPath, "//bar", "lib2");
