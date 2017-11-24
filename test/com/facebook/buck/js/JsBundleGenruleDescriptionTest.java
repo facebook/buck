@@ -247,6 +247,11 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
+  public void exportsMiscOfJsBundle() {
+    assertEquals(setup.jsBundle().getSourcePathToMisc(), setup.genrule().getSourcePathToMisc());
+  }
+
+  @Test
   public void exposesSourceMapOfJsBundleWithSpecialFlavor() {
     setUp(JsFlavors.SOURCE_MAP);
 
@@ -254,6 +259,17 @@ public class JsBundleGenruleDescriptionTest {
 
     assertEquals(
         pathResolver.getRelativePath(setup.jsBundle().getSourcePathToSourceMap()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void exposesMiscOfJsBundleWithSpecialFlavor() {
+    setUp(JsFlavors.MISC);
+
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.jsBundle().getSourcePathToMisc()),
         pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
   }
 
