@@ -28,7 +28,6 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
-import com.facebook.buck.skylark.function.NativeModule;
 import com.facebook.buck.skylark.function.ReadConfig;
 import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
@@ -46,9 +45,11 @@ import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
+import com.google.devtools.build.lib.packages.NativeProvider;
 import com.google.devtools.build.lib.syntax.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
+import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
@@ -95,7 +96,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final BuckEventBus buckEventBus;
   private final PrintingEventHandler eventHandler;
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
-  private final Supplier<NativeModule> nativeModuleSupplier;
+  private final Supplier<ClassObject> nativeModuleSupplier;
   private final Supplier<Environment.Frame> buckGlobalsSupplier;
   private final BuiltinFunction readConfigFunction;
 
@@ -114,9 +115,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // it's never used
     // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
     this.buckRuleFunctionsSupplier = MoreSuppliers.memoize(this::getBuckRuleFunctions);
-    this.nativeModuleSupplier =
-        MoreSuppliers.memoize(
-            () -> new NativeModule(buckRuleFunctionsSupplier.get(), Glob.create()));
+    this.nativeModuleSupplier = MoreSuppliers.memoize(this::newNativeModule);
     this.buckGlobalsSupplier = MoreSuppliers.memoize(this::getBuckGlobals);
     this.readConfigFunction = ReadConfig.create();
   }
@@ -451,6 +450,25 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public void close() throws BuildFileParseException, InterruptedException, IOException {
     // nothing to do
+  }
+
+  /**
+   * Returns a native module with built-in functions and Buck rules.
+   *
+   * <p>It's the module that handles method calls like {@code native.glob} or {@code
+   * native.cxx_library}.
+   */
+  private ClassObject newNativeModule() {
+    ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
+    for (String nativeFunction : Runtime.getFunctionNames(SkylarkNativeModule.class)) {
+      builder.put(nativeFunction, Runtime.getFunction(SkylarkNativeModule.class, nativeFunction));
+    }
+    BuiltinFunction glob = Glob.create();
+    builder.put(glob.getName(), glob);
+    for (BuiltinFunction ruleFunction : buckRuleFunctionsSupplier.get()) {
+      builder.put(ruleFunction.getName(), ruleFunction);
+    }
+    return NativeProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */
