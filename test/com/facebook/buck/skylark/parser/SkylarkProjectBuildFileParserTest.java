@@ -202,6 +202,24 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void packageNameFunctionInExtensionUsesBuildFilePackage() throws Exception {
+    Path buildFileDirectory = projectFilesystem.resolve("test");
+    Files.createDirectories(buildFileDirectory);
+    Path buildFile = buildFileDirectory.resolve("BUCK");
+    Path extensionFileDirectory = buildFileDirectory.resolve("ext");
+    Files.createDirectories(extensionFileDirectory);
+    Path extensionFile = extensionFileDirectory.resolve("build_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//test/ext:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name='foo', binary_jar=get_name())"));
+    Files.write(extensionFile, Arrays.asList("def get_name():", "  return native.package_name()"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("test"));
+  }
+
+  @Test
   public void testImportVariable() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);

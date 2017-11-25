@@ -85,7 +85,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private static final String PARSE_CONTEXT = "$parse_context";
   private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
       ImmutableSet.of("visibility", "within_view");
-  private static final String PACKAGE_NAME_GLOBAL = "PACKAGE_NAME";
   // Dummy label used for resolving paths for other labels.
   private static final Label EMPTY_LABEL =
       Label.createUnvalidated(PackageIdentifier.EMPTY_PACKAGE_ID, "");
@@ -244,7 +243,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .useDefaultSemantics()
             .build();
     String basePath = getBasePath(buildFile);
-    env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
+    env.setupDynamic(Runtime.PKG_NAME, basePath);
     env.setupDynamic(PARSE_CONTEXT, parseContext);
     env.setup("glob", Glob.create());
     env.setup("package_name", SkylarkNativeModule.packageName);
@@ -385,7 +384,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
         ImmutableMap.Builder<String, Object> builder =
             ImmutableMap.<String, Object>builder()
-                .put("buck.base_path", env.lookup(PACKAGE_NAME_GLOBAL))
+                .put("buck.base_path", env.lookup(Runtime.PKG_NAME))
                 .put("buck.type", name);
         ImmutableMap<String, ParamInfo> allParamInfo =
             CoercedTypeCache.INSTANCE.getAllParamInfo(
@@ -460,9 +459,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ClassObject newNativeModule() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-    for (String nativeFunction : Runtime.getFunctionNames(SkylarkNativeModule.class)) {
-      builder.put(nativeFunction, Runtime.getFunction(SkylarkNativeModule.class, nativeFunction));
-    }
+    BuiltinFunction packageName = SkylarkNativeModule.packageName;
+    builder.put(packageName.getName(), packageName);
     BuiltinFunction glob = Glob.create();
     builder.put(glob.getName(), glob);
     for (BuiltinFunction ruleFunction : buckRuleFunctionsSupplier.get()) {
