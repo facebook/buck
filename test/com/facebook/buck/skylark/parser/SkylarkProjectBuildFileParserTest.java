@@ -192,6 +192,16 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void packageNameFunction() throws Exception {
+    Path buildFile = projectFilesystem.resolve("pkg").resolve("BUCK");
+    Files.createDirectories(buildFile.getParent());
+    Files.write(
+        buildFile, Arrays.asList("prebuilt_jar(name=package_name(), binary_jar='foo.jar')"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("pkg"));
+  }
+
+  @Test
   public void testImportVariable() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);

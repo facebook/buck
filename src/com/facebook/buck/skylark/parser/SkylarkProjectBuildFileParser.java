@@ -31,6 +31,7 @@ import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.NativeModule;
 import com.facebook.buck.skylark.function.ReadConfig;
 import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
+import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
@@ -247,6 +248,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
     env.setupDynamic(PARSE_CONTEXT, parseContext);
     env.setup("glob", Glob.create());
+    env.setup("package_name", SkylarkNativeModule.packageName);
     PackageContext packageContext =
         PackageContext.builder()
             .setGlobber(SimpleGlobber.create(fileSystem.getPath(buildFile.getParent().toString())))
