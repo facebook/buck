@@ -63,19 +63,16 @@ public class KotlinTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public KotlinTestDescription(
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
-      JavacOptions templateOptions,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      JavacOptions templateOptions) {
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateJavacOptions = templateOptions;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -131,7 +128,9 @@ public class KotlinTestDescription
         javaOptions.getJavaRuntimeLauncher(),
         args.getVmArgs(),
         ImmutableMap.of(), /* nativeLibsEnvironment */
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toMacroArgFunction::apply)),
         args.getRunTestSeparately(),

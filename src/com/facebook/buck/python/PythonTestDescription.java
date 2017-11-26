@@ -78,7 +78,6 @@ public class PythonTestDescription
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
@@ -87,14 +86,12 @@ public class PythonTestDescription
       FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
-      Optional<Long> defaultTestRuleTimeoutMs,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
     this.pythonPlatforms = pythonPlatforms;
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatforms = cxxPlatforms;
   }
 
@@ -352,7 +349,9 @@ public class PythonTestDescription
         binary,
         args.getLabels(),
         neededCoverageBuilder.build(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getContacts());
   }
 

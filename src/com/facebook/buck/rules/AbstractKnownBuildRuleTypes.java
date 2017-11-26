@@ -149,7 +149,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import org.immutables.value.Value;
@@ -259,9 +258,6 @@ abstract class AbstractKnownBuildRuleTypes {
             cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms);
-
-    // Look up the timeout to apply to entire test rules.
-    Optional<Long> defaultTestRuleTimeoutMs = config.getLong("test", "rule_timeout");
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 
@@ -405,8 +401,7 @@ abstract class AbstractKnownBuildRuleTypes {
             cxxBuckConfig,
             dxConfig));
     builder.addDescriptions(
-        new AndroidInstrumentationTestDescription(
-            toolchainProvider, defaultJavaOptions, defaultTestRuleTimeoutMs));
+        new AndroidInstrumentationTestDescription(config, toolchainProvider, defaultJavaOptions));
     builder.addDescriptions(
         new AndroidLibraryDescription(
             javaConfig, defaultJavacOptions, defaultAndroidCompilerFactory));
@@ -443,8 +438,7 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
-            defaultTestRuleTimeoutMs));
+            appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor)));
     builder.addDescriptions(new CommandAliasDescription(Platform.detect()));
     builder.addDescriptions(cxxBinaryDescription);
     builder.addDescriptions(cxxLibraryDescription);
@@ -455,32 +449,25 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.addDescriptions(
-        new CxxTestDescription(
-            cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms, defaultTestRuleTimeoutMs));
+        new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms));
     builder.addDescriptions(new DBinaryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
     builder.addDescriptions(
         new DLibraryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
-    builder.addDescriptions(
-        new DTestDescription(
-            dBuckConfig, cxxBuckConfig, defaultCxxPlatform, defaultTestRuleTimeoutMs));
+    builder.addDescriptions(new DTestDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
     builder.addDescriptions(new ExportFileDescription());
     builder.addDescriptions(
         new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
     builder.addDescriptions(new GenAidlDescription(toolchainProvider));
     builder.addDescriptions(new GoBinaryDescription(goBuckConfig));
     builder.addDescriptions(new GoLibraryDescription(goBuckConfig));
-    builder.addDescriptions(new GoTestDescription(goBuckConfig, defaultTestRuleTimeoutMs));
+    builder.addDescriptions(new GoTestDescription(goBuckConfig));
     builder.addDescriptions(new GraphqlLibraryDescription());
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.addDescriptions(
         new GroovyLibraryDescription(groovyBuckConfig, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new GroovyTestDescription(
-            groovyBuckConfig,
-            javaConfig,
-            defaultJavaOptionsForTests,
-            defaultJavacOptions,
-            defaultTestRuleTimeoutMs));
+            groovyBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new GwtBinaryDescription(defaultJavaOptions));
     builder.addDescriptions(
         new HalideLibraryDescription(
@@ -499,7 +486,6 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
-            defaultTestRuleTimeoutMs,
             defaultJavaCxxPlatform,
             cxxPlatforms));
     builder.addDescriptions(new JsBundleDescription(toolchainProvider));
@@ -511,11 +497,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new KotlinLibraryDescription(kotlinBuckConfig, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new KotlinTestDescription(
-            kotlinBuckConfig,
-            javaConfig,
-            defaultJavaOptionsForTests,
-            defaultJavacOptions,
-            defaultTestRuleTimeoutMs));
+            kotlinBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(
         new LuaBinaryDescription(defaultLuaPlatform, luaPlatforms, cxxBuckConfig, pythonPlatforms));
     builder.addDescriptions(new LuaLibraryDescription());
@@ -540,7 +522,6 @@ abstract class AbstractKnownBuildRuleTypes {
             pythonPlatforms,
             cxxBuckConfig,
             defaultCxxPlatform,
-            defaultTestRuleTimeoutMs,
             cxxPlatforms));
     builder.addDescriptions(new RemoteFileDescription(toolchainProvider));
     builder.addDescriptions(
@@ -549,7 +530,6 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
-            defaultTestRuleTimeoutMs,
             defaultCxxPlatform,
             defaultAndroidCompilerFactory));
     builder.addDescriptions(
@@ -567,11 +547,10 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             defaultJavacOptions,
             defaultJavaOptionsForTests,
-            defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
     builder.addDescriptions(new SceneKitAssetsDescription());
     builder.addDescriptions(new ShBinaryDescription());
-    builder.addDescriptions(new ShTestDescription(defaultTestRuleTimeoutMs));
+    builder.addDescriptions(new ShTestDescription(config));
     builder.addDescriptions(new WorkerToolDescription(config));
 
     List<DescriptionProvider> descriptionProviders =

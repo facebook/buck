@@ -28,7 +28,6 @@ import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
-import java.util.Optional;
 
 public class RobolectricTestBuilder
     extends AbstractNodeBuilder<
@@ -49,7 +48,6 @@ public class RobolectricTestBuilder
             javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            /* testRuleTimeoutMs */ Optional.empty(),
             null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target);
@@ -62,7 +60,6 @@ public class RobolectricTestBuilder
             DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            /* testRuleTimeoutMs */ Optional.empty(),
             null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
@@ -77,7 +74,6 @@ public class RobolectricTestBuilder
             javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            /* testRuleTimeoutMs */ Optional.empty(),
             null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,

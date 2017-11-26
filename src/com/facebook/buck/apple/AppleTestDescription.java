@@ -118,7 +118,6 @@ public class AppleTestDescription
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public AppleTestDescription(
       ToolchainProvider toolchainProvider,
@@ -128,8 +127,7 @@ public class AppleTestDescription
       Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
     this.toolchainProvider = toolchainProvider;
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
@@ -138,7 +136,6 @@ public class AppleTestDescription
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -336,7 +333,9 @@ public class AppleTestDescription
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
         appleConfig.getTestLogLevelEnvironmentVariable(),
         appleConfig.getTestLogLevel(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(appleConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
         args.getSnapshotReferenceImagesPath());
   }

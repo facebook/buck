@@ -336,6 +336,10 @@ public class CxxBuckConfig {
         .collect(MoreCollectors.toImmutableSet());
   }
 
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractCxxToolProviderParams {

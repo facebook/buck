@@ -65,7 +65,6 @@ public class ScalaTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions templateJavacOptions;
   private final JavaOptions javaOptions;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
 
   public ScalaTestDescription(
@@ -73,13 +72,11 @@ public class ScalaTestDescription
       JavaBuckConfig javaBuckConfig,
       JavacOptions templateOptions,
       JavaOptions javaOptions,
-      Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform) {
     this.config = config;
     this.javaBuckConfig = javaBuckConfig;
     this.templateJavacOptions = templateOptions;
     this.javaOptions = javaOptions;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
   }
 
@@ -148,7 +145,9 @@ public class ScalaTestDescription
         javaOptions.getJavaRuntimeLauncher(),
         args.getVmArgs(),
         cxxLibraryEnhancement.nativeLibsEnvironment,
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toMacroArgFunction::apply)),
         args.getRunTestSeparately(),

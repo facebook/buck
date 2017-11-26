@@ -74,19 +74,16 @@ public class CxxTestDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final Flavor defaultCxxFlavor;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
       Flavor defaultCxxFlavor,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.cxxPlatforms = cxxPlatforms;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   private ImmutableSet<BuildTarget> getImplicitFrameworkDeps(
@@ -283,7 +280,9 @@ public class CxxTestDescription
                   args.getLabels(),
                   args.getContacts(),
                   args.getRunTestSeparately().orElse(false),
-                  args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+                  args.getTestRuleTimeoutMs()
+                      .map(Optional::of)
+                      .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
                   cxxBuckConfig.getMaximumTestOutputSize());
           break;
         }
@@ -306,7 +305,9 @@ public class CxxTestDescription
                   args.getLabels(),
                   args.getContacts(),
                   args.getRunTestSeparately().orElse(false),
-                  args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs));
+                  args.getTestRuleTimeoutMs()
+                      .map(Optional::of)
+                      .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()));
           break;
         }
       default:

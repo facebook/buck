@@ -53,17 +53,12 @@ public class DTestDescription
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public DTestDescription(
-      DBuckConfig dBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -124,7 +119,9 @@ public class DTestDescription
         binaryRule,
         args.getContacts(),
         args.getLabels(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs));
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(dBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()));
   }
 
   @Override

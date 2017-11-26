@@ -58,7 +58,6 @@ public class PythonTestBuilder
             pythonPlatforms,
             CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
-            Optional.empty(),
             cxxPlatforms),
         target);
   }

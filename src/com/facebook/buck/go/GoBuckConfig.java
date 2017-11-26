@@ -136,6 +136,10 @@ public class GoBuckConfig {
     return getGoTool("linker", "link", "linker_flags");
   }
 
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
+
   Path getDefaultPackageName(BuildTarget target) {
     Path prefix = Paths.get(delegate.getValue(SECTION, "prefix").orElse(""));
     return prefix.resolve(target.getBasePath());

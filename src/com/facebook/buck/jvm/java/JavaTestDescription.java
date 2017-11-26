@@ -71,7 +71,6 @@ public class JavaTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
@@ -79,13 +78,11 @@ public class JavaTestDescription
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateJavacOptions,
-      Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateJavacOptions = templateJavacOptions;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -158,7 +155,9 @@ public class JavaTestDescription
         javaOptions.getJavaRuntimeLauncher(),
         args.getVmArgs(),
         cxxLibraryEnhancement.nativeLibsEnvironment,
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toMacroArgFunction::apply)),
         args.getRunTestSeparately(),

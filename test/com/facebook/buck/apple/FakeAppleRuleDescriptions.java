@@ -63,8 +63,6 @@ public class FakeAppleRuleDescriptions {
               "default_debug_info_format_for_libraries = NONE")
           .build();
 
-  public static final Optional<Long> DEFAULT_TIMEOUT = Optional.of(300000L);
-
   public static final AppleSdk DEFAULT_MACOSX_SDK =
       AppleSdk.builder()
           .setApplePlatform(ApplePlatform.MACOSX)
@@ -272,8 +270,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_PLATFORM.getFlavor(),
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
-          Suppliers.ofInstance(Optional.empty()),
-          DEFAULT_TIMEOUT);
+          Suppliers.ofInstance(Optional.empty()));
 
   private static TestToolchainProvider createTestToolchainProviderForSwiftPlatform(
       FlavorDomain<SwiftPlatform> swiftFlavorDomain) {

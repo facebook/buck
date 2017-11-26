@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
-import java.util.Optional;
 
 public class DTestBuilder
     extends AbstractNodeBuilder<
@@ -29,8 +28,7 @@ public class DTestBuilder
 
   public DTestBuilder(BuildTarget target, DBuckConfig dBuckConfig, CxxPlatform defaultCxxPlatform) {
     super(
-        new DTestDescription(
-            dBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG, defaultCxxPlatform, Optional.empty()),
+        new DTestDescription(dBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG, defaultCxxPlatform),
         target);
     getArgForPopulating().setSrcs(SourceList.EMPTY);
   }

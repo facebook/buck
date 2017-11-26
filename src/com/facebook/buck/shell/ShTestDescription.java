@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -63,10 +64,10 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
               new ClasspathMacroExpander(),
               new ExecutableMacroExpander());
 
-  private final Optional<Long> defaultTestRuleTimeoutMs;
+  private final BuckConfig buckConfig;
 
-  public ShTestDescription(Optional<Long> defaultTestRuleTimeoutMs) {
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+  public ShTestDescription(BuckConfig buckConfig) {
+    this.buckConfig = buckConfig;
   }
 
   @Override
@@ -109,7 +110,9 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
         FluentIterable.from(args.getResources())
             .transform(p -> PathSourcePath.of(projectFilesystem, p))
             .toSortedSet(Ordering.natural()),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(buckConfig.getDefaultTestRuleTimeoutMs()),
         args.getRunTestSeparately(),
         args.getLabels(),
         args.getType(),

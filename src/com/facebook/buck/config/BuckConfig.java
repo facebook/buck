@@ -1010,4 +1010,9 @@ public class BuckConfig implements ConfigPathGetter {
   public Optional<String> getPathToBuildPrehookScript() {
     return getValue("build", "prehook_script");
   }
+
+  /** The timeout to apply to entire test rules. */
+  public Optional<Long> getDefaultTestRuleTimeoutMs() {
+    return config.getLong(TEST_SECTION_HEADER, "rule_timeout");
+  }
 }

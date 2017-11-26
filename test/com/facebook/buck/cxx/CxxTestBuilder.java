@@ -46,11 +46,7 @@ public class CxxTestBuilder
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
-        new CxxTestDescription(
-            cxxBuckConfig,
-            defaultCxxPlatform.getFlavor(),
-            cxxPlatforms,
-            /* testRuleTimeoutMs */ Optional.empty()),
+        new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms),
         target);
   }
 

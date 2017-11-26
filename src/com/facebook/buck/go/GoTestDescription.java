@@ -64,11 +64,9 @@ public class GoTestDescription
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
 
   private final GoBuckConfig goBuckConfig;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
 
-  public GoTestDescription(GoBuckConfig goBuckConfig, Optional<Long> defaultTestRuleTimeoutMs) {
+  public GoTestDescription(GoBuckConfig goBuckConfig) {
     this.goBuckConfig = goBuckConfig;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -186,7 +184,9 @@ public class GoTestDescription
         testMain,
         args.getLabels(),
         args.getContacts(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(goBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getRunTestSeparately(),
         args.getResources());
   }

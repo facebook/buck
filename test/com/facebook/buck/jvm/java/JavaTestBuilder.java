@@ -39,7 +39,6 @@ public class JavaTestBuilder
             javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
             DEFAULT_JAVAC_OPTIONS,
-            /* testRuleTimeoutMs */ Optional.empty(),
             CxxPlatformUtils.DEFAULT_PLATFORM,
             CxxPlatformUtils.DEFAULT_PLATFORMS),
         target);
