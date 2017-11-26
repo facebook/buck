@@ -469,6 +469,7 @@
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/module/annotationprocessor/**" />
+          <exclude name="com/facebook/buck/rust/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
           <exclude name="com/facebook/buck/zip/bundler/**" />
           <exclude name="com/facebook/buck/zip/rules/**" />
@@ -496,7 +497,7 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-zipbundler, build-module-ziprules"/>
+  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-rust, build-module-zipbundler, build-module-ziprules"/>
 
   <target name="build-module-d" depends="compile">
     <build-buck-module-jar module-name="d">
@@ -510,6 +511,14 @@
     <build-buck-module-jar module-name="dotnet">
       <module-javac-params>
         <include name="com/facebook/buck/dotnet/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-rust" depends="compile">
+    <build-buck-module-jar module-name="rust">
+      <module-javac-params>
+        <include name="com/facebook/buck/rust/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>

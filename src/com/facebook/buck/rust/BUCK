@@ -1,13 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "rust",
     srcs = glob(["*.java"]),
-    visibility = [
-        "//src/com/facebook/buck/cli:main",
-        "//test/com/facebook/buck/rust/...",
-    ],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
@@ -19,6 +15,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/module:module",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:command_tool",
@@ -44,5 +41,8 @@ java_library_with_plugins(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/rust/...",
     ],
 )
