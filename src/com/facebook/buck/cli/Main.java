@@ -1183,7 +1183,8 @@ public final class Main {
                     .addAll(filesystem.getIgnorePaths())
                     .addAll(DEFAULT_IGNORE_GLOBS)
                     .build(),
-                daemon.getWatchmanCursor());
+                daemon.getWatchmanCursor(),
+                buckConfig.getNumThreads());
       } catch (WatchmanWatcherException e) {
         buildEventBus.post(
             ConsoleEvent.warning(

@@ -25,7 +25,9 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,11 +37,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -79,7 +86,8 @@ public class WatchmanWatcher {
   private final EventBus fileChangeEventBus;
   private final WatchmanClientFactory watchmanClientFactory;
   private final ImmutableMap<Path, WatchmanQuery> queries;
-  private Map<Path, WatchmanCursor> cursors;
+  private final Map<Path, WatchmanCursor> cursors;
+  private final int numThreads;
 
   private final long timeoutMillis;
 
@@ -93,13 +101,15 @@ public class WatchmanWatcher {
       Watchman watchman,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
-      Map<Path, WatchmanCursor> cursors) {
+      Map<Path, WatchmanCursor> cursors,
+      int numThreads) {
     this(
         fileChangeEventBus,
         () -> watchman.createClient(),
         DEFAULT_TIMEOUT_MILLIS,
         createQueries(watchman.getProjectWatches(), ignorePaths, watchman.getCapabilities()),
-        cursors);
+        cursors,
+        numThreads);
   }
 
   @VisibleForTesting
@@ -108,12 +118,14 @@ public class WatchmanWatcher {
       WatchmanClientFactory watchmanClientFactory,
       long timeoutMillis,
       ImmutableMap<Path, WatchmanQuery> queries,
-      Map<Path, WatchmanCursor> cursors) {
+      Map<Path, WatchmanCursor> cursors,
+      int numThreads) {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClientFactory = watchmanClientFactory;
     this.timeoutMillis = timeoutMillis;
     this.queries = queries;
     this.cursors = cursors;
+    this.numThreads = numThreads;
   }
 
   @VisibleForTesting
@@ -212,34 +224,60 @@ public class WatchmanWatcher {
       throws IOException, InterruptedException {
     // Speculatively set to false
     AtomicBoolean filesHaveChanged = new AtomicBoolean(false);
+    ExecutorService executorService =
+        MostExecutors.newMultiThreadExecutor(getClass().getName(), numThreads);
     buckEventBus.post(WatchmanStatusEvent.started());
+
     try {
-      try (WatchmanClient client = watchmanClientFactory.newInstance()) {
-        for (Path cellPath : queries.keySet()) {
-          WatchmanQuery query = queries.get(cellPath);
-          WatchmanCursor cursor = cursors.get(cellPath);
-          if (query != null && cursor != null) {
-            try (SimplePerfEvent.Scope perfEvent =
-                SimplePerfEvent.scope(
-                    buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath)) {
-              postEvents(
-                  buckEventBus,
-                  freshInstanceAction,
-                  cellPath,
-                  client,
-                  query,
-                  cursor,
-                  filesHaveChanged,
-                  perfEvent);
-            }
+      List<Callable<Void>> watchmanQueries = new ArrayList<>();
+      for (Path cellPath : queries.keySet()) {
+        watchmanQueries.add(
+            () -> {
+              WatchmanQuery query = queries.get(cellPath);
+              WatchmanCursor cursor = cursors.get(cellPath);
+              if (query != null && cursor != null) {
+                try (SimplePerfEvent.Scope perfEvent =
+                        SimplePerfEvent.scope(
+                            buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath);
+                    WatchmanClient client = watchmanClientFactory.newInstance()) {
+                  postEvents(
+                      buckEventBus,
+                      freshInstanceAction,
+                      cellPath,
+                      client,
+                      query,
+                      cursor,
+                      filesHaveChanged,
+                      perfEvent);
+                }
+              }
+              return null;
+            });
+      }
+
+      // Run all of the Watchman queries in parallel. This can be significant if you have a lot of
+      // cells.
+      List<Future<Void>> futures = executorService.invokeAll(watchmanQueries);
+      for (Future<Void> future : futures) {
+        try {
+          future.get();
+        } catch (ExecutionException e) {
+          Throwable cause = e.getCause();
+          if (cause != null) {
+            Throwables.throwIfUnchecked(cause);
+            Throwables.propagateIfPossible(cause, IOException.class);
+            Throwables.propagateIfPossible(cause, InterruptedException.class);
           }
+          throw new RuntimeException(e);
         }
       }
+
       if (!filesHaveChanged.get()) {
         buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
       }
     } finally {
       buckEventBus.post(WatchmanStatusEvent.finished());
+      executorService.shutdown();
     }
   }
 

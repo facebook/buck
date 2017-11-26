@@ -124,7 +124,8 @@ public class WatchmanWatcherIntegrationTest {
             ImmutableMap.of(
                 tmp.getRoot(),
                 new WatchmanCursor(
-                    new StringBuilder("n:buckd").append(UUID.randomUUID()).toString())));
+                    new StringBuilder("n:buckd").append(UUID.randomUUID()).toString())),
+            /* numThreads */ 1);
 
     // Clear out the initial overflow event.
     watcher.postEvents(
