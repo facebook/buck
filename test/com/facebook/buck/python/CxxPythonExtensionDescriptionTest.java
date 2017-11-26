@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
+import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLink;
@@ -40,6 +41,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.CxxPythonExtensionDescription.Type;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -525,5 +527,29 @@ public class CxxPythonExtensionDescriptionTest {
     assertThat(
         cxxPythonExtension.getModule().toString(),
         Matchers.endsWith(CxxPythonExtensionDescription.getExtensionName("blah")));
+  }
+
+  @Test
+  public void compilationDatabase() throws Exception {
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:ext"),
+            FlavorDomain.of("Python Platform", PY2, PY3),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestUtils.createDefaultPlatforms());
+    builder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraphFactory.newInstance(builder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRule rule =
+        resolver.requireRule(
+            builder
+                .getTarget()
+                .withAppendedFlavors(
+                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                    PY2.getFlavor(),
+                    Type.COMPILATION_DATABASE.getFlavor()));
+    assertThat(rule, Matchers.instanceOf(CxxCompilationDatabase.class));
   }
 }
