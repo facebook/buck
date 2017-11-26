@@ -22,10 +22,13 @@ import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,6 +85,18 @@ class CompilerDelegate implements AddsToRuleKey {
 
   public ImmutableMap<String, String> getEnvironment() {
     return compiler.getEnvironment(resolver);
+  }
+
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+    return compiler
+        .getInputs()
+        .stream()
+        .sorted()
+        .filter(
+            (SourcePath path) ->
+                !(path instanceof PathSourcePath)
+                    || !((PathSourcePath) path).getRelativePath().isAbsolute())
+        .collect(MoreCollectors.toImmutableList());
   }
 
   public boolean isArgFileSupported() {

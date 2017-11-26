@@ -48,7 +48,7 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
   }
 
   @Override
-  public void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder) {
+  public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
     builder.addHeaderDir(getRoot());
   }
 
