@@ -58,10 +58,6 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
-import com.facebook.buck.d.DBinaryDescription;
-import com.facebook.buck.d.DBuckConfig;
-import com.facebook.buck.d.DLibraryDescription;
-import com.facebook.buck.d.DTestDescription;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
@@ -230,8 +226,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     // Get the default target platform from config.
     CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
-
-    DBuckConfig dBuckConfig = new DBuckConfig(config);
 
     RustBuckConfig rustBuckConfig = new RustBuckConfig(config);
 
@@ -450,9 +444,6 @@ abstract class AbstractKnownBuildRuleTypes {
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.addDescriptions(
         new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms));
-    builder.addDescriptions(new DBinaryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig));
-    builder.addDescriptions(new DLibraryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig));
-    builder.addDescriptions(new DTestDescription(toolchainProvider, dBuckConfig, cxxBuckConfig));
     builder.addDescriptions(new ExportFileDescription());
     builder.addDescriptions(
         new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
@@ -552,10 +543,15 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new ShTestDescription(config));
     builder.addDescriptions(new WorkerToolDescription(config));
 
+    DescriptionCreationContext descriptionCreationContext =
+        DescriptionCreationContext.builder()
+            .setBuckConfig(config)
+            .setToolchainProvider(toolchainProvider)
+            .build();
     List<DescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(DescriptionProvider.class);
     for (DescriptionProvider provider : descriptionProviders) {
-      for (Description<?> description : provider.getDescriptions()) {
+      for (Description<?> description : provider.getDescriptions(descriptionCreationContext)) {
         builder.addDescriptions(description);
       }
     }

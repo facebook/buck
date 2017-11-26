@@ -14,25 +14,31 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.d;
 
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
 
 @Extension
-public class AppleDescriptionProvider implements DescriptionProvider {
+public class DDescriptionsProvider implements DescriptionProvider {
+
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
+    BuckConfig buckConfig = context.getBuckConfig();
+    DBuckConfig dBuckConfig = new DBuckConfig(buckConfig);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+
     return Arrays.asList(
-        new AppleAssetCatalogDescription(),
-        new AppleResourceDescription(),
-        new CoreDataModelDescription(),
-        new XcodeWorkspaceConfigDescription(),
-        new XcodePrebuildScriptDescription(),
-        new XcodePostbuildScriptDescription());
+        new DBinaryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig),
+        new DLibraryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig),
+        new DTestDescription(toolchainProvider, dBuckConfig, cxxBuckConfig));
   }
 }

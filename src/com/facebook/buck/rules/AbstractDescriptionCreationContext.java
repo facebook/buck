@@ -14,19 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.rules;
+package com.facebook.buck.rules;
 
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.DescriptionCreationContext;
-import com.facebook.buck.rules.DescriptionProvider;
-import java.util.Collection;
-import java.util.Collections;
-import org.pf4j.Extension;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-@Extension
-public class ZipDescriptionProvider implements DescriptionProvider {
-  @Override
-  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    return Collections.singleton(new ZipFileDescription());
-  }
+/** Contains objects that can be used during the creation of descriptions. */
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractDescriptionCreationContext {
+  BuckConfig getBuckConfig();
+
+  ToolchainProvider getToolchainProvider();
 }

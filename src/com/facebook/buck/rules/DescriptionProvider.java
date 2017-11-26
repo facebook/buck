@@ -44,5 +44,5 @@ import org.pf4j.ExtensionPoint;
  * //src/com/facebook/buck/cli:main} target.
  */
 public interface DescriptionProvider extends ExtensionPoint {
-  Collection<Description<?>> getDescriptions();
+  Collection<Description<?>> getDescriptions(DescriptionCreationContext context);
 }

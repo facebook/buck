@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.rules;
 
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +27,7 @@ import org.pf4j.Extension;
 @Extension
 public class JavaDescriptionProvider implements DescriptionProvider {
   @Override
-  public Collection<Description<?>> getDescriptions() {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     return Collections.singleton(new PrebuiltJarDescription());
   }
 }
