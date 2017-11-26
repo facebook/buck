@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.io.ExecutableFinder;
@@ -45,6 +46,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -103,9 +105,11 @@ public class ResolverIntegrationTest {
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
 
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    testToolchainProvider.addToolchain(Downloader.DEFAULT_NAME, new ExplodingDownloader());
     ImmutableSet<Description<?>> descriptions =
         ImmutableSet.of(
-            new RemoteFileDescription(new ExplodingDownloader()), new PrebuiltJarDescription());
+            new RemoteFileDescription(testToolchainProvider), new PrebuiltJarDescription());
 
     buildFileParser =
         new PythonDslProjectBuildFileParser(

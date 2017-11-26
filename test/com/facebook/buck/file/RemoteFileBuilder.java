@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -27,7 +28,14 @@ public class RemoteFileBuilder
         RemoteFileDescriptionArg.Builder, RemoteFileDescriptionArg, RemoteFileDescription,
         RemoteFile> {
   protected RemoteFileBuilder(Downloader downloader, BuildTarget target) {
-    super(new RemoteFileDescription(downloader), target);
+    super(new RemoteFileDescription(createToolchainProviderWithDownloader(downloader)), target);
+  }
+
+  private static TestToolchainProvider createToolchainProviderWithDownloader(
+      Downloader downloader) {
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    testToolchainProvider.addToolchain(Downloader.DEFAULT_NAME, downloader);
+    return testToolchainProvider;
   }
 
   public static RemoteFileBuilder createBuilder(Downloader downloader, BuildTarget target) {

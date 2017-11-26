@@ -47,7 +47,6 @@ import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -63,10 +62,7 @@ import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
 import com.facebook.buck.d.DTestDescription;
-import com.facebook.buck.file.Downloader;
-import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
@@ -266,16 +262,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     // Look up the timeout to apply to entire test rules.
     Optional<Long> defaultTestRuleTimeoutMs = config.getLong("test", "rule_timeout");
-
-    // Prepare the downloader if we're allowing mid-build downloads
-    Downloader downloader;
-    DownloadConfig downloadConfig = new DownloadConfig(config);
-    if (downloadConfig.isDownloadAtRuntimeOk()) {
-      downloader = StackedDownloader.createFromConfig(config, toolchainProvider);
-    } else {
-      // Or just set one that blows up
-      downloader = new ExplodingDownloader();
-    }
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 
@@ -556,7 +542,7 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultCxxPlatform,
             defaultTestRuleTimeoutMs,
             cxxPlatforms));
-    builder.addDescriptions(new RemoteFileDescription(downloader));
+    builder.addDescriptions(new RemoteFileDescription(toolchainProvider));
     builder.addDescriptions(
         new RobolectricTestDescription(
             toolchainProvider,

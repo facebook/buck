@@ -17,11 +17,14 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.toolchain.Toolchain;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
-public interface Downloader {
+public interface Downloader extends Toolchain {
+
+  String DEFAULT_NAME = "downloader";
 
   /**
    * Download the given URL and, upon a successful download, place it in {@code output}. Note that

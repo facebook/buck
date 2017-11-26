@@ -35,6 +35,8 @@ import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;
+import com.facebook.buck.file.Downloader;
+import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformsProviderFactory;
@@ -94,7 +96,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     CXX_PLATFORMS(
         CxxPlatformsProvider.DEFAULT_NAME,
         CxxPlatformsProvider.class,
-        CxxPlatformsProviderFactory.class);
+        CxxPlatformsProviderFactory.class),
+    DOWNLOADER(Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class);
 
     @VisibleForTesting final String name;
     private final Class<? extends Toolchain> toolchainClass;

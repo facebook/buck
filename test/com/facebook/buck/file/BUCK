@@ -95,6 +95,7 @@ java_library(
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/toolchain/impl:testutil",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:ddmlib",
         "//third-party/java/android:tools-sdk-common",
