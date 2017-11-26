@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -134,18 +135,7 @@ public class BuildFileSpecTest {
     Cell cell =
         new TestCellBuilder()
             .setFilesystem(filesystem)
-            .setWatchman(
-                new Watchman(
-                    ImmutableMap.of(
-                        filesystem.getRootPath(),
-                        ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
-                    ImmutableSet.of(
-                        WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
-                        WatchmanFactory.Capability.DIRNAME,
-                        WatchmanFactory.Capability.WILDMATCH_GLOB),
-                    ImmutableMap.of(),
-                    Optional.of(Paths.get(".watchman-sock")),
-                    Optional.of(fakeWatchmanClient)))
+            .setWatchman(createWatchman(fakeWatchmanClient, filesystem, watchRoot))
             .build();
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(cell, ParserConfig.BuildFileSearchMethod.WATCHMAN);
@@ -183,18 +173,7 @@ public class BuildFileSpecTest {
     Cell cell =
         new TestCellBuilder()
             .setFilesystem(filesystem)
-            .setWatchman(
-                new Watchman(
-                    ImmutableMap.of(
-                        filesystem.getRootPath(),
-                        ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
-                    ImmutableSet.of(
-                        WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
-                        WatchmanFactory.Capability.DIRNAME,
-                        WatchmanFactory.Capability.WILDMATCH_GLOB),
-                    ImmutableMap.of(),
-                    Optional.of(Paths.get(".watchman-sock")),
-                    Optional.of(fakeWatchmanClient)))
+            .setWatchman(createWatchman(fakeWatchmanClient, filesystem, watchRoot))
             .build();
 
     thrown.expect(IOException.class);
@@ -240,18 +219,7 @@ public class BuildFileSpecTest {
     Cell cell =
         new TestCellBuilder()
             .setFilesystem(filesystem)
-            .setWatchman(
-                new Watchman(
-                    ImmutableMap.of(
-                        filesystem.getRootPath(),
-                        ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
-                    ImmutableSet.of(
-                        WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
-                        WatchmanFactory.Capability.DIRNAME,
-                        WatchmanFactory.Capability.WILDMATCH_GLOB),
-                    ImmutableMap.of(),
-                    Optional.of(Paths.get(".watchman-sock")),
-                    Optional.of(timingOutWatchmanClient)))
+            .setWatchman(createWatchman(timingOutWatchmanClient, filesystem, watchRoot))
             .build();
     ImmutableSet<Path> expectedBuildFiles =
         ImmutableSet.of(filesystem.resolve(buildFile), filesystem.resolve(nestedBuildFile));
@@ -269,5 +237,24 @@ public class BuildFileSpecTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("could not be found");
     recursiveSpec.findBuildFiles(cell, ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
+  }
+
+  private static Watchman createWatchman(
+      WatchmanClient client, ProjectFilesystem filesystem, Path watchRoot) {
+    return new Watchman(
+        ImmutableMap.of(
+            filesystem.getRootPath(),
+            ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
+        ImmutableSet.of(
+            WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
+            WatchmanFactory.Capability.DIRNAME,
+            WatchmanFactory.Capability.WILDMATCH_GLOB),
+        ImmutableMap.of(),
+        Optional.of(Paths.get(".watchman-sock"))) {
+      @Override
+      public WatchmanClient createClient() throws IOException {
+        return client;
+      }
+    };
   }
 }

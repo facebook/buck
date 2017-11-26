@@ -617,16 +617,18 @@ public class WatchmanWatcherTest {
         ImmutableMap.of(
             "files", ImmutableList.of(ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
 
+    WatchmanClient client =
+        new FakeWatchmanClient(
+            0,
+            ImmutableMap.of(
+                FAKE_CLOCK_QUERY,
+                watchmanRootOutput,
+                FAKE_SECONDARY_QUERY.toList("c:0:0"),
+                watchmanSecondaryOutput));
     WatchmanWatcher watcher =
         new WatchmanWatcher(
             eventBus,
-            new FakeWatchmanClient(
-                0,
-                ImmutableMap.of(
-                    FAKE_CLOCK_QUERY,
-                    watchmanRootOutput,
-                    FAKE_SECONDARY_QUERY.toList("c:0:0"),
-                    watchmanSecondaryOutput)),
+            () -> client,
             10000,
             ImmutableMap.of(
                 FAKE_ROOT, FAKE_QUERY,
@@ -675,7 +677,7 @@ public class WatchmanWatcherTest {
       String sinceCursor) {
     return new WatchmanWatcher(
         eventBus,
-        watchmanClient,
+        () -> watchmanClient,
         timeoutMillis,
         ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
         ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)));

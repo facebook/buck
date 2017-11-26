@@ -17,7 +17,6 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.io.WatchmanFactory.Capability;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -27,28 +26,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public class Watchman implements AutoCloseable {
+/** Contains the configuration for a Watchman client as well as the ability to create a client. */
+public abstract class Watchman {
 
   private final ImmutableMap<Path, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
-  private final Optional<Path> transportPath;
-  private final Optional<WatchmanClient> watchmanClient;
   private final ImmutableMap<String, String> clockIds;
+  private final Optional<Path> transportPath;
 
-  // TODO(beng): Split the metadata out into an immutable value type and pass
-  // the WatchmanClient separately.
-  @VisibleForTesting
   public Watchman(
       ImmutableMap<Path, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
       ImmutableMap<String, String> clockIds,
-      Optional<Path> transportPath,
-      Optional<WatchmanClient> watchmanClient) {
+      Optional<Path> transportPath) {
     this.projectWatches = projectWatches;
     this.capabilities = capabilities;
     this.clockIds = clockIds;
     this.transportPath = transportPath;
-    this.watchmanClient = watchmanClient;
   }
 
   public ImmutableMap<Path, WatchmanCursor> buildClockWatchmanCursorMap() {
@@ -92,14 +86,15 @@ public class Watchman implements AutoCloseable {
     return transportPath;
   }
 
-  public Optional<WatchmanClient> getWatchmanClient() {
-    return watchmanClient;
-  }
-
-  @Override
-  public void close() throws IOException {
-    if (watchmanClient.isPresent()) {
-      watchmanClient.get().close();
-    }
-  }
+  /**
+   * Note this method will throw an {@link IOException} if:
+   *
+   * <ul>
+   *   <li>{@link #getTransportPath()} returns {@link Optional#empty()}
+   *   <li>It cannot establish a connection to Watchman.
+   * </ul>
+   *
+   * @return a new client that the caller is responsible for closing.
+   */
+  public abstract WatchmanClient createClient() throws IOException;
 }

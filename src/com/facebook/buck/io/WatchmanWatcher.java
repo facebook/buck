@@ -77,35 +77,40 @@ public class WatchmanWatcher {
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final EventBus fileChangeEventBus;
-  private final WatchmanClient watchmanClient;
+  private final WatchmanClientFactory watchmanClientFactory;
   private final ImmutableMap<Path, WatchmanQuery> queries;
   private Map<Path, WatchmanCursor> cursors;
 
   private final long timeoutMillis;
 
+  /** Factory for creating new instances of {@link WatchmanClient}. */
+  interface WatchmanClientFactory {
+    /** @return a new client that the caller is responsible for closing. */
+    WatchmanClient newInstance() throws IOException;
+  }
+
   public WatchmanWatcher(
-      ImmutableMap<Path, ProjectWatch> projectWatch,
+      Watchman watchman,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
-      Watchman watchman,
       Map<Path, WatchmanCursor> cursors) {
     this(
         fileChangeEventBus,
-        watchman.getWatchmanClient().get(),
+        () -> watchman.createClient(),
         DEFAULT_TIMEOUT_MILLIS,
-        createQueries(projectWatch, ignorePaths, watchman.getCapabilities()),
+        createQueries(watchman.getProjectWatches(), ignorePaths, watchman.getCapabilities()),
         cursors);
   }
 
   @VisibleForTesting
   WatchmanWatcher(
       EventBus fileChangeEventBus,
-      WatchmanClient watchmanClient,
+      WatchmanClientFactory watchmanClientFactory,
       long timeoutMillis,
       ImmutableMap<Path, WatchmanQuery> queries,
       Map<Path, WatchmanCursor> cursors) {
     this.fileChangeEventBus = fileChangeEventBus;
-    this.watchmanClient = watchmanClient;
+    this.watchmanClientFactory = watchmanClientFactory;
     this.timeoutMillis = timeoutMillis;
     this.queries = queries;
     this.cursors = cursors;
@@ -209,21 +214,24 @@ public class WatchmanWatcher {
     AtomicBoolean filesHaveChanged = new AtomicBoolean(false);
     buckEventBus.post(WatchmanStatusEvent.started());
     try {
-      for (Path cellPath : queries.keySet()) {
-        WatchmanQuery query = queries.get(cellPath);
-        WatchmanCursor cursor = cursors.get(cellPath);
-        if (query != null && cursor != null) {
-          try (SimplePerfEvent.Scope perfEvent =
-              SimplePerfEvent.scope(
-                  buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath)) {
-            postEvents(
-                buckEventBus,
-                freshInstanceAction,
-                cellPath,
-                query,
-                cursor,
-                filesHaveChanged,
-                perfEvent);
+      try (WatchmanClient client = watchmanClientFactory.newInstance()) {
+        for (Path cellPath : queries.keySet()) {
+          WatchmanQuery query = queries.get(cellPath);
+          WatchmanCursor cursor = cursors.get(cellPath);
+          if (query != null && cursor != null) {
+            try (SimplePerfEvent.Scope perfEvent =
+                SimplePerfEvent.scope(
+                    buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath)) {
+              postEvents(
+                  buckEventBus,
+                  freshInstanceAction,
+                  cellPath,
+                  client,
+                  query,
+                  cursor,
+                  filesHaveChanged,
+                  perfEvent);
+            }
           }
         }
       }
@@ -240,6 +248,7 @@ public class WatchmanWatcher {
       BuckEventBus buckEventBus,
       FreshInstanceAction freshInstanceAction,
       Path cellPath,
+      WatchmanClient client,
       WatchmanQuery query,
       WatchmanCursor cursor,
       AtomicBoolean filesHaveChanged,
@@ -249,7 +258,7 @@ public class WatchmanWatcher {
       Optional<? extends Map<String, ? extends Object>> queryResponse;
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(buckEventBus, "query")) {
         queryResponse =
-            watchmanClient.queryWithTimeout(
+            client.queryWithTimeout(
                 TimeUnit.MILLISECONDS.toNanos(timeoutMillis), query.toList(cursor.get()).toArray());
       }
 
