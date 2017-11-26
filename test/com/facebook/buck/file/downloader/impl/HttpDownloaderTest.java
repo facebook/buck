@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static org.easymock.EasyMock.capture;
@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.file.downloader.Downloader;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.net.HttpURLConnection;

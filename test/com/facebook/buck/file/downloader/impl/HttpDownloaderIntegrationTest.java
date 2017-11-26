@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.google.common.io.Files;
 import java.io.IOException;

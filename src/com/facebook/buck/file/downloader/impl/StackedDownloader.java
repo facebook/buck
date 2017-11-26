@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;

@@ -14,9 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.DownloadEvent.Started;
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -59,7 +61,7 @@ public class OnDiskMavenDownloader implements Downloader {
       throw new IOException(String.format("Unable to download %s (derived from %s)", target, uri));
     }
 
-    DownloadEvent.Started started = DownloadEvent.started(target.toUri());
+    Started started = DownloadEvent.started(target.toUri());
     eventBus.post(started);
 
     try (InputStream is = new BufferedInputStream(Files.newInputStream(target))) {

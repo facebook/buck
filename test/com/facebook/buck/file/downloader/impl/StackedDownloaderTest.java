@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
@@ -28,6 +28,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;

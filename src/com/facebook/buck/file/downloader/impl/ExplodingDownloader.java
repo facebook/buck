@@ -14,25 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
-public interface Downloader extends Toolchain {
-
-  String DEFAULT_NAME = "downloader";
-
-  /**
-   * Download the given URL and, upon a successful download, place it in {@code output}. Note that
-   * if a {@code Downloader} can't handle the {@link URI#scheme} then {@code false} will be
-   * returned.
-   *
-   * @return Whether or not the download succeeded.
-   * @throws IOException Should an exception be thrown when downloading.
-   */
-  boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException;
+public class ExplodingDownloader implements Downloader {
+  @Override
+  public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
+    throw new HumanReadableException(
+        "Downloading files at runtime is disabled, please run 'buck fetch' before your build");
+  }
 }

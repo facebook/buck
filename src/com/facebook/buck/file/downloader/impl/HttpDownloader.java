@@ -14,9 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.file.downloader.AuthAwareDownloader;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.DownloadEvent.Started;
 import com.facebook.buck.log.Logger;
 import com.google.common.io.BaseEncoding;
 import java.io.BufferedInputStream;
@@ -64,7 +67,7 @@ public class HttpDownloader implements Downloader, AuthAwareDownloader {
       return false;
     }
 
-    DownloadEvent.Started started = DownloadEvent.started(uri);
+    Started started = DownloadEvent.started(uri);
     eventBus.post(started);
 
     try {

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;

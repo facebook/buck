@@ -14,9 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.file.downloader.AuthAwareDownloader;
+import com.facebook.buck.file.downloader.Downloader;
 import java.io.IOException;
 import java.net.PasswordAuthentication;
 import java.net.URI;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader;
 
 import com.facebook.buck.event.BuckEventBus;
 import java.io.IOException;

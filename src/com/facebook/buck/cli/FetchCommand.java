@@ -18,9 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.StackedDownloader;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.StackedDownloader;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;

@@ -35,7 +35,7 @@ import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;
-import com.facebook.buck.file.Downloader;
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;

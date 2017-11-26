@@ -17,9 +17,7 @@
 package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.config.DownloadConfig;
-import com.facebook.buck.file.Downloader;
-import com.facebook.buck.file.ExplodingDownloader;
-import com.facebook.buck.file.StackedDownloader;
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;

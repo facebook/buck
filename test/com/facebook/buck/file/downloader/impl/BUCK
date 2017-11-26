@@ -1,0 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "impl",
+    deps = [
+        "//src/com/facebook/buck/file/downloader/impl:impl",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/toolchain/impl:testutil",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/jetty:jetty",
+        "//third-party/java/jimfs:jimfs",
+        "//third-party/java/junit:junit",
+    ],
+)

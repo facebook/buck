@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.exceptions.RetryingException;
 import java.io.IOException;

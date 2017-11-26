@@ -1,33 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-java_library(
-    name = "downloader",
-    srcs = [
-        "AuthAwareDownloader.java",
-        "DownloadEvent.java",
-        "DownloadProgressEvent.java",
-        "Downloader.java",
-        "ExplodingDownloader.java",
-        "HttpDownloader.java",
-        "MavenUrlDecoder.java",
-        "OnDiskMavenDownloader.java",
-        "RemoteMavenDownloader.java",
-        "RetryingDownloader.java",
-        "StackedDownloader.java",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/android/toolchain:toolchain",
-        "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/toolchain:toolchain",
-        "//src/com/facebook/buck/util:exceptions",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 java_immutables_library(
     name = "file",
     srcs = [
@@ -36,6 +8,9 @@ java_immutables_library(
         "RemoteFileBinary.java",
         "RemoteFileDescription.java",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/file/downloader:downloader",
+    ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/rules:types",
@@ -43,7 +18,6 @@ java_immutables_library(
         "//test/com/facebook/buck/maven:maven",
     ],
     deps = [
-        ":downloader",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

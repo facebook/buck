@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.file;
+package com.facebook.buck.file.downloader.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.file.downloader.Downloader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,7 +30,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Tests {@link RetryingDownloader} functionality. */
+/** Tests {@link com.facebook.buck.file.downloader.impl.RetryingDownloader} functionality. */
 public class RetryingDownloaderTest {
 
   private BuckEventBus fakeEventBus;
