@@ -35,6 +35,7 @@ java_immutables_library(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

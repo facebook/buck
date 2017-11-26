@@ -21,6 +21,7 @@ import static com.facebook.buck.rust.RustCompileUtils.ruleToCrateName;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -47,6 +48,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.FluentIterable;
@@ -68,18 +70,14 @@ public class RustLibraryDescription
 
   private static final FlavorDomain<RustDescriptionEnhancer.Type> LIBRARY_TYPE =
       FlavorDomain.from("Rust Library Type", RustDescriptionEnhancer.Type.class);
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
+  private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
 
   public RustLibraryDescription(
-      RustBuckConfig rustBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
+      ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -153,11 +151,14 @@ public class RustLibraryDescription
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, RustDescriptionEnhancer.Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(buildTarget);
+    Optional<CxxPlatform> cxxPlatform =
+        cxxPlatformsProvider.getCxxPlatforms().getValue(buildTarget);
 
     if (type.isPresent()) {
       // Uncommon case - someone explicitly invoked buck to build a specific flavor as the
@@ -189,7 +190,7 @@ public class RustLibraryDescription
           resolver,
           pathResolver,
           ruleFinder,
-          cxxPlatform.orElse(defaultCxxPlatform),
+          cxxPlatform.orElse(cxxPlatformsProvider.getDefaultCxxPlatform()),
           rustBuckConfig,
           rustcArgs.build(),
           /* linkerArgs */ ImmutableList.of(),
@@ -412,12 +413,13 @@ public class RustLibraryDescription
     extraDepsBuilder.addAll(
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
 
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (cxxPlatforms.containsAnyOf(flavors)) {
+    if (getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -432,7 +434,12 @@ public class RustLibraryDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(cxxPlatforms, LIBRARY_TYPE));
+    return Optional.of(ImmutableSet.of(getCxxPlatformsProvider().getCxxPlatforms(), LIBRARY_TYPE));
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

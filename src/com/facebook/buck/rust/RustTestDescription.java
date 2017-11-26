@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rust;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
@@ -57,17 +58,12 @@ public class RustTestDescription
         Flavored,
         VersionRoot<RustTestDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxPlatform defaultCxxPlatform;
 
-  public RustTestDescription(
-      RustBuckConfig rustBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
+  public RustTestDescription(ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -91,6 +87,8 @@ public class RustTestDescription
 
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     BinaryWrapperRule testExeBuild =
         resolver.addToIndex(
             RustCompileUtils.createBinaryBuildRule(
@@ -99,8 +97,8 @@ public class RustTestDescription
                 params,
                 resolver,
                 rustBuckConfig,
-                cxxPlatforms,
-                defaultCxxPlatform,
+                cxxPlatformsProvider.getCxxPlatforms(),
+                cxxPlatformsProvider.getDefaultCxxPlatform(),
                 args.getCrate(),
                 args.getFeatures(),
                 Stream.of(
@@ -142,12 +140,13 @@ public class RustTestDescription
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
     extraDepsBuilder.addAll(compiler.getParseTimeDeps());
 
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (cxxPlatforms.containsAnyOf(flavors)) {
+    if (getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -162,7 +161,14 @@ public class RustTestDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(cxxPlatforms, RustBinaryDescription.BINARY_TYPE));
+    return Optional.of(
+        ImmutableSet.of(
+            getCxxPlatformsProvider().getCxxPlatforms(), RustBinaryDescription.BINARY_TYPE));
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

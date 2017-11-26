@@ -17,8 +17,8 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -39,6 +39,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
@@ -59,17 +60,12 @@ public class RustBinaryDescription
   public static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Rust Binary Type", Type.class);
 
+  private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxPlatform defaultCxxPlatform;
 
-  public RustBinaryDescription(
-      RustBuckConfig rustBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
+  public RustBinaryDescription(ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -94,14 +90,16 @@ public class RustBinaryDescription
 
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
         projectFilesystem,
         params,
         resolver,
         rustBuckConfig,
-        cxxPlatforms,
-        defaultCxxPlatform,
+        cxxPlatformsProvider.getCxxPlatforms(),
+        cxxPlatformsProvider.getDefaultCxxPlatform(),
         args.getCrate(),
         args.getFeatures(),
         Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
@@ -126,7 +124,8 @@ public class RustBinaryDescription
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
     extraDepsBuilder.addAll(compiler.getParseTimeDeps());
 
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
     extraDepsBuilder.addAll(
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
   }
@@ -162,7 +161,7 @@ public class RustBinaryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (cxxPlatforms.containsAnyOf(flavors)) {
+    if (getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -177,7 +176,12 @@ public class RustBinaryDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(cxxPlatforms, BINARY_TYPE));
+    return Optional.of(ImmutableSet.of(getCxxPlatformsProvider().getCxxPlatforms(), BINARY_TYPE));
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

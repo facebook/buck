@@ -522,12 +522,9 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultJavacOptions,
             defaultCxxPlatform,
             defaultAndroidCompilerFactory));
-    builder.addDescriptions(
-        new RustBinaryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
-    builder.addDescriptions(
-        new RustLibraryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
-    builder.addDescriptions(
-        new RustTestDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
+    builder.addDescriptions(new RustBinaryDescription(toolchainProvider, rustBuckConfig));
+    builder.addDescriptions(new RustLibraryDescription(toolchainProvider, rustBuckConfig));
+    builder.addDescriptions(new RustTestDescription(toolchainProvider, rustBuckConfig));
     builder.addDescriptions(new PrebuiltRustLibraryDescription());
     builder.addDescriptions(
         new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));

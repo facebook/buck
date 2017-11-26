@@ -17,10 +17,13 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class RustLibraryBuilder
@@ -34,10 +37,7 @@ public class RustLibraryBuilder
 
   public static RustLibraryBuilder from(String target) {
     return new RustLibraryBuilder(
-        new RustLibraryDescription(
-            FakeRustConfig.FAKE_RUST_CONFIG,
-            CxxPlatformUtils.DEFAULT_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM),
+        new RustLibraryDescription(createToolchainProvider(), FakeRustConfig.FAKE_RUST_CONFIG),
         BuildTargetFactory.newInstance(target));
   }
 
@@ -49,5 +49,14 @@ public class RustLibraryBuilder
   public RustLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setDeps(deps);
     return this;
+  }
+
+  private static ToolchainProvider createToolchainProvider() {
+    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    testToolchainProvider.addToolchain(
+        CxxPlatformsProvider.DEFAULT_NAME,
+        CxxPlatformsProvider.of(
+            CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS));
+    return testToolchainProvider;
   }
 }
