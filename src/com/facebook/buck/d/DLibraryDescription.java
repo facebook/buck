@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
@@ -46,15 +48,15 @@ import org.immutables.value.Value;
 public class DLibraryDescription
     implements Description<DLibraryDescriptionArg>, VersionPropagator<DLibraryDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
 
   public DLibraryDescription(
-      DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+      ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -118,6 +120,11 @@ public class DLibraryDescription
       SourceList sources,
       DIncludes dIncludes,
       PicType pic) {
+
+    CxxPlatform cxxPlatform =
+        toolchainProvider
+            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+            .getDefaultCxxPlatform();
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(

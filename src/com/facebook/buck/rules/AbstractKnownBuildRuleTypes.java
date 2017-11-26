@@ -450,10 +450,9 @@ abstract class AbstractKnownBuildRuleTypes {
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.addDescriptions(
         new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms));
-    builder.addDescriptions(new DBinaryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
-    builder.addDescriptions(
-        new DLibraryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
-    builder.addDescriptions(new DTestDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
+    builder.addDescriptions(new DBinaryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig));
+    builder.addDescriptions(new DLibraryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig));
+    builder.addDescriptions(new DTestDescription(toolchainProvider, dBuckConfig, cxxBuckConfig));
     builder.addDescriptions(new ExportFileDescription());
     builder.addDescriptions(
         new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));

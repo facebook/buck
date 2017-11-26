@@ -21,6 +21,7 @@ import static com.facebook.buck.d.DDescriptionUtils.SOURCE_LINK_TREE;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
@@ -55,15 +57,15 @@ public class DBinaryDescription
 
   public static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
+  private final ToolchainProvider toolchainProvider;
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
 
   public DBinaryDescription(
-      DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig, CxxPlatform cxxPlatform) {
+      ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -101,7 +103,7 @@ public class DBinaryDescription
             projectFilesystem,
             params,
             buildRuleResolver,
-            cxxPlatform,
+            getCxxPlatform(),
             dBuckConfig,
             cxxBuckConfig,
             /* compilerFlags */ ImmutableList.of(),
@@ -134,7 +136,13 @@ public class DBinaryDescription
       AbstractDBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(cxxPlatform.getLd().getParseTimeDeps());
+    extraDepsBuilder.addAll(getCxxPlatform().getLd().getParseTimeDeps());
+  }
+
+  private CxxPlatform getCxxPlatform() {
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
   }
 
   @BuckStyleImmutable
