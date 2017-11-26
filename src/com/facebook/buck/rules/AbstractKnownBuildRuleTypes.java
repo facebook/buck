@@ -116,11 +116,6 @@ import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
-import com.facebook.buck.rust.PrebuiltRustLibraryDescription;
-import com.facebook.buck.rust.RustBinaryDescription;
-import com.facebook.buck.rust.RustBuckConfig;
-import com.facebook.buck.rust.RustLibraryDescription;
-import com.facebook.buck.rust.RustTestDescription;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.CommandAliasDescription;
@@ -226,8 +221,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     // Get the default target platform from config.
     CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
-
-    RustBuckConfig rustBuckConfig = new RustBuckConfig(config);
 
     GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor, cxxPlatforms);
 
@@ -522,10 +515,6 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultJavacOptions,
             defaultCxxPlatform,
             defaultAndroidCompilerFactory));
-    builder.addDescriptions(new RustBinaryDescription(toolchainProvider, rustBuckConfig));
-    builder.addDescriptions(new RustLibraryDescription(toolchainProvider, rustBuckConfig));
-    builder.addDescriptions(new RustTestDescription(toolchainProvider, rustBuckConfig));
-    builder.addDescriptions(new PrebuiltRustLibraryDescription());
     builder.addDescriptions(
         new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
