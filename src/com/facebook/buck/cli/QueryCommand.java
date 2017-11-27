@@ -48,12 +48,16 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 public class QueryCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(QueryCommand.class);
+
+  /** String used to separate distinct sets when using `%Ss` in a query */
+  public static final String SET_SEPARATOR = "--";
 
   /**
    * Example usage:
@@ -99,7 +103,8 @@ public class QueryCommand extends AbstractCommand {
     return !outputAttributes.get().isEmpty();
   }
 
-  @Argument private List<String> arguments = new ArrayList<>();
+  @Argument(handler = QueryMultiSetOptionHandler.class)
+  private List<String> arguments = new ArrayList<>();
 
   @VisibleForTesting
   void setArguments(List<String> arguments) {
@@ -159,10 +164,35 @@ public class QueryCommand extends AbstractCommand {
       String queryFormat,
       List<String> formatArgs)
       throws InterruptedException, QueryException, IOException {
-    String argsList =
-        Joiner.on(' ').join(Iterables.transform(formatArgs, input -> "'" + input + "'"));
-    String setRepresentation = "set(" + argsList + ")";
-    String formattedQuery = queryFormat.replace("%Ss", setRepresentation);
+    // No separators means 1 set, a single separator means 2 sets, etc
+    int numberOfSetsProvided = Iterables.frequency(formatArgs, SET_SEPARATOR) + 1;
+    int numberOfSetsRequested = StringUtils.countMatches(queryFormat, "%Ss");
+    if (numberOfSetsProvided != numberOfSetsRequested && numberOfSetsProvided > 1) {
+      String message =
+          String.format(
+              "Incorrect number of sets. Query uses `%%Ss` %d times but %d sets were given",
+              numberOfSetsRequested, numberOfSetsProvided);
+      throw new HumanReadableException(message);
+    }
+
+    // If they only provided one list as args, use that for every instance of `%Ss`
+    if (numberOfSetsProvided == 1) {
+      String formattedQuery = queryFormat.replace("%Ss", getSetRepresentation(formatArgs));
+      return runSingleQuery(params, env, formattedQuery);
+    }
+
+    List<String> unusedFormatArgs = formatArgs;
+    String formattedQuery = queryFormat;
+    while (formattedQuery.contains("%Ss")) {
+      int nextSeparatorIndex = unusedFormatArgs.indexOf(SET_SEPARATOR);
+      List<String> currentSet =
+          nextSeparatorIndex == -1
+              ? unusedFormatArgs
+              : unusedFormatArgs.subList(0, nextSeparatorIndex);
+      // +1 so we don't include the separator in the next list
+      unusedFormatArgs = unusedFormatArgs.subList(nextSeparatorIndex + 1, unusedFormatArgs.size());
+      formattedQuery = formattedQuery.replaceFirst("%Ss", getSetRepresentation(currentSet));
+    }
     return runSingleQuery(params, env, formattedQuery);
   }
 
@@ -308,6 +338,11 @@ public class QueryCommand extends AbstractCommand {
 
   public static String getEscapedArgumentsListAsString(List<String> arguments) {
     return Joiner.on(" ").join(Lists.transform(arguments, arg -> "'" + arg + "'"));
+  }
+
+  private static String getSetRepresentation(List<String> args) {
+    String argsList = Joiner.on(' ').join(Iterables.transform(args, input -> "'" + input + "'"));
+    return "set(" + argsList + ")";
   }
 
   static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {

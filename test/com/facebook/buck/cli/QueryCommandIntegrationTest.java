@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -809,5 +810,45 @@ public class QueryCommandIntegrationTest {
     assertThat(
         Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout()),
         Matchers.containsInAnyOrder("//owners_violating_package_boundary/inner:lib"));
+  }
+
+  @Test
+  public void testTwoDifferentSetsPassedFromCommandLine() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "testsof(deps(%Ss)) union deps(%Ss)", "//example:four", "--", "//example:one");
+    result.assertSuccess();
+
+    List<String> output =
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout());
+    assertThat(output, Matchers.hasItems("//example:one", "//example:four-tests"));
+    assertThat(output, Matchers.not(Matchers.hasItem("//example:one-tests")));
+  }
+
+  @Test
+  public void testThreeDifferentSetsPassedFromCommandLine() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "testsof(deps(%Ss)) union (deps(%Ss) intersect deps(%Ss))",
+            "//example:four",
+            "--",
+            "//example:one",
+            "--",
+            "//example:two");
+    result.assertSuccess();
+
+    List<String> output =
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout());
+    assertThat(output, Matchers.hasItems("//example:two", "//example:four-tests"));
+    assertThat(
+        output,
+        Matchers.not(Matchers.hasItems("//example:one", "//example:one-tests", "//example:four")));
   }
 }

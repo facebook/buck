@@ -707,6 +707,33 @@ Then the query produced will be equivalent to:
 buck query testsof(deps(set('//foo:bar' '//foo:baz')))
 </pre></p>
 
+<p>
+When using multiple <code>%Ss</code> operators in a single query, it is
+sometimes necessary to use different values for the different occurrences of
+{sp}<code>%Ss</code>. In those situations, <code>--</code> can be used to
+separate elements that go in different sets. For example:
+</p>
+
+<p><pre>
+buck query "testsof(deps(%Ss)) union deps(%Ss)" @path/to/args-file
+</pre></p>
+
+<p><pre>
+{literal}
+//foo:foo
+--
+//bar:bar
+{/literal}
+</pre></p>
+
+<p>
+is equivalent to running the following:
+</p>
+
+<p><pre>
+buck query "testsof(deps(set('//foo:foo'))) union deps(set('//bar:bar'))"
+</pre></p>
+
 {/param}
 
 {param params}
