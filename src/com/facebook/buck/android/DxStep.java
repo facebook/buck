@@ -16,12 +16,12 @@
 
 package com.facebook.buck.android;
 
-import com.android.tools.r8.CompilationException;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.D8Output;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
+import com.android.tools.r8.utils.CompilationFailedException;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -261,14 +261,13 @@ public class DxStep extends ShellStep {
         Path output = outputToDex ? Files.createTempDirectory("buck-d8") : outputDexFile;
 
         D8Command.Builder builder =
-            D8Command.builder()
+            D8Command.builder(diagnosticsHandler)
                 .addProgramFiles(inputs)
                 .setIntermediate(intermediate)
                 .setMode(
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
-                .setDiagnosticsHandler(diagnosticsHandler)
                 .setOutputPath(output);
 
         D8Output d8Output = com.android.tools.r8.D8.run(builder.build());
@@ -282,7 +281,7 @@ public class DxStep extends ShellStep {
 
         resourcesReferencedInCode = d8Output.getReferencedResources();
         return 0;
-      } catch (CompilationException | IOException e) {
+      } catch (CompilationFailedException | IOException e) {
         context.postEvent(
             ConsoleEvent.severe(
                 String.join(
