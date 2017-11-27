@@ -1492,8 +1492,10 @@ class CachingBuildRuleBuilder {
 
     // Deserialize the manifest.
     Manifest manifest;
-    try (InputStream input =
-        new GZIPInputStream(rule.getProjectFilesystem().newFileInputStream(path))) {
+    // Keep the file input stream in a separate variable so that it gets closed if the
+    // GZIPInputStream constructor throws.
+    try (InputStream manifestFile = rule.getProjectFilesystem().newFileInputStream(path);
+        InputStream input = new GZIPInputStream(manifestFile)) {
       manifest = new Manifest(input);
     } catch (Exception e) {
       LOG.warn(
