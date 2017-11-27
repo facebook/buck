@@ -36,10 +36,12 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
@@ -51,6 +53,7 @@ import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.Environment.Extension;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
@@ -69,6 +72,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
  * Parser for build files written using Skylark syntax.
@@ -200,20 +204,23 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     }
     ParseContext parseContext = new ParseContext();
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
-      Environment env =
+      EnvironmentData envData =
           createBuildFileEvaluationEnvironment(buildFile, buildFileAst, mutability, parseContext);
-      boolean exec = buildFileAst.exec(env, eventHandler);
+      boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot evaluate build file " + buildFile);
       }
-      parseContext.recordLoadedPath(buildFilePath);
       ImmutableList<Map<String, Object>> rules = parseContext.getRecordedRules();
       LOG.verbose("Got rules: %s", rules);
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
       return ParseResult.builder()
           .setRawRules(rules)
-          .setLoadedPaths(parseContext.getLoadedPaths())
+          .setLoadedPaths(
+              ImmutableSortedSet.<com.google.devtools.build.lib.vfs.Path>naturalOrder()
+                  .addAll(envData.getLoadedPaths())
+                  .add(buildFilePath)
+                  .build())
           .build();
     }
   }
@@ -230,11 +237,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return The environment that can be used for evaluating build files. It includes built-in
    *     functions like {@code glob} and native rules like {@code java_library}.
    */
-  private Environment createBuildFileEvaluationEnvironment(
+  private EnvironmentData createBuildFileEvaluationEnvironment(
       Path buildFile, BuildFileAST buildFileAst, Mutability mutability, ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
-    ImmutableMap<String, Environment.Extension> importMap =
-        buildImportMap(buildFileAst.getImports(), parseContext);
+    ImmutableList<ExtensionData> dependencies = loadExtensions(buildFileAst.getImports());
+    ImmutableMap<String, Environment.Extension> importMap = toImportMap(dependencies);
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
@@ -253,47 +260,111 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .setRawConfig(options.getRawConfig())
             .build();
     env.setupDynamic(PackageFactory.PACKAGE_CONTEXT, packageContext);
-    return env;
+    return EnvironmentData.builder()
+        .setEnvironment(env)
+        .setLoadedPaths(toLoadedPaths(dependencies))
+        .build();
+  }
+
+  private ImmutableList<com.google.devtools.build.lib.vfs.Path> toLoadedPaths(
+      ImmutableList<ExtensionData> dependencies) {
+    ImmutableList.Builder<com.google.devtools.build.lib.vfs.Path> loadedPathsBuilder =
+        ImmutableList.builder();
+    for (ExtensionData extensionData : dependencies) {
+      loadedPathsBuilder.add(extensionData.getPath());
+      loadedPathsBuilder.addAll(toLoadedPaths(extensionData.getDependencies()));
+    }
+    return loadedPathsBuilder.build();
+  }
+
+  /** Loads all extensions identified by corresponding {@link SkylarkImport}s. */
+  private ImmutableList<ExtensionData> loadExtensions(ImmutableList<SkylarkImport> skylarkImports)
+      throws IOException, InterruptedException, BuildFileParseException {
+    ImmutableList.Builder<ExtensionData> extensionsBuilder = ImmutableList.builder();
+    for (SkylarkImport skylarkImport : skylarkImports) {
+      ExtensionData extensionData = loadExtension(skylarkImport);
+      extensionsBuilder.add(extensionData);
+    }
+    return extensionsBuilder.build();
+  }
+
+  /**
+   * Captures {@link Environment} and information related to its parsing like all {@link
+   * com.google.devtools.build.lib.vfs.Path} used in order to create this environment.
+   */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractEnvironmentData {
+    public abstract Environment getEnvironment();
+
+    public abstract ImmutableList<com.google.devtools.build.lib.vfs.Path> getLoadedPaths();
+  }
+
+  /**
+   * Captures {@link Extension} and information related to its parsing like all other extensions
+   * used in order to load it. The main purpose of extra information is to properly captured all
+   * dependent information for caching purposes.
+   */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractExtensionData {
+    public abstract Extension getExtension();
+
+    public abstract com.google.devtools.build.lib.vfs.Path getPath();
+
+    public abstract ImmutableList<ExtensionData> getDependencies();
+
+    public abstract String getImportString();
   }
 
   /**
    * @return The map from skylark import string like {@code //pkg:build_rules.bzl} to an {@link
-   *     Environment.Extension}.
+   *     Environment.Extension} for provided {@code dependencies}.
    */
-  private ImmutableMap<String, Environment.Extension> buildImportMap(
-      ImmutableList<SkylarkImport> skylarkImports, ParseContext parseContext)
-      throws IOException, InterruptedException, BuildFileParseException {
-    ImmutableMap.Builder<String, Environment.Extension> extensionMapBuilder =
-        ImmutableMap.builder();
-    for (SkylarkImport skylarkImport : skylarkImports) {
-      try (Mutability mutability =
-          Mutability.create("importing " + skylarkImport.getImportString())) {
-        com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
-        BuildFileAST extensionAst =
-            BuildFileAST.parseSkylarkFile(createInputSource(extensionPath), eventHandler);
-        if (extensionAst.containsErrors()) {
-          throw BuildFileParseException.createForUnknownParseError(
-              "Cannot parse extension file " + skylarkImport.getImportString());
-        }
-        Environment.Builder envBuilder =
-            Environment.builder(mutability).setGlobals(buckGlobalsSupplier.get());
-        if (!extensionAst.getImports().isEmpty()) {
-          envBuilder.setImportedExtensions(buildImportMap(extensionAst.getImports(), parseContext));
-        }
-        Environment extensionEnv = envBuilder.useDefaultSemantics().build();
-        extensionEnv.setup("native", nativeModuleSupplier.get());
-        Runtime.registerModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
-        boolean success = extensionAst.exec(extensionEnv, eventHandler);
-        if (!success) {
-          throw BuildFileParseException.createForUnknownParseError(
-              "Cannot evaluate extension file " + skylarkImport.getImportString());
-        }
-        Environment.Extension extension = new Environment.Extension(extensionEnv);
-        extensionMapBuilder.put(skylarkImport.getImportString(), extension);
-        parseContext.recordLoadedPath(extensionPath);
+  private ImmutableMap<String, Environment.Extension> toImportMap(
+      ImmutableList<ExtensionData> dependencies) {
+    return dependencies
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableMap(
+                ExtensionData::getImportString, ExtensionData::getExtension));
+  }
+
+  /** Creates an extension from a {@code path}. */
+  private ExtensionData loadExtension(SkylarkImport skylarkImport)
+      throws IOException, BuildFileParseException, InterruptedException {
+    com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
+    Extension extension;
+    ImmutableList<ExtensionData> dependencies = ImmutableList.of();
+    try (Mutability mutability = Mutability.create("importing extension")) {
+      BuildFileAST extensionAst =
+          BuildFileAST.parseSkylarkFile(createInputSource(extensionPath), eventHandler);
+      if (extensionAst.containsErrors()) {
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot parse extension file " + skylarkImport.getImportString());
       }
+      Environment.Builder envBuilder =
+          Environment.builder(mutability).setGlobals(buckGlobalsSupplier.get());
+      if (!extensionAst.getImports().isEmpty()) {
+        dependencies = loadExtensions(extensionAst.getImports());
+        envBuilder.setImportedExtensions(toImportMap(dependencies));
+      }
+      Environment extensionEnv = envBuilder.useDefaultSemantics().build();
+      extensionEnv.setup("native", nativeModuleSupplier.get());
+      Runtime.registerModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
+      boolean success = extensionAst.exec(extensionEnv, eventHandler);
+      if (!success) {
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot evaluate extension file " + skylarkImport.getImportString());
+      }
+      extension = new Extension(extensionEnv);
     }
-    return extensionMapBuilder.build();
+    return ExtensionData.builder()
+        .setExtension(extension)
+        .setPath(extensionPath)
+        .setDependencies(dependencies)
+        .setImportString(skylarkImport.getImportString())
+        .build();
   }
 
   /**

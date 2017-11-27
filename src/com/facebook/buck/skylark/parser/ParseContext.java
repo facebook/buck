@@ -17,7 +17,6 @@
 package com.facebook.buck.skylark.parser;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 
 /**
@@ -28,22 +27,14 @@ import java.util.Map;
  */
 class ParseContext {
   private final ImmutableList.Builder<Map<String, Object>> rawRuleBuilder;
-  private final ImmutableSortedSet.Builder<com.google.devtools.build.lib.vfs.Path>
-      loadedPathsBuilder;
 
   ParseContext() {
     rawRuleBuilder = ImmutableList.builder();
-    loadedPathsBuilder = ImmutableSortedSet.naturalOrder();
   }
 
   /** Records the parsed {@code rawRule}. */
   void recordRule(Map<String, Object> rawRule) {
     rawRuleBuilder.add(rawRule);
-  }
-
-  /** Records usage of {@code path}. */
-  void recordLoadedPath(com.google.devtools.build.lib.vfs.Path path) {
-    loadedPathsBuilder.add(path);
   }
 
   /**
@@ -52,10 +43,5 @@ class ParseContext {
    */
   ImmutableList<Map<String, Object>> getRecordedRules() {
     return rawRuleBuilder.build();
-  }
-
-  /** @return The set of build files and extensions loaded while parsing requested build file. */
-  ImmutableSortedSet<com.google.devtools.build.lib.vfs.Path> getLoadedPaths() {
-    return loadedPathsBuilder.build();
   }
 }
