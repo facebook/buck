@@ -43,6 +43,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -140,7 +141,7 @@ public class DistBuildFileHashes {
       final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories,
       ListeningExecutorService executorService) {
     List<ListenableFuture<Map.Entry<BuildRule, RuleKey>>> ruleKeyEntries = new ArrayList<>();
-    for (final BuildRule rule : actionGraph.getNodes()) {
+    for (final BuildRule rule : Sets.newLinkedHashSet(actionGraph.getNodes())) {
       ruleKeyEntries.add(
           executorService.submit(
               () ->
