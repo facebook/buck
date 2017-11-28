@@ -35,7 +35,6 @@ java_library(
 )
 
 SUPPORT_SRCS = [
-    "AbstractNeededCoverageSpec.java",
     "AbstractPythonPlatform.java",
     "AbstractPythonVersion.java",
     "PythonEnvironment.java",

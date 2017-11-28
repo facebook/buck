@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.python;
+package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
