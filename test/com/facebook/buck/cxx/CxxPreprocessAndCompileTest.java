@@ -99,17 +99,20 @@ public class CxxPreprocessAndCompileTest {
   private static final Path DEFAULT_WORKING_DIR = Paths.get(System.getProperty("user.dir"));
   private static final RuleKeyAppendableFunction<FrameworkPath, Path>
       DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =
-          new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-            @Override
-            public void appendToRuleKey(RuleKeyObjectSink sink) {
-              // Do nothing.
-            }
+          new DefaultFramworkPathSearchPathAppendableFunction();
 
-            @Override
-            public Path apply(FrameworkPath input) {
-              return Paths.get("test", "framework", "path", input.toString());
-            }
-          };
+  private static class DefaultFramworkPathSearchPathAppendableFunction
+      implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+    @Override
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      // Do nothing.
+    }
+
+    @Override
+    public Path apply(FrameworkPath input) {
+      return Paths.get("test", "framework", "path", input.toString());
+    }
+  }
 
   private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 

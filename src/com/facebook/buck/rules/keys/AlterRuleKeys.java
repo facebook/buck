@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -25,6 +26,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 
 public final class AlterRuleKeys {
+  private static final Logger LOG = Logger.get(AlterRuleKeys.class);
   private static final LoadingCache<Class<?>, ImmutableCollection<AlterRuleKey>> cache =
       CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
 
@@ -45,9 +47,31 @@ public final class AlterRuleKeys {
   }
 
   private static void amendKey(RuleKeyObjectSink sink, Object appendable) {
-    sink.setReflectively(".class", appendable.getClass().getName());
-    for (AlterRuleKey alterRuleKey : cache.getUnchecked(appendable.getClass())) {
+    Class<?> clazz = appendable.getClass();
+    String className = clazz.getName();
+    if (clazz.isAnonymousClass() || clazz.isSynthetic()) {
+      // TODO(cjhopman): Make this an error.
+      String pseudoName = getPseudoClassName(clazz);
+      LOG.warn(
+          "Trying to add anonymous class %s to rulekeys. Using %s instead", className, pseudoName);
+      className = pseudoName;
+    }
+    sink.setReflectively(".class", className);
+    for (AlterRuleKey alterRuleKey : cache.getUnchecked(clazz)) {
       alterRuleKey.amendKey(sink, appendable);
     }
+  }
+
+  private static String getPseudoClassName(Class<?> clazz) {
+    Class<?> declaring = clazz;
+    while ((declaring.isAnonymousClass() || declaring.isSynthetic())
+        && declaring.getEnclosingClass() != null) {
+      declaring = declaring.getEnclosingClass();
+    }
+    String prefix = declaring.getName();
+    if (declaring.isAnonymousClass() || declaring.isSynthetic()) {
+      prefix = prefix.replaceAll("\\$.*", "");
+    }
+    return prefix + "$?????";
   }
 }

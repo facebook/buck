@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxFlags;
+import com.facebook.buck.cxx.CxxFlags.TranslateMacrosAppendableFunction;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxSource;
@@ -243,7 +243,8 @@ public class HalideLibraryDescription
       Optional<ImmutableList<String>> optionalFlags, CxxPlatform platform) {
     if (optionalFlags.isPresent()) {
       RuleKeyAppendableFunction<String, String> macroMapper =
-          CxxFlags.getTranslateMacrosFn(platform);
+          new TranslateMacrosAppendableFunction(
+              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
       ImmutableList<String> flags = optionalFlags.get();
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       for (String flag : flags) {

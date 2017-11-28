@@ -37,6 +37,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -704,24 +705,32 @@ public class CxxDescriptionEnhancer {
    */
   public static RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath(
       final CxxPlatform cxxPlatform, final SourcePathResolver resolver) {
-    return new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-      private RuleKeyAppendableFunction<String, String> translateMacrosFn =
-          CxxFlags.getTranslateMacrosFn(cxxPlatform);
+    return new FrameworkPathToSearchPathFunction(cxxPlatform, resolver);
+  }
 
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        sink.setReflectively("translateMacrosFn", translateMacrosFn);
-      }
+  private static class FrameworkPathToSearchPathFunction
+      implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+    private final SourcePathResolver resolver;
+    @AddToRuleKey private final RuleKeyAppendableFunction<String, String> translateMacrosFn;
 
-      @Override
-      public Path apply(FrameworkPath input) {
-        String pathAsString =
-            FrameworkPath.getUnexpandedSearchPath(
-                    resolver::getAbsolutePath, Functions.identity(), input)
-                .toString();
-        return Paths.get(translateMacrosFn.apply(pathAsString));
-      }
-    };
+    public FrameworkPathToSearchPathFunction(CxxPlatform cxxPlatform, SourcePathResolver resolver) {
+      this.resolver = resolver;
+      this.translateMacrosFn =
+          new CxxFlags.TranslateMacrosAppendableFunction(
+              ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros()), cxxPlatform);
+    }
+
+    @Override
+    public void appendToRuleKey(RuleKeyObjectSink sink) {}
+
+    @Override
+    public Path apply(FrameworkPath input) {
+      String pathAsString =
+          FrameworkPath.getUnexpandedSearchPath(
+                  resolver::getAbsolutePath, Functions.identity(), input)
+              .toString();
+      return Paths.get(translateMacrosFn.apply(pathAsString));
+    }
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(

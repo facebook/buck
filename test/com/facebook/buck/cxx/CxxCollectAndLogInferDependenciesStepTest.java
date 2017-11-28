@@ -74,18 +74,20 @@ public class CxxCollectAndLogInferDependenciesStepTest {
       ProjectFilesystem filesystem,
       InferBuckConfig inferBuckConfig)
       throws Exception {
-    RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
-        new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-          @Override
-          public void appendToRuleKey(RuleKeyObjectSink sink) {
-            // Do nothing.
-          }
+    class FrameworkPathAppendableFunction
+        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+      @Override
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        // Do nothing.
+      }
 
-          @Override
-          public Path apply(FrameworkPath input) {
-            return Paths.get("test", "framework", "path", input.toString());
-          }
-        };
+      @Override
+      public Path apply(FrameworkPath input) {
+        return Paths.get("test", "framework", "path", input.toString());
+      }
+    }
+    RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
+        new FrameworkPathAppendableFunction();
 
     SourcePath preprocessor = FakeSourcePath.of(filesystem, "preprocessor");
     Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();

@@ -27,15 +27,18 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.log.ConsoleHandler;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
+import com.facebook.buck.rules.keys.RuleKeyDiagnostics.Result;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyResult;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
+import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -58,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
+import org.hamcrest.Matchers;
 import org.immutables.value.Value;
 import org.junit.Test;
 
@@ -820,6 +824,38 @@ public class RuleKeyTest {
     assertNotEquals(first, third);
   }
 
+  @Test
+  public void lambdaAddsPseudoClassName() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    Result<RuleKey, String> result =
+        createFactory(resolver, ruleFinder)
+            .buildForDiagnostics((RuleKeyAppendable) (sink) -> {}, new StringRuleKeyHasher());
+    assertThat(
+        result.diagKey,
+        Matchers.containsString(
+            "string(\"com.facebook.buck.rules.RuleKeyTest$?????\"):key(.class)"));
+  }
+
+  @Test
+  public void anonymousClassAddsPseudoClassName() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    Result<RuleKey, String> result =
+        createFactory(resolver, ruleFinder)
+            .buildForDiagnostics(new AddsToRuleKey() {}, new StringRuleKeyHasher());
+    assertThat(
+        result.diagKey,
+        Matchers.containsString(
+            "string(\"com.facebook.buck.rules.RuleKeyTest$?????\"):key(.class)"));
+  }
+
   @Value.Immutable
   @BuckStyleTuple
   interface AbstractTestRuleKeyInterfaceImmutable extends AddsToRuleKey {
@@ -928,6 +964,7 @@ public class RuleKeyTest {
 
   @Test(expected = UncheckedExecutionException.class)
   public void badUseOfAddValueMethodsToRuleKey() {
+    java.util.logging.Logger.getGlobal().addHandler(new ConsoleHandler());
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new SingleThreadedBuildRuleResolver(
@@ -1033,6 +1070,14 @@ public class RuleKeyTest {
 
   private DefaultRuleKeyFactory.Builder<HashCode> createBuilder(
       SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
+    TestDefaultRuleKeyFactory factory = createFactory(resolver, ruleFinder);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
+    BuildRule buildRule = new FakeBuildRule(buildTarget);
+    return factory.newBuilderForTesting(buildRule);
+  }
+
+  private TestDefaultRuleKeyFactory createFactory(
+      SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
     FileHashCache fileHashCache =
         new FileHashCache() {
 
@@ -1060,10 +1105,7 @@ public class RuleKeyTest {
           @Override
           public void set(Path path, HashCode hashCode) {}
         };
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
-    BuildRule buildRule = new FakeBuildRule(buildTarget);
-    return new TestDefaultRuleKeyFactory(fileHashCache, resolver, ruleFinder)
-        .newBuilderForTesting(buildRule);
+    return new TestDefaultRuleKeyFactory(fileHashCache, resolver, ruleFinder);
   }
 
   private RuleKeyResult<RuleKey> buildResult(AbstractRuleKeyBuilder<HashCode> builder) {

@@ -115,6 +115,18 @@ public class CxxCompilationDatabaseTest {
     BuildRuleParams compileBuildRuleParams =
         TestBuildRuleParams.create()
             .withDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
+    class FrameworkPathAppendableFunction
+        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+      @Override
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        // Do nothing.
+      }
+
+      @Override
+      public Path apply(FrameworkPath input) {
+        throw new UnsupportedOperationException("should not be called");
+      }
+    }
     rules.add(
         testBuildRuleResolver.addToIndex(
             CxxPreprocessAndCompile.preprocessAndCompile(
@@ -130,17 +142,7 @@ public class CxxCompilationDatabaseTest {
                         new HashedFileTool(
                             PathSourcePath.of(filesystem, Paths.get("preprocessor")))),
                     preprocessorFlags,
-                    new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-                      @Override
-                      public void appendToRuleKey(RuleKeyObjectSink sink) {
-                        // Do nothing.
-                      }
-
-                      @Override
-                      public Path apply(FrameworkPath input) {
-                        throw new UnsupportedOperationException("should not be called");
-                      }
-                    },
+                    new FrameworkPathAppendableFunction(),
                     Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(

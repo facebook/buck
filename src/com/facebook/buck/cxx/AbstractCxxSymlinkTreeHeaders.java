@@ -37,7 +37,6 @@ import org.immutables.value.Value;
 @Value.Immutable(prehash = true)
 @BuckStyleImmutable
 abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
-
   @Override
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 

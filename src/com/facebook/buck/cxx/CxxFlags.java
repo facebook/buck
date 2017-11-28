@@ -36,40 +36,14 @@ public class CxxFlags {
 
   private CxxFlags() {}
 
-  public static RuleKeyAppendableFunction<String, String> getTranslateMacrosFn(
-      final CxxPlatform cxxPlatform) {
-    final ImmutableSortedMap<String, String> flagMacros =
-        ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros());
-    return new RuleKeyAppendableFunction<String, String>() {
-
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        SortedMap<String, String> sanitizedMap =
-            Maps.transformValues(
-                flagMacros,
-                cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty())::apply);
-        sink.setReflectively("flagMacros", sanitizedMap);
-      }
-
-      @Override
-      public String apply(String flag) {
-        // TODO(agallager): We're currently tied to `$VARIABLE` style of macros as much of the apple
-        // support relies on this.  Long-term though, we should make this consistent with the
-        // `$(macro ...)` style we use in the rest of the codebase.
-        for (Map.Entry<String, String> entry : flagMacros.entrySet()) {
-          flag = flag.replace("$" + entry.getKey(), entry.getValue());
-        }
-        return flag;
-      }
-    };
-  }
-
   public static ImmutableList<String> getFlagsWithPlatformMacroExpansion(
       ImmutableList<String> flags,
       PatternMatchedCollection<ImmutableList<String>> platformFlags,
       CxxPlatform platform) {
     return RichStream.from(getFlags(flags, platformFlags, platform))
-        .map(getTranslateMacrosFn(platform))
+        .map(
+            new TranslateMacrosAppendableFunction(
+                ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform))
         .toImmutableList();
   }
 
@@ -77,7 +51,9 @@ public class CxxFlags {
       ImmutableList<StringWithMacros> flags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
       CxxPlatform platform) {
-    RuleKeyAppendableFunction<String, String> translateMacrosFn = getTranslateMacrosFn(platform);
+    RuleKeyAppendableFunction<String, String> translateMacrosFn =
+        new TranslateMacrosAppendableFunction(
+            ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
     return RichStream.from(getFlags(flags, platformFlags, platform))
         .map(s -> s.mapStrings(translateMacrosFn))
         .toImmutableList();
@@ -122,7 +98,11 @@ public class CxxFlags {
         languageFlags.entrySet()) {
       langFlags.putAll(
           entry.getKey(),
-          Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)::apply));
+          Iterables.transform(
+              entry.getValue(),
+              (new TranslateMacrosAppendableFunction(
+                      ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform))
+                  ::apply));
     }
 
     return langFlags.build();
@@ -143,12 +123,48 @@ public class CxxFlags {
 
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<StringWithMacros>> entry :
         languageFlags.entrySet()) {
-      RuleKeyAppendableFunction<String, String> translateMacrosFn = getTranslateMacrosFn(platform);
+      RuleKeyAppendableFunction<String, String> translateMacrosFn =
+          new TranslateMacrosAppendableFunction(
+              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
       langFlags.putAll(
           entry.getKey(),
           entry.getValue().stream().map(s -> s.mapStrings(translateMacrosFn))::iterator);
     }
 
     return langFlags.build();
+  }
+
+  /** Function for translating cxx arg macros. */
+  public static class TranslateMacrosAppendableFunction
+      implements RuleKeyAppendableFunction<String, String> {
+
+    private final ImmutableSortedMap<String, String> flagMacros;
+    private final CxxPlatform cxxPlatform;
+
+    public TranslateMacrosAppendableFunction(
+        ImmutableSortedMap<String, String> flagMacros, CxxPlatform cxxPlatform) {
+      this.flagMacros = flagMacros;
+      this.cxxPlatform = cxxPlatform;
+    }
+
+    @Override
+    public void appendToRuleKey(RuleKeyObjectSink sink) {
+      SortedMap<String, String> sanitizedMap =
+          Maps.transformValues(
+              flagMacros,
+              cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty())::apply);
+      sink.setReflectively("flagMacros", sanitizedMap);
+    }
+
+    @Override
+    public String apply(String flag) {
+      // TODO(agallager): We're currently tied to `$VARIABLE` style of macros as much of the apple
+      // support relies on this.  Long-term though, we should make this consistent with the
+      // `$(macro ...)` style we use in the rest of the codebase.
+      for (Map.Entry<String, String> entry : flagMacros.entrySet()) {
+        flag = flag.replace("$" + entry.getKey(), entry.getValue());
+      }
+      return flag;
+    }
   }
 }

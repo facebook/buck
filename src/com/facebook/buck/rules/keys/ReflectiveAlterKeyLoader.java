@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Queue;
 
 class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection<AlterRuleKey>> {
-
   private static final Comparator<ValueExtractor> COMPARATOR =
       (o1, o2) -> {
         String name1 = o1.getFullyQualifiedName();
