@@ -270,7 +270,7 @@ public class RustLibraryDescription
                 depType,
                 args);
         SourcePath rlib = rule.getSourcePathToOutput();
-        return new RustLibraryArg(crate, rlib, direct, params.getBuildDeps());
+        return new RustLibraryArg(crate, rlib, direct);
       }
 
       @Override

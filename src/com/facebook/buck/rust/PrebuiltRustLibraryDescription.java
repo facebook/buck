@@ -66,7 +66,7 @@ public class PrebuiltRustLibraryDescription
           boolean isCheck,
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType depType) {
-        return new RustLibraryArg(args.getCrate(), args.getRlib(), direct, getBuildDeps());
+        return new RustLibraryArg(args.getCrate(), args.getRlib(), direct);
       }
 
       @Override

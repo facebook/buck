@@ -18,37 +18,31 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.SortedSet;
 import java.util.function.Consumer;
 
 /** Generate linker command line for Rust library when used as a dependency. */
 public class RustLibraryArg implements Arg, HasSourcePath {
   @AddToRuleKey private final String crate;
   @AddToRuleKey private final SourcePath rlib;
-  // TODO(cjhopman): This shouldn't be using NonHashableSourcePathContainer, it should either remove
-  // this field if the deps aren't actually required or use SourcePaths to the correct paths.
-  @AddToRuleKey private final ImmutableList<NonHashableSourcePathContainer> deps;
   @AddToRuleKey private final boolean direct;
 
-  public RustLibraryArg(String crate, SourcePath rlib, boolean direct, SortedSet<BuildRule> deps) {
+  RustLibraryArg(String crate, SourcePath rlib, boolean direct) {
     this.crate = crate;
     this.rlib = rlib;
     this.direct = direct;
-    this.deps =
-        deps.stream()
-            .map(BuildRule::getSourcePathToOutput)
-            .filter(Objects::nonNull)
-            .map(NonHashableSourcePathContainer::new)
-            .collect(MoreCollectors.toImmutableList());
+  }
+
+  @Override
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(ImmutableList.of(rlib));
   }
 
   @Override
@@ -85,16 +79,13 @@ public class RustLibraryArg implements Arg, HasSourcePath {
     if (!crate.equals(that.crate)) {
       return false;
     }
-    if (!deps.equals(that.deps)) {
-      return false;
-    }
     return rlib.equals(that.rlib);
   }
 
   @Override
   public int hashCode() {
     int result = crate.hashCode();
-    result = 31 * result + deps.hashCode();
+    result = 31 * result + crate.hashCode();
     result = 31 * result + rlib.hashCode();
     result = 31 * result + (direct ? 1 : 0);
     return result;
