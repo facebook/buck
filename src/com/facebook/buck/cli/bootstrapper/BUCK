@@ -35,6 +35,10 @@ java_library(
         # running inside javac.
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
 
+        # This is a set of utility classes for working with javax.lang.model that are useful both
+        # from Buck and the compiler
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
+
         # This is an internal API used to communicate between Buck and the compiler plugin
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
     ],

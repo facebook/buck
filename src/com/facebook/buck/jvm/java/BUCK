@@ -379,6 +379,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java/abi:abi",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/message_ipc:message_ipc",

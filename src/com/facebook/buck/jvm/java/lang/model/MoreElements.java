@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.abi;
+package com.facebook.buck.jvm.java.lang.model;
 
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.util.Map;
-import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -39,7 +39,9 @@ public final class MoreElements {
   private MoreElements() {}
 
   public static TypeElement getTypeElement(Element element) {
-    Preconditions.checkArgument(element.getKind() != ElementKind.PACKAGE);
+    if (element.getKind() == ElementKind.PACKAGE) {
+      throw new IllegalArgumentException();
+    }
 
     Element walker = element;
     while (!walker.getKind().isClass() && !walker.getKind().isInterface()) {
@@ -50,7 +52,9 @@ public final class MoreElements {
   }
 
   public static TypeElement getTopLevelTypeElement(Element element) {
-    Preconditions.checkArgument(element.getKind() != ElementKind.PACKAGE);
+    if (element.getKind() == ElementKind.PACKAGE) {
+      throw new IllegalArgumentException();
+    }
 
     Element walker = element;
     while (walker.getEnclosingElement() != null

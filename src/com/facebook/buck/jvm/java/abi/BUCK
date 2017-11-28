@@ -24,6 +24,7 @@ java_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin:plugin",
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
         "//src/com/facebook/buck/util:exceptions",

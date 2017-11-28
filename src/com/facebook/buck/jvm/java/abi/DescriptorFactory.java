@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.google.common.base.Preconditions;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -148,7 +149,8 @@ class DescriptorFactory {
 
               @Override
               public Type visitDeclared(DeclaredType t, Void aVoid) {
-                // The erasure of a parameterized type is just the unparameterized version (JLS8 4.6)
+                // The erasure of a parameterized type is just the unparameterized version (JLS8
+                // 4.6)
                 TypeElement typeElement = (TypeElement) t.asElement();
 
                 if (typeElement.getQualifiedName().contentEquals("")) {
@@ -173,7 +175,8 @@ class DescriptorFactory {
               @Override
               public Type visitTypeVariable(TypeVariable t, Void aVoid) {
                 // The erasure of a type variable is the erasure of its leftmost bound (JLS8 4.6)
-                // If there's only one bound, getUpperBound returns it directly; if there's more than
+                // If there's only one bound, getUpperBound returns it directly; if there's more
+                // than
                 // one it returns an IntersectionType
                 return getType(t.getUpperBound());
               }

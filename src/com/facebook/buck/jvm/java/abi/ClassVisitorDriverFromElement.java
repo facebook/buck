@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Map;
