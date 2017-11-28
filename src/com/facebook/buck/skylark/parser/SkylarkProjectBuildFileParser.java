@@ -397,11 +397,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return The list of functions supporting all native Buck functions like {@code java_library}.
    */
   private ImmutableList<BuiltinFunction> getBuckRuleFunctions() {
-    ImmutableList.Builder<BuiltinFunction> ruleFunctionsBuilder = ImmutableList.builder();
-    for (Description<?> description : options.getDescriptions()) {
-      ruleFunctionsBuilder.add(newRuleDefinition(description));
-    }
-    return ruleFunctionsBuilder.build();
+    return options
+        .getDescriptions()
+        .stream()
+        .map(this::newRuleDefinition)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   /**
