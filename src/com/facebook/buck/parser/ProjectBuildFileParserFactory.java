@@ -33,6 +33,8 @@ import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.events.EventKind;
+import com.google.devtools.build.lib.events.PrintingEventHandler;
 import java.util.Optional;
 
 public class ProjectBuildFileParserFactory {
@@ -129,7 +131,8 @@ public class ProjectBuildFileParserFactory {
                   buildFileParserOptions,
                   eventBus,
                   SkylarkFilesystem.using(cell.getFilesystem()),
-                  typeCoercerFactory)),
+                  typeCoercerFactory,
+                  new PrintingEventHandler(EventKind.ALL_EVENTS))),
           parserConfig.getDefaultBuildFileSyntax());
     }
     return pythonDslProjectBuildFileParser;

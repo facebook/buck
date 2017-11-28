@@ -44,8 +44,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
-import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.events.PrintingEventHandler;
+import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.packages.NativeProvider;
 import com.google.devtools.build.lib.syntax.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
@@ -65,11 +64,11 @@ import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -90,12 +89,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   // Dummy label used for resolving paths for other labels.
   private static final Label EMPTY_LABEL =
       Label.createUnvalidated(PackageIdentifier.EMPTY_PACKAGE_ID, "");
+  // URL prefix for all build rule documentation pages
+  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buckbuild.com/rule/";
 
   private final FileSystem fileSystem;
   private final TypeCoercerFactory typeCoercerFactory;
   private final ProjectBuildFileParserOptions options;
   private final BuckEventBus buckEventBus;
-  private final PrintingEventHandler eventHandler;
+  private final EventHandler eventHandler;
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
   private final Supplier<ClassObject> nativeModuleSupplier;
   private final Supplier<Environment.Frame> buckGlobalsSupplier;
@@ -105,7 +106,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
       TypeCoercerFactory typeCoercerFactory,
-      PrintingEventHandler eventHandler) {
+      EventHandler eventHandler) {
     this.options = options;
     this.buckEventBus = buckEventBus;
     this.fileSystem = fileSystem;
@@ -124,13 +125,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
-      TypeCoercerFactory typeCoercerFactory) {
+      TypeCoercerFactory typeCoercerFactory,
+      EventHandler eventHandler) {
     return new SkylarkProjectBuildFileParser(
-        options,
-        buckEventBus,
-        fileSystem,
-        typeCoercerFactory,
-        new PrintingEventHandler(EnumSet.allOf(EventKind.class)));
+        options, buckEventBus, fileSystem, typeCoercerFactory, eventHandler);
   }
 
   @Override
@@ -429,7 +427,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             CoercedTypeCache.INSTANCE.getAllParamInfo(
                 typeCoercerFactory, ruleClass.getConstructorArgType());
         populateAttributes(kwargs, builder, allParamInfo);
-        throwOnMissingRequiredAttribute(kwargs, allParamInfo);
+        throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
         ParseContext parseContext = getParseContext(env, ast);
         parseContext.recordRule(builder.build());
         return Runtime.NONE;
@@ -443,14 +441,32 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *
    * @param kwargs The keyword arguments passed to the rule.
    * @param allParamInfo The mapping from build rule attributes to their information.
+   * @param name The build rule name. (e.g. {@code java_library}).
+   * @param ast The abstract syntax tree of the build rule function invocation.
    */
   private void throwOnMissingRequiredAttribute(
-      Map<String, Object> kwargs, ImmutableMap<String, ParamInfo> allParamInfo) {
-    for (Map.Entry<String, ParamInfo> paramInfoEntry : allParamInfo.entrySet()) {
-      String pythonName = paramInfoEntry.getValue().getPythonName();
-      if (!paramInfoEntry.getValue().isOptional() && !kwargs.containsKey(pythonName)) {
-        throw new IllegalArgumentException(pythonName + " is expected but not provided");
-      }
+      Map<String, Object> kwargs,
+      ImmutableMap<String, ParamInfo> allParamInfo,
+      String name,
+      FuncallExpression ast)
+      throws EvalException {
+    ImmutableList<ParamInfo> missingAttributes =
+        allParamInfo
+            .values()
+            .stream()
+            .filter(param -> !param.isOptional() && !kwargs.containsKey(param.getPythonName()))
+            .collect(MoreCollectors.toImmutableList());
+    if (!missingAttributes.isEmpty()) {
+      throw new EvalException(
+          ast.getLocation(),
+          name
+              + " requires "
+              + missingAttributes
+                  .stream()
+                  .map(ParamInfo::getPythonName)
+                  .collect(Collectors.joining(" and "))
+              + " but they are not provided.",
+          BUCK_RULE_DOC_URL_PREFIX + name);
     }
   }
 

@@ -17,7 +17,11 @@
 package com.facebook.buck.skylark.parser;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,11 +43,16 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.events.EventCollector;
+import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.events.EventKind;
+import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.Type;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
@@ -59,31 +68,36 @@ public class SkylarkProjectBuildFileParserTest {
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+  private Cell cell;
 
   @Before
   public void setUp() throws Exception {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 new DefaultProcessExecutor(new TestConsole()),
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
-    parser =
-        SkylarkProjectBuildFileParser.using(
-            ProjectBuildFileParserOptions.builder()
-                .setProjectRoot(cell.getRoot())
-                .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
-                .setIgnorePaths(ImmutableSet.of())
-                .setBuildFileName("BUCK")
-                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
-                .setBuildFileImportWhitelist(ImmutableList.of())
-                .setPythonInterpreter("skylark")
-                .build(),
-            BuckEventBusForTests.newInstance(),
-            SkylarkFilesystem.using(projectFilesystem),
-            new DefaultTypeCoercerFactory());
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+  }
+
+  private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
+    return SkylarkProjectBuildFileParser.using(
+        ProjectBuildFileParserOptions.builder()
+            .setProjectRoot(cell.getRoot())
+            .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+            .setIgnorePaths(ImmutableSet.of())
+            .setBuildFileName("BUCK")
+            .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
+            .setBuildFileImportWhitelist(ImmutableList.of())
+            .setPythonInterpreter("skylark")
+            .build(),
+        BuckEventBusForTests.newInstance(),
+        SkylarkFilesystem.using(projectFilesystem),
+        new DefaultTypeCoercerFactory(),
+        eventHandler);
   }
 
   @Test
@@ -189,6 +203,26 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name=read_config('app', 'name', 'guava'), binary_jar='foo.jar')"));
     Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("guava"));
+  }
+
+  @Test
+  public void missingRequiredAttributeIsReported() throws Exception {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(eventCollector);
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("prebuilt_jar()"));
+    try {
+      parser.getAll(buildFile, new AtomicLong());
+      fail("Should not reach here.");
+    } catch (BuildFileParseException e) {
+      assertThat(e.getMessage(), startsWith("Cannot evaluate build file "));
+    }
+    assertThat(eventCollector.count(), is(1));
+    assertThat(
+        eventCollector.iterator().next().getMessage(),
+        stringContainsInOrder(
+            "prebuilt_jar requires name and binary_jar but they are not provided.",
+            "Need help? See https://buckbuild.com/rule/prebuilt_jar"));
   }
 
   @Test
@@ -446,7 +480,8 @@ public class SkylarkProjectBuildFileParserTest {
                 .build(),
             BuckEventBusForTests.newInstance(),
             SkylarkFilesystem.using(projectFilesystem),
-            new DefaultTypeCoercerFactory());
+            new DefaultTypeCoercerFactory(),
+            new PrintingEventHandler(EnumSet.allOf(EventKind.class)));
 
     Files.write(
         buildFile,
