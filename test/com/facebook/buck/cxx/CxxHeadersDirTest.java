@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
@@ -58,7 +59,7 @@ public class CxxHeadersDirTest {
         new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
     UncachedRuleKeyBuilder builder =
         new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory);
-    cxxHeaders.appendToRuleKey(builder);
+    AlterRuleKeys.amendKey(builder, cxxHeaders);
     return builder.build(RuleKey::new);
   }
 

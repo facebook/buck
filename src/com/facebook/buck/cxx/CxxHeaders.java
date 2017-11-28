@@ -19,8 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -39,7 +40,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Encapsulates headers from a single root location. */
-public abstract class CxxHeaders implements RuleKeyAppendable {
+public abstract class CxxHeaders implements AddsToRuleKey {
 
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
@@ -56,7 +57,9 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public abstract void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder);
 
   /** @return all deps required by this header pack. */
-  public abstract Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
+  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return BuildableSupport.deriveDeps(this, ruleFinder);
+  }
 
   /**
    * @return the path to add to the preprocessor search path to find the includes. This defaults to
