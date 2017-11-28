@@ -175,4 +175,36 @@ public class ThriftCoordinatorServerIntegrationTest {
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testTerminateWhenBuildTargetsQueueCreationThrows() throws Exception {
+    SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
+    ThriftCoordinatorServer.EventListener eventListener =
+        EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
+    try (ThriftCoordinatorServer server =
+            new ThriftCoordinatorServer(
+                OptionalInt.empty(),
+                queueFuture,
+                STAMPEDE_ID,
+                eventListener,
+                new NoOpBuildRuleFinishedPublisher(),
+                EasyMock.createNiceMock(MinionHealthTracker.class),
+                EasyMock.createNiceMock(DistBuildService.class));
+        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
+      server.start();
+      client.start(server.getPort());
+      queueFuture.setException(new RuntimeException());
+      try {
+        client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
+        Assert.fail("expecting exception, because stampede id mismatches");
+      } catch (Exception e) {
+        // expected.
+      }
+
+      Assert.assertEquals(
+          ThriftCoordinatorServer.GET_WORK_FAILED_EXIT_CODE,
+          server.waitUntilBuildCompletesAndReturnExitCode());
+    }
+  }
 }

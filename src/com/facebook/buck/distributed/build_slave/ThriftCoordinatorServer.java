@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
+import com.facebook.buck.distributed.thrift.CoordinatorService.Iface;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
@@ -152,7 +153,7 @@ public class ThriftCoordinatorServer implements Closeable {
     this.handler = new IdleCoordinatorService();
     CoordinatorServiceHandler handlerWrapper = new CoordinatorServiceHandler();
     this.processor = new CoordinatorService.Processor<>(handlerWrapper);
-    queue.addListener(() -> switchToActiveMode(queue), MoreExecutors.directExecutor());
+    queue.addListener(() -> switchToActiveModeOrFail(queue), MoreExecutors.directExecutor());
   }
 
   public ThriftCoordinatorServer start() throws IOException {
@@ -257,7 +258,7 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
-  private void switchToActiveMode(Future<BuildTargetsQueue> queue) {
+  private void switchToActiveModeOrFail(Future<BuildTargetsQueue> queue) {
     Preconditions.checkState(queue.isDone());
     try {
       MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
@@ -271,7 +272,20 @@ public class ThriftCoordinatorServer implements Closeable {
     } catch (InterruptedException | ExecutionException e) {
       String msg = "Failed to create the BuildTargetsQueue.";
       LOG.error(msg);
-      throw new RuntimeException(msg, e);
+      this.handler =
+          new Iface() {
+            @Override
+            public GetWorkResponse getWork(GetWorkRequest request) throws TException {
+              throw new RuntimeException(msg, e);
+            }
+
+            @Override
+            public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
+                throws TException {
+              return new ReportMinionAliveResponse();
+            }
+          };
+      // Any exception we throw here is going to be swallowed by the async executor.
     }
   }
 
