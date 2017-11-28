@@ -80,6 +80,7 @@ public class HeartbeatService implements Closeable {
 
   @Override
   public void close() {
+    LOG.info("Shutting down heartbeat service.");
     this.service.shutdown();
   }
 

@@ -150,6 +150,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
         Thread.sleep(minionPollLoopIntervalMillis);
       }
 
+      LOG.info(String.format("Minion [%s] has exited signal/fetch work loop.", minionId));
+
       completionCheckingThriftCall(() -> client.stop());
     }
 

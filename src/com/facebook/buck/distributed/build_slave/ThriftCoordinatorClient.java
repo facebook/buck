@@ -109,6 +109,10 @@ public class ThriftCoordinatorClient implements Closeable {
     ReportMinionAliveRequest request =
         new ReportMinionAliveRequest().setMinionId(minionId).setStampedeId(stampedeId);
     try {
+      LOG.info(
+          String.format(
+              "Minion [%s] is sending still alive heartbeat to coordinator for stampedeId [%s]",
+              minionId, stampedeId.toString()));
       client.reportMinionAlive(request);
     } catch (TException e) {
       String msg =
