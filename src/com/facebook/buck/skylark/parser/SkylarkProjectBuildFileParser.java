@@ -101,7 +101,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
   private final Supplier<ClassObject> nativeModuleSupplier;
   private final Supplier<Environment.Frame> buckGlobalsSupplier;
-  private final BuiltinFunction readConfigFunction;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -120,7 +119,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     this.buckRuleFunctionsSupplier = MoreSuppliers.memoize(this::getBuckRuleFunctions);
     this.nativeModuleSupplier = MoreSuppliers.memoize(this::newNativeModule);
     this.buckGlobalsSupplier = MoreSuppliers.memoize(this::getBuckGlobals);
-    this.readConfigFunction = ReadConfig.create();
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -380,6 +378,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               .useDefaultSemantics()
               .build();
 
+      BuiltinFunction readConfigFunction = ReadConfig.create();
       globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
       for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
         globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
