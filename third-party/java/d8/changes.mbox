@@ -1,43 +1,34 @@
-From 96ebf687133554841ed357cf72e2dfc7fd298bee Mon Sep 17 00:00:00 2001
+From 3a91bfba8228339401b1bda2c10fd8b4fe3a39da Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
-Date: Fri, 3 Nov 2017 13:32:53 -0700
-Subject: [PATCH] Compute referenced resources in D8 and disable interface
- desugaring
+Date: Tue, 21 Nov 2017 22:52:39 -0800
+Subject: [PATCH] Compute referenced resources in D8 and disable
+ interface/trywithresources desugaring
 
 Computing referenced resources is used to trim the Uber R.java.
 Interface desugaring requires classpaths available during dexing.
+trywithresources can be disabled if targeting ICS+
 ---
- src/main/java/com/android/tools/r8/D8.java                 |  6 ++++--
- src/main/java/com/android/tools/r8/D8Output.java           | 10 +++++++++-
- src/main/java/com/android/tools/r8/dex/FileWriter.java     |  6 ++++--
- .../java/com/android/tools/r8/graph/DexItemFactory.java    | 14 ++++++++++++++
- .../java/com/android/tools/r8/utils/InternalOptions.java   |  3 ++-
- 5 files changed, 33 insertions(+), 6 deletions(-)
+ src/main/java/com/android/tools/r8/D8.java                |  3 ++-
+ src/main/java/com/android/tools/r8/D8Output.java          | 10 +++++++++-
+ src/main/java/com/android/tools/r8/dex/FileWriter.java    |  6 ++++--
+ .../java/com/android/tools/r8/graph/DexItemFactory.java   | 15 +++++++++++++++
+ .../java/com/android/tools/r8/utils/InternalOptions.java  |  7 +++++--
+ 5 files changed, 35 insertions(+), 6 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8.java b/src/main/java/com/android/tools/r8/D8.java
-index ae370ae3..efc57928 100644
+index c3b30e82..cbe94045 100644
 --- a/src/main/java/com/android/tools/r8/D8.java
 +++ b/src/main/java/com/android/tools/r8/D8.java
-@@ -69,7 +69,8 @@ public final class D8 {
-     AndroidAppOutputSink compatSink = new AndroidAppOutputSink(command.getOutputSink());
-     CompilationResult result = runForTesting(command.getInputApp(), compatSink, options);
-     assert result != null;
--    D8Output output = new D8Output(compatSink.build(), command.getOutputMode());
-+    D8Output output = new D8Output(compatSink.build(), command.getOutputMode(),
-+        result.appInfo.dexItemFactory.computeReferencedResources());
-     return output;
-   }
- 
-@@ -89,7 +90,8 @@ public final class D8 {
-     AndroidAppOutputSink compatSink = new AndroidAppOutputSink(command.getOutputSink());
-     CompilationResult result = runForTesting(command.getInputApp(), compatSink, options, executor);
-     assert result != null;
--    return new D8Output(compatSink.build(), command.getOutputMode());
-+    return new D8Output(compatSink.build(), command.getOutputMode(),
-+        result.appInfo.dexItemFactory.computeReferencedResources());
-   }
- 
-   private static void run(String[] args) throws IOException, CompilationException {
+@@ -97,7 +97,8 @@ public final class D8 {
+       CompilationResult result =
+           run(command.getInputApp(), compatSink, options, executor);
+       assert result != null;
+-      return new D8Output(compatSink.build(), command.getOutputMode());
++      return new D8Output(compatSink.build(), command.getOutputMode(),
++         result.appInfo.dexItemFactory.computeReferencedResources());
+     } catch (IOException io) {
+       command.getReporter().error(new IOExceptionDiagnostic(io));
+       throw new CompilationFailedException(io);
 diff --git a/src/main/java/com/android/tools/r8/D8Output.java b/src/main/java/com/android/tools/r8/D8Output.java
 index 1910e9b7..4cc80eee 100644
 --- a/src/main/java/com/android/tools/r8/D8Output.java
@@ -100,18 +91,22 @@ index 27dedb19..84beffea 100644
          throw new ApiLevelException(
              AndroidApiLevel.N,
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index a7d44ba3..ae73c0ab 100644
+index dcf29a49..9a4bcb7c 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-@@ -21,6 +21,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+@@ -23,9 +23,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.HashMap;
 +import java.util.HashSet;
+ import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
- import java.util.Set;
-@@ -496,4 +497,17 @@ public class DexItemFactory {
++import java.util.Set;
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.function.Consumer;
+ 
+@@ -547,4 +549,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -130,10 +125,10 @@ index a7d44ba3..ae73c0ab 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/utils/InternalOptions.java b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-index d7006af3..e1beb1f9 100644
+index 08403930..4efb865f 100644
 --- a/src/main/java/com/android/tools/r8/utils/InternalOptions.java
 +++ b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-@@ -97,7 +97,8 @@ public class InternalOptions {
+@@ -107,9 +107,12 @@ public class InternalOptions {
    // Flag to turn on/off desugaring in D8/R8.
    public boolean enableDesugaring = true;
    // Defines interface method rewriter behavior.
@@ -141,8 +136,13 @@ index d7006af3..e1beb1f9 100644
 +  // Facebook: Disabled by default as it kills incremental builds
 +  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Off;
    // Defines try-with-resources rewriter behavior.
-   public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Auto;
+-  public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Auto;
++  // Facebook: Disabled by default as it is not necessary if targeting ICS+
++  // despite the official policy being that KK is required
++  public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Off;
  
+   // Application writing mode.
+   public OutputMode outputMode = OutputMode.Indexed;
 -- 
-2.11.0
+2.14.1
 
