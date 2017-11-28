@@ -64,7 +64,6 @@ import java.util.stream.Stream;
 public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final ImmutableList<Arg> args;
   @AddToRuleKey private final ImmutableMap<String, Arg> env;
   @AddToRuleKey private final Optional<String> type;
@@ -82,7 +81,6 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       ImmutableList<Arg> args,
       ImmutableMap<String, Arg> env,
       ImmutableSortedSet<? extends SourcePath> resources,
@@ -92,7 +90,6 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<String> type,
       ImmutableSet<String> contacts) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleFinder = ruleFinder;
     this.args = args;
     this.env = env;
     this.resources = resources;
@@ -190,8 +187,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Tool getExecutableCommand() {
-    CommandTool.Builder builder =
-        new CommandTool.Builder().addDeps(ruleFinder.filterBuildRuleInputs(resources));
+    CommandTool.Builder builder = new CommandTool.Builder().addInputs(resources);
 
     for (Arg arg : args) {
       builder.addArg(arg);

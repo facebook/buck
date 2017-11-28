@@ -104,7 +104,6 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
                 FluentIterable.from(testArgs)
                     .append(testEnv.values())
                     .transformAndConcat(arg -> arg.getDeps(ruleFinder))),
-        ruleFinder,
         testArgs,
         testEnv,
         FluentIterable.from(args.getResources())

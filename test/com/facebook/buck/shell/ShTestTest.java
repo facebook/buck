@@ -68,7 +68,6 @@ public class ShTestTest extends EasyMockSupport {
             TestBuildRuleParams.create()
                 .withDeclaredDeps(ImmutableSortedSet.of(dep))
                 .withExtraDeps(ImmutableSortedSet.of(extraDep)),
-            ruleFinder,
             /* args */ ImmutableList.of(SourcePathArg.of(FakeSourcePath.of("run_test.sh"))),
             /* env */ ImmutableMap.of(),
             /* resources */ ImmutableSortedSet.of(),

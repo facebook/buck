@@ -371,7 +371,7 @@ public class RustCompileUtils {
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
-      executableBuilder.addDep(sharedLibraries);
+      executableBuilder.addNonHashableInput(sharedLibraries.getRootSourcePath());
       executableBuilder.addInputs(sharedLibraries.getLinks().values());
 
       // Also add Rust shared libraries as runtime deps. We don't need these in the symlink tree
