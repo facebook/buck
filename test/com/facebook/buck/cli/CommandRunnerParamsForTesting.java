@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -134,7 +135,8 @@ public class CommandRunnerParamsForTesting {
         Optional.empty(),
         new DefaultProjectFilesystemFactory(),
         TestRuleKeyConfigurationFactory.create(),
-        processExecutor);
+        processExecutor,
+        new ExecutableFinder());
   }
 
   public static Builder builder() {

@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -106,9 +107,11 @@ public class DistBuildStateTest {
 
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ProcessExecutor processExecutor;
+  private ExecutableFinder executableFinder;
 
   private void setUp() {
     processExecutor = new DefaultProcessExecutor(new TestConsole());
+    executableFinder = new ExecutableFinder();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
     knownBuildRuleTypesProvider =
@@ -154,6 +157,7 @@ public class DistBuildStateTest {
             rootCellWhenLoading,
             ImmutableMap.of(),
             processExecutor,
+            executableFinder,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
@@ -220,6 +224,7 @@ public class DistBuildStateTest {
             rootCellWhenLoading,
             ImmutableMap.of(),
             processExecutor,
+            executableFinder,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
 
@@ -280,6 +285,7 @@ public class DistBuildStateTest {
             rootCellWhenLoading,
             ImmutableMap.of(),
             processExecutor,
+            executableFinder,
             new DefaultProjectFilesystemFactory());
 
     ProjectFilesystem reconstructedCellFilesystem =
@@ -368,6 +374,7 @@ public class DistBuildStateTest {
             rootCellWhenLoading,
             ImmutableMap.of(),
             processExecutor,
+            executableFinder,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));

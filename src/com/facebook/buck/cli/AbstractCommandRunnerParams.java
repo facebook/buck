@@ -20,6 +20,7 @@ import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
@@ -142,6 +143,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract ProcessExecutor getProcessExecutor();
+
+  @Value.Parameter
+  public abstract ExecutableFinder getExecutableFinder();
 
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.

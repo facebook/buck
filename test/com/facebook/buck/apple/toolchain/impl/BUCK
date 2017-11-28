@@ -8,6 +8,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/apple/toolchain/impl:impl",
+        "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/config:FakeBuckConfig",

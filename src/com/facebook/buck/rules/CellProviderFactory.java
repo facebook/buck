@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
@@ -48,6 +49,7 @@ public class CellProviderFactory {
       CellConfig rootCellConfigOverrides,
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
+      ExecutableFinder executableFinder,
       ProjectFilesystemFactory projectFilesystemFactory) {
 
     DefaultCellPathResolver rootCellCellPathResolver =
@@ -137,7 +139,7 @@ public class CellProviderFactory {
 
                 ToolchainProvider toolchainProvider =
                     new DefaultToolchainProvider(
-                        environment, buckConfig, cellFilesystem, processExecutor);
+                        environment, buckConfig, cellFilesystem, processExecutor, executableFinder);
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
@@ -160,7 +162,7 @@ public class CellProviderFactory {
               "Root cell should be nameless");
           ToolchainProvider toolchainProvider =
               new DefaultToolchainProvider(
-                  environment, rootConfig, rootFilesystem, processExecutor);
+                  environment, rootConfig, rootFilesystem, processExecutor, executableFinder);
           return Cell.of(
               getKnownRoots(rootCellCellPathResolver),
               Optional.empty(),
@@ -187,7 +189,8 @@ public class CellProviderFactory {
                           cellParam.getEnvironment(),
                           cellParam.getConfig(),
                           cellParam.getFilesystem(),
-                          cellParam.getProcessExecutor());
+                          cellParam.getProcessExecutor(),
+                          cellParam.getExecutableFinder());
 
                   return Cell.of(
                       cellParams.keySet(),

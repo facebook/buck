@@ -775,6 +775,7 @@ public class ProjectWorkspace {
             CellConfig.of(),
             env,
             processExecutor,
+            new ExecutableFinder(),
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }

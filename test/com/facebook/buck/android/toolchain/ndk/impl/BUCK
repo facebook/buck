@@ -9,6 +9,7 @@ java_test(
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
+        "//src/com/facebook/buck/io:executable-finder",
         "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/io/filesystem:testutil",

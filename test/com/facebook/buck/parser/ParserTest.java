@@ -48,6 +48,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.io.file.MorePaths;
@@ -253,11 +254,8 @@ public class ParserTest {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
 
     ToolchainCreationContext toolchainCreationContext =
-        ToolchainCreationContext.builder()
-            .setProcessExecutor(processExecutor)
-            .setFilesystem(filesystem)
-            .setBuckConfig(config)
-            .build();
+        ToolchainCreationContext.of(
+            ImmutableMap.of(), config, filesystem, processExecutor, new ExecutableFinder());
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =

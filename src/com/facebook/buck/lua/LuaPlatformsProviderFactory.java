@@ -18,7 +18,6 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
@@ -30,15 +29,14 @@ public class LuaPlatformsProviderFactory implements ToolchainFactory<LuaPlatform
   @Override
   public Optional<LuaPlatformsProvider> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    ExecutableFinder executableFinder = new ExecutableFinder();
-
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
 
     FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
     CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
 
-    LuaBuckConfig luaBuckConfig = new LuaBuckConfig(context.getBuckConfig(), executableFinder);
+    LuaBuckConfig luaBuckConfig =
+        new LuaBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
 
     FlavorDomain<LuaPlatform> luaPlatforms =
         FlavorDomain.from(

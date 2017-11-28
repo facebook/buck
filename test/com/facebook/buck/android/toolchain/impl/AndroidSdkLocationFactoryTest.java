@@ -25,6 +25,7 @@ import com.facebook.buck.android.DefaultAndroidLegacyToolchain;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TestConsole;
@@ -33,6 +34,7 @@ import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -70,11 +72,12 @@ public class AndroidSdkLocationFactoryTest {
     Optional<AndroidSdkLocation> toolchain =
         factory.createToolchain(
             toolchainProvider,
-            ToolchainCreationContext.builder()
-                .setProcessExecutor(new DefaultProcessExecutor(new TestConsole()))
-                .setBuckConfig(FakeBuckConfig.builder().build())
-                .setFilesystem(projectFilesystem)
-                .build());
+            ToolchainCreationContext.of(
+                ImmutableMap.of(),
+                FakeBuckConfig.builder().build(),
+                projectFilesystem,
+                new DefaultProcessExecutor(new TestConsole()),
+                new ExecutableFinder()));
 
     assertFalse(toolchain.isPresent());
   }
@@ -103,11 +106,12 @@ public class AndroidSdkLocationFactoryTest {
     Optional<AndroidSdkLocation> toolchain =
         factory.createToolchain(
             toolchainProvider,
-            ToolchainCreationContext.builder()
-                .setProcessExecutor(new DefaultProcessExecutor(new TestConsole()))
-                .setBuckConfig(FakeBuckConfig.builder().build())
-                .setFilesystem(projectFilesystem)
-                .build());
+            ToolchainCreationContext.of(
+                ImmutableMap.of(),
+                FakeBuckConfig.builder().build(),
+                projectFilesystem,
+                new DefaultProcessExecutor(new TestConsole()),
+                new ExecutableFinder()));
 
     assertEquals(sdkLocation, toolchain.get().getSdkRootPath());
   }

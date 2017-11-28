@@ -53,6 +53,7 @@ import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticEventListener;
 import com.facebook.buck.io.WatchmanFactory;
@@ -670,6 +671,8 @@ public final class Main {
               knownBuildRuleTypesFactoryFactory.create(
                   processExecutor, pluginManager, sandboxExecutionStrategyFactory));
 
+      ExecutableFinder executableFinder = new ExecutableFinder();
+
       Cell rootCell =
           CellProviderFactory.createForLocalBuild(
                   filesystem,
@@ -678,6 +681,7 @@ public final class Main {
                   command.getConfigOverrides(),
                   clientEnvironment,
                   processExecutor,
+                  executableFinder,
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());
 
@@ -1060,7 +1064,8 @@ public final class Main {
                       parserAndCaches.getDefaultRuleKeyFactoryCacheRecycler(),
                       projectFilesystemFactory,
                       ruleKeyConfiguration,
-                      processExecutor));
+                      processExecutor,
+                      executableFinder));
         } catch (InterruptedException | ClosedByInterruptException e) {
           buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
           throw e;

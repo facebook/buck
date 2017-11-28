@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
@@ -101,6 +102,7 @@ public class DistBuildState {
       Cell rootCell,
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
+      ExecutableFinder executableFinder,
       ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
@@ -136,7 +138,12 @@ public class DistBuildState {
       cellParams.put(
           cellRoot,
           DistBuildCellParams.of(
-              buckConfig, projectFilesystem, cellName, environment, processExecutor));
+              buckConfig,
+              projectFilesystem,
+              cellName,
+              environment,
+              processExecutor,
+              executableFinder));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 

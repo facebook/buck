@@ -37,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.lua.LuaPlatformsProvider;
 import com.facebook.buck.lua.LuaPlatformsProviderFactory;
@@ -140,14 +141,11 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
       ProjectFilesystem projectFilesystem,
-      ProcessExecutor processExecutor) {
+      ProcessExecutor processExecutor,
+      ExecutableFinder executableFinder) {
     toolchainCreationContext =
-        ToolchainCreationContext.builder()
-            .setBuckConfig(buckConfig)
-            .setFilesystem(projectFilesystem)
-            .setEnvironment(environment)
-            .setProcessExecutor(processExecutor)
-            .build();
+        ToolchainCreationContext.of(
+            environment, buckConfig, projectFilesystem, processExecutor, executableFinder);
 
     ImmutableMap.Builder<String, Class<? extends ToolchainFactory<?>>> toolchainFactoriesBuilder =
         ImmutableMap.builder();

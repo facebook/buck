@@ -33,6 +33,7 @@ import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -78,11 +79,12 @@ public class AppleCxxPlatformsProviderFactoryTest {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
 
     ToolchainCreationContext toolchainCreationContext =
-        ToolchainCreationContext.builder()
-            .setBuckConfig(buckConfig)
-            .setFilesystem(projectFilesystem)
-            .setProcessExecutor(processExecutor)
-            .build();
+        ToolchainCreationContext.of(
+            ImmutableMap.of(),
+            buckConfig,
+            projectFilesystem,
+            processExecutor,
+            new ExecutableFinder());
 
     Optional<Path> appleDeveloperDir =
         new AppleDeveloperDirectoryProviderFactory()
