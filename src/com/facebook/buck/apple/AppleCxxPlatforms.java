@@ -301,6 +301,12 @@ public class AppleCxxPlatforms {
     Tool lldb =
         VersionedTool.of(getToolPath("lldb", toolSearchPaths, xcodeToolFinder), "lldb", version);
 
+    Tool plutil =
+        VersionedTool.of(
+            getToolPath("plutil", ImmutableList.of(Paths.get("/", USR_BIN)), xcodeToolFinder),
+            "plutil",
+            version);
+
     Optional<Path> stubBinaryPath =
         targetSdk
             .getApplePlatform()
@@ -483,6 +489,7 @@ public class AppleCxxPlatforms {
         .setLipo(lipo)
         .setStubBinary(stubBinaryPath)
         .setLldb(lldb)
+        .setPlutil(plutil)
         .setCodesignAllocate(
             getOptionalTool("codesign_allocate", toolSearchPaths, xcodeToolFinder, version))
         .setCodesignProvider(appleConfig.getCodesignProvider());
