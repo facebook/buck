@@ -139,7 +139,7 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
   }
 
   private static class PlatformSpecificTool implements AbstractTool {
-    private final Supplier<Tool> tool;
+    @AddToRuleKey private final Supplier<Tool> tool;
     @AddToRuleKey private final Optional<BuildTarget> genericExe;
     @AddToRuleKey private final ImmutableSortedMap<Platform, BuildTarget> platformExe;
 
