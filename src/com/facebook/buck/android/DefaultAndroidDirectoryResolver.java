@@ -171,7 +171,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       if (possiblePath.getSecond().isPresent()) {
         Path dirPath = fileSystem.getPath(possiblePath.getSecond().get());
         if (!Files.isDirectory(dirPath)) {
-          throw new RuntimeException(
+          throw new HumanReadableException(
               String.format(INVALID_DIRECTORY_MESSAGE_TEMPLATE, possiblePath.getFirst(), dirPath));
         }
         return Optional.of(dirPath);
@@ -189,7 +189,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
                   getEnvironmentVariable("ANDROID_SDK"),
                   getEnvironmentVariable("ANDROID_HOME"),
                   new Pair<String, Optional<String>>("android.sdk_path", config.getSdkPath())));
-    } catch (RuntimeException e) {
+    } catch (HumanReadableException e) {
       sdkErrorMessage = Optional.of(e.getMessage());
       return Optional.empty();
     }
@@ -290,28 +290,20 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   private Optional<Path> findNdk(AndroidBuckConfig config) {
-    try {
-      Optional<Path> ndkRepositoryPath =
-          findFirstDirectory(ImmutableList.of(getEnvironmentVariable("ANDROID_NDK_REPOSITORY")));
-      if (ndkRepositoryPath.isPresent()) {
-        return findNdkFromRepository(ndkRepositoryPath.get());
-      }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
+    Optional<Path> ndkRepositoryPath =
+        findFirstDirectory(ImmutableList.of(getEnvironmentVariable("ANDROID_NDK_REPOSITORY")));
+    if (ndkRepositoryPath.isPresent()) {
+      return findNdkFromRepository(ndkRepositoryPath.get());
+    }
+    Optional<Path> ndkDirectoryPath =
+        findFirstDirectory(
+            ImmutableList.of(
+                getEnvironmentVariable("ANDROID_NDK"), getEnvironmentVariable("NDK_HOME")));
+    if (ndkDirectoryPath.isPresent()) {
+      return findNdkFromDirectory(ndkDirectoryPath.get());
     }
     try {
-      Optional<Path> ndkDirectoryPath =
-          findFirstDirectory(
-              ImmutableList.of(
-                  getEnvironmentVariable("ANDROID_NDK"), getEnvironmentVariable("NDK_HOME")));
-      if (ndkDirectoryPath.isPresent()) {
-        return findNdkFromDirectory(ndkDirectoryPath.get());
-      }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
-    }
-    try {
-      Optional<Path> ndkRepositoryPath =
+      ndkRepositoryPath =
           findFirstDirectory(
               ImmutableList.of(
                   new Pair<String, Optional<String>>(
@@ -319,18 +311,18 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       if (ndkRepositoryPath.isPresent()) {
         return findNdkFromRepository(ndkRepositoryPath.get());
       }
-    } catch (RuntimeException e) {
+    } catch (HumanReadableException e) {
       ndkErrorMessage = Optional.of(e.getMessage());
     }
     try {
-      Optional<Path> ndkDirectoryPath =
+      ndkDirectoryPath =
           findFirstDirectory(
               ImmutableList.of(
                   new Pair<String, Optional<String>>("ndk.ndk_path", config.getNdkPath())));
       if (ndkDirectoryPath.isPresent()) {
         return findNdkFromDirectory(ndkDirectoryPath.get());
       }
-    } catch (RuntimeException e) {
+    } catch (HumanReadableException e) {
       ndkErrorMessage = Optional.of(e.getMessage());
     }
 
