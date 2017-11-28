@@ -32,6 +32,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
@@ -130,6 +131,11 @@ public class MinionModeRunner implements DistBuildModeRunner {
         String.format(
             "Started new minion that can build [%d] work units in parallel",
             maxWorkUnitBuildCapacity));
+  }
+
+  @Override
+  public ListenableFuture<?> getAsyncPrepFuture() {
+    return Futures.immediateFuture(true);
   }
 
   @Override

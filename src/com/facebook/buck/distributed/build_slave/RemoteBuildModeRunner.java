@@ -19,6 +19,8 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
@@ -49,6 +51,11 @@ public class RemoteBuildModeRunner implements DistBuildModeRunner {
     this.setter = setter;
     this.distBuildService = distBuildService;
     this.stampedeId = stampedeId;
+  }
+
+  @Override
+  public ListenableFuture<?> getAsyncPrepFuture() {
+    return Futures.immediateFuture(true);
   }
 
   @Override

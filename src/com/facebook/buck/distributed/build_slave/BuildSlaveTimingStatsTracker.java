@@ -38,19 +38,19 @@ public class BuildSlaveTimingStatsTracker {
 
   private final Map<SlaveEvents, Stopwatch> watches = new HashMap<>();
 
-  public long getElapsedTimeMs(SlaveEvents event) {
+  public synchronized long getElapsedTimeMs(SlaveEvents event) {
     Stopwatch watch = Preconditions.checkNotNull(watches.get(event));
     Preconditions.checkState(!watch.isRunning(), "Stopwatch for %s is still running.", event);
     return watch.elapsed(TimeUnit.MILLISECONDS);
   }
 
-  public void startTimer(SlaveEvents event) {
+  public synchronized void startTimer(SlaveEvents event) {
     Preconditions.checkState(
         !watches.containsKey(event), "Stopwatch for %s has already been started.", event);
     watches.put(event, Stopwatch.createStarted());
   }
 
-  public void stopTimer(SlaveEvents event) {
+  public synchronized void stopTimer(SlaveEvents event) {
     Stopwatch watch = Preconditions.checkNotNull(watches.get(event));
     Preconditions.checkState(
         watch.isRunning(), "Stopwatch for %s has already been stopped.", event);

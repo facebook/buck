@@ -47,10 +47,31 @@ public class DistBuildSlaveExecutor {
   private final DistBuildSlaveExecutorArgs args;
   private final DelegateAndGraphsInitializer initializer;
 
+  private final Object buildPreparationLock = new Object();
+  private boolean buildPreparationCompleted = false;
+  private Optional<Runnable> postPreparationCallback = Optional.empty();
+
   public DistBuildSlaveExecutor(DistBuildSlaveExecutorArgs args) {
     this.args = args;
     this.initializer =
         new DelegateAndGraphsInitializer(args.createDelegateAndGraphsInitiazerArgs());
+  }
+
+  /**
+   * Register a callback to be executed after the preparation is complete and the actual build is
+   * about to start. This function does not guarantee that the actual build has not started, but it
+   * does guarantee that the preparation has finished when the callback is executed.
+   */
+  public void onBuildSlavePreparationCompleted(Runnable callback) {
+    boolean alreadyCompleted;
+    synchronized (buildPreparationLock) {
+      this.postPreparationCallback = Optional.of(callback);
+      alreadyCompleted = buildPreparationCompleted;
+    }
+
+    if (alreadyCompleted) {
+      callback.run();
+    }
   }
 
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
@@ -69,7 +90,7 @@ public class DistBuildSlaveExecutor {
               false,
               args.getLogDirectoryPath(),
               args.getBuildRuleFinishedPublisher());
-      return runWithHeartbeatService(runner);
+      return setPreparationCallbackAndRunWithHeartbeatService(runner);
     }
 
     BuildExecutorArgs builderArgs = args.createBuilderArgs();
@@ -122,9 +143,9 @@ public class DistBuildSlaveExecutor {
           LOG.error("Unknown distributed build mode [%s].", args.getDistBuildMode().toString());
           return -1;
       }
-    }
 
-    return runWithHeartbeatService(runner);
+      return setPreparationCallbackAndRunWithHeartbeatService(runner);
+    }
   }
 
   private Optional<BuildId> fetchClientBuildId() {
@@ -144,8 +165,21 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  private int runWithHeartbeatService(DistBuildModeRunner runner)
+  private int setPreparationCallbackAndRunWithHeartbeatService(DistBuildModeRunner runner)
       throws IOException, InterruptedException {
+    runner
+        .getAsyncPrepFuture()
+        .addListener(
+            () -> {
+              Optional<Runnable> callbackToRun;
+              synchronized (buildPreparationLock) {
+                buildPreparationCompleted = true;
+                callbackToRun = postPreparationCallback;
+              }
+              callbackToRun.ifPresent(Runnable::run);
+            },
+            args.getExecutorService());
+
     try (HeartbeatService service =
         new HeartbeatService(args.getDistBuildConfig().getHearbeatServiceRateMillis())) {
       return runner.runAndReturnExitCode(service);

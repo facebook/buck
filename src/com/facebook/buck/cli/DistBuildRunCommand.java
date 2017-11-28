@@ -192,7 +192,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   distBuildConfig,
                   timeStatsTracker,
                   getBuildRuleFinishedPublisher());
-          timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
+
+          distBuildExecutor.onBuildSlavePreparationCompleted(
+              () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
 
           // All preparation work is done, so start building.
           int returnCode = distBuildExecutor.buildAndReturnExitCode();

@@ -102,6 +102,11 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   }
 
   @Override
+  public ListenableFuture<?> getAsyncPrepFuture() {
+    return queue;
+  }
+
+  @Override
   public int runAndReturnExitCode(HeartbeatService heartbeatService) throws IOException {
     try (AsyncCoordinatorRun run = new AsyncCoordinatorRun(heartbeatService, queue)) {
       return run.getExitCode();
