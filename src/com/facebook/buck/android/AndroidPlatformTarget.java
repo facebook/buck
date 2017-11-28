@@ -32,7 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,13 +42,6 @@ import java.util.regex.Pattern;
 public class AndroidPlatformTarget {
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
-
-  /** {@link Supplier} for an {@link AndroidPlatformTarget} that always throws. */
-  public static final Supplier<AndroidPlatformTarget> EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER =
-      () -> {
-        throw new HumanReadableException(
-            "Must set ANDROID_SDK to point to the absolute path of your Android SDK directory.");
-      };
 
   @VisibleForTesting
   static final Pattern PLATFORM_TARGET_PATTERN =

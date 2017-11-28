@@ -16,10 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidPlatformTargetSupplier;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
@@ -87,7 +83,6 @@ public class CommandRunnerParamsForTesting {
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       Console console,
       Cell cell,
-      AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
@@ -110,10 +105,6 @@ public class CommandRunnerParamsForTesting {
         .setBuildInfoStoreManager(new BuildInfoStoreManager())
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
         .setCell(cell)
-        .setAndroidPlatformTargetSupplier(
-            new AndroidPlatformTargetSupplier(
-                androidDirectoryResolver,
-                new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform)))
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(artifactCache))
         .setBuckEventBus(eventBus)
         .setTypeCoercerFactory(typeCoercerFactory)
@@ -154,7 +145,6 @@ public class CommandRunnerParamsForTesting {
 
   public static class Builder {
 
-    private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
     private BuckConfig config = FakeBuckConfig.builder().build();
@@ -168,7 +158,6 @@ public class CommandRunnerParamsForTesting {
       return createCommandRunnerParamsForTesting(
           console,
           new TestCellBuilder().build(),
-          androidDirectoryResolver,
           artifactCache,
           eventBus,
           config,

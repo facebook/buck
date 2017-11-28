@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.config.BuckConfig;
@@ -58,7 +57,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
@@ -136,8 +134,6 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell)
       throws InterruptedException, IOException {
-    Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-        AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ProcessExecutor processExecutor = new FakeProcessExecutor();
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -147,7 +143,6 @@ public class CleanCommandTest extends EasyMockSupport {
         .setBuildInfoStoreManager(new BuildInfoStoreManager())
         .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
         .setCell(cell)
-        .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
         .setBuckEventBus(BuckEventBusForTests.newInstance())
         .setTypeCoercerFactory(createMock(TypeCoercerFactory.class))

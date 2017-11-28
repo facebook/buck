@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.BuckConfig;
@@ -52,7 +51,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
@@ -73,8 +71,6 @@ public abstract class AbstractCommandRunnerParams {
   public abstract Parser getParser();
 
   public abstract BuckEventBus getBuckEventBus();
-
-  public abstract Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier();
 
   public abstract Platform getPlatform();
 

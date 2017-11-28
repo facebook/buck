@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -73,7 +71,6 @@ public class QueryCommandTest {
         TestProjectFilesystems.createProjectFilesystem(
             workspace.getDestPath().toRealPath().normalize());
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
@@ -83,7 +80,6 @@ public class QueryCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             console,
             cell,
-            androidDirectoryResolver,
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),

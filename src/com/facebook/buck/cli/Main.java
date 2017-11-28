@@ -20,11 +20,6 @@ import static com.facebook.buck.rules.CellConfig.MalformedOverridesException;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.AndroidPlatformTargetSupplier;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
@@ -206,7 +201,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.CmdLineException;
@@ -653,11 +647,6 @@ public final class Main {
 
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
-      AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
-      AndroidDirectoryResolver androidDirectoryResolver =
-          new DefaultAndroidDirectoryResolver(
-              filesystem.getRootPath().getFileSystem(), clientEnvironment, androidBuckConfig);
-
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
           new PlatformSandboxExecutionStrategyFactory();
 
@@ -1017,8 +1006,6 @@ public final class Main {
         } else {
           processManager = Optional.of(new PkillProcessManager(processExecutor));
         }
-        Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-            new AndroidPlatformTargetSupplier(androidDirectoryResolver, androidBuckConfig);
 
         // At this point, we have parsed options but haven't started
         // running the command yet.  This is a good opportunity to
@@ -1045,7 +1032,6 @@ public final class Main {
                       .setConsole(console)
                       .setStdIn(stdIn)
                       .setCell(rootCell)
-                      .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
                       .setArtifactCacheFactory(artifactCacheFactory)
                       .setBuckEventBus(buildEventBus)
                       .setTypeCoercerFactory(parserAndCaches.getTypeCoercerFactory())
