@@ -26,6 +26,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
@@ -98,6 +100,13 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
   @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return delegate.store(info, output);
+  }
+
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    // Contains is best-effort.
+    return delegate.multiContainsAsync(ruleKeys);
   }
 
   @Override

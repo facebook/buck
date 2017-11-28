@@ -16,6 +16,9 @@
 
 package com.facebook.buck.artifact_cache;
 
+import static com.facebook.buck.artifact_cache.thrift.ContainsResultType.CONTAINS;
+import static com.facebook.buck.artifact_cache.thrift.ContainsResultType.DOES_NOT_CONTAIN;
+import static com.facebook.buck.artifact_cache.thrift.ContainsResultType.UNKNOWN_DUE_TO_TRANSIENT_ERRORS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -25,9 +28,11 @@ import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.artifact_cache.thrift.ArtifactMetadata;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheDeleteResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchResponse;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiContainsResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheResponse;
+import com.facebook.buck.artifact_cache.thrift.ContainsResult;
 import com.facebook.buck.artifact_cache.thrift.FetchResult;
 import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
@@ -44,6 +49,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
@@ -330,6 +336,75 @@ public class ThriftArtifactCacheTest {
       assertEquals(payload1, filesystem.readFileIfItExists(output1).get());
       assertFalse(filesystem.exists(output2));
       assertEquals(payload3, filesystem.readFileIfItExists(output3).get());
+    }
+
+    EasyMock.verify(fetchClient);
+  }
+
+  @Test
+  public void testMultiContains() throws InterruptedException, IOException {
+    HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
+    HttpService fetchClient = EasyMock.createMock(HttpService.class);
+    BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
+    ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
+    NetworkCacheArgs networkArgs =
+        NetworkCacheArgs.builder()
+            .setCacheName("default_cache_name")
+            .setRepository("default_repository")
+            .setCacheReadMode(CacheReadMode.READONLY)
+            .setCacheMode(ArtifactCacheMode.thrift_over_http)
+            .setScheduleType("default_schedule_type")
+            .setProjectFilesystem(filesystem)
+            .setFetchClient(fetchClient)
+            .setStoreClient(storeClient)
+            .setBuckEventBus(eventBus)
+            .setHttpWriteExecutorService(service)
+            .setHttpFetchExecutorService(service)
+            .setErrorTextTemplate("my super error msg")
+            .build();
+
+    com.facebook.buck.rules.RuleKey key0 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(0));
+    com.facebook.buck.rules.RuleKey key1 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(1));
+    com.facebook.buck.rules.RuleKey key2 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(2));
+    com.facebook.buck.rules.RuleKey key3 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(3));
+    ImmutableSet<com.facebook.buck.rules.RuleKey> ruleKeys =
+        ImmutableSet.of(key0, key1, key2, key3);
+
+    BuckCacheMultiContainsResponse multiContainsResponse = new BuckCacheMultiContainsResponse();
+    ContainsResult result0 = new ContainsResult().setResultType(DOES_NOT_CONTAIN);
+    ContainsResult result1 = new ContainsResult().setResultType(CONTAINS);
+    ContainsResult result2 = new ContainsResult().setResultType(UNKNOWN_DUE_TO_TRANSIENT_ERRORS);
+    ContainsResult result3 = new ContainsResult().setResultType(CONTAINS);
+
+    multiContainsResponse.addToResults(result0);
+    multiContainsResponse.addToResults(result1);
+    multiContainsResponse.addToResults(result2);
+    multiContainsResponse.addToResults(result3);
+
+    BuckCacheResponse response =
+        new BuckCacheResponse()
+            .setWasSuccessful(true)
+            .setType(BuckCacheRequestType.CONTAINS)
+            .setMultiContainsResponse(multiContainsResponse);
+
+    Capture<Request.Builder> requestCapture = EasyMock.newCapture();
+    EasyMock.expect(fetchClient.makeRequest(EasyMock.anyString(), EasyMock.capture(requestCapture)))
+        .andReturn(new InMemoryThriftResponse(response))
+        .once();
+    fetchClient.close();
+    EasyMock.expectLastCall().once();
+    EasyMock.replay(fetchClient);
+
+    try (ThriftArtifactCache cache =
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 1, 1)) {
+      MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
+      assertEquals(4, result.getCacheResults().size());
+      assertEquals(CacheResultType.MISS, result.getCacheResults().get(key0).getType());
+      assertEquals(CacheResultType.CONTAINS, result.getCacheResults().get(key1).getType());
+      assertEquals(CacheResultType.ERROR, result.getCacheResults().get(key2).getType());
+      assertEquals(CacheResultType.CONTAINS, result.getCacheResults().get(key3).getType());
     }
 
     EasyMock.verify(fetchClient);

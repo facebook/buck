@@ -20,9 +20,11 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
 
 /**
@@ -59,6 +61,21 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
     ListenableFuture<Void> storeFuture = delegate.store(info, output);
     eventBus.post(eventFactory.newStoreFinishedEvent(started));
     return storeFuture;
+  }
+
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    ArtifactCacheEvent.Started started = eventFactory.newContainsStartedEvent(ruleKeys);
+    eventBus.post(started);
+
+    return Futures.transform(
+        delegate.multiContainsAsync(ruleKeys),
+        results -> {
+          eventBus.post(eventFactory.newContainsFinishedEvent(started, results));
+          return results;
+        },
+        MoreExecutors.directExecutor());
   }
 
   @Override

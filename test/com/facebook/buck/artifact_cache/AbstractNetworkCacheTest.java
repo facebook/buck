@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -89,6 +90,12 @@ public class AbstractNetworkCacheTest {
                 .build()) {
           @Override
           protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
+            return null;
+          }
+
+          @Override
+          protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
+              throws IOException {
             return null;
           }
 

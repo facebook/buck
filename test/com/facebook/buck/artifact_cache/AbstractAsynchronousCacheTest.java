@@ -31,6 +31,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.ExplicitRunExecutorService;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
@@ -172,6 +173,12 @@ public class AbstractAsynchronousCacheTest {
     protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
       requestedRuleKeys.add(ImmutableList.of(ruleKey));
       return hit();
+    }
+
+    @Override
+    protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
+        throws IOException {
+      throw new UnsupportedOperationException("multiContains is not supported");
     }
 
     private FetchResult hit() {

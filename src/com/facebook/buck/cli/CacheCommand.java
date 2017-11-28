@@ -180,6 +180,7 @@ public class CacheCommand extends AbstractCommand {
           ++cacheErrors;
           break;
         case HIT:
+        case CONTAINS:
           ++cacheHits;
           break;
         case MISS:
@@ -251,6 +252,7 @@ public class CacheCommand extends AbstractCommand {
       case ERROR:
         return String.format("%s %s", typeString, cacheResult.getCacheError());
       case HIT:
+      case CONTAINS:
         return String.format("%s %s", typeString, cacheResult.getCacheSource());
       case SKIPPED:
       case MISS:

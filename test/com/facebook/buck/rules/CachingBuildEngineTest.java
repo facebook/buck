@@ -4235,6 +4235,12 @@ public class CachingBuildEngineTest {
     }
 
     @Override
+    public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+        ImmutableSet<RuleKey> ruleKeys) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
       throw new RuntimeException("Delete operation is not supported");
     }

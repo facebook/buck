@@ -30,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -101,6 +102,9 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   protected abstract FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException;
+
+  protected abstract MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
+      throws IOException;
 
   protected abstract StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException;
 
@@ -312,6 +316,16 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
+  public final ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    return fetchExecutorService.submit(
+        () -> {
+          MultiContainsResult results = multiContainsImpl(ruleKeys);
+          return results.getCacheResults();
+        });
+  }
+
+  @Override
   public final ListenableFuture<Void> store(final ArtifactInfo info, final BorrowablePath output) {
     if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
@@ -453,6 +467,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     }
   }
 
+  /** Return type used by the implementations of this abstract class. */
   @BuckStyleTuple
   @Value.Immutable(builder = true)
   public interface AbstractFetchResult {
@@ -469,6 +484,16 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     CacheResult getCacheResult();
   }
 
+  /** Return type used by the implementations of this abstract class. */
+  @BuckStyleTuple
+  @Value.Immutable(builder = true)
+  public interface AbstractMultiContainsResult {
+    Optional<Long> getResponseSizeBytes();
+
+    ImmutableMap<RuleKey, CacheResult> getCacheResults();
+  }
+
+  /** Return type used by the implementations of this abstract class. */
   @BuckStyleTuple
   @Value.Immutable(builder = true)
   public interface AbstractMultiFetchResult {
@@ -476,6 +501,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     ImmutableList<FetchResult> getResults();
   }
 
+  /** Return type used by the implementations of this abstract class. */
   @BuckStyleTuple
   @Value.Immutable(builder = true)
   public interface AbstractStoreResult {

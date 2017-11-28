@@ -192,6 +192,15 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
         });
   }
 
+  /**
+   * Contains is supposed to be best-effort, but super-fast => Assume the second level is present.
+   */
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    return delegate.multiContainsAsync(ruleKeys);
+  }
+
   @Override
   public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
     // Artifact can be stored as two-level entry (rule key -> hash -> content)

@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class DirArtifactCache implements ArtifactCache {
 
@@ -65,21 +66,21 @@ public class DirArtifactCache implements ArtifactCache {
   private final ProjectFilesystem filesystem;
   private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
-  private final CacheReadMode cacheMode;
+  private final CacheReadMode cacheReadMode;
   private long bytesSinceLastDeleteOldFiles;
 
   public DirArtifactCache(
       String name,
       ProjectFilesystem filesystem,
       Path cacheDir,
-      CacheReadMode cacheMode,
+      CacheReadMode cacheReadMode,
       Optional<Long> maxCacheSizeBytes)
       throws IOException {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
-    this.cacheMode = cacheMode;
+    this.cacheReadMode = cacheReadMode;
     this.bytesSinceLastDeleteOldFiles = 0L;
 
     // Check first, as mkdirs will fail if the path is a symlink.
@@ -199,6 +200,29 @@ public class DirArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    return Futures.immediateFuture(multiContains(ruleKeys));
+  }
+
+  private ImmutableMap<RuleKey, CacheResult> multiContains(Set<RuleKey> ruleKeys) {
+    ImmutableMap.Builder<RuleKey, CacheResult> results = new ImmutableMap.Builder<>();
+
+    for (RuleKey ruleKey : ruleKeys) {
+      Path artifactPath = getPathForRuleKey(ruleKey, Optional.empty());
+      Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
+
+      boolean contains = filesystem.exists(artifactPath) && filesystem.exists(metadataPath);
+      results.put(ruleKey, contains ? CacheResult.contains(name, CACHE_MODE) : CacheResult.miss());
+      LOG.verbose(
+          "Artifact contains request for rulekey [%s] was a cache %s.",
+          ruleKey, (contains ? "hit" : "miss"));
+    }
+
+    return results.build();
+  }
+
   private void deleteSync(RuleKey ruleKey) {
     Path artifactPath = getPathForRuleKey(ruleKey, Optional.empty());
     Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
@@ -274,7 +298,7 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public CacheReadMode getCacheReadMode() {
-    return cacheMode;
+    return cacheReadMode;
   }
 
   @Override
