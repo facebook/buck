@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.plugin.adapter.ElementsExtendedImpl;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
+import com.sun.source.util.Trees;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,8 +50,8 @@ class TreeBackedElements extends ElementsExtendedImpl {
   private final Map<Name, ArtificialTypeElement> knownTypes = new HashMap<>();
   private final Map<Name, ArtificialPackageElement> knownPackages = new HashMap<>();
 
-  public TreeBackedElements(Elements javacElements) {
-    super(javacElements);
+  public TreeBackedElements(Elements javacElements, Trees trees) {
+    super(javacElements, trees);
     this.javacElements = javacElements;
   }
 

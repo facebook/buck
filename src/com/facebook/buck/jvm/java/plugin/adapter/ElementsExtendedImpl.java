@@ -18,6 +18,17 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
+import com.sun.source.util.Trees;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 
 /**
@@ -25,7 +36,40 @@ import javax.lang.model.util.Elements;
  * pure extension methods on {@link MoreElements} because they require per-instance state.
  */
 public class ElementsExtendedImpl extends DelegatingElements implements ElementsExtended {
-  public ElementsExtendedImpl(Elements inner) {
+  private final Map<TypeElement, Map<Name, List<ExecutableElement>>> methodsMaps = new HashMap<>();
+  private final Trees trees;
+
+  public ElementsExtendedImpl(Elements inner, Trees trees) {
     super(inner);
+    this.trees = trees;
+  }
+
+  @Override
+  public List<ExecutableElement> getDeclaredMethods(TypeElement owner, CharSequence name) {
+    Map<Name, List<ExecutableElement>> methodsMap =
+        methodsMaps.computeIfAbsent(owner, ElementsExtendedImpl::buildMethodsMap);
+
+    List<ExecutableElement> result = methodsMap.get(getName(name));
+    if (result == null) {
+      result = Collections.emptyList();
+    }
+    return result;
+  }
+
+  @Override
+  public boolean isCompiledInCurrentRun(Element element) {
+    return trees.getTree(element) != null;
+  }
+
+  private static Map<Name, List<ExecutableElement>> buildMethodsMap(TypeElement owner) {
+    Map<Name, List<ExecutableElement>> result = new HashMap<>();
+
+    for (ExecutableElement method : ElementFilter.methodsIn(owner.getEnclosedElements())) {
+      List<ExecutableElement> methodsWithName =
+          result.computeIfAbsent(method.getSimpleName(), ignored -> new ArrayList<>());
+      methodsWithName.add(method);
+    }
+
+    return result;
   }
 }
