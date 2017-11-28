@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.JavacEventSink;
 import com.facebook.buck.jvm.java.JavacEventSinkScopedSimplePerfEvent;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
@@ -25,11 +26,10 @@ import java.util.Set;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
 
 public class StubGenerator {
   private final SourceVersion version;
-  private final Elements elements;
+  private final ElementsExtended elements;
   private final Messager messager;
   private final JarBuilder jarBuilder;
   private final JavacEventSink eventSink;
@@ -37,7 +37,7 @@ public class StubGenerator {
 
   public StubGenerator(
       SourceVersion version,
-      Elements elements,
+      ElementsExtended elements,
       Messager messager,
       JarBuilder jarBuilder,
       JavacEventSink eventSink,

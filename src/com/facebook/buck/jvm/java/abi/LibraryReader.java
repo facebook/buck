@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -24,7 +25,6 @@ import java.util.List;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
 import org.objectweb.asm.ClassVisitor;
 
 /** An interface for reading and listing resources and classes in a library. */
@@ -39,7 +39,7 @@ interface LibraryReader extends AutoCloseable {
 
   static LibraryReader of(
       SourceVersion targetVersion,
-      Elements elements,
+      ElementsExtended elements,
       Messager messager,
       Iterable<Element> topLevelElements,
       boolean includeParameterMetadata) {

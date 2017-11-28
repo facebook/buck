@@ -20,6 +20,7 @@ java_library(
     deps = [
         # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
         # internals or large libraries like Guava
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
     ],
 )

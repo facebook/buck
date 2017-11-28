@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,7 +30,6 @@ import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
 
 public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
@@ -47,7 +47,7 @@ public class StubJar {
    */
   public StubJar(
       SourceVersion targetVersion,
-      Elements elements,
+      ElementsExtended elements,
       Messager messager,
       Iterable<Element> topLevelElements,
       boolean includeParameterMetadata) {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.jvm.java.plugin.api.CompilationUnitTreeProxy;
@@ -31,7 +32,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -102,7 +102,7 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   }
 
   @Override
-  public Elements getElements() {
+  public ElementsExtended getElements() {
     return javacTask.getElements();
   }
 

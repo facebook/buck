@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.google.common.base.Preconditions;
 import java.util.List;
@@ -35,7 +36,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementScanner8;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 import javax.tools.Diagnostic;
 import org.objectweb.asm.AnnotationVisitor;
@@ -49,7 +49,7 @@ class ClassVisitorDriverFromElement {
   private final Messager messager;
   private final SignatureFactory signatureFactory;
   private final SourceVersion targetVersion;
-  private final Elements elements;
+  private final ElementsExtended elements;
   private final AccessFlags accessFlagsUtils;
   private final boolean includeParameterMetadata;
 
@@ -61,7 +61,7 @@ class ClassVisitorDriverFromElement {
    */
   ClassVisitorDriverFromElement(
       SourceVersion targetVersion,
-      Elements elements,
+      ElementsExtended elements,
       Messager messager,
       boolean includeParameterMetadata) {
     this.targetVersion = targetVersion;
