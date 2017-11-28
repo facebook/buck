@@ -56,6 +56,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -81,12 +82,12 @@ public class CxxLuaExtensionDescription
             CxxLuaExtensionDescription.AbstractCxxLuaExtensionDescriptionArg>,
         VersionPropagator<CxxLuaExtensionDescriptionArg> {
 
-  private final FlavorDomain<LuaPlatform> luaPlatforms;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
 
   public CxxLuaExtensionDescription(
-      FlavorDomain<LuaPlatform> luaPlatforms, CxxBuckConfig cxxBuckConfig) {
-    this.luaPlatforms = luaPlatforms;
+      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
   }
 
@@ -281,6 +282,8 @@ public class CxxLuaExtensionDescription
       CellPathResolver cellRoots,
       final CxxLuaExtensionDescriptionArg args) {
 
+    FlavorDomain<LuaPlatform> luaPlatforms = getLuaPlatformsProvider().getLuaPlatforms();
+
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
     Optional<Map.Entry<Flavor, LuaPlatform>> platform = luaPlatforms.getFlavorAndValue(buildTarget);
@@ -355,7 +358,7 @@ public class CxxLuaExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    for (LuaPlatform luaPlatform : luaPlatforms.getValues()) {
+    for (LuaPlatform luaPlatform : getLuaPlatformsProvider().getLuaPlatforms().getValues()) {
 
       // Add deps from lua C/C++ library.
       Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
@@ -363,6 +366,11 @@ public class CxxLuaExtensionDescription
       // Get any parse time deps from the C/C++ platforms.
       extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
     }
+  }
+
+  private LuaPlatformsProvider getLuaPlatformsProvider() {
+    return toolchainProvider.getByName(
+        LuaPlatformsProvider.DEFAULT_NAME, LuaPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

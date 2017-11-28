@@ -56,6 +56,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSortedMap;
@@ -269,8 +270,12 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(
                 new LuaBinaryDescription(
-                    LuaTestUtils.DEFAULT_PLATFORM,
-                    LuaTestUtils.DEFAULT_PLATFORMS,
+                    new ToolchainProviderBuilder()
+                        .withToolchain(
+                            LuaPlatformsProvider.DEFAULT_NAME,
+                            LuaPlatformsProvider.of(
+                                LuaTestUtils.DEFAULT_PLATFORM, LuaTestUtils.DEFAULT_PLATFORMS))
+                        .build(),
                     cxxBuckConfig,
                     pythonPlatforms),
                 BuildTargetFactory.newInstance("//:binary"))

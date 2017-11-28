@@ -62,6 +62,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
@@ -98,18 +99,15 @@ public class LuaBinaryDescription
 
   private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
-  private final LuaPlatform defaultPlatform;
-  private final FlavorDomain<LuaPlatform> luaPlatforms;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
 
   public LuaBinaryDescription(
-      LuaPlatform defaultPlatform,
-      FlavorDomain<LuaPlatform> luaPlatforms,
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
-    this.defaultPlatform = defaultPlatform;
-    this.luaPlatforms = luaPlatforms;
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.pythonPlatforms = pythonPlatforms;
   }
@@ -736,6 +734,10 @@ public class LuaBinaryDescription
 
   // Return the C/C++ platform to build against.
   private LuaPlatform getPlatform(BuildTarget target, AbstractLuaBinaryDescriptionArg arg) {
+    LuaPlatformsProvider luaPlatformsProvider =
+        toolchainProvider.getByName(LuaPlatformsProvider.DEFAULT_NAME, LuaPlatformsProvider.class);
+
+    FlavorDomain<LuaPlatform> luaPlatforms = luaPlatformsProvider.getLuaPlatforms();
 
     Optional<LuaPlatform> flavorPlatform = luaPlatforms.getValue(target);
     if (flavorPlatform.isPresent()) {
@@ -746,7 +748,7 @@ public class LuaBinaryDescription
       return luaPlatforms.getValue(arg.getPlatform().get());
     }
 
-    return defaultPlatform;
+    return luaPlatformsProvider.getDefaultLuaPlatform();
   }
 
   @Override

@@ -99,9 +99,7 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.lua.CxxLuaExtensionDescription;
 import com.facebook.buck.lua.LuaBinaryDescription;
-import com.facebook.buck.lua.LuaBuckConfig;
 import com.facebook.buck.lua.LuaLibraryDescription;
-import com.facebook.buck.lua.LuaPlatform;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
@@ -265,12 +263,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
-    LuaBuckConfig luaBuckConfig = new LuaBuckConfig(config, executableFinder);
-    FlavorDomain<LuaPlatform> luaPlatforms =
-        FlavorDomain.from(
-            LuaPlatform.FLAVOR_DOMAIN_NAME, luaBuckConfig.getPlatforms(cxxPlatforms.getValues()));
-    LuaPlatform defaultLuaPlatform = luaPlatforms.getValue(defaultCxxPlatform.getFlavor());
-
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
             cxxBuckConfig, inferBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms);
@@ -432,7 +424,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new CxxGenruleDescription(
             cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
-    builder.addDescriptions(new CxxLuaExtensionDescription(luaPlatforms, cxxBuckConfig));
+    builder.addDescriptions(new CxxLuaExtensionDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.addDescriptions(
@@ -482,7 +474,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new KotlinTestDescription(
             kotlinBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(
-        new LuaBinaryDescription(defaultLuaPlatform, luaPlatforms, cxxBuckConfig, pythonPlatforms));
+        new LuaBinaryDescription(toolchainProvider, cxxBuckConfig, pythonPlatforms));
     builder.addDescriptions(new LuaLibraryDescription());
     builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);

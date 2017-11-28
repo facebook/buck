@@ -24,6 +24,7 @@ import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
@@ -42,7 +43,14 @@ public class LuaBinaryBuilder
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     this(
-        new LuaBinaryDescription(defaultPlatform, luaPlatforms, cxxBuckConfig, pythonPlatforms),
+        new LuaBinaryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    LuaPlatformsProvider.DEFAULT_NAME,
+                    LuaPlatformsProvider.of(defaultPlatform, luaPlatforms))
+                .build(),
+            cxxBuckConfig,
+            pythonPlatforms),
         target);
   }
 
