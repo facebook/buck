@@ -18,54 +18,42 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 
 /** Generate linker command line for Rust library when used as a dependency. */
 public class RustLibraryArg implements Arg, HasSourcePath {
-  // TODO(cjhopman): This shouldn't hold a SourcePathResolver.
-  private final SourcePathResolver resolver;
   @AddToRuleKey private final String crate;
   @AddToRuleKey private final SourcePath rlib;
-  // TODO(cjhopman): These should either be added to the rulekey or removed.
-  private final SortedSet<BuildRule> deps;
-  private final boolean direct;
+  // TODO(cjhopman): This shouldn't be using NonHashableSourcePathContainer, it should either remove
+  // this field if the deps aren't actually required or use SourcePaths to the correct paths.
+  @AddToRuleKey private final ImmutableList<NonHashableSourcePathContainer> deps;
+  @AddToRuleKey private final boolean direct;
 
-  public RustLibraryArg(
-      SourcePathResolver resolver,
-      String crate,
-      SourcePath rlib,
-      boolean direct,
-      SortedSet<BuildRule> deps) {
-    this.resolver = resolver;
+  public RustLibraryArg(String crate, SourcePath rlib, boolean direct, SortedSet<BuildRule> deps) {
     this.crate = crate;
     this.rlib = rlib;
     this.direct = direct;
-    this.deps = deps;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    ImmutableSet.Builder<BuildRule> deps = ImmutableSet.builder();
-
-    deps.addAll(ruleFinder.filterBuildRuleInputs(rlib));
-    deps.addAll(this.deps);
-
-    return deps.build();
+    this.deps =
+        deps.stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .filter(Objects::nonNull)
+            .map(NonHashableSourcePathContainer::new)
+            .collect(MoreCollectors.toImmutableList());
   }
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-    Path path = resolver.getRelativePath(rlib);
-
+    Path path = pathResolver.getRelativePath(rlib);
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     if (direct) {
@@ -94,9 +82,6 @@ public class RustLibraryArg implements Arg, HasSourcePath {
     if (direct != that.direct) {
       return false;
     }
-    if (!resolver.equals(that.resolver)) {
-      return false;
-    }
     if (!crate.equals(that.crate)) {
       return false;
     }
@@ -108,8 +93,7 @@ public class RustLibraryArg implements Arg, HasSourcePath {
 
   @Override
   public int hashCode() {
-    int result = resolver.hashCode();
-    result = 31 * result + crate.hashCode();
+    int result = crate.hashCode();
     result = 31 * result + deps.hashCode();
     result = 31 * result + rlib.hashCode();
     result = 31 * result + (direct ? 1 : 0);
