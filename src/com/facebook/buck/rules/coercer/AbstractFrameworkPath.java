@@ -18,9 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.Optionals;
@@ -39,8 +39,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractFrameworkPath
-    implements Comparable<AbstractFrameworkPath>, RuleKeyAppendable {
+abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath>, AddsToRuleKey {
 
   /** The type of framework entry this object represents. */
   protected enum Type {
@@ -54,9 +53,11 @@ abstract class AbstractFrameworkPath
   protected abstract Type getType();
 
   @Value.Parameter
+  @AddToRuleKey(stringify = true)
   public abstract Optional<SourceTreePath> getSourceTreePath();
 
   @Value.Parameter
+  @AddToRuleKey
   public abstract Optional<SourcePath> getSourcePath();
 
   public Iterator<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
@@ -144,12 +145,6 @@ abstract class AbstractFrameworkPath
       default:
         throw new RuntimeException("Unhandled type: " + getType());
     }
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("sourcePath", getSourcePath());
-    sink.setReflectively("sourceTree", getSourceTreePath().map(Object::toString));
   }
 
   public static FrameworkPath ofSourceTreePath(SourceTreePath sourceTreePath) {
