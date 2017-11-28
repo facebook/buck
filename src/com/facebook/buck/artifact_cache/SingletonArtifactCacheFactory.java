@@ -35,6 +35,11 @@ public class SingletonArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
+  public ArtifactCache newInstance(boolean onlyRemote, boolean distributedBuildModeEnabled) {
+    return artifactCache;
+  }
+
+  @Override
   public ArtifactCacheFactory cloneWith(BuckConfig newConfig) {
     return new SingletonArtifactCacheFactory(artifactCache);
   }

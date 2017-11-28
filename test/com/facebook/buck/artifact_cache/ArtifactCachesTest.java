@@ -230,6 +230,25 @@ public class ArtifactCachesTest {
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 
+  @Test
+  public void testCreateRemoteCacheOnly() throws Exception {
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir, http");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .newInstance(true, false);
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
+  }
+
   private static ArtifactCache stripDecorators(ArtifactCache artifactCache) {
     if (artifactCache instanceof LoggingArtifactCacheDecorator) {
       LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;

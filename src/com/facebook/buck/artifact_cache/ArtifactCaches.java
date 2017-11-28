@@ -129,6 +129,11 @@ public class ArtifactCaches implements ArtifactCacheFactory {
    */
   @Override
   public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+    return newInstance(false, distributedBuildModeEnabled);
+  }
+
+  @Override
+  public ArtifactCache newInstance(boolean onlyRemote, boolean distributedBuildModeEnabled) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -140,6 +145,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             wifiSsid,
             httpWriteExecutorService,
             httpFetchExecutorService,
+            onlyRemote,
             distributedBuildModeEnabled);
 
     if (asyncCloseable.isPresent()) {
@@ -183,6 +189,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
+      boolean onlyRemote,
       boolean distributedBuildModeEnabled) {
     ImmutableSet<ArtifactCacheMode> modes = buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
@@ -193,7 +200,9 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     for (ArtifactCacheMode mode : modes) {
       switch (mode) {
         case dir:
-          initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
+          if (!onlyRemote) {
+            initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
+          }
           break;
         case http:
           initializeDistributedCaches(
@@ -209,7 +218,9 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               mode);
           break;
         case sqlite:
-          initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
+          if (!onlyRemote) {
+            initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
+          }
           break;
         case thrift_over_http:
           Preconditions.checkArgument(
