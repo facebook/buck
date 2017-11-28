@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidInstrumentationApkBuilder
@@ -35,7 +35,7 @@ public class AndroidInstrumentationApkBuilder
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(
         new AndroidInstrumentationApkDescription(
-            new TestToolchainProvider(),
+            new ToolchainProviderBuilder().withDefaultNdkCxxPlatforms().build(),
             DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ANDROID_JAVAC_OPTIONS,

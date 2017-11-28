@@ -16,15 +16,12 @@
 
 package com.facebook.buck.rust;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class RustBinaryBuilder
@@ -38,7 +35,9 @@ public class RustBinaryBuilder
 
   public static RustBinaryBuilder from(String target) {
     return new RustBinaryBuilder(
-        new RustBinaryDescription(createToolchainProvider(), FakeRustConfig.FAKE_RUST_CONFIG),
+        new RustBinaryDescription(
+            new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
+            FakeRustConfig.FAKE_RUST_CONFIG),
         BuildTargetFactory.newInstance(target));
   }
 
@@ -50,14 +49,5 @@ public class RustBinaryBuilder
   public RustBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setDeps(deps);
     return this;
-  }
-
-  private static ToolchainProvider createToolchainProvider() {
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        CxxPlatformsProvider.DEFAULT_NAME,
-        CxxPlatformsProvider.of(
-            CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS));
-    return testToolchainProvider;
   }
 }

@@ -39,7 +39,7 @@ import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,7 +56,7 @@ public class GenruleDescriptionTest {
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
     GenruleDescription genruleDescription =
         new GenruleDescription(
-            new TestToolchainProvider(),
+            new ToolchainProviderBuilder().build(),
             FakeBuckConfig.builder().build(),
             new NoSandboxExecutionStrategy());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");

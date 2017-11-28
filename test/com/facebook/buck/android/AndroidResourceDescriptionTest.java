@@ -36,7 +36,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -97,7 +97,7 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/dirs/_dir/ignore");
 
     AndroidResourceDescription description =
-        new AndroidResourceDescription(new TestToolchainProvider(), false);
+        new AndroidResourceDescription(new ToolchainProviderBuilder().build(), false);
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
     Map<Path, SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));

@@ -84,7 +84,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -259,31 +259,33 @@ public class ParserTest {
             .setBuckConfig(config)
             .build();
 
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+    ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(testToolchainProvider, toolchainCreationContext);
+            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
     appleDeveloperDirectoryProvider.ifPresent(
         provider ->
-            testToolchainProvider.addToolchain(
+            toolchainProviderBuilder.withToolchain(
                 AppleDeveloperDirectoryProvider.DEFAULT_NAME, provider));
     Optional<AppleToolchainProvider> appleToolchainProvider =
         new AppleToolchainProviderFactory()
-            .createToolchain(testToolchainProvider, toolchainCreationContext);
+            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
     appleToolchainProvider.ifPresent(
         provider ->
-            testToolchainProvider.addToolchain(AppleToolchainProvider.DEFAULT_NAME, provider));
+            toolchainProviderBuilder.withToolchain(AppleToolchainProvider.DEFAULT_NAME, provider));
     Optional<AppleSdkLocation> appleSdkLocation =
         new AppleSdkLocationFactory()
-            .createToolchain(testToolchainProvider, toolchainCreationContext);
+            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
     appleSdkLocation.ifPresent(
-        provider -> testToolchainProvider.addToolchain(AppleSdkLocation.DEFAULT_NAME, provider));
+        provider ->
+            toolchainProviderBuilder.withToolchain(AppleSdkLocation.DEFAULT_NAME, provider));
     Optional<AppleCxxPlatformsProvider> appleCxxPlatformsProvider =
         new AppleCxxPlatformsProviderFactory()
-            .createToolchain(testToolchainProvider, toolchainCreationContext);
+            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext);
     appleCxxPlatformsProvider.ifPresent(
         provider ->
-            testToolchainProvider.addToolchain(AppleCxxPlatformsProvider.DEFAULT_NAME, provider));
+            toolchainProviderBuilder.withToolchain(
+                AppleCxxPlatformsProvider.DEFAULT_NAME, provider));
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     knownBuildRuleTypesProvider =

@@ -22,7 +22,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -30,7 +30,7 @@ public class JsBundleBuilder
     extends AbstractNodeBuilder<
         JsBundleDescriptionArg.Builder, JsBundleDescriptionArg, JsBundleDescription, JsBundle> {
   private static final JsBundleDescription bundleDescription =
-      new JsBundleDescription(new TestToolchainProvider());
+      new JsBundleDescription(new ToolchainProviderBuilder().build());
 
   JsBundleBuilder(
       BuildTarget target,

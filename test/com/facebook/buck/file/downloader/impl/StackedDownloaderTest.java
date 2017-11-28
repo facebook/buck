@@ -30,7 +30,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +62,7 @@ public class StackedDownloaderTest {
   public void shouldCreateADownloaderEvenWithAnEmptyStack() {
     Downloader downloader =
         StackedDownloader.createFromConfig(
-            FakeBuckConfig.builder().build(), new TestToolchainProvider());
+            FakeBuckConfig.builder().build(), new ToolchainProviderBuilder().build());
 
     assertNotNull(downloader);
 
@@ -73,7 +74,7 @@ public class StackedDownloaderTest {
   public void shouldAddOnDiskAndroidReposIfPresentInSdk() throws IOException {
     Downloader downloader =
         StackedDownloader.createFromConfig(
-            FakeBuckConfig.builder().build(), new TestToolchainProvider());
+            FakeBuckConfig.builder().build(), new ToolchainProviderBuilder().build());
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
     for (Downloader seen : downloaders) {
@@ -87,11 +88,12 @@ public class StackedDownloaderTest {
     Files.createDirectories(androidM2);
     Files.createDirectories(googleM2);
 
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkRoot));
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkRoot))
+            .build();
     downloader =
-        StackedDownloader.createFromConfig(FakeBuckConfig.builder().build(), testToolchainProvider);
+        StackedDownloader.createFromConfig(FakeBuckConfig.builder().build(), toolchainProvider);
     downloaders = unpackDownloaders(downloader);
 
     int count = 0;
@@ -125,7 +127,8 @@ public class StackedDownloaderTest {
                 "central = https://repo1.maven.org/maven2")
             .build();
 
-    Downloader downloader = StackedDownloader.createFromConfig(config, new TestToolchainProvider());
+    Downloader downloader =
+        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
     boolean seenRemote = false;
@@ -159,7 +162,8 @@ public class StackedDownloaderTest {
             .setSections("[download]", "maven_repo = https://repo1.maven.org/maven2")
             .build();
 
-    Downloader downloader = StackedDownloader.createFromConfig(config, new TestToolchainProvider());
+    Downloader downloader =
+        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
     assertThat(downloader, includes(RemoteMavenDownloader.class));
   }
 
@@ -217,7 +221,7 @@ public class StackedDownloaderTest {
                 + "as a local Maven repository as configured",
             pathNotExist));
 
-    StackedDownloader.createFromConfig(config, new TestToolchainProvider());
+    StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
   }
 
   @Test
@@ -235,7 +239,7 @@ public class StackedDownloaderTest {
                 + "as a local Maven repository as configured",
             pathNotExist));
 
-    StackedDownloader.createFromConfig(config, new TestToolchainProvider());
+    StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
   }
 
   @Test
@@ -243,14 +247,16 @@ public class StackedDownloaderTest {
     BuckConfig config =
         FakeBuckConfig.builder().setSections("[download]", "max_number_of_retries = 1").build();
 
-    Downloader downloader = StackedDownloader.createFromConfig(config, new TestToolchainProvider());
+    Downloader downloader =
+        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
     assertThat(downloader, includes(RetryingDownloader.class));
   }
 
   @Test
   public void shouldNotUseRetryingDownloaderIfMaxNumberOfRetriesIsSet() throws IOException {
     BuckConfig config = FakeBuckConfig.builder().build();
-    Downloader downloader = StackedDownloader.createFromConfig(config, new TestToolchainProvider());
+    Downloader downloader =
+        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
     assertThat(downloader, not(includes(RetryingDownloader.class)));
   }
 

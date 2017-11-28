@@ -23,7 +23,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableMap;
 
 public class DBinaryBuilder
@@ -39,14 +40,14 @@ public class DBinaryBuilder
     getArgForPopulating().setSrcs(SourceList.EMPTY);
   }
 
-  private static TestToolchainProvider createToolchain(CxxPlatform cxxPlatform) {
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        CxxPlatformsProvider.DEFAULT_NAME,
-        CxxPlatformsProvider.of(
-            cxxPlatform,
-            new FlavorDomain<>(
-                "C/C++ platform", ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform))));
-    return testToolchainProvider;
+  private static ToolchainProvider createToolchain(CxxPlatform cxxPlatform) {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            CxxPlatformsProvider.of(
+                cxxPlatform,
+                new FlavorDomain<>(
+                    "C/C++ platform", ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform))))
+        .build();
   }
 }

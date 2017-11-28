@@ -25,7 +25,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class CxxGenruleBuilder
     extends AbstractNodeBuilder<
@@ -36,7 +36,7 @@ public class CxxGenruleBuilder
     super(
         new CxxGenruleDescription(
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            new TestToolchainProvider(),
+            new ToolchainProviderBuilder().build(),
             new NoSandboxExecutionStrategy(),
             cxxPlatforms),
         target);

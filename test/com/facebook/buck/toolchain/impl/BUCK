@@ -13,5 +13,6 @@ java_library(
         "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/cxx/toolchain:testutil",
     ],
 )

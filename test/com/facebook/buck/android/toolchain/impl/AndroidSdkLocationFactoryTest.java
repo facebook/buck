@@ -30,7 +30,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,18 +56,20 @@ public class AndroidSdkLocationFactoryTest {
 
     FakeAndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
 
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME,
-        new DefaultAndroidLegacyToolchain(
-            () ->
-                AndroidPlatformTarget.getDefaultPlatformTarget(
-                    androidDirectoryResolver, Optional.empty(), Optional.empty()),
-            androidDirectoryResolver));
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidLegacyToolchain.DEFAULT_NAME,
+                new DefaultAndroidLegacyToolchain(
+                    () ->
+                        AndroidPlatformTarget.getDefaultPlatformTarget(
+                            androidDirectoryResolver, Optional.empty(), Optional.empty()),
+                    androidDirectoryResolver))
+            .build();
 
     Optional<AndroidSdkLocation> toolchain =
         factory.createToolchain(
-            testToolchainProvider,
+            toolchainProvider,
             ToolchainCreationContext.builder()
                 .setProcessExecutor(new DefaultProcessExecutor(new TestConsole()))
                 .setBuckConfig(FakeBuckConfig.builder().build())
@@ -86,18 +89,20 @@ public class AndroidSdkLocationFactoryTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(sdkLocation), Optional.empty(), Optional.empty(), Optional.empty());
 
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME,
-        new DefaultAndroidLegacyToolchain(
-            () ->
-                AndroidPlatformTarget.getDefaultPlatformTarget(
-                    androidDirectoryResolver, Optional.empty(), Optional.empty()),
-            androidDirectoryResolver));
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidLegacyToolchain.DEFAULT_NAME,
+                new DefaultAndroidLegacyToolchain(
+                    () ->
+                        AndroidPlatformTarget.getDefaultPlatformTarget(
+                            androidDirectoryResolver, Optional.empty(), Optional.empty()),
+                    androidDirectoryResolver))
+            .build();
 
     Optional<AndroidSdkLocation> toolchain =
         factory.createToolchain(
-            testToolchainProvider,
+            toolchainProvider,
             ToolchainCreationContext.builder()
                 .setProcessExecutor(new DefaultProcessExecutor(new TestConsole()))
                 .setBuckConfig(FakeBuckConfig.builder().build())

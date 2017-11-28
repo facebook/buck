@@ -37,7 +37,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
@@ -63,9 +64,9 @@ public class RemoteFileDescriptionTest {
   @Before
   public void setUp() {
     downloader = new ExplodingDownloader();
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(Downloader.DEFAULT_NAME, downloader);
-    description = new RemoteFileDescription(testToolchainProvider);
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder().withToolchain(Downloader.DEFAULT_NAME, downloader).build();
+    description = new RemoteFileDescription(toolchainProvider);
     filesystem = new FakeProjectFilesystem();
     ruleResolver =
         new SingleThreadedBuildRuleResolver(

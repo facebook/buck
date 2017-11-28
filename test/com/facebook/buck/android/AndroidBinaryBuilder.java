@@ -30,7 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -59,12 +59,11 @@ public class AndroidBinaryBuilder
   }
 
   private static ToolchainProvider createToolchainProvider() {
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
-
-    return testToolchainProvider;
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
+        .withDefaultNdkCxxPlatforms()
+        .build();
   }
 
   public static AndroidBinaryBuilder createBuilder(BuildTarget buildTarget) {

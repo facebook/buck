@@ -39,7 +39,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -70,7 +71,7 @@ public class AppleCxxPlatformsProviderFactoryTest {
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
@@ -85,7 +86,7 @@ public class AppleCxxPlatformsProviderFactoryTest {
 
     Optional<Path> appleDeveloperDir =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(toolchainProvider, toolchainCreationContext)
+            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
     ImmutableMap<String, AppleToolchain> appleToolchains =
@@ -102,10 +103,12 @@ public class AppleCxxPlatformsProviderFactoryTest {
 
     assumeThat(appleSdkPaths, is(not(anEmptyMap())));
 
-    toolchainProvider.addToolchain(
-        AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.of(appleSdkPaths));
-    toolchainProvider.addToolchain(
-        AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(appleToolchains));
+    ToolchainProvider toolchainProvider =
+        toolchainProviderBuilder
+            .withToolchain(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.of(appleSdkPaths))
+            .withToolchain(
+                AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(appleToolchains))
+            .build();
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(

@@ -42,7 +42,7 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
@@ -150,14 +150,13 @@ public class ApplePackageDescriptionTest {
   }
 
   private ApplePackageDescription descriptionWithCommand(String command) {
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        AppleCxxPlatformsProvider.DEFAULT_NAME,
-        AppleCxxPlatformsProvider.of(
-            FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN));
-
     return new ApplePackageDescription(
-        testToolchainProvider,
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AppleCxxPlatformsProvider.DEFAULT_NAME,
+                AppleCxxPlatformsProvider.of(
+                    FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN))
+            .build(),
         new NoSandboxExecutionStrategy(),
         FakeBuckConfig.builder()
             .setSections(

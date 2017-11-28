@@ -29,7 +29,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import java.util.Optional;
 import org.junit.Before;
@@ -52,18 +53,20 @@ public class AndroidNdkFactoryTest {
 
     FakeAndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
 
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME,
-        new DefaultAndroidLegacyToolchain(
-            () ->
-                AndroidPlatformTarget.getDefaultPlatformTarget(
-                    androidDirectoryResolver, Optional.empty(), Optional.empty()),
-            androidDirectoryResolver));
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidLegacyToolchain.DEFAULT_NAME,
+                new DefaultAndroidLegacyToolchain(
+                    () ->
+                        AndroidPlatformTarget.getDefaultPlatformTarget(
+                            androidDirectoryResolver, Optional.empty(), Optional.empty()),
+                    androidDirectoryResolver))
+            .build();
 
     Optional<AndroidNdk> androidNdk =
         factory.createToolchain(
-            testToolchainProvider,
+            toolchainProvider,
             ToolchainCreationContext.builder()
                 .setProcessExecutor(new DefaultProcessExecutor(new TestConsole()))
                 .setBuckConfig(FakeBuckConfig.builder().build())

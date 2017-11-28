@@ -23,7 +23,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -34,7 +34,10 @@ public class AndroidResourceBuilder
         AndroidResourceDescription, AndroidResource> {
 
   private AndroidResourceBuilder(BuildTarget target, ProjectFilesystem filesystem) {
-    super(new AndroidResourceDescription(new TestToolchainProvider(), false), target, filesystem);
+    super(
+        new AndroidResourceDescription(new ToolchainProviderBuilder().build(), false),
+        target,
+        filesystem);
   }
 
   public static AndroidResourceBuilder createBuilder(BuildTarget target) {
