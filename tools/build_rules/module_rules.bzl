@@ -1,11 +1,16 @@
 """Contains build rules for Buck modules"""
 
+load("@bazel_skylib//lib:sets.bzl", "sets")
 load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
 def buck_module(
     name,
     **kwargs
 ):
+    kwargs["provided_deps"] = sets.union(kwargs.get("provided_deps", []), [
+        "//src/com/facebook/buck/module:module",
+    ])
+
     java_library_with_plugins(
         name = name,
         **kwargs
