@@ -120,6 +120,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final Tool ibtool;
 
+  @AddToRuleKey private final Tool plutil;
+
   @AddToRuleKey private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey private final ApplePlatform platform;
@@ -208,6 +210,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.extensionBundlePaths = extensionBundlePaths;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
+    this.plutil = appleCxxPlatform.getPlutil();
     this.assetCatalog = assetCatalog;
     this.coreDataModel = coreDataModel;
     this.sceneKitAssets = sceneKitAssets;
@@ -1038,6 +1041,17 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 ImmutableList.of("--compile"),
                 sourcePath,
                 compiledNibPath));
+        break;
+      case "strings":
+        stepsBuilder.add(
+            new PlutilConvertStep(
+                getBuildTarget(),
+                getProjectFilesystem(),
+                plutil.getEnvironment(resolver),
+                plutil.getCommandPrefix(resolver),
+                PlutilConvertStep.Format.binary1,
+                sourcePath,
+                destinationPath));
         break;
       default:
         stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), sourcePath, destinationPath));
