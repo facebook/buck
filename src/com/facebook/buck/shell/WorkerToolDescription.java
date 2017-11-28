@@ -147,7 +147,7 @@ public class WorkerToolDescription
     return new DefaultWorkerTool(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(tool.getDeps(new SourcePathRuleFinder(resolver))),
+        new SourcePathRuleFinder(resolver),
         tool,
         maxWorkers,
         args.getPersistent()

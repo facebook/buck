@@ -42,7 +42,6 @@ public class WorkerMacroExpander extends ExecutableMacroExpander {
   protected ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildRuleResolver resolver, BuildRule rule) throws MacroException {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.add(rule);
     deps.addAll(getTool(rule).getDeps(new SourcePathRuleFinder(resolver)));
     return deps.build();
   }
