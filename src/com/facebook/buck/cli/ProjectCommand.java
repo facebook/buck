@@ -170,7 +170,7 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--exclude-artifacts",
     usage =
-        "Don't include references to the artifacts created by compiling a target in"
+        "Don't include references to the artifacts created by compiling a target in "
             + "the module representing that target."
   )
   private boolean excludeArtifacts = false;
