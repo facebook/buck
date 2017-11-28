@@ -100,43 +100,41 @@ public class CommandRunnerParamsForTesting {
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 
-    return CommandRunnerParams.builder()
-        .setConsole(console)
-        .setBuildInfoStoreManager(new BuildInfoStoreManager())
-        .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
-        .setCell(cell)
-        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(artifactCache))
-        .setBuckEventBus(eventBus)
-        .setTypeCoercerFactory(typeCoercerFactory)
-        .setParser(
-            new Parser(
-                new BroadcastEventListener(),
-                cell.getBuckConfig().getView(ParserConfig.class),
-                typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
-                knownBuildRuleTypesProvider))
-        .setPlatform(platform)
-        .setEnvironment(environment)
-        .setJavaPackageFinder(javaPackageFinder)
-        .setClock(new DefaultClock())
-        .setProcessManager(Optional.empty())
-        .setWebServer(webServer)
-        .setBuckConfig(config)
-        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
-        .setExecutors(
-            ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()))
-        .setScheduledExecutor(new FakeExecutor())
-        .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
-        .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
-        .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
-        .setInvocationInfo(Optional.empty())
-        .setActionGraphCache(new ActionGraphCache(config.getMaxActionGraphCacheEntries()))
-        .setKnownBuildRuleTypesProvider(knownBuildRuleTypesProvider)
-        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setRuleKeyConfiguration(TestRuleKeyConfigurationFactory.create())
-        .setProcessExecutor(processExecutor)
-        .build();
+    return CommandRunnerParams.of(
+        console,
+        new ByteArrayInputStream("".getBytes("UTF-8")),
+        cell,
+        new VersionedTargetGraphCache(),
+        new SingletonArtifactCacheFactory(artifactCache),
+        typeCoercerFactory,
+        new Parser(
+            new BroadcastEventListener(),
+            cell.getBuckConfig().getView(ParserConfig.class),
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
+            knownBuildRuleTypesProvider),
+        eventBus,
+        platform,
+        environment,
+        javaPackageFinder,
+        new DefaultClock(),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        Optional.empty(),
+        webServer,
+        Optional.empty(),
+        config,
+        new StackedFileHashCache(ImmutableList.of()),
+        ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),
+        new FakeExecutor(),
+        BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache(config.getMaxActionGraphCacheEntries()),
+        knownBuildRuleTypesProvider,
+        new BuildInfoStoreManager(),
+        Optional.empty(),
+        Optional.empty(),
+        new DefaultProjectFilesystemFactory(),
+        TestRuleKeyConfigurationFactory.create(),
+        processExecutor);
   }
 
   public static Builder builder() {

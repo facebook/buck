@@ -138,37 +138,37 @@ public class CleanCommandTest extends EasyMockSupport {
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
-    return CommandRunnerParams.builder()
-        .setConsole(new TestConsole())
-        .setBuildInfoStoreManager(new BuildInfoStoreManager())
-        .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
-        .setCell(cell)
-        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
-        .setBuckEventBus(BuckEventBusForTests.newInstance())
-        .setTypeCoercerFactory(createMock(TypeCoercerFactory.class))
-        .setParser(createMock(Parser.class))
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setClock(new DefaultClock())
-        .setProcessManager(Optional.empty())
-        .setWebServer(Optional.empty())
-        .setBuckConfig(buckConfig)
-        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
-        .setExecutors(ImmutableMap.of())
-        .setScheduledExecutor(new FakeExecutor())
-        .setBuildEnvironmentDescription(CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)
-        .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
-        .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
-        .setActionGraphCache(new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()))
-        .setKnownBuildRuleTypesProvider(
-            KnownBuildRuleTypesProvider.of(
-                DefaultKnownBuildRuleTypesFactory.of(
-                    processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())))
-        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setRuleKeyConfiguration(TestRuleKeyConfigurationFactory.create())
-        .setProcessExecutor(processExecutor)
-        .build();
+    return CommandRunnerParams.of(
+        new TestConsole(),
+        new ByteArrayInputStream("".getBytes("UTF-8")),
+        cell,
+        new VersionedTargetGraphCache(),
+        new SingletonArtifactCacheFactory(new NoopArtifactCache()),
+        createMock(TypeCoercerFactory.class),
+        createMock(Parser.class),
+        BuckEventBusForTests.newInstance(),
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder(),
+        new DefaultClock(),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        buckConfig,
+        new StackedFileHashCache(ImmutableList.of()),
+        ImmutableMap.of(),
+        new FakeExecutor(),
+        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())),
+        new BuildInfoStoreManager(),
+        Optional.empty(),
+        Optional.empty(),
+        new DefaultProjectFilesystemFactory(),
+        TestRuleKeyConfigurationFactory.create(),
+        processExecutor);
   }
 }
