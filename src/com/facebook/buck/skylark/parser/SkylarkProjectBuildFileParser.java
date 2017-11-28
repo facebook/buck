@@ -36,7 +36,6 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,7 +71,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /**
  * Parser for build files written using Skylark syntax.
@@ -284,35 +282,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       extensionsBuilder.add(extensionData);
     }
     return extensionsBuilder.build();
-  }
-
-  /**
-   * Captures {@link Environment} and information related to its parsing like all {@link
-   * com.google.devtools.build.lib.vfs.Path} used in order to create this environment.
-   */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractEnvironmentData {
-    public abstract Environment getEnvironment();
-
-    public abstract ImmutableList<com.google.devtools.build.lib.vfs.Path> getLoadedPaths();
-  }
-
-  /**
-   * Captures {@link Extension} and information related to its parsing like all other extensions
-   * used in order to load it. The main purpose of extra information is to properly captured all
-   * dependent information for caching purposes.
-   */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractExtensionData {
-    public abstract Extension getExtension();
-
-    public abstract com.google.devtools.build.lib.vfs.Path getPath();
-
-    public abstract ImmutableList<ExtensionData> getDependencies();
-
-    public abstract String getImportString();
   }
 
   /**
