@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java.lang.model;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -30,6 +32,8 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * More utility functions for working with {@link Element}s, along the lines of those found on
@@ -37,6 +41,57 @@ import javax.lang.model.type.DeclaredType;
  */
 public final class MoreElements {
   private MoreElements() {}
+
+  @Nullable
+  public static TypeElement getSuperclass(TypeElement type) {
+    TypeMirror superclassType = type.getSuperclass();
+    switch (superclassType.getKind()) {
+      case DECLARED:
+      case ERROR:
+        return (TypeElement) ((DeclaredType) superclassType).asElement();
+      case NONE:
+        return null;
+        // $CASES-OMITTED$
+      default:
+        throw new IllegalArgumentException(superclassType.toString());
+    }
+  }
+
+  public static Stream<TypeElement> getInterfaces(TypeElement type) {
+    return type.getInterfaces()
+        .stream()
+        .filter(it -> it.getKind() == TypeKind.DECLARED || it.getKind() == TypeKind.ERROR)
+        .map(it -> (TypeElement) ((DeclaredType) it).asElement());
+  }
+
+  public static Stream<TypeElement> getTransitiveSuperclasses(TypeElement type) {
+    Stream.Builder<TypeElement> builder = Stream.builder();
+
+    TypeElement walker = getSuperclass(type);
+    while (walker != null) {
+      builder.add(walker);
+      walker = getSuperclass(walker);
+    }
+
+    return builder.build();
+  }
+
+  public static boolean isTransitiveMemberClass(TypeElement inner, TypeElement outer) {
+    Element walker = inner.getEnclosingElement();
+    while (walker != null) {
+      if (walker == outer) {
+        return true;
+      }
+      walker = walker.getEnclosingElement();
+    }
+
+    return false;
+  }
+
+  public static Stream<TypeMirror> getSupersAndInterfaces(TypeElement element) {
+    return Stream.concat(Stream.of(element.getSuperclass()), element.getInterfaces().stream())
+        .filter(Objects::nonNull);
+  }
 
   public static TypeElement getTypeElement(Element element) {
     if (element.getKind() == ElementKind.PACKAGE) {
