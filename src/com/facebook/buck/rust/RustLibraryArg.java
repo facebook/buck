@@ -24,7 +24,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -57,15 +56,10 @@ public class RustLibraryArg implements Arg, HasSourcePath {
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableSet.Builder<BuildRule> deps = ImmutableSet.builder();
 
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getInputs()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(rlib));
     deps.addAll(this.deps);
 
     return deps.build();
-  }
-
-  @Override
-  public ImmutableList<SourcePath> getInputs() {
-    return ImmutableList.of(rlib);
   }
 
   @Override

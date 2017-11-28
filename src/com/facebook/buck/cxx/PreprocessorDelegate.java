@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -225,7 +226,7 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     Stream.Builder<SourcePath> inputsBuilder = Stream.builder();
 
     // Add inputs that we always use.
-    preprocessor.getInputs().forEach(inputsBuilder);
+    BuildableSupport.deriveInputs(preprocessor).forEach(inputsBuilder);
 
     // Prefix header is not represented in the dep file, so should be added manually.
     if (preprocessorFlags.getPrefixHeader().isPresent()) {
@@ -292,7 +293,8 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     // directly and hash it appropriately.
     for (Arg flag : flags) {
       Preconditions.checkArgument(
-          flag.getInputs().isEmpty(), "precompiled header hashing does not support source paths");
+          BuildableSupport.deriveInputs(flag).collect(MoreCollectors.toImmutableList()).isEmpty(),
+          "precompiled header hashing does not support source paths");
     }
     for (String part : sanitizer.sanitizeFlags(Iterables.skip(Arg.stringify(flags, resolver), 1))) {
       // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash

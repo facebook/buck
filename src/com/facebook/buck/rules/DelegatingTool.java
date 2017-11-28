@@ -34,11 +34,6 @@ public abstract class DelegatingTool implements AbstractTool {
   }
 
   @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return tool.getInputs();
-  }
-
-  @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return tool.getCommandPrefix(resolver);
   }

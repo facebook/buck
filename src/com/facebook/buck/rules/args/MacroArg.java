@@ -24,15 +24,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -80,23 +77,6 @@ public class MacroArg implements Arg, RuleKeyAppendable {
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    ImmutableCollection<BuildRule> rules;
-    try {
-      rules =
-          expander.extractBuildTimeDeps(
-              target, cellNames, resolver, unexpanded, precomputedWorkCache);
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    ImmutableList.Builder<SourcePath> paths = ImmutableList.builder();
-    for (BuildRule rule : rules) {
-      paths.add(Preconditions.checkNotNull(rule.getSourcePathToOutput()));
-    }
-    return paths.build();
   }
 
   @Override

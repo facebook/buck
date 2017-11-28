@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -58,23 +57,6 @@ public class CommandTool implements Tool {
     this.environment = environment;
     this.extraInputs = extraInputs;
     this.nonHashableInputs = nonHashableInputs;
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    ImmutableSortedSet.Builder<SourcePath> inputs = ImmutableSortedSet.naturalOrder();
-    if (baseTool.isPresent()) {
-      inputs.addAll(baseTool.get().getInputs());
-    }
-    for (Arg arg : args) {
-      inputs.addAll(arg.getInputs());
-    }
-    for (Map.Entry<String, Arg> entry : environment.entrySet()) {
-      inputs.addAll(entry.getValue().getInputs());
-    }
-
-    inputs.addAll(extraInputs);
-    return inputs.build();
   }
 
   @Override

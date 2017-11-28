@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -67,7 +69,13 @@ public class HaskellPrebuiltLibraryDescriptionTest {
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
     assertThat(
-        RichStream.from(input.getArgs()).flatMap(a -> a.getInputs().stream()).toImmutableSet(),
+        RichStream.from(input.getArgs())
+            .flatMap(
+                a ->
+                    BuildableSupport.deriveInputs(a)
+                        .collect(MoreCollectors.toImmutableList())
+                        .stream())
+            .toImmutableSet(),
         Matchers.contains(lib));
   }
 
@@ -90,7 +98,13 @@ public class HaskellPrebuiltLibraryDescriptionTest {
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED);
     assertThat(
-        RichStream.from(input.getArgs()).flatMap(a -> a.getInputs().stream()).toImmutableSet(),
+        RichStream.from(input.getArgs())
+            .flatMap(
+                a ->
+                    BuildableSupport.deriveInputs(a)
+                        .collect(MoreCollectors.toImmutableList())
+                        .stream())
+            .toImmutableSet(),
         Matchers.contains(lib));
   }
 

@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
@@ -130,12 +129,6 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return getDeps();
-  }
-
-  /** @return the inputs from all embedded macros. */
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return RichStream.from(getDeps()).map(BuildRule::getSourcePathToOutput).toImmutableList();
   }
 
   /** Expands all macros to strings and append them to the given builder. */

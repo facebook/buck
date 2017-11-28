@@ -18,7 +18,6 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -49,11 +48,6 @@ public class PythonEnvironment implements Tool {
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableSortedSet.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.of();
   }
 
   @Override

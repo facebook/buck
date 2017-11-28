@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -43,15 +42,6 @@ abstract class FrameworkPathArg implements Arg {
         .flatMap(Optionals::toStream)
         .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
         .collect(MoreCollectors.toImmutableSet());
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return frameworkPaths
-        .stream()
-        .map(FrameworkPath::getSourcePath)
-        .flatMap(Optionals::toStream)
-        .collect(MoreCollectors.toImmutableList());
   }
 
   @Override

@@ -65,14 +65,6 @@ abstract class AbstractLuaPackageComponents implements AddsToRuleKey {
         .build();
   }
 
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    return ImmutableSortedSet.<SourcePath>naturalOrder()
-        .addAll(getModules().values())
-        .addAll(getPythonModules().values())
-        .addAll(getNativeLibraries().values())
-        .build();
-  }
-
   /** @return whether any components may be prebuilt native libraries. */
   public boolean hasNativeCode(CxxPlatform cxxPlatform) {
     for (String module : getModules().keySet()) {

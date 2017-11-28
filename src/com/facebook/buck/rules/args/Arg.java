@@ -19,7 +19,6 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.MoreCollectors;
@@ -46,11 +45,6 @@ public interface Arg extends AddsToRuleKey {
   /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
   default ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return BuildableSupport.deriveDeps(this, ruleFinder).collect(MoreCollectors.toImmutableList());
-  }
-
-  /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
-  default ImmutableCollection<SourcePath> getInputs() {
-    return BuildableSupport.deriveInputs(this).collect(MoreCollectors.toImmutableList());
   }
 
   /**

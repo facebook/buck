@@ -134,12 +134,7 @@ public class ExternalJavac implements Javac {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return javac.get().getInputs();
+    return javac.get().getDeps(ruleFinder);
   }
 
   @Override

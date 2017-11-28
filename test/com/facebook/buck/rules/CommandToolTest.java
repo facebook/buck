@@ -25,6 +25,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -54,7 +55,9 @@ public class CommandToolTest {
         tool.getCommandPrefix(pathResolver),
         Matchers.contains(pathResolver.getAbsolutePath(rule.getSourcePathToOutput()).toString()));
     assertThat(tool.getDeps(ruleFinder), Matchers.contains(rule));
-    assertThat(tool.getInputs(), Matchers.contains(path));
+    assertThat(
+        BuildableSupport.deriveInputs(tool).collect(MoreCollectors.toImmutableList()),
+        Matchers.contains(path));
   }
 
   @Test
@@ -90,7 +93,9 @@ public class CommandToolTest {
     CommandTool tool = new CommandTool.Builder().addInputs(ImmutableList.of(path)).build();
 
     assertThat(tool.getDeps(ruleFinder), Matchers.contains(rule));
-    assertThat(tool.getInputs(), Matchers.contains(path));
+    assertThat(
+        BuildableSupport.deriveInputs(tool).collect(MoreCollectors.toImmutableList()),
+        Matchers.contains(path));
   }
 
   @Test
@@ -131,6 +136,8 @@ public class CommandToolTest {
         Matchers.hasEntry(
             "ENV", pathResolver.getAbsolutePath(rule.getSourcePathToOutput()).toString()));
     assertThat(tool.getDeps(ruleFinder), Matchers.contains(rule));
-    assertThat(tool.getInputs(), Matchers.contains(path));
+    assertThat(
+        BuildableSupport.deriveInputs(tool).collect(MoreCollectors.toImmutableList()),
+        Matchers.contains(path));
   }
 }

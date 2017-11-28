@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -88,9 +89,7 @@ class CompilerDelegate implements AddsToRuleKey {
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
-    return compiler
-        .getInputs()
-        .stream()
+    return BuildableSupport.deriveInputs(compiler)
         .sorted()
         .filter(
             (SourcePath path) ->

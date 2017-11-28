@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -126,7 +128,9 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(noMacrosArg.getInputs(), Matchers.empty());
+    assertThat(
+        BuildableSupport.deriveInputs(noMacrosArg).collect(MoreCollectors.toImmutableList()),
+        Matchers.empty());
 
     // Test one embedded macros.
     StringWithMacrosArg oneMacrosArg =
@@ -137,7 +141,9 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(oneMacrosArg.getInputs(), Matchers.contains(rule1.getSourcePathToOutput()));
+    assertThat(
+        BuildableSupport.deriveInputs(oneMacrosArg).collect(MoreCollectors.toImmutableList()),
+        Matchers.contains(rule1.getSourcePathToOutput()));
 
     // Test multiple embedded macros.
     StringWithMacrosArg multipleMacrosArg =
@@ -153,7 +159,7 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        multipleMacrosArg.getInputs(),
+        BuildableSupport.deriveInputs(multipleMacrosArg).collect(MoreCollectors.toImmutableList()),
         Matchers.contains(
             rule1.getSourcePathToOutput(),
             rule2.getSourcePathToOutput(),

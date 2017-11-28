@@ -28,9 +28,6 @@ public interface Tool extends AddsToRuleKey {
    */
   ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
-  /** @return all {@link SourcePath}s this tool requires to run. */
-  ImmutableCollection<SourcePath> getInputs();
-
   /** @return the prefix command use to run this tool. */
   ImmutableList<String> getCommandPrefix(SourcePathResolver resolver);
 

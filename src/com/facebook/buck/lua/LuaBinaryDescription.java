@@ -644,15 +644,6 @@ public class LuaBinaryDescription
       @AddToRuleKey private final List<SourcePath> toolExtraInputs = extraInputs;
 
       @Override
-      public ImmutableCollection<SourcePath> getInputs() {
-        return ImmutableSortedSet.<SourcePath>naturalOrder()
-            .add(starter)
-            .addAll(components.getInputs())
-            .addAll(extraInputs)
-            .build();
-      }
-
-      @Override
       public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
         return ImmutableList.of(resolver.getAbsolutePath(starter).toString());
       }
