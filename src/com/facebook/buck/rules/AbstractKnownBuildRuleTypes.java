@@ -97,9 +97,6 @@ import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.lua.CxxLuaExtensionDescription;
-import com.facebook.buck.lua.LuaBinaryDescription;
-import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
@@ -419,7 +416,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new CxxGenruleDescription(
             cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
-    builder.addDescriptions(new CxxLuaExtensionDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(
         new CxxPythonExtensionDescription(toolchainProvider, cxxBuckConfig, cxxPlatforms));
     builder.addDescriptions(
@@ -468,8 +464,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new KotlinTestDescription(
             kotlinBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
-    builder.addDescriptions(new LuaBinaryDescription(toolchainProvider, cxxBuckConfig));
-    builder.addDescriptions(new LuaLibraryDescription());
     builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);
     builder.addDescriptions(new OcamlBinaryDescription(ocamlBuckConfig));
