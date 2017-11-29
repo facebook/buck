@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -2956,7 +2957,8 @@ public class StubJarTest {
   }
 
   @Test
-  public void doesNotStubReferencesFromBridgeMethodsToInnerClassesOtherTypes() throws IOException {
+  public void stubsReferencesFromBridgeMethodsToInnerClassesOtherTypes() throws IOException {
+    notYetImplementedForMissingClasspath();
     tester
         .setSourceFile(
             "A.java",
@@ -2976,7 +2978,6 @@ public class StubJarTest {
             "public class com/example/buck/A$B extends com/example/buck/C  {",
             "",
             "  // access flags 0x8",
-            // The following entry won't be present, because it's only here for the bridge method
             "  static INNERCLASS com/example/buck/C$D com/example/buck/C D",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
@@ -2998,9 +2999,15 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            // TODO: Why is this backwards wrt the full API?
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/C$D com/example/buck/C D",
             "",
             "  // access flags 0x1",
             "  public <init>(Lcom/example/buck/A;)V",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge foo()Lcom/example/buck/C$D;",
             "}")
         .addExpectedStub(
             "com/example/buck/A",
@@ -4284,7 +4291,8 @@ public class StubJarTest {
   }
 
   @Test
-  public void shouldNotIncludeGenericBridgeMethods() throws IOException {
+  public void shouldIncludeGenericBridgeMethods() throws IOException {
+    notYetImplementedForMissingClasspath();
     tester
         .setSourceFile(
             "A.java",
@@ -4311,7 +4319,6 @@ public class StubJarTest {
             "",
             "  // access flags 0x1041",
             "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
-            // Should include this method
             "}")
         .addExpectedStub(
             "com/example/buck/A",
@@ -4327,6 +4334,228 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public compareTo(Lcom/example/buck/A;)I",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void shouldIncludeGenericOverrideBridgeMethods() throws IOException {
+    notYetImplementedForMissingClasspath();
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A extends Super<String> {",
+            "  @Override",
+            "  public int compareTo(String s) {",
+            "    return 0;",
+            "  }",
+            "}",
+            "class Super<T extends CharSequence> implements Comparable<T> {",
+            "  @Override",
+            "  public int compareTo(T t) {",
+            "    return 0;",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "// signature Lcom/example/buck/Super<Ljava/lang/String;>;",
+            "// declaration: com/example/buck/A extends com.example.buck.Super<java.lang.String>",
+            "public class com/example/buck/A extends com/example/buck/Super  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public compareTo(Ljava/lang/String;)I",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge compareTo(Ljava/lang/CharSequence;)I",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/Super",
+            "// class version 52.0 (52)",
+            "// access flags 0x20",
+            "// signature <T::Ljava/lang/CharSequence;>Ljava/lang/Object;Ljava/lang/Comparable<TT;>;",
+            "// declaration: com/example/buck/Super<T extends java.lang.CharSequence> implements java.lang.Comparable<T>",
+            "class com/example/buck/Super implements java/lang/Comparable  {",
+            "",
+            "",
+            "  // access flags 0x0",
+            "  <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  // signature (TT;)I",
+            "  // declaration: int compareTo(T)",
+            "  public compareTo(Ljava/lang/CharSequence;)I",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge compareTo(Ljava/lang/Object;)I",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  public class Foo<T> implements Callable<T> {
+    @Override
+    public T call() throws Exception {
+      return null;
+    }
+  }
+
+  @Test
+  public void shouldIncludeCovariantReturnBridgeMethods() throws IOException {
+    notYetImplementedForMissingClasspath();
+    tester
+        .setSourceFile(
+            "Super.java",
+            "package com.example.buck;",
+            "public class Super<T, U> {",
+            "  protected Super getThis() { return this; }",
+            "  public java.util.List<T> getList() { return null; }",
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A extends Super<String, String> {",
+            "  protected A getThis() { return this; }",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "// signature Lcom/example/buck/Super<Ljava/lang/String;Ljava/lang/String;>;",
+            "// declaration: com/example/buck/A extends com.example.buck.Super<java.lang.String, java.lang.String>",
+            "public class com/example/buck/A extends com/example/buck/Super  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x4",
+            "  protected getThis()Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x1044",
+            "  protected synthetic bridge getThis()Lcom/example/buck/Super;",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "// signature Lcom/example/buck/Super<Ljava/lang/String;Ljava/lang/String;>;",
+            "// declaration: com/example/buck/A extends com.example.buck.Super<java.lang.String, java.lang.String>",
+            "public class com/example/buck/A extends com/example/buck/Super  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x4",
+            "  protected getThis()Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x1044",
+            "  protected synthetic bridge getThis()Lcom/example/buck/Super;",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void
+      shouldCopyAccessibilityAnnotationsAndParamNamesFromOverriderAndThrowsFromOverriddenToBridgeMethods()
+          throws IOException {
+    notYetImplementedForMissingClasspath();
+    tester
+        .setSourceFile("Anno.java", "package com.example.buck;", "public @interface Anno { }")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Super.java",
+            "package com.example.buck;",
+            "public class Super {",
+            "  protected @SuperAnno Super getThis(@SuperAnno int param) throws Exception { return this; }",
+            "  protected Super varargsMethod(int... args) { return this; };",
+            "}",
+            "@interface SuperAnno { }")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import java.io.IOException;",
+            "public class A extends Super {",
+            "  public @Anno A getThis(@Anno final int i) throws IOException { return this; }",
+            "  public A varargsMethod(int... args) { return this; };",
+            "}")
+        .addCompilerOptions("-parameters")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A extends com/example/buck/Super  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public getThis(I)Lcom/example/buck/A; throws java/io/IOException ",
+            "    // parameter final  i",
+            "  @Lcom/example/buck/Anno;() // invisible",
+            "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
+            "",
+            "  // access flags 0x81",
+            "  public varargs varargsMethod([I)Lcom/example/buck/A;",
+            "    // parameter  args",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge varargsMethod([I)Lcom/example/buck/Super;",
+            "    // parameter synthetic  args",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge getThis(I)Lcom/example/buck/Super; throws java/lang/Exception ",
+            "    // parameter final synthetic  i",
+            "  @Lcom/example/buck/Anno;() // invisible",
+            "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A extends com/example/buck/Super  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public getThis(I)Lcom/example/buck/A; throws java/io/IOException ",
+            "    // parameter final  i",
+            "  @Lcom/example/buck/Anno;() // invisible",
+            "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
+            "",
+            "  // access flags 0x81",
+            "  public varargs varargsMethod([I)Lcom/example/buck/A;",
+            "    // parameter  args",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge varargsMethod([I)Lcom/example/buck/Super;",
+            "    // parameter synthetic  args",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge getThis(I)Lcom/example/buck/Super; throws java/lang/Exception ",
+            "    // parameter final synthetic  i",
+            "  @Lcom/example/buck/Anno;() // invisible",
+            "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
             "}")
         .createAndCheckStubJar();
   }
@@ -4336,25 +4565,47 @@ public class StubJarTest {
    * methods on the superclass get bridges in the subclass. Let's make sure
    */
   @Test
-  public void shouldNotIncludeNonPublicBaseClassBridgeMethods() throws IOException {
+  public void shouldIncludeNonPublicBaseClassBridgeMethods() throws IOException {
+    notYetImplementedForMissingClasspath();
     tester
         .setSourceFile(
-            "A.java",
+            "B.java",
             "package com.example.buck;",
-            "public class A extends B {",
-            "}",
             "class B {",
-            "  public void foo() {};",
+            "  public void foo() {}",
+            "public void bar() {}",
             "}")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Super.java",
+            "package com.example.buck;",
+            "abstract class Super extends B {",
+            "  @Override",
+            "  public void bar() {}",
+            "  public void baz() {}",
+            "  public abstract void abstractMethod();", // This one won't get bridged
+            "  public final void finalMethod() { }", // Nor will this one
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java", "package com.example.buck;", "public abstract class A extends Super {", "}")
         .addExpectedFullAbi(
             "com/example/buck/A",
             "// class version 52.0 (52)",
-            "// access flags 0x21",
-            "public class com/example/buck/A extends com/example/buck/B  {",
+            "// access flags 0x421",
+            "public abstract class com/example/buck/A extends com/example/buck/Super  {",
             "",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge baz()V",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge bar()V",
             "",
             "  // access flags 0x1041",
             "  public synthetic bridge foo()V",
@@ -4362,22 +4613,74 @@ public class StubJarTest {
         .addExpectedStub(
             "com/example/buck/A",
             "// class version 52.0 (52)",
-            "// access flags 0x21",
-            "public class com/example/buck/A extends com/example/buck/B  {",
+            "// access flags 0x421",
+            "public abstract class com/example/buck/A extends com/example/buck/Super  {",
             "",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge baz()V",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge bar()V",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge foo()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void shouldNotIncludeNonPublicBaseClassBridgeMethodsWhenManuallyDone() throws IOException {
+    notYetImplementedForMissingClasspath();
+    tester
+        .setSourceFile(
+            "B.java",
+            "package com.example.buck;",
+            "class B {",
+            "  public void foo() {}",
+            "  public void bar() {}",
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Super.java",
+            "package com.example.buck;",
+            "public class Super extends B {",
+            "  public void bar() {}",
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A extends Super {",
+            "  public void foo() {}",
+            "}")
+        .addExpectedFullAbi(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A extends com/example/buck/Super  {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public foo()V",
             "}")
         .addExpectedStub(
-            "com/example/buck/B",
+            "com/example/buck/A",
             "// class version 52.0 (52)",
-            "// access flags 0x20",
-            "class com/example/buck/B {",
+            "// access flags 0x21",
+            "public class com/example/buck/A extends com/example/buck/Super  {",
             "",
             "",
-            "  // access flags 0x0",
-            "  <init>()V",
+            "  // access flags 0x1",
+            "  public <init>()V",
             "",
             "  // access flags 0x1",
             "  public foo()V",
@@ -4646,6 +4949,7 @@ public class StubJarTest {
               new StubGenerator(
                   SourceVersion.RELEASE_8,
                   testCompiler.getElements(),
+                  testCompiler.getTypes(),
                   testCompiler.getMessager(),
                   jarBuilder,
                   new JavacEventSinkToBuckEventBusBridge(

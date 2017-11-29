@@ -51,7 +51,7 @@ class StubJarClassEntry extends StubJarEntry {
     // at the very start of the chain which transforms the event stream coming out of `ClassNode`
     // to look like what ClassVisitorDriverFromElement would have produced.
     if (compatibilityMode != null && compatibilityMode != AbiGenerationMode.CLASS) {
-      firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering);
+      firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering, compatibilityMode);
     }
     input.visitClass(path, firstLevelFiltering);
 

@@ -57,6 +57,50 @@ public class InnerClassesTable {
     this.topElement = topElement;
   }
 
+  public void addTypeReferences(Element element) {
+    new ElementScanner8<Void, Void>() {
+      @Override
+      public Void visitType(TypeElement e, Void aVoid) {
+        if (e != element) {
+          return null;
+        }
+
+        addTypeReferences(e.getAnnotationMirrors());
+        e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
+        addTypeReferences(e.getSuperclass());
+        e.getInterfaces().forEach(InnerClassesTable.this::addTypeReferences);
+        // Members will be visited in the call to super, below
+
+        return super.visitType(e, aVoid);
+      }
+
+      @Override
+      public Void visitExecutable(ExecutableElement e, Void aVoid) {
+        addTypeReferences(e.getAnnotationMirrors());
+        e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
+        addTypeReferences(e.getReturnType());
+        addTypeReferences(e.getDefaultValue());
+        // Parameters will be visited in the call to super, below
+        e.getThrownTypes().forEach(InnerClassesTable.this::addTypeReferences);
+        return super.visitExecutable(e, aVoid);
+      }
+
+      @Override
+      public Void visitVariable(VariableElement e, Void aVoid) {
+        addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(e.asType());
+        return super.visitVariable(e, aVoid);
+      }
+
+      @Override
+      public Void visitTypeParameter(TypeParameterElement e, Void aVoid) {
+        addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(e.asType());
+        return super.visitTypeParameter(e, aVoid);
+      }
+    }.scan(element);
+  }
+
   public void addTypeReferences(TypeMirror type) {
     new TypeScanner8<Void, Void>() {
       @Override
@@ -92,7 +136,7 @@ public class InnerClassesTable {
     }.scan(type);
   }
 
-  private void addTypeReferences(List<? extends AnnotationMirror> annotationMirrors) {
+  public void addTypeReferences(List<? extends AnnotationMirror> annotationMirrors) {
     annotationMirrors.forEach(this::addTypeReferences);
   }
 
@@ -159,38 +203,9 @@ public class InnerClassesTable {
               return null;
             }
 
-            addTypeReferences(e.getAnnotationMirrors());
-            e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
-            addTypeReferences(e.getSuperclass());
-            e.getInterfaces().forEach(InnerClassesTable.this::addTypeReferences);
-            // Members will be visited in the call to super, below
+            addTypeReferences(e);
 
             return super.visitType(e, aVoid);
-          }
-
-          @Override
-          public Void visitExecutable(ExecutableElement e, Void aVoid) {
-            addTypeReferences(e.getAnnotationMirrors());
-            e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
-            addTypeReferences(e.getReturnType());
-            addTypeReferences(e.getDefaultValue());
-            // Parameters will be visited in the call to super, below
-            e.getThrownTypes().forEach(InnerClassesTable.this::addTypeReferences);
-            return super.visitExecutable(e, aVoid);
-          }
-
-          @Override
-          public Void visitVariable(VariableElement e, Void aVoid) {
-            addTypeReferences(e.getAnnotationMirrors());
-            addTypeReferences(e.asType());
-            return super.visitVariable(e, aVoid);
-          }
-
-          @Override
-          public Void visitTypeParameter(TypeParameterElement e, Void aVoid) {
-            addTypeReferences(e.getAnnotationMirrors());
-            addTypeReferences(e.asType());
-            return super.visitTypeParameter(e, aVoid);
           }
         };
     elementScanner.scan(topElement);

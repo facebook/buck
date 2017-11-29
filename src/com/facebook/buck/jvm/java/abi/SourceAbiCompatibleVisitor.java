@@ -32,10 +32,13 @@ import org.objectweb.asm.signature.SignatureWriter;
  * the ability to verify them by binary comparison against class ABIs.
  */
 public class SourceAbiCompatibleVisitor extends ClassVisitor {
+
+  private final AbiGenerationMode compatibilityMode;
   @Nullable private String name;
 
-  public SourceAbiCompatibleVisitor(ClassVisitor cv) {
+  public SourceAbiCompatibleVisitor(ClassVisitor cv, AbiGenerationMode compatibilityMode) {
     super(Opcodes.ASM6, cv);
+    this.compatibilityMode = compatibilityMode;
   }
 
   @Override
@@ -55,9 +58,10 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Nullable
   public MethodVisitor visitMethod(
       int access, String name, String desc, String signature, String[] exceptions) {
-    if ((access & Opcodes.ACC_BRIDGE) != 0) {
+    if (!compatibilityMode.usesDependencies() && (access & Opcodes.ACC_BRIDGE) != 0) {
       return null;
     }
+
     return super.visitMethod(access, name, desc, fixupSignature(signature), exceptions);
   }
 

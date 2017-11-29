@@ -28,6 +28,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
@@ -104,6 +105,17 @@ class DescriptorFactory {
               protected Type defaultAction(TypeMirror t, Void aVoid) {
                 throw new IllegalArgumentException(
                     String.format("Unexpected type kind: %s", t.getKind()));
+              }
+
+              @Override
+              public Type visitExecutable(ExecutableType e, Void aVoid) {
+                Stream<? extends TypeMirror> parameterTypeStream = e.getParameterTypes().stream();
+
+                return Type.getMethodType(
+                    getType(e.getReturnType()),
+                    parameterTypeStream
+                        .map(DescriptorFactory.this::getType)
+                        .toArray(size -> new Type[size]));
               }
 
               @Override

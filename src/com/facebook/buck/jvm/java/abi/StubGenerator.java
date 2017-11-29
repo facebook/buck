@@ -26,10 +26,12 @@ import java.util.Set;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.util.Types;
 
 public class StubGenerator {
   private final SourceVersion version;
   private final ElementsExtended elements;
+  private final Types types;
   private final Messager messager;
   private final JarBuilder jarBuilder;
   private final JavacEventSink eventSink;
@@ -39,6 +41,7 @@ public class StubGenerator {
   public StubGenerator(
       SourceVersion version,
       ElementsExtended elements,
+      Types types,
       Messager messager,
       JarBuilder jarBuilder,
       JavacEventSink eventSink,
@@ -46,6 +49,7 @@ public class StubGenerator {
       boolean includeParameterMetadata) {
     this.version = version;
     this.elements = elements;
+    this.types = types;
     this.messager = messager;
     this.jarBuilder = jarBuilder;
     this.eventSink = eventSink;
@@ -56,7 +60,7 @@ public class StubGenerator {
   public void generate(Set<Element> topLevelElements) {
     try (JavacEventSinkScopedSimplePerfEvent ignored =
         new JavacEventSinkScopedSimplePerfEvent(eventSink, "generate_stubs")) {
-      new StubJar(version, elements, messager, topLevelElements, includeParameterMetadata)
+      new StubJar(version, elements, types, messager, topLevelElements, includeParameterMetadata)
           .setCompatibilityMode(abiCompatibilityMode)
           .writeTo(jarBuilder);
     } catch (IOException e) {

@@ -238,6 +238,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   new StubGenerator(
                       getTargetVersion(options),
                       javacTask.getElements(),
+                      javacTask.getTypes(),
                       javacTask.getMessager(),
                       jarBuilder,
                       context.getEventSink(),
