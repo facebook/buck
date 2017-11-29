@@ -52,7 +52,9 @@ public final class SetupTestNGTest {
     result.assertTestFailure();
     assertThat(
         result.getStderr(),
-        containsString("0 Passed   0 Skipped   1 Failed   com.example.SimpleTest"));
+        // The test setup failure causes the test to be skipped, which we mark as a failure.
+        // TODO detect when a test is skipped due to a setup failure and mark it skipped instead
+        containsString("0 Passed   0 Skipped   2 Failed   com.example.SimpleTest"));
   }
 
   @Test
