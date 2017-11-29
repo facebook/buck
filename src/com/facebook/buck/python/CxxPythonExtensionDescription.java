@@ -48,6 +48,7 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -63,6 +64,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
@@ -110,22 +112,22 @@ public class CxxPythonExtensionDescription
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
-  private final FlavorDomain<PythonPlatform> pythonPlatforms;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public CxxPythonExtensionDescription(
-      FlavorDomain<PythonPlatform> pythonPlatforms,
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.pythonPlatforms = pythonPlatforms;
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(pythonPlatforms, cxxPlatforms, LIBRARY_TYPE));
+    return Optional.of(ImmutableSet.of(getPythonPlatforms(), cxxPlatforms, LIBRARY_TYPE));
   }
 
   @Override
@@ -427,7 +429,7 @@ public class CxxPythonExtensionDescription
               projectFilesystem,
               ruleResolver,
               cellRoots,
-              pythonPlatforms.getRequiredValue(buildTarget),
+              getPythonPlatforms().getRequiredValue(buildTarget),
               cxxPlatforms.getRequiredValue(buildTarget),
               args);
         case COMPILATION_DATABASE:
@@ -436,7 +438,7 @@ public class CxxPythonExtensionDescription
               projectFilesystem,
               ruleResolver,
               cellRoots,
-              pythonPlatforms.getRequiredValue(buildTarget),
+              getPythonPlatforms().getRequiredValue(buildTarget),
               cxxPlatforms.getRequiredValue(buildTarget),
               args);
       }
@@ -555,9 +557,15 @@ public class CxxPythonExtensionDescription
     // Get any parse time deps from the C/C++ platforms.
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
 
-    for (PythonPlatform pythonPlatform : pythonPlatforms.getValues()) {
+    for (PythonPlatform pythonPlatform : getPythonPlatforms().getValues()) {
       Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);
     }
+  }
+
+  private FlavorDomain<PythonPlatform> getPythonPlatforms() {
+    return toolchainProvider
+        .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+        .getPythonPlatforms();
   }
 
   @BuckStyleImmutable

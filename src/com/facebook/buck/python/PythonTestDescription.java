@@ -27,6 +27,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -44,6 +45,7 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.NeededCoverageSpec;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
@@ -75,23 +77,23 @@ public class PythonTestDescription
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
+  private final ToolchainProvider toolchainProvider;
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
-  private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
+      ToolchainProvider toolchainProvider,
       PythonBinaryDescription binaryDescription,
       PythonBuckConfig pythonBuckConfig,
-      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.toolchainProvider = toolchainProvider;
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
-    this.pythonPlatforms = pythonPlatforms;
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
@@ -168,6 +170,11 @@ public class PythonTestDescription
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PythonTestDescriptionArg args) {
+
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        toolchainProvider
+            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getPythonPlatforms();
 
     PythonPlatform pythonPlatform =
         pythonPlatforms

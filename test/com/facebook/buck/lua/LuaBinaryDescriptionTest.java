@@ -36,6 +36,7 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.python.toolchain.PythonEnvironment;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -275,9 +276,11 @@ public class LuaBinaryDescriptionTest {
                             LuaPlatformsProvider.DEFAULT_NAME,
                             LuaPlatformsProvider.of(
                                 LuaTestUtils.DEFAULT_PLATFORM, LuaTestUtils.DEFAULT_PLATFORMS))
+                        .withToolchain(
+                            PythonPlatformsProvider.DEFAULT_NAME,
+                            PythonPlatformsProvider.of(pythonPlatforms))
                         .build(),
-                    cxxBuckConfig,
-                    pythonPlatforms),
+                    cxxBuckConfig),
                 BuildTargetFactory.newInstance("//:binary"))
             .setMainModule("main")
             .setDeps(ImmutableSortedSet.of(cxxPythonExtensionBuilder.getTarget()));

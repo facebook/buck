@@ -21,10 +21,12 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
@@ -37,7 +39,15 @@ public class PythonLibraryBuilder
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new PythonLibraryDescription(pythonPlatforms, cxxPlatforms), target);
+    super(
+        new PythonLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    PythonPlatformsProvider.DEFAULT_NAME,
+                    PythonPlatformsProvider.of(pythonPlatforms))
+                .build(),
+            cxxPlatforms),
+        target);
   }
 
   public PythonLibraryBuilder(BuildTarget target) {

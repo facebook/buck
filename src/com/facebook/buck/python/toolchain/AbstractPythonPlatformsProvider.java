@@ -14,17 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.python.toolchain.impl;
+package com.facebook.buck.python.toolchain;
 
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.python.toolchain.PythonEnvironment;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-public class PythonPlatformsProviderUtils {
-  public static PythonEnvironment getPythonEnvironment(
-      PythonBuckConfig pythonBuckConfig, ProcessExecutor processExecutor) {
-    return new PythonPlatformsProvider()
-        .getPythonEnvironment(
-            pythonBuckConfig, processExecutor, pythonBuckConfig.getDefaultPythonPlatformSection());
-  }
+@Value.Immutable(copy = false, builder = false)
+@BuckStyleImmutable
+public interface AbstractPythonPlatformsProvider extends Toolchain {
+  String DEFAULT_NAME = "python-platforms";
+
+  @Value.Parameter
+  FlavorDomain<PythonPlatform> getPythonPlatforms();
 }

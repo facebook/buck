@@ -27,7 +27,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.python.toolchain.PythonVersion;
-import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderUtils;
+import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TestConsole;
@@ -197,9 +197,10 @@ public class PythonTestIntegrationTest {
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
       throws InterruptedException {
     PythonVersion actualVersion =
-        PythonPlatformsProviderUtils.getPythonEnvironment(
-                new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder()),
-                new DefaultProcessExecutor(new TestConsole()))
+        PythonPlatformsProviderFactoryUtils.getPythonEnvironment(
+                FakeBuckConfig.builder().build(),
+                new DefaultProcessExecutor(new TestConsole()),
+                new ExecutableFinder())
             .getPythonVersion();
     assumeTrue(
         String.format(

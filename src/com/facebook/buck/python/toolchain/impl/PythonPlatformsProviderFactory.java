@@ -17,25 +17,41 @@
 package com.facebook.buck.python.toolchain.impl;
 
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PythonEnvironment;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.python.toolchain.PythonVersion;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class PythonPlatformsProvider {
+public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPlatformsProvider> {
+
+  @Override
+  public Optional<PythonPlatformsProvider> createToolchain(
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+    PythonBuckConfig pythonBuckConfig =
+        new PythonBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
+    ImmutableList<PythonPlatform> pythonPlatformsList =
+        getPythonPlatforms(pythonBuckConfig, context.getProcessExecutor());
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        FlavorDomain.from("Python Platform", pythonPlatformsList);
+    return Optional.of(PythonPlatformsProvider.of(pythonPlatforms));
+  }
 
   /**
    * Constructs set of Python platform flavors given in a .buckconfig file, as is specified by
    * section names of the form python#{flavor name}.
    */
   public ImmutableList<PythonPlatform> getPythonPlatforms(
-      PythonBuckConfig pythonBuckConfig, ProcessExecutor processExecutor)
-      throws InterruptedException {
+      PythonBuckConfig pythonBuckConfig, ProcessExecutor processExecutor) {
     ImmutableList.Builder<PythonPlatform> builder = ImmutableList.builder();
 
     // Add the python platform described in the top-level section first.

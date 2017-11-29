@@ -41,6 +41,8 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.lua.LuaPlatformsProvider;
 import com.facebook.buck.lua.LuaPlatformsProviderFactory;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactory;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformsProviderFactory;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
@@ -104,7 +106,11 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     LUA_PLATFORMS_PROVIDER(
         LuaPlatformsProvider.DEFAULT_NAME,
         LuaPlatformsProvider.class,
-        LuaPlatformsProviderFactory.class);
+        LuaPlatformsProviderFactory.class),
+    PYTHON_PLATFORMS_PROVIDER(
+        PythonPlatformsProvider.DEFAULT_NAME,
+        PythonPlatformsProvider.class,
+        PythonPlatformsProviderFactory.class);
 
     @VisibleForTesting final String name;
     private final Class<? extends Toolchain> toolchainClass;

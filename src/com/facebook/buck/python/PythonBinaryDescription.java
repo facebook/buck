@@ -28,6 +28,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -45,6 +46,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
@@ -73,23 +75,23 @@ public class PythonBinaryDescription
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
+  private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;
-  private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
   public PythonBinaryDescription(
+      ToolchainProvider toolchainProvider,
       RuleKeyConfiguration ruleKeyConfiguration,
       PythonBuckConfig pythonBuckConfig,
-      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.toolchainProvider = toolchainProvider;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.pythonBuckConfig = pythonBuckConfig;
-    this.pythonPlatforms = pythonPlatforms;
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
@@ -308,6 +310,12 @@ public class PythonBinaryDescription
             /* nativeLibraries */ ImmutableMap.of(),
             /* prebuiltLibraries */ ImmutableSet.of(),
             /* zipSafe */ args.getZipSafe());
+
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        toolchainProvider
+            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getPythonPlatforms();
+
     // Extract the platforms from the flavor, falling back to the default platforms if none are
     // found.
     PythonPlatform pythonPlatform =

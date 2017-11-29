@@ -24,11 +24,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,15 +50,23 @@ public class PythonTestBuilder
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonTestDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    PythonPlatformsProvider.DEFAULT_NAME,
+                    PythonPlatformsProvider.of(pythonPlatforms))
+                .build(),
             new PythonBinaryDescription(
+                new ToolchainProviderBuilder()
+                    .withToolchain(
+                        PythonPlatformsProvider.DEFAULT_NAME,
+                        PythonPlatformsProvider.of(pythonPlatforms))
+                    .build(),
                 TestRuleKeyConfigurationFactory.create(),
                 pythonBuckConfig,
-                pythonPlatforms,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 defaultCxxPlatform,
                 cxxPlatforms),
             pythonBuckConfig,
-            pythonPlatforms,
             CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
             cxxPlatforms),

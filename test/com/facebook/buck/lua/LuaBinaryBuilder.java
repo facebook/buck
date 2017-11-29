@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -48,9 +49,11 @@ public class LuaBinaryBuilder
                 .withToolchain(
                     LuaPlatformsProvider.DEFAULT_NAME,
                     LuaPlatformsProvider.of(defaultPlatform, luaPlatforms))
+                .withToolchain(
+                    PythonPlatformsProvider.DEFAULT_NAME,
+                    PythonPlatformsProvider.of(pythonPlatforms))
                 .build(),
-            cxxBuckConfig,
-            pythonPlatforms),
+            cxxBuckConfig),
         target);
   }
 

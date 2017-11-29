@@ -112,8 +112,6 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestDescription;
-import com.facebook.buck.python.toolchain.PythonPlatform;
-import com.facebook.buck.python.toolchain.impl.PythonPlatformsProvider;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
@@ -232,17 +230,11 @@ abstract class AbstractKnownBuildRuleTypes {
     ExecutableFinder executableFinder = new ExecutableFinder();
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, executableFinder);
-    PythonPlatformsProvider pythonPlatformsProvider = new PythonPlatformsProvider();
-
-    ImmutableList<PythonPlatform> pythonPlatformsList =
-        pythonPlatformsProvider.getPythonPlatforms(pyConfig, processExecutor);
-    FlavorDomain<PythonPlatform> pythonPlatforms =
-        FlavorDomain.from("Python Platform", pythonPlatformsList);
     PythonBinaryDescription pythonBinaryDescription =
         new PythonBinaryDescription(
+            toolchainProvider,
             ruleKeyConfiguration,
             pyConfig,
-            pythonPlatforms,
             cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms);
@@ -429,7 +421,7 @@ abstract class AbstractKnownBuildRuleTypes {
             cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
     builder.addDescriptions(new CxxLuaExtensionDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(
-        new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
+        new CxxPythonExtensionDescription(toolchainProvider, cxxBuckConfig, cxxPlatforms));
     builder.addDescriptions(
         new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms));
     builder.addDescriptions(new ExportFileDescription());
@@ -476,8 +468,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new KotlinTestDescription(
             kotlinBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
-    builder.addDescriptions(
-        new LuaBinaryDescription(toolchainProvider, cxxBuckConfig, pythonPlatforms));
+    builder.addDescriptions(new LuaBinaryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(new LuaLibraryDescription());
     builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);
@@ -491,13 +482,13 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new PrebuiltPythonLibraryDescription());
     builder.addDescriptions(pythonBinaryDescription);
     PythonLibraryDescription pythonLibraryDescription =
-        new PythonLibraryDescription(pythonPlatforms, cxxPlatforms);
+        new PythonLibraryDescription(toolchainProvider, cxxPlatforms);
     builder.addDescriptions(pythonLibraryDescription);
     builder.addDescriptions(
         new PythonTestDescription(
+            toolchainProvider,
             pythonBinaryDescription,
             pyConfig,
-            pythonPlatforms,
             cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms));

@@ -18,11 +18,11 @@ package com.facebook.buck.python.toolchain.impl;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -32,24 +32,21 @@ import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class PythonPlatformsProviderTest {
+public class PythonPlatformsProviderFactoryTest {
 
   @Test
   public void testDefaultPythonLibrary() throws InterruptedException {
     BuildTarget library = BuildTargetFactory.newInstance("//:library");
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of("python", ImmutableMap.of("library", library.toString())))
-                .build(),
-            new AlwaysFoundExecutableFinder());
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("python", ImmutableMap.of("library", library.toString())))
+            .build();
     assertThat(
-        new PythonPlatformsProvider()
-            .getDefaultPythonPlatform(
-                config,
+        PythonPlatformsProviderFactoryUtils.getDefaultPythonPlatform(
+                buckConfig,
                 new FakeProcessExecutor(
-                    Functions.constant(new FakeProcess(0, "CPython 2.7", "")), new TestConsole()))
+                    Functions.constant(new FakeProcess(0, "CPython 2.7", "")), new TestConsole()),
+                new AlwaysFoundExecutableFinder())
             .getCxxLibrary(),
         Matchers.equalTo(Optional.of(library)));
   }

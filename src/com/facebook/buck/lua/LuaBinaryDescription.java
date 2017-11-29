@@ -41,6 +41,7 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -101,15 +102,10 @@ public class LuaBinaryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final FlavorDomain<PythonPlatform> pythonPlatforms;
 
-  public LuaBinaryDescription(
-      ToolchainProvider toolchainProvider,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<PythonPlatform> pythonPlatforms) {
+  public LuaBinaryDescription(ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.pythonPlatforms = pythonPlatforms;
   }
 
   @Override
@@ -763,6 +759,10 @@ public class LuaBinaryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     LuaPlatform luaPlatform = getPlatform(buildTarget, args);
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        toolchainProvider
+            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getPythonPlatforms();
     PythonPlatform pythonPlatform =
         pythonPlatforms
             .getValue(buildTarget)
