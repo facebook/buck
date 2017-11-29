@@ -76,10 +76,6 @@ public final class TestNGRunner extends BaseRunner {
           listener.onFinish(null);
           System.out.println("TestNGRunner caught an exception");
           e.printStackTrace();
-          if (!isDryRun) {
-            results.add(
-                new TestResult(className, "<TestNG failure>", 0, ResultType.FAILURE, e, "", ""));
-          }
         }
         System.out.println("TestNGRunner tested " + className + ", got " + results.size());
       }
@@ -187,12 +183,6 @@ public final class TestNGRunner extends BaseRunner {
       if (!annotation.getEnabled()) {
         // on a dry run, have to record it now -- since it doesn't run, listener can't do it
         results.add(TestResult.forDisabled(className, methodName));
-        return;
-      }
-      if (isDryRun) {
-        // on a dry run, record it now and don't run it
-        results.add(TestResult.forDryRun(className, methodName));
-        annotation.setEnabled(false);
         return;
       }
     }

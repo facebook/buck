@@ -123,7 +123,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final AtomicInteger numExcludedTests = new AtomicInteger(0);
   private final AtomicInteger numDisabledTests = new AtomicInteger(0);
   private final AtomicInteger numAssumptionViolationTests = new AtomicInteger(0);
-  private final AtomicInteger numDryRunTests = new AtomicInteger(0);
 
   private final AtomicReference<TestRunEvent.Started> testRunStarted;
   private final AtomicReference<TestRunEvent.Finished> testRunFinished;
@@ -731,10 +730,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     int testFailuresVal = numFailingTests.get();
     int testSkipsVal =
         numDisabledTests.get()
-            + numAssumptionViolationTests.get()
-            +
             // don't count: numExcludedTests.get() +
-            numDryRunTests.get();
+            + numAssumptionViolationTests.get();
     if (testSkipsVal > 0) {
       return Optional.of(
           String.format(
@@ -942,9 +939,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         break;
       case DISABLED:
         numDisabledTests.incrementAndGet();
-        break;
-      case DRY_RUN:
-        numDryRunTests.incrementAndGet();
         break;
       case EXCLUDED:
         numExcludedTests.incrementAndGet();

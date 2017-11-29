@@ -30,7 +30,6 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
   private final String testCaseName;
   private final ImmutableList<TestResultSummary> testResults;
-  private final boolean isDryRun;
   private final boolean hasAssumptionViolations;
   private final int skippedCount;
   private final int passCount;
@@ -41,7 +40,6 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
     this.testCaseName = testCaseName;
     this.testResults = ImmutableList.copyOf(testResults);
 
-    boolean isDryRun = false;
     boolean hasAssumptionViolations = false;
     int skippedCount = 0;
     int failureCount = 0;
@@ -52,11 +50,6 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
       switch (result.getType()) {
         case SUCCESS:
           ++passCount;
-          break;
-
-        case DRY_RUN:
-          isDryRun = true;
-          ++passCount; // "pass" in the sense that it confirms the class can be loaded
           break;
 
         case DISABLED:
@@ -76,17 +69,11 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
           break;
       }
     }
-    this.isDryRun = isDryRun;
     this.hasAssumptionViolations = hasAssumptionViolations;
     this.skippedCount = skippedCount;
     this.failureCount = failureCount;
     this.passCount = passCount;
     this.totalTime = totalTime;
-  }
-
-  @JsonIgnore
-  public boolean isDryRun() {
-    return isDryRun;
   }
 
   @Override
@@ -114,10 +101,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   public String getOneLineSummary(Locale locale, boolean hasPassingDependencies, Ansi ansi) {
     String statusText;
     Ansi.SeverityLevel severityLevel;
-    if (isDryRun) {
-      severityLevel = Ansi.SeverityLevel.WARNING;
-      statusText = "DRYRUN";
-    } else if (!isSuccess()) {
+    if (!isSuccess()) {
       if (hasPassingDependencies) {
         severityLevel = Ansi.SeverityLevel.ERROR;
         statusText = "FAIL";
@@ -185,9 +169,6 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   }
 
   private String getShortStatusSummaryString() {
-    if (isDryRun) {
-      return "DRYRUN";
-    }
     if (failureCount > 0) {
       return "FAIL";
     }

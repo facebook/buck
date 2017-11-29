@@ -51,7 +51,6 @@ public abstract class BaseRunner {
   protected List<String> testClassNames;
   protected long defaultTestTimeoutMillis;
   protected TestSelectorList testSelectorList;
-  protected boolean isDryRun;
   protected boolean shouldExplainTestSelectors;
 
   public abstract void run() throws Throwable;
@@ -147,9 +146,6 @@ public abstract class BaseRunner {
     String testSelectorSuffix = "";
     if (!testSelectorList.isEmpty()) {
       testSelectorSuffix += ".test_selectors";
-    }
-    if (isDryRun) {
-      testSelectorSuffix += ".dry_run";
     }
     OutputStream output;
     if (outputDirectory != null) {
@@ -254,7 +250,6 @@ public abstract class BaseRunner {
 
     this.outputDirectory = outputDirectory;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
-    this.isDryRun = isDryRun;
     this.testClassNames = testClassNames;
     this.testSelectorList = testSelectorListBuilder.build();
     if (!testSelectorList.isEmpty() && !shouldExplainTestSelectors) {

@@ -232,7 +232,6 @@ public class TestResultFormatter {
       List<TestResults> completedResults,
       List<TestStatusMessage> testStatusMessages) {
     // Print whether each test succeeded or failed.
-    boolean isDryRun = false;
     boolean hasAssumptionViolations = false;
     int numTestsPassed = 0;
     int numTestsFailed = 0;
@@ -250,7 +249,6 @@ public class TestResultFormatter {
       }
       // Get passes/skips by iterating through each case
       for (TestCaseSummary testCaseSummary : summary.getTestCases()) {
-        isDryRun = isDryRun || testCaseSummary.isDryRun();
         numTestsPassed += testCaseSummary.getPassedCount();
         numTestsSkipped += testCaseSummary.getSkippedCount();
         hasAssumptionViolations =
@@ -267,11 +265,7 @@ public class TestResultFormatter {
       } else {
         message = "NO TESTS RAN";
       }
-      if (isDryRun) {
-        addTo.add(ansi.asHighlightedSuccessText(message));
-      } else {
-        addTo.add(ansi.asHighlightedWarningText(message));
-      }
+      addTo.add(ansi.asHighlightedWarningText(message));
       return;
     }
 
