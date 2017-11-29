@@ -67,7 +67,9 @@ public class MinionHealthTracker {
     return deadMinionIds;
   }
 
-  /** Tell the tracker it is fine to forever stop tracking this minion. */
+  /**
+   * Tell the tracker it is fine to forever stop tracking this minion. This class is thread-safe.
+   */
   public void stopTrackingForever(String minionId) {
     untrackedMinions.add(minionId);
   }
@@ -84,11 +86,11 @@ public class MinionHealthTracker {
       reportHealthy();
     }
 
-    public void reportHealthy() {
+    public synchronized void reportHealthy() {
       lastHealthCheckMillis = clock.currentTimeMillis();
     }
 
-    public long getLastHealthCheckMillis() {
+    public synchronized long getLastHealthCheckMillis() {
       return lastHealthCheckMillis;
     }
 
