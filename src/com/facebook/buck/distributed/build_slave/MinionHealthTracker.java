@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -27,6 +28,7 @@ import java.util.Set;
 
 /** Tracks the health of Minions to make sure they don't silently die and the build hangs. */
 public class MinionHealthTracker {
+  private static final Logger LOG = Logger.get(MinionHealthTracker.class);
 
   private final Map<String, MinionTrackingInfo> minions;
   private final Set<String> untrackedMinions;
@@ -46,6 +48,7 @@ public class MinionHealthTracker {
 
   /** Heartbeat reports a minion is currently alive and happily running. */
   public void reportMinionAlive(String minionId) {
+    LOG.debug(String.format("Received keep alive heartbeat from Minion [%s]", minionId));
     minions
         .computeIfAbsent(minionId, key -> new MinionTrackingInfo(minionId, clock))
         .reportHealthy();
@@ -60,7 +63,12 @@ public class MinionHealthTracker {
         continue;
       }
 
-      if (currentMillis - minion.getLastHealthCheckMillis() > maxMinionSilenceMillis) {
+      long lastHealthCheckMillis = minion.getLastHealthCheckMillis();
+      if ((currentMillis - lastHealthCheckMillis) > maxMinionSilenceMillis) {
+        LOG.error(
+            String.format(
+                "Minion [%s] failed healthcheck. Last heartbeat ts [%d]. Current ts [%d].",
+                minion.minionId, lastHealthCheckMillis, currentMillis));
         deadMinionIds.add(minion.getMinionId());
       }
     }
@@ -88,6 +96,9 @@ public class MinionHealthTracker {
 
     public synchronized void reportHealthy() {
       lastHealthCheckMillis = clock.currentTimeMillis();
+      LOG.debug(
+          String.format(
+              "Updated keep alive ts for Minion [%s] to [%d]", minionId, lastHealthCheckMillis));
     }
 
     public synchronized long getLastHealthCheckMillis() {
