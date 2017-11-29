@@ -209,7 +209,7 @@ public class CxxLinkTest {
     // Generate a rule with a path we need to sanitize to a consistent value.
     ImmutableList<Arg> args1 =
         ImmutableList.of(
-            new SanitizedArg(sanitizer1.sanitize(Optional.empty()), "-Lsomething/foo"));
+            SanitizedArg.create(sanitizer1.sanitize(Optional.empty()), "-Lsomething/foo"));
 
     RuleKey ruleKey1 =
         ruleKeyFactory.build(
@@ -230,7 +230,7 @@ public class CxxLinkTest {
     // same consistent value as above.
     ImmutableList<Arg> args2 =
         ImmutableList.of(
-            new SanitizedArg(sanitizer2.sanitize(Optional.empty()), "-Ldifferent/foo"));
+            SanitizedArg.create(sanitizer2.sanitize(Optional.empty()), "-Ldifferent/foo"));
 
     RuleKey ruleKey2 =
         ruleKeyFactory.build(
