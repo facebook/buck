@@ -273,6 +273,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "generate_missing_umbrella_headers", false);
   }
 
+  public boolean shouldCompileStringsAsBinaryPlists() {
+    return delegate.getBooleanValue(APPLE_SECTION, "strings_as_binary_plist", false);
+  }
+
   public boolean shouldUseSwiftDelegate() {
     // TODO(mgd): Remove Swift delegation from Apple rules
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);

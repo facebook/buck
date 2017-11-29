@@ -152,6 +152,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
+  private final boolean shouldCompileStringsAsBinaryPlists;
   private final Optional<String> platformBuildVersion;
   private final Optional<String> xcodeVersion;
   private final Optional<String> xcodeBuildVersion;
@@ -195,6 +196,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean cacheable,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
+      boolean shouldCompileStringsAsBinaryPlists,
       Optional<Boolean> ibtoolModuleFlag) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
@@ -214,6 +216,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.assetCatalog = assetCatalog;
     this.coreDataModel = coreDataModel;
     this.sceneKitAssets = sceneKitAssets;
+    this.shouldCompileStringsAsBinaryPlists = shouldCompileStringsAsBinaryPlists;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
         getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
@@ -1043,15 +1046,19 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 compiledNibPath));
         break;
       case "strings":
-        stepsBuilder.add(
-            new PlutilConvertStep(
-                getBuildTarget(),
-                getProjectFilesystem(),
-                plutil.getEnvironment(resolver),
-                plutil.getCommandPrefix(resolver),
-                PlutilConvertStep.Format.binary1,
-                sourcePath,
-                destinationPath));
+        if (shouldCompileStringsAsBinaryPlists) {
+          stepsBuilder.add(
+              new PlutilConvertStep(
+                  getBuildTarget(),
+                  getProjectFilesystem(),
+                  plutil.getEnvironment(resolver),
+                  plutil.getCommandPrefix(resolver),
+                  PlutilConvertStep.Format.binary1,
+                  sourcePath,
+                  destinationPath));
+        } else {
+          stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), sourcePath, destinationPath));
+        }
         break;
       default:
         stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), sourcePath, destinationPath));

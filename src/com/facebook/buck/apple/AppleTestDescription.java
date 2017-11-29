@@ -307,6 +307,7 @@ public class AppleTestDescription
             appleConfig.assetCatalogValidation(),
             args.getCodesignFlags(),
             args.getCodesignIdentity(),
+            appleConfig.shouldCompileStringsAsBinaryPlists(),
             Optional.empty());
     resolver.addToIndex(bundle);
 

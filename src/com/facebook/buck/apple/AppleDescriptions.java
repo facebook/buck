@@ -579,6 +579,7 @@ public class AppleDescriptions {
       AppleAssetCatalog.ValidationType assetCatalogValidation,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
+      boolean shouldCompileStringsAsBinaryPlists,
       Optional<Boolean> ibtoolModuleFlag) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
@@ -796,6 +797,7 @@ public class AppleDescriptions {
         cacheable,
         codesignFlags,
         codesignAdhocIdentity,
+        shouldCompileStringsAsBinaryPlists,
         ibtoolModuleFlag);
   }
 

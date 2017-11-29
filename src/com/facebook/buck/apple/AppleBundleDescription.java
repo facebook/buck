@@ -180,6 +180,7 @@ public class AppleBundleDescription
         appleConfig.assetCatalogValidation(),
         args.getCodesignFlags(),
         args.getCodesignIdentity(),
+        appleConfig.shouldCompileStringsAsBinaryPlists(),
         args.getIbtoolModuleFlag());
   }
 

@@ -368,6 +368,7 @@ public class AppleBinaryDescription
         appleConfig.assetCatalogValidation(),
         ImmutableList.of(),
         Optional.empty(),
+        appleConfig.shouldCompileStringsAsBinaryPlists(),
         Optional.empty());
   }
 
