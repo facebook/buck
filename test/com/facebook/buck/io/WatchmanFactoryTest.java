@@ -91,6 +91,20 @@ public class WatchmanFactoryTest {
   }
 
   @Test
+  public void shouldReturnEmptyWatchmanIfNotOnPath() throws InterruptedException {
+    FakeExecutableFinder finder = new FakeExecutableFinder();
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
+    FakeListeningProcessExecutor executor =
+        new FakeListeningProcessExecutor(ImmutableMultimap.of());
+    WatchmanFactory watchmanFactory = new WatchmanFactory();
+    Watchman watchman =
+        watchmanFactory.build(
+            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+
+    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
+  }
+
+  @Test
   public void shouldReturnEmptyWatchmanIfVersionCheckFails()
       throws InterruptedException, IOException {
     SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;

@@ -21,7 +21,6 @@ import com.facebook.buck.io.windowspipe.WindowsNamedPipe;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ForwardingProcessListener;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.RichStream;
@@ -149,7 +148,7 @@ public class WatchmanFactory {
           getWatchman(client, pathToTransport, projectWatchList, console, clock, endTimeNanos);
       LOG.debug("Connected to Watchman");
       return watchman;
-    } catch (ClassCastException | HumanReadableException | IOException e) {
+    } catch (ClassCastException | IOException e) {
       LOG.warn(e, "Unable to determine the version of watchman. Going without.");
       return NULL_WATCHMAN;
     }
@@ -163,7 +162,12 @@ public class WatchmanFactory {
       Clock clock,
       long timeoutMillis)
       throws IOException, InterruptedException {
-    Path watchmanPath = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath();
+    Optional<Path> watchmanPathOpt = exeFinder.getOptionalExecutable(WATCHMAN, env);
+    if (!watchmanPathOpt.isPresent()) {
+      return Optional.empty();
+    }
+
+    Path watchmanPath = watchmanPathOpt.get().toAbsolutePath();
     Optional<? extends Map<String, ?>> result =
         execute(
             executor,
