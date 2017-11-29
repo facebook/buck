@@ -23,10 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.python.toolchain.PythonEnvironment;
-import com.facebook.buck.python.toolchain.PythonPlatform;
-import com.facebook.buck.python.toolchain.PythonVersion;
-import com.facebook.buck.python.toolchain.impl.PythonVersionFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
@@ -37,8 +33,6 @@ import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
-import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -49,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 public class PythonBuckConfig {
@@ -87,45 +82,6 @@ public class PythonBuckConfig {
     this.exeFinder = exeFinder;
   }
 
-  @VisibleForTesting
-  protected PythonPlatform getDefaultPythonPlatform(ProcessExecutor executor)
-      throws InterruptedException {
-    return getPythonPlatform(executor, SECTION, DEFAULT_PYTHON_PLATFORM);
-  }
-
-  /**
-   * Constructs set of Python platform flavors given in a .buckconfig file, as is specified by
-   * section names of the form python#{flavor name}.
-   */
-  public ImmutableList<PythonPlatform> getPythonPlatforms(ProcessExecutor processExecutor)
-      throws InterruptedException {
-    ImmutableList.Builder<PythonPlatform> builder = ImmutableList.builder();
-
-    // Add the python platform described in the top-level section first.
-    builder.add(getDefaultPythonPlatform(processExecutor));
-
-    // Then add all additional python platform described in the extended sections.
-    for (String section : delegate.getSections()) {
-      if (section.startsWith(PYTHON_PLATFORM_SECTION_PREFIX)) {
-        builder.add(
-            getPythonPlatform(
-                processExecutor,
-                section,
-                InternalFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length()))));
-      }
-    }
-
-    return builder.build();
-  }
-
-  private PythonPlatform getPythonPlatform(
-      ProcessExecutor processExecutor, String section, Flavor flavor) throws InterruptedException {
-    return PythonPlatform.of(
-        flavor,
-        getPythonEnvironment(processExecutor, section),
-        delegate.getBuildTarget(section, "library"));
-  }
-
   private Path findInterpreter(ImmutableList<String> interpreterNames) {
     Preconditions.checkArgument(!interpreterNames.isEmpty());
     for (String interpreterName : interpreterNames) {
@@ -156,25 +112,13 @@ public class PythonBuckConfig {
     return configPath;
   }
 
-  private Path getPythonInterpreter(String section) {
+  public Path getPythonInterpreter(String section) {
     return getPythonInterpreter(delegate.getValue(section, "interpreter"));
   }
 
   /** @return the {@link Path} to the default python interpreter. */
   public Path getPythonInterpreter() {
     return getPythonInterpreter(SECTION);
-  }
-
-  private PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor, String section)
-      throws InterruptedException {
-    Path pythonPath = getPythonInterpreter(section);
-    PythonVersion pythonVersion = getVersion(processExecutor, section, pythonPath);
-    return new PythonEnvironment(pythonPath, pythonVersion);
-  }
-
-  public PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor)
-      throws InterruptedException {
-    return getPythonEnvironment(processExecutor, SECTION);
   }
 
   public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {
@@ -231,19 +175,8 @@ public class PythonBuckConfig {
     return delegate.getValue(SECTION, "pex_extension").orElse(".pex");
   }
 
-  private Optional<PythonVersion> getConfiguredVersion(String section) {
-    return delegate.getValue(section, "version").map(PythonVersionFactory::fromString);
-  }
-
-  private PythonVersion getVersion(ProcessExecutor processExecutor, String section, Path path)
-      throws InterruptedException {
-
-    Optional<PythonVersion> configuredVersion = getConfiguredVersion(section);
-    if (configuredVersion.isPresent()) {
-      return configuredVersion.get();
-    }
-
-    return PythonVersionFactory.fromInterpreter(processExecutor, path);
+  public Optional<String> getConfiguredVersion(String section) {
+    return delegate.getValue(section, "version");
   }
 
   public boolean shouldCacheBinaries() {
@@ -258,6 +191,29 @@ public class PythonBuckConfig {
     return delegate
         .getEnum(SECTION, "package_style", PackageStyle.class)
         .orElse(PackageStyle.STANDALONE);
+  }
+
+  public String getDefaultPythonPlatformSection() {
+    return SECTION;
+  }
+
+  public Flavor getDefaultPythonPlatformFlavor() {
+    return DEFAULT_PYTHON_PLATFORM;
+  }
+
+  public Stream<String> getPythonPlatformSections() {
+    return delegate
+        .getSections()
+        .stream()
+        .filter(section -> section.startsWith(PYTHON_PLATFORM_SECTION_PREFIX));
+  }
+
+  public Flavor calculatePythonPlatformFlavorFromSection(String section) {
+    return InternalFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length()));
+  }
+
+  public Optional<BuildTarget> getCxxLibrary(String section) {
+    return delegate.getBuildTarget(section, "library");
   }
 
   public enum PackageStyle {

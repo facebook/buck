@@ -113,6 +113,7 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.impl.PythonPlatformsProvider;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
@@ -231,8 +232,10 @@ abstract class AbstractKnownBuildRuleTypes {
     ExecutableFinder executableFinder = new ExecutableFinder();
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, executableFinder);
+    PythonPlatformsProvider pythonPlatformsProvider = new PythonPlatformsProvider();
+
     ImmutableList<PythonPlatform> pythonPlatformsList =
-        pyConfig.getPythonPlatforms(processExecutor);
+        pythonPlatformsProvider.getPythonPlatforms(pyConfig, processExecutor);
     FlavorDomain<PythonPlatform> pythonPlatforms =
         FlavorDomain.from("Python Platform", pythonPlatformsList);
     PythonBinaryDescription pythonBinaryDescription =

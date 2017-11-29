@@ -26,8 +26,6 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -37,14 +35,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -52,7 +46,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -200,25 +193,6 @@ public class PythonBuckConfigTest {
     assertThat(
         config.getPexExecutor(resolver).get().getCommandPrefix(pathResolver),
         Matchers.contains(projectDir.resolve(pexExecuter).toString()));
-  }
-
-  @Test
-  public void testDefaultPythonLibrary() throws InterruptedException {
-    BuildTarget library = BuildTargetFactory.newInstance("//:library");
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of("python", ImmutableMap.of("library", library.toString())))
-                .build(),
-            new AlwaysFoundExecutableFinder());
-    assertThat(
-        config
-            .getDefaultPythonPlatform(
-                new FakeProcessExecutor(
-                    Functions.constant(new FakeProcess(0, "CPython 2.7", "")), new TestConsole()))
-            .getCxxLibrary(),
-        Matchers.equalTo(Optional.of(library)));
   }
 
   @Test
