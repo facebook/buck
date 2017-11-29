@@ -33,10 +33,7 @@ public class TestNGIntegrationTest {
 
   @Test
   public void testThatSuccessfulTestNGTestWorks() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_testng", temporaryFolder, true);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupSimpleTestNGWorkspace();
 
     ProcessResult simpleTestNGTestResult = workspace.runBuckCommand("test", "//test:simple-test");
     simpleTestNGTestResult.assertSuccess();
@@ -44,10 +41,7 @@ public class TestNGIntegrationTest {
 
   @Test
   public void testThatFailingTestNGTestWorks() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_testng", temporaryFolder, true);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupSimpleTestNGWorkspace();
 
     ProcessResult simpleFailingTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-failing-test");
@@ -55,16 +49,30 @@ public class TestNGIntegrationTest {
   }
 
   @Test
+  public void testThatSkippedTestNGTestFails() throws IOException {
+    ProjectWorkspace workspace = setupSimpleTestNGWorkspace();
+
+    ProcessResult simpleSkippedTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:simple-skipped-test");
+    simpleSkippedTestNGTestResult.assertTestFailure();
+  }
+
+  @Test
   public void testThatInjectionWorks() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_testng", temporaryFolder, true);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupSimpleTestNGWorkspace();
 
     ProcessResult injectionTestNGTestResult =
         workspace.runBuckCommand("test", "//test:injection-test");
     injectionTestNGTestResult.assertSuccess();
     // Make sure that we didn't just skip over the class.
     assertThat(injectionTestNGTestResult.getStderr(), containsString("1 Passed"));
+  }
+
+  private ProjectWorkspace setupSimpleTestNGWorkspace() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_testng", temporaryFolder, true);
+    workspace.setUp();
+    return workspace;
   }
 }
