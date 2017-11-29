@@ -60,6 +60,11 @@ abstract class AbstractCompilerParameters {
   }
 
   @Value.Default
+  public AbiGenerationMode getAbiCompatibilityMode() {
+    return getAbiGenerationMode();
+  }
+
+  @Value.Default
   public boolean shouldTrackClassUsage() {
     return false;
   }

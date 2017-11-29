@@ -189,6 +189,7 @@ public class ExternalJavac implements Javac {
       @Nullable JarParameters abiJarParaameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     Preconditions.checkArgument(abiJarParaameters == null);
     Preconditions.checkArgument(libraryJarParameters == null);

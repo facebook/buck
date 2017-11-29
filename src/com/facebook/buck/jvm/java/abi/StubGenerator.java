@@ -33,6 +33,7 @@ public class StubGenerator {
   private final Messager messager;
   private final JarBuilder jarBuilder;
   private final JavacEventSink eventSink;
+  private final AbiGenerationMode abiCompatibilityMode;
   private final boolean includeParameterMetadata;
 
   public StubGenerator(
@@ -41,12 +42,14 @@ public class StubGenerator {
       Messager messager,
       JarBuilder jarBuilder,
       JavacEventSink eventSink,
+      AbiGenerationMode abiCompatibilityMode,
       boolean includeParameterMetadata) {
     this.version = version;
     this.elements = elements;
     this.messager = messager;
     this.jarBuilder = jarBuilder;
     this.eventSink = eventSink;
+    this.abiCompatibilityMode = abiCompatibilityMode;
     this.includeParameterMetadata = includeParameterMetadata;
   }
 
@@ -54,6 +57,7 @@ public class StubGenerator {
     try (JavacEventSinkScopedSimplePerfEvent ignored =
         new JavacEventSinkScopedSimplePerfEvent(eventSink, "generate_stubs")) {
       new StubJar(version, elements, messager, topLevelElements, includeParameterMetadata)
+          .setCompatibilityMode(abiCompatibilityMode)
           .writeTo(jarBuilder);
     } catch (IOException e) {
       throw new HumanReadableException("Failed to generate abi: %s", e.getMessage());

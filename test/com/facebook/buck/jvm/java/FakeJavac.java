@@ -54,6 +54,7 @@ public class FakeJavac implements Javac {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     return new Invocation() {
       @Override

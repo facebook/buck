@@ -75,6 +75,7 @@ public abstract class Jsr199Javac implements Javac {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     return new Jsr199JavacInvocation(
         () -> createCompiler(context, resolver),
@@ -88,6 +89,7 @@ public abstract class Jsr199Javac implements Javac {
         abiJarParameters,
         libraryJarParameters,
         abiGenerationMode,
+        abiCompatibilityMode,
         ruleInfo);
   }
 }

@@ -423,11 +423,18 @@ public abstract class DefaultJavaLibraryRules {
                 getProjectFilesystem(),
                 getInitialParams(),
                 libraryRule.getSourcePathToOutput(),
-                getJavaBuckConfig() == null
-                        || getJavaBuckConfig().getSourceAbiVerificationMode()
-                            == SourceAbiVerificationMode.OFF
-                    ? AbiGenerationMode.CLASS
-                    : getAbiGenerationMode()));
+                getAbiCompatibilityMode()));
+  }
+
+  @Value.Lazy
+  AbiGenerationMode getAbiCompatibilityMode() {
+    return getJavaBuckConfig() == null
+            || getJavaBuckConfig().getSourceAbiVerificationMode() == SourceAbiVerificationMode.OFF
+        ? AbiGenerationMode.CLASS
+        // Use the BuckConfig version (rather than the inferred one) because if any
+        // targets are using source_only it can affect the output of other targets
+        // in ways that are hard to simulate
+        : getJavaBuckConfig().getAbiGenerationMode();
   }
 
   @Value.Lazy
@@ -544,6 +551,7 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getCompileTimeClasspathSourcePaths(),
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
+        getAbiCompatibilityMode(),
         getSourceOnlyAbiRuleInfo());
   }
 
@@ -565,6 +573,7 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getCompileTimeClasspathSourcePaths(),
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
+        getAbiCompatibilityMode(),
         getSourceOnlyAbiRuleInfo());
   }
 

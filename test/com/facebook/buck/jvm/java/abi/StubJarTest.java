@@ -4650,6 +4650,7 @@ public class StubJarTest {
                   jarBuilder,
                   new JavacEventSinkToBuckEventBusBridge(
                       new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId())),
+                  AbiGenerationMode.CLASS,
                   additionalOptions.contains("-parameters"));
 
           testCompiler.addPostEnterCallback(generator::generate);

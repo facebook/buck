@@ -50,6 +50,7 @@ public interface Javac extends AbstractTool {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo);
 
   String getDescription(
