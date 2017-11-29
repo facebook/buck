@@ -175,6 +175,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
     return new HeartbeatCallback() {
       @Override
       public void runHeartbeat() throws IOException {
+        LOG.debug(String.format("About to send keep alive heartbeat for Minion [%s]", minionId));
         client.reportMinionAlive(minionId);
       }
     };

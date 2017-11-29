@@ -85,7 +85,7 @@ public class ThriftCoordinatorClient implements Closeable {
       throws IOException {
     LOG.debug(
         String.format(
-            "Minion [%s] is reporting that it finished building [%s] items. Requesting [%s] items.",
+            "Sending GetWorkRequest. Minion [%s] is reporting that it finished building [%s] items. Requesting [%s] items.",
             minionId, finishedTargets.size(), maxWorkUnitsToFetch));
     Preconditions.checkNotNull(client, "Client was not started.");
 
@@ -98,7 +98,9 @@ public class ThriftCoordinatorClient implements Closeable {
             .setLastExitCode(minionExitCode);
 
     try {
-      return client.getWork(request);
+      GetWorkResponse work = client.getWork(request);
+      LOG.debug(String.format("Minion [%s] finished sending GetWorkRequest", minionId));
+      return work;
     } catch (TException e) {
       throw new ThriftException(e);
     }
@@ -109,11 +111,15 @@ public class ThriftCoordinatorClient implements Closeable {
     ReportMinionAliveRequest request =
         new ReportMinionAliveRequest().setMinionId(minionId).setStampedeId(stampedeId);
     try {
-      LOG.info(
+      LOG.debug(
           String.format(
               "Minion [%s] is sending still alive heartbeat to coordinator for stampedeId [%s]",
               minionId, stampedeId.toString()));
       client.reportMinionAlive(request);
+      LOG.debug(
+          String.format(
+              "Minion [%s] finished sending still alive heartbeat to coordinator for stampedeId [%s]",
+              minionId, stampedeId.toString()));
     } catch (TException e) {
       String msg =
           String.format(
