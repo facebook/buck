@@ -40,7 +40,7 @@ import com.facebook.buck.python.CxxPythonExtension;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.python.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;

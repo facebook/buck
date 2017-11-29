@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "impl",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/python/toolchain/impl:impl",
+        "//third-party/java/junit:junit",
+    ],
+)

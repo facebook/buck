@@ -23,6 +23,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonVersion;
+import com.facebook.buck.python.toolchain.impl.PythonVersionFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
@@ -228,7 +232,7 @@ public class PythonBuckConfig {
   }
 
   private Optional<PythonVersion> getConfiguredVersion(String section) {
-    return delegate.getValue(section, "version").map(PythonVersion::fromString);
+    return delegate.getValue(section, "version").map(PythonVersionFactory::fromString);
   }
 
   private PythonVersion getVersion(ProcessExecutor processExecutor, String section, Path path)
@@ -239,7 +243,7 @@ public class PythonBuckConfig {
       return configuredVersion.get();
     }
 
-    return PythonVersion.fromInterpreter(processExecutor, path);
+    return PythonVersionFactory.fromInterpreter(processExecutor, path);
   }
 
   public boolean shouldCacheBinaries() {

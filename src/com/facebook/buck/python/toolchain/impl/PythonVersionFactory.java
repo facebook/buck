@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,14 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.python;
+package com.facebook.buck.python.toolchain.impl;
 
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import java.io.IOException;
@@ -30,26 +28,10 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractPythonVersion implements AddsToRuleKey {
+public class PythonVersionFactory {
 
   private static final Pattern VERSION_RE = Pattern.compile("(?<name>[^ ]*) (?<version>[^ ]*)");
-
-  // TODO(cjhopman): This should add the interpreter name to the rulekey.
-  @Value.Parameter
-  public abstract String getInterpreterName();
-
-  @Value.Parameter
-  @AddToRuleKey
-  public abstract String getVersionString(); // X.Y
-
-  @Override
-  public String toString() {
-    return getInterpreterName() + " " + getVersionString();
-  }
 
   /** @return parse a {@link PythonVersion} from a version string (e.g. "CPython 2.7"). */
   public static PythonVersion fromString(String versionStr) {

@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;

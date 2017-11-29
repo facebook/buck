@@ -14,22 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.python;
+package com.facebook.buck.python.toolchain.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.util.ProcessExecutor;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class PythonVersionTest {
+public class PythonVersionFactoryTest {
 
   @Test
   public void testGetPythonVersion() throws Exception {
     PythonVersion version =
-        PythonVersion.extractPythonVersion(
+        PythonVersionFactory.extractPythonVersion(
             Paths.get("usr", "bin", "python"), new ProcessExecutor.Result(0, "", "CPython 2.7\n"));
     assertEquals("CPython 2.7", version.toString());
   }
@@ -37,7 +38,7 @@ public class PythonVersionTest {
   @Test
   public void testGetPyrunVersion() throws Exception {
     PythonVersion version =
-        PythonVersion.extractPythonVersion(
+        PythonVersionFactory.extractPythonVersion(
             Paths.get("non", "important", "path"),
             new ProcessExecutor.Result(0, "", "CPython 2.7\n"));
     assertEquals("CPython 2.7", version.toString());
@@ -47,7 +48,7 @@ public class PythonVersionTest {
   public void testGetWindowsVersion() throws Exception {
     String output = "CPython 2.7\r\n";
     PythonVersion version =
-        PythonVersion.extractPythonVersion(
+        PythonVersionFactory.extractPythonVersion(
             Paths.get("non", "important", "path"), new ProcessExecutor.Result(0, "", output));
     assertThat(version.toString(), Matchers.equalTo("CPython 2.7"));
   }
@@ -55,7 +56,7 @@ public class PythonVersionTest {
   @Test
   public void fromString() {
     assertThat(
-        PythonVersion.fromString("CPython 2.7"),
+        PythonVersionFactory.fromString("CPython 2.7"),
         Matchers.equalTo(PythonVersion.of("CPython", "2.7")));
   }
 }

@@ -59,7 +59,6 @@ standard_java_test(
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/plugin:plugin",
         "//src/com/facebook/buck/python:config",
-        "//src/com/facebook/buck/python:support",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:caching_build_engine_delegates",
