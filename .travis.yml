@@ -58,6 +58,9 @@ before_install:
   # Haskell setup:
   - export PATH=/opt/ghc/8.0.2/bin:$PATH
 
+# Buck dependencies are checked in, so no need to download dependencies
+install: true
+
 # https://docs.travis-ci.com/user/caching#Things-not-to-cache
 # https://docs.travis-ci.com/user/caching#Explicitly-disabling-caching
 cache:
