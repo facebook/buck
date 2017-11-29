@@ -623,6 +623,30 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void appBundleWithResourcesCompileStrings() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_resources_compile_strings", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace
+        .runBuckCommand(
+            "build",
+            "--config",
+            "apple.strings_as_binary_plist=true",
+            target.getFullyQualifiedName())
+        .assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s"));
+  }
+
+  @Test
   public void appBundleVariantDirectoryMustEndInLproj() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
