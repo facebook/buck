@@ -302,6 +302,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       return manifestStoreResult;
     }
 
+    @JsonIgnore
+    public boolean isBuildRuleNoOp() {
+      return getBuildRule() instanceof NoopBuildRule;
+    }
+
     @Override
     public String toString() {
       String success = successType.isPresent() ? successType.get().toString() : "MISSING";
