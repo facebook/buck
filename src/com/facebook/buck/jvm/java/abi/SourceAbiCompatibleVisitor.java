@@ -85,8 +85,8 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
     super.visitInnerClass(name, outerName, innerName, access);
   }
 
-  private static String fixupSignature(@PropagatesNullable String signature) {
-    if (signature == null) {
+  private String fixupSignature(@PropagatesNullable String signature) {
+    if (signature == null || compatibilityMode.usesDependencies()) {
       return signature;
     }
 
