@@ -37,6 +37,7 @@ import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * An implementation of {@link Elements} using just the AST of a single module, without its
@@ -50,8 +51,8 @@ class TreeBackedElements extends ElementsExtendedImpl {
   private final Map<Name, ArtificialTypeElement> knownTypes = new HashMap<>();
   private final Map<Name, ArtificialPackageElement> knownPackages = new HashMap<>();
 
-  public TreeBackedElements(Elements javacElements, Trees trees) {
-    super(javacElements, trees);
+  public TreeBackedElements(Elements javacElements, Types javacTypes, Trees trees) {
+    super(javacElements, javacTypes, trees);
     this.javacElements = javacElements;
   }
 

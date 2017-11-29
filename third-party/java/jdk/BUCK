@@ -14,6 +14,7 @@ prebuilt_jar(
         "//test/com/facebook/buck/jvm/java/abi:testutil",
         "//test/com/facebook/buck/jvm/java/abi/source:source",
         "//test/com/facebook/buck/jvm/java/abi/source:testutil",
+        "//test/com/facebook/buck/jvm/java/lang/model:model",
         "//test/com/facebook/buck/jvm/java/plugin/adapter:",
         "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
         "//test/com/facebook/buck/jvm/java/tracing:tracing",

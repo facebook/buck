@@ -144,7 +144,7 @@ public class BuckJavacTask extends JavacTaskWrapper {
   @Override
   public ElementsExtended getElements() {
     if (elements == null) {
-      elements = new ElementsExtendedImpl(super.getElements(), getTrees());
+      elements = new ElementsExtendedImpl(super.getElements(), getTypes(), getTrees());
     }
     return elements;
   }

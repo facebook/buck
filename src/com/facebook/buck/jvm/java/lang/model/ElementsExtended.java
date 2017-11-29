@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.lang.model;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -28,6 +29,18 @@ import javax.lang.model.util.Elements;
  */
 public interface ElementsExtended extends Elements {
   List<ExecutableElement> getDeclaredMethods(TypeElement owner, CharSequence name);
+
+  List<ExecutableElement> getAllMethods(TypeElement owner, CharSequence name);
+
+  List<BridgeMethod> getBridgeMethods(TypeElement owner, CharSequence name);
+
+  List<BridgeMethod> getAllBridgeMethods(TypeElement type);
+
+  @Nullable
+  ExecutableElement getImplementation(ExecutableElement method, TypeElement inType);
+
+  @Nullable
+  TypeElement getBinaryImplementationOwner(ExecutableElement method, TypeElement inType);
 
   boolean isCompiledInCurrentRun(Element element);
 }
