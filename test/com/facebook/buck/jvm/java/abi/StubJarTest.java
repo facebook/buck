@@ -318,6 +318,35 @@ public class StubJarTest {
   }
 
   @Test
+  public void genericTypeBoundsShouldBePreserved() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A<T extends java.util.ArrayList, U extends CharSequence, V extends T> {",
+            "  public T get(U u, V v) { return null; }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "// signature <T:Ljava/util/ArrayList;U::Ljava/lang/CharSequence;V:TT;>Ljava/lang/Object;",
+            "// declaration: com/example/buck/A<T extends java.util.ArrayList, U extends java.lang.CharSequence, VT>",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  // signature (TU;TV;)TT;",
+            "  // declaration: T get(U, V)",
+            "  public get(Ljava/lang/CharSequence;Ljava/util/ArrayList;)Ljava/util/ArrayList;",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void elementsInStubCorrectlyInOrder() throws IOException {
     // Fields and methods should stub in order
     // Inner classes should stub in reverse
@@ -413,10 +442,10 @@ public class StubJarTest {
             "  public INNERCLASS com/example/buck/A$C com/example/buck/A C",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/F$G com/example/buck/F G",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/F$H com/example/buck/F H",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$G com/example/buck/F G",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/F$H com/example/buck/F H",
             "",
             "  // access flags 0x0",
             "  Z first",
@@ -650,8 +679,8 @@ public class StubJarTest {
             "",
             "",
             "  @Lcom/example/buck/dependency/Dep$Anno;() // invisible",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/dependency/Dep$Anno com/example/buck/dependency/Dep Anno",
+            "  // access flags 0x2609",
+            "  public static abstract INNERCLASS com/example/buck/dependency/Dep$Anno com/example/buck/dependency/Dep Anno",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -792,8 +821,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/Outer$Inner$Nested {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/Outer$Inner$Nested com/example/buck/Outer$Inner Nested",
             "",
@@ -1104,8 +1133,8 @@ public class StubJarTest {
             "",
             "",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : CLASS_TYPE_PARAMETER 0, null // invisible",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
+            "  // access flags 0x2609",
+            "  public static abstract INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -1135,8 +1164,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
+            "  // access flags 0x2609",
+            "  public static abstract INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -1174,8 +1203,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
+            "  // access flags 0x2609",
+            "  public static abstract INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
             "",
             "  // access flags 0x0",
             "  // signature Ljava/util/List<Ljava/lang/String;>;",
@@ -1594,6 +1623,52 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsEnumsOverridingGenericInterface() throws IOException {
+    notYetImplementedForMissingClasspath();
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public enum A implements java.util.Comparator<A> {",
+            "  Value1,",
+            "  Value2;",
+            "  @Override",
+            "  public int compare(A a1, A a2) { return 0; }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x4031",
+            "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;Ljava/util/Comparator<Lcom/example/buck/A;>;",
+            "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A> implements java.util.Comparator<com.example.buck.A>",
+            "public final enum com/example/buck/A extends java/lang/Enum  implements java/util/Comparator  {",
+            "",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A; Value1",
+            "",
+            "  // access flags 0x4019",
+            "  public final static enum Lcom/example/buck/A; Value2",
+            "",
+            "  // access flags 0x9",
+            "  public static values()[Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x9",
+            "  public static valueOf(Ljava/lang/String;)Lcom/example/buck/A;",
+            "",
+            "  // access flags 0x1",
+            "  public compare(Lcom/example/buck/A;Lcom/example/buck/A;)I",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge compare(Ljava/lang/Object;Ljava/lang/Object;)I",
+            "",
+            "  // access flags 0x2",
+            "  private <init>(Ljava/lang/String;I)V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void stubsExplicitlyAbstractEnums() throws IOException {
     tester
         .setSourceFile(
@@ -1647,10 +1722,10 @@ public class StubJarTest {
         .addExpectedStub(
             "com/example/buck/A",
             "// class version 52.0 (52)",
-            "// access flags 0x4021",
+            "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;",
             "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A>",
-            "public enum com/example/buck/A extends java/lang/Enum  {",
+            "public abstract enum com/example/buck/A extends java/lang/Enum  {",
             "",
             "",
             "  // access flags 0x4019",
@@ -1721,10 +1796,10 @@ public class StubJarTest {
         .addExpectedStub(
             "com/example/buck/A",
             "// class version 52.0 (52)",
-            "// access flags 0x4021",
+            "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A;>;Ljava/lang/Runnable;",
             "// declaration: com/example/buck/A extends java.lang.Enum<com.example.buck.A> implements java.lang.Runnable",
-            "public enum com/example/buck/A extends java/lang/Enum  implements java/lang/Runnable  {",
+            "public abstract enum com/example/buck/A extends java/lang/Enum  implements java/lang/Runnable  {",
             "",
             "",
             "  // access flags 0x4019",
@@ -1992,11 +2067,9 @@ public class StubJarTest {
             "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A$B;>;Ljava/lang/Runnable;",
             "// declaration: com/example/buck/A$B extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
-            // abstract flag is removed in the stub:
             "public abstract enum com/example/buck/A$B extends java/lang/Enum  implements java/lang/Runnable  {",
             "",
             "  // access flags 0x4409",
-            // abstract flag is removed in the stub:
             "  public static abstract enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
             "  // access flags 0x4008",
             "  static enum INNERCLASS com/example/buck/A$B$1 null null",
@@ -2029,13 +2102,13 @@ public class StubJarTest {
         .addExpectedStub(
             "com/example/buck/A$B",
             "// class version 52.0 (52)",
-            "// access flags 0x4021",
+            "// access flags 0x4421",
             "// signature Ljava/lang/Enum<Lcom/example/buck/A$B;>;Ljava/lang/Runnable;",
             "// declaration: com/example/buck/A$B extends java.lang.Enum<com.example.buck.A$B> implements java.lang.Runnable",
-            "public enum com/example/buck/A$B extends java/lang/Enum  implements java/lang/Runnable  {",
+            "public abstract enum com/example/buck/A$B extends java/lang/Enum  implements java/lang/Runnable  {",
             "",
-            "  // access flags 0x4009",
-            "  public static enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x4409",
+            "  public static abstract enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
             "",
             "  // access flags 0x4019",
             "  public final static enum Lcom/example/buck/A$B; Value",
@@ -2058,7 +2131,6 @@ public class StubJarTest {
             "  // access flags 0x1008",
             "  static synthetic INNERCLASS com/example/buck/A$1 null null",
             "  // access flags 0x4409",
-            // abstract flag is removed in the stub:
             "  public static abstract enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
             "",
             "  // access flags 0x1",
@@ -2070,8 +2142,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x4009",
-            "  public static enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x4409",
+            "  public static abstract enum INNERCLASS com/example/buck/A$B com/example/buck/A B",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -2119,10 +2191,10 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A$B$C$D {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/A$B com/example/buck/A B",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/A$B$C com/example/buck/A$B C",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$B$C com/example/buck/A$B C",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B$C$D com/example/buck/A$B$C D",
             "",
@@ -2160,8 +2232,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A$B$C {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B$C com/example/buck/A$B C",
             "  // access flags 0x1",
@@ -2285,10 +2357,10 @@ public class StubJarTest {
             "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
             // Inenrclass entries for references to other classes are sorted. Otherwise the order
             // in class-based ABIs could be influenced by references inside method bodies.
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
             "  // access flags 0x0",
             "  Lcom/example/buck/B$C$D; field1",
@@ -2314,8 +2386,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/B$C$D {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/B$C com/example/buck/B C",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
@@ -2402,10 +2474,10 @@ public class StubJarTest {
             "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
             // Inenrclass entries for references to other classes are sorted. Otherwise the order
             // in class-based ABIs could be influenced by references inside method bodies.
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
             "  // access flags 0x0",
             "  Lcom/example/buck/B$C$D; field1",
@@ -2431,8 +2503,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/B$C$D {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
             "  // access flags 0x9",
             "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
@@ -2517,12 +2589,10 @@ public class StubJarTest {
             "",
             "  // access flags 0x0",
             "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
-            // Inenrclass entries for references to other classes are sorted. Otherwise the order
-            // in class-based ABIs could be influenced by references inside method bodies.
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x4019",
+            "  public final static enum INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
             "  // access flags 0x0",
             "  Lcom/example/buck/B$C$D; field1",
@@ -2550,8 +2620,8 @@ public class StubJarTest {
             "// declaration: com/example/buck/B$C$D extends java.lang.Enum<com.example.buck.B$C$D>",
             "public final enum com/example/buck/B$C$D extends java/lang/Enum  {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
             "  // access flags 0x4019",
             "  public final static enum INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
@@ -2675,6 +2745,7 @@ public class StubJarTest {
 
   @Test
   public void stubsImportedReferencesToInnerClassesOfOtherTypes() throws IOException {
+    notYetImplementedForMissingClasspath();
     tester
         .setSourceFile(
             "Imported.java",
@@ -2699,10 +2770,10 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
+            "  // access flags 0x1",
+            "  public INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
             "",
             "  // access flags 0x1",
             "  public Lcom/example/buck/imported/Imported$Inner$Innerer; field",
@@ -2741,10 +2812,10 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
             "",
             "  // access flags 0x1",
             "  public Lcom/example/buck/imported/Imported$Inner$Innerer; field",
@@ -2799,8 +2870,8 @@ public class StubJarTest {
               "// access flags 0x21",
               "public class com/example/buck/A {",
               "",
-              "  // access flags 0x8",
-              "  static INNERCLASS com/example/buck/imported/ImportedBase$Inner com/example/buck/imported/ImportedBase Inner",
+              "  // access flags 0x9",
+              "  public static INNERCLASS com/example/buck/imported/ImportedBase$Inner com/example/buck/imported/ImportedBase Inner",
               "",
               "  // access flags 0x1",
               "  public Lcom/example/buck/imported/ImportedBase$Inner; field",
@@ -2861,8 +2932,8 @@ public class StubJarTest {
             "",
             "",
             "  @Lcom/example/buck/Anno;(value=com.example.buck.B$Inner.class) // invisible",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/B$Inner com/example/buck/B Inner",
+            "  // access flags 0x0",
+            "  INNERCLASS com/example/buck/B$Inner com/example/buck/B Inner",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -3292,6 +3363,7 @@ public class StubJarTest {
 
   @Test
   public void shouldIncludeInnerClassTypeParameterReferenceInMethodParameter() throws IOException {
+    notYetImplementedForMissingClasspath();
     tester
         .setSourceFile(
             "Outer.java",
@@ -3315,8 +3387,8 @@ public class StubJarTest {
             "// access flags 0x601",
             "public abstract interface com/example/buck/A {",
             "",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
+            "  // access flags 0x4019",
+            "  public final static enum INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
             "",
             "  // access flags 0x401",
             "  // signature (Ljava/util/Set<Lcom/example/buck/Outer$Inner;>;)V",
@@ -4220,8 +4292,8 @@ public class StubJarTest {
             "",
             "",
             "  @Lcom/example/buck/A$Anno;() // invisible",
-            "  // access flags 0x8",
-            "  static INNERCLASS com/example/buck/A$Anno com/example/buck/A Anno",
+            "  // access flags 0x2609",
+            "  public static abstract INNERCLASS com/example/buck/A$Anno com/example/buck/A Anno",
             "}")
         .createAndCheckStubJar();
   }

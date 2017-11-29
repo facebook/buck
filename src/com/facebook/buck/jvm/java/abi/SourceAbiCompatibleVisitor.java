@@ -74,7 +74,9 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
     Preconditions.checkNotNull(this.name);
-    if (!this.name.equals(name) && !this.name.equals(outerName)) {
+    if (!compatibilityMode.usesDependencies()
+        && !this.name.equals(name)
+        && !this.name.equals(outerName)) {
       // Because we can't know the flags for inferred types, InnerClassesTable marks all entries
       // as ACC_STATIC except for the class itself and its member classes. It could technically
       // use the correct flags for non-inferred types, but then it becomes impossible for us to
@@ -98,7 +100,11 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
     return writer.toString();
   }
 
-  private static int stripAbstractFromEnums(int access) {
+  private int stripAbstractFromEnums(int access) {
+    if (compatibilityMode.usesDependencies()) {
+      return access;
+    }
+
     if ((access & Opcodes.ACC_ENUM) == Opcodes.ACC_ENUM) {
       access = access & ~Opcodes.ACC_ABSTRACT;
     }

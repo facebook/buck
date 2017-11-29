@@ -51,6 +51,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
         SupportsPipelining<JavacPipelineState> {
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
+  @AddToRuleKey private final int seed = 1;
   // This will be added to the rule key by virtue of being returned from getBuildDeps.
   private final ImmutableSortedSet<BuildRule> buildDeps;
   private final JarContentsSupplier outputJarContents;

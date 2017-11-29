@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import java.io.IOException;
@@ -25,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
@@ -570,7 +570,7 @@ public class InnerClassesTableTest {
       compiler.enter();
       assertEquals(Collections.emptyList(), compiler.getDiagnosticMessages());
 
-      Elements elements = compiler.getElements();
+      ElementsExtended elements = compiler.getElements();
       Element topElement =
           className.endsWith("package-info")
               ? elements.getPackageElement(className.replace(".package-info", ""))
