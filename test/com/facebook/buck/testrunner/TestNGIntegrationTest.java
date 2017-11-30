@@ -17,6 +17,7 @@
 package com.facebook.buck.testrunner;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -62,7 +63,17 @@ public class TestNGIntegrationTest {
   }
 
   @Test
+  public void testSelectors() throws IOException {
+    ProcessResult filteredTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:", "-f", "SimpleTest");
+    filteredTestNGTestResult.assertSuccess();
+    // should run SimpleTest
+    assertThat(filteredTestNGTestResult.getStderr(), containsString("SimpleTest"));
+    // should not run SimpleTest
+    assertThat(filteredTestNGTestResult.getStderr(), not(containsString("SimpleFailingTest")));
+  }
 
+  @Test
   public void testThatInjectionWorks() throws IOException {
     ProcessResult injectionTestNGTestResult =
         workspace.runBuckCommand("test", "//test:injection-test");
