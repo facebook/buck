@@ -104,29 +104,22 @@ public class DefaultAndroidDirectoryResolverTest {
     resolver.getSdkOrThrow();
   }
 
-  @Test(expected = HumanReadableException.class)
-  public void throwAtNdkPathIsNotRepository() throws Exception {
-    throwAtNdkPathIsNotDirectory("ANDROID_NDK_REPOSITORY");
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void throwAtNdkPathIsNotDirectory() throws Exception {
-    throwAtNdkPathIsNotDirectory("ANDROID_NDK");
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void throwAtNdkPathIsNotDirectory2() throws Exception {
-    throwAtNdkPathIsNotDirectory("NDK_HOME");
-  }
-
-  private void throwAtNdkPathIsNotDirectory(String environmentVariable) throws Exception {
+  @Test
+  public void throwAtNdkPathIsNotDirectory() throws IOException {
     Path file = tmpDir.getRoot().resolve(tmpDir.newFile("file"));
-    new DefaultAndroidDirectoryResolver(
-        tmpDir.getRoot().getFileSystem(),
-        ImmutableMap.of(environmentVariable, file.toString()),
-        AndroidNdkHelper.DEFAULT_CONFIG);
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK", file.toString()),
+            AndroidNdkHelper.DEFAULT_CONFIG);
 
-    assert false;
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ANDROID_NDK",
+            file));
+    resolver.getNdkOrThrow();
   }
 
   @Test
@@ -625,7 +618,7 @@ public class DefaultAndroidDirectoryResolverTest {
   }
 
   @Test
-  public void testErrorMessageFromBuckconfigNdkDirectory() throws IOException {
+  public void testErrorMessageFromBuckconfigNdk() throws IOException {
     Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
@@ -635,7 +628,6 @@ public class DefaultAndroidDirectoryResolverTest {
                 .setNdkVersion("r9d")
                 .setNdkPath(ndkDir.resolve("wrong").toString())
                 .build());
-
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         String.format(
@@ -643,45 +635,46 @@ public class DefaultAndroidDirectoryResolverTest {
             "ndk.ndk_path",
             ndkDir.resolve("wrong")));
     resolver.getNdkOrThrow();
-  }
 
-  @Test
-  public void testErrorMessageFromBuckconfigNdk() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
-    DefaultAndroidDirectoryResolver resolver =
+    resolver =
         new DefaultAndroidDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of(),
             FakeAndroidBuckConfig.builder()
                 .setNdkVersion("r9d")
-                .setNdkRepositoryPath(ndkDir.resolve("wrong").toString())
+                .setNdkRepositoryPath(ndkDir.resolve("also-wrong").toString())
                 .build());
-
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         String.format(
             DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
             "ndk.ndk_repository_path",
-            ndkDir.resolve("wrong")));
+            ndkDir.resolve("also-wrong")));
     resolver.getNdkOrThrow();
   }
 
-  @Test(expected = HumanReadableException.class)
-  public void testEnvironmentVariableOverridesNdkConfig() throws Exception {
+  @Test
+  public void testEnvironmentVariableOverridesNdkConfig() throws IOException {
     Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
-    new DefaultAndroidDirectoryResolver(
-        tmpDir.getRoot().getFileSystem(),
-        ImmutableMap.of(
-            "ANDROID_NDK_REPOSITORY", ndkDir.resolve("invalid").toString(),
-            "ANDROID_NDK", ndkDir.toString(),
-            "NDK_HOME", ndkDir.toString()),
-        FakeAndroidBuckConfig.builder()
-            .setNdkVersion("r9d")
-            .setNdkRepositoryPath(ndkDir.toString())
-            .setNdkPath(ndkDir.toString())
-            .build());
-
-    assert false;
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of(
+                "ANDROID_NDK_REPOSITORY", ndkDir.resolve("env1").toString(),
+                "ANDROID_NDK", ndkDir.resolve("env2").toString(),
+                "NDK_HOME", ndkDir.resolve("env3").toString()),
+            FakeAndroidBuckConfig.builder()
+                .setNdkVersion("r9d")
+                .setNdkRepositoryPath(ndkDir.resolve("config1").toString())
+                .setNdkPath(ndkDir.resolve("config2").toString())
+                .build());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        String.format(
+            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            "ndk.ndk_path",
+            ndkDir.resolve("config2")));
+    resolver.getNdkOrThrow();
   }
 
   private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
