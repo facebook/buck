@@ -103,6 +103,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract BuildRuleFinishedPublisher getBuildRuleFinishedPublisher();
 
+  public abstract UnexpectedSlaveCacheMissTracker getUnexpectedSlaveCacheMissTracker();
+
   public int getBuildThreadCount() {
     return getState()
         .getRemoteRootCellConfig()

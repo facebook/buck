@@ -28,6 +28,8 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.build_slave.NoOpUnexpectedSlaveCacheMissTracker;
+import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -97,6 +99,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   private BuildRuleFinishedPublisher buildRuleFinishedPublisher =
       new NoOpBuildRuleFinishedPublisher();
+
+  private UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker =
+      new NoOpUnexpectedSlaveCacheMissTracker();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
@@ -192,7 +197,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   multiSourceFileContentsProvider,
                   distBuildConfig,
                   timeStatsTracker,
-                  getBuildRuleFinishedPublisher());
+                  getBuildRuleFinishedPublisher(),
+                  getUnexpectedSlaveCacheMissTracker());
 
           distBuildExecutor.onBuildSlavePreparationCompleted(
               () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
@@ -313,11 +319,16 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               scheduledExecutorService);
 
       buildRuleFinishedPublisher = slaveEventListener;
+      unexpectedSlaveCacheMissTracker = slaveEventListener;
     }
   }
 
   private BuildRuleFinishedPublisher getBuildRuleFinishedPublisher() {
     return Preconditions.checkNotNull(buildRuleFinishedPublisher);
+  }
+
+  private UnexpectedSlaveCacheMissTracker getUnexpectedSlaveCacheMissTracker() {
+    return Preconditions.checkNotNull(unexpectedSlaveCacheMissTracker);
   }
 
   @Override

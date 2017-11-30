@@ -31,6 +31,7 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutorArgs;
+import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -110,7 +111,8 @@ public abstract class DistBuildFactory {
       FileContentsProvider fileContentsProvider,
       DistBuildConfig distBuildConfig,
       BuildSlaveTimingStatsTracker timingStatsTracker,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
@@ -148,6 +150,7 @@ public abstract class DistBuildFactory {
                 .setTimingStatsTracker(timingStatsTracker)
                 .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
                 .setBuildRuleFinishedPublisher(buildRuleFinishedPublisher)
+                .setUnexpectedSlaveCacheMissTracker(unexpectedSlaveCacheMissTracker)
                 .build());
     return executor;
   }

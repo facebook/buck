@@ -85,13 +85,14 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             new BuildSlaveRunId().setId("sl7"),
             MAX_PARALLEL_WORK_UNITS,
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
-            POLL_LOOP_INTERVAL_MILLIS);
+            POLL_LOOP_INTERVAL_MILLIS,
+            new NoOpUnexpectedSlaveCacheMissTracker());
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
     int exitCode = jointRunner.runAndReturnExitCode(heartbeatService);
     Assert.assertEquals(0, exitCode);
     Assert.assertEquals(4, localBuilder.getBuildTargets().size());
-    Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));
+    Assert.assertEquals(BuildTargetsQueueTest.ROOT_TARGET, localBuilder.getBuildTargets().get(3));
 
     Path buildTracePath = logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME);
     Assert.assertTrue(buildTracePath.toFile().exists());

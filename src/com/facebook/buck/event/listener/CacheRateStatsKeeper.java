@@ -48,6 +48,7 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheHits = new AtomicInteger(0);
   private final AtomicInteger cacheIgnores = new AtomicInteger(0);
   private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
+  private final AtomicInteger unexpectedCacheMissesInStampedeBuildSlave = new AtomicInteger(0);
 
   protected volatile Optional<Integer> ruleCount = Optional.empty();
 
@@ -84,6 +85,10 @@ public class CacheRateStatsKeeper {
     }
   }
 
+  public void recordUnexpectedCacheMisses(int unexpectedMisses) {
+    unexpectedCacheMissesInStampedeBuildSlave.addAndGet(unexpectedMisses);
+  }
+
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = Optional.of(calculated.getNumRules());
   }
@@ -102,6 +107,8 @@ public class CacheRateStatsKeeper {
     serializableStats.setCacheLocalKeyUnchangedHitsCount(cacheLocalKeyUnchangedHits.get());
     serializableStats.setCacheIgnoresCount(cacheIgnores.get());
     serializableStats.setCacheIgnoresCount(cacheIgnores.get());
+    serializableStats.setUnexpectedCacheMissesCount(
+        unexpectedCacheMissesInStampedeBuildSlave.get());
 
     return serializableStats;
   }

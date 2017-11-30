@@ -101,7 +101,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.TARGET_NAME),
+              ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFour.getWorkUnitsSize(), 0);
@@ -112,7 +112,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.TARGET_NAME),
+              ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFive.getWorkUnitsSize(), 0);

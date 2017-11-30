@@ -38,7 +38,7 @@ public class MinionWorkloadAllocatorTest {
   @Before
   public void setUp() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = BuildTargetsQueueTest.createDiamondDependencyResolver();
-    target = BuildTargetFactory.newInstance(BuildTargetsQueueTest.TARGET_NAME);
+    target = BuildTargetFactory.newInstance(BuildTargetsQueueTest.ROOT_TARGET);
     queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
   }
 
@@ -68,7 +68,7 @@ public class MinionWorkloadAllocatorTest {
 
     List<WorkUnit> fourthTargets =
         allocator.dequeueZeroDependencyNodes(
-            MINION_ONE, ImmutableList.of(BuildTargetsQueueTest.TARGET_NAME), MAX_WORK_UNITS);
+            MINION_ONE, ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET), MAX_WORK_UNITS);
     Assert.assertEquals(0, fourthTargets.size());
     Assert.assertTrue(allocator.isBuildFinished());
   }

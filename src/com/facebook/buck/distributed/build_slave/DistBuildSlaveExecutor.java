@@ -118,7 +118,8 @@ public class DistBuildSlaveExecutor {
                   args.getBuildSlaveRunId(),
                   args.getRemoteCoordinatorAddress(),
                   OptionalInt.of(args.getRemoteCoordinatorPort()),
-                  args.getDistBuildConfig());
+                  args.getDistBuildConfig(),
+                  args.getUnexpectedSlaveCacheMissTracker());
           break;
 
         case COORDINATOR_AND_MINION:
@@ -133,7 +134,8 @@ public class DistBuildSlaveExecutor {
                   args.getBuildSlaveRunId(),
                   localBuildExecutor,
                   args.getLogDirectoryPath(),
-                  args.getBuildRuleFinishedPublisher());
+                  args.getBuildRuleFinishedPublisher(),
+                  args.getUnexpectedSlaveCacheMissTracker());
           break;
 
         case COORDINATOR:

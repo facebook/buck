@@ -24,6 +24,7 @@ import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -63,7 +64,10 @@ import javax.annotation.concurrent.GuardedBy;
  * BuildSlaveStatus with the latest updates.
  */
 public class DistBuildSlaveEventBusListener
-    implements BuildRuleFinishedPublisher, BuckEventListener, Closeable {
+    implements BuildRuleFinishedPublisher,
+        UnexpectedSlaveCacheMissTracker,
+        BuckEventListener,
+        Closeable {
 
   private static final Logger LOG = Logger.get(DistBuildSlaveEventBusListener.class);
 
@@ -326,6 +330,12 @@ public class DistBuildSlaveEventBusListener
     eventBus.post(new BuildSlaveFinishedStatusEvent(finishedStats, remoteBuckConfig));
     networkScheduler.schedule(
         () -> sendFinishedStatsToFrontend(finishedStats), 0, TimeUnit.SECONDS);
+  }
+
+  /** Record unexpected cache misses in build slaves. */
+  @Override
+  public void onUnexpectedCacheMiss(int numUnexpectedMisses) {
+    cacheRateStatsKeeper.recordUnexpectedCacheMisses(numUnexpectedMisses);
   }
 
   @Subscribe

@@ -49,11 +49,11 @@ public class BuildTargetsQueueTest {
   public static final String HAS_RUNTIME_DEP_RULE = "//:runtime_dep";
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  public static final String TARGET_NAME = "//foo:one";
-  public static final String LEAF_TARGET = TARGET_NAME + "_leaf";
-  public static final String RIGHT_TARGET = TARGET_NAME + "_right";
-  public static final String LEFT_TARGET = TARGET_NAME + "_left";
-  public static final String CHAIN_TOP_TARGET = TARGET_NAME + "_chain_top";
+  public static final String ROOT_TARGET = "//foo:one";
+  public static final String LEAF_TARGET = ROOT_TARGET + "_leaf";
+  public static final String RIGHT_TARGET = ROOT_TARGET + "_right";
+  public static final String LEFT_TARGET = ROOT_TARGET + "_left";
+  public static final String CHAIN_TOP_TARGET = ROOT_TARGET + "_chain_top";
 
   private static class FakeHasRuntimeDepsRule extends FakeBuildRule implements HasRuntimeDeps {
     private final ImmutableSortedSet<BuildRule> runtimeDeps;
@@ -95,7 +95,7 @@ public class BuildTargetsQueueTest {
   @Test
   public void testResolverWithOnSingleTarget() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = createSimpleResolver();
-    BuildTarget target = BuildTargetFactory.newInstance(TARGET_NAME);
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
@@ -137,7 +137,7 @@ public class BuildTargetsQueueTest {
   @Test
   public void testResolverWithDiamondDependencyTarget() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = createDiamondDependencyResolver();
-    BuildTarget target = BuildTargetFactory.newInstance(TARGET_NAME);
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
 
     List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
@@ -145,7 +145,7 @@ public class BuildTargetsQueueTest {
     WorkUnit leafNodeWorkUnit = zeroDepWorkUnits.get(0);
     List<String> leafNodeTargets = leafNodeWorkUnit.getBuildTargets();
     Assert.assertEquals(1, leafNodeTargets.size());
-    Assert.assertEquals(TARGET_NAME + "_leaf", leafNodeTargets.get(0));
+    Assert.assertEquals(ROOT_TARGET + "_leaf", leafNodeTargets.get(0));
 
     zeroDepWorkUnits = queue.dequeueZeroDependencyNodes(leafNodeTargets, MAX_UNITS_OF_WORK);
     Assert.assertEquals(2, zeroDepWorkUnits.size());
@@ -166,7 +166,7 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(1, zeroDepWorkUnits.size());
     WorkUnit rootWorkUnit = zeroDepWorkUnits.get(0);
     Assert.assertEquals(1, rootWorkUnit.getBuildTargets().size());
-    Assert.assertEquals(TARGET_NAME, rootWorkUnit.getBuildTargets().get(0));
+    Assert.assertEquals(ROOT_TARGET, rootWorkUnit.getBuildTargets().get(0));
 
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(rootWorkUnit.getBuildTargets(), MAX_UNITS_OF_WORK);
@@ -177,11 +177,11 @@ public class BuildTargetsQueueTest {
   public void testDiamondDependencyResolverWithChainFromLeaf() throws NoSuchBuildTargetException {
     // Graph structure:
     //        / right \
-    // root -          - chain top - chain bottom
+    // root -          - chain top - leaf
     //        \ left  /
 
     BuildRuleResolver resolver = createDiamondDependencyResolverWithChainFromLeaf();
-    BuildTarget target = BuildTargetFactory.newInstance(TARGET_NAME);
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
 
     List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
@@ -215,7 +215,7 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(1, zeroDepWorkUnits.size());
     WorkUnit rootWorkUnit = zeroDepWorkUnits.get(0);
     Assert.assertEquals(1, rootWorkUnit.getBuildTargets().size());
-    Assert.assertEquals(TARGET_NAME, rootWorkUnit.getBuildTargets().get(0));
+    Assert.assertEquals(ROOT_TARGET, rootWorkUnit.getBuildTargets().get(0));
 
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(rootWorkUnit.getBuildTargets(), MAX_UNITS_OF_WORK);
@@ -228,7 +228,7 @@ public class BuildTargetsQueueTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET_NAME))
+            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(ROOT_TARGET))
                 .build(resolver),
             JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:two"))
                 .build(resolver));
@@ -268,7 +268,7 @@ public class BuildTargetsQueueTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildTarget root = BuildTargetFactory.newInstance(TARGET_NAME);
+    BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget right = BuildTargetFactory.newInstance(RIGHT_TARGET);
     BuildTarget leaf = BuildTargetFactory.newInstance(LEAF_TARGET);
@@ -286,16 +286,20 @@ public class BuildTargetsQueueTest {
   public static BuildTargetsQueue createDiamondDependencyQueue() throws NoSuchBuildTargetException {
     return BuildTargetsQueue.newQueue(
         createDiamondDependencyResolver(),
-        ImmutableList.of(BuildTargetFactory.newInstance(TARGET_NAME)));
+        ImmutableList.of(BuildTargetFactory.newInstance(ROOT_TARGET)));
   }
 
+  // Graph structure:
+  //        / right \
+  // root -          - chain top - leaf
+  //        \ left  /
   private static BuildRuleResolver createDiamondDependencyResolverWithChainFromLeaf()
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildTarget root = BuildTargetFactory.newInstance(TARGET_NAME);
+    BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget right = BuildTargetFactory.newInstance(RIGHT_TARGET);
     BuildTarget chainTop = BuildTargetFactory.newInstance(CHAIN_TOP_TARGET);
@@ -310,5 +314,12 @@ public class BuildTargetsQueueTest {
             JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
     buildRules.forEach(resolver::addToIndex);
     return resolver;
+  }
+
+  public static BuildTargetsQueue createDiamondDependencyQueueWithChainFromLeaf()
+      throws NoSuchBuildTargetException {
+    return BuildTargetsQueue.newQueue(
+        createDiamondDependencyResolverWithChainFromLeaf(),
+        ImmutableList.of(BuildTargetFactory.newInstance(ROOT_TARGET)));
   }
 }

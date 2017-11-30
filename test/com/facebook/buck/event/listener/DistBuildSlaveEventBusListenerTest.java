@@ -148,6 +148,7 @@ public class DistBuildSlaveEventBusListenerTest {
     cacheRateStats.setCacheErrorsCount(0);
     cacheRateStats.setCacheIgnoresCount(0);
     cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
+    cacheRateStats.setUnexpectedCacheMissesCount(0);
 
     status.setFilesMaterializedCount(0);
 
@@ -258,6 +259,37 @@ public class DistBuildSlaveEventBusListenerTest {
 
     eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), 100));
     eventBus.post(BuildEvent.unskippedRuleCountUpdated(50));
+
+    listener.close();
+    verify(distBuildServiceMock);
+    Assert.assertEquals(capturedStatus.getValue(), expectedStatus);
+  }
+
+  @Test
+  public void testHandlingUnexpectedCacheMissTracking() throws IOException {
+    BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
+
+    CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
+    cacheRateStats.setUnexpectedCacheMissesCount(13);
+
+    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    distBuildServiceMock.storeBuildSlaveFinishedStats(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    Capture<BuildSlaveStatus> capturedStatus = Capture.newInstance(CaptureType.LAST);
+    distBuildServiceMock.updateBuildSlaveStatus(
+        eq(stampedeId), eq(buildSlaveRunId), capture(capturedStatus));
+    expectLastCall().atLeastOnce();
+
+    replay(distBuildServiceMock);
+    setUpDistBuildSlaveEventBusListener();
+
+    listener.onUnexpectedCacheMiss(7);
+    listener.onUnexpectedCacheMiss(6);
 
     listener.close();
     verify(distBuildServiceMock);

@@ -90,7 +90,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
       BuildSlaveRunId buildSlaveRunId,
       int availableWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
-      long minionPollLoopIntervalMillis) {
+      long minionPollLoopIntervalMillis,
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
     this(
         coordinatorAddress,
         coordinatorPort,
@@ -100,6 +101,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
         availableWorkUnitBuildCapacity,
         buildCompletionChecker,
         minionPollLoopIntervalMillis,
+        unexpectedCacheMissTracker,
         MostExecutors.newMultiThreadExecutor(
             new CommandThreadFactory("MinionBuilderThread"), availableWorkUnitBuildCapacity));
   }
@@ -114,6 +116,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
       int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
       long minionPollLoopIntervalMillis,
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
       ExecutorService buildExecutorService) {
     this.minionPollLoopIntervalMillis = minionPollLoopIntervalMillis;
     this.buildExecutor = buildExecutor;
@@ -125,7 +128,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
     this.buildCompletionChecker = buildCompletionChecker;
     this.buildExecutorService = buildExecutorService;
-    this.buildTracker = new MinionLocalBuildStateTracker(maxWorkUnitBuildCapacity);
+    this.buildTracker =
+        new MinionLocalBuildStateTracker(maxWorkUnitBuildCapacity, unexpectedCacheMissTracker);
 
     LOG.info(
         String.format(
@@ -280,7 +284,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
               LOG.info(String.format("Building of target [%s] completed.", fullyQualifiedName));
             }
 
-            buildTracker.recordFinishedTarget(fullyQualifiedName);
+            buildTracker.recordFinishedTarget(result);
             registerUploadCompletionHandler(Preconditions.checkNotNull(result));
           }
 

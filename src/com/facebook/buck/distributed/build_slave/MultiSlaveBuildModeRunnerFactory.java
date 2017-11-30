@@ -112,7 +112,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       BuildSlaveRunId buildSlaveRunId,
       String coordinatorAddress,
       OptionalInt coordinatorPort,
-      DistBuildConfig distBuildConfig) {
+      DistBuildConfig distBuildConfig,
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = distBuildService.getCurrentBuildJobState(stampedeId);
@@ -131,7 +132,8 @@ public class MultiSlaveBuildModeRunnerFactory {
             .getConcurrencyLimit()
             .threadLimit,
         checker,
-        distBuildConfig.getMinionPollLoopIntervalMillis());
+        distBuildConfig.getMinionPollLoopIntervalMillis(),
+        unexpectedCacheMissTracker);
   }
 
   /**
@@ -150,7 +152,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       BuildSlaveRunId buildSlaveRunId,
       BuildExecutor localBuildExecutor,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             actionGraphAndResolverFuture,
@@ -169,6 +172,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             buildSlaveRunId,
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),
-            distBuildConfig));
+            distBuildConfig,
+            unexpectedCacheMissTracker));
   }
 }

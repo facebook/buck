@@ -53,6 +53,7 @@ struct CacheRateStats {
     3: optional i32 cacheIgnoresCount;
     4: optional i32 cacheErrorsCount;
     5: optional i32 cacheLocalKeyUnchangedHitsCount;
+    6: optional i32 unexpectedCacheMissesCount;
 
     10: optional i32 totalRulesCount;
     11: optional i32 updatedRulesCount;
