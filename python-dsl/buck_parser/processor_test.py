@@ -582,6 +582,24 @@ class BuckTest(unittest.TestCase):
             get_config_from_results(result),
             {'hello': {'world': 'foo', 'bar': None, 'goo': None}})
 
+    def test_struct_is_available(self):
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                's = struct(name="foo")',
+                'foo_rule(',
+                '  name=s.name,',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'foo')
+
     def test_add_build_file_dep(self):
         """
         Test simple use of `add_build_file_dep`.

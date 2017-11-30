@@ -7,6 +7,7 @@ import __builtin__
 import __future__
 
 import contextlib
+import collections
 from pathlib import Path, PurePath
 from pywatchman import WatchmanError
 from .deterministic_set import DeterministicSet
@@ -480,6 +481,21 @@ def depset(elements, build_env=None):
     :rtype: DeterministicSet
     """
     return DeterministicSet(elements)
+
+
+@provide_for_build
+def struct(build_env=None, **kwargs):
+    """Creates an immutable container using the keyword arguments as attributes.
+
+    It can be used to group multiple values and/or functions together. Example:
+        def _my_function():
+          return 3
+        s = struct(x = 2, foo = _my_function)
+        return s.x + s.foo()  # returns 5
+    """
+    keys = [key for key in kwargs]
+    new_type = collections.namedtuple('struct', keys)
+    return new_type(**kwargs)
 
 
 GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$')
