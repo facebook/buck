@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class JarBuildStepsFactory
@@ -75,7 +76,7 @@ public class JarBuildStepsFactory
 
   @AddToRuleKey private final AbiGenerationMode abiGenerationMode;
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
-  @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
+  @Nullable private final Supplier<SourceOnlyAbiRuleInfo> ruleInfoSupplier;
 
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
@@ -93,7 +94,7 @@ public class JarBuildStepsFactory
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
-      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
+      @Nullable Supplier<SourceOnlyAbiRuleInfo> ruleInfoSupplier) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
     this.libraryTarget = libraryTarget;
@@ -109,7 +110,7 @@ public class JarBuildStepsFactory
     this.classesToRemoveFromJar = classesToRemoveFromJar;
     this.abiGenerationMode = abiGenerationMode;
     this.abiCompatibilityMode = abiCompatibilityMode;
-    this.ruleInfo = ruleInfo;
+    this.ruleInfoSupplier = ruleInfoSupplier;
   }
 
   public boolean producesJar() {
@@ -272,7 +273,7 @@ public class JarBuildStepsFactory
         .setShouldTrackClassUsage(trackClassUsage)
         .setAbiGenerationMode(abiGenerationMode)
         .setAbiCompatibilityMode(abiCompatibilityMode)
-        .setSourceOnlyAbiRuleInfo(ruleInfo)
+        .setSourceOnlyAbiRuleInfo(ruleInfoSupplier != null ? ruleInfoSupplier.get() : null)
         .build();
   }
 

@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -375,13 +376,14 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  SourceOnlyAbiRuleInfo getSourceOnlyAbiRuleInfo() {
-    return new DefaultSourceOnlyAbiRuleInfo(
-        getSourcePathRuleFinder(),
-        getLibraryTarget(),
-        getRequiredForSourceOnlyAbi(),
-        getClasspaths(),
-        getClasspathsForSourceOnlyAbi());
+  Supplier<SourceOnlyAbiRuleInfo> getSourceOnlyAbiRuleInfoSupplier() {
+    return () ->
+        new DefaultSourceOnlyAbiRuleInfo(
+            getSourcePathRuleFinder(),
+            getLibraryTarget(),
+            getRequiredForSourceOnlyAbi(),
+            getClasspaths(),
+            getClasspathsForSourceOnlyAbi());
   }
 
   @Nullable
@@ -552,7 +554,7 @@ public abstract class DefaultJavaLibraryRules {
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
-        getSourceOnlyAbiRuleInfo());
+        getSourceOnlyAbiRuleInfoSupplier());
   }
 
   @Value.Lazy
@@ -574,7 +576,7 @@ public abstract class DefaultJavaLibraryRules {
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
-        getSourceOnlyAbiRuleInfo());
+        getSourceOnlyAbiRuleInfoSupplier());
   }
 
   @org.immutables.builder.Builder.AccessibleFields
