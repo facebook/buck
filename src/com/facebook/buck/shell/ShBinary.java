@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -39,12 +40,15 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -55,15 +59,18 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
           System.getProperty(
               "buck.path_to_sh_binary_template", "src/com/facebook/buck/shell/sh_binary_template"));
 
+  private static final String ROOT_CELL_LINK_NAME = "__default__";
+
   @AddToRuleKey private final SourcePath main;
   @AddToRuleKey private final ImmutableSet<SourcePath> resources;
-  private ProjectFilesystem projectFilesystem;
+  private CellPathResolver cellRoots;
 
   /** The path where the output will be written. */
   private final Path output;
 
   protected ShBinary(
       BuildTarget buildTarget,
+      CellPathResolver cellRoots,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePath main,
@@ -71,7 +78,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, params);
     this.main = main;
     this.resources = resources;
-    this.projectFilesystem = projectFilesystem;
+    this.cellRoots = cellRoots;
 
     this.output =
         BuildTargets.getGenPath(
@@ -85,24 +92,59 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
+    ImmutableList.Builder<String> cellsPathsStringsBuilder = new ImmutableList.Builder<String>();
+    ImmutableList.Builder<String> cellsNamesBuilder = new ImmutableList.Builder<String>();
+
+    // Create symlink to the root cell.
+    Optional<Path> rootPath = cellRoots.getCellPath(Optional.empty());
+    Preconditions.checkState(rootPath.isPresent(), "The root cell should have a path");
+    Path relativePath =
+        getProjectFilesystem().resolve(output.getParent()).relativize(rootPath.get());
+    cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
+    cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
+
+    // Create symlink to the cells.
+    for (ImmutableMap.Entry<String, Path> ent : cellRoots.getCellPaths().entrySet()) {
+      relativePath = getProjectFilesystem().resolve(output.getParent()).relativize(ent.getValue());
+      cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
+      cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ent.getKey()));
+    }
+    ImmutableList<String> cellsNames = cellsNamesBuilder.build();
+    ImmutableList<String> cellsPathsStrings = cellsPathsStringsBuilder.build();
+
     // Generate an .sh file that builds up an environment and invokes the user's script.
     // This generated .sh file will be returned by getExecutableCommand().
     // This script can be cached and used on machines other than the one where it was
-    // created. That means it can't contain any absolute filepaths. Expose the absolute
-    // filepath of the root of the project as $BUCK_REAL_ROOT, determined at runtime.
-    String pathBackToRoot =
-        projectFilesystem
-            .resolve(output.getParent())
-            .relativize(projectFilesystem.getRootPath())
-            .toString();
+    // created. That means it can't contain any absolute filepaths.
 
-    ImmutableList<String> resourceStrings =
-        resources
-            .stream()
-            .map(context.getSourcePathResolver()::getRelativePath)
-            .map(Object::toString)
-            .map(Escaper.BASH_ESCAPER)
-            .collect(MoreCollectors.toImmutableList());
+    ImmutableList.Builder<String> resourceStringsBuilder = new ImmutableList.Builder<String>();
+    ImmutableSortedSet<Path> resourcesPaths =
+        context.getSourcePathResolver().getAllAbsolutePaths(resources);
+    for (Path resourcePath : resourcesPaths) {
+      // Get the name of the cell containing the resource.
+      Optional<String> resourceCellName = getCellNameForPath(resourcePath);
+      // If resourceCellName is Optional.empty(), the call below will
+      // return the path of the root cell.
+      Optional<Path> resourceCellPath = cellRoots.getCellPath(resourceCellName);
+      Preconditions.checkState(
+          resourceCellPath.isPresent(), "cell %s doesn't have a path", resourceCellName);
+      // Get the path relative to its cell.
+      Path relativeResourcePath = resourceCellPath.get().relativize(resourcePath);
+      // Get the path when referenced in the symlink created for the cell in the output folder.
+      Path linkedResourcePath =
+          Paths.get(resourceCellName.orElse(ROOT_CELL_LINK_NAME)).resolve(relativeResourcePath);
+      resourceStringsBuilder.add(Escaper.BASH_ESCAPER.apply(linkedResourcePath.toString()));
+    }
+    ImmutableList<String> resourceStrings = resourceStringsBuilder.build();
+
+    // Configure the template output.
+    ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
+    valuesBuilder.put(
+        "script_to_run",
+        Escaper.escapeAsBashString(context.getSourcePathResolver().getRelativePath(main)));
+    valuesBuilder.put("resources", resourceStrings);
+    valuesBuilder.put("cell_names", cellsNames);
+    valuesBuilder.put("cell_paths", cellsPathsStrings);
 
     return new ImmutableList.Builder<Step>()
         .addAll(
@@ -110,20 +152,44 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .add(
-            new StringTemplateStep(
-                TEMPLATE,
-                getProjectFilesystem(),
-                output,
-                ImmutableMap.of(
-                    "path_back_to_root",
-                    pathBackToRoot,
-                    "script_to_run",
-                    Escaper.escapeAsBashString(
-                        context.getSourcePathResolver().getRelativePath(main)),
-                    "resources",
-                    resourceStrings)))
+            new StringTemplateStep(TEMPLATE, getProjectFilesystem(), output, valuesBuilder.build()))
         .add(new MakeExecutableStep(getProjectFilesystem(), output))
         .build();
+  }
+
+  private Optional<String> getCellNameForPath(Path path) {
+    Optional<Optional<String>> result = Optional.empty();
+    Path matchedPath = null;
+
+    // Match root path.
+    Optional<Optional<String>> rootCellName = Optional.of(Optional.empty());
+    Optional<Path> rootPath = cellRoots.getCellPath(Optional.empty());
+    Preconditions.checkState(rootPath.isPresent(), "The root cell should have a path");
+    if (path.startsWith(rootPath.get())) {
+      result = rootCellName;
+      matchedPath = rootPath.get();
+    }
+
+    // Match other cells.
+    for (Map.Entry<String, Path> cellEntry : cellRoots.getCellPaths().entrySet()) {
+      // Get the longest match.
+      if (path.startsWith(cellEntry.getValue())
+          && (matchedPath == null
+              // Get the longest match.
+              || cellEntry.getValue().toString().length() > matchedPath.toString().length())) {
+        result = Optional.of(Optional.of(cellEntry.getKey()));
+        matchedPath = cellEntry.getValue();
+      }
+    }
+
+    // result can end up in three possible states:
+    // - Optional.empty(): no cell has been matched.
+    // - Optional.of(Optional.empty()): the root cell has been matched and there's no corresponding
+    //        concrete cell.
+    // - other values: an other cell has been matched.
+    Preconditions.checkState(result.isPresent(), "path %s is not included in any cell", path);
+
+    return result.get();
   }
 
   @Override
