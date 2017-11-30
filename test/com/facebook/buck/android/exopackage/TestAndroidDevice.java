@@ -233,6 +233,11 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
+  public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
+    // noop
+  }
+
+  @Override
   public String getSerialNumber() {
     return serial;
   }

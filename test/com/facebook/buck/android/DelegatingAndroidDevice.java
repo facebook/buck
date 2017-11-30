@@ -100,6 +100,11 @@ public class DelegatingAndroidDevice implements AndroidDevice {
   }
 
   @Override
+  public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
+    delegate.sendBroadcast(action, stringExtras);
+  }
+
+  @Override
   public String getSerialNumber() {
     return delegate.getSerialNumber();
   }
