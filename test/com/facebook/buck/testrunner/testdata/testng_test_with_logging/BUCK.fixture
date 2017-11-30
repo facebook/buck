@@ -1,0 +1,12 @@
+java_test(
+    name = "testng-logging",
+    test_type = "testng",
+    srcs = [
+        "TestNGLoggingTest.java",
+    ],
+    deps = [
+      "buck//third-party/java/hamcrest:hamcrest",
+      "buck//third-party/java/testng:testng",
+    ],
+)
+
