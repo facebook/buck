@@ -171,6 +171,7 @@ public class CleanCommandTest extends EasyMockSupport {
         new DefaultProjectFilesystemFactory(),
         TestRuleKeyConfigurationFactory.create(),
         processExecutor,
-        new ExecutableFinder());
+        new ExecutableFinder(),
+        pluginManager);
   }
 }

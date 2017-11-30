@@ -13,9 +13,9 @@ java_library(
         "//src/com/facebook/buck/file/downloader/impl:impl",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/lua:lua",
         "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//src/com/facebook/buck/swift/toolchain/impl:impl",
         "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/pf4j:pf4j",
     ],
 )

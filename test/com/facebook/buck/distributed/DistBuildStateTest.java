@@ -108,11 +108,12 @@ public class DistBuildStateTest {
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ProcessExecutor processExecutor;
   private ExecutableFinder executableFinder;
+  private PluginManager pluginManager;
 
   private void setUp() {
     processExecutor = new DefaultProcessExecutor(new TestConsole());
     executableFinder = new ExecutableFinder();
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    pluginManager = BuckPluginManagerFactory.createPluginManager();
 
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
@@ -158,6 +159,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            pluginManager,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
@@ -225,6 +227,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            pluginManager,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
 
@@ -286,6 +289,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            pluginManager,
             new DefaultProjectFilesystemFactory());
 
     ProjectFilesystem reconstructedCellFilesystem =
@@ -375,6 +379,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            pluginManager,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));

@@ -53,6 +53,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import org.immutables.value.Value;
+import org.pf4j.PluginManager;
 
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
@@ -146,6 +147,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract ExecutableFinder getExecutableFinder();
+
+  @Value.Parameter
+  public abstract PluginManager getPluginManager();
 
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.

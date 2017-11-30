@@ -39,8 +39,6 @@ import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.lua.LuaPlatformsProvider;
-import com.facebook.buck.lua.LuaPlatformsProviderFactory;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactory;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
@@ -50,6 +48,7 @@ import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainDescriptor;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainSupplier;
 import com.facebook.buck.toolchain.ToolchainWithCapability;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -63,6 +62,8 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
+import org.pf4j.PluginManager;
 
 public class DefaultToolchainProvider extends BaseToolchainProvider {
 
@@ -107,15 +108,12 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
           ToolchainDescriptor.of(
               Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class),
           ToolchainDescriptor.of(
-              LuaPlatformsProvider.DEFAULT_NAME,
-              LuaPlatformsProvider.class,
-              LuaPlatformsProviderFactory.class),
-          ToolchainDescriptor.of(
               PythonPlatformsProvider.DEFAULT_NAME,
               PythonPlatformsProvider.class,
               PythonPlatformsProviderFactory.class));
 
   private final ToolchainCreationContext toolchainCreationContext;
+  private final ImmutableList<ToolchainDescriptor<?>> toolchainDescriptors;
   private final ImmutableMap<String, Class<? extends ToolchainFactory<?>>> toolchainFactories;
 
   private final LoadingCache<String, Optional<? extends Toolchain>> toolchains =
@@ -133,6 +131,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               });
 
   public DefaultToolchainProvider(
+      PluginManager pluginManager,
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
       ProjectFilesystem projectFilesystem,
@@ -142,13 +141,32 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
         ToolchainCreationContext.of(
             environment, buckConfig, projectFilesystem, processExecutor, executableFinder);
 
+    toolchainDescriptors = loadToolchainDescriptors(pluginManager);
+
     ImmutableMap.Builder<String, Class<? extends ToolchainFactory<?>>> toolchainFactoriesBuilder =
         ImmutableMap.builder();
-    for (ToolchainDescriptor<?> toolchainDescriptor : DEFAULT_TOOLCHAIN_DESCRIPTORS) {
+    for (ToolchainDescriptor<?> toolchainDescriptor : toolchainDescriptors) {
       toolchainFactoriesBuilder.put(
           toolchainDescriptor.getName(), toolchainDescriptor.getToolchainFactoryClass());
     }
     toolchainFactories = toolchainFactoriesBuilder.build();
+  }
+
+  private ImmutableList<ToolchainDescriptor<?>> loadToolchainDescriptors(
+      PluginManager pluginManager) {
+    ImmutableList.Builder<ToolchainDescriptor<?>> toolchainDescriptorBuilder =
+        ImmutableList.builder();
+    toolchainDescriptorBuilder.addAll(DEFAULT_TOOLCHAIN_DESCRIPTORS);
+    loadToolchainDescriptorsFromPlugins(pluginManager).forEach(toolchainDescriptorBuilder::add);
+    return toolchainDescriptorBuilder.build();
+  }
+
+  private Stream<ToolchainDescriptor<?>> loadToolchainDescriptorsFromPlugins(
+      PluginManager pluginManager) {
+    return pluginManager
+        .getExtensions(ToolchainSupplier.class)
+        .stream()
+        .flatMap(supplier -> supplier.getToolchainDescriptor().stream());
   }
 
   @Override
@@ -171,7 +189,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
       Class<T> capability) {
     ImmutableList.Builder<String> toolchainsWithCapabilities = ImmutableList.builder();
 
-    for (ToolchainDescriptor<?> toolchainDescriptor : DEFAULT_TOOLCHAIN_DESCRIPTORS) {
+    for (ToolchainDescriptor<?> toolchainDescriptor : toolchainDescriptors) {
       if (capability.isAssignableFrom(toolchainDescriptor.getToolchainClass())) {
         toolchainsWithCapabilities.add(toolchainDescriptor.getName());
       }

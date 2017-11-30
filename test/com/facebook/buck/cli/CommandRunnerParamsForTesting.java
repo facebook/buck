@@ -136,7 +136,8 @@ public class CommandRunnerParamsForTesting {
         new DefaultProjectFilesystemFactory(),
         TestRuleKeyConfigurationFactory.create(),
         processExecutor,
-        new ExecutableFinder());
+        new ExecutableFinder(),
+        BuckPluginManagerFactory.createPluginManager());
   }
 
   public static Builder builder() {

@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
+import org.pf4j.PluginManager;
 
 public final class CellProvider {
   private final LoadingCache<Path, Cell> cells;
@@ -91,5 +92,7 @@ public final class CellProvider {
     ProcessExecutor getProcessExecutor();
 
     ExecutableFinder getExecutableFinder();
+
+    PluginManager getPluginManager();
   }
 }

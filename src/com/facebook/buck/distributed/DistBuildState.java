@@ -51,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import org.pf4j.PluginManager;
 
 /** Saves and restores the state of a build to/from a thrift data structure. */
 public class DistBuildState {
@@ -103,6 +104,7 @@ public class DistBuildState {
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
+      PluginManager pluginManager,
       ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
@@ -143,7 +145,8 @@ public class DistBuildState {
               cellName,
               environment,
               processExecutor,
-              executableFinder));
+              executableFinder,
+              pluginManager));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 

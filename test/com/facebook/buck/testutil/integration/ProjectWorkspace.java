@@ -43,6 +43,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.CellProviderFactory;
@@ -773,6 +774,7 @@ public class ProjectWorkspace {
             WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
+            BuckPluginManagerFactory.createPluginManager(),
             env,
             processExecutor,
             new ExecutableFinder(),

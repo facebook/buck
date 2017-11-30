@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.pf4j.PluginManager;
 
 public class CellProviderFactory {
 
@@ -47,6 +48,7 @@ public class CellProviderFactory {
       Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
+      PluginManager pluginManager,
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
@@ -139,7 +141,12 @@ public class CellProviderFactory {
 
                 ToolchainProvider toolchainProvider =
                     new DefaultToolchainProvider(
-                        environment, buckConfig, cellFilesystem, processExecutor, executableFinder);
+                        pluginManager,
+                        environment,
+                        buckConfig,
+                        cellFilesystem,
+                        processExecutor,
+                        executableFinder);
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
@@ -162,7 +169,12 @@ public class CellProviderFactory {
               "Root cell should be nameless");
           ToolchainProvider toolchainProvider =
               new DefaultToolchainProvider(
-                  environment, rootConfig, rootFilesystem, processExecutor, executableFinder);
+                  pluginManager,
+                  environment,
+                  rootConfig,
+                  rootFilesystem,
+                  processExecutor,
+                  executableFinder);
           return Cell.of(
               getKnownRoots(rootCellCellPathResolver),
               Optional.empty(),
@@ -186,6 +198,7 @@ public class CellProviderFactory {
 
                   ToolchainProvider toolchainProvider =
                       new DefaultToolchainProvider(
+                          cellParam.getPluginManager(),
                           cellParam.getEnvironment(),
                           cellParam.getConfig(),
                           cellParam.getFilesystem(),

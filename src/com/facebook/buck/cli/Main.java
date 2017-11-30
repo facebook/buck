@@ -679,6 +679,7 @@ public final class Main {
                   watchman,
                   buckConfig,
                   command.getConfigOverrides(),
+                  pluginManager,
                   clientEnvironment,
                   processExecutor,
                   executableFinder,
@@ -1065,7 +1066,8 @@ public final class Main {
                       projectFilesystemFactory,
                       ruleKeyConfiguration,
                       processExecutor,
-                      executableFinder));
+                      executableFinder,
+                      pluginManager));
         } catch (InterruptedException | ClosedByInterruptException e) {
           buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
           throw e;
