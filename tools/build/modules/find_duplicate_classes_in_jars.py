@@ -179,7 +179,7 @@ def reverse_dict(dict_to_reverse):
     result = {}
     for k in dict_to_reverse.keys():
         for v in dict_to_reverse[k]:
-            result.setdefault(v, []).append(v)
+            result.setdefault(v, []).append(k)
     return result
 
 
