@@ -16,6 +16,9 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -33,10 +36,10 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,9 +55,14 @@ public class GoLibraryDescription
         MetadataProvidingDescription<GoLibraryDescriptionArg> {
 
   private final GoBuckConfig goBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
+  private final ToolchainProvider toolchainProvider;
 
-  public GoLibraryDescription(GoBuckConfig goBuckConfig) {
+  public GoLibraryDescription(
+      GoBuckConfig goBuckConfig, CxxBuckConfig cxxBuckConfig, ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -124,7 +132,10 @@ public class GoLibraryDescription
           projectFilesystem,
           params,
           resolver,
+          cellRoots,
           goBuckConfig,
+          cxxBuckConfig,
+          getCxxPlatform(),
           args.getPackageName()
               .map(Paths::get)
               .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
@@ -132,18 +143,29 @@ public class GoLibraryDescription
           args.getCompilerFlags(),
           args.getAssemblerFlags(),
           platform.get(),
-          FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(BuildRule::getBuildTarget)
-              .append(args.getExportedDeps()));
+          new ImmutableList.Builder<BuildTarget>()
+              .addAll(
+                  params.getDeclaredDeps().get().stream().map(BuildRule::getBuildTarget).iterator())
+              .addAll(args.getExportedDeps())
+              .build(),
+          args.getCgoSrcs(),
+          args.getCgoHeaders(),
+          args.getCgoDeps());
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
+  private CxxPlatform getCxxPlatform() {
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasCgo {
     ImmutableList<String> getCompilerFlags();
 
     ImmutableList<String> getAssemblerFlags();

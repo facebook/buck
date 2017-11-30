@@ -1,0 +1,14 @@
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    cgo_deps = [":lib"],
+    cgo_headers = ["lib.h"],
+    cgo_srcs = ["cgosrc.go"],
+    deps = [],
+)
+
+cxx_library(
+    name = "lib",
+    srcs = ["lib.c"],
+    headers = ["lib.h"],
+)

@@ -17,10 +17,8 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -56,10 +54,7 @@ public class GoBuckConfig {
   private Supplier<GoPlatformFlavorDomain> platformFlavorDomain;
   private Supplier<GoPlatform> defaultPlatform;
 
-  public GoBuckConfig(
-      final BuckConfig delegate,
-      final ProcessExecutor processExecutor,
-      final FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public GoBuckConfig(final BuckConfig delegate, final ProcessExecutor processExecutor) {
     this.delegate = delegate;
 
     goRootSupplier =
@@ -80,8 +75,7 @@ public class GoBuckConfig {
         MoreSuppliers.memoize(
             () -> {
               // TODO(mikekap): Allow adding goos/goarch values from config.
-              return new GoPlatformFlavorDomain(
-                  delegate.getPlatform(), delegate.getArchitecture(), cxxPlatforms);
+              return new GoPlatformFlavorDomain();
             });
 
     defaultPlatform =
@@ -126,6 +120,10 @@ public class GoBuckConfig {
 
   Tool getAssembler() {
     return getGoTool("assembler", "asm", "asm_flags");
+  }
+
+  Tool getCGo() {
+    return getGoTool("cgo", "cgo", "");
   }
 
   Tool getPacker() {

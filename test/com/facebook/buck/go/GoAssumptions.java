@@ -19,13 +19,11 @@ package com.facebook.buck.go;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 
 abstract class GoAssumptions {
@@ -44,8 +42,7 @@ abstract class GoAssumptions {
         fs.mkdirs(fs.getPath(goRoot));
         baseConfig.setFilesystem(fs);
       }
-      new GoBuckConfig(baseConfig.build(), executor, FlavorDomain.from("Cxx", ImmutableSet.of()))
-          .getCompiler();
+      new GoBuckConfig(baseConfig.build(), executor).getCompiler();
     } catch (HumanReadableException e) {
       exception = e;
     }

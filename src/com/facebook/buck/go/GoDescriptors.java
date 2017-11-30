@@ -16,6 +16,9 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
@@ -29,6 +32,7 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -36,6 +40,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -95,13 +100,19 @@ abstract class GoDescriptors {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       GoBuckConfig goBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
       Path packageName,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
       List<String> assemblerFlags,
       GoPlatform platform,
-      Iterable<BuildTarget> deps) {
+      Iterable<BuildTarget> deps,
+      ImmutableSet<SourcePath> cgoSrcs,
+      ImmutableSet<SourcePath> cgoHeaders,
+      ImmutableSortedSet<BuildTarget> cgoDeps) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -113,11 +124,33 @@ abstract class GoDescriptors {
     for (GoLinkable linkable : linkables) {
       linkableDepsBuilder.addAll(linkable.getDeps(ruleFinder));
     }
-    ImmutableList<BuildRule> linkableDeps = linkableDepsBuilder.build();
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
     SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, pathResolver, linkables);
     resolver.addToIndex(symlinkTree);
+
+    Optional<CGoCompileRules> cgoCompile = Optional.empty();
+    if (!cgoSrcs.isEmpty()) {
+      cgoCompile =
+          Optional.of(
+              CGoCompileRules.create(
+                  buildTarget.withAppendedFlavors(InternalFlavor.of("cgo"), platform.getFlavor()),
+                  projectFilesystem,
+                  resolver,
+                  pathResolver,
+                  cellRoots,
+                  cxxBuckConfig,
+                  cxxPlatform,
+                  platform,
+                  cgoSrcs,
+                  cgoHeaders,
+                  cgoDeps,
+                  goBuckConfig.getCGo(),
+                  packageName));
+      linkableDepsBuilder.addAll(cgoCompile.get().getDeps());
+    } else if (!cgoDeps.isEmpty()) {
+      throw new HumanReadableException("Cgo dependencies can only be used along Cgo extension");
+    }
 
     LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
 
@@ -125,15 +158,17 @@ abstract class GoDescriptors {
         buildTarget,
         projectFilesystem,
         params
-            .copyAppendingExtraDeps(linkableDeps)
+            .copyAppendingExtraDeps(linkableDepsBuilder.build())
             .copyAppendingExtraDeps(ImmutableList.of(symlinkTree)),
         symlinkTree,
         packageName,
         getPackageImportMap(
             goBuckConfig.getVendorPaths(),
             buildTarget.getBasePath(),
-            FluentIterable.from(linkables)
-                .transformAndConcat(input -> input.getGoLinkInput().keySet())),
+            linkables
+                .stream()
+                .flatMap(input -> input.getGoLinkInput().keySet().stream())
+                .collect(MoreCollectors.toImmutableList())),
         ImmutableSet.copyOf(srcs),
         ImmutableList.copyOf(compilerFlags),
         goBuckConfig.getCompiler(),
@@ -141,7 +176,8 @@ abstract class GoDescriptors {
         goBuckConfig.getAssemblerIncludeDirs(),
         goBuckConfig.getAssembler(),
         goBuckConfig.getPacker(),
-        platform);
+        platform,
+        cgoCompile);
   }
 
   @VisibleForTesting
@@ -176,12 +212,18 @@ abstract class GoDescriptors {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
       GoBuckConfig goBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
-      GoPlatform platform) {
+      GoPlatform platform,
+      ImmutableSet<SourcePath> cgoSrcs,
+      ImmutableSet<SourcePath> cgoHeaders,
+      ImmutableSortedSet<BuildTarget> cgoDeps) {
     BuildTarget libraryTarget =
         buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
     GoCompile library =
@@ -190,14 +232,24 @@ abstract class GoDescriptors {
             projectFilesystem,
             params,
             resolver,
+            cellRoots,
             goBuckConfig,
+            cxxBuckConfig,
+            cxxPlatform,
             Paths.get("main"),
             srcs,
             compilerFlags,
             assemblerFlags,
             platform,
-            FluentIterable.from(params.getDeclaredDeps().get())
-                .transform(BuildRule::getBuildTarget));
+            params
+                .getDeclaredDeps()
+                .get()
+                .stream()
+                .map(BuildRule::getBuildTarget)
+                .collect(MoreCollectors.toImmutableList()),
+            cgoSrcs,
+            cgoHeaders,
+            cgoDeps);
     resolver.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -212,13 +264,18 @@ abstract class GoDescriptors {
                 buildTarget,
                 resolver,
                 platform,
-                FluentIterable.from(params.getDeclaredDeps().get())
-                    .transform(BuildRule::getBuildTarget),
+                params
+                    .getDeclaredDeps()
+                    .get()
+                    .stream()
+                    .map(BuildRule::getBuildTarget)
+                    .collect(MoreCollectors.toImmutableList()),
                 /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 
     LOG.verbose("Symlink tree for linking of %s: %s", buildTarget, symlinkTree);
 
+    Optional<Linker> cxxLinker = Optional.of(cxxPlatform.getLd().resolve(resolver));
     return new GoBinary(
         buildTarget,
         projectFilesystem,
@@ -230,7 +287,7 @@ abstract class GoDescriptors {
                     .add(library)
                     .build())
             .withoutExtraDeps(),
-        platform.getCxxPlatform().map(input -> input.getLd().resolve(resolver)),
+        cxxLinker,
         symlinkTree,
         library,
         goBuckConfig.getLinker(),
@@ -240,10 +297,16 @@ abstract class GoDescriptors {
 
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
       BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams sourceParams,
-      BuildRuleResolver resolver) {
+      BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
+      ImmutableSet<SourcePath> cgoSrcs,
+      ImmutableSet<SourcePath> cgoHeaders,
+      ImmutableSortedSet<BuildTarget> cgoDeps) {
 
     Optional<Tool> configTool = goBuckConfig.getGoTestMainGenerator(resolver);
     if (configTool.isPresent()) {
@@ -277,12 +340,18 @@ abstract class GoDescriptors {
                       .withoutDeclaredDeps()
                       .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   resolver,
+                  cellRoots,
                   goBuckConfig,
+                  cxxBuckConfig,
+                  cxxPlatform,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),
-                  goBuckConfig.getDefaultPlatform());
+                  goBuckConfig.getDefaultPlatform(),
+                  cgoSrcs,
+                  cgoHeaders,
+                  cgoDeps);
             });
 
     return ((BinaryBuildRule) generator).getExecutableCommand();

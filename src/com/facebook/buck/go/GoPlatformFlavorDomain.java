@@ -16,11 +16,8 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -73,30 +70,17 @@ public class GoPlatformFlavorDomain {
           .put("sparc64", Architecture.UNKNOWN)
           .build();
 
-  private final Platform currentPlatform;
-  private final Architecture currentArchitecture;
-  private FlavorDomain<CxxPlatform> cxxPlatforms;
   private ImmutableMap<String, Platform> goOsValues;
   private ImmutableMap<String, Architecture> goArchValues;
 
   public GoPlatformFlavorDomain(
-      final Platform currentPlatform,
-      final Architecture currentArchitecture,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      Map<String, Platform> additionalOsValues,
-      Map<String, Architecture> additionalArchValues) {
-    this.currentPlatform = currentPlatform;
-    this.currentArchitecture = currentArchitecture;
-    this.cxxPlatforms = cxxPlatforms;
+      Map<String, Platform> additionalOsValues, Map<String, Architecture> additionalArchValues) {
     this.goOsValues = MoreMaps.merge(GOOS_TO_PLATFORM_LIST, additionalOsValues);
     this.goArchValues = MoreMaps.merge(GOARCH_TO_ARCH_LIST, additionalArchValues);
   }
 
-  public GoPlatformFlavorDomain(
-      Platform currentPlatform,
-      Architecture currentArchitecture,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this(currentPlatform, currentArchitecture, cxxPlatforms, ImmutableMap.of(), ImmutableMap.of());
+  public GoPlatformFlavorDomain() {
+    this(ImmutableMap.of(), ImmutableMap.of());
   }
 
   public Optional<GoPlatform> getValue(Flavor flavor) {
@@ -109,11 +93,7 @@ public class GoPlatformFlavorDomain {
     Architecture arch = goArchValues.get(components[1]);
     if (os != null && arch != null) {
       return Optional.of(
-          GoPlatform.builder()
-              .setGoOs(components[0])
-              .setGoArch(components[1])
-              .setCxxPlatform(getCxxPlatform(os, arch))
-              .build());
+          GoPlatform.builder().setGoOs(components[0]).setGoArch(components[1]).build());
     }
     return Optional.empty();
   }
@@ -157,20 +137,6 @@ public class GoPlatformFlavorDomain {
         GoPlatform.builder()
             .setGoOs(osValue.get().getKey())
             .setGoArch(archValue.get().getKey())
-            .setCxxPlatform(getCxxPlatform(platform, architecture))
             .build());
-  }
-
-  // TODO(mikekap): Move this somewhere closer to CxxPlatforms.
-  private Optional<CxxPlatform> getCxxPlatform(Platform platform, Architecture arch) {
-    if (platform == Platform.UNKNOWN || arch == Architecture.UNKNOWN) {
-      return Optional.empty();
-    }
-
-    if (platform == currentPlatform && arch == currentArchitecture) {
-      return cxxPlatforms.getValue(ImmutableSet.of(DefaultCxxPlatforms.FLAVOR));
-    }
-
-    return Optional.empty();
   }
 }

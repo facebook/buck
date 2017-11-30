@@ -216,7 +216,7 @@ abstract class AbstractKnownBuildRuleTypes {
     // Get the default target platform from config.
     CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
 
-    GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor, cxxPlatforms);
+    GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor);
 
     HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
 
@@ -424,9 +424,11 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
     builder.addDescriptions(new GenAidlDescription(toolchainProvider));
-    builder.addDescriptions(new GoBinaryDescription(goBuckConfig));
-    builder.addDescriptions(new GoLibraryDescription(goBuckConfig));
-    builder.addDescriptions(new GoTestDescription(goBuckConfig));
+    builder.addDescriptions(
+        new GoBinaryDescription(goBuckConfig, cxxBuckConfig, toolchainProvider));
+    builder.addDescriptions(
+        new GoLibraryDescription(goBuckConfig, cxxBuckConfig, toolchainProvider));
+    builder.addDescriptions(new GoTestDescription(goBuckConfig, cxxBuckConfig, toolchainProvider));
     builder.addDescriptions(new GraphqlLibraryDescription());
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.addDescriptions(
