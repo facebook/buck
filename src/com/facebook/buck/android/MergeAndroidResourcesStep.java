@@ -246,15 +246,17 @@ public class MergeAndroidResourcesStep implements Step {
 
       ImmutableSet.Builder<String> requiredPackages = ImmutableSet.<String>builder();
 
-      // Create a temporary list to avoid concurrent modification problems.
+      // Create a temporary list as the multimap 
+      // will be concurrently modified below.
       ArrayList<Entry<String, RDotTxtEntry>> entries =
           new ArrayList<>(rDotJavaPackageToResources.entries());
 
       if (skipPrebuiltRDotJava) {
-        // If skip_prebuilt_r_dot_java is true remove all packages except union package
         Preconditions.checkArgument(
             unionPackage.isPresent(),
             "union_package should be specified if skip_prebuilt_r_dot_java is set");
+
+        // If skip_prebuilt_r_dot_java is true remove all packages except union package
         rDotJavaPackageToResources = TreeMultimap.create();
 
       } else {
@@ -267,7 +269,6 @@ public class MergeAndroidResourcesStep implements Step {
         String unionPackageName = unionPackage.get();
         requiredPackages.add(unionPackageName);
 
-        // Create a temporary list to avoid concurrent modification problems.
         for (Map.Entry<String, RDotTxtEntry> entry : entries) {
           if (!rDotJavaPackageToResources.containsEntry(unionPackageName, entry.getValue())) {
             rDotJavaPackageToResources.put(unionPackageName, entry.getValue());

@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -92,6 +93,12 @@ public class AndroidLibraryDescription
     if (buildTarget.getFlavors().contains(JavaLibrary.SRC_JAR)) {
       return new JavaSourceJar(
           buildTarget, projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
+    }
+
+    if (args.isSkipPrebuiltRDotJava()) {
+      Preconditions.checkArgument(
+          args.getResourceUnionPackage().isPresent(),
+          "union_package should be specified if skip_prebuilt_r_dot_java is set");
     }
 
     boolean hasDummyRDotJavaFlavor = buildTarget.getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
