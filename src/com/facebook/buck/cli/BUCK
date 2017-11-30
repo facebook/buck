@@ -250,7 +250,6 @@ java_binary(
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
-        "//src/com/facebook/buck/lua:lua",
         "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/model:build_id",

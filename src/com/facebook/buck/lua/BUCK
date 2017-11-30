@@ -1,17 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "lua",
     srcs = glob(["*.java"]),
-    resources = [
-        "native-starter.cpp.in",
-        "starter.lua.in",
-    ],
-    tests = [
-        "//test/com/facebook/buck/lua:lua",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
@@ -48,4 +40,12 @@ java_library_with_plugins(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
     ],
+    resources = [
+        "native-starter.cpp.in",
+        "starter.lua.in",
+    ],
+    tests = [
+        "//test/com/facebook/buck/lua:lua",
+    ],
+    visibility = ["PUBLIC"],
 )
