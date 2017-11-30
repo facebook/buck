@@ -63,9 +63,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import javax.annotation.concurrent.ThreadSafe;
 
-@ThreadSafe
 public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   ImmutableList<ToolchainDescriptor<?>> DEFAULT_TOOLCHAIN_DESCRIPTORS =
