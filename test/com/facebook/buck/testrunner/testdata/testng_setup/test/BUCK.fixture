@@ -3,6 +3,7 @@ java_test(
   test_type = 'testng',
   srcs = glob(['*.java']),
   deps = [
-    '//lib:testng',
+    'buck//third-party/java/hamcrest:hamcrest',
+    'buck//third-party/java/testng:testng',
   ],
 )

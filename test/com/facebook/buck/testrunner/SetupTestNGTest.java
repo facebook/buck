@@ -42,7 +42,7 @@ public final class SetupTestNGTest {
   @Before
   public void setupWorkspace() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_testng_setup", temporaryFolder);
+        this, "testng_setup", temporaryFolder, true);
     workspace.setUp();
   }
 
