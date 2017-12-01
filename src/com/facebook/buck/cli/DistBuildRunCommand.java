@@ -169,8 +169,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
         try (CommandThreadManager pool =
             new CommandThreadManager(getClass().getName(), concurrencyLimit)) {
-          DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
-
           // Note that we cannot use the same pool of build threads for file materialization
           // because usually all build threads are waiting for files to be materialized, and
           // there is no thread left for the FileContentsProvider(s) to use.
@@ -196,7 +194,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   stampedeId,
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
-                  distBuildConfig,
                   timeStatsTracker,
                   getBuildRuleFinishedPublisher(),
                   getUnexpectedSlaveCacheMissTracker());

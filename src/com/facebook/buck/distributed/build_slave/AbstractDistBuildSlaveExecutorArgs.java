@@ -95,7 +95,9 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract DistBuildService getDistBuildService();
 
-  public abstract DistBuildConfig getDistBuildConfig();
+  public DistBuildConfig getDistBuildConfig() {
+    return new DistBuildConfig(getState().getRemoteRootCellConfig());
+  }
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 

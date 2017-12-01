@@ -109,7 +109,6 @@ public abstract class DistBuildFactory {
       Optional<StampedeId> stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
-      DistBuildConfig distBuildConfig,
       BuildSlaveTimingStatsTracker timingStatsTracker,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
       UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker) {
@@ -145,7 +144,6 @@ public abstract class DistBuildFactory {
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
                 .setDistBuildService(service)
-                .setDistBuildConfig(distBuildConfig)
                 .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
                 .setTimingStatsTracker(timingStatsTracker)
                 .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
