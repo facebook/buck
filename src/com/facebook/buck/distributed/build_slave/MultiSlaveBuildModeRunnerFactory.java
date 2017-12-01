@@ -106,7 +106,7 @@ public class MultiSlaveBuildModeRunnerFactory {
    * @return a new instance of the {@link MinionModeRunner}.
    */
   public static MinionModeRunner createMinion(
-      BuildExecutor localBuildExecutor,
+      ListenableFuture<BuildExecutor> localBuildExecutor,
       DistBuildService distBuildService,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
@@ -150,7 +150,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       StampedeId stampedeId,
       Optional<BuildId> clientBuildId,
       BuildSlaveRunId buildSlaveRunId,
-      BuildExecutor localBuildExecutor,
+      ListenableFuture<BuildExecutor> localBuildExecutor,
       Path logDirectoryPath,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
       UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {

@@ -69,7 +69,7 @@ public class MinionModeRunnerIntegrationTest {
         new MinionModeRunner(
             "localhost",
             OptionalInt.of(4242),
-            localBuilder,
+            Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl1"),
             MAX_PARALLEL_WORK_UNITS,
@@ -104,7 +104,7 @@ public class MinionModeRunnerIntegrationTest {
         new MinionModeRunner(
             "localhost",
             OptionalInt.of(4242),
-            localBuilder,
+            Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl2"),
             MAX_PARALLEL_WORK_UNITS,
@@ -242,7 +242,7 @@ public class MinionModeRunnerIntegrationTest {
           new MinionModeRunner(
               "localhost",
               OptionalInt.of(server.getPort()),
-              buildExecutor,
+              Futures.immediateFuture(buildExecutor),
               STAMPEDE_ID,
               new BuildSlaveRunId().setId("sl3"),
               MAX_PARALLEL_WORK_UNITS,

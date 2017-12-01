@@ -41,6 +41,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,7 +54,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   private final String coordinatorAddress;
   private volatile OptionalInt coordinatorPort;
-  private final BuildExecutor buildExecutor;
+  private final ListenableFuture<BuildExecutor> buildExecutorFuture;
   private final StampedeId stampedeId;
   private final BuildSlaveRunId buildSlaveRunId;
   private final long minionPollLoopIntervalMillis;
@@ -68,6 +69,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   // Aggregate exit code for the minion. Non-zero if any set of build targets failed.
   private AtomicInteger exitCode = new AtomicInteger(0);
+
+  @Nullable private volatile BuildExecutor buildExecutor = null;
 
   /** Callback when the build has completed. */
   public interface BuildCompletionChecker {
@@ -85,7 +88,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   public MinionModeRunner(
       String coordinatorAddress,
       OptionalInt coordinatorPort,
-      BuildExecutor buildExecutor,
+      ListenableFuture<BuildExecutor> buildExecutorFuture,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       int availableWorkUnitBuildCapacity,
@@ -95,7 +98,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
     this(
         coordinatorAddress,
         coordinatorPort,
-        buildExecutor,
+        buildExecutorFuture,
         stampedeId,
         buildSlaveRunId,
         availableWorkUnitBuildCapacity,
@@ -110,7 +113,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   public MinionModeRunner(
       String coordinatorAddress,
       OptionalInt coordinatorPort,
-      BuildExecutor buildExecutor,
+      ListenableFuture<BuildExecutor> buildExecutorFuture,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       int maxWorkUnitBuildCapacity,
@@ -119,7 +122,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
       UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
       ExecutorService buildExecutorService) {
     this.minionPollLoopIntervalMillis = minionPollLoopIntervalMillis;
-    this.buildExecutor = buildExecutor;
+    this.buildExecutorFuture = buildExecutorFuture;
     this.stampedeId = stampedeId;
     this.buildSlaveRunId = buildSlaveRunId;
     this.coordinatorAddress = coordinatorAddress;
@@ -139,13 +142,20 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   @Override
   public ListenableFuture<?> getAsyncPrepFuture() {
-    return Futures.immediateFuture(true);
+    return buildExecutorFuture;
   }
 
   @Override
   public int runAndReturnExitCode(HeartbeatService heartbeatService)
       throws IOException, InterruptedException {
     Preconditions.checkState(coordinatorPort.isPresent(), "Coordinator port has not been set.");
+    try {
+      buildExecutor = buildExecutorFuture.get();
+    } catch (ExecutionException e) {
+      String msg = String.format("Failed to get the BuildExecutor.");
+      LOG.error(e, msg);
+      throw new RuntimeException(msg, e);
+    }
 
     final String minionId = generateMinionId(buildSlaveRunId);
     try (ThriftCoordinatorClient client =
@@ -169,7 +179,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
     buildExecutorService.shutdown();
     buildExecutorService.awaitTermination(30, TimeUnit.MINUTES);
 
-    buildExecutor.shutdown();
+    Preconditions.checkNotNull(buildExecutor).shutdown();
 
     return exitCode.get();
   }
@@ -247,7 +257,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
     LOG.debug(String.format("Targets: [%s]", Joiner.on(", ").join(targetsToBuild)));
 
     // Start the build, and get futures representing the results.
-    List<BuildEngineResult> resultFutures = buildExecutor.initializeBuild(targetsToBuild);
+    List<BuildEngineResult> resultFutures =
+        Preconditions.checkNotNull(buildExecutor).initializeBuild(targetsToBuild);
 
     // Register handlers that will ensure we free up cores as soon as a work unit is complete,
     // and signal built targets as soon as they are uploaded to the cache.
@@ -257,7 +268,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
     // Wait for the targets to finish building and get the exit code.
     int lastExitCode =
-        buildExecutor.waitForBuildToFinish(targetsToBuild, resultFutures, Optional.empty());
+        Preconditions.checkNotNull(buildExecutor)
+            .waitForBuildToFinish(targetsToBuild, resultFutures, Optional.empty());
 
     LOG.info(String.format("Minion [%s] finished with exit code [%d].", minionId, lastExitCode));
 

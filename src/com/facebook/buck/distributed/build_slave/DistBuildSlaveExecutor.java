@@ -31,12 +31,12 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DistBuildSlaveExecutor {
@@ -96,7 +96,8 @@ public class DistBuildSlaveExecutor {
     BuildExecutorArgs builderArgs = args.createBuilderArgs();
     try (ExecutionContext executionContext =
         LocalBuildExecutor.createExecutionContext(builderArgs)) {
-      BuildExecutor localBuildExecutor = createBuilder(builderArgs, executionContext);
+      ListenableFuture<BuildExecutor> localBuildExecutor =
+          createBuilder(builderArgs, executionContext);
 
       switch (args.getDistBuildMode()) {
         case REMOTE_BUILD:
@@ -202,34 +203,26 @@ public class DistBuildSlaveExecutor {
     };
   }
 
-  private BuildExecutor createBuilder(
+  private ListenableFuture<BuildExecutor> createBuilder(
       BuildExecutorArgs builderArgs, ExecutionContext executionContext) {
-    Supplier<BuildExecutor> builderSupplier =
-        () -> {
-          DelegateAndGraphs delegateAndGraphs = null;
-          try {
-            delegateAndGraphs = initializer.getDelegateAndGraphs().get();
-          } catch (InterruptedException | ExecutionException e) {
-            String msg = String.format("Failed to get the DelegateAndGraphs.");
-            LOG.error(e, msg);
-            throw new RuntimeException(msg, e);
-          }
-          return new LocalBuildExecutor(
-              builderArgs,
-              executionContext,
-              delegateAndGraphs.getActionGraphAndResolver(),
-              delegateAndGraphs.getCachingBuildEngineDelegate(),
-              args.getExecutorService(),
-              KEEP_GOING,
-              true,
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              // Only the client side build needs to synchronize, not the slave.
-              // (as the co-ordinator synchronizes artifacts between slaves).
-              new NoOpRemoteBuildRuleCompletionWaiter());
-        };
-    return new LazyInitBuilder(builderSupplier);
+    return Futures.transform(
+        initializer.getDelegateAndGraphs(),
+        delegateAndGraphs ->
+            new LocalBuildExecutor(
+                builderArgs,
+                executionContext,
+                delegateAndGraphs.getActionGraphAndResolver(),
+                delegateAndGraphs.getCachingBuildEngineDelegate(),
+                args.getExecutorService(),
+                KEEP_GOING,
+                true,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                // Only the client side build needs to synchronize, not the slave.
+                // (as the co-ordinator synchronizes artifacts between slaves).
+                new NoOpRemoteBuildRuleCompletionWaiter()),
+        args.getExecutorService());
   }
 
   private List<BuildTarget> getTopLevelTargetsToBuild() {
