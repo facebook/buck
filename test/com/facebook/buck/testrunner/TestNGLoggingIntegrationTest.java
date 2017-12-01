@@ -24,20 +24,25 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class TestNGLoggingIntegrationTest {
 
+  private ProjectWorkspace workspace;
+
   @Rule public TemporaryPaths temp = new TemporaryPaths();
+
+  @Before
+  public void setupWorkspace() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this,
+            "testng_logging", temp, true);
+    workspace.setUp();
+  }
 
   @Test
   public void logOutputIsOnlyReportedForTestWhichFails() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this,
-            "testng_test_with_logging", temp, true);
-    workspace.setUp();
-
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:testng-logging");
     result.assertTestFailure();
 
@@ -53,5 +58,20 @@ public class TestNGLoggingIntegrationTest {
 
     // None of the messages printed in the passing test should be in the output.
     assertThat(testOutput, not(containsString("in a passing test")));
+  }
+
+  @Test
+  public void logParametersForFailingTest() throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test",
+        "//:testng-test-output-parameters");
+    result.assertTestFailure();
+
+    String testOutput = result.getStderr();
+    // Failing test params are logged
+    assertThat(testOutput, containsString("failingTestWithParams (1, 2)"));
+    assertThat(testOutput, containsString("failingTestWithParams (2, 3)"));
+    assertThat(testOutput, containsString("failingTestWithParams (3, 4)"));
+    // Don't log test params for passing test
+    assertThat(testOutput, not(containsString("failingTestWithParams (0, 0)")));
   }
 }
