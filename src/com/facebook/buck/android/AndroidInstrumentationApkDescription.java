@@ -45,7 +45,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -182,7 +181,7 @@ public class AndroidInstrumentationApkDescription
             rulesToExcludeFromDex
                 .stream()
                 .map(BuildRule::getBuildTarget)
-                .collect(MoreCollectors.toImmutableSet()),
+                .collect(ImmutableSet.toImmutableSet()),
             resourcesToExclude,
             /* skipCrunchPngs */ false,
             args.getIncludesVectorDrawables(),

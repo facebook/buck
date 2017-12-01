@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
@@ -80,7 +79,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
         compilerPlugins
             .stream()
             .map(BuildRule::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.extraClassPath = extraClassPath;

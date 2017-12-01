@@ -66,7 +66,6 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -352,7 +351,7 @@ public class AndroidBinaryGraphEnhancerTest {
             .getClasspathEntriesToDex()
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
     assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);
     AndroidBuildConfigJavaLibrary enhancedBuildConfigJavaLibrary =

@@ -24,7 +24,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
@@ -94,7 +93,7 @@ public class RuleKeyCacheRecycler<V> {
         // directories containing this path.
         IntStream.range(1, path.getNameCount() + 1)
             .mapToObj(end -> RuleKeyInput.of(filesystem, path.subpath(0, end)))
-            .collect(MoreCollectors.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @Subscribe

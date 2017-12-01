@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -73,7 +72,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
         resourceDeps
             .stream()
             .map(HasAndroidResourceDeps.class::cast)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     this.resourcesProvider = resourcesProvider;
     this.pathToOverrideSymbolsFile = resourcesProvider.getOverrideSymbolsPath();
   }

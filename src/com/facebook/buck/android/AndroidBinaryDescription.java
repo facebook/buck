@@ -70,7 +70,6 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -257,7 +256,7 @@ public class AndroidBinaryDescription
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
           RichStream.from(buildRulesToExcludeFromDex)
               .filter(JavaLibrary.class)
-              .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
           NonPredexedDexBuildableArgs.builder()

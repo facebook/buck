@@ -21,7 +21,6 @@ import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -223,7 +222,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
         modulePathsToAggregate
             .stream()
             .collect(
-                MoreCollectors.toImmutableMap(
+                ImmutableMap.toImmutableMap(
                     path -> path, path -> parentNode.getChild(path).getModule()));
     if (aggregationLimit == Integer.MAX_VALUE) {
       return modules;

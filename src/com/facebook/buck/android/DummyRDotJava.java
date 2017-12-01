@@ -45,7 +45,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -133,7 +132,7 @@ public class DummyRDotJava extends AbstractBuildRule
         androidResourceDeps
             .stream()
             .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     this.useOldStyleableFormat = useOldStyleableFormat;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.compileStepFactory = compileStepFactory;

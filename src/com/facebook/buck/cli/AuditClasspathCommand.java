@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.versions.VersionException;
@@ -103,7 +102,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                         input,
                         BuildTargetPatternParser.fullyQualified(),
                         params.getCell().getCellPathResolver()))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     if (targets.isEmpty()) {
       params
@@ -243,7 +242,7 @@ public class AuditClasspathCommand extends AbstractCommand {
               .stream()
               .map(pathResolver::getAbsolutePath)
               .map(Object::toString)
-              .collect(MoreCollectors.toImmutableList()));
+              .collect(ImmutableList.toImmutableList()));
     }
 
     // Note: using `asMap` here ensures that the keys are sorted

@@ -27,7 +27,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -169,10 +168,7 @@ public class SplitZipStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     Set<Path> inputJarPaths =
-        inputPathsToSplit
-            .stream()
-            .map(filesystem::resolve)
-            .collect(MoreCollectors.toImmutableSet());
+        inputPathsToSplit.stream().map(filesystem::resolve).collect(ImmutableSet.toImmutableSet());
     Supplier<ImmutableList<ClassNode>> classes =
         ClassNodeListSupplier.createMemoized(inputJarPaths);
     ProguardTranslatorFactory translatorFactory =
@@ -379,7 +375,7 @@ public class SplitZipStep implements Step {
         .build()
         .stream()
         .map(input -> input + ".class")
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**
@@ -404,7 +400,7 @@ public class SplitZipStep implements Step {
             .filter(SplitZipStep::isNeitherEmptyNorComment)
             .map(translatorFactory.createObfuscationFunction())
             .map(Type::getObjectType)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     FirstOrderHelper.addTypesAndDependencies(scenarioClasses, classesSupplier.get(), builder);
   }

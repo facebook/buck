@@ -45,7 +45,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -133,7 +132,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
           getBuildTarget(),
           summaries,
           getContacts(),
-          getLabels().stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          getLabels().stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 

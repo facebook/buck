@@ -65,7 +65,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -150,7 +149,7 @@ public class LuaBinaryDescription
     return nativeStarterLibrary.isPresent()
         ? ImmutableSet.of(nativeStarterLibrary.get())
         : Optionals.toStream(luaPlatform.getLuaCxxLibraryTarget())
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
   }
 
   private Starter getStarter(
@@ -626,14 +625,14 @@ public class LuaBinaryDescription
           nativeLibsLinktree
               .stream()
               .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
 
       @AddToRuleKey
       private final List<NonHashableSourcePathContainer> toolPythonModulesLinktree =
           pythonModulesLinktree
               .stream()
               .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
-              .collect(MoreCollectors.toImmutableList());;
+              .collect(ImmutableList.toImmutableList());;
 
       @AddToRuleKey private final List<SourcePath> toolExtraInputs = extraInputs;
 

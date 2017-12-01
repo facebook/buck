@@ -19,7 +19,6 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.FileSystemMap;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
@@ -88,7 +87,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
             .entrySet()
             .stream()
             .collect(
-                MoreCollectors.toImmutableMap(
+                ImmutableMap.toImmutableMap(
                     entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
       } catch (IOException e) {
         throw new RuntimeException(e);

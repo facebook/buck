@@ -45,7 +45,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
@@ -370,7 +369,7 @@ public class GoTestDescription
                   .get()
                   .stream()
                   .map(BuildRule::getBuildTarget)
-                  .collect(MoreCollectors.toImmutableList()),
+                  .collect(ImmutableList.toImmutableList()),
               args.getCgoSrcs(),
               args.getCgoHeaders(),
               args.getCgoDeps());
@@ -395,7 +394,7 @@ public class GoTestDescription
                   .get()
                   .stream()
                   .map(BuildRule::getBuildTarget)
-                  .collect(MoreCollectors.toImmutableList()),
+                  .collect(ImmutableList.toImmutableList()),
               args.getCgoSrcs(),
               args.getCgoHeaders(),
               args.getCgoDeps());

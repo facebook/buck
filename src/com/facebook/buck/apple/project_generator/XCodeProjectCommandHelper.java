@@ -57,7 +57,6 @@ import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.RichStream;
@@ -392,7 +391,7 @@ public class XCodeProjectCommandHelper {
               .getProjectRoots()
               .stream()
               .map(TargetNode::getBuildTarget)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
     } else {
       targets = passedInTargetsSet;
     }
@@ -492,7 +491,7 @@ public class XCodeProjectCommandHelper {
                   parserConfig.getDefaultFlavorsMode())
               .stream()
               .flatMap(Collection::stream)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return FocusedModuleTargetMatcher.noFocus();
@@ -660,7 +659,7 @@ public class XCodeProjectCommandHelper {
         .stream()
         .filter(rootsPredicate)
         .map(TargetNode::getBuildTarget)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   private TargetGraph getProjectGraphForIde(
@@ -724,7 +723,7 @@ public class XCodeProjectCommandHelper {
                         .getNodes()
                         .stream()
                         .map(TargetNode::getBuildTarget)
-                        .collect(MoreCollectors.toImmutableSet()),
+                        .collect(ImmutableSet.toImmutableSet()),
                     explicitTestTargets));
       }
     }

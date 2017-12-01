@@ -17,7 +17,6 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
@@ -53,7 +52,8 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final Map<String, String> HG_ENVIRONMENT_VARIABLES =
       ImmutableMap.of(
-          // Set HGPLAIN to prevent user-defined Hg aliases from interfering with the expected behavior.
+          // Set HGPLAIN to prevent user-defined Hg aliases from interfering with the expected
+          // behavior.
           "HGPLAIN", "1");
 
   /**
@@ -173,7 +173,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
             replaceTemplateValue(CHANGED_FILES_COMMAND, REVISION_ID_TEMPLATE, fromRevisionId));
     return Arrays.stream(hgChangedFilesString.split("\0"))
         .filter(s -> !s.isEmpty())
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -329,7 +329,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       Iterable<String> values, final String template, final String replacement) {
     return StreamSupport.stream(values.spliterator(), false)
         .map(text -> text.contains(template) ? text.replace(template, replacement) : text)
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   private static String commandAsString(Iterable<String> command) {

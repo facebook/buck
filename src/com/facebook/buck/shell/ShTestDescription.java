@@ -40,7 +40,6 @@ import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -93,7 +92,7 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
         Stream.concat(
                 Optionals.toStream(args.getTest()).map(SourcePathArg::of),
                 args.getArgs().stream().map(toArg))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     ImmutableMap<String, Arg> testEnv =
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg::apply));
     return new ShTest(

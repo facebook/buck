@@ -44,7 +44,6 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -209,15 +208,14 @@ public class Build implements Closeable {
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
     ImmutableSet<BuildTarget> targetsToBuild =
-        StreamSupport.stream(targetish.spliterator(), false)
-            .collect(MoreCollectors.toImmutableSet());
+        StreamSupport.stream(targetish.spliterator(), false).collect(ImmutableSet.toImmutableSet());
 
     ImmutableList<BuildRule> rulesToBuild =
         ImmutableList.copyOf(
             targetsToBuild
                 .stream()
                 .map(buildTarget -> getRuleResolver().requireRule(buildTarget))
-                .collect(MoreCollectors.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
 
     // Calculate and post the number of rules that need to built.
     int numRules = buildEngine.getNumRulesToBuild(rulesToBuild);
@@ -296,7 +294,7 @@ public class Build implements Closeable {
         rulesToBuild
             .stream()
             .map(rule -> buildEngine.build(buildContext, executionContext, rule))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     return resultFutures;
   }

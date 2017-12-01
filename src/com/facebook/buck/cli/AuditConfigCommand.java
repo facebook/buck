@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -124,7 +123,7 @@ public class AuditConfigCommand extends AbstractCommand {
                           input, parts[0], parts[1], buckConfig.getValue(parts[0], parts[1])));
                 })
             .collect(
-                MoreCollectors.toImmutableSortedSet(
+                ImmutableSortedSet.toImmutableSortedSet(
                     Comparator.comparing(ConfigValue::getSection)
                         .thenComparing(ConfigValue::getKey)));
 

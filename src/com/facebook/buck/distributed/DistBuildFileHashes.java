@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -172,7 +171,7 @@ public class DistBuildFileHashes {
               .stream()
               .map(recordedHash -> recordedHash.getRemoteFileHashes())
               .filter(x -> x.getEntriesSize() > 0)
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       checkNoDuplicates(hashes);
       return hashes;
     } catch (ExecutionException e) {

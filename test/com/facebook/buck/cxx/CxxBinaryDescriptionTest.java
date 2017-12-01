@@ -63,7 +63,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
 import com.facebook.buck.versions.VersionUniverseVersionSelector;
@@ -216,7 +215,7 @@ public class CxxBinaryDescriptionTest {
         rule.getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -226,7 +225,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -241,7 +240,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,

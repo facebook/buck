@@ -29,7 +29,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,7 +93,7 @@ public class AuditInputCommand extends AbstractCommand {
                         input,
                         BuildTargetPatternParser.fullyQualified(),
                         params.getCell().getCellPathResolver()))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     LOG.debug("Getting input for targets: %s", targets);
 

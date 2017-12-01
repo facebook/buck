@@ -50,7 +50,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
@@ -162,7 +161,7 @@ public class IjProjectCommandHelper {
               .getNodes()
               .stream()
               .map(TargetNode::getBuildTarget)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
     } else {
       graphRoots = passedInTargetsSet;
     }
@@ -308,7 +307,7 @@ public class IjProjectCommandHelper {
               TargetNode<?, ?> targetNode = targetGraph.get(input);
               return targetNode != null && isTargetWithAnnotations(targetNode);
             })
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   private void addBuildFailureError() {

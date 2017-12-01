@@ -41,10 +41,10 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -125,7 +125,7 @@ public class InstallTriggerIntegrationTest {
             buildDeps
                 .stream()
                 .map(BuildRule::getSourcePathToOutput)
-                .collect(MoreCollectors.toImmutableSortedSet());
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
         this.buildDeps = buildDeps;
       }
 

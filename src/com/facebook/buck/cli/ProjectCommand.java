@@ -34,7 +34,6 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Ascii;
@@ -341,7 +340,7 @@ public class ProjectCommand extends BuildCommand {
                         .getFlavors()
                         .stream()
                         .map(Flavor::toString)
-                        .collect(MoreCollectors.toImmutableSet()),
+                        .collect(ImmutableSet.toImmutableSet()),
                     getEnableParserProfiling(),
                     withTests,
                     withoutTests,
@@ -393,7 +392,7 @@ public class ProjectCommand extends BuildCommand {
       throws IOException, InterruptedException {
     BuildCommand buildCommand =
         new BuildCommand(
-            targets.stream().map(Object::toString).collect(MoreCollectors.toImmutableList()));
+            targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     buildCommand.setKeepGoing(true);
     return buildCommand.run(
         disableCaching ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory()) : params);

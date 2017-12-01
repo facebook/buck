@@ -19,7 +19,6 @@ package com.facebook.buck.android.dalvik.firstorder;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,7 +48,7 @@ public class FirstOrderTest {
       KNOWN_TYPES
           .stream()
           .map(FirstOrderTest::loadClassNode)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
 
   enum DependencyEnum {
     DEFAULT

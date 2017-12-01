@@ -32,7 +32,6 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,7 +93,8 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
                               .listDirRecursive(ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT)
                               .stream()
                               .map(Path::toString)
-                              .collect(MoreCollectors.toImmutableSortedSet()));
+                              .collect(
+                                  ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
                       return true;
                     },
                     true);
@@ -126,7 +127,8 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
         .entrySet()
         .stream()
         .collect(
-            MoreCollectors.toImmutableSortedMap(
+            ImmutableSortedMap.toImmutableSortedMap(
+                Ordering.natural(),
                 Map.Entry::getKey,
                 entry ->
                     entry
@@ -135,7 +137,7 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
                         .map(Paths::get)
                         .filter(p -> p.startsWith(packagePath))
                         .map(packagePath::relativize)
-                        .collect(MoreCollectors.toImmutableSortedSet())));
+                        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()))));
   }
 
   @Override

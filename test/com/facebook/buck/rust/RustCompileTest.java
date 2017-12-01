@@ -40,7 +40,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -205,7 +204,7 @@ public class RustCompileTest {
           fakeLinker(),
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")
               .map(StringArg::of)
-              .collect(MoreCollectors.toImmutableList()),
+              .collect(ImmutableList.toImmutableList()),
           /* depArgs */ ImmutableList.of(),
           /* linkerFlags */
           ImmutableList.of(),

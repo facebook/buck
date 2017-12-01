@@ -41,7 +41,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
@@ -225,7 +224,7 @@ public class AndroidResourceDescription
             RichStream.from(symlinkAttribute.get().getRight().entrySet())
                 .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
                 .filter(e -> isPossibleResourcePath(e.getKey()))
-                .collect(MoreCollectors.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
       }
     }
     Path symlinkTreeRoot =

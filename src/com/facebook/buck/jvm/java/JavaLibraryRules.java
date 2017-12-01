@@ -32,11 +32,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -124,7 +124,7 @@ public class JavaLibraryRules {
         getAbiRules(resolver, inputs)
             .stream()
             .map(BuildRule::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   /**

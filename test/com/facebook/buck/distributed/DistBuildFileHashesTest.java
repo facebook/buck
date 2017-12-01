@@ -53,7 +53,6 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -539,6 +538,6 @@ public class DistBuildFileHashesTest {
             recordedHashes
                 .stream()
                 .map(ThriftUtil::thriftToDebugJson)
-                .collect(MoreCollectors.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
   }
 }

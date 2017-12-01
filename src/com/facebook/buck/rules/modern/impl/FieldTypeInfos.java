@@ -22,8 +22,8 @@ import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -164,7 +164,7 @@ class FieldTypeInfos {
       // a Stream<Object> (or maybe Iterable<Object>) to a rulekey.
       return RichStream.from(value)
           .map(innerType::extractRuleKeyObject)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
     }
   }
 }

@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -290,7 +289,7 @@ public class DxStep extends ShellStep {
                         .diagnostics
                         .stream()
                         .map(Diagnostic::getDiagnosticMessage)
-                        .collect(MoreCollectors.toImmutableList()))));
+                        .collect(ImmutableList.toImmutableList()))));
         e.printStackTrace(context.getStdErr());
         return 1;
       }

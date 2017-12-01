@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Provides default implementations of Tool functions. This is only a separate class because Tool
@@ -26,6 +26,6 @@ import com.google.common.collect.ImmutableCollection;
 public interface AbstractTool extends Tool {
   @Override
   default ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return BuildableSupport.deriveDeps(this, ruleFinder).collect(MoreCollectors.toImmutableList());
+    return BuildableSupport.deriveDeps(this, ruleFinder).collect(ImmutableList.toImmutableList());
   }
 }

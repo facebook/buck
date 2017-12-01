@@ -24,7 +24,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.cache.LoadingCache;
@@ -71,7 +70,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
             .stream()
             .filter(cache -> cache instanceof MaterializerDummyFileHashCache)
             .map(cache -> (MaterializerDummyFileHashCache) cache)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
   }
 
   /**

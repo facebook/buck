@@ -32,7 +32,6 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.InputStreamConsumer;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ObjectMappers;
@@ -147,7 +146,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                           .getIgnorePaths()
                           .stream()
                           .map(PathOrGlobMatcher::getPathOrGlob)
-                          .collect(MoreCollectors.toImmutableList()));
+                          .collect(ImmutableList.toImmutableList()));
                 }
                 return ignorePathsJson1;
               } catch (IOException e) {

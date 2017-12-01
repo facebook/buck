@@ -41,7 +41,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
@@ -224,7 +223,7 @@ public class Omnibus {
                 .getNodes()
                 .stream()
                 .filter(n -> !roots.containsKey(n))
-                .collect(MoreCollectors.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
+                .collect(ImmutableMap.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
         .deps(Maps.asMap(deps, Functions.forMap(nativeLinkables)))
         .excluded(Maps.asMap(excluded, Functions.forMap(nativeLinkables)))
         .excludedRoots(

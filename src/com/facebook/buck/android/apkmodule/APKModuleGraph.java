@@ -29,7 +29,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +41,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -151,7 +151,8 @@ public class APKModuleGraph implements AddsToRuleKey {
     return getAPKModules()
         .stream()
         .collect(
-            MoreCollectors.toImmutableSortedMap(
+            ImmutableSortedMap.toImmutableSortedMap(
+                Ordering.natural(),
                 module -> module,
                 module -> ImmutableSortedSet.copyOf(getGraph().getOutgoingNodesFor(module))));
   }

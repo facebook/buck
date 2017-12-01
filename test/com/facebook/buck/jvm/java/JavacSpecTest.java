@@ -36,7 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -119,7 +119,7 @@ public class JavacSpecTest {
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
     assertThat(
-        BuildableSupport.deriveInputs(javac).collect(MoreCollectors.toImmutableList()),
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
         Matchers.contains(javacJarPath));
   }
 
@@ -136,7 +136,7 @@ public class JavacSpecTest {
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
     assertThat(
-        BuildableSupport.deriveInputs(javac).collect(MoreCollectors.toImmutableList()),
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
         Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
@@ -156,7 +156,7 @@ public class JavacSpecTest {
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
     assertThat(
-        BuildableSupport.deriveInputs(javac).collect(MoreCollectors.toImmutableList()),
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
         Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 

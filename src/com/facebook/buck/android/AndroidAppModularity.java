@@ -30,9 +30,9 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Optional;
@@ -82,7 +82,7 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
                                 buildContext
                                     .getSourcePathResolver()
                                     .getAbsolutePath(input.getValue()))))
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         additionalDexStoreToJarPathMapBuilder.build();
 

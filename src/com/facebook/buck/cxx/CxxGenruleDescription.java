@@ -70,7 +70,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -552,7 +551,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           .targets
           .stream()
           .map(DefaultBuildTargetSourcePath::of)
-          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     }
   }
 

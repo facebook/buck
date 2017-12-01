@@ -39,7 +39,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
@@ -252,7 +251,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .pathsToThirdPartyJars
             .stream()
             .map(resolver::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     steps.add(
         new ApkBuilderStep(

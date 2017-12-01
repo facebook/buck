@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -59,7 +58,7 @@ class DexFilesInfo implements AddsToRuleKey {
   public ImmutableSet<Path> getSecondaryDexDirs(
       ProjectFilesystem filesystem, SourcePathResolver resolver) {
     return secondaryDexDirs.transform(
-        set -> set.stream().map(resolver::getRelativePath).collect(MoreCollectors.toImmutableSet()),
+        set -> set.stream().map(resolver::getRelativePath).collect(ImmutableSet.toImmutableSet()),
         view -> view.getSecondaryDexDirs(filesystem, resolver));
   }
 
@@ -80,7 +79,7 @@ class DexFilesInfo implements AddsToRuleKey {
             .readLines(resolver.getRelativePath(subDirListing))
             .stream()
             .map(resolvedRootDirectory::resolve)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }

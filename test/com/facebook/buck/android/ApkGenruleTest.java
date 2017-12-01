@@ -59,7 +59,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -184,7 +183,7 @@ public class ApkGenruleTest {
             .getBuildDeps()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(projectFilesystem.getRootPath());

@@ -55,7 +55,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
@@ -149,7 +148,7 @@ class NativeLibraryMergeEnhancer {
     Iterable<NativeLinkable> allLinkables =
         allModulesLinkables
             .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     final ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
     Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
@@ -504,7 +503,7 @@ class NativeLibraryMergeEnhancer {
         .keySet()
         .stream()
         .sorted(Comparator.comparing(MergedLibNativeLinkable::getBuildTarget))
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**

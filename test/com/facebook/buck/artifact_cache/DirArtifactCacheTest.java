@@ -48,7 +48,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.DirectoryCleaner;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -383,7 +382,7 @@ public class DirArtifactCacheTest {
         cachedFiles
             .stream()
             .map(input -> input.getFileName().toString())
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     for (RuleKey ruleKey : ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)) {
       assertThat(filenames, Matchers.hasItem(ruleKey.toString()));
@@ -446,7 +445,7 @@ public class DirArtifactCacheTest {
             .values()
             .stream()
             .map(CacheResult::getType)
-            .collect(MoreCollectors.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
     dirArtifactCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
@@ -470,7 +469,7 @@ public class DirArtifactCacheTest {
             .values()
             .stream()
             .map(CacheResult::getType)
-            .collect(MoreCollectors.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @Test

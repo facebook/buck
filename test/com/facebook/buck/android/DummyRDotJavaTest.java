@@ -47,7 +47,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -132,7 +131,7 @@ public class DummyRDotJavaTest {
     List<String> sortedSymbolsFiles =
         Stream.of((AndroidResource) resourceRule1, (AndroidResource) resourceRule2)
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.of(rDotJavaSrcFolder.resolve("com/facebook/R.java"));
 

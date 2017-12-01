@@ -57,7 +57,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -485,7 +484,7 @@ public class HaskellDescriptionUtils {
             // the omnibus library so that they can be `LD_PRELOAD`ed early.
             RichStream.from(preloadDeps)
                 .filter(NativeLinkable.class)
-                .collect(MoreCollectors.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
+                .collect(ImmutableMap.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
 
     // Construct the omnibus shared library.
     BuildRule omnibusSharedObject =

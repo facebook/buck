@@ -42,7 +42,6 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -111,7 +110,7 @@ public class WorkerToolDescription
             .stream()
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)
-            .collect(MoreCollectors.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
     Function<String, Arg> toArg =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);

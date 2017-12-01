@@ -50,7 +50,6 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,7 +116,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .getNativeLibDirectories()
             .stream()
             .map(sourcePathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         Matchers.contains(ndkLibrary.getLibraryPath()));
   }
 
@@ -205,7 +204,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
                 .getStrippedObjectDescriptions()
                 .stream()
                 .map(StrippedObjectDescription::getSourcePath)
-                .collect(MoreCollectors.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     assertThat(
         stripRules,
         Matchers.contains(

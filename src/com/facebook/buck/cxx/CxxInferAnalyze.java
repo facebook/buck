@@ -35,11 +35,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymCopyStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -82,7 +82,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
     return transitiveAnalyzeRules
         .stream()
         .map(rule -> ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), rule.getSpecsDir()))
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   public Path getSpecsDir() {
@@ -136,7 +136,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
                     .stream()
                     .map(CxxInferCapture::getSourcePathToOutput)
                     .map(context.getSourcePathResolver()::getRelativePath)
-                    .collect(MoreCollectors.toImmutableList()),
+                    .collect(ImmutableList.toImmutableList()),
                 resultsDir))
         .add(
             new AbstractExecutionStep("write_specs_path_list") {
@@ -149,7 +149,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
                         .map(
                             input ->
                                 context.getSourcePathResolver().getAbsolutePath(input).toString())
-                        .collect(MoreCollectors.toImmutableList());
+                        .collect(ImmutableList.toImmutableList());
                 getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
                 return StepExecutionResult.SUCCESS;
               }

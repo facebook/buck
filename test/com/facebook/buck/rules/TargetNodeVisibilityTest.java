@@ -30,7 +30,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPatternParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -248,11 +247,11 @@ public class TargetNodeVisibilityTest {
             visibilities
                 .stream()
                 .map(s -> parser.parse(cellNames, s))
-                .collect(MoreCollectors.toImmutableSet()),
+                .collect(ImmutableSet.toImmutableSet()),
             withinView
                 .stream()
                 .map(s -> parser.parse(cellNames, s))
-                .collect(MoreCollectors.toImmutableSet()),
+                .collect(ImmutableSet.toImmutableSet()),
             createCellRoots(filesystem));
   }
 }

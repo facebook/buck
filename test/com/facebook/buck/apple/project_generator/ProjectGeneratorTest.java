@@ -116,7 +116,6 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
@@ -5179,7 +5178,7 @@ public class ProjectGeneratorTest {
         initialTargetNodes
             .stream()
             .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);

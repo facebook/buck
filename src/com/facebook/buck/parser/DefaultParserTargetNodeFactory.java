@@ -40,7 +40,6 @@ import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
@@ -138,7 +137,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
                 .getFlavors()
                 .stream()
                 .map(Flavor::toString)
-                .collect(MoreCollectors.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
         String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
         throw new HumanReadableException(
             "The following flavor(s) are not supported on target %s:\n"

@@ -52,7 +52,6 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
@@ -595,7 +594,7 @@ class CachingBuildRuleBuilder {
               .stream()
               .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
               .map(ObjectMappers.toJsonFunction())
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       getBuildInfoRecorder().addMetadata(BuildInfo.MetadataKey.DEP_FILE, inputStrings);
 
       // Re-calculate and store the depfile rule key for next time.
@@ -643,7 +642,7 @@ class CachingBuildRuleBuilder {
                 .getRecordedPaths()
                 .stream()
                 .map(Object::toString)
-                .collect(MoreCollectors.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
       try {
         boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
@@ -1342,7 +1341,7 @@ class CachingBuildRuleBuilder {
             .get()
             .stream()
             .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     try (Scope ignored =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.DEP_FILE)) {

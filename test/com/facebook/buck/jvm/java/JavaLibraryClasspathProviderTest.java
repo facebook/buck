@@ -37,7 +37,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -136,7 +135,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
                 aLib, Optional.of(aLib.getSourcePathToOutput()))
             .stream()
             .map(resolver::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test
@@ -148,7 +147,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
                 JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a)))
             .stream()
             .map(resolver::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     assertEquals(
         ImmutableSet.of(
@@ -159,7 +158,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
                 JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(c, d)))
             .stream()
             .map(resolver::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test
@@ -186,7 +185,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         aLib.getTransitiveClasspaths()
             .stream()
             .map(resolver::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test

@@ -17,10 +17,10 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +81,7 @@ public class BuckEventBusForTests {
     }
 
     public List<String> getLogMessages() {
-      return logEvents.stream().map(Object::toString).collect(MoreCollectors.toImmutableList());
+      return logEvents.stream().map(Object::toString).collect(ImmutableList.toImmutableList());
     }
   }
 }

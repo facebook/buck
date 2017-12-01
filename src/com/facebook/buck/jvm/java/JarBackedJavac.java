@@ -20,7 +20,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -61,7 +60,7 @@ public class JarBackedJavac extends Jsr199Javac {
                 .stream()
                 .map(PATH_TO_URL)
                 // Use "toString" since URL.equals does DNS lookups.
-                .collect(MoreCollectors.toImmutableSortedSet(Ordering.usingToString()))
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.usingToString()))
                 .asList());
     try {
       return (JavaCompiler) compilerClassLoader.loadClass(compilerClassName).newInstance();

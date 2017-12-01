@@ -34,7 +34,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -250,7 +249,7 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     return inputsBuilder
         .build()
         .filter(getCoveredByDepFilePredicate())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public Predicate<SourcePath> getCoveredByDepFilePredicate() {
@@ -293,7 +292,7 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     // directly and hash it appropriately.
     for (Arg flag : flags) {
       Preconditions.checkArgument(
-          BuildableSupport.deriveInputs(flag).collect(MoreCollectors.toImmutableList()).isEmpty(),
+          BuildableSupport.deriveInputs(flag).collect(ImmutableList.toImmutableList()).isEmpty(),
           "precompiled header hashing does not support source paths");
     }
     for (String part : sanitizer.sanitizeFlags(Iterables.skip(Arg.stringify(flags, resolver), 1))) {

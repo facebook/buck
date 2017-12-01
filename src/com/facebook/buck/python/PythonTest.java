@@ -44,7 +44,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -197,7 +196,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   getBuildTarget().getFullyQualifiedName(),
                   ImmutableList.copyOf(testResultSummaries))),
           contacts,
-          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 

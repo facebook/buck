@@ -22,7 +22,6 @@ import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -150,7 +149,7 @@ public class Resolver {
             .repositories
             .stream()
             .map(AetherUtil::toRemoteRepository)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
   }
 
   public void resolve(Collection<String> artifacts)
@@ -212,7 +211,7 @@ public class Resolver {
                             artifact ->
                                 (Callable<Map.Entry<Path, Prebuilt>>)
                                     () -> downloadArtifact(artifact, graph, specifiedDependencies))
-                        .collect(MoreCollectors.toImmutableList()));
+                        .collect(ImmutableList.toImmutableList()));
 
     try {
       return ImmutableSetMultimap.<Path, Prebuilt>builder()
@@ -476,7 +475,7 @@ public class Resolver {
                     .setReleasePolicy(toPolicy(input.getReleases()))
                     .setSnapshotPolicy(toPolicy(input.getSnapshots()))
                     .build())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Nullable
@@ -532,7 +531,7 @@ public class Resolver {
                       .toList();
               return new Dependency(artifact, dep.getScope(), dep.isOptional(), exclusions);
             })
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   private Dependency getDependencyFromString(String artifact) {

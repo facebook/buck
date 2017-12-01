@@ -63,7 +63,6 @@ import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.timing.Clock;
@@ -271,7 +270,7 @@ public class ChromeTraceBuildListenerTest {
             .stream()
             .filter(i -> i.toString().endsWith(".trace"))
             .map(path -> path.getFileName().toString())
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     assertEquals(4, files.size());
     assertEquals(

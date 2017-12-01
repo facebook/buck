@@ -44,7 +44,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -157,7 +156,7 @@ public class CxxLink extends AbstractBuildRule
             .stream()
             .map(dep -> dep.getProjectFilesystem().getRootPath())
             .distinct()
-            .collect(MoreCollectors.toImmutableMap(x -> x, currentRuleCellRoot::relativize));
+            .collect(ImmutableMap.toImmutableMap(x -> x, currentRuleCellRoot::relativize));
 
     Builder<Step> builder = new Builder<>();
     builder

@@ -133,7 +133,6 @@ import com.facebook.buck.swift.SwiftCommonArg;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -1184,7 +1183,7 @@ public class ProjectGenerator {
 
         ImmutableList<TargetNode<?, ?>> scriptPhases =
             Stream.concat(preScriptPhases.stream(), postScriptPhases.stream())
-                .collect(MoreCollectors.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         mutator.collectFilesToCopyInXcode(
             filesToCopyInXcodeBuilder, scriptPhases, projectCell, buildRuleResolverForNode);
       }
@@ -2235,7 +2234,7 @@ public class ProjectGenerator {
             .stream()
             .map(Path::getFileName)
             .map(Path::toString)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     if (!headerPaths.contains(moduleName + ".h")) {
       projectFilesystem.writeContentsToPath(
           new UmbrellaHeader(moduleName, headerPathStrings).render(),

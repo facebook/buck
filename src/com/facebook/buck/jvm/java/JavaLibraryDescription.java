@@ -38,7 +38,6 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
@@ -114,7 +113,7 @@ public class JavaLibraryDescription
               .filter(HasSources.class::isInstance)
               .map(rule -> ((HasSources) rule).getSources())
               .flatMap(Collection::stream)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
 
       // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
       // javadoc wants to have classes being documented have all their deps be available somewhere.

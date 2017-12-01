@@ -47,7 +47,6 @@ import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +125,7 @@ public class BuildTargetsQueueTest {
                 MoreIterables.dedupKeepLast(resolver.getBuildRules())
                     .stream()
                     .map(rule -> rule.getBuildTarget())
-                    .collect(MoreCollectors.toImmutableSet()),
+                    .collect(ImmutableSet.toImmutableSet()),
                 target ->
                     cacheHitTargets.contains(target) ? CACHE_HIT_RULE_KEY : CACHE_MISS_RULE_KEY));
 

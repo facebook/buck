@@ -27,7 +27,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.ExplicitRunExecutorService;
 import com.google.common.collect.ImmutableList;
@@ -207,7 +206,7 @@ public class AbstractAsynchronousCacheTest {
       ImmutableList<RuleKey> keys =
           RichStream.from(requests)
               .map(FetchRequest::getRuleKey)
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       requestedRuleKeys.add(keys);
       while (result.size() < keys.size()) {
         result.add(skip());

@@ -40,7 +40,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -168,7 +167,7 @@ abstract class GoDescriptors {
             linkables
                 .stream()
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
-                .collect(MoreCollectors.toImmutableList())),
+                .collect(ImmutableList.toImmutableList())),
         ImmutableSet.copyOf(srcs),
         ImmutableList.copyOf(compilerFlags),
         goBuckConfig.getCompiler(),
@@ -246,7 +245,7 @@ abstract class GoDescriptors {
                 .get()
                 .stream()
                 .map(BuildRule::getBuildTarget)
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             cgoSrcs,
             cgoHeaders,
             cgoDeps);
@@ -269,7 +268,7 @@ abstract class GoDescriptors {
                     .get()
                     .stream()
                     .map(BuildRule::getBuildTarget)
-                    .collect(MoreCollectors.toImmutableList()),
+                    .collect(ImmutableList.toImmutableList()),
                 /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 

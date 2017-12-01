@@ -58,13 +58,13 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -348,7 +348,7 @@ public class PythonTestDescriptionTest {
     assertThat(
         binary
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(pexExecutor.getBuildTarget()));
   }
 

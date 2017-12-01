@@ -43,7 +43,6 @@ import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -322,7 +321,7 @@ public class OcamlRuleBuilder {
               .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
               .map(ocamlContext::getCOutput)
               .map(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))
-              .collect(MoreCollectors.toImmutableList()),
+              .collect(ImmutableList.toImmutableList()),
           ocamlContext,
           ocamlLibraryBuild,
           ImmutableSortedSet.of(ocamlLibraryBuild),
@@ -506,7 +505,7 @@ public class OcamlRuleBuilder {
     return input
         .stream()
         .filter(OcamlUtil.sourcePathExt(resolver, OcamlCompilables.OCAML_C))
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(

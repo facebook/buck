@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.SortedSet;
@@ -48,6 +47,6 @@ public class AndroidResourceHelper {
               }
             })
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSortedSet(deps.comparator()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(deps.comparator()));
   }
 }

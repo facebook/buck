@@ -109,7 +109,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -919,7 +918,7 @@ public final class Main {
                       cell ->
                           cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
                   .filter(path -> Files.isRegularFile(path))
-                  .collect(MoreCollectors.toImmutableList());
+                  .collect(ImmutableList.toImmutableList());
           if (localConfigFiles.size() > 0) {
             String message =
                 localConfigFiles.size() == 1

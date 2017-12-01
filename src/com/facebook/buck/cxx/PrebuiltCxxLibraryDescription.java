@@ -61,7 +61,6 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.FunctionMacroReplacer;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
@@ -617,7 +616,7 @@ public class PrebuiltCxxLibraryDescription
             .stream()
             .filter(r -> r instanceof NativeLinkable)
             .map(r -> (NativeLinkable) r)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
       }
 
       @Override
@@ -635,7 +634,7 @@ public class PrebuiltCxxLibraryDescription
             .map(ruleResolver::getRule)
             .filter(r -> r instanceof NativeLinkable)
             .map(r -> (NativeLinkable) r)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
       }
 
       @Override

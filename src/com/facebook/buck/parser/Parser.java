@@ -44,7 +44,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -192,7 +191,7 @@ public class Parser {
                   .getParseDeps()
                   .stream()
                   .map(Object::toString)
-                  .collect(MoreCollectors.toImmutableList()));
+                  .collect(ImmutableList.toImmutableList()));
           return toReturn;
         }
       }

@@ -88,7 +88,6 @@ import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
@@ -1508,7 +1507,7 @@ public class ParserTest {
         targetNodes
             .stream()
             .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         hasItems(fooLib1Target, fooLib2Target));
   }
 

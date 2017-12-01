@@ -29,9 +29,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -104,7 +105,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
     return asRules(target, cellNames, resolver, input, precomputedWork)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -118,7 +119,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
 
     return asRules(target, cellNames, resolver, input, precomputedWork)
         .sorted()
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   private Stream<BuildRule> asRules(

@@ -18,7 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
@@ -119,7 +119,7 @@ public class Glob {
                             excludeDirectories)
                         .stream()
                         .sorted()
-                        .collect(MoreCollectors.toImmutableList())));
+                        .collect(ImmutableList.toImmutableList())));
           } catch (FileNotFoundException fnfe) {
             throw new EvalException(ast.getLocation(), "Cannot find " + fnfe.getMessage());
           }

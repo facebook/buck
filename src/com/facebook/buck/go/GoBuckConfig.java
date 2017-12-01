@@ -26,7 +26,6 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -148,7 +147,7 @@ public class GoBuckConfig {
         delegate.getOptionalListWithoutComments(SECTION, "vendor_path", ':');
 
     if (vendorPaths.isPresent()) {
-      return vendorPaths.get().stream().map(Paths::get).collect(MoreCollectors.toImmutableList());
+      return vendorPaths.get().stream().map(Paths::get).collect(ImmutableList.toImmutableList());
     }
     return ImmutableList.of();
   }

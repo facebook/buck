@@ -47,12 +47,12 @@ import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
@@ -176,7 +176,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                           .flatMap(Optionals::toStream)
                           .flatMap(input -> input.getDeps(ruleFinder).stream()))
                   .collect(
-                      MoreCollectors.toImmutableSortedSet(Comparator.<BuildRule>naturalOrder()))),
+                      ImmutableSortedSet.toImmutableSortedSet(
+                          Comparator.<BuildRule>naturalOrder()))),
           resolver,
           args,
           cmd,

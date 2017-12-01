@@ -24,12 +24,12 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.zip.Unzip;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -121,7 +121,7 @@ public interface HasJavaAbi {
                   .map(
                       path ->
                           ExplicitBuildTargetSourcePath.of(buildTargetSourcePath.getTarget(), path))
-                  .collect(MoreCollectors.toImmutableSortedSet());
+                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
         } else {
           SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
           contents =
@@ -129,7 +129,7 @@ public interface HasJavaAbi {
                   .stream()
                   .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
                   .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
-                  .collect(MoreCollectors.toImmutableSortedSet());
+                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
         }
         contentPaths =
             contents
@@ -143,7 +143,7 @@ public interface HasJavaAbi {
                       }
                     })
                 .map(Path::toString)
-                .collect(MoreCollectors.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
       }
     }
 

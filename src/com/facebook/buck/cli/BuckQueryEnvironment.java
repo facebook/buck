@@ -46,7 +46,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -111,7 +110,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             .getAllCells()
             .stream()
             .collect(
-                MoreCollectors.toImmutableMap(
+                ImmutableMap.toImmutableMap(
                     Function.identity(),
                     cell ->
                         new FilesystemBackedBuildFileTree(
@@ -264,7 +263,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         .stream()
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -283,7 +282,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         return node.getParseDeps()
             .stream()
             .map(targetsToNodes::get)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
       }
     }.start();
 
@@ -299,7 +298,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             .filter(target -> target instanceof QueryBuildTarget)
             .map(target -> ((QueryBuildTarget) target).getBuildTarget())
             .filter(buildTarget -> !targetsToNodes.containsKey(buildTarget))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     // TODO(mkosiba): This looks more and more like the Parser.buildTargetGraph method. Unify the
     // two.

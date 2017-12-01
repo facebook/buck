@@ -34,10 +34,10 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,7 +65,10 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
   }
 
   private ImmutableSortedSet<InputPath> toInputPaths(ImmutableSet<SourcePath> sourcePaths) {
-    return sourcePaths.stream().map(InputPath::new).collect(MoreCollectors.toImmutableSortedSet());
+    return sourcePaths
+        .stream()
+        .map(InputPath::new)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -84,7 +87,7 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
     ImmutableSet<Path> thirdPartyJars =
         inputPathResolver
             .resolveAllPaths(pathsToThirdPartyJars)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     return ImmutableList.of(
         createMergedThirdPartyJarsStep(
             thirdPartyJars, filesystem.resolve(outputPathResolver.resolvePath(mergedPath))));

@@ -44,7 +44,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -452,7 +451,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               .setTestCases(testCaseSummaries)
               .setContacts(contacts)
               .setLabels(
-                  labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+                  labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
       if (getProjectFilesystem().isDirectory(testLogsPath)) {
         for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
           testResultsBuilder.addTestLogPaths(testLogPath);

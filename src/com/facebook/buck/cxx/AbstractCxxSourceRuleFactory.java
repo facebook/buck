@@ -48,7 +48,6 @@ import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
@@ -155,7 +154,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return getCxxPreprocessorInput()
         .stream()
         .flatMap(input -> input.getFrameworks().stream())
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Value.Lazy
@@ -164,7 +163,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getCxxPreprocessorInput()
             .stream()
             .flatMap(input -> input.getIncludes().stream())
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     try {
       CxxHeaders.checkConflictingHeaders(result);
     } catch (CxxHeaders.ConflictingHeadersException e) {
@@ -179,7 +178,7 @@ abstract class AbstractCxxSourceRuleFactory {
               getCxxPreprocessorInput()
                   .stream()
                   .flatMap(input -> input.getPreprocessorFlags().get(type).stream())
-                  .collect(MoreCollectors.toImmutableList()));
+                  .collect(ImmutableList.toImmutableList()));
 
   private final Function<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue>
       preprocessorDelegates =
@@ -826,7 +825,7 @@ abstract class AbstractCxxSourceRuleFactory {
               }
             })
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 Function.identity(), CxxPreprocessAndCompile::getSourcePathToOutput));
   }
 

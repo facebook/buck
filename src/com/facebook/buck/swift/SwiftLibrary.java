@@ -46,7 +46,6 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
@@ -115,7 +114,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // all libraries).
     return RichStream.from(getDeclaredDeps())
         .filter(NativeLinkable.class)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -136,7 +135,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     return RichStream.from(exportedDeps)
         .filter(NativeLinkable.class)
         .concat(RichStream.of(swiftRuntimeNativeLinkable))
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -257,7 +256,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         .stream()
         .filter(CxxPreprocessorDep.class::isInstance)
         .map(CxxPreprocessorDep.class::cast)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override

@@ -74,7 +74,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.base.Preconditions;
@@ -919,7 +918,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         standaloneBinary
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(pyTool.getBuildTarget()));
   }
 

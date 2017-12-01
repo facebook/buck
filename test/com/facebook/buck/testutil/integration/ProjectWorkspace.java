@@ -52,7 +52,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -383,7 +382,7 @@ public class ProjectWorkspace {
         .entrySet()
         .stream()
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> getPath(entry.getValue())));
   }
 
@@ -407,7 +406,7 @@ public class ProjectWorkspace {
         .entrySet()
         .stream()
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));
   }
 

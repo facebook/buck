@@ -41,7 +41,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -180,7 +179,7 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   parseResults(
                       getPathToTestExitCode(), getPathToTestOutput(), getPathToTestResults()))),
           contacts,
-          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 

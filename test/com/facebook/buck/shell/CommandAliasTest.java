@@ -37,9 +37,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -106,9 +106,9 @@ public class CommandAliasTest {
     assertEquals(
         Stream.concat(Stream.concat(declaredDeps.stream(), extraDeps.stream()), Stream.of(toolDeps))
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSortedSet()),
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         new CommandAlias(target, fs, paramsWithDeps, toolWithDeps)
             .getRuntimeDeps(new SourcePathRuleFinder(ruleResolver))
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 }

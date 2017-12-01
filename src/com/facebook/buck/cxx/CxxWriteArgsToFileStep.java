@@ -24,7 +24,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +51,7 @@ class CxxWriteArgsToFileStep implements Step {
     ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
     if (escaper.isPresent()) {
       argFileContents =
-          argFileContents.stream().map(escaper.get()).collect(MoreCollectors.toImmutableList());
+          argFileContents.stream().map(escaper.get()).collect(ImmutableList.toImmutableList());
     }
     return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
   }

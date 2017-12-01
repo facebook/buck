@@ -34,7 +34,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -132,7 +131,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
         .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_C))
         .distinct()
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getLexInput() {
@@ -140,7 +139,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
         .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLL))
         .distinct()
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getYaccInput() {
@@ -148,7 +147,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
         .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLY))
         .distinct()
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getMLInput() {

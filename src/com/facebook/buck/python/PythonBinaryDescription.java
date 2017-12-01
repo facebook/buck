@@ -48,7 +48,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -184,7 +183,7 @@ public class PythonBinaryDescription
                             // whitelisted
                             // extensions or anything in the inplace python template file.
                             .collect(
-                                MoreCollectors.toImmutableMap(
+                                ImmutableMap.toImmutableMap(
                                     sourcePath ->
                                         Paths.get(PythonInPlaceBinary.PREBUILT_PYTHON_RULES_SUBDIR)
                                             .resolve(
@@ -337,7 +336,7 @@ public class PythonBinaryDescription
             PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
                 .stream()
                 .map(resolver::getRule)
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             binaryPackageComponents,
             pythonPlatform,
             cxxBuckConfig,
@@ -347,7 +346,7 @@ public class PythonBinaryDescription
                 .map(
                     MacroArg.toMacroArgFunction(
                         PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver))
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
     return createPackageRule(

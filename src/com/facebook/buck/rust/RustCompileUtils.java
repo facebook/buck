@@ -44,7 +44,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -156,7 +155,7 @@ public class RustCompileUtils {
         ruledeps
             .stream()
             .flatMap(r -> r.getBuildDeps().stream())
-            .collect(MoreCollectors.toImmutableList())) {
+            .collect(ImmutableList.toImmutableList())) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
         SortedSet<BuildRule> deps = ImmutableSortedSet.of();
@@ -448,7 +447,7 @@ public class RustCompileUtils {
                   String name = resolver.getRelativePath(src).getFileName().toString();
                   return defaults.contains(name) || name.equals(crateName);
                 })
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     if (res.size() == 1) {
       return Optional.of(res.get(0));

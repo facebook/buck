@@ -28,7 +28,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
@@ -77,7 +76,7 @@ public class PrebuiltOcamlLibraryDescription
         cLibs
             .stream()
             .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     final SourcePath bytecodeLibraryPath =
         PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));

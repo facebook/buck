@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
@@ -238,7 +237,7 @@ public class BuildTargetsQueueFactory {
 
         Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
         ImmutableSet<BuildRule> runtimeDeps =
-            resolver.getAllRules(runtimeDepPaths.collect(MoreCollectors.toImmutableSet()));
+            resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
 
         allDependencies.addAll(runtimeDeps);
       }

@@ -43,7 +43,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -52,6 +51,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -107,7 +108,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
         MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Override

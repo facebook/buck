@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +53,7 @@ public class MultiArtifactCache implements ArtifactCache {
         artifactCaches
             .stream()
             .filter(c -> c.getCacheReadMode().equals(CacheReadMode.READWRITE))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
   }
 
@@ -143,7 +142,7 @@ public class MultiArtifactCache implements ArtifactCache {
                         .stream()
                         .filter(e -> !e.getValue().getType().isSuccess())
                         .map(Map.Entry::getKey)
-                        .collect(MoreCollectors.toImmutableSet());
+                        .collect(ImmutableSet.toImmutableSet());
 
                 if (missingKeys.isEmpty()) {
                   return Futures.immediateFuture(mergedResults);

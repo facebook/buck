@@ -35,11 +35,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -143,7 +143,7 @@ public class JarBuildStepsFactory
 
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     // a hash set is intentionally used to achieve constant time look-up
-    return abiClasspath.getArchiveMembers(pathResolver).collect(MoreCollectors.toImmutableSet())
+    return abiClasspath.getArchiveMembers(pathResolver).collect(ImmutableSet.toImmutableSet())
         ::contains;
   }
 

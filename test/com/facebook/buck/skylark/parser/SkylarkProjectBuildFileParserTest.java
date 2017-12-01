@@ -39,7 +39,6 @@ import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -542,7 +541,7 @@ public class SkylarkProjectBuildFileParserTest {
             .map(projectFilesystem::resolve)
             .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
     Map<String, Object> configsMetadataRule = allRulesAndMetaRules.get(2);
     assertThat(configsMetadataRule.get("__configs"), equalTo(ImmutableMap.of()));

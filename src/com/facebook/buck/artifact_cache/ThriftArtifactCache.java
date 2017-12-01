@@ -37,7 +37,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -372,11 +371,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     ImmutableList<RuleKey> keys =
         RichStream.from(requests)
             .map(FetchRequest::getRuleKey)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     ImmutableList<LazyPath> outputs =
         RichStream.from(requests)
             .map(FetchRequest::getOutput)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     Preconditions.checkState(keys.size() == outputs.size());
     String joinedKeys = Joiner.on(", ").join(keys);
     LOG.verbose("Will fetch keys <%s>", joinedKeys);
@@ -453,7 +452,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       throws IOException {
     long responseSizeBytes = httpResponse.contentLength();
     ImmutableList<FetchResult.Builder> resultsBuilders =
-        keys.stream().map(k -> FetchResult.builder()).collect(MoreCollectors.toImmutableList());
+        keys.stream().map(k -> FetchResult.builder()).collect(ImmutableList.toImmutableList());
 
     BuckCacheResponse cacheResponse = response.getThriftData();
     resultsBuilders.forEach(b -> b.setResponseSizeBytes(responseSizeBytes));

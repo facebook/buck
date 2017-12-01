@@ -40,7 +40,6 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -103,7 +102,7 @@ public class GenruleDescriptionTest {
             .getExtraDeps()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test

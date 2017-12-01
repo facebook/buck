@@ -61,7 +61,6 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -411,7 +410,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getBuildTarget(),
             ImmutableList.of(),
             contacts,
-            labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+            labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
       }
 
       List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
@@ -449,7 +448,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
           .setBuildTarget(getBuildTarget())
           .setTestCases(summaries)
           .setContacts(contacts)
-          .setLabels(labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()))
+          .setLabels(labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()))
           .addTestLogPaths(getProjectFilesystem().resolve(pathToTestLogs))
           .build();
     };
@@ -687,7 +686,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                 .getTransitiveClasspaths()
                                 .stream()
                                 .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-                                .collect(MoreCollectors.toImmutableSet()))
+                                .collect(ImmutableSet.toImmutableSet()))
                         .addAll(
                             additionalClasspathEntries
                                 .stream()
@@ -698,7 +697,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                                 .getSourcePathResolver()
                                                 .getAbsolutePath(e.getLeft())
                                             : e.getRight())
-                                .collect(MoreCollectors.toImmutableSet()))
+                                .collect(ImmutableSet.toImmutableSet()))
                         .addAll(getBootClasspathEntries(context))
                         .build();
                 getProjectFilesystem()

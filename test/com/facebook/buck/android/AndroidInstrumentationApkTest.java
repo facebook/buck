@@ -44,7 +44,6 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -160,7 +159,7 @@ public class AndroidInstrumentationApkTest {
             .getClasspathEntriesToDex()
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
         ImmutableSet.of(
@@ -171,6 +170,6 @@ public class AndroidInstrumentationApkTest {
             .getClasspathEntriesToDex()
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 }

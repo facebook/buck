@@ -53,7 +53,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -185,7 +184,7 @@ public class HaskellBinaryDescription
                         .map(resolver::getRule)
                         .filter(NativeLinkable.class::isInstance))
             .orElse(Stream.of())
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     depsBuilder.addAll(depQueryDeps);
     ImmutableSet<BuildRule> deps = depsBuilder.build();
 

@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -95,7 +94,7 @@ class CompilerDelegate implements AddsToRuleKey {
             (SourcePath path) ->
                 !(path instanceof PathSourcePath)
                     || !((PathSourcePath) path).getRelativePath().isAbsolute())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public boolean isArgFileSupported() {

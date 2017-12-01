@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.config.Config;
@@ -234,7 +233,7 @@ public class BuckConfig implements ConfigPathGetter {
                           resolve,
                           String.format(
                               "Error in %s.%s: Cell-relative path not found: ", section, field)))
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       return Optional.of(paths);
     }
 
@@ -252,7 +251,7 @@ public class BuckConfig implements ConfigPathGetter {
     return buildTargets
         .stream()
         .map(buildTarget -> buildTarget.getFullyQualifiedName() + suffix)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<BuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {

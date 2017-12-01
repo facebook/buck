@@ -61,13 +61,13 @@ import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Map;
@@ -178,7 +178,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                         .getBuildTarget()
                         .getUnflavoredBuildTarget()
                         .equals(unflavoredBuildTarget))
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     params = params.withExtraDeps(filteredExtraDeps);
 
     SwiftPlatformsProvider swiftPlatformsProvider =
@@ -375,7 +375,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             RichStream.from(params.getBuildDeps())
                 .filter(NativeLinkable.class)
                 .concat(RichStream.of(swiftRuntimeLinkable))
-                .collect(MoreCollectors.toImmutableSet()),
+                .collect(ImmutableSet.toImmutableSet()),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),

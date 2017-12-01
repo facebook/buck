@@ -25,9 +25,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -92,7 +92,7 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
         .results
         .stream()
         .map(QueryTarget::toString)
-        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override

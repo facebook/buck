@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -163,7 +162,7 @@ public class CommandTool implements Tool {
               .build()
               .map(NonHashableSourcePathContainer::new)
               .collect(
-                  MoreCollectors.toImmutableSortedSet(
+                  ImmutableSortedSet.toImmutableSortedSet(
                       Comparator.comparing(NonHashableSourcePathContainer::getSourcePath))));
     }
   }

@@ -23,7 +23,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.thrift.BuildFileEnvProperty;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
@@ -276,7 +275,7 @@ class DaemonicCellState {
             paths
                 .stream()
                 .map(v -> root.relativize(v).toString())
-                .collect(MoreCollectors.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         result.put(root.relativize(path).toString(), pathList);
       }
     }

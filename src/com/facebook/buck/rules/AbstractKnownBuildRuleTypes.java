@@ -122,7 +122,6 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -166,7 +165,7 @@ abstract class AbstractKnownBuildRuleTypes {
   protected ImmutableMap<BuildRuleType, Description<?>> getDescriptionsByType() {
     return getDescriptions()
         .stream()
-        .collect(MoreCollectors.toImmutableMap(Description::getBuildRuleType, d -> d));
+        .collect(ImmutableMap.toImmutableMap(Description::getBuildRuleType, d -> d));
   }
 
   @Value.Lazy
@@ -174,7 +173,7 @@ abstract class AbstractKnownBuildRuleTypes {
     return getDescriptions()
         .stream()
         .map(Description::getBuildRuleType)
-        .collect(MoreCollectors.toImmutableMap(BuildRuleType::getName, t -> t));
+        .collect(ImmutableMap.toImmutableMap(BuildRuleType::getName, t -> t));
   }
 
   public BuildRuleType getBuildRuleType(String named) {

@@ -61,7 +61,6 @@ import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PatternsMatcher;
@@ -295,7 +294,7 @@ public class TargetsCommand extends AbstractCommand {
         .get()
         .stream()
         .map(Paths::get)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -641,13 +640,13 @@ public class TargetsCommand extends AbstractCommand {
                   .getNodes()
                   .stream()
                   .map(TargetNode::getBuildTarget)
-                  .collect(MoreCollectors.toImmutableSet()));
+                  .collect(ImmutableSet.toImmutableSet()));
       directOwners =
           graph
               .getNodes()
               .stream()
               .filter(new DirectOwnerPredicate(buildFileTree, referencedFiles.get(), buildFileName))
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
     } else {
       directOwners = graph.getNodes();
     }

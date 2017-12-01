@@ -44,7 +44,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -53,6 +52,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -205,7 +206,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
         MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     this.dexTool = dexTool;
   }
 
@@ -281,7 +282,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 input ->
                     getProjectFilesystem()
                         .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input)))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -310,7 +311,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                                 new AbstractMap.SimpleEntry<>(
                                     entry.getKey(),
                                     buildContext.getSourcePathResolver().getAbsolutePath(v))))
-            .collect(MoreCollectors.toImmutableMultimap(e -> e.getKey(), e -> e.getValue()));
+            .collect(
+                ImmutableListMultimap.toImmutableListMultimap(e -> e.getKey(), e -> e.getValue()));
 
     // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {
@@ -415,7 +417,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
               proguardConfigs
                   .stream()
                   .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-                  .collect(MoreCollectors.toImmutableSet()),
+                  .collect(ImmutableSet.toImmutableSet()),
               skipProguard,
               steps,
               buildableContext,
@@ -571,7 +573,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
         classpathEntriesToDex
             .stream()
             .collect(
-                MoreCollectors.toImmutableMap(
+                ImmutableMap.toImmutableMap(
                     java.util.function.Function.identity(),
                     (path) ->
                         AndroidBinaryBuildable.getProguardOutputFromInputClasspath(

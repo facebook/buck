@@ -27,9 +27,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import java.util.ArrayList;
@@ -146,7 +146,7 @@ class AndroidBinaryInstallGraphEnhancer {
             .getResourcesPaths()
             .stream()
             .collect(
-                MoreCollectors.toImmutableMultimap(
+                ImmutableListMultimap.toImmutableListMultimap(
                     (ExopackagePathAndHash pathAndHash) ->
                         ruleFinder.getRule(pathAndHash.getPath()).orElse(null),
                     v -> v));

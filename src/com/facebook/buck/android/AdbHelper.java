@@ -43,7 +43,6 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -556,7 +555,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (devices == null) {
       return ImmutableList.of();
     }
-    return devices.stream().map(this::createDevice).collect(MoreCollectors.toImmutableList());
+    return devices.stream().map(this::createDevice).collect(ImmutableList.toImmutableList());
   }
 
   private Console getConsole() {

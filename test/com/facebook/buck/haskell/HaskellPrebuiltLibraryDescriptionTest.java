@@ -40,7 +40,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,7 +72,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .flatMap(
                 a ->
                     BuildableSupport.deriveInputs(a)
-                        .collect(MoreCollectors.toImmutableList())
+                        .collect(ImmutableList.toImmutableList())
                         .stream())
             .toImmutableSet(),
         Matchers.contains(lib));
@@ -102,7 +101,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .flatMap(
                 a ->
                     BuildableSupport.deriveInputs(a)
-                        .collect(MoreCollectors.toImmutableList())
+                        .collect(ImmutableList.toImmutableList())
                         .stream())
             .toImmutableSet(),
         Matchers.contains(lib));

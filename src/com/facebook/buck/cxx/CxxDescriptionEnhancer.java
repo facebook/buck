@@ -67,7 +67,6 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -486,7 +485,7 @@ public class CxxDescriptionEnhancer {
                               cxxPlatform,
                               Preconditions.checkNotNull(s.getSourcePath())));
                     })
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             x -> true,
             SourceWithFlags::getSourcePath));
   }
@@ -763,7 +762,7 @@ public class CxxDescriptionEnhancer {
             .orElse(ImmutableSortedSet.of())
             .stream()
             .map(resolver::getRule)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     depsBuilder.addAll(depQueryDeps);
     // Add any extra deps passed in.
     extraDeps.stream().map(resolver::getRule).forEach(depsBuilder::add);
@@ -987,7 +986,7 @@ public class CxxDescriptionEnhancer {
                   Preconditions.checkArgument(input instanceof SourcePathArg);
                   return (SourcePathArg) input;
                 })
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
 
     CxxLink cxxLink =

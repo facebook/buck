@@ -21,7 +21,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -117,7 +116,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   private static String createDefaultMessage(
       BuildTarget target, ImmutableSet<Flavor> invalidFlavors) {
     ImmutableSet<String> invalidFlavorsStr =
-        invalidFlavors.stream().map(Flavor::toString).collect(MoreCollectors.toImmutableSet());
+        invalidFlavors.stream().map(Flavor::toString).collect(ImmutableSet.toImmutableSet());
     String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
     return String.format(
         "The following flavor(s) are not supported on target %s:\n%s.",

@@ -43,7 +43,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
@@ -204,7 +203,7 @@ public class DuplicateResourcesTest {
 
     assertThat(
         errorMessage,
-        command.stream().filter(s -> "-S".equals(s)).collect(MoreCollectors.toImmutableList()),
+        command.stream().filter(s -> "-S".equals(s)).collect(ImmutableList.toImmutableList()),
         Matchers.hasSize(paths.length));
     int firstResourceFolderArgument = command.indexOf("-S");
 
@@ -274,9 +273,9 @@ public class DuplicateResourcesTest {
                     steps
                         .stream()
                         .filter(step -> step instanceof AaptStep)
-                        .collect(MoreCollectors.toImmutableList()))
+                        .collect(ImmutableList.toImmutableList()))
             .filter(steps -> !steps.isEmpty())
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     assertEquals(1, ruleSteps.size());
     assertEquals(1, Iterables.getOnlyElement(ruleSteps).size());

@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import java.util.AbstractMap;
@@ -73,7 +74,7 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
                     ? new AbstractMap.SimpleEntry<K, V>(e.getKey(), null)
                     : (Map.Entry<K, V>) e)
         // Use ImmutableSet instead of Set here to preserve iteration order:
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override

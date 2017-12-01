@@ -27,17 +27,18 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Closer;
 import java.io.File;
 import java.io.IOException;
@@ -257,7 +258,9 @@ public class ExopackageInstaller {
             .entrySet()
             .stream()
             .filter(entry -> !presentFiles.contains(entry.getKey()))
-            .collect(MoreCollectors.toImmutableSortedMap(Map.Entry::getKey, Map.Entry::getValue));
+            .collect(
+                ImmutableSortedMap.toImmutableSortedMap(
+                    Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue));
 
     installFiles(filesType, filesToInstall);
   }
@@ -268,7 +271,7 @@ public class ExopackageInstaller {
         presentFiles
             .stream()
             .filter(p -> !p.getFileName().equals("lock") && !wantedFiles.contains(p))
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     deleteFiles(filesToDelete);
   }
 
@@ -276,7 +279,7 @@ public class ExopackageInstaller {
     filesToDelete
         .stream()
         .collect(
-            MoreCollectors.toImmutableListMultimap(
+            ImmutableListMultimap.toImmutableListMultimap(
                 path -> dataRoot.resolve(path).getParent(), path -> path.getFileName().toString()))
         .asMap()
         .forEach(

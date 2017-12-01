@@ -43,7 +43,6 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -215,10 +214,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             archiverFlags,
             archiver.getArchiveOptions(contents == ArchiveContents.THIN),
             output,
-            inputs
-                .stream()
-                .map(resolver::getRelativePath)
-                .collect(MoreCollectors.toImmutableList()),
+            inputs.stream().map(resolver::getRelativePath).collect(ImmutableList.toImmutableList()),
             archiver,
             getScratchPath()));
 

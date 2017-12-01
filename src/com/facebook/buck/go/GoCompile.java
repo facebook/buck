@@ -35,7 +35,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -130,7 +129,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               .getGeneratedGoSource()
               .stream()
               .map(input -> context.getSourcePathResolver().getAbsolutePath(input))
-              .collect(MoreCollectors.toImmutableList()));
+              .collect(ImmutableList.toImmutableList()));
       Path srcPath =
           context.getSourcePathResolver().getAbsolutePath(cgoCompile.get().getOutputBinary());
       extraLibsListBuilder.add(srcPath);
@@ -208,7 +207,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         for (Path header :
             Stream.of(headerSrcs, asmSrcs)
                 .flatMap(ImmutableList::stream)
-                .collect(MoreCollectors.toImmutableList())) {
+                .collect(ImmutableList.toImmutableList())) {
           steps.add(
               SymlinkFileStep.builder()
                   .setFilesystem(getProjectFilesystem())
@@ -261,7 +260,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               GoPackStep.Operation.APPEND,
               Stream.of(extraLibs, asmOutputs.build())
                   .flatMap(ImmutableList::stream)
-                  .collect(MoreCollectors.toImmutableList()),
+                  .collect(ImmutableList.toImmutableList()),
               output));
     }
 

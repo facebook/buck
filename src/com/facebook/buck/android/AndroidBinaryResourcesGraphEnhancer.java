@@ -34,7 +34,6 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -516,6 +515,6 @@ class AndroidBinaryResourcesGraphEnhancer {
               Preconditions.checkState(input instanceof HasAndroidResourceDeps);
               return (HasAndroidResourceDeps) input;
             })
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 }

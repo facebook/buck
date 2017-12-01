@@ -39,7 +39,6 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -129,7 +128,7 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        BuildableSupport.deriveInputs(noMacrosArg).collect(MoreCollectors.toImmutableList()),
+        BuildableSupport.deriveInputs(noMacrosArg).collect(ImmutableList.toImmutableList()),
         Matchers.empty());
 
     // Test one embedded macros.
@@ -142,7 +141,7 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        BuildableSupport.deriveInputs(oneMacrosArg).collect(MoreCollectors.toImmutableList()),
+        BuildableSupport.deriveInputs(oneMacrosArg).collect(ImmutableList.toImmutableList()),
         Matchers.contains(rule1.getSourcePathToOutput()));
 
     // Test multiple embedded macros.
@@ -159,7 +158,7 @@ public class StringWithMacrosArgTest {
             CELL_PATH_RESOLVER,
             resolver);
     assertThat(
-        BuildableSupport.deriveInputs(multipleMacrosArg).collect(MoreCollectors.toImmutableList()),
+        BuildableSupport.deriveInputs(multipleMacrosArg).collect(ImmutableList.toImmutableList()),
         Matchers.contains(
             rule1.getSourcePathToOutput(),
             rule2.getSourcePathToOutput(),

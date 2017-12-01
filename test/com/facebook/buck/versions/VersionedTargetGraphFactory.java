@@ -18,7 +18,6 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +41,6 @@ public class VersionedTargetGraphFactory {
 
   public static VersionedTargetGraph newInstance(ImmutableList<TargetNode<?, ?>> nodes) {
     return newInstance(
-        nodes.stream().collect(MoreCollectors.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
+        nodes.stream().collect(ImmutableMap.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
   }
 }

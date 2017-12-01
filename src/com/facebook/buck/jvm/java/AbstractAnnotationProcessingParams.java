@@ -22,11 +22,11 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Set;
@@ -131,7 +131,7 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
                 .stream()
                 .map(processorGroup -> processorGroup.resolve(filesystem, resolver)),
             getModernProcessors().stream())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Value.NaturalOrder
@@ -143,7 +143,7 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
             getLegacyProcessors().stream().map(JavacPluginProperties::getInputs),
             getModernProcessors().stream().map(ResolvedJavacPluginProperties::getInputs))
         .flatMap(Collection::stream)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Value.Default

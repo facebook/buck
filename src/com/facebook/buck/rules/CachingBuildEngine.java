@@ -29,7 +29,6 @@ import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
@@ -394,7 +393,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
     List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
     ImmutableSet<BuildRule> runtimeDeps =
-        resolver.getAllRules(runtimeDepPaths.collect(MoreCollectors.toImmutableSet()));
+        resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
     for (BuildRule dep : runtimeDeps) {
       runtimeDepResults.add(
           getBuildRuleResultWithRuntimeDepsUnlocked(dep, buildContext, executionContext));

@@ -42,7 +42,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -111,7 +110,7 @@ public class HaskellLibraryDescriptionTest {
                 Preconditions.checkNotNull(sharedLib.getSourcePathToOutput()))
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     assertThat(outputs.size(), Matchers.equalTo(ImmutableSet.copyOf(outputs).size()));
 
     ImmutableList<BuildTarget> targets =

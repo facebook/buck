@@ -34,13 +34,13 @@ import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
@@ -153,7 +153,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                     .getLoadedPaths()
                     .stream()
                     .map(Object::toString)
-                    .collect(MoreCollectors.toImmutableSortedSet())))
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()))))
         // TODO(ttsugrii): implement once configuration options are exposed via Skylark API
         .add(ImmutableMap.of("__configs", ImmutableMap.of()))
         // TODO(ttsugrii): implement once environment variables are exposed via Skylark API
@@ -291,7 +291,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return dependencies
         .stream()
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 ExtensionData::getImportString, ExtensionData::getExtension));
   }
 
@@ -399,7 +399,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         .getDescriptions()
         .stream()
         .map(this::newRuleDefinition)
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**
@@ -455,7 +455,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .values()
             .stream()
             .filter(param -> !param.isOptional() && !kwargs.containsKey(param.getPythonName()))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     if (!missingAttributes.isEmpty()) {
       throw new EvalException(
           ast.getLocation(),

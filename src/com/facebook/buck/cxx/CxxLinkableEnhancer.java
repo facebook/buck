@@ -41,7 +41,6 @@ import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -284,7 +283,7 @@ public class CxxLinkableEnhancer {
                     .stream()
                     .map(frameworkPathToSearchPath)
                     .filter(Objects::nonNull)
-                    .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
             for (Path searchPath : searchPaths) {
               consumer.accept("-L");
               consumer.accept(searchPath.toString());
@@ -333,7 +332,7 @@ public class CxxLinkableEnhancer {
                 frameworkPaths
                     .stream()
                     .map(frameworkPathToSearchPath)
-                    .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
             for (Path searchPath : searchPaths) {
               consumer.accept("-F");
               consumer.accept(searchPath.toString());
@@ -403,7 +402,7 @@ public class CxxLinkableEnhancer {
       Path output, Iterable<String> supplementaryOutputNames) {
     return Streams.stream(supplementaryOutputNames)
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 name -> name,
                 name -> output.getParent().resolve(output.getFileName().toString() + "-" + name)));
   }

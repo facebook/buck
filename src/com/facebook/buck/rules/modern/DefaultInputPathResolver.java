@@ -22,11 +22,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -77,7 +77,7 @@ public final class DefaultInputPathResolver implements InputPathResolver {
               .entrySet()
               .stream()
               .collect(
-                  MoreCollectors.toImmutableMap(
+                  ImmutableMap.toImmutableMap(
                       entry -> entry.getKey(), entry -> extract(entry.getValue()))));
     }
 
@@ -108,7 +108,7 @@ public final class DefaultInputPathResolver implements InputPathResolver {
           sourcePaths
               .stream()
               .map(DefaultInputPathResolver.this::extract)
-              .collect(MoreCollectors.toImmutableList()));
+              .collect(ImmutableList.toImmutableList()));
     }
 
     @Override

@@ -55,7 +55,6 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -235,7 +234,7 @@ public class AppleCxxPlatforms {
             .stream()
             .map(AppleToolchain::getVersion)
             .flatMap(Optionals::toStream)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     if (toolchainVersions.isEmpty()) {
       if (!xcodeBuildVersion.isPresent()) {
         throw new HumanReadableException("Failed to read toolchain versions and Xcode version.");

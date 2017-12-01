@@ -36,12 +36,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -91,7 +91,7 @@ public class MergeAssets extends AbstractBuildRule {
         MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Override

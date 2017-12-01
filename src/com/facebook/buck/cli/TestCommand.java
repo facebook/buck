@@ -64,7 +64,6 @@ import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -377,7 +376,7 @@ public class TestCommand extends BuildCommand {
                         .post(ExternalTestSpecCalculationEvent.finished(rule.getBuildTarget()));
                   }
                 })
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     StreamSupport.stream(
             testRules.spliterator(),
@@ -423,7 +422,7 @@ public class TestCommand extends BuildCommand {
         StreamSupport.stream(testRules.spliterator(), /* parallel */ false)
             .map(BuildRule::getBuildTarget)
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
     int exitCode = -1;
@@ -613,7 +612,7 @@ public class TestCommand extends BuildCommand {
               build.executeAndPrintFailuresToEventBus(
                   RichStream.from(testRules)
                       .map(TestRule::getBuildTarget)
-                      .collect(MoreCollectors.toImmutableList()),
+                      .collect(ImmutableList.toImmutableList()),
                   params.getBuckEventBus(),
                   params.getConsole(),
                   getPathToBuildReport(params.getBuckConfig()));

@@ -24,7 +24,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -244,7 +243,7 @@ public class VersionedTargetGraphBuilder {
             .stream()
             .map(this::getNode)
             .map(RootAction::new)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     // Add actions to the `rootActions` member for bookkeeping.
     actions.forEach(a -> rootActions.put(a.getRoot().getBuildTarget(), a));
@@ -362,7 +361,7 @@ public class VersionedTargetGraphBuilder {
       // Now that everything is ready, return all the results.
       return StreamSupport.stream(targets.spliterator(), false)
           .map(index::get)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
     }
 
     public Void getChecked() throws VersionException, InterruptedException {

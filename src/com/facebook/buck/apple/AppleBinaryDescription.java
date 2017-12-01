@@ -52,7 +52,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Joiner;
@@ -142,7 +141,7 @@ public class AppleBinaryDescription
         result
             .stream()
             .filter(domain -> !domain.equals(StripStyle.FLAVOR_DOMAIN))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     return Optional.of(result);
   }

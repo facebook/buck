@@ -32,7 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -78,7 +77,7 @@ public class ShTestTest extends EasyMockSupport {
             /* contacts */ ImmutableSet.of());
 
     assertThat(
-        shTest.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
+        shTest.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(dep.getBuildTarget(), extraDep.getBuildTarget()));
   }
 }

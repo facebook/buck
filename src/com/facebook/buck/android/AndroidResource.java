@@ -40,7 +40,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -327,7 +326,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .get()
             .stream()
             .map(context.getSourcePathResolver()::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     steps.add(
         new MiniAapt(
             context.getSourcePathResolver(),

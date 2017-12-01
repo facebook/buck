@@ -37,7 +37,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -154,7 +153,7 @@ public class ResourcesFilter extends AbstractBuildRule
 
     return IntStream.range(0, resDirectories.size())
         .mapToObj(count -> resDestinationBasePath.resolve(String.valueOf(count)))
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
@@ -197,7 +196,7 @@ public class ResourcesFilter extends AbstractBuildRule
                 sourcePath ->
                     getProjectFilesystem()
                         .relativize(context.getSourcePathResolver().getAbsolutePath(sourcePath)))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     ImmutableList<Path> resPaths =
         resDirectories
             .stream()
@@ -205,7 +204,7 @@ public class ResourcesFilter extends AbstractBuildRule
                 sourcePath ->
                     getProjectFilesystem()
                         .relativize(context.getSourcePathResolver().getAbsolutePath(sourcePath)))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder);
     final FilterResourcesSteps filterResourcesSteps =
@@ -374,7 +373,7 @@ public class ResourcesFilter extends AbstractBuildRule
             .readLines(getStringFilesPath())
             .stream()
             .map(Paths::get)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     return new BuildOutput(stringFiles);
   }
 

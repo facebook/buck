@@ -21,12 +21,12 @@ import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.EnumSet;
 import java.util.Optional;
 
@@ -71,8 +71,10 @@ public class AndroidBinaryFilesInfo {
                   cnl.entrySet()
                       .stream()
                       .collect(
-                          MoreCollectors.toImmutableSortedMap(
-                              e -> e.getKey(), e -> e.getValue().getSourcePathToNativeLibsDir())));
+                          ImmutableSortedMap.toImmutableSortedMap(
+                              Ordering.natural(),
+                              e -> e.getKey(),
+                              e -> e.getValue().getSourcePathToNativeLibsDir())));
     }
 
     Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs =
@@ -86,7 +88,8 @@ public class AndroidBinaryFilesInfo {
                                 || packageAssetLibraries
                                 || !entry.getKey().isRootModule())
                     .collect(
-                        MoreCollectors.toImmutableSortedMap(
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(),
                             e -> e.getKey(),
                             e -> e.getValue().getSourcePathToNativeLibsAssetsDir())));
     return new NativeFilesInfo(nativeLibsDirs, nativeLibsAssetsDirs);
@@ -122,7 +125,7 @@ public class AndroidBinaryFilesInfo {
                   metadataPathAndDexdir ->
                       DexInfo.of(
                           metadataPathAndDexdir.getFirst(), metadataPathAndDexdir.getSecond()))
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       builder.setModuleInfo(moduleInfo);
       shouldInstall = true;
     }

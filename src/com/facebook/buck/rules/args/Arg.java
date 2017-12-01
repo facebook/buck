@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +43,7 @@ public interface Arg extends AddsToRuleKey {
 
   /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
   default ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return BuildableSupport.deriveDeps(this, ruleFinder).collect(MoreCollectors.toImmutableList());
+    return BuildableSupport.deriveDeps(this, ruleFinder).collect(ImmutableList.toImmutableList());
   }
 
   /**

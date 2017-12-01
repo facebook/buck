@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -82,7 +81,7 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             testSources
                 .stream()
                 .map(context.getSourcePathResolver()::getAbsolutePath)
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             output));
   }
 

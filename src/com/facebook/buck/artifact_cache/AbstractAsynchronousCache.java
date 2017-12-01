@@ -23,7 +23,6 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
@@ -130,14 +129,14 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
             requests
                 .stream()
                 .map(r -> r.getRequest().getRuleKey())
-                .collect(MoreCollectors.toImmutableList()))) {
+                .collect(ImmutableList.toImmutableList()))) {
       try {
         MultiFetchResult result =
             multiFetchImpl(
                 requests
                     .stream()
                     .map(ClaimedFetchRequest::getRequest)
-                    .collect(MoreCollectors.toImmutableList()));
+                    .collect(ImmutableList.toImmutableList()));
         Preconditions.checkState(result.getResults().size() == requests.size());
         // MultiFetch must return a non-skipped result for at least one of the requested keys.
         Preconditions.checkState(
@@ -169,7 +168,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
             requests
                 .stream()
                 .map(r -> r.getRequest().getRuleKey())
-                .collect(MoreCollectors.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         String msg =
             String.format(
                 "multifetch(<%s>): %s: %s",

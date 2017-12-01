@@ -47,7 +47,6 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -263,7 +262,7 @@ public class PythonTestDescription
                     pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps()))
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(resolver::getRule)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
             buildTarget,
@@ -281,7 +280,7 @@ public class PythonTestDescription
                 .map(
                     MacroArg.toMacroArgFunction(
                         PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver))
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
 

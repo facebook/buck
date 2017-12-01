@@ -30,7 +30,6 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
@@ -121,7 +120,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     ImmutableList<RuleKey> ruleKeys =
-        arguments.stream().map(RuleKey::new).collect(MoreCollectors.toImmutableList());
+        arguments.stream().map(RuleKey::new).collect(ImmutableList.toImmutableList());
 
     Path tmpDir = Files.createTempDirectory("buck-cache-command");
 

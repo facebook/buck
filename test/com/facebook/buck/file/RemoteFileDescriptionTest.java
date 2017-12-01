@@ -40,7 +40,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.net.URI;
@@ -130,12 +129,12 @@ public class RemoteFileDescriptionTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     Tool executableCommand = ((RemoteFileBinary) buildRule).getExecutableCommand();
     assertThat(
-        BuildableSupport.deriveInputs(executableCommand).collect(MoreCollectors.toImmutableList()),
+        BuildableSupport.deriveInputs(executableCommand).collect(ImmutableList.toImmutableList()),
         Matchers.hasSize(1));
     SourcePath input =
         Iterables.getOnlyElement(
             BuildableSupport.deriveInputs(executableCommand)
-                .collect(MoreCollectors.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     Path absolutePath = pathResolver.getAbsolutePath(input);
     assertEquals("kale", absolutePath.getFileName().toString());
     assertEquals(

@@ -43,7 +43,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -118,7 +117,7 @@ public class JavaSymbolsRuleTest {
           ImmutableSet.of("com.example.Example1", "com.example.Example2"),
           StreamSupport.stream(jsonNode.get("provided").spliterator(), false)
               .map(JsonNode::textValue)
-              .collect(MoreCollectors.toImmutableSet()));
+              .collect(ImmutableSet.toImmutableSet()));
     }
   }
 }

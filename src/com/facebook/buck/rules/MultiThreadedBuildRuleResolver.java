@@ -18,10 +18,10 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,7 +75,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
         .values()
         .stream()
         .map(Futures::getUnchecked)
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override

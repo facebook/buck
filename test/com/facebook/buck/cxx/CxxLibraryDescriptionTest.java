@@ -81,7 +81,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -297,7 +296,7 @@ public class CxxLibraryDescriptionTest {
             .getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -307,7 +306,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -325,7 +324,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -540,7 +539,7 @@ public class CxxLibraryDescriptionTest {
             .getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -550,7 +549,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -567,7 +566,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -596,7 +595,7 @@ public class CxxLibraryDescriptionTest {
             .getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -606,7 +605,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -623,7 +622,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -1149,7 +1148,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         cxxLibrary
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         hasItem(cxxBinaryBuilder.getTarget()));
   }
 

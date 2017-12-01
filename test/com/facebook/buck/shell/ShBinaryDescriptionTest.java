@@ -26,7 +26,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -45,7 +45,7 @@ public class ShBinaryDescriptionTest {
             .build(resolver);
     assertThat(
         BuildableSupport.deriveInputs(shBinary.getExecutableCommand())
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         Matchers.hasItem(main));
   }
 
@@ -63,7 +63,7 @@ public class ShBinaryDescriptionTest {
             .build(resolver);
     assertThat(
         BuildableSupport.deriveInputs(shBinary.getExecutableCommand())
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         Matchers.hasItem(resource));
   }
 }

@@ -34,7 +34,6 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.LinkedHashSet;
@@ -166,7 +165,7 @@ public class JsTestScenario {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setBasePath(basePath)
-              .setSrcs(sources.collect(MoreCollectors.toImmutableSet()))
+              .setSrcs(sources.collect(ImmutableSet.toImmutableSet()))
               .setWorker(workerTarget)
               .build());
     }

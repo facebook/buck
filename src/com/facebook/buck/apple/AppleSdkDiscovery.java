@@ -26,7 +26,6 @@ import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -222,7 +221,7 @@ public class AppleSdkDiscovery {
               Optional.of(
                   Arrays.stream(settingsToolchains.getArray())
                       .map(Object::toString)
-                      .collect(MoreCollectors.toImmutableList()));
+                      .collect(ImmutableList.toImmutableList()));
         }
       }
 

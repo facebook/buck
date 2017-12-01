@@ -29,12 +29,14 @@ import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Optional;
@@ -73,7 +75,7 @@ public class AndroidAppModularityVerification extends AbstractBuildRule {
         MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Override
@@ -104,7 +106,8 @@ public class AndroidAppModularityVerification extends AbstractBuildRule {
                                 new AbstractMap.SimpleEntry<>(
                                     entry.getKey(),
                                     buildContext.getSourcePathResolver().getAbsolutePath(v))))
-            .collect(MoreCollectors.toImmutableMultimap(e -> e.getKey(), e -> e.getValue()));
+            .collect(
+                ImmutableListMultimap.toImmutableListMultimap(e -> e.getKey(), e -> e.getValue()));
 
     AndroidModuleConsistencyStep androidModuleConsistencyStep =
         AndroidModuleConsistencyStep.ensureModuleConsistency(

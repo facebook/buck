@@ -18,8 +18,8 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -54,7 +54,7 @@ abstract class AbstractHeaderVerification implements RuleKeyAppendable {
   protected Iterable<Pattern> getWhitelistPatterns() {
     return Stream.concat(getWhitelist().stream(), getPlatformWhitelist().stream())
         .map(Pattern::compile)
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public static HeaderVerification of(Mode mode) {
