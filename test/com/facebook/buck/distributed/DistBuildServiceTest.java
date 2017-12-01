@@ -253,6 +253,7 @@ public class DistBuildServiceTest {
     stampedeId.setId(idString);
     buildJob.setStampedeId(stampedeId);
     createBuildResponse.setBuildJob(buildJob);
+    createBuildResponse.setWasAccepted(true);
     response.setCreateBuildResponse(createBuildResponse);
     response.setWasSuccessful(true);
     EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))

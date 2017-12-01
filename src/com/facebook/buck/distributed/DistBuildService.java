@@ -41,6 +41,7 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
 import com.facebook.buck.distributed.thrift.CASContainsRequest;
 import com.facebook.buck.distributed.thrift.CreateBuildRequest;
+import com.facebook.buck.distributed.thrift.CreateBuildResponse;
 import com.facebook.buck.distributed.thrift.EnqueueMinionsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
@@ -352,7 +353,12 @@ public class DistBuildService implements Closeable {
     request.setCreateBuildRequest(createBuildRequest);
     FrontendResponse response = makeRequestChecked(request);
 
-    return response.getCreateBuildResponse().getBuildJob();
+    CreateBuildResponse createBuildResponse = response.getCreateBuildResponse();
+    if (createBuildResponse.isSetWasAccepted() && !createBuildResponse.wasAccepted) {
+      throw new HumanReadableException(createBuildResponse.getRejectionMessage());
+    }
+
+    return createBuildResponse.getBuildJob();
   }
 
   public BuildJob startBuild(StampedeId id) throws IOException {
@@ -363,7 +369,7 @@ public class DistBuildService implements Closeable {
    * Make a start-build request with custom value for {@param enqueueJob}.
    *
    * @param id - Stampede id for the build you want to start.
-   * @param enqueueJob - Whether or not this job should be enqueued on the coordinator queue.
+   * @param enqueueJob - Whether or not this job should be enqueued on the coordinator queue.start
    * @return - Latest BuildJob spec.
    */
   public BuildJob startBuild(StampedeId id, boolean enqueueJob) throws IOException {

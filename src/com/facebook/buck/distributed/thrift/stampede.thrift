@@ -221,6 +221,8 @@ struct CreateBuildRequest {
 
 struct CreateBuildResponse {
   1: optional BuildJob buildJob;
+  2: optional bool wasAccepted;
+  3: optional string rejectionMessage;
 }
 
 # Request for the servers to start a distributed build.
