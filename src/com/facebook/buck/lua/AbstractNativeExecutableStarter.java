@@ -71,8 +71,7 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTarget {
 
-  private static final String NATIVE_STARTER_CXX_SOURCE =
-      "com/facebook/buck/lua/native-starter.cpp.in";
+  private static final String NATIVE_STARTER_CXX_SOURCE = "native-starter.cpp.in";
 
   abstract ProjectFilesystem getProjectFilesystem();
 
@@ -106,7 +105,9 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   private String getNativeStarterCxxSourceTemplate() {
     try {
-      return Resources.toString(Resources.getResource(NATIVE_STARTER_CXX_SOURCE), Charsets.UTF_8);
+      return Resources.toString(
+          Resources.getResource(AbstractNativeExecutableStarter.class, NATIVE_STARTER_CXX_SOURCE),
+          Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
