@@ -7,6 +7,7 @@ def buck_module(
     name,
     **kwargs
 ):
+    """Declares a buck module"""
     kwargs["provided_deps"] = sets.union(kwargs.get("provided_deps", []), [
         "//src/com/facebook/buck/module:module",
     ])
