@@ -523,6 +523,9 @@
       <module-javac-params>
         <include name="com/facebook/buck/lua/**/*.java" />
       </module-javac-params>
+      <module-resources>
+        <include name="com/facebook/buck/lua/*.in"/>
+      </module-resources>
     </build-buck-module-jar>
   </target>
 
@@ -625,7 +628,6 @@
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/ide/intellij/templates/*"/>
-        <include name="com/facebook/buck/lua/*.in"/>
         <include name="com/facebook/buck/maven/build-file.st"/>
         <include name="com/facebook/buck/python/*.py"/>
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
@@ -771,6 +773,7 @@
     <attribute name="module-gen-dir" default="${build.dir}/gen/buck-modules/@{module-name}"/>
     <element name="module-javac-params" optional="true" />
     <element name="additional-classpath-entries" optional="true" />
+    <element name="module-resources" optional="true" />
     <sequential>
       <mkdir dir="@{module-classes-dir}" />
       <mkdir dir="${build.dir}/${modules.dir.name}" />
@@ -790,6 +793,12 @@
           <module-javac-params/>
         </javac-params>
       </ecj>
+      <copy todir="@{module-classes-dir}">
+        <fileset dir="${src.dir}">
+          <module-resources/>
+          <exclude name="**"/>
+        </fileset>
+      </copy>
       <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
         <fileset dir="@{module-classes-dir}" />
       </jar>
