@@ -18,6 +18,7 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
   private static final org.apache.thrift.protocol.TField ACTION_GRAPH_CREATION_TIME_MILLIS_FIELD_DESC = new org.apache.thrift.protocol.TField("actionGraphCreationTimeMillis", org.apache.thrift.protocol.TType.I64, (short)5);
   private static final org.apache.thrift.protocol.TField TOTAL_BUILDTIME_MILLIS_FIELD_DESC = new org.apache.thrift.protocol.TField("totalBuildtimeMillis", org.apache.thrift.protocol.TType.I64, (short)6);
   private static final org.apache.thrift.protocol.TField DIST_BUILD_PREPARATION_TIME_MILLIS_FIELD_DESC = new org.apache.thrift.protocol.TField("distBuildPreparationTimeMillis", org.apache.thrift.protocol.TType.I64, (short)7);
+  private static final org.apache.thrift.protocol.TField REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS_FIELD_DESC = new org.apache.thrift.protocol.TField("reverseDependencyQueueCreationTimeMillis", org.apache.thrift.protocol.TType.I64, (short)8);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BuildSlavePerStageTimingStatsStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuildSlavePerStageTimingStatsTupleSchemeFactory();
@@ -29,6 +30,7 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
   public long actionGraphCreationTimeMillis; // optional
   public long totalBuildtimeMillis; // optional
   public long distBuildPreparationTimeMillis; // optional
+  public long reverseDependencyQueueCreationTimeMillis; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -38,7 +40,8 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
     TARGET_GRAPH_DESERIALIZATION_TIME_MILLIS((short)4, "targetGraphDeserializationTimeMillis"),
     ACTION_GRAPH_CREATION_TIME_MILLIS((short)5, "actionGraphCreationTimeMillis"),
     TOTAL_BUILDTIME_MILLIS((short)6, "totalBuildtimeMillis"),
-    DIST_BUILD_PREPARATION_TIME_MILLIS((short)7, "distBuildPreparationTimeMillis");
+    DIST_BUILD_PREPARATION_TIME_MILLIS((short)7, "distBuildPreparationTimeMillis"),
+    REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS((short)8, "reverseDependencyQueueCreationTimeMillis");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -67,6 +70,8 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
           return TOTAL_BUILDTIME_MILLIS;
         case 7: // DIST_BUILD_PREPARATION_TIME_MILLIS
           return DIST_BUILD_PREPARATION_TIME_MILLIS;
+        case 8: // REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS
+          return REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS;
         default:
           return null;
       }
@@ -114,8 +119,9 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
   private static final int __ACTIONGRAPHCREATIONTIMEMILLIS_ISSET_ID = 4;
   private static final int __TOTALBUILDTIMEMILLIS_ISSET_ID = 5;
   private static final int __DISTBUILDPREPARATIONTIMEMILLIS_ISSET_ID = 6;
+  private static final int __REVERSEDEPENDENCYQUEUECREATIONTIMEMILLIS_ISSET_ID = 7;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.DIST_BUILD_STATE_FETCH_TIME_MILLIS,_Fields.DIST_BUILD_STATE_LOADING_TIME_MILLIS,_Fields.SOURCE_FILE_PRELOAD_TIME_MILLIS,_Fields.TARGET_GRAPH_DESERIALIZATION_TIME_MILLIS,_Fields.ACTION_GRAPH_CREATION_TIME_MILLIS,_Fields.TOTAL_BUILDTIME_MILLIS,_Fields.DIST_BUILD_PREPARATION_TIME_MILLIS};
+  private static final _Fields optionals[] = {_Fields.DIST_BUILD_STATE_FETCH_TIME_MILLIS,_Fields.DIST_BUILD_STATE_LOADING_TIME_MILLIS,_Fields.SOURCE_FILE_PRELOAD_TIME_MILLIS,_Fields.TARGET_GRAPH_DESERIALIZATION_TIME_MILLIS,_Fields.ACTION_GRAPH_CREATION_TIME_MILLIS,_Fields.TOTAL_BUILDTIME_MILLIS,_Fields.DIST_BUILD_PREPARATION_TIME_MILLIS,_Fields.REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -132,6 +138,8 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
     tmpMap.put(_Fields.TOTAL_BUILDTIME_MILLIS, new org.apache.thrift.meta_data.FieldMetaData("totalBuildtimeMillis", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.DIST_BUILD_PREPARATION_TIME_MILLIS, new org.apache.thrift.meta_data.FieldMetaData("distBuildPreparationTimeMillis", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS, new org.apache.thrift.meta_data.FieldMetaData("reverseDependencyQueueCreationTimeMillis", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuildSlavePerStageTimingStats.class, metaDataMap);
@@ -152,6 +160,7 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
     this.actionGraphCreationTimeMillis = other.actionGraphCreationTimeMillis;
     this.totalBuildtimeMillis = other.totalBuildtimeMillis;
     this.distBuildPreparationTimeMillis = other.distBuildPreparationTimeMillis;
+    this.reverseDependencyQueueCreationTimeMillis = other.reverseDependencyQueueCreationTimeMillis;
   }
 
   public BuildSlavePerStageTimingStats deepCopy() {
@@ -174,6 +183,8 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
     this.totalBuildtimeMillis = 0;
     setDistBuildPreparationTimeMillisIsSet(false);
     this.distBuildPreparationTimeMillis = 0;
+    setReverseDependencyQueueCreationTimeMillisIsSet(false);
+    this.reverseDependencyQueueCreationTimeMillis = 0;
   }
 
   public long getDistBuildStateFetchTimeMillis() {
@@ -337,6 +348,29 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __DISTBUILDPREPARATIONTIMEMILLIS_ISSET_ID, value);
   }
 
+  public long getReverseDependencyQueueCreationTimeMillis() {
+    return this.reverseDependencyQueueCreationTimeMillis;
+  }
+
+  public BuildSlavePerStageTimingStats setReverseDependencyQueueCreationTimeMillis(long reverseDependencyQueueCreationTimeMillis) {
+    this.reverseDependencyQueueCreationTimeMillis = reverseDependencyQueueCreationTimeMillis;
+    setReverseDependencyQueueCreationTimeMillisIsSet(true);
+    return this;
+  }
+
+  public void unsetReverseDependencyQueueCreationTimeMillis() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __REVERSEDEPENDENCYQUEUECREATIONTIMEMILLIS_ISSET_ID);
+  }
+
+  /** Returns true if field reverseDependencyQueueCreationTimeMillis is set (has been assigned a value) and false otherwise */
+  public boolean isSetReverseDependencyQueueCreationTimeMillis() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __REVERSEDEPENDENCYQUEUECREATIONTIMEMILLIS_ISSET_ID);
+  }
+
+  public void setReverseDependencyQueueCreationTimeMillisIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __REVERSEDEPENDENCYQUEUECREATIONTIMEMILLIS_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case DIST_BUILD_STATE_FETCH_TIME_MILLIS:
@@ -395,6 +429,14 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
       }
       break;
 
+    case REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS:
+      if (value == null) {
+        unsetReverseDependencyQueueCreationTimeMillis();
+      } else {
+        setReverseDependencyQueueCreationTimeMillis((java.lang.Long)value);
+      }
+      break;
+
     }
   }
 
@@ -421,6 +463,9 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
     case DIST_BUILD_PREPARATION_TIME_MILLIS:
       return getDistBuildPreparationTimeMillis();
 
+    case REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS:
+      return getReverseDependencyQueueCreationTimeMillis();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -446,6 +491,8 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
       return isSetTotalBuildtimeMillis();
     case DIST_BUILD_PREPARATION_TIME_MILLIS:
       return isSetDistBuildPreparationTimeMillis();
+    case REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS:
+      return isSetReverseDependencyQueueCreationTimeMillis();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -528,6 +575,15 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
         return false;
     }
 
+    boolean this_present_reverseDependencyQueueCreationTimeMillis = true && this.isSetReverseDependencyQueueCreationTimeMillis();
+    boolean that_present_reverseDependencyQueueCreationTimeMillis = true && that.isSetReverseDependencyQueueCreationTimeMillis();
+    if (this_present_reverseDependencyQueueCreationTimeMillis || that_present_reverseDependencyQueueCreationTimeMillis) {
+      if (!(this_present_reverseDependencyQueueCreationTimeMillis && that_present_reverseDependencyQueueCreationTimeMillis))
+        return false;
+      if (this.reverseDependencyQueueCreationTimeMillis != that.reverseDependencyQueueCreationTimeMillis)
+        return false;
+    }
+
     return true;
   }
 
@@ -562,6 +618,10 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
     hashCode = hashCode * 8191 + ((isSetDistBuildPreparationTimeMillis()) ? 131071 : 524287);
     if (isSetDistBuildPreparationTimeMillis())
       hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(distBuildPreparationTimeMillis);
+
+    hashCode = hashCode * 8191 + ((isSetReverseDependencyQueueCreationTimeMillis()) ? 131071 : 524287);
+    if (isSetReverseDependencyQueueCreationTimeMillis())
+      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(reverseDependencyQueueCreationTimeMillis);
 
     return hashCode;
   }
@@ -644,6 +704,16 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetReverseDependencyQueueCreationTimeMillis()).compareTo(other.isSetReverseDependencyQueueCreationTimeMillis());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetReverseDependencyQueueCreationTimeMillis()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.reverseDependencyQueueCreationTimeMillis, other.reverseDependencyQueueCreationTimeMillis);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -703,6 +773,12 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
       if (!first) sb.append(", ");
       sb.append("distBuildPreparationTimeMillis:");
       sb.append(this.distBuildPreparationTimeMillis);
+      first = false;
+    }
+    if (isSetReverseDependencyQueueCreationTimeMillis()) {
+      if (!first) sb.append(", ");
+      sb.append("reverseDependencyQueueCreationTimeMillis:");
+      sb.append(this.reverseDependencyQueueCreationTimeMillis);
       first = false;
     }
     sb.append(")");
@@ -806,6 +882,14 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 8: // REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.reverseDependencyQueueCreationTimeMillis = iprot.readI64();
+              struct.setReverseDependencyQueueCreationTimeMillisIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -856,6 +940,11 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
         oprot.writeI64(struct.distBuildPreparationTimeMillis);
         oprot.writeFieldEnd();
       }
+      if (struct.isSetReverseDependencyQueueCreationTimeMillis()) {
+        oprot.writeFieldBegin(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME_MILLIS_FIELD_DESC);
+        oprot.writeI64(struct.reverseDependencyQueueCreationTimeMillis);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -895,7 +984,10 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
       if (struct.isSetDistBuildPreparationTimeMillis()) {
         optionals.set(6);
       }
-      oprot.writeBitSet(optionals, 7);
+      if (struct.isSetReverseDependencyQueueCreationTimeMillis()) {
+        optionals.set(7);
+      }
+      oprot.writeBitSet(optionals, 8);
       if (struct.isSetDistBuildStateFetchTimeMillis()) {
         oprot.writeI64(struct.distBuildStateFetchTimeMillis);
       }
@@ -917,12 +1009,15 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
       if (struct.isSetDistBuildPreparationTimeMillis()) {
         oprot.writeI64(struct.distBuildPreparationTimeMillis);
       }
+      if (struct.isSetReverseDependencyQueueCreationTimeMillis()) {
+        oprot.writeI64(struct.reverseDependencyQueueCreationTimeMillis);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuildSlavePerStageTimingStats struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(7);
+      java.util.BitSet incoming = iprot.readBitSet(8);
       if (incoming.get(0)) {
         struct.distBuildStateFetchTimeMillis = iprot.readI64();
         struct.setDistBuildStateFetchTimeMillisIsSet(true);
@@ -950,6 +1045,10 @@ public class BuildSlavePerStageTimingStats implements org.apache.thrift.TBase<Bu
       if (incoming.get(6)) {
         struct.distBuildPreparationTimeMillis = iprot.readI64();
         struct.setDistBuildPreparationTimeMillisIsSet(true);
+      }
+      if (incoming.get(7)) {
+        struct.reverseDependencyQueueCreationTimeMillis = iprot.readI64();
+        struct.setReverseDependencyQueueCreationTimeMillisIsSet(true);
       }
     }
   }

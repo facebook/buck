@@ -33,6 +33,7 @@ public class BuildSlaveTimingStatsTracker {
     SOURCE_FILE_PRELOAD_TIME,
     TARGET_GRAPH_DESERIALIZATION_TIME,
     ACTION_GRAPH_CREATION_TIME,
+    REVERSE_DEPENDENCY_QUEUE_CREATION_TIME,
     TOTAL_RUNTIME,
   }
 
@@ -68,6 +69,8 @@ public class BuildSlaveTimingStatsTracker {
         .setTargetGraphDeserializationTimeMillis(
             getElapsedTimeMs(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME))
         .setActionGraphCreationTimeMillis(getElapsedTimeMs(SlaveEvents.ACTION_GRAPH_CREATION_TIME))
+        .setReverseDependencyQueueCreationTimeMillis(
+            getElapsedTimeMs(SlaveEvents.REVERSE_DEPENDENCY_QUEUE_CREATION_TIME))
         .setTotalBuildtimeMillis(getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
   }
 }

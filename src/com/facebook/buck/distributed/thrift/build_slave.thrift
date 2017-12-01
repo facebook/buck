@@ -96,6 +96,7 @@ struct BuildSlavePerStageTimingStats {
     5: optional i64 actionGraphCreationTimeMillis;
     6: optional i64 totalBuildtimeMillis;
     7: optional i64 distBuildPreparationTimeMillis;
+    8: optional i64 reverseDependencyQueueCreationTimeMillis;
 }
 
 struct BuildSlaveFinishedStats {

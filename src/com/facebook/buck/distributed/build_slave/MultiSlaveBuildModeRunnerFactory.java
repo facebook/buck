@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import static com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents.REVERSE_DEPENDENCY_QUEUE_CREATION_TIME;
+
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.config.resources.ResourcesConfig;
@@ -68,26 +70,31 @@ public class MultiSlaveBuildModeRunnerFactory {
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
       RuleKeyConfiguration rkConfigForCache,
-      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>>
-          asyncRuleKeyCalculatorOptional) {
+      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> asyncRuleKeyCalculatorOptional,
+      BuildSlaveTimingStatsTracker timingStatsTracker) {
 
-    ListenableFuture<BuildTargetsQueue> queue =
+    ListenableFuture<BuildTargetsQueue> queueFuture =
         Futures.transformAsync(
             asyncRuleKeyCalculatorOptional,
             ruleKeyCalculatorOptional ->
                 Futures.transform(
                     delegateAndGraphsFuture,
-                    graphs ->
-                        new BuildTargetsQueueFactory(
-                                graphs.getActionGraphAndResolver().getResolver(),
-                                executorService,
-                                distBuildConfig.isDeepRemoteBuildEnabled(),
-                                remoteCache,
-                                eventBus,
-                                graphs.getCachingBuildEngineDelegate().getFileHashCache(),
-                                rkConfigForCache,
-                                ruleKeyCalculatorOptional)
-                            .newQueue(topLevelTargetsToBuild),
+                    graphs -> {
+                      timingStatsTracker.startTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME);
+                      BuildTargetsQueue queue =
+                          new BuildTargetsQueueFactory(
+                                  graphs.getActionGraphAndResolver().getResolver(),
+                                  executorService,
+                                  distBuildConfig.isDeepRemoteBuildEnabled(),
+                                  remoteCache,
+                                  eventBus,
+                                  graphs.getCachingBuildEngineDelegate().getFileHashCache(),
+                                  rkConfigForCache,
+                                  ruleKeyCalculatorOptional)
+                              .newQueue(topLevelTargetsToBuild);
+                      timingStatsTracker.stopTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME);
+                      return queue;
+                    },
                     executorService),
             executorService);
     Optional<String> minionQueue = distBuildConfig.getMinionQueue();
@@ -106,7 +113,7 @@ public class MultiSlaveBuildModeRunnerFactory {
     Optional<URI> traceUploadUri = chromeTraceBuckConfig.getTraceUploadUri();
 
     return new CoordinatorModeRunner(
-        queue,
+        queueFuture,
         stampedeId,
         listener,
         logDirectoryPath,
@@ -175,7 +182,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
-      RuleKeyConfiguration rkConfigForCache) {
+      RuleKeyConfiguration rkConfigForCache,
+      BuildSlaveTimingStatsTracker timingStatsTracker) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             delegateAndGraphsFuture,
@@ -195,7 +203,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                 localBuildExecutor,
                 buildExecutor ->
                     Optional.of(buildExecutor.getCachingBuildEngine().getRuleKeyCalculator()),
-                executorService)),
+                executorService),
+            timingStatsTracker),
         createMinion(
             localBuildExecutor,
             distBuildService,

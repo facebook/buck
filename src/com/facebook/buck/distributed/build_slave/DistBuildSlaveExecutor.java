@@ -94,7 +94,8 @@ public class DistBuildSlaveExecutor {
               args.getExecutorService(),
               args.getArtifactCacheFactory().newInstance(true, true),
               args.getRuleKeyConfiguration(),
-              /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()));
+              /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()),
+              args.getTimingStatsTracker());
       return setPreparationCallbackAndRunWithHeartbeatService(runner);
     }
 
@@ -145,7 +146,8 @@ public class DistBuildSlaveExecutor {
                   args.getBuckEventBus(),
                   args.getExecutorService(),
                   args.getArtifactCacheFactory().newInstance(true, true),
-                  args.getRuleKeyConfiguration());
+                  args.getRuleKeyConfiguration(),
+                  args.getTimingStatsTracker());
           break;
 
         case COORDINATOR:
