@@ -1,15 +1,15 @@
 dependencies --platform android --lib @/buck-out/gen/js/extras#android.jslib --lib @/buck-out/gen/js/fruit#android.jslib --root @ yoghurt banana apple
 {"command":"library-dependencies","release":false,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/extras#android.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,android.jslib"}
 library-files --platform android --root @
-transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraArgs":"--arbitrary extra --flags"}
 var choclateChips;
-transform --arbitrary extra --flags --filename js/extras/yoghurt.js
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraArgs":"--arbitrary extra --flags"}
 var yoghurt;
 {"command":"library-dependencies","release":false,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android.jslib"}
 library-files --platform android --root @
-transform --filename js/apple.js
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js"}
 var apple;
-transform --filename js/banana.js
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","sourceJsFilePath":"@/js/banana.js","sourceJsFileName":"js/banana.js"}
 var banana;
-transform --filename js/pear.js
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","sourceJsFilePath":"@/js/pear.js","sourceJsFileName":"js/pear.js"}
 var pear;

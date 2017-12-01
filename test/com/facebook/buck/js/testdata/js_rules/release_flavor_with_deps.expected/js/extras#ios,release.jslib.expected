@@ -1,8 +1,8 @@
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"ios","outputPath":"@/buck-out/gen/js/extras#ios,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,ios,release.jslib"}
 library-files --release --platform ios --root @
 optimize --arbitrary extra --flags --platform ios
-transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraArgs":"--arbitrary extra --flags"}
 var choclateChips;
 optimize --arbitrary extra --flags --platform ios
-transform --arbitrary extra --flags --filename js/extras/yoghurt.js
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraArgs":"--arbitrary extra --flags"}
 var yoghurt;

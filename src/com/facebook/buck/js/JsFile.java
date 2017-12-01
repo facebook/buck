@@ -32,8 +32,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -61,14 +66,18 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jsfile"));
   }
 
-  ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgsFormat, Path outputPath) {
+  public Optional<String> getExtraArgs() {
+    return extraArgs;
+  }
+
+  ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgs, Path outputPath) {
     return ImmutableList.of(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
         JsUtil.workerShellStep(
             worker,
-            String.format(jobArgsFormat, extraArgs.orElse("")),
+            jobArgs,
             getBuildTarget(),
             context.getSourcePathResolver(),
             getProjectFilesystem()));
@@ -108,16 +117,53 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      final Path srcPath = sourcePathResolver.getAbsolutePath(src);
-      final String jobArgs =
-          String.format(
-              "transform %%s --filename %s --out %s %s",
-              virtualPath.orElseGet(
-                  () -> MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))),
-              outputPath,
-              subPath.map(srcPath::resolve).orElse(srcPath));
+
+      String jobArgs;
+      try {
+        jobArgs = getJobArgs(sourcePathResolver, outputPath);
+      } catch (IOException ex) {
+        throw JsUtil.getJobArgsException(ex, getBuildTarget());
+      }
 
       return getBuildSteps(context, jobArgs, outputPath);
+    }
+
+    private String getJobArgs(SourcePathResolver sourcePathResolver, Path outputFilePath)
+        throws IOException {
+      BuildTarget target = getBuildTarget();
+      ByteArrayOutputStream stream = new ByteArrayOutputStream();
+      JsonGenerator generator = ObjectMappers.createGenerator(stream);
+      generator.writeStartObject();
+
+      generator.writeFieldName("command");
+      generator.writeString("transform");
+
+      generator.writeFieldName("outputFilePath");
+      generator.writeString(outputFilePath.toString());
+
+      generator.writeFieldName("sourceJsFilePath");
+      Path srcPath = sourcePathResolver.getAbsolutePath(src);
+      generator.writeString(subPath.map(srcPath::resolve).orElse(srcPath).toString());
+
+      generator.writeFieldName("sourceJsFileName");
+      generator.writeString(
+          virtualPath.orElseGet(
+              () -> MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))));
+
+      getExtraArgs()
+          .ifPresent(
+              value -> {
+                try {
+                  generator.writeFieldName("extraArgs");
+                  generator.writeString(value);
+                } catch (IOException ex) {
+                  throw JsUtil.getJobArgsException(ex, target);
+                }
+              });
+
+      generator.writeEndObject();
+      generator.close();
+      return stream.toString(StandardCharsets.UTF_8.name());
     }
 
     @VisibleForTesting
@@ -155,7 +201,8 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
       final String jobArgs =
           String.format(
-              "optimize %%s %s --out %s %s",
+              "optimize %s %s --out %s %s",
+              getExtraArgs().orElse(""),
               JsFlavors.platformArgForRelease(getBuildTarget().getFlavors()),
               outputPath,
               sourcePathResolver.getAbsolutePath(devFile).toString());
