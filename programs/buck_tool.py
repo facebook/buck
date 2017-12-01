@@ -105,6 +105,24 @@ class ExecuteTarget(Exception):
         os.execvpe(self._path, self._argv, self._envp)
 
 
+class BuckStatusReporter(object):
+    """ Add custom logic to log Buck completion statuses or errors including
+    critical ones like JVM crashes and OOMs. This object is fully mutable with
+    all fields optional which get populated on the go. Only safe operations
+    are allowed in the reporter except for report() function which can throw
+    """
+    def __init__(self, argv):
+        self.argv = argv
+        self.build_id = ''
+        self.buck_version = ''
+        self.is_buckd = False
+        self.status_message = ''
+
+    def report(self, exit_code):
+        """ Add custom code here to track Buck invocations """
+        pass
+
+
 class JvmCrashLogger(object):
     def __init__(self, buck_tool, project_root):
         self._buck_tool = buck_tool
@@ -143,7 +161,8 @@ class JvmCrashLogger(object):
 
 
 class BuckTool(object):
-    def __init__(self, buck_project):
+    def __init__(self, buck_project, buck_reporter):
+        self._reporter = buck_reporter
         self._package_info = self._get_package_info()
         self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
@@ -156,6 +175,7 @@ class BuckTool(object):
         self._pathsep = os.pathsep
         if sys.platform == 'cygwin':
             self._pathsep = ';'
+
 
     def _get_package_info(self):
         raise NotImplementedError()
@@ -346,6 +366,7 @@ class BuckTool(object):
                     self.kill_buckd()
 
                 buck_version_uid = self._get_buck_version_uid()
+                self._reporter.buck_version = buck_version_uid
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
@@ -371,6 +392,7 @@ class BuckTool(object):
                 env['BUCK_BUILD_ID'] = build_id
 
                 use_nailgun = use_buckd and self._is_buckd_running()
+                self._reporter.is_buckd = use_nailgun
                 run_fn = self._run_with_nailgun if use_nailgun else self._run_without_nailgun
 
                 self._unpack_modules()
@@ -600,6 +622,8 @@ class BuckTool(object):
             if extra_java_args:
                 java_args.extend(shlex.split(extra_java_args))
             return java_args
+
+
 
 
 def install_signal_handlers():

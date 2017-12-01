@@ -40,10 +40,10 @@ BUCK_INFO_LOCATION = os.path.join("build", "buck-info.json")
 
 class BuckRepo(BuckTool):
 
-    def __init__(self, buck_bin_dir, buck_project):
+    def __init__(self, buck_bin_dir, buck_project, buck_reporter):
         self.buck_dir = platform_path(os.path.dirname(buck_bin_dir))
 
-        super(BuckRepo, self).__init__(buck_project)
+        super(BuckRepo, self).__init__(buck_project, buck_reporter)
 
         dot_git = os.path.join(self.buck_dir, '.git')
         self.is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
