@@ -81,7 +81,7 @@ public class DistBuildSlaveExecutor {
     if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
       runner =
           MultiSlaveBuildModeRunnerFactory.createCoordinator(
-              initializer.getActionGraphAndResolver(),
+              initializer.getDelegateAndGraphs(),
               getTopLevelTargetsToBuild(),
               args.getDistBuildConfig(),
               args.getDistBuildService(),
@@ -89,7 +89,12 @@ public class DistBuildSlaveExecutor {
               clientBuildId,
               false,
               args.getLogDirectoryPath(),
-              args.getBuildRuleFinishedPublisher());
+              args.getBuildRuleFinishedPublisher(),
+              args.getBuckEventBus(),
+              args.getExecutorService(),
+              args.getArtifactCacheFactory().newInstance(true, true),
+              args.getRuleKeyConfiguration(),
+              /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()));
       return setPreparationCallbackAndRunWithHeartbeatService(runner);
     }
 
@@ -126,7 +131,7 @@ public class DistBuildSlaveExecutor {
         case COORDINATOR_AND_MINION:
           runner =
               MultiSlaveBuildModeRunnerFactory.createCoordinatorAndMinion(
-                  initializer.getActionGraphAndResolver(),
+                  initializer.getDelegateAndGraphs(),
                   getTopLevelTargetsToBuild(),
                   args.getDistBuildConfig(),
                   args.getDistBuildService(),
@@ -136,7 +141,11 @@ public class DistBuildSlaveExecutor {
                   localBuildExecutor,
                   args.getLogDirectoryPath(),
                   args.getBuildRuleFinishedPublisher(),
-                  args.getUnexpectedSlaveCacheMissTracker());
+                  args.getUnexpectedSlaveCacheMissTracker(),
+                  args.getBuckEventBus(),
+                  args.getExecutorService(),
+                  args.getArtifactCacheFactory().newInstance(true, true),
+                  args.getRuleKeyConfiguration());
           break;
 
         case COORDINATOR:

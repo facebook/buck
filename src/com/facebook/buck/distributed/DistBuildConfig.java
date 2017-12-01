@@ -90,6 +90,9 @@ public class DistBuildConfig {
   private static final String MAX_MINION_SILENCE_MILLIS = "max_minion_silence_millis";
   private static final long DEFAULT_MAX_MINION_SILENCE_MILLIS = TimeUnit.SECONDS.toMillis(30);
 
+  private static final String ENABLE_DEEP_REMOTE_BUILD = "enable_deep_remote_build";
+  private static final boolean DEFAULT_ENABLE_DEEP_REMOTE_BUILD = false;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -199,6 +202,11 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, MINION_POLL_LOOP_INTERVAL_MILLIS)
         .orElse(DEFAULT_MINION_POLL_LOOP_INTERVAL_MILLIS);
+  }
+
+  public boolean isDeepRemoteBuildEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_DEEP_REMOTE_BUILD, DEFAULT_ENABLE_DEEP_REMOTE_BUILD);
   }
 
   public long getHearbeatServiceRateMillis() {

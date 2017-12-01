@@ -281,6 +281,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
   }
 
+  /// We might want to share rule-key calculation with other parts of code.
+  public ParallelRuleKeyCalculator<RuleKey> getRuleKeyCalculator() {
+    return ruleKeyCalculator;
+  }
+
   /**
    * We have a lot of places where tasks are submitted into a service implicitly. There is no way to
    * assign custom weights to such tasks. By creating a temporary service with adjusted weights it

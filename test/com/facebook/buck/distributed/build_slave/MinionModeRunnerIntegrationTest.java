@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
@@ -318,6 +319,11 @@ public class MinionModeRunnerIntegrationTest {
         List<BuildEngineResult> resultFutures,
         Optional<Path> pathToBuildReport) {
       return 0;
+    }
+
+    @Override
+    public CachingBuildEngine getCachingBuildEngine() {
+      throw new UnsupportedOperationException();
     }
 
     @Override

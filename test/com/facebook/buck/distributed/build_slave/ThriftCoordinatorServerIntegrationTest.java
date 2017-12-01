@@ -40,7 +40,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   @Test
   public void testMakingSimpleRequest() throws IOException {
     try (ThriftCoordinatorServer server =
-            createServerOnRandomPort(BuildTargetsQueue.newEmptyQueue());
+            createServerOnRandomPort(BuildTargetsQueueFactory.newEmptyQueue());
         ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
       server.start();
       client.start(server.getPort());
@@ -158,7 +158,7 @@ public class ThriftCoordinatorServerIntegrationTest {
     StampedeId wrongStampedeId = new StampedeId().setId("not-" + STAMPEDE_ID.id);
 
     try (ThriftCoordinatorServer server =
-            createCoordinatorServer(OptionalInt.empty(), BuildTargetsQueue.newEmptyQueue());
+            createCoordinatorServer(OptionalInt.empty(), BuildTargetsQueueFactory.newEmptyQueue());
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", wrongStampedeId)) {
       server.start();

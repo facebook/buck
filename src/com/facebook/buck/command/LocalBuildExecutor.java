@@ -158,6 +158,11 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   @Override
+  public CachingBuildEngine getCachingBuildEngine() {
+    return cachingBuildEngine;
+  }
+
+  @Override
   public synchronized void shutdown() throws IOException {
     if (isShutdown) {
       return;

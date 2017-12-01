@@ -17,27 +17,17 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.stream.Stream;
 
 // NOTE: Not thread safe. Caller needs to synchronize access if using multiple threads.
 public class BuildTargetsQueue {
@@ -48,95 +38,13 @@ public class BuildTargetsQueue {
   private final Set<String> seenFinishedNodes = new HashSet<>();
   private int totalBuilt = 0;
 
-  private BuildTargetsQueue(
+  BuildTargetsQueue(
       List<EnqueuedTarget> zeroDependencyTargets, Map<String, EnqueuedTarget> allEnqueuedTargets) {
+    LOG.verbose(
+        "Constructing queue with [%d] zero dependency targets and [%d] total targets.",
+        zeroDependencyTargets.size(), allEnqueuedTargets.size());
     this.zeroDependencyTargets = zeroDependencyTargets;
     this.allEnqueuedTargets = allEnqueuedTargets;
-  }
-
-  public static BuildTargetsQueue newEmptyQueue() {
-    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>());
-  }
-
-  public static BuildTargetsQueue newQueue(
-      BuildRuleResolver resolver, Iterable<BuildTarget> targetsToBuild) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    // Build the reverse dependency graph by traversing the action graph Top-Down.
-    Map<String, Set<String>> allReverseDeps = new HashMap<>();
-    Map<String, Set<String>> allForwardDeps = new HashMap<>();
-    Set<String> visitedTargets = new HashSet<>();
-    Queue<BuildRule> buildRulesToProcess =
-        Lists.newLinkedList(
-            FluentIterable.from(targetsToBuild)
-                .transform(
-                    x -> {
-                      BuildRule rule = resolver.getRule(x);
-                      visitedTargets.add(ruleToTarget(rule));
-                      return rule;
-                    }));
-    while (!buildRulesToProcess.isEmpty()) {
-      BuildRule rule = buildRulesToProcess.remove();
-
-      String target = ruleToTarget(rule);
-      allForwardDeps.put(target, new HashSet<>());
-
-      ImmutableSortedSet.Builder<BuildRule> allDependencies = ImmutableSortedSet.naturalOrder();
-
-      // Get all standard build dependencies
-      allDependencies.addAll(rule.getBuildDeps());
-
-      // Optionally add in any run-time deps
-      if (rule instanceof HasRuntimeDeps) {
-        LOG.debug(String.format("[%s] has runtime deps", rule.getFullyQualifiedName()));
-
-        Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
-        ImmutableSet<BuildRule> runtimeDeps =
-            resolver.getAllRules(runtimeDepPaths.collect(MoreCollectors.toImmutableSet()));
-
-        allDependencies.addAll(runtimeDeps);
-      }
-
-      for (BuildRule dependencyRule : allDependencies.build()) {
-        String dependencyTarget = ruleToTarget(dependencyRule);
-
-        if (!allReverseDeps.containsKey(dependencyTarget)) {
-          allReverseDeps.put(dependencyTarget, new HashSet<>());
-        }
-        Preconditions.checkNotNull(allReverseDeps.get(dependencyTarget)).add(target);
-        Preconditions.checkNotNull(allForwardDeps.get(target)).add(dependencyTarget);
-
-        if (!visitedTargets.contains(dependencyTarget)) {
-          visitedTargets.add(dependencyTarget);
-          buildRulesToProcess.add(dependencyRule);
-        }
-      }
-    }
-
-    // Do the reference counting and create the EnqueuedTargets.
-    List<EnqueuedTarget> zeroDependencyTargets = new ArrayList<>();
-    Map<String, EnqueuedTarget> allEnqueuedTargets = new HashMap<>();
-    for (String target : visitedTargets) {
-      Iterable<String> currentRevDeps = null;
-      if (allReverseDeps.containsKey(target)) {
-        currentRevDeps = allReverseDeps.get(target);
-      } else {
-        currentRevDeps = new ArrayList<>();
-      }
-
-      EnqueuedTarget enqueuedTarget =
-          new EnqueuedTarget(
-              target,
-              ImmutableList.copyOf(currentRevDeps),
-              Preconditions.checkNotNull(allForwardDeps.get(target)).size(),
-              ImmutableSet.copyOf(allForwardDeps.get(target)));
-      allEnqueuedTargets.put(target, enqueuedTarget);
-
-      if (enqueuedTarget.areAllDependenciesResolved()) {
-        zeroDependencyTargets.add(enqueuedTarget);
-      }
-    }
-
-    return new BuildTargetsQueue(zeroDependencyTargets, allEnqueuedTargets);
   }
 
   public boolean hasReadyZeroDependencyNodes() {
@@ -276,11 +184,8 @@ public class BuildTargetsQueue {
     return workUnit;
   }
 
-  private static String ruleToTarget(BuildRule rule) {
-    return rule.getFullyQualifiedName();
-  }
-
-  private static class EnqueuedTarget {
+  /** Custom structure for nodes used by the {@link BuildTargetsQueue}. */
+  static class EnqueuedTarget {
     private final String buildTarget;
     private final ImmutableList<String> dependentTargets;
     private final Set<String> allDependencies;
@@ -289,7 +194,7 @@ public class BuildTargetsQueue {
 
     private boolean partOfBuildingUnitOfWork = false;
 
-    private EnqueuedTarget(
+    public EnqueuedTarget(
         String buildTarget,
         ImmutableList<String> dependentTargets,
         int numberOfDependencies,

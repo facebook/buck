@@ -117,7 +117,7 @@ public abstract class DistBuildFactory {
     // Create a cache factory which uses a combination of the distributed build config,
     // overridden with the local buck config (i.e. the build slave).
     ArtifactCacheFactory distBuildArtifactCacheFactory =
-        params.getArtifactCacheFactory().cloneWith(state.getRootCell().getBuckConfig());
+        params.getArtifactCacheFactory().cloneWith(state.getRemoteRootCellConfig());
 
     DistBuildSlaveExecutor executor =
         new DistBuildSlaveExecutor(
@@ -131,7 +131,7 @@ public abstract class DistBuildFactory {
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
                 .setRuleKeyConfiguration(
-                    ConfigRuleKeyConfigurationFactory.create(state.getRootCell().getBuckConfig()))
+                    ConfigRuleKeyConfigurationFactory.create(state.getRemoteRootCellConfig()))
                 .setConsole(params.getConsole())
                 .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)
