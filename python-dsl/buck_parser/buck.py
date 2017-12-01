@@ -452,6 +452,20 @@ def package_name(build_env=None):
     """
     return get_base_path(build_env=build_env)
 
+
+@provide_for_build
+def fail(message, attr=None, build_env=None):
+    """Raises a parse error.
+
+    :param message: Error message to display for the user.
+        The object is converted to a string.
+    :param attr: Optional name of the attribute that caused the error.
+    """
+    attribute_prefix = ("attribute " + attr + ": " if attr is not None else "")
+    msg = attribute_prefix + str(message)
+    raise AssertionError(msg)
+
+
 @provide_for_build
 def get_cell_name(build_env=None):
     """Get the cell name of the build file that was initially evaluated.

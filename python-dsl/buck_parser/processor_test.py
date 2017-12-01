@@ -1138,6 +1138,38 @@ class BuckTest(unittest.TestCase):
                 processor.process(self.project_root, None, 'BUCK_fail', [])
             self.assertEqual(e.exception.message, expected_msg)
 
+    def test_fail_function_throws_an_error(self):
+        build_file = ProjectFile(
+            root=self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'fail("expected error")',
+            )
+        )
+        self.write_files(build_file)
+
+        processor = self.create_build_file_processor()
+
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(AssertionError, "expected error"):
+                processor.process(self.project_root, None, 'BUCK_fail', [])
+
+    def test_fail_function_includes_attribute_information(self):
+        build_file = ProjectFile(
+            root=self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'fail("error", "foo")',
+            )
+        )
+        self.write_files(build_file)
+
+        processor = self.create_build_file_processor()
+
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(AssertionError, "attribute foo: error"):
+                processor.process(self.project_root, None, 'BUCK_fail', [])
+
     def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
         defs_file = ProjectFile(
             root=self.project_root,
