@@ -58,19 +58,31 @@ public class BuildSlaveTimingStatsTracker {
     watch.stop();
   }
 
+  public synchronized boolean isSet(SlaveEvents event) {
+    return watches.containsKey(event);
+  }
+
   public BuildSlavePerStageTimingStats generateStats() {
-    return new BuildSlavePerStageTimingStats()
-        .setDistBuildPreparationTimeMillis(
-            getElapsedTimeMs(SlaveEvents.DIST_BUILD_PREPARATION_TIME))
-        .setDistBuildStateFetchTimeMillis(getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_FETCH_TIME))
-        .setDistBuildStateLoadingTimeMillis(
-            getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME))
-        .setSourceFilePreloadTimeMillis(getElapsedTimeMs(SlaveEvents.SOURCE_FILE_PRELOAD_TIME))
-        .setTargetGraphDeserializationTimeMillis(
-            getElapsedTimeMs(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME))
-        .setActionGraphCreationTimeMillis(getElapsedTimeMs(SlaveEvents.ACTION_GRAPH_CREATION_TIME))
-        .setReverseDependencyQueueCreationTimeMillis(
-            getElapsedTimeMs(SlaveEvents.REVERSE_DEPENDENCY_QUEUE_CREATION_TIME))
-        .setTotalBuildtimeMillis(getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
+    BuildSlavePerStageTimingStats timingStats =
+        new BuildSlavePerStageTimingStats()
+            .setDistBuildPreparationTimeMillis(
+                getElapsedTimeMs(SlaveEvents.DIST_BUILD_PREPARATION_TIME))
+            .setDistBuildStateFetchTimeMillis(
+                getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_FETCH_TIME))
+            .setDistBuildStateLoadingTimeMillis(
+                getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME))
+            .setSourceFilePreloadTimeMillis(getElapsedTimeMs(SlaveEvents.SOURCE_FILE_PRELOAD_TIME))
+            .setTargetGraphDeserializationTimeMillis(
+                getElapsedTimeMs(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME))
+            .setActionGraphCreationTimeMillis(
+                getElapsedTimeMs(SlaveEvents.ACTION_GRAPH_CREATION_TIME))
+            .setTotalBuildtimeMillis(getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
+
+    if (isSet(SlaveEvents.REVERSE_DEPENDENCY_QUEUE_CREATION_TIME)) {
+      timingStats.setReverseDependencyQueueCreationTimeMillis(
+          getElapsedTimeMs(SlaveEvents.REVERSE_DEPENDENCY_QUEUE_CREATION_TIME));
+    }
+
+    return timingStats;
   }
 }

@@ -540,7 +540,6 @@ public class DistBuildSlaveEventBusListenerTest {
             .setDistBuildStateLoadingTimeMillis(0)
             .setTargetGraphDeserializationTimeMillis(0)
             .setActionGraphCreationTimeMillis(ACTION_GRAPH_CREATION_TIME_MS)
-            .setReverseDependencyQueueCreationTimeMillis(0)
             .setSourceFilePreloadTimeMillis(0)
             .setTotalBuildtimeMillis(0)
             .setDistBuildPreparationTimeMillis(0);
