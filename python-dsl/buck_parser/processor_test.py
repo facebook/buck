@@ -600,6 +600,53 @@ class BuckTest(unittest.TestCase):
                 build_file.root, build_file.prefix, build_file.path, diagnostics)
             self.assertEqual(rules[0].get('name'), 'foo')
 
+    def test_package_name_is_available(self):
+        package_dir = os.path.join(self.project_root, 'pkg')
+        os.makedirs(package_dir)
+        build_file = ProjectFile(
+            self.project_root,
+            path='pkg/BUCK',
+            contents=(
+                'foo_rule(',
+                '  name=package_name(),',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'pkg')
+
+    def test_package_name_in_extension_returns_build_file_package(self):
+        package_dir = os.path.join(self.project_root, 'pkg')
+        os.makedirs(package_dir)
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'def foo():',
+                '  return package_name()',
+            ))
+        self.write_file(extension_file)
+        build_file = ProjectFile(
+            self.project_root,
+            path='pkg/BUCK',
+            contents=(
+                'load("//:ext.bzl", "foo")',
+                'foo_rule(',
+                '  name=foo(),',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'pkg')
+
     def test_add_build_file_dep(self):
         """
         Test simple use of `add_build_file_dep`.
