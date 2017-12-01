@@ -489,7 +489,7 @@ public class BuckConfig implements ConfigPathGetter {
     return ImmutableSet.copyOf(getListWithoutComments("extensions", "listeners"));
   }
 
-  /** Return Strings so as to avoid a dependency on {@link LabelSelector}! */
+  /** Return Strings so as to avoid a dependency on {@link com.facebook.buck.cli.LabelSelector}! */
   public ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     return getListWithoutComments("test", "excluded_labels");
   }
