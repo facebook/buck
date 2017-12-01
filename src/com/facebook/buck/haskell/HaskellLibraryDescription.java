@@ -724,7 +724,9 @@ public class HaskellLibraryDescription
               args);
         case GHCI:
           return HaskellDescriptionUtils.requireGhciRule(
-              baseTarget,
+              // The GHCi rule is a user-facing "deployable" rule, rather than a factory rule, so
+              // make sure to use the original build target when generating it.
+              buildTarget,
               projectFilesystem,
               params,
               resolver,
