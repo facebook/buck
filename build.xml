@@ -823,6 +823,7 @@
                windowtitle="Buck"
                failonerror="true"
                additionalparam="${javadoc.doclint}"
+               useexternalfile="true"
                >
         <arg value="-notimestamp"/>
         <fileset dir="${src.dir}">
