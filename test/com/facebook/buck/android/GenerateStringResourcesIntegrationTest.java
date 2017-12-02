@@ -81,7 +81,7 @@ public class GenerateStringResourcesIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace.ProcessResult foundAapt2 =
         workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+    Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
     String buildTarget =
         String.format(
             "%s#%s",

@@ -312,7 +312,8 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand("targets", "--show-target-hash", "--show-rulekey", "//:test");
-    result.assertFailure();
+    result.assertSpecialExitCode(
+        "--show-target-hash and --show-rulekey should be incompatible", ExitCode.COMMANDLINE_ERROR);
     String stderr = result.getStderr();
     assertTrue(
         stderr,
@@ -329,7 +330,9 @@ public class TargetsCommandIntegrationTest {
         workspace.runBuckCommand(
             "targets", "--show-target-hash", "--show-rulekey", "--show-output", "//:test");
 
-    result.assertFailure();
+    result.assertSpecialExitCode(
+        "--show-target-hash and --show-rulekey and --show-output should be incompatible",
+        ExitCode.COMMANDLINE_ERROR);
     String stderr = result.getStderr();
     assertTrue(
         stderr,

@@ -217,18 +217,6 @@ public final class Main {
    */
   public static final int JNA_POINTER_SIZE = Pointer.SIZE;
 
-  /** Trying again won't help. */
-  public static final int FAIL_EXIT_CODE = 1;
-
-  /** Trying again later might work. */
-  public static final int BUSY_EXIT_CODE = 2;
-
-  /** Internal error exit code, meaning Buck fails with unknown exception */
-  public static final int INTERNAL_ERROR_EXIT_CODE = 13;
-
-  /** The command was interrupted */
-  public static final int INTERRUPTED_EXIT_CODE = 130;
-
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
       Optional.ofNullable(System.getProperty("buck.buckd_launch_time_nanos"));
   private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
@@ -368,7 +356,6 @@ public final class Main {
     installUncaughtExceptionHandler(context);
 
     Path projectRoot = Paths.get(".");
-    int exitCode = FAIL_EXIT_CODE;
     BuildId buildId = getBuildId(context);
 
     // Only post an overflow event if Watchman indicates a fresh instance event
@@ -381,6 +368,7 @@ public final class Main {
     // Get the client environment, either from this process or from the Nailgun context.
     ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
 
+    ExitCode exitCode = ExitCode.SUCCESS;
     try {
       CommandMode commandMode = CommandMode.RELEASE;
       exitCode =
@@ -395,33 +383,38 @@ public final class Main {
               ImmutableList.copyOf(args));
     } catch (InterruptedException | ClosedByInterruptException e) {
       // We're about to exit, so it's acceptable to swallow interrupts here.
-      exitCode = INTERRUPTED_EXIT_CODE;
+      exitCode = ExitCode.SIGNAL_INTERRUPT;
       LOG.debug(e, "Interrupted");
     } catch (IOException e) {
+      exitCode = ExitCode.FATAL_GENERIC;
       if (e.getMessage().startsWith("No space left on device")) {
         makeStandardConsole(context).printBuildFailure(e.getMessage());
       } else {
         LOG.error(e);
       }
+    } catch (OutOfMemoryError e) {
+      exitCode = ExitCode.FATAL_OOM;
+      LOG.error(e, "Out of memory");
     } catch (HumanReadableException e) {
+      exitCode = ExitCode.BUILD_ERROR;
       makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (InterruptionFailedException e) { // Command could not be interrupted.
-      exitCode = INTERRUPTED_EXIT_CODE;
+      exitCode = ExitCode.SIGNAL_INTERRUPT;
       if (context.isPresent()) {
         context.get().getNGServer().shutdown(false);
       }
     } catch (BuckIsDyingException e) {
-      exitCode = INTERNAL_ERROR_EXIT_CODE;
+      exitCode = ExitCode.FATAL_GENERIC;
       LOG.warn(e, "Fallout because buck was already dying");
     } catch (Throwable t) {
-      exitCode = INTERNAL_ERROR_EXIT_CODE;
+      exitCode = ExitCode.FATAL_GENERIC;
       LOG.error(t, "Uncaught exception at top level");
     } finally {
       LOG.debug("Done.");
       LogConfig.flushLogs();
       // Exit explicitly so that non-daemon threads (of which we use many) don't
       // keep the VM alive.
-      System.exit(exitCode);
+      System.exit(exitCode.getCode());
     }
   }
 
@@ -433,25 +426,6 @@ public final class Main {
         new Ansi(
             AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
                 platform, getClientEnvironment(context))));
-  }
-
-  private OptionalInt parseArgs(ImmutableList<String> args, BuckCommand command) {
-    // Parse the command line args.
-    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
-    try {
-      cmdLineParser.parseArgument(args);
-    } catch (CmdLineException e) {
-      // Can't go through the console for prettification since that needs the BuckConfig, and that
-      // needs to be created with the overrides, which are parsed from the command line here, which
-      // required the console to print the message that parsing has failed. So just write to stderr
-      // and be done with it.
-      stdErr.println(e.getLocalizedMessage());
-      stdErr.println("For help see 'buck --help'.");
-      return OptionalInt.of(1);
-    }
-    // Return help strings fast if the command is a help request.
-    OptionalInt result = command.runHelp(stdErr);
-    return result;
   }
 
   private void setupLogging(
@@ -530,10 +504,10 @@ public final class Main {
    * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
    * @param unexpandedCommandLineArgs command line arguments
-   * @return an exit code or {@code null} if this is a process that should not exit
+   * @return an ExitCode representing the result of the command
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public int runMainWithExitCode(
+  public ExitCode runMainWithExitCode(
       BuildId buildId,
       Path projectRoot,
       Optional<NGContext> context,
@@ -544,24 +518,43 @@ public final class Main {
       ImmutableList<String> unexpandedCommandLineArgs)
       throws IOException, InterruptedException {
 
+    ExitCode exitCode = ExitCode.SUCCESS;
+
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
 
+    // Parse command line arguments
     BuckCommand command = new BuckCommand();
-    OptionalInt returnCode = parseArgs(args, command);
-    if (returnCode.isPresent()) {
-      return returnCode.getAsInt();
+    try {
+      // Parse the command line args.
+      AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
+      cmdLineParser.parseArgument(args);
+    } catch (CmdLineException e) {
+      // Can't go through the console for prettification since that needs the BuckConfig, and that
+      // needs to be created with the overrides, which are parsed from the command line here, which
+      // required the console to print the message that parsing has failed. So just write to stderr
+      // and be done with it.
+      stdErr.println(e.getLocalizedMessage());
+      stdErr.println("For help see 'buck --help'.");
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
+    // Return help strings fast if the command is a help request.
+    OptionalInt result = command.runHelp(stdErr);
+    if (result.isPresent()) {
+      return ExitCode.SUCCESS;
+    }
+
+    // Initialize logging
     try {
       setupLogging(commandMode, command, args);
     } catch (Throwable e) {
       // Explicitly catch error and print to stderr
       // because it is possible that logger is partially initialized
       // and exception will be logged nowhere.
-      System.err.println("Failed to initialize logger");
-      e.printStackTrace();
-      return INTERNAL_ERROR_EXIT_CODE;
+      stdErr.println("Failed to initialize logger");
+      e.printStackTrace(stdErr);
+      return ExitCode.FATAL_GENERIC;
     }
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -598,7 +591,7 @@ public final class Main {
       commandSemaphoreAcquired = commandSemaphore.tryAcquire();
       if (!commandSemaphoreAcquired) {
         LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
-        return BUSY_EXIT_CODE;
+        return ExitCode.BUSY;
       }
     }
 
@@ -702,7 +695,6 @@ public final class Main {
         TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
       }
 
-      int exitCode;
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(clientEnvironment, System.getProperties());
@@ -1030,7 +1022,7 @@ public final class Main {
                 TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - initTimestamp)));
 
         try {
-          exitCode =
+          int code =
               command.run(
                   CommandRunnerParams.of(
                       console,
@@ -1067,20 +1059,29 @@ public final class Main {
                       processExecutor,
                       executableFinder,
                       pluginManager));
+
+          // TODO(buck_team) Have all commands return proper ExitCode object instead of remapping
+          final ImmutableMap<Integer, ExitCode> EXIT_CODE_MAPPING =
+              ImmutableMap.of(
+                  0,
+                  ExitCode.SUCCESS,
+                  32,
+                  ExitCode.TEST_ERROR,
+                  42,
+                  ExitCode.TEST_ERROR,
+                  64,
+                  ExitCode.TEST_NOTHING,
+                  70,
+                  ExitCode.TEST_ERROR);
+
+          exitCode = EXIT_CODE_MAPPING.getOrDefault(code, ExitCode.BUILD_ERROR);
+
         } catch (InterruptedException | ClosedByInterruptException e) {
-          buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
+          buildEventBus.post(
+              CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT.getCode()));
           throw e;
         }
-        // We've reserved exitCode 2 for timeouts, and some commands (e.g. run) may violate this
-        // Let's avoid an infinite loop
-        if (exitCode == BUSY_EXIT_CODE) {
-          exitCode = FAIL_EXIT_CODE; // Some loss of info here, but better than looping
-          LOG.error(
-              "Buck return with exit code %d which we use to indicate busy status. "
-                  + "This is probably propagating an exit code from a sub process or tool. "
-                  + "Coercing to %d to avoid retries.",
-              BUSY_EXIT_CODE, FAIL_EXIT_CODE);
-        }
+
         // Wait for HTTP writes to complete.
         closeHttpExecutorService(
             cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
@@ -1088,7 +1089,7 @@ public final class Main {
             "CounterAggregatorExecutor",
             counterAggregatorExecutor,
             COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS);
-        buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
+        buildEventBus.post(CommandEvent.finished(startedEvent, exitCode.getCode()));
       } catch (Throwable t) {
         LOG.debug(t, "Failing build on exception.");
         closeHttpExecutorService(cacheBuckConfig, Optional.empty(), httpWriteExecutorService);
@@ -1118,7 +1119,9 @@ public final class Main {
       }
       if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
         context.get().in.close(); // Avoid client exit triggering client disconnection handling.
-        context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
+        context
+            .get()
+            .exit(exitCode.getCode()); // Allow nailgun client to exit while outputting traces.
       }
 
       closeDiskIoExecutorService(diskIoExecutorService);
@@ -1657,7 +1660,7 @@ public final class Main {
             // We pass false for exitVM because otherwise Nailgun exits with code 0.
             context.get().getNGServer().shutdown(/* exitVM */ false);
           }
-          NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(INTERNAL_ERROR_EXIT_CODE);
+          NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(ExitCode.FATAL_GENERIC.getCode());
         });
   }
 

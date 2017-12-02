@@ -32,6 +32,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -229,7 +230,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // Run `buck build`.
     ProcessResult buildResult =
         workspace.runBuckCommand("build", "//:raz", "-b", "FIRST_ORDER_ONLY");
-    buildResult.assertFailure("Build should have failed.");
+    buildResult.assertSpecialExitCode("invalid option -b", ExitCode.COMMANDLINE_ERROR);
 
     workspace.verify();
   }

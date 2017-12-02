@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -190,7 +191,7 @@ public class LuaBinaryIntegrationTest {
     workspace.writeContentsToPath("require 'os'\nos.exit(5)", "simple.lua");
     workspace.runBuckBuild("//:simple").assertSuccess();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//:simple");
-    assertThat(result.getExitCode(), Matchers.equalTo(5));
+    assertEquals(result.getExitCode(), ExitCode.BUILD_ERROR);
   }
 
   @Test

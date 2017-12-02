@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -115,7 +116,9 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   public void fatJarWithExitCode() throws IOException {
     setUpProjectWorkspaceForScenario("fat_jar");
 
-    workspace.runBuckCommand("run", "//:bin-exit-code").assertSpecialExitCode("error", 5);
+    workspace
+        .runBuckCommand("run", "//:bin-exit-code")
+        .assertSpecialExitCode("error", ExitCode.BUILD_ERROR);
   }
 
   @Test

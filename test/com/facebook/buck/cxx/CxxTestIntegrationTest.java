@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -49,7 +50,7 @@ public class CxxTestIntegrationTest {
         ".buckconfig");
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertThat(stderr, Matchers.containsString("Timed out after 250 ms running test command"));
   }
@@ -67,7 +68,7 @@ public class CxxTestIntegrationTest {
 
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("test", target.getFullyQualifiedName());
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertThat(stderr, Matchers.containsString("Timed out after 100 ms running test command"));
   }

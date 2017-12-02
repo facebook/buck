@@ -805,6 +805,6 @@ public class TestRunningTest {
             FakeBuildContext.withSourcePathResolver(resolver),
             ruleFinder);
 
-    assertThat(ret, equalTo(TestRunning.TEST_FAILURES_EXIT_CODE));
+    assertThat(ret, equalTo(ExitCode.TEST_ERROR.getCode()));
   }
 }

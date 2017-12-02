@@ -117,6 +117,6 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("run", "//cmd:command");
-    result.assertSpecialExitCode("buck run should propagate failure", 5);
+    result.assertSpecialExitCode("buck run should propagate failure", ExitCode.BUILD_ERROR);
   }
 }

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -374,7 +375,7 @@ public class AppleTestIntegrationTest {
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertThat(result.getStderr(), containsString("Timed out after 100 ms running test command"));
   }
 
@@ -387,7 +388,7 @@ public class AppleTestIntegrationTest {
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertThat(result.getStderr(), containsString("0 Passed   0 Skipped   1 Failed   FooXCTest"));
     assertThat(
         result.getStderr(),
@@ -461,7 +462,7 @@ public class AppleTestIntegrationTest {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(
             "test", "--config", "apple.xctool_path=fbxctest/bin/fbxctest", "//:AppTest");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertThat(result.getStderr(), containsString("0 Passed   0 Skipped   1 Failed   AppTest"));
     assertThat(
         result.getStderr(),

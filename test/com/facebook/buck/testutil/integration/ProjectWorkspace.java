@@ -26,8 +26,8 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.cli.Main;
-import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanFactory;
@@ -572,7 +572,7 @@ public class ProjectWorkspace {
           knownBuildRuleTypesFactoryFactory == null
               ? new Main(stdout, stderr, stdin)
               : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
-      int exitCode;
+      ExitCode exitCode;
       try {
         exitCode =
             main.runMainWithExitCode(
@@ -586,7 +586,7 @@ public class ProjectWorkspace {
                 ImmutableList.copyOf(args));
       } catch (InterruptedException e) {
         e.printStackTrace(stderr);
-        exitCode = Main.FAIL_EXIT_CODE;
+        exitCode = ExitCode.BUILD_ERROR;
         Threads.interruptCurrentThread();
       }
 
@@ -789,11 +789,11 @@ public class ProjectWorkspace {
 
   /** The result of running {@code buck} from the command line. */
   public static class ProcessResult {
-    private final int exitCode;
+    private final ExitCode exitCode;
     private final String stdout;
     private final String stderr;
 
-    private ProcessResult(int exitCode, String stdout, String stderr) {
+    private ProcessResult(ExitCode exitCode, String stdout, String stderr) {
       this.exitCode = exitCode;
       this.stdout = Preconditions.checkNotNull(stdout);
       this.stderr = Preconditions.checkNotNull(stderr);
@@ -805,7 +805,7 @@ public class ProjectWorkspace {
      * <p>Currently, in practice, any time a client might want to use it, it is more appropriate to
      * use {@link #assertSuccess()} or {@link #assertFailure()} instead.
      */
-    public int getExitCode() {
+    public ExitCode getExitCode() {
       return exitCode;
     }
 
@@ -818,36 +818,37 @@ public class ProjectWorkspace {
     }
 
     public ProcessResult assertSuccess() {
-      return assertExitCode(null, 0);
+      return assertExitCode(null, ExitCode.SUCCESS);
     }
 
     public ProcessResult assertSuccess(String message) {
-      return assertExitCode(message, 0);
+      return assertExitCode(message, ExitCode.SUCCESS);
     }
 
     public ProcessResult assertFailure() {
-      return assertExitCode(null, Main.FAIL_EXIT_CODE);
+      return assertExitCode(null, ExitCode.BUILD_ERROR);
     }
 
     public ProcessResult assertTestFailure() {
-      return assertExitCode(null, TestRunning.TEST_FAILURES_EXIT_CODE);
+      return assertExitCode(null, ExitCode.TEST_ERROR);
     }
 
     public ProcessResult assertTestFailure(String message) {
-      return assertExitCode(message, TestRunning.TEST_FAILURES_EXIT_CODE);
+      return assertExitCode(message, ExitCode.TEST_ERROR);
     }
 
     public ProcessResult assertFailure(String message) {
-      return assertExitCode(message, 1);
+      return assertExitCode(message, ExitCode.BUILD_ERROR);
     }
 
-    public ProcessResult assertExitCode(@Nullable String message, int exitCode) {
+    public ProcessResult assertExitCode(@Nullable String message, ExitCode exitCode) {
       if (exitCode == getExitCode()) {
         return this;
       }
 
       String failureMessage =
-          String.format("Expected exit code %d but was %d.", exitCode, getExitCode());
+          String.format(
+              "Expected exit code %d but was %d.", exitCode.getCode(), getExitCode().getCode());
       if (message != null) {
         failureMessage = message + " " + failureMessage;
       }
@@ -861,7 +862,7 @@ public class ProjectWorkspace {
       return this;
     }
 
-    public ProcessResult assertSpecialExitCode(String message, int exitCode) {
+    public ProcessResult assertSpecialExitCode(String message, ExitCode exitCode) {
       return assertExitCode(message, exitCode);
     }
   }

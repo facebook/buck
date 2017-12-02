@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -95,8 +96,7 @@ public class PythonTestIntegrationTest {
 
     ProcessResult runResult2 = workspace.runBuckCommand("run", "//:test-failure");
     runResult2.assertExitCode(
-        "python test binary should exit with expected error code on failure",
-        PythonRunTestsStep.TEST_FAILURES_EXIT_CODE);
+        "python test binary should exit with expected error code on failure", ExitCode.TEST_ERROR);
   }
 
   @Test
@@ -137,7 +137,7 @@ public class PythonTestIntegrationTest {
   public void testPythonTestTimeout() throws IOException {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
     String stderr = result.getStderr();
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertTrue(stderr, stderr.contains("Following test case timed out: //:test-spinning"));
   }
 
@@ -146,7 +146,8 @@ public class PythonTestIntegrationTest {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("test", "//:test-setup-class-failure");
-    result.assertSpecialExitCode("Tests should execute successfully but fail.", 42);
+    result.assertSpecialExitCode(
+        "Tests should execute successfully but fail.", ExitCode.TEST_ERROR);
     assertThat(
         result.getStderr(),
         containsString(
@@ -172,7 +173,8 @@ public class PythonTestIntegrationTest {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("test", "//:test-setup-class-failure-with-test-suite");
-    result.assertSpecialExitCode("Tests should execute successfully but fail.", 42);
+    result.assertSpecialExitCode(
+        "Tests should execute successfully but fail.", ExitCode.TEST_ERROR);
     assertThat(
         result.getStderr(),
         containsString(

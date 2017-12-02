@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -58,7 +59,7 @@ public class ScalaTestIntegrationTest {
   @Test(timeout = (2 * 60 * 1000))
   public void testTestTimeout() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
   }

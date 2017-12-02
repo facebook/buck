@@ -62,7 +62,6 @@ import org.junit.rules.ExpectedException;
 
 public class DaemonIntegrationTest {
 
-  private static final int SUCCESS_EXIT_CODE = 0;
   private ScheduledExecutorService executorService;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -97,14 +96,10 @@ public class DaemonIntegrationTest {
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
-            createRunnableCommand(SUCCESS_EXIT_CODE, "build", "//:sleep"),
-            0,
-            TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.SUCCESS, "build", "//:sleep"), 0, TimeUnit.MILLISECONDS);
     Future<?> secondThread =
         executorService.schedule(
-            createRunnableCommand(Main.BUSY_EXIT_CODE, "build", "//:sleep"),
-            500L,
-            TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.BUSY, "build", "//:sleep"), 500L, TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }
@@ -177,12 +172,10 @@ public class DaemonIntegrationTest {
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
-            createRunnableCommand(SUCCESS_EXIT_CODE, "build", "//:sleep"),
-            0,
-            TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.SUCCESS, "build", "//:sleep"), 0, TimeUnit.MILLISECONDS);
     Future<?> secondThread =
         executorService.schedule(
-            createRunnableCommand(SUCCESS_EXIT_CODE, "targets"), 500L, TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.SUCCESS, "targets"), 500L, TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }
@@ -197,14 +190,14 @@ public class DaemonIntegrationTest {
     workspace.setUp();
     executorService.invokeAll(
         ImmutableList.of(
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep")));
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep")));
   }
 
-  private Runnable createRunnableCommand(final int expectedExitCode, final String... args) {
+  private Runnable createRunnableCommand(final ExitCode expectedExitCode, final String... args) {
     return () -> {
       try {
         Main main =
@@ -212,7 +205,7 @@ public class DaemonIntegrationTest {
                 new CapturingPrintStream(),
                 new CapturingPrintStream(),
                 new ByteArrayInputStream("".getBytes("UTF-8")));
-        int exitCode =
+        ExitCode exitCode =
             main.runMainWithExitCode(
                 new BuildId(),
                 tmp.getRoot(),
@@ -233,7 +226,7 @@ public class DaemonIntegrationTest {
     };
   }
 
-  private Callable<Object> createCallableCommand(int expectedExitCode, String... args) {
+  private Callable<Object> createCallableCommand(ExitCode expectedExitCode, String... args) {
     return callable(createRunnableCommand(expectedExitCode, args));
   }
 

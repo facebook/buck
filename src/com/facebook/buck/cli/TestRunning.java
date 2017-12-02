@@ -109,8 +109,6 @@ import org.w3c.dom.Element;
 /** Utility class for running tests from {@link TestRule}s which have been built. */
 public class TestRunning {
 
-  public static final int TEST_FAILURES_EXIT_CODE = 42;
-
   private static final Logger LOG = Logger.get(TestRunning.class);
 
   // Utility class; do not instantiate.
@@ -439,7 +437,8 @@ public class TestRunning {
               return !results1.isSuccess();
             });
 
-    return failures ? TEST_FAILURES_EXIT_CODE : 0;
+    // TODO(buck_team): convert to ExitCode
+    return failures ? 32 : 0;
   }
 
   private static ListenableFuture<TestResults> transformTestResults(
