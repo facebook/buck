@@ -4,6 +4,9 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/toolchain:toolchain",
     ],
+    tests = [
+        "//test/com/facebook/buck/toolchain/impl:impl",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:helpers",

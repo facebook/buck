@@ -203,7 +203,11 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
       return toolchains.get(toolchainName);
     } catch (ExecutionException | UncheckedExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), HumanReadableException.class);
-      throw new HumanReadableException(e, "Cannot create a toolchain: " + toolchainName);
+      throw new HumanReadableException(
+          e,
+          String.format(
+              "Cannot create a toolchain: %s. Cause: %s",
+              toolchainName, e.getCause().getMessage()));
     }
   }
 
