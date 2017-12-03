@@ -521,21 +521,6 @@ def depset(elements, build_env=None):
     return DeterministicSet(elements)
 
 
-@provide_for_build
-def struct(build_env=None, **kwargs):
-    """Creates an immutable container using the keyword arguments as attributes.
-
-    It can be used to group multiple values and/or functions together. Example:
-        def _my_function():
-          return 3
-        s = struct(x = 2, foo = _my_function)
-        return s.x + s.foo()  # returns 5
-    """
-    keys = [key for key in kwargs]
-    new_type = collections.namedtuple('struct', keys)
-    return new_type(**kwargs)
-
-
 GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$')
 
 
@@ -922,6 +907,19 @@ class BuildFileProcessor(object):
         build_env.includes.add(path)
         build_env.merge(inner_env)
 
+    def _struct(self, **kwargs):
+        """Creates an immutable container using the keyword arguments as attributes.
+
+        It can be used to group multiple values and/or functions together. Example:
+            def _my_function():
+              return 3
+            s = struct(x = 2, foo = _my_function)
+            return s.x + s.foo()  # returns 5
+        """
+        keys = [key for key in kwargs]
+        new_type = collections.namedtuple('struct', keys)
+        return new_type(**kwargs)
+
     def _add_build_file_dep(self, name):
         # type: (str) -> None
         """
@@ -1066,6 +1064,7 @@ class BuildFileProcessor(object):
                 'glob': self._glob,
                 'subdir_glob': self._subdir_glob,
                 'load': functools.partial(self._load, is_implicit_include),
+                'struct': self._struct,
             }
 
             # Don't include implicit includes if the current file being

@@ -583,16 +583,23 @@ class BuckTest(unittest.TestCase):
             {'hello': {'world': 'foo', 'bar': None, 'goo': None}})
 
     def test_struct_is_available(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                's = struct(name="foo")',
+            )
+        )
         build_file = ProjectFile(
             self.project_root,
             path='BUCK',
             contents=(
-                's = struct(name="foo")',
+                'load("//:ext.bzl", "s")',
                 'foo_rule(',
                 '  name=s.name,',
                 ')'
             ))
-        self.write_file(build_file)
+        self.write_files(extension_file, build_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         diagnostics = []
         with build_file_processor.with_builtins(__builtin__.__dict__):
