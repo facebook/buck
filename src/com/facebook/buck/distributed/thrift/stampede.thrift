@@ -166,6 +166,8 @@ struct BuildJob {
   // The build UUID of a buck client which initiated
   // remote or distributed build.
   11: optional string buckBuildUuid;
+  // The user that created the build.
+  12: optional string username;
 }
 
 struct Announcement {
