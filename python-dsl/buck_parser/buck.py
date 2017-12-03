@@ -920,6 +920,20 @@ class BuildFileProcessor(object):
         new_type = collections.namedtuple('struct', keys)
         return new_type(**kwargs)
 
+    def _provider(self):
+        """Creates a declared provider factory.
+
+        The return value of this function can be used to create "struct-like"
+        values. Example:
+            SomeInfo = provider()
+            def foo():
+              return 3
+            info = SomeInfo(x = 2, foo = foo)
+            print(info.x + info.foo())  # prints 5
+        """
+        return self._struct
+
+
     def _add_build_file_dep(self, name):
         # type: (str) -> None
         """
@@ -1065,6 +1079,7 @@ class BuildFileProcessor(object):
                 'subdir_glob': self._subdir_glob,
                 'load': functools.partial(self._load, is_implicit_include),
                 'struct': self._struct,
+                'provider': self._provider,
             }
 
             # Don't include implicit includes if the current file being
