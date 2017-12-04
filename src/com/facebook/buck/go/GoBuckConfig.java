@@ -17,82 +17,43 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 public class GoBuckConfig {
 
   private static final String SECTION = "go";
-  private static final Path DEFAULT_GO_TOOL = Paths.get("go");
 
   private final BuckConfig delegate;
 
-  private Supplier<Path> goRootSupplier;
-  private Supplier<Path> goToolDirSupplier;
-
-  public GoBuckConfig(final BuckConfig delegate, final ProcessExecutor processExecutor) {
+  public GoBuckConfig(final BuckConfig delegate) {
     this.delegate = delegate;
-
-    goRootSupplier =
-        MoreSuppliers.memoize(
-            () -> {
-              Optional<Path> configValue = delegate.getPath(SECTION, "root");
-              if (configValue.isPresent()) {
-                return configValue.get();
-              }
-
-              return Paths.get(getGoEnvFromTool(processExecutor, "GOROOT"));
-            });
-
-    goToolDirSupplier =
-        MoreSuppliers.memoize(() -> Paths.get(getGoEnvFromTool(processExecutor, "GOTOOLDIR")));
   }
 
   Optional<String> getDefaultPlatform() {
     return delegate.getValue(SECTION, "default_platform");
   }
 
-  Tool getCompiler() {
-    return getGoTool("compiler", "compile", "compiler_flags");
-  }
-
-  Tool getAssembler() {
-    return getGoTool("assembler", "asm", "asm_flags");
-  }
-
-  Tool getCGo() {
-    return getGoTool("cgo", "cgo", "");
-  }
-
-  Tool getPacker() {
-    return getGoTool("packer", "pack", "");
-  }
-
-  Tool getLinker() {
-    return getGoTool("linker", "link", "linker_flags");
+  Optional<Path> getGoRoot() {
+    return delegate.getPath(SECTION, "root");
   }
 
   public BuckConfig getDelegate() {
     return delegate;
+  }
+
+  public Optional<Path> getPath(String name) {
+    return delegate.getPath(SECTION, name);
+  }
+
+  public Optional<String> getValue(String name) {
+    return delegate.getValue(SECTION, name);
   }
 
   Path getDefaultPackageName(BuildTarget target) {
@@ -114,73 +75,7 @@ public class GoBuckConfig {
     return delegate.getView(ToolConfig.class).getTool(SECTION, "test_main_gen", resolver);
   }
 
-  ImmutableList<Path> getAssemblerIncludeDirs() {
-    // TODO(mikekap): Allow customizing this via config.
-    return ImmutableList.of(goRootSupplier.get().resolve("pkg").resolve("include"));
-  }
-
-  private Tool getGoTool(
-      final String configName, final String toolName, final String extraFlagsConfigKey) {
-    Path toolPath =
-        delegate.getPath(SECTION, configName).orElse(goToolDirSupplier.get().resolve(toolName));
-
-    CommandTool.Builder builder =
-        new CommandTool.Builder(new HashedFileTool(() -> delegate.getPathSourcePath(toolPath)));
-    if (!extraFlagsConfigKey.isEmpty()) {
-      for (String arg : getFlags(extraFlagsConfigKey)) {
-        builder.addArg(arg);
-      }
-    }
-    builder.addEnv("GOROOT", goRootSupplier.get().toString());
-    return builder.build();
-  }
-
-  private ImmutableList<String> getFlags(String key) {
-    return ImmutableList.copyOf(
-        Splitter.on(" ").omitEmptyStrings().split(delegate.getValue(SECTION, key).orElse("")));
-  }
-
-  private Path getGoToolPath() {
-    Optional<Path> goTool = delegate.getPath(SECTION, "tool");
-    if (goTool.isPresent()) {
-      return goTool.get();
-    }
-
-    // Try resolving it via the go root config var. We can't use goRootSupplier here since that
-    // would create a recursion.
-    Optional<Path> goRoot = delegate.getPath(SECTION, "root");
-    if (goRoot.isPresent()) {
-      return goRoot.get().resolve("bin").resolve("go");
-    }
-
-    return new ExecutableFinder().getExecutable(DEFAULT_GO_TOOL, delegate.getEnvironment());
-  }
-
-  private String getGoEnvFromTool(ProcessExecutor processExecutor, String env) {
-    Path goTool = getGoToolPath();
-    Optional<ImmutableMap<String, String>> goRootEnv =
-        delegate.getPath(SECTION, "root").map(input -> ImmutableMap.of("GOROOT", input.toString()));
-    try {
-      ProcessExecutor.Result goToolResult =
-          processExecutor.launchAndExecute(
-              ProcessExecutorParams.builder()
-                  .addCommand(goTool.toString(), "env", env)
-                  .setEnvironment(goRootEnv)
-                  .build(),
-              EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-              /* stdin */ Optional.empty(),
-              /* timeOutMs */ Optional.empty(),
-              /* timeoutHandler */ Optional.empty());
-      if (goToolResult.getExitCode() == 0) {
-        return CharMatcher.whitespace().trimFrom(goToolResult.getStdout().get());
-      } else {
-        throw new HumanReadableException(goToolResult.getStderr().get());
-      }
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e, "Could not run \"%s env %s\": %s", goTool, env, e.getMessage());
-    }
+  public Optional<Path> getTool() {
+    return delegate.getPath(SECTION, "tool");
   }
 }

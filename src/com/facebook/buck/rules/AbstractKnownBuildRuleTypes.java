@@ -215,7 +215,7 @@ abstract class AbstractKnownBuildRuleTypes {
     // Get the default target platform from config.
     CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
 
-    GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor);
+    GoBuckConfig goBuckConfig = new GoBuckConfig(config);
 
     HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
 

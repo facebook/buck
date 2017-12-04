@@ -19,11 +19,15 @@ package com.facebook.buck.go;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 
 abstract class GoAssumptions {
@@ -42,7 +46,17 @@ abstract class GoAssumptions {
         fs.mkdirs(fs.getPath(goRoot));
         baseConfig.setFilesystem(fs);
       }
-      new GoBuckConfig(baseConfig.build(), executor).getCompiler();
+      new GoToolchainFactory()
+          .createToolchain(
+              new ToolchainProviderBuilder().build(),
+              ToolchainCreationContext.of(
+                  ImmutableMap.of(),
+                  baseConfig.build(),
+                  new FakeProjectFilesystem(),
+                  executor,
+                  new ExecutableFinder()))
+          .get()
+          .getCompiler();
     } catch (HumanReadableException e) {
       exception = e;
     }

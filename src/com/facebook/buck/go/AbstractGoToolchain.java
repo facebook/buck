@@ -16,19 +16,80 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
-public interface AbstractGoToolchain extends Toolchain {
+public abstract class AbstractGoToolchain implements Toolchain {
 
-  String DEFAULT_NAME = "go-toolchain";
-
-  @Value.Parameter
-  GoPlatformFlavorDomain getPlatformFlavorDomain();
+  public static final String DEFAULT_NAME = "go-toolchain";
 
   @Value.Parameter
-  GoPlatform getDefaultPlatform();
+  protected abstract GoBuckConfig getGoBuckConfig();
+
+  @Value.Parameter
+  public abstract GoPlatformFlavorDomain getPlatformFlavorDomain();
+
+  @Value.Parameter
+  public abstract GoPlatform getDefaultPlatform();
+
+  @Value.Parameter
+  public abstract Path getGoRoot();
+
+  @Value.Parameter
+  public abstract Path getToolDir();
+
+  ImmutableList<Path> getAssemblerIncludeDirs() {
+    // TODO(mikekap): Allow customizing this via config.
+    return ImmutableList.of(getGoRoot().resolve("pkg").resolve("include"));
+  }
+
+  public Tool getCompiler() {
+    return getGoTool("compiler", "compile", "compiler_flags");
+  }
+
+  public Tool getAssembler() {
+    return getGoTool("assembler", "asm", "asm_flags");
+  }
+
+  public Tool getCGo() {
+    return getGoTool("cgo", "cgo", "");
+  }
+
+  public Tool getPacker() {
+    return getGoTool("packer", "pack", "");
+  }
+
+  public Tool getLinker() {
+    return getGoTool("linker", "link", "linker_flags");
+  }
+
+  private Tool getGoTool(
+      final String configName, final String toolName, final String extraFlagsConfigKey) {
+    Path toolPath = getGoBuckConfig().getPath(configName).orElse(getToolDir().resolve(toolName));
+
+    CommandTool.Builder builder =
+        new CommandTool.Builder(
+            new HashedFileTool(() -> getGoBuckConfig().getDelegate().getPathSourcePath(toolPath)));
+    if (!extraFlagsConfigKey.isEmpty()) {
+      for (String arg : getFlags(extraFlagsConfigKey)) {
+        builder.addArg(arg);
+      }
+    }
+    builder.addEnv("GOROOT", getGoRoot().toString());
+    return builder.build();
+  }
+
+  private ImmutableList<String> getFlags(String key) {
+    return ImmutableList.copyOf(
+        Splitter.on(" ").omitEmptyStrings().split(getGoBuckConfig().getValue(key).orElse("")));
+  }
 }

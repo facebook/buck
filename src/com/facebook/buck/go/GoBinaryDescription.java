@@ -91,6 +91,7 @@ public class GoBinaryDescription
         resolver,
         cellRoots,
         goBuckConfig,
+        goToolchain,
         cxxBuckConfig,
         getCxxPlatform(!args.getCgoSrcs().isEmpty()),
         args.getSrcs(),

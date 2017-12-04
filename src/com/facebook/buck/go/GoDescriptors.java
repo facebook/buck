@@ -101,6 +101,7 @@ abstract class GoDescriptors {
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoBuckConfig goBuckConfig,
+      GoToolchain goToolchain,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Path packageName,
@@ -144,7 +145,7 @@ abstract class GoDescriptors {
                   cgoSrcs,
                   cgoHeaders,
                   cgoDeps,
-                  goBuckConfig.getCGo(),
+                  goToolchain.getCGo(),
                   packageName));
       linkableDepsBuilder.addAll(cgoCompile.get().getDeps());
     } else if (!cgoDeps.isEmpty()) {
@@ -170,11 +171,11 @@ abstract class GoDescriptors {
                 .collect(ImmutableList.toImmutableList())),
         ImmutableSet.copyOf(srcs),
         ImmutableList.copyOf(compilerFlags),
-        goBuckConfig.getCompiler(),
+        goToolchain.getCompiler(),
         ImmutableList.copyOf(assemblerFlags),
-        goBuckConfig.getAssemblerIncludeDirs(),
-        goBuckConfig.getAssembler(),
-        goBuckConfig.getPacker(),
+        goToolchain.getAssemblerIncludeDirs(),
+        goToolchain.getAssembler(),
+        goToolchain.getPacker(),
         platform,
         cgoCompile);
   }
@@ -213,6 +214,7 @@ abstract class GoDescriptors {
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoBuckConfig goBuckConfig,
+      GoToolchain goToolchain,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableSet<SourcePath> srcs,
@@ -233,6 +235,7 @@ abstract class GoDescriptors {
             resolver,
             cellRoots,
             goBuckConfig,
+            goToolchain,
             cxxBuckConfig,
             cxxPlatform,
             Paths.get("main"),
@@ -289,14 +292,14 @@ abstract class GoDescriptors {
         cxxLinker,
         symlinkTree,
         library,
-        goBuckConfig.getLinker(),
+        goToolchain.getLinker(),
         ImmutableList.copyOf(linkerFlags),
         platform);
   }
 
   static Tool getTestMainGenerator(
-      GoToolchain goToolchain,
       GoBuckConfig goBuckConfig,
+      GoToolchain goToolchain,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       BuildTarget sourceBuildTarget,
@@ -342,6 +345,7 @@ abstract class GoDescriptors {
                   resolver,
                   cellRoots,
                   goBuckConfig,
+                  goToolchain,
                   cxxBuckConfig,
                   cxxPlatform,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),

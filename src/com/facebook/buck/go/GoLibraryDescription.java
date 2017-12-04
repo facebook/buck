@@ -125,8 +125,8 @@ public class GoLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoLibraryDescriptionArg args) {
-    Optional<GoPlatform> platform =
-        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
+    GoToolchain goToolchain = getGoToolchain();
+    Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
 
     if (platform.isPresent()) {
       return GoDescriptors.createGoCompileRule(
@@ -136,6 +136,7 @@ public class GoLibraryDescription
           resolver,
           cellRoots,
           goBuckConfig,
+          goToolchain,
           cxxBuckConfig,
           getCxxPlatform(),
           args.getPackageName()

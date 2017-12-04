@@ -149,8 +149,8 @@ public class GoTestDescription
       ImmutableSortedSet<BuildTarget> cgoDeps) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
-            goToolchain,
             goBuckConfig,
+            goToolchain,
             cxxBuckConfig,
             getCxxPlatform(!cgoSrcs.isEmpty()),
             buildTarget,
@@ -267,6 +267,7 @@ public class GoTestDescription
             resolver,
             cellRoots,
             goBuckConfig,
+            goToolchain,
             cxxBuckConfig,
             getCxxPlatform(!args.getCgoSrcs().isEmpty()),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
@@ -329,6 +330,7 @@ public class GoTestDescription
       GoPlatform platform) {
     Path packageName = getGoPackageName(resolver, buildTarget, args);
     GoCompile testLibrary;
+    GoToolchain goToolchain = getGoToolchain();
     if (args.getLibrary().isPresent()) {
       // We should have already type-checked the arguments in the base rule.
       final GoLibraryDescriptionArg libraryArg =
@@ -361,6 +363,7 @@ public class GoTestDescription
               resolver,
               cellRoots,
               goBuckConfig,
+              goToolchain,
               cxxBuckConfig,
               getCxxPlatform(!args.getCgoSrcs().isEmpty()),
               packageName,
@@ -395,6 +398,7 @@ public class GoTestDescription
               resolver,
               cellRoots,
               goBuckConfig,
+              goToolchain,
               cxxBuckConfig,
               getCxxPlatform(!args.getCgoSrcs().isEmpty()),
               packageName,
