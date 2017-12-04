@@ -17,10 +17,8 @@
 package com.facebook.buck.toolchain.impl;
 
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -28,7 +26,6 @@ import com.facebook.buck.toolchain.ToolchainWithCapability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,13 +37,6 @@ public class ToolchainProviderBuilder {
   public ToolchainProviderBuilder withDefaultNdkCxxPlatforms() {
     return withToolchain(
         NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(ImmutableMap.of()));
-  }
-
-  public ToolchainProviderBuilder withDefaultAppleCxxPlatforms() {
-    return withToolchain(
-        AppleCxxPlatformsProvider.DEFAULT_NAME,
-        AppleCxxPlatformsProvider.of(
-            FlavorDomain.from("Apple C++ Platform", Collections.emptyList())));
   }
 
   public ToolchainProviderBuilder withDefaultCxxPlatforms() {
