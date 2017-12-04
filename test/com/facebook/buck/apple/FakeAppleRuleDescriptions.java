@@ -21,6 +21,8 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatforms;
+import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -142,7 +144,7 @@ public class FakeAppleRuleDescriptions {
   public static final AppleCxxPlatforms.XcodeBuildVersionCache FAKE_XCODE_BUILD_VERSION_CACHE =
       new AppleCxxPlatforms.XcodeBuildVersionCache() {
         @Override
-        Optional<String> lookup(Path developerDir) {
+        protected Optional<String> lookup(Path developerDir) {
           return Optional.of("0A0000");
         }
       };

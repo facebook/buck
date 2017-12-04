@@ -5,6 +5,8 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/android/packageable:packageable",
+        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
+        "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/macros:types",
@@ -22,8 +24,6 @@ java_immutables_library(
         "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/elf:elf",
-        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
-        "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/cxx/toolchain/objectfile:objectfile",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",

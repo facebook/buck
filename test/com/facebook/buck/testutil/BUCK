@@ -11,6 +11,8 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/hashing:hashing",
     ],
     visibility = ["//test/..."],
     deps = [
@@ -47,7 +49,6 @@ java_library(
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
-        "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

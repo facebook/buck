@@ -14,13 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain.impl;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
@@ -146,7 +147,7 @@ public class AppleCxxPlatforms {
   }
 
   @VisibleForTesting
-  static AppleCxxPlatform buildWithExecutableChecker(
+  public static AppleCxxPlatform buildWithExecutableChecker(
       ProjectFilesystem filesystem,
       AppleSdk targetSdk,
       String minVersion,
@@ -571,7 +572,7 @@ public class AppleCxxPlatforms {
   }
 
   @VisibleForTesting
-  static class XcodeBuildVersionCache {
+  public static class XcodeBuildVersionCache {
     private final Map<Path, Optional<String>> cache = new HashMap<>();
 
     /**
@@ -583,7 +584,7 @@ public class AppleCxxPlatforms {
      * @return the xcode build version if found, nothing if it fails to be found, or the version
      *     plist file cannot be read.
      */
-    Optional<String> lookup(Path developerDir) {
+    protected Optional<String> lookup(Path developerDir) {
       return cache.computeIfAbsent(
           developerDir,
           ignored -> {

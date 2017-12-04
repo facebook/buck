@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.toolchain.impl;
 
-import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain.impl;
 
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.FileFinder;
@@ -36,7 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
-final class XcodeToolFinder {
+public final class XcodeToolFinder {
   private final Platform platform;
 
   public XcodeToolFinder() {
