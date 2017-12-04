@@ -20,26 +20,34 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.SystemToolProvider;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 public class HaskellPlatformsFactory {
 
+  private final BuckConfig buckConfig;
   private final HaskellBuckConfig haskellBuckConfig;
+  private final ExecutableFinder executableFinder;
 
   public HaskellPlatformsFactory(BuckConfig buckConfig, ExecutableFinder executableFinder) {
-    this.haskellBuckConfig = new HaskellBuckConfig(buckConfig, executableFinder);
+    this.buckConfig = buckConfig;
+    this.haskellBuckConfig = new HaskellBuckConfig(buckConfig);
+    this.executableFinder = executableFinder;
   }
 
   private HaskellPlatform getPlatform(String section, CxxPlatform cxxPlatform) {
     return HaskellPlatform.builder()
         .setHaskellVersion(HaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))
-        .setCompiler(haskellBuckConfig.getCompiler(section))
+        .setCompiler(getCompiler(section))
         .setCompilerFlags(haskellBuckConfig.getCompilerFlags(section).orElse(ImmutableList.of()))
-        .setLinker(haskellBuckConfig.getLinker(section))
+        .setLinker(getLinker(section))
         .setLinkerFlags(haskellBuckConfig.getLinkerFlags(section).orElse(ImmutableList.of()))
-        .setPackager(haskellBuckConfig.getPackager(section))
-        .setHaddock(haskellBuckConfig.getHaddock(section))
+        .setPackager(getPackager(section))
+        .setHaddock(getHaddock(section))
         .setShouldCacheLinks(haskellBuckConfig.getShouldCacheLinks(section))
         .setShouldUsedOldBinaryOutputLocation(
             haskellBuckConfig.getShouldUsedOldBinaryOutputLocation(section))
@@ -69,5 +77,44 @@ public class HaskellPlatformsFactory {
                     : getPlatform(
                         haskellBuckConfig.getSectionForPlatform(cxxPlatform), cxxPlatform))
         .toImmutableList();
+  }
+
+  private ToolProvider getTool(
+      Optional<ToolProvider> toolProviderFromConfig, String source, String systemName) {
+    return toolProviderFromConfig.orElseGet(
+        () ->
+            SystemToolProvider.builder()
+                .setExecutableFinder(executableFinder)
+                .setSourcePathConverter(buckConfig::getPathSourcePath)
+                .setName(Paths.get(systemName))
+                .setEnvironment(buckConfig.getEnvironment())
+                .setSource(source)
+                .build());
+  }
+
+  private ToolProvider getCompiler(String section) {
+    return getTool(
+        haskellBuckConfig.getCompiler(section),
+        haskellBuckConfig.getCompilerSource(section),
+        "ghc");
+  }
+
+  private ToolProvider getLinker(String section) {
+    return getTool(
+        haskellBuckConfig.getLinker(section), haskellBuckConfig.getLinkerSource(section), "ghc");
+  }
+
+  private ToolProvider getPackager(String section) {
+    return getTool(
+        haskellBuckConfig.getPackager(section),
+        haskellBuckConfig.getPackagerSource(section),
+        "ghc-pkg");
+  }
+
+  private ToolProvider getHaddock(String section) {
+    return getTool(
+        haskellBuckConfig.getHaddock(section),
+        haskellBuckConfig.getHaddockSource(section),
+        "haddock");
   }
 }

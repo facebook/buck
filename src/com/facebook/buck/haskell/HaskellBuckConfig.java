@@ -19,14 +19,11 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -36,11 +33,9 @@ public class HaskellBuckConfig {
   private static final String SECTION_PREFIX = "haskell";
 
   private final BuckConfig delegate;
-  private final ExecutableFinder finder;
 
-  public HaskellBuckConfig(BuckConfig delegate, ExecutableFinder finder) {
+  public HaskellBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.finder = finder;
   }
 
   private Optional<ImmutableList<String>> getFlags(String section, String field) {
@@ -55,19 +50,12 @@ public class HaskellBuckConfig {
     return Optional.of(split.build());
   }
 
-  private ToolProvider getTool(String section, String configName, String systemName) {
-    return delegate
-        .getView(ToolConfig.class)
-        .getToolProvider(section, configName)
-        .orElseGet(
-            () ->
-                SystemToolProvider.builder()
-                    .setExecutableFinder(finder)
-                    .setSourcePathConverter(delegate::getPathSourcePath)
-                    .setName(Paths.get(systemName))
-                    .setEnvironment(delegate.getEnvironment())
-                    .setSource(String.format(".buckconfig (%s.%s)", section, configName))
-                    .build());
+  private Optional<ToolProvider> getToolProvider(String section, String configName) {
+    return delegate.getView(ToolConfig.class).getToolProvider(section, configName);
+  }
+
+  private String getToolSource(String section, String configName) {
+    return String.format(".buckconfig (%s.%s)", section, configName);
   }
 
   public String getDefaultSection() {
@@ -82,20 +70,36 @@ public class HaskellBuckConfig {
     return delegate.getInteger(section, "compiler_major_version").orElse(DEFAULT_MAJOR_VERSION);
   }
 
-  public ToolProvider getCompiler(String section) {
-    return getTool(section, "compiler", "ghc");
+  public Optional<ToolProvider> getCompiler(String section) {
+    return getToolProvider(section, "compiler");
   }
 
-  public ToolProvider getLinker(String section) {
-    return getTool(section, "linker", "ghc");
+  public String getCompilerSource(String section) {
+    return getToolSource(section, "compiler");
   }
 
-  public ToolProvider getPackager(String section) {
-    return getTool(section, "packager", "ghc-pkg");
+  public Optional<ToolProvider> getLinker(String section) {
+    return getToolProvider(section, "linker");
   }
 
-  public ToolProvider getHaddock(String section) {
-    return getTool(section, "haddock", "haddock");
+  public String getLinkerSource(String section) {
+    return getToolSource(section, "linker");
+  }
+
+  public Optional<ToolProvider> getPackager(String section) {
+    return getToolProvider(section, "packager");
+  }
+
+  public String getPackagerSource(String section) {
+    return getToolSource(section, "packager");
+  }
+
+  public Optional<ToolProvider> getHaddock(String section) {
+    return getToolProvider(section, "haddock");
+  }
+
+  public String getHaddockSource(String section) {
+    return getToolSource(section, "haddock");
   }
 
   public Optional<ImmutableList<String>> getCompilerFlags(String section) {
