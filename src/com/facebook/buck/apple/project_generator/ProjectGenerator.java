@@ -2235,10 +2235,11 @@ public class ProjectGenerator {
             .map(Path::getFileName)
             .map(Path::toString)
             .collect(ImmutableList.toImmutableList());
-    if (!headerPaths.contains(moduleName + ".h")) {
+    if (!headerPathStrings.contains(moduleName + ".h")) {
+      Path umbrellaPath = headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h"));
+      Preconditions.checkState(!projectFilesystem.exists(umbrellaPath));
       projectFilesystem.writeContentsToPath(
-          new UmbrellaHeader(moduleName, headerPathStrings).render(),
-          headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h")));
+          new UmbrellaHeader(moduleName, headerPathStrings).render(), umbrellaPath);
     }
   }
 
