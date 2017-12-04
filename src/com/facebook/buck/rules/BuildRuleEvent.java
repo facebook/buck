@@ -304,7 +304,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     @JsonIgnore
     public boolean isBuildRuleNoOp() {
-      return getBuildRule() instanceof NoopBuildRule;
+      return getBuildRule() instanceof NoopBuildRule
+          || getBuildRule() instanceof NoopBuildRuleWithDeclaredAndExtraDeps;
     }
 
     @Override
