@@ -305,8 +305,7 @@ abstract class AbstractKnownBuildRuleTypes {
         haskellPlatforms.getValue(defaultCxxPlatform.getFlavor());
     builder.addDescriptions(new HaskellHaddockDescription(toolchainProvider));
     builder.addDescriptions(new HaskellLibraryDescription(toolchainProvider, cxxBuckConfig));
-    builder.addDescriptions(
-        new HaskellBinaryDescription(defaultHaskellPlatform, haskellPlatforms, cxxBuckConfig));
+    builder.addDescriptions(new HaskellBinaryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(new HaskellPrebuiltLibraryDescription());
     builder.addDescriptions(
         new HaskellGhciDescription(defaultHaskellPlatform, haskellPlatforms, cxxBuckConfig));
