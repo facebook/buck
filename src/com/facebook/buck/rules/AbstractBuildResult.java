@@ -51,7 +51,7 @@ abstract class AbstractBuildResult {
 
   abstract Optional<ManifestStoreResult> getManifestStoreResult();
 
-  abstract Optional<Set<String>> getDepsBuiltLocally();
+  abstract Optional<Set<String>> getDepsWithCacheMisses();
 
   @Value.Check
   void check() {

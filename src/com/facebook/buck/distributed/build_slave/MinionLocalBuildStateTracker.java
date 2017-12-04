@@ -168,20 +168,20 @@ public class MinionLocalBuildStateTracker {
     Preconditions.checkArgument(buildResult.isSuccess());
     String target = buildResult.getRule().getFullyQualifiedName();
 
-    if (buildResult.getDepsBuiltLocally().isPresent()) {
-      Set<String> depsBuiltLocally = new HashSet<>(buildResult.getDepsBuiltLocally().get());
-      depsBuiltLocally.removeAll(knownTargets); // These targets are supposed to be built locally.
-      depsBuiltLocally.removeAll(locallyBuiltDirectDeps); // These have been recorded previously.
+    if (buildResult.getDepsWithCacheMisses().isPresent()) {
+      Set<String> depsWithCacheMisses = new HashSet<>(buildResult.getDepsWithCacheMisses().get());
+      depsWithCacheMisses.removeAll(knownTargets); // These are supposed to be built locally.
+      depsWithCacheMisses.removeAll(locallyBuiltDirectDeps); // These have been recorded previously.
 
       // Anything left is an unexpected cache miss.
-      if (depsBuiltLocally.size() > 0) {
+      if (depsWithCacheMisses.size() > 0) {
         LOG.warn(
             "Got [%d] cache misses for direct dependencies of target [%s], built them locally.",
-            depsBuiltLocally.size(), target);
-        unexpectedCacheMissTracker.onUnexpectedCacheMiss(depsBuiltLocally.size());
+            depsWithCacheMisses.size(), target);
+        unexpectedCacheMissTracker.onUnexpectedCacheMiss(depsWithCacheMisses.size());
 
         // Make sure we don't record these targets again.
-        locallyBuiltDirectDeps.addAll(depsBuiltLocally);
+        locallyBuiltDirectDeps.addAll(depsWithCacheMisses);
       }
     }
   }

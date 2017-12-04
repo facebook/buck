@@ -131,7 +131,7 @@ class CachingBuildRuleBuilder {
   private final ArtifactCache artifactCache;
   private final BuildId buildId;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
-  private final Set<String> depsBuiltLocally = Collections.synchronizedSet(new HashSet<>());
+  private final Set<String> depsWithCacheMiss = Collections.synchronizedSet(new HashSet<>());
 
   private final BuildRuleScopeManager buildRuleScopeManager;
 
@@ -234,7 +234,7 @@ class CachingBuildRuleBuilder {
     if (manifestStoreResult != null) {
       builder.setManifestStoreResult(manifestStoreResult);
     }
-    builder.setDepsBuiltLocally(depsBuiltLocally);
+    builder.setDepsWithCacheMisses(depsWithCacheMiss);
     return builder;
   }
 
@@ -1018,8 +1018,12 @@ class CachingBuildRuleBuilder {
         return Futures.immediateFuture(Optional.of(canceled(depResult.getFailure())));
       }
 
-      if (depResult.getSuccess().equals(BuildRuleSuccessType.BUILT_LOCALLY)) {
-        depsBuiltLocally.add(depResult.getRule().getFullyQualifiedName());
+      if (depResult
+          .getCacheResult()
+          .orElse(CacheResult.skipped())
+          .getType()
+          .equals(CacheResultType.MISS)) {
+        depsWithCacheMiss.add(depResult.getRule().getFullyQualifiedName());
       }
     }
     depsAreAvailable = true;

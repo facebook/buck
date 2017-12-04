@@ -185,22 +185,22 @@ public class MinionModeRunnerIntegrationTest {
                 BuildResult.Builder buildResult = successfulBuildResult(target);
                 switch (target) {
                   case ROOT_TARGET:
-                    buildResult.setDepsBuiltLocally(
+                    buildResult.setDepsWithCacheMisses(
                         ImmutableSet.of(RIGHT_TARGET, LEFT_TARGET, MISS_TARGET_3));
                     break;
                   case RIGHT_TARGET:
-                    buildResult.setDepsBuiltLocally(
+                    buildResult.setDepsWithCacheMisses(
                         ImmutableSet.of(CHAIN_TOP_TARGET, MISS_TARGET_2));
                     break;
                   case LEFT_TARGET:
-                    buildResult.setDepsBuiltLocally(
+                    buildResult.setDepsWithCacheMisses(
                         ImmutableSet.of(CHAIN_TOP_TARGET, MISS_TARGET_2));
                     break;
                   case CHAIN_TOP_TARGET:
-                    buildResult.setDepsBuiltLocally(ImmutableSet.of(LEAF_TARGET, MISS_TARGET_2));
+                    buildResult.setDepsWithCacheMisses(ImmutableSet.of(LEAF_TARGET, MISS_TARGET_2));
                     break;
                   case LEAF_TARGET:
-                    buildResult.setDepsBuiltLocally(ImmutableSet.of(MISS_TARGET_1));
+                    buildResult.setDepsWithCacheMisses(ImmutableSet.of(MISS_TARGET_1));
                     break;
                 }
                 results.add(
