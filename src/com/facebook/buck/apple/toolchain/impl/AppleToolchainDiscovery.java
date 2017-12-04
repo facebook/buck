@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain.impl;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
