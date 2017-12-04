@@ -65,7 +65,7 @@ public class GoBinaryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors);
+    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
   }
 
   @Override
@@ -77,11 +77,12 @@ public class GoBinaryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoBinaryDescriptionArg args) {
+    GoToolchain goToolchain = getGoToolchain();
     GoPlatform platform =
-        goBuckConfig
+        goToolchain
             .getPlatformFlavorDomain()
             .getValue(buildTarget)
-            .orElse(goBuckConfig.getDefaultPlatform());
+            .orElse(goToolchain.getDefaultPlatform());
 
     return GoDescriptors.createGoBinaryRule(
         buildTarget,
@@ -125,6 +126,10 @@ public class GoBinaryDescription
         .getCxxPlatforms()
         .getValue(ImmutableSet.of(DefaultCxxPlatforms.FLAVOR))
         .get();
+  }
+
+  private GoToolchain getGoToolchain() {
+    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
   }
 
   @BuckStyleImmutable

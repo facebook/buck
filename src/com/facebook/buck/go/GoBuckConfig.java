@@ -19,7 +19,6 @@ package com.facebook.buck.go;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
@@ -50,9 +49,6 @@ public class GoBuckConfig {
   private Supplier<Path> goRootSupplier;
   private Supplier<Path> goToolDirSupplier;
 
-  private Supplier<GoPlatformFlavorDomain> platformFlavorDomain;
-  private Supplier<GoPlatform> defaultPlatform;
-
   public GoBuckConfig(final BuckConfig delegate, final ProcessExecutor processExecutor) {
     this.delegate = delegate;
 
@@ -69,48 +65,10 @@ public class GoBuckConfig {
 
     goToolDirSupplier =
         MoreSuppliers.memoize(() -> Paths.get(getGoEnvFromTool(processExecutor, "GOTOOLDIR")));
-
-    platformFlavorDomain =
-        MoreSuppliers.memoize(
-            () -> {
-              // TODO(mikekap): Allow adding goos/goarch values from config.
-              return new GoPlatformFlavorDomain();
-            });
-
-    defaultPlatform =
-        MoreSuppliers.memoize(
-            () -> {
-              Optional<String> configValue = delegate.getValue(SECTION, "default_platform");
-              Optional<GoPlatform> platform;
-              if (configValue.isPresent()) {
-                platform =
-                    platformFlavorDomain.get().getValue(InternalFlavor.of(configValue.get()));
-                if (!platform.isPresent()) {
-                  throw new HumanReadableException(
-                      "Bad go platform value for %s.default_platform = %s", SECTION, configValue);
-                }
-              } else {
-                platform =
-                    platformFlavorDomain
-                        .get()
-                        .getValue(delegate.getPlatform(), delegate.getArchitecture());
-                if (!platform.isPresent()) {
-                  throw new HumanReadableException(
-                      "Couldn't determine default go platform for %s %s",
-                      delegate.getPlatform(), delegate.getArchitecture());
-                }
-              }
-
-              return platform.get();
-            });
   }
 
-  GoPlatformFlavorDomain getPlatformFlavorDomain() {
-    return platformFlavorDomain.get();
-  }
-
-  GoPlatform getDefaultPlatform() {
-    return defaultPlatform.get();
+  Optional<String> getDefaultPlatform() {
+    return delegate.getValue(SECTION, "default_platform");
   }
 
   Tool getCompiler() {

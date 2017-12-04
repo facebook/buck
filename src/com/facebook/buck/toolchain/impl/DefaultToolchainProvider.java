@@ -37,6 +37,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
+import com.facebook.buck.go.GoToolchain;
+import com.facebook.buck.go.GoToolchainFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
@@ -107,6 +109,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               CxxPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class),
+          ToolchainDescriptor.of(
+              GoToolchain.DEFAULT_NAME, GoToolchain.class, GoToolchainFactory.class),
           ToolchainDescriptor.of(
               PythonPlatformsProvider.DEFAULT_NAME,
               PythonPlatformsProvider.class,

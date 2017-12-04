@@ -84,7 +84,7 @@ public class GoTestDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors)
+    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors)
         || flavors.contains(TEST_LIBRARY_FLAVOR);
   }
 
@@ -96,7 +96,8 @@ public class GoTestDescription
       GoTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+    Optional<GoPlatform> platform =
+        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)
         && buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
@@ -140,6 +141,7 @@ public class GoTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
+      GoToolchain goToolchain,
       ImmutableSet<SourcePath> srcs,
       Path packageName,
       ImmutableSet<SourcePath> cgoSrcs,
@@ -147,6 +149,7 @@ public class GoTestDescription
       ImmutableSortedSet<BuildTarget> cgoDeps) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
+            goToolchain,
             goBuckConfig,
             cxxBuckConfig,
             getCxxPlatform(!cgoSrcs.isEmpty()),
@@ -185,11 +188,12 @@ public class GoTestDescription
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoTestDescriptionArg args) {
+    GoToolchain goToolchain = getGoToolchain();
     GoPlatform platform =
-        goBuckConfig
+        goToolchain
             .getPlatformFlavorDomain()
             .getValue(buildTarget)
-            .orElse(goBuckConfig.getDefaultPlatform());
+            .orElse(goToolchain.getDefaultPlatform());
 
     if (buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
       return createTestLibrary(
@@ -198,7 +202,14 @@ public class GoTestDescription
 
     GoBinary testMain =
         createTestMainRule(
-            buildTarget, projectFilesystem, params, resolver, cellRoots, args, platform);
+            buildTarget,
+            projectFilesystem,
+            params,
+            resolver,
+            cellRoots,
+            goToolchain,
+            args,
+            platform);
     resolver.addToIndex(testMain);
 
     return new GoTest(
@@ -221,6 +232,7 @@ public class GoTestDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
+      GoToolchain goToolchain,
       GoTestDescriptionArg args,
       GoPlatform platform) {
     Path packageName = getGoPackageName(resolver, buildTarget, args);
@@ -237,6 +249,7 @@ public class GoTestDescription
             params,
             resolver,
             cellRoots,
+            goToolchain,
             args.getSrcs(),
             packageName,
             args.getCgoSrcs(),
@@ -426,6 +439,10 @@ public class GoTestDescription
         .getCxxPlatforms()
         .getValue(ImmutableSet.of(DefaultCxxPlatforms.FLAVOR))
         .get();
+  }
+
+  private GoToolchain getGoToolchain() {
+    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
   }
 
   @BuckStyleImmutable

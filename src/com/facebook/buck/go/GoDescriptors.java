@@ -295,6 +295,7 @@ abstract class GoDescriptors {
   }
 
   static Tool getTestMainGenerator(
+      GoToolchain goToolchain,
       GoBuckConfig goBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -347,7 +348,7 @@ abstract class GoDescriptors {
                   ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),
-                  goBuckConfig.getDefaultPlatform(),
+                  goToolchain.getDefaultPlatform(),
                   cgoSrcs,
                   cgoHeaders,
                   cgoDeps);

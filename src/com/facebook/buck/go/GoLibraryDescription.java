@@ -72,7 +72,7 @@ public class GoLibraryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors);
+    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
   }
 
   @Override
@@ -83,7 +83,8 @@ public class GoLibraryDescription
       GoLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+    Optional<GoPlatform> platform =
+        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -124,7 +125,8 @@ public class GoLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoLibraryDescriptionArg args) {
-    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+    Optional<GoPlatform> platform =
+        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
 
     if (platform.isPresent()) {
       return GoDescriptors.createGoCompileRule(
@@ -160,6 +162,10 @@ public class GoLibraryDescription
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+  }
+
+  private GoToolchain getGoToolchain() {
+    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
   }
 
   @BuckStyleImmutable
