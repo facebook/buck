@@ -519,14 +519,14 @@
   </target>
 
   <target name="build-module-lua" depends="compile">
-    <build-buck-module-jar module-name="lua">
+    <build-buck-module-jar-with-resources module-name="lua">
       <module-javac-params>
         <include name="com/facebook/buck/lua/**/*.java" />
       </module-javac-params>
       <module-resources>
         <include name="com/facebook/buck/lua/*.in"/>
       </module-resources>
-    </build-buck-module-jar>
+    </build-buck-module-jar-with-resources>
   </target>
 
   <target name="build-module-rust" depends="compile">
@@ -773,7 +773,42 @@
     <attribute name="module-gen-dir" default="${build.dir}/gen/buck-modules/@{module-name}"/>
     <element name="module-javac-params" optional="true" />
     <element name="additional-classpath-entries" optional="true" />
-    <element name="module-resources" optional="true" />
+    <sequential>
+      <mkdir dir="@{module-classes-dir}" />
+      <mkdir dir="${build.dir}/${modules.dir.name}" />
+      <path id="@{module-name}-classpath">
+        <pathelement location="${classes.dir}" />
+        <path refid="classpath-no-src" />
+        <fileset dir="${build.dir}/${modules.dir.name}">
+          <additional-classpath-entries/>
+        </fileset>
+      </path>
+      <ecj destdir="@{module-classes-dir}" classpathref="@{module-name}-classpath"
+        gensrcdir="@{module-gen-dir}">
+        <javac-params>
+          <compilerarg value="-processorpath" />
+          <compilerarg value="${module.processorpath}" />
+          <compilerarg value="${pf4j-annotation-processor-storage-config}" />
+          <module-javac-params/>
+        </javac-params>
+      </ecj>
+      <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
+        <fileset dir="@{module-classes-dir}" />
+      </jar>
+    </sequential>
+  </macrodef>
+
+  <!--
+   Builds a jar of a module with resources
+   -->
+  <macrodef name="build-buck-module-jar-with-resources">
+    <attribute name="module-name" />
+    <attribute name="module-classes-dir" default="${build.dir}/classes/${modules.dir.name}/@{module-name}" />
+    <attribute name="module-jar" default="${build.dir}/${modules.dir.name}/@{module-name}.jar" />
+    <attribute name="module-gen-dir" default="${build.dir}/gen/buck-modules/@{module-name}"/>
+    <element name="module-javac-params" optional="true" />
+    <element name="additional-classpath-entries" optional="true" />
+    <element name="module-resources" />
     <sequential>
       <mkdir dir="@{module-classes-dir}" />
       <mkdir dir="${build.dir}/${modules.dir.name}" />
@@ -796,7 +831,6 @@
       <copy todir="@{module-classes-dir}">
         <fileset dir="${src.dir}">
           <module-resources/>
-          <exclude name="**"/>
         </fileset>
       </copy>
       <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
