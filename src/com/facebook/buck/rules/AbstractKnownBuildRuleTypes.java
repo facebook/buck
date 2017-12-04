@@ -63,11 +63,6 @@ import com.facebook.buck.graphql.GraphqlLibraryDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryDescription;
-import com.facebook.buck.haskell.HaskellBinaryDescription;
-import com.facebook.buck.haskell.HaskellGhciDescription;
-import com.facebook.buck.haskell.HaskellHaddockDescription;
-import com.facebook.buck.haskell.HaskellLibraryDescription;
-import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
@@ -293,12 +288,6 @@ abstract class AbstractKnownBuildRuleTypes {
             provisioningProfileStore,
             appleConfig);
     builder.addDescriptions(appleBinaryDescription);
-
-    builder.addDescriptions(new HaskellHaddockDescription(toolchainProvider));
-    builder.addDescriptions(new HaskellLibraryDescription(toolchainProvider, cxxBuckConfig));
-    builder.addDescriptions(new HaskellBinaryDescription(toolchainProvider, cxxBuckConfig));
-    builder.addDescriptions(new HaskellPrebuiltLibraryDescription());
-    builder.addDescriptions(new HaskellGhciDescription(toolchainProvider, cxxBuckConfig));
 
     if (javaConfig.getDxThreadCount().isPresent()) {
       LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
