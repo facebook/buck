@@ -8,7 +8,7 @@ java_library_with_plugins(
     ],
     resources = [
         "LICENSE",
-        "testmaingen.go",
+        "testmaingen.go.in",
     ],
     visibility = [
         "//src/com/facebook/buck/cli:main",

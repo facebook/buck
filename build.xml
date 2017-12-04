@@ -624,7 +624,7 @@
     <copy todir="${classes.dir}">
       <fileset dir="${src.dir}">
         <include name="com/facebook/buck/apple/project_generator/*.st"/>
-        <include name="com/facebook/buck/go/testmaingen.go"/>
+        <include name="com/facebook/buck/go/testmaingen.go.in"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/ide/intellij/templates/*"/>

@@ -62,7 +62,7 @@ abstract class GoDescriptors {
 
   private static final Logger LOG = Logger.get(GoDescriptors.class);
 
-  private static final String TEST_MAIN_GEN_PATH = "com/facebook/buck/go/testmaingen.go";
+  private static final String TEST_MAIN_GEN_PATH = "testmaingen.go.in";
   public static final Flavor TRANSITIVE_LINKABLES_FLAVOR =
       InternalFlavor.of("transitive-linkables");
 
@@ -363,7 +363,8 @@ abstract class GoDescriptors {
 
   private static String extractTestMainGenerator() {
     try {
-      return Resources.toString(Resources.getResource(TEST_MAIN_GEN_PATH), Charsets.UTF_8);
+      return Resources.toString(
+          Resources.getResource(GoDescriptors.class, TEST_MAIN_GEN_PATH), Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
