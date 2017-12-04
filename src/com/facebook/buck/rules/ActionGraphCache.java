@@ -352,9 +352,7 @@ public class ActionGraphCache {
               ActionGraphPerfStatEvent.start(
                   clock,
                   eventBus,
-                  () -> {
-                    return Iterables.size(resolver.getBuildRules());
-                  },
+                  () -> Iterables.size(resolver.getBuildRules()),
                   node.getDescription().getClass().getName(),
                   node.getBuildTarget().getFullyQualifiedName())) {
             resolver.requireRule(node.getBuildTarget());
