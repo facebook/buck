@@ -243,6 +243,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   /** Invalidate everything in the cache. */
   @Override
   public void invalidateAll() {
+    evictionCount.add(cache.size());
     cache.clear();
     inputsIndex.clear();
   }
