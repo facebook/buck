@@ -24,6 +24,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -37,7 +38,15 @@ public class HaskellLibraryBuilder
       HaskellPlatform defaultPlatform,
       FlavorDomain<HaskellPlatform> platforms,
       CxxBuckConfig cxxBuckConfig) {
-    super(new HaskellLibraryDescription(defaultPlatform, platforms, cxxBuckConfig), target);
+    super(
+        new HaskellLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    HaskellPlatformsProvider.DEFAULT_NAME,
+                    HaskellPlatformsProvider.of(defaultPlatform, platforms))
+                .build(),
+            cxxBuckConfig),
+        target);
   }
 
   public HaskellLibraryBuilder(BuildTarget target) {
