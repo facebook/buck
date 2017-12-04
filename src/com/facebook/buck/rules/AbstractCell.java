@@ -103,6 +103,12 @@ abstract class AbstractCell {
       String toolchain,
       ToolchainProvider toolchainProvider,
       ToolchainProvider otherToolchainProvider) {
+    boolean toolchainCreated = toolchainProvider.isToolchainCreated(toolchain);
+    boolean otherToolchainCreated = otherToolchainProvider.isToolchainCreated(toolchain);
+    if (!toolchainCreated && !otherToolchainCreated) {
+      return true;
+    }
+
     boolean toolchainPresent = toolchainProvider.isToolchainPresent(toolchain);
     boolean otherToolchainPresent = otherToolchainProvider.isToolchainPresent(toolchain);
     if (!toolchainPresent && !otherToolchainPresent) {

@@ -83,6 +83,11 @@ public class ToolchainProviderBuilder {
     }
 
     @Override
+    public boolean isToolchainCreated(String toolchainName) {
+      return isToolchainPresent(toolchainName);
+    }
+
+    @Override
     public <T extends ToolchainWithCapability> Collection<String> getToolchainsWithCapability(
         Class<T> capability) {
       ImmutableList.Builder<String> featureSupportingToolchains = ImmutableList.builder();

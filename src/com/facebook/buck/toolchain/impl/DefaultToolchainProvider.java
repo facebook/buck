@@ -185,6 +185,11 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   }
 
   @Override
+  public boolean isToolchainCreated(String toolchainName) {
+    return toolchains.getIfPresent(toolchainName) != null;
+  }
+
+  @Override
   public <T extends ToolchainWithCapability> Collection<String> getToolchainsWithCapability(
       Class<T> capability) {
     ImmutableList.Builder<String> toolchainsWithCapabilities = ImmutableList.builder();
