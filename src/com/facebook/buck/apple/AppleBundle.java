@@ -243,7 +243,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     } else {
       this.provisioningProfileStore =
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of());
-      this.codeSignIdentityStore = CodeSignIdentityStore.fromIdentities(ImmutableList.of());
+      this.codeSignIdentityStore = CodeSignIdentityStoreFactory.fromIdentities(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.codesign = appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver);

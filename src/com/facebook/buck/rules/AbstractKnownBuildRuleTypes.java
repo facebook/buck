@@ -43,6 +43,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CodeSignIdentityStore;
+import com.facebook.buck.apple.CodeSignIdentityStoreFactory;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
@@ -256,7 +257,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
     CodeSignIdentityStore codeSignIdentityStore =
-        CodeSignIdentityStore.fromSystem(
+        CodeSignIdentityStoreFactory.fromSystem(
             processExecutor, appleConfig.getCodeSignIdentitiesCommand());
     ProvisioningProfileStore provisioningProfileStore =
         ProvisioningProfileStore.fromSearchPath(

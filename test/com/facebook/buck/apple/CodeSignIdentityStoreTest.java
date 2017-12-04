@@ -53,7 +53,7 @@ public class CodeSignIdentityStoreTest {
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, process));
     CodeSignIdentityStore store =
-        CodeSignIdentityStore.fromSystem(processExecutor, ImmutableList.of("unused"));
+        CodeSignIdentityStoreFactory.fromSystem(processExecutor, ImmutableList.of("unused"));
     ImmutableList<CodeSignIdentity> expected =
         ImmutableList.of(
             CodeSignIdentity.builder()
@@ -72,7 +72,7 @@ public class CodeSignIdentityStoreTest {
         TestDataHelper.getTestDataDirectory(this).resolve("code_sign_identity_store");
 
     CodeSignIdentityStore store =
-        CodeSignIdentityStore.fromSystem(
+        CodeSignIdentityStoreFactory.fromSystem(
             executor, ImmutableList.of(testdataDir.resolve("fake_identities.sh").toString()));
 
     ImmutableList<CodeSignIdentity> expected =

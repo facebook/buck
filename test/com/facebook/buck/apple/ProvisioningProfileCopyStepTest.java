@@ -92,7 +92,7 @@ public class ProvisioningProfileCopyStepTest {
     xcentFile = Paths.get("test.xcent");
     dryRunResultFile = Paths.get("test_dry_run_results.plist");
     executionContext = TestExecutionContext.newInstance();
-    codeSignIdentityStore = CodeSignIdentityStore.fromIdentities(ImmutableList.of());
+    codeSignIdentityStore = CodeSignIdentityStoreFactory.fromIdentities(ImmutableList.of());
     entitlementsFile = testdataDir.resolve("Entitlements.plist");
   }
 
