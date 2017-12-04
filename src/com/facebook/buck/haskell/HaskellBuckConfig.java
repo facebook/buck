@@ -18,13 +18,11 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.RichStream;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -70,44 +68,6 @@ public class HaskellBuckConfig {
                     .setEnvironment(delegate.getEnvironment())
                     .setSource(String.format(".buckconfig (%s.%s)", section, configName))
                     .build());
-  }
-
-  private HaskellPlatform getPlatform(String section, CxxPlatform cxxPlatform) {
-    return HaskellPlatform.builder()
-        .setHaskellVersion(HaskellVersion.of(getCompilerMajorVersion(section)))
-        .setCompiler(getCompiler(section))
-        .setCompilerFlags(getCompilerFlags(section).orElse(ImmutableList.of()))
-        .setLinker(getLinker(section))
-        .setLinkerFlags(getLinkerFlags(section).orElse(ImmutableList.of()))
-        .setPackager(getPackager(section))
-        .setHaddock(getHaddock(section))
-        .setShouldCacheLinks(getShouldCacheLinks(section))
-        .setShouldUsedOldBinaryOutputLocation(getShouldUsedOldBinaryOutputLocation(section))
-        .setPackageNamePrefix(getPackageNamePrefix(section))
-        .setGhciScriptTemplate(getGhciScriptTemplate(section))
-        .setGhciIservScriptTemplate(getGhciIservScriptTemplate(section))
-        .setGhciBinutils(getGhciBinutils(section))
-        .setGhciGhc(getGhciGhc(section))
-        .setGhciIServ(getGhciIServ(section))
-        .setGhciIServProf(getGhciIServProf(section))
-        .setGhciLib(getGhciLib(section))
-        .setGhciCxx(getGhciCxx(section))
-        .setGhciCc(getGhciCc(section))
-        .setGhciCpp(getGhciCpp(section))
-        .setLinkStyleForStubHeader(getLinkStyleForStubHeader(section))
-        .setCxxPlatform(cxxPlatform)
-        .build();
-  }
-
-  public ImmutableList<HaskellPlatform> getPlatforms(Iterable<CxxPlatform> cxxPlatforms) {
-    return RichStream.from(cxxPlatforms)
-        .map(
-            cxxPlatform ->
-                // We special case the "default" C/C++ platform to just use the "haskell" section.
-                cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
-                    ? getPlatform(getDefaultSection(), cxxPlatform)
-                    : getPlatform(getSectionForPlatform(cxxPlatform), cxxPlatform))
-        .toImmutableList();
   }
 
   public String getDefaultSection() {
