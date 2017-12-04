@@ -22,6 +22,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
+import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatforms;
 import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.config.BuckConfig;
@@ -233,7 +234,7 @@ public class FakeAppleRuleDescriptions {
               DEFAULT_APPLE_FLAVOR_DOMAIN),
           SWIFT_LIBRARY_DESCRIPTION,
           DEFAULT_PLATFORM.getFlavor(),
-          CodeSignIdentityStoreFactory.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
@@ -248,7 +249,7 @@ public class FakeAppleRuleDescriptions {
               DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
               DEFAULT_APPLE_FLAVOR_DOMAIN),
           SWIFT_LIBRARY_DESCRIPTION,
-          CodeSignIdentityStoreFactory.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
@@ -260,7 +261,7 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM.getFlavor(),
-          CodeSignIdentityStoreFactory.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
@@ -272,7 +273,7 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM.getFlavor(),
-          CodeSignIdentityStoreFactory.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           Suppliers.ofInstance(Optional.empty()));
 

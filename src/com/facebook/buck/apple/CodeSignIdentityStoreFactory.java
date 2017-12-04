@@ -24,7 +24,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.hash.HashCode;
@@ -106,9 +105,5 @@ public class CodeSignIdentityStoreFactory {
               }
               return allValidIdentities;
             }));
-  }
-
-  public static CodeSignIdentityStore fromIdentities(Iterable<CodeSignIdentity> identities) {
-    return new CodeSignIdentityStore(Suppliers.ofInstance(ImmutableList.copyOf(identities)));
   }
 }
