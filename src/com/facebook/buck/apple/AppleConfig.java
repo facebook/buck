@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.io.ExecutableFinder;
@@ -48,6 +47,10 @@ import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
+
+  public static final ImmutableList<String> DEFAULT_IDENTITIES_COMMAND =
+      ImmutableList.of("security", "find-identity", "-v", "-p", "codesigning");
+
   private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
   private static final String DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE = "FB_LOG_LEVEL";
   private static final String DEFAULT_TEST_LOG_LEVEL = "debug";
@@ -330,7 +333,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getCodeSignIdentitiesCommand() {
     Optional<String> value = delegate.getValue(APPLE_SECTION, "code_sign_identities_command");
     if (!value.isPresent()) {
-      return CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND;
+      return DEFAULT_IDENTITIES_COMMAND;
     }
     return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }

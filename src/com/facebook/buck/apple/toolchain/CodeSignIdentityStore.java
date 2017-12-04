@@ -23,8 +23,6 @@ import java.util.function.Supplier;
 
 /** A collection of code sign identities. */
 public class CodeSignIdentityStore implements AddsToRuleKey {
-  public static final ImmutableList<String> DEFAULT_IDENTITIES_COMMAND =
-      ImmutableList.of("security", "find-identity", "-v", "-p", "codesigning");
 
   @AddToRuleKey private final Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier;
 
