@@ -50,6 +50,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
@@ -72,16 +73,11 @@ public class HaskellGhciDescription
 
   private static final Logger LOG = Logger.get(HaskellGhciDescription.class);
 
-  private final HaskellPlatform defaultPlatform;
-  private final FlavorDomain<HaskellPlatform> platforms;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
 
-  public HaskellGhciDescription(
-      HaskellPlatform defaultPlatform,
-      FlavorDomain<HaskellPlatform> platforms,
-      CxxBuckConfig cxxBuckConfig) {
-    this.defaultPlatform = defaultPlatform;
-    this.platforms = platforms;
+  public HaskellGhciDescription(ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
   }
 
@@ -287,6 +283,8 @@ public class HaskellGhciDescription
 
   // Return the C/C++ platform to build against.
   private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellGhciDescriptionArg arg) {
+    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
     if (flavorPlatform.isPresent()) {
@@ -297,7 +295,7 @@ public class HaskellGhciDescription
       return platforms.getValue(arg.getPlatform().get());
     }
 
-    return defaultPlatform;
+    return haskellPlatformsProvider.getDefaultHaskellPlatform();
   }
 
   @Override
@@ -345,6 +343,11 @@ public class HaskellGhciDescription
             depsQuery ->
                 QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
                     .forEach(extraDepsBuilder::add));
+  }
+
+  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+    return toolchainProvider.getByName(
+        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
   }
 
   /** Composition of {@link NativeLinkable}s in the omnibus link. */

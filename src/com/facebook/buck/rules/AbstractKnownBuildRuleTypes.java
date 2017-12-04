@@ -67,8 +67,6 @@ import com.facebook.buck.haskell.HaskellBinaryDescription;
 import com.facebook.buck.haskell.HaskellGhciDescription;
 import com.facebook.buck.haskell.HaskellHaddockDescription;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
-import com.facebook.buck.haskell.HaskellPlatform;
-import com.facebook.buck.haskell.HaskellPlatformsFactory;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.js.JsBundleDescription;
@@ -296,19 +294,11 @@ abstract class AbstractKnownBuildRuleTypes {
             appleConfig);
     builder.addDescriptions(appleBinaryDescription);
 
-    HaskellPlatformsFactory haskellPlatformsFactory =
-        new HaskellPlatformsFactory(config, executableFinder);
-    FlavorDomain<HaskellPlatform> haskellPlatforms =
-        FlavorDomain.from(
-            "Haskell platform", haskellPlatformsFactory.getPlatforms(cxxPlatforms.getValues()));
-    HaskellPlatform defaultHaskellPlatform =
-        haskellPlatforms.getValue(defaultCxxPlatform.getFlavor());
     builder.addDescriptions(new HaskellHaddockDescription(toolchainProvider));
     builder.addDescriptions(new HaskellLibraryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(new HaskellBinaryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(new HaskellPrebuiltLibraryDescription());
-    builder.addDescriptions(
-        new HaskellGhciDescription(defaultHaskellPlatform, haskellPlatforms, cxxBuckConfig));
+    builder.addDescriptions(new HaskellGhciDescription(toolchainProvider, cxxBuckConfig));
 
     if (javaConfig.getDxThreadCount().isPresent()) {
       LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
