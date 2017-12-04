@@ -303,8 +303,7 @@ abstract class AbstractKnownBuildRuleTypes {
             "Haskell platform", haskellPlatformsFactory.getPlatforms(cxxPlatforms.getValues()));
     HaskellPlatform defaultHaskellPlatform =
         haskellPlatforms.getValue(defaultCxxPlatform.getFlavor());
-    builder.addDescriptions(
-        new HaskellHaddockDescription(defaultHaskellPlatform, haskellPlatforms));
+    builder.addDescriptions(new HaskellHaddockDescription(toolchainProvider));
     builder.addDescriptions(
         new HaskellLibraryDescription(defaultHaskellPlatform, haskellPlatforms, cxxBuckConfig));
     builder.addDescriptions(
