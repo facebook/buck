@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
-java_immutables_library(
+java_library_with_plugins(
     name = "go",
     srcs = glob(["*.java"]),
     exported_deps = [
@@ -11,8 +11,7 @@ java_immutables_library(
         "testmaingen.go",
     ],
     visibility = [
-        "//src/com/facebook/buck/rules:types",
-        "//src/com/facebook/buck/toolchain/impl:impl",
+        "//src/com/facebook/buck/cli:main",
         "//test/com/facebook/buck/go/...",
     ],
     deps = [
