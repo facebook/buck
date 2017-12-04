@@ -28,7 +28,10 @@ public enum CrateType {
       RustDescriptionEnhancer.RFBIN,
       (target, n, p) ->
           String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
-  CHECK("lib", RustDescriptionEnhancer.RFCHECK, (target, n, p) -> String.format("lib%s.rmeta", n)),
+  CHECK(
+      "lib",
+      RustDescriptionEnhancer.RFCHECK,
+      (target, crate, plat) -> hashed_filename(target, crate, "rmeta")),
   CHECKBIN(
       "bin",
       RustDescriptionEnhancer.RFCHECK,
@@ -37,21 +40,15 @@ public enum CrateType {
   LIB(
       "lib",
       RustDescriptionEnhancer.RFLIB,
-      (target, crate, plat) -> {
-        return rlib_filename(target, crate);
-      }), // XXX how to tell?
+      (target, crate, plat) -> hashed_filename(target, crate, "rlib")), // XXX how to tell?
   RLIB(
       "rlib",
       RustDescriptionEnhancer.RFRLIB,
-      (target, crate, plat) -> {
-        return rlib_filename(target, crate);
-      }),
+      (target, crate, plat) -> hashed_filename(target, crate, "rlib")),
   RLIB_PIC(
       "rlib",
       RustDescriptionEnhancer.RFRLIB_PIC,
-      (target, crate, plat) -> {
-        return rlib_filename(target, crate);
-      }),
+      (target, crate, plat) -> hashed_filename(target, crate, "rlib")),
   DYLIB("dylib", RustDescriptionEnhancer.RFDYLIB, CrateType::dylib_filename),
   CDYLIB("cdylib", CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType::dylib_filename),
   STATIC(
@@ -65,14 +62,13 @@ public enum CrateType {
   PROC_MACRO("proc-macro", RustDescriptionEnhancer.RFPROC_MACRO, CrateType::dylib_filename),
   ;
 
-  private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {
+  private static String hashed_filename(BuildTarget target, String crate, String ext) {
     String hash = RustCompileUtils.hashForTarget(target);
-    return String.format("lib%s-%s.%s", crate, hash, plat.getSharedLibraryExtension());
+    return String.format("lib%s-%s.%s", crate, hash, ext);
   }
 
-  private static String rlib_filename(BuildTarget target, String crate) {
-    String hash = RustCompileUtils.hashForTarget(target);
-    return String.format("lib%s-%s.rlib", crate, hash);
+  private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {
+    return hashed_filename(target, crate, plat.getSharedLibraryExtension());
   }
 
   // Crate type as passed to `rustc --crate-type=`
