@@ -24,8 +24,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.apple.toolchain.AppleToolchain;
-import com.facebook.buck.apple.toolchain.impl.AppleToolchainDiscovery;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.util.FakeProcess;
@@ -35,8 +33,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -122,65 +118,6 @@ public class AppleConfigTest {
     ImmutableList<Path> extraPlatformPaths = config.getExtraPlatformPaths();
     assertEquals(ImmutableList.of(Paths.get("/path/to/somewhere/Toolchain")), extraToolchainPaths);
     assertEquals(ImmutableList.of(Paths.get("/path/to/somewhere/Platform")), extraPlatformPaths);
-  }
-
-  @Test
-  public void resolveAppleToolchainDirectoriesWithSymlinks() throws IOException {
-    Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
-    Path symlink = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery-symlink");
-    Path xcodeSymlink =
-        Paths.get("test/com/facebook/buck/apple/testdata/xcode-toolchain-discovery");
-    Files.deleteIfExists(symlink);
-    Files.deleteIfExists(xcodeSymlink);
-    Files.createSymbolicLink(symlink, root.toAbsolutePath());
-    Files.createSymbolicLink(xcodeSymlink, root.toAbsolutePath());
-
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "apple",
-                    ImmutableMap.of(
-                        "extra_toolchain_paths", symlink.resolve("Toolchains").toString())))
-            .build();
-    AppleConfig config = buckConfig.getView(AppleConfig.class);
-
-    ProcessExecutorParams xcodeSelectParams =
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of("xcode-select", "--print-path"))
-            .build();
-    FakeProcess fakeXcodeSelect = new FakeProcess(0, xcodeSymlink.toString(), "");
-    FakeProcessExecutor processExecutor =
-        new FakeProcessExecutor(ImmutableMap.of(xcodeSelectParams, fakeXcodeSelect));
-
-    Supplier<Optional<Path>> developerDirectories =
-        config.getAppleDeveloperDirectorySupplier(processExecutor);
-    ImmutableList<Path> extraToolchainPaths = config.getExtraToolchainPaths();
-
-    ImmutableMap<String, AppleToolchain> expected =
-        ImmutableMap.of(
-            "com.facebook.foo.toolchain.XcodeDefault",
-            AppleToolchain.builder()
-                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
-                .setVersion("23B456")
-                .setPath(root.resolve("Toolchains/foo.xctoolchain").toAbsolutePath())
-                .build(),
-            "com.facebook.bar.toolchain.XcodeDefault",
-            AppleToolchain.builder()
-                .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
-                .setVersion("23B456")
-                .setPath(root.resolve("Toolchains/bar.xctoolchain").toAbsolutePath())
-                .build());
-
-    try {
-      assertThat(
-          AppleToolchainDiscovery.discoverAppleToolchains(
-              developerDirectories.get(), extraToolchainPaths),
-          equalTo(expected));
-    } finally {
-      Files.deleteIfExists(symlink);
-      Files.deleteIfExists(xcodeSymlink);
-    }
   }
 
   @Test
