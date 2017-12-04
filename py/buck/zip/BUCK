@@ -6,6 +6,14 @@ python_binary(
     ],
 )
 
+python_binary(
+    name = "append_with_copy",
+    main = "append_with_copy.py",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 python_test(
     name = "test",
     srcs = glob(["test_*.py"]),
@@ -17,6 +25,7 @@ python_test(
 python_library(
     name = "lib",
     srcs = [
+        "append_with_copy.py",
         "munger.py",
     ],
 )

@@ -17,14 +17,38 @@ def buck_module(
         **kwargs
     )
 
+    jar_without_hash_name = name + '_jar_without_hash'
+
     java_binary(
+        name = jar_without_hash_name,
+        deps = [
+            ":" + name,
+        ],
+    )
+
+    calculate_module_hash_name = name + '_calculate_module_hash'
+
+    genrule(
+        name = calculate_module_hash_name,
+        out = "module-binary-hash.txt",
+        cmd = " ".join([
+            "$(exe //py/hash:hash_files)",
+            "$(location :{})".format(jar_without_hash_name),
+            "$(location //py/hash:hash_files.py) > $OUT"
+        ]),
+    )
+
+    genrule(
         name = name + "-module",
+        out = "{}.jar".format(name),
+        cmd = " ".join([
+            "$(exe //py/buck/zip:append_with_copy)",
+            "$(location :{}) $OUT".format(jar_without_hash_name),
+            "META-INF/module-binary-hash.txt $(location :{})".format(calculate_module_hash_name)
+        ]),
         visibility = [
             "//programs:bucklib",
             "//programs:calculate-buck-binary-hash",
-        ],
-        deps = [
-            ":" + name,
         ],
     )
 

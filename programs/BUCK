@@ -104,7 +104,6 @@ genrule(
     cmd = " ".join([
         "$(exe //py/hash:hash_files)",
         " ".join(["$(location {})".format(resource) for resource in RESOURCES_AFFECTING_BUILD_ARTIFACTS.values()]),
-        " ".join(["$(location {})".format(get_module_binary(buck_module)) for buck_module in BUCK_MODULES.values()]),
         "$(location //py/hash:hash_files.py)",
         " > $OUT",
     ]),

@@ -9,6 +9,8 @@
   <property name="build.successful.file" value="${build.dir}/successful-build" />
   <property name="classes.dir.name" value="classes" />
   <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
+  <property name="buck.modules.classes.dir.name" value="buck-modules-classes" />
+  <property name="buck.modules.classes.dir" value="${build.dir}/${buck.modules.classes.dir.name}" />
   <property name="buck.modules.annotation.processor.src.dir" value="com/facebook/buck/module/annotationprocessor" />
   <property name="buck.modules.ap.classes.dir.name" value="buck-modules-ap-classes" />
   <property name="buck.modules.annotation.processor.classes.dir" value="${build.dir}/${buck.modules.ap.classes.dir.name}" />
@@ -67,6 +69,7 @@
 
   <property name="buck.hash.dir" value="${build.dir}/classes/META-INF"/>
   <property name="buck.hash.file" value="${buck.hash.dir}/buck-binary-hash.txt"/>
+  <property name="buck.combined.hash.file" value="${buck.hash.dir}/buck-combined-binary-hash.txt"/>
 
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
   <property name="buck.info.error.file" value="${build.dir}/buck-info-error.txt"/>
@@ -788,9 +791,10 @@
 
   <macrodef name="build-buck-module-jar">
     <attribute name="module-name" />
-    <attribute name="module-classes-dir" default="${build.dir}/classes/${modules.dir.name}/@{module-name}" />
+    <attribute name="module-classes-dir" default="${buck.modules.classes.dir}/@{module-name}" />
     <attribute name="module-jar" default="${build.dir}/${modules.dir.name}/@{module-name}.jar" />
-    <attribute name="module-gen-dir" default="${build.dir}/gen/buck-modules/@{module-name}"/>
+    <attribute name="module-gen-dir" default="${buck.modules.classes.dir}/gen/@{module-name}"/>
+    <attribute name="module-binary-hash-file" default="@{module-classes-dir}/META-INF/module-binary-hash.txt"/>
     <element name="module-javac-params" optional="true" />
     <element name="additional-classpath-entries" optional="true" />
     <sequential>
@@ -812,6 +816,14 @@
           <module-javac-params/>
         </javac-params>
       </ecj>
+      <delete file="@{module-binary-hash-file}"/>
+      <checksum todir="${build.dir}/buck-modules-checksums/@{module-name}" totalproperty="@{module-name}.module.hash.value">
+        <fileset dir="@{module-classes-dir}">
+          <include name="**"/>
+        </fileset>
+      </checksum>
+      <echo file="@{module-binary-hash-file}">${@{module-name}.module.hash.value}</echo>
+      <echo>Generated module hash: ${@{module-name}.module.hash.value}</echo>
       <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
         <fileset dir="@{module-classes-dir}" />
       </jar>
@@ -823,9 +835,10 @@
    -->
   <macrodef name="build-buck-module-jar-with-resources">
     <attribute name="module-name" />
-    <attribute name="module-classes-dir" default="${build.dir}/classes/${modules.dir.name}/@{module-name}" />
+    <attribute name="module-classes-dir" default="${buck.modules.classes.dir}/@{module-name}" />
     <attribute name="module-jar" default="${build.dir}/${modules.dir.name}/@{module-name}.jar" />
-    <attribute name="module-gen-dir" default="${build.dir}/gen/buck-modules/@{module-name}"/>
+    <attribute name="module-gen-dir" default="${buck.modules.classes.dir}/gen/@{module-name}"/>
+    <attribute name="module-binary-hash-file" default="@{module-classes-dir}/META-INF/module-binary-hash.txt"/>
     <element name="module-javac-params" optional="true" />
     <element name="additional-classpath-entries" optional="true" />
     <element name="module-resources" />
@@ -853,6 +866,14 @@
           <module-resources/>
         </fileset>
       </copy>
+      <delete file="@{module-binary-hash-file}"/>
+      <checksum todir="${build.dir}/buck-modules-checksums/@{module-name}" totalproperty="@{module-name}.module.hash.value">
+        <fileset dir="@{module-classes-dir}">
+          <include name="**"/>
+        </fileset>
+      </checksum>
+      <echo file="@{module-binary-hash-file}">${@{module-name}.module.hash.value}</echo>
+      <echo>Generated module hash: ${@{module-name}.module.hash.value}</echo>
       <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
         <fileset dir="@{module-classes-dir}" />
       </jar>
@@ -886,6 +907,7 @@
           <exclude name="com/facebook/buck/intellij/**" />
         </fileset>
         <fileset dir="${gensrc.dir}" />
+        <fileset dir="${buck.modules.classes.dir}/gen/" />
         <link href="http://docs.oracle.com/javase/7/docs/api/"
               offline="true"
               packagelistloc="third-party/java/javase" />
@@ -902,7 +924,7 @@
     </sequential>
   </macrodef>
 
-  <target name="-javadoc-deps" depends="compile" />
+  <target name="-javadoc-deps" depends="compile, build-modules" />
 
   <path id="javadoc.classpath">
     <path refid="classpath" />
