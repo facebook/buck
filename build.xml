@@ -467,6 +467,7 @@
           <exclude name="com/facebook/buck/d/**" />
           <exclude name="com/facebook/buck/dotnet/**" />
           <exclude name="com/facebook/buck/event/api/**" />
+          <exclude name="com/facebook/buck/go/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -500,7 +501,7 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-lua, build-module-rust, build-module-zipbundler, build-module-ziprules"/>
+  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-go, build-module-lua, build-module-rust, build-module-zipbundler, build-module-ziprules"/>
 
   <target name="build-module-d" depends="compile">
     <build-buck-module-jar module-name="d">
@@ -516,6 +517,17 @@
         <include name="com/facebook/buck/dotnet/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-go" depends="compile">
+    <build-buck-module-jar-with-resources module-name="go">
+      <module-javac-params>
+        <include name="com/facebook/buck/go/**/*.java" />
+      </module-javac-params>
+      <module-resources>
+        <include name="com/facebook/buck/go/*.in"/>
+      </module-resources>
+    </build-buck-module-jar-with-resources>
   </target>
 
   <target name="build-module-lua" depends="compile">
@@ -624,7 +636,6 @@
     <copy todir="${classes.dir}">
       <fileset dir="${src.dir}">
         <include name="com/facebook/buck/apple/project_generator/*.st"/>
-        <include name="com/facebook/buck/go/testmaingen.go.in"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/ide/intellij/templates/*"/>
