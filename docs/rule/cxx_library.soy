@@ -91,6 +91,8 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call native_common.preferred_linkage /}
 
+{call cxx_common.reexport_all_header_dependencies_arg /}
+
 {call cxx_common.exported_deps_arg /}
 
 {call cxx_common.precompiled_header_arg /}

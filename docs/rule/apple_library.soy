@@ -63,11 +63,16 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 
 {call cxx_common.exported_platform_linker_flags_arg /}
 
+
 {call native_common.preferred_linkage /}
 
 {call native_common.link_style /}
 
 {call native_common.link_whole /}
+
+{call cxx_common.reexport_all_header_dependencies_arg /}
+
+{call cxx_common.exported_deps_arg /}
 
 {call buck.tests_apple_arg /}
 
