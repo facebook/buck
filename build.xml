@@ -468,6 +468,7 @@
           <exclude name="com/facebook/buck/dotnet/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/go/**" />
+          <exclude name="com/facebook/buck/haskell/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -501,7 +502,7 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-go, build-module-lua, build-module-rust, build-module-zipbundler, build-module-ziprules"/>
+  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-go, build-module-haskell, build-module-lua, build-module-rust, build-module-zipbundler, build-module-ziprules"/>
 
   <target name="build-module-d" depends="compile">
     <build-buck-module-jar module-name="d">
@@ -528,6 +529,14 @@
         <include name="com/facebook/buck/go/*.in"/>
       </module-resources>
     </build-buck-module-jar-with-resources>
+  </target>
+
+  <target name="build-module-haskell" depends="compile">
+    <build-buck-module-jar module-name="haskell">
+      <module-javac-params>
+        <include name="com/facebook/buck/haskell/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
   </target>
 
   <target name="build-module-lua" depends="compile">
