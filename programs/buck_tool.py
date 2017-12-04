@@ -113,10 +113,12 @@ class BuckStatusReporter(object):
     """
     def __init__(self, argv):
         self.argv = argv
-        self.build_id = ''
-        self.buck_version = ''
+        self.build_id = None
+        self.buck_version = None
         self.is_buckd = False
-        self.status_message = ''
+        self.status_message = None
+        self.repository = None
+        self.start_time = time.time()
 
     def report(self, exit_code):
         """ Add custom code here to track Buck invocations """
@@ -361,6 +363,14 @@ class BuckTool(object):
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                try:
+                    repository = self._get_repository()
+                    self._reporter.repository = repository
+                except Exception as e:
+                    # _get_repository() is only for reporting,
+                    # so skip on error
+                    logging.warning('Failed to get repo name: ' + str(e))
+
                 if self._command_line.command == "clean" and \
                         not self._command_line.is_help():
                     self.kill_buckd()
@@ -527,6 +537,13 @@ class BuckTool(object):
                 return 0
 
             return returncode
+
+    def _get_repository(self):
+        arcconfig = os.path.join(self._buck_project.root, '.arcconfig')
+        if os.path.isfile(arcconfig):
+            with open(arcconfig, 'r') as fp:
+                return json.load(fp).get('project_id', None)
+        return None
 
 
     def kill_buckd(self):
