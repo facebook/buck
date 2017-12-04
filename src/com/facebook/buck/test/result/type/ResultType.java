@@ -19,14 +19,8 @@ package com.facebook.buck.test.result.type;
 /** The kind of result */
 public enum ResultType {
 
-  // First, three different reasons why the tests weren't even attempted:
+  // First, two different reasons why the tests weren't even attempted:
 
-  /**
-   * The test was not run because the user chose to run tests with the --dry-run flag, which caused
-   * the test runner to print out the names of tests that *would* have run without actually running
-   * them.
-   */
-  DRY_RUN,
   /**
    * The test was not run because it was excluded by the user (e.g., specifying {@link
    * com.facebook.buck.cli.TestSelectorOptions}).

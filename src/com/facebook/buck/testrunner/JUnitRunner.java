@@ -218,7 +218,7 @@ public final class JUnitRunner extends BaseRunner {
         // we should use the original behavior to use our
         // BuckBlockJUnit4ClassRunner, which provides the Descriptions needed
         // to do test selecting properly.
-        if (defaultTestTimeoutMillis <= 0 || isDryRun || !testSelectorList.isEmpty()) {
+        if (defaultTestTimeoutMillis <= 0 || !testSelectorList.isEmpty()) {
           return super.annotatedBuilder();
         }
 
@@ -329,13 +329,6 @@ public final class JUnitRunner extends BaseRunner {
         type = ResultType.ASSUMPTION_VIOLATION;
         // Clear the assumption-failure field before the next test result appears.
         assumptionFailure = null;
-      } else if (isDryRun) {
-        if ("org.junit.runner.manipulation.Filter".equals(className)
-            && "initializationError".equals(methodName)) {
-          return; // don't record errors from failed class initialization during dry run
-        }
-        failure = null;
-        type = ResultType.DRY_RUN;
       } else if (numFailures == 0) {
         failure = null;
         type = ResultType.SUCCESS;
@@ -477,10 +470,6 @@ public final class JUnitRunner extends BaseRunner {
       }
       if (description.getAnnotation(Ignore.class) != null) {
         filteredOut.add(TestResult.forDisabled(className, methodName));
-        return false;
-      }
-      if (isDryRun) {
-        filteredOut.add(TestResult.forDryRun(className, methodName));
         return false;
       }
       return true;

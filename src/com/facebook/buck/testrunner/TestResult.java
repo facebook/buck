@@ -48,10 +48,6 @@ final class TestResult {
     this.stdErr = stdErr;
   }
 
-  public static TestResult forDryRun(String testClassName, String testMethodName) {
-    return new TestResult(testClassName, testMethodName, 0, ResultType.DRY_RUN, null, null, null);
-  }
-
   public static TestResult forExcluded(String testClassName, String testMethodName, String reason) {
     return new TestResult(
         testClassName, testMethodName, 0, ResultType.EXCLUDED, null, reason, null);
