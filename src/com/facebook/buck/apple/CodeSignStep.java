@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
+import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;

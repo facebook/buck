@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
