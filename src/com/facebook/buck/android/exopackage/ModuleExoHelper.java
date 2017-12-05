@@ -56,13 +56,24 @@ public class ModuleExoHelper {
     this.dexInfoForModules = dexInfoForModules;
   }
 
-  /** @return the list of modular dex files which are installable for this build */
+  /**
+   * @return the list of modular dex files which are installable for this build The returned map
+   *     contains entries of the form destination_file_path => local_src_file_path
+   */
   public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
     return ExopackageUtil.applyFilenameFormat(
         getRequiredDexFiles(), MODULAR_DEX_DIR, "module-%s.dex.jar");
   }
 
-  /** @return metadata contents for each module, containing hashes and canary class names */
+  /**
+   * @return metadata contents for each module, containing hashes and canary class names along with
+   *     a top level metadata file describing the full set of modular jars. The per-module metadata
+   *     files contain comment lines beginning with a '.' and entry lines which each describe a jar
+   *     belonging to the module with the format: "file_path file_hash"
+   *     <p>The top level metadata file has one line per jar with the following format: "file_name
+   *     module_name" and provides a top-level listing of all jars included in the build along with
+   *     a mapping back to the module name where they came from
+   */
   public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
     final Builder<Path, String> builder = ImmutableMap.builder();
     for (DexInfo info : dexInfoForModules) {
@@ -78,16 +89,24 @@ public class ModuleExoHelper {
     // Top level metadata.txt containing the list of jars
     final String fileListing =
         getFilesToInstall()
-            .keySet()
+            .entrySet()
             .stream()
-            .map(Path::getFileName)
-            .map(Path::toString)
-            .map(filename -> filename + " ")
-            .collect(Collectors.joining("\n"));
+            .map(
+                entry -> {
+                  String moduleName = entry.getValue().getParent().getFileName().toString();
+                  String fileName = entry.getKey().getFileName().toString();
+                  return String.format("%s %s\n", fileName, moduleName);
+                })
+            .collect(Collectors.joining());
     builder.put(MODULAR_DEX_DIR.resolve("metadata.txt"), fileListing);
     return builder.build();
   }
 
+  /**
+   * @return a file_hash => local_file_path mapping
+   * @throws IOException if an error occurred while parsing the metadata files which describe the
+   *     files to be installed
+   */
   private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
     ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
     for (DexInfo dexInfo : dexInfoForModules) {
