@@ -238,7 +238,8 @@ public class ExoHelper {
    */
   public static void setupHotswap(Application application) {
     application.registerReceiver(
-        new ModularDexChangedReceiver(), ModularDexChangedReceiver.getIntentFilter());
+        new ModularDexChangedReceiver(),
+        ModularDexChangedReceiver.getIntentFilter(application.getPackageName()));
   }
 
   /**
