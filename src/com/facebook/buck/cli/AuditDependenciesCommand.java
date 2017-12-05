@@ -109,8 +109,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =
-          BuckQueryEnvironment.from(
-              params, parserState, pool.getListeningExecutorService(), getEnableParserProfiling());
+          BuckQueryEnvironment.from(params, parserState, pool.getListeningExecutorService());
       return QueryCommand.runMultipleQuery(
           params,
           env,

@@ -134,8 +134,7 @@ public class QueryCommand extends AbstractCommand {
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
-      BuckQueryEnvironment env =
-          BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());
+      BuckQueryEnvironment env = BuckQueryEnvironment.from(params, parserState, executor);
       return formatAndRunQuery(params, env);
     } catch (QueryException | BuildFileParseException e) {
       // TODO(buck_team): return ExitCode.PARSE_ERROR if it is BuildFileParseException
