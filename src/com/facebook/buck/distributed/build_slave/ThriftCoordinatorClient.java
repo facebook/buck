@@ -57,6 +57,7 @@ public class ThriftCoordinatorClient implements Closeable {
 
   /** Starts the thrift client. */
   public synchronized ThriftCoordinatorClient start(int remotePort) throws ThriftException {
+    LOG.info("Starting ThriftCoordinatorClient (for MinionModeRunner)...");
     transport = new TFramedTransport(new TSocket(remoteHost, remotePort));
 
     try {
@@ -67,13 +68,16 @@ public class ThriftCoordinatorClient implements Closeable {
 
     TProtocol protocol = new TBinaryProtocol(transport);
     client = new CoordinatorService.Client(protocol);
+    LOG.info("Started ThriftCoordinatorClient.");
     return this;
   }
 
   /** Orderly stops the thrift client. */
   public synchronized ThriftCoordinatorClient stop() {
+    LOG.info("Stopping ThriftCoordinatorClient (for MinionModeRunner)...");
     Preconditions.checkNotNull(transport, "The client has already been stopped.");
     transport.close();
+    LOG.info("Stopped ThriftCoordinatorClient.");
     transport = null;
     client = null;
     return this;
