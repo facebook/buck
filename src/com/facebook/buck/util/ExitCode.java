@@ -63,8 +63,10 @@ public enum ExitCode {
   FATAL_BOOTSTRAP(11),
   /** Non-recoverable OutOfMemory error */
   FATAL_OOM(12),
-  /** Non-recoverable disk error */
+  /** Non-recoverable generic I/0 error */
   FATAL_IO(13),
+  /** No space on device */
+  FATAL_DISK_FULL(14),
 
   // Other non-fatal errors 20 - 127
 

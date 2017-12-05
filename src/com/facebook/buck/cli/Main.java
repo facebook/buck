@@ -387,10 +387,11 @@ public final class Main {
       exitCode = ExitCode.SIGNAL_INTERRUPT;
       LOG.debug(e, "Interrupted");
     } catch (IOException e) {
-      exitCode = ExitCode.FATAL_GENERIC;
       if (e.getMessage().startsWith("No space left on device")) {
+        exitCode = ExitCode.FATAL_DISK_FULL;
         makeStandardConsole(context).printBuildFailure(e.getMessage());
       } else {
+        exitCode = ExitCode.FATAL_IO;
         LOG.error(e);
       }
     } catch (OutOfMemoryError e) {
