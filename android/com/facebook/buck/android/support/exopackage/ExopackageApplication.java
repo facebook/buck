@@ -79,6 +79,8 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
       if (isExopackageEnabledForModules()) {
         registerReceiver(
             new ModularDexChangedReceiver(), ModularDexChangedReceiver.getIntentFilter());
+        // Enable all class-loads to resolve hotswapped classes
+        DelegatingClassLoader.getInstance().installHelperAboveApplicationClassLoader();
       }
     }
 

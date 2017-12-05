@@ -94,7 +94,6 @@ class DelegatingClassLoader extends ClassLoader {
       Log.d(TAG, "Installing DelegatingClassLoader");
       final ClassLoader parent = DelegatingClassLoader.class.getClassLoader();
       sInstalledClassLoader = new DelegatingClassLoader(parent);
-      sInstalledClassLoader.installHelperAboveApplicationClassLoader();
     }
     return sInstalledClassLoader;
   }
@@ -104,10 +103,15 @@ class DelegatingClassLoader extends ClassLoader {
   }
 
   /**
-   * Install the helper classloader above the application's ClassLoader, and below the system CL.
-   * See {@link AboveAppClassLoader} below for a detailed explanation of its purpose.
+   * Install the helper classloader above the application's ClassLoader, and below the system CL. If
+   * the host application's default ClassLoader needs to load a class from our delegate, we need to
+   * intercept that class request. We cannot/do not want to install DelegatingClassLoader above the
+   * AppCL because we need to allow managed classes to request classes from the primary dex, thus we
+   * need to query the AppCL from the DCL. Placing the DCL above the AppCL would create a loop, so
+   * we install this AboveAppClassLoader to catch any requests for managed classes (e.g. resolution
+   * of an Activity from an Intent) which the AppCL receives.
    */
-  private void installHelperAboveApplicationClassLoader() {
+  public void installHelperAboveApplicationClassLoader() {
     try {
       ClassLoader appClassLoader = getClass().getClassLoader();
       Field parentField = ClassLoader.class.getDeclaredField("parent");
@@ -120,14 +124,7 @@ class DelegatingClassLoader extends ClassLoader {
     }
   }
 
-  /**
-   * If the host application's default ClassLoader needs to load a class from our delegate, we need
-   * to intercept that class request. We cannot/do not want to install DelegatingClassLoader above
-   * the AppCL because we need to allow managed classes to request classes from the primary dex,
-   * thus we need to query the AppCL from the DCL. Placing the DCL above the AppCL would create a
-   * loop, so we install this AboveAppClassLoader to catch any requests for managed classes (e.g.
-   * resolution of an Activity from an Intent) which the AppCL receives.
-   */
+  /** {@see #installHelperAboveApplicationClassLoader()} for an explanation of this functionality */
   private class AboveAppClassLoader extends ClassLoader {
     private AboveAppClassLoader(ClassLoader parent) {
       super(parent);
