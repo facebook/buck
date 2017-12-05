@@ -300,6 +300,7 @@ public final class Main {
   private static final Logger LOG = Logger.get(Main.class);
 
   private static boolean isSessionLeader;
+  private static PluginManager pluginManager;
 
   @Nullable private static FileLock resourcesFileLock = null;
 
@@ -557,7 +558,9 @@ public final class Main {
       return ExitCode.FATAL_GENERIC;
     }
 
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    if (pluginManager == null) {
+      pluginManager = BuckPluginManagerFactory.createPluginManager();
+    }
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
