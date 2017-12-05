@@ -27,11 +27,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -39,6 +38,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,38 +49,29 @@ import java.util.Optional;
 import java.util.SortedSet;
 
 /**
- * The CGoCompileRules represents cgo build process which outputs the linkable object that is
- * appended to the native go compiled program (via pack tool).
+ * The CGoLibrary represents cgo build process which outputs the linkable object that is appended to
+ * the native go compiled program (via pack tool).
  *
  * <p>The process consists of four steps (similiar to go build): 1. Generate c sources with cgo tool
  * 2. Compile and link cgo sources into single object 3. Generate cgo_import.go 4. Return generated
  * go files and linked object (used by GoCompile)
  */
-public class CGoCompileRules implements AddsToRuleKey {
-  @AddToRuleKey private final ImmutableList<SourcePath> goFiles;
-  @AddToRuleKey private final SourcePath output;
-  private final ImmutableSortedSet<BuildRule> deps;
+public class CGoLibrary extends NoopBuildRule {
+  private final ImmutableList<SourcePath> goFiles;
+  private final SourcePath output;
 
-  public CGoCompileRules(
-      ImmutableList<SourcePath> goFiles, SourcePath output, ImmutableSortedSet<BuildRule> deps) {
+  private CGoLibrary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<SourcePath> goFiles,
+      SourcePath output) {
+    super(buildTarget, projectFilesystem);
+
     this.goFiles = goFiles;
     this.output = output;
-    this.deps = deps;
   }
 
-  public SortedSet<BuildRule> getDeps() {
-    return deps;
-  }
-
-  public ImmutableList<SourcePath> getGeneratedGoSource() {
-    return goFiles;
-  }
-
-  public SourcePath getOutputBinary() {
-    return output;
-  }
-
-  public static CGoCompileRules create(
+  public static BuildRule create(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
@@ -89,26 +80,38 @@ public class CGoCompileRules implements AddsToRuleKey {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       GoPlatform platform,
-      ImmutableSet<SourcePath> cgoSrcs,
-      ImmutableSet<SourcePath> cgoHeaders,
+      CgoLibraryDescriptionArg args,
       Iterable<BuildTarget> cgoDeps,
       Tool cgo,
       Path packageName) {
 
+    if (args.getHeaders().getNamedSources().isPresent()) {
+      throw new HumanReadableException(
+          "explicit header mapping is unsupported for cgo_library rule");
+    }
+
     // generate C sources with cgo tool (go build writes c files to _obj dir)
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ImmutableMap<Path, SourcePath> headers =
+        CxxDescriptionEnhancer.parseHeaders(
+            buildTarget, ruleResolver, ruleFinder, pathResolver, Optional.of(cxxPlatform), args);
+
     CGoGenSource genSource =
         (CGoGenSource)
             ruleResolver.computeIfAbsent(
-                buildTarget,
+                buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-gen-sources")),
                 target ->
                     new CGoGenSource(
-                        buildTarget,
+                        target,
                         projectFilesystem,
                         ruleFinder,
                         pathResolver,
-                        cgoSrcs,
+                        args.getSrcs()
+                            .stream()
+                            .map(x -> x.getSourcePath())
+                            .collect(ImmutableSet.toImmutableSet()),
                         cgo,
+                        args.getCgoCompilerFlags(),
                         platform));
 
     // generated c files needs to be compiled and linked into a single object
@@ -128,22 +131,23 @@ public class CGoCompileRules implements AddsToRuleKey {
                     cellRoots,
                     cxxBuckConfig,
                     cxxPlatform,
+                    args,
                     ImmutableSortedSet.of(genSource),
                     ImmutableSortedSet.<SourcePath>naturalOrder()
                         .add(genSource.getExportHeader())
-                        .addAll(cgoHeaders)
+                        .addAll(headers.values())
                         .build(),
                     new ImmutableList.Builder<SourcePath>()
                         .addAll(genSource.getCFiles())
                         .addAll(genSource.getCgoFiles())
                         .build(),
                     cgoDeps,
-                    ImmutableList.of()));
+                    args.getLinkerFlags()));
 
     // generate cgo_import.h with previously generated object file (_cgo.o)
     BuildRule cgoImport =
         ruleResolver.computeIfAbsent(
-            buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-gen-cgo_import.go")),
+            buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-gen-import")),
             target ->
                 new CGoGenImport(
                     target,
@@ -174,16 +178,18 @@ public class CGoCompileRules implements AddsToRuleKey {
                     cellRoots,
                     cxxBuckConfig,
                     cxxPlatform,
+                    args,
                     ImmutableSortedSet.of(cgoImport),
                     ImmutableSortedSet.<SourcePath>naturalOrder()
                         .add(genSource.getExportHeader())
-                        .addAll(cgoHeaders)
+                        .addAll(headers.values())
                         .build(),
                     genSource.getCFiles(),
                     cgoDeps,
-                    wrapFlags(ImmutableList.of("-r", "-nostdlib"))));
-
-    Preconditions.checkNotNull(cgoAllBin.getSourcePathToOutput());
+                    ImmutableList.<StringWithMacros>builder()
+                        .addAll(args.getLinkerFlags())
+                        .addAll(wrapFlags(ImmutableList.of("-r", "-nostdlib")))
+                        .build()));
 
     // output (referenced later on by GoCompile) provides:
     // * _cgo_gotypes.go
@@ -192,13 +198,17 @@ public class CGoCompileRules implements AddsToRuleKey {
     //
     // the go sources should be appended to sources list and _all.o file should
     // be appended to the output binary (pack step)
-    return new CGoCompileRules(
-        new ImmutableList.Builder<SourcePath>()
-            .addAll(genSource.getGoFiles())
-            .add(Preconditions.checkNotNull(cgoImport.getSourcePathToOutput()))
-            .build(),
-        cgoAllBin.getSourcePathToOutput(),
-        ImmutableSortedSet.of(cgoImport, cgoAllBin));
+    return ruleResolver.computeIfAbsent(
+        buildTarget,
+        target ->
+            new CGoLibrary(
+                target,
+                projectFilesystem,
+                new ImmutableList.Builder<SourcePath>()
+                    .addAll(genSource.getGoFiles())
+                    .add(Preconditions.checkNotNull(cgoImport.getSourcePathToOutput()))
+                    .build(),
+                Preconditions.checkNotNull(cgoAllBin.getSourcePathToOutput())));
   }
 
   private static BuildRule nativeBinCompilation(
@@ -209,6 +219,7 @@ public class CGoCompileRules implements AddsToRuleKey {
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
+      CgoLibraryDescriptionArg args,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<SourcePath> rawHeaders,
       ImmutableList<SourcePath> sources,
@@ -253,25 +264,24 @@ public class CGoCompileRules implements AddsToRuleKey {
             ImmutableSet.of(),
             Optional.empty(),
             Optional.empty(),
-            Linker.LinkableDepType.STATIC,
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
             CxxLinkOptions.of(),
-            ImmutableList.of(),
-            PatternMatchedCollection.of(),
-            ImmutableMap.of(),
+            args.getPreprocessorFlags(),
+            args.getPlatformPreprocessorFlags(),
+            args.getLangPreprocessorFlags(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            // used for compilers other than gcc (due to __gcc_struct__)
-            wrapFlags(ImmutableList.of("-Wno-unknown-attributes")),
-            ImmutableMap.of(),
-            PatternMatchedCollection.of(),
+            args.getCompilerFlags(),
+            args.getLangCompilerFlags(),
+            args.getPlatformCompilerFlags(),
             Optional.empty(),
             Optional.empty(),
             flags,
-            ImmutableList.of(),
-            PatternMatchedCollection.of(),
+            args.getLinkerExtraOutputs(),
+            args.getPlatformLinkerFlags(),
             Optional.empty(),
-            ImmutableList.of(),
-            rawHeaders);
+            args.getIncludeDirs(),
+            args.getRawHeaders());
 
     return cxxLinkAndCompileRules.getBinaryRule();
   }
@@ -291,5 +301,20 @@ public class CGoCompileRules implements AddsToRuleKey {
       builder.add(SourceWithFlags.of(sourcePath));
     }
     return builder.build();
+  }
+
+  /** returns .go files produced by cgo tool */
+  public ImmutableList<SourcePath> getGeneratedGoSource() {
+    return goFiles;
+  }
+
+  /** returns compiled linkable file source path */
+  public SourcePath getOutput() {
+    return output;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.of();
   }
 }

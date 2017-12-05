@@ -43,6 +43,7 @@ public class CGoGenSource extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableSet<SourcePath> cgoSrcs;
   @AddToRuleKey private final Tool cgo;
   @AddToRuleKey private final GoPlatform platform;
+  @AddToRuleKey private final ImmutableList<String> cgoCompilerFlags;
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
   private final Path genDir;
@@ -57,10 +58,12 @@ public class CGoGenSource extends AbstractBuildRule {
       SourcePathResolver pathResolver,
       ImmutableSet<SourcePath> cgoSrcs,
       Tool cgo,
+      ImmutableList<String> cgoCompilerFlags,
       GoPlatform platform) {
     super(buildTarget, projectFilesystem);
     this.cgoSrcs = cgoSrcs;
     this.cgo = cgo;
+    this.cgoCompilerFlags = cgoCompilerFlags;
     this.platform = platform;
     this.genDir = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/gen/");
 
@@ -115,6 +118,7 @@ public class CGoGenSource extends AbstractBuildRule {
             getProjectFilesystem().getRootPath(),
             cgo.getEnvironment(context.getSourcePathResolver()),
             cgo.getCommandPrefix(context.getSourcePathResolver()),
+            cgoCompilerFlags,
             cgoSrcs
                 .stream()
                 .map(context.getSourcePathResolver()::getAbsolutePath)

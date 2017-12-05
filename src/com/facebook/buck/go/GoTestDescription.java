@@ -16,7 +16,6 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -67,13 +66,10 @@ public class GoTestDescription
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
 
   private final GoBuckConfig goBuckConfig;
-  private final CxxBuckConfig cxxBuckConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public GoTestDescription(
-      GoBuckConfig goBuckConfig, CxxBuckConfig cxxBuckConfig, ToolchainProvider toolchainProvider) {
+  public GoTestDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
-    this.cxxBuckConfig = cxxBuckConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -140,26 +136,19 @@ public class GoTestDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       GoToolchain goToolchain,
       ImmutableSet<SourcePath> srcs,
       Path packageName,
-      ImmutableSet<SourcePath> cgoSrcs,
-      ImmutableSet<SourcePath> cgoHeaders,
       ImmutableSortedSet<BuildTarget> cgoDeps) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
             goBuckConfig,
             goToolchain,
-            cxxBuckConfig,
-            getCxxPlatform(!cgoSrcs.isEmpty()),
+            getCxxPlatform(!cgoDeps.isEmpty()),
             buildTarget,
             projectFilesystem,
             params,
             resolver,
-            cellRoots,
-            cgoSrcs,
-            cgoHeaders,
             cgoDeps);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -196,20 +185,12 @@ public class GoTestDescription
             .orElse(goToolchain.getDefaultPlatform());
 
     if (buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
-      return createTestLibrary(
-          buildTarget, projectFilesystem, params, resolver, cellRoots, args, platform);
+      return createTestLibrary(buildTarget, projectFilesystem, params, resolver, args, platform);
     }
 
     GoBinary testMain =
         createTestMainRule(
-            buildTarget,
-            projectFilesystem,
-            params,
-            resolver,
-            cellRoots,
-            goToolchain,
-            args,
-            platform);
+            buildTarget, projectFilesystem, params, resolver, goToolchain, args, platform);
     resolver.addToIndex(testMain);
 
     return new GoTest(
@@ -231,7 +212,6 @@ public class GoTestDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       GoToolchain goToolchain,
       GoTestDescriptionArg args,
       GoPlatform platform) {
@@ -248,12 +228,9 @@ public class GoTestDescription
             projectFilesystem,
             params,
             resolver,
-            cellRoots,
             goToolchain,
             args.getSrcs(),
             packageName,
-            args.getCgoSrcs(),
-            args.getCgoHeaders(),
             args.getCgoDeps());
     BuildTarget testMainBuildTarget =
         buildTarget.withAppendedFlavors(InternalFlavor.of("test-main"));
@@ -265,18 +242,14 @@ public class GoTestDescription
                 .withDeclaredDeps(ImmutableSortedSet.of(testLibrary))
                 .withExtraDeps(ImmutableSortedSet.of(generatedTestMain)),
             resolver,
-            cellRoots,
             goBuckConfig,
             goToolchain,
-            cxxBuckConfig,
-            getCxxPlatform(!args.getCgoSrcs().isEmpty()),
+            getCxxPlatform(!args.getCgoDeps().isEmpty()),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
             args.getCompilerFlags(),
             args.getAssemblerFlags(),
             args.getLinkerFlags(),
             platform,
-            args.getCgoSrcs(),
-            args.getCgoHeaders(),
             args.getCgoDeps());
     resolver.addToIndex(testMain);
     return testMain;
@@ -325,7 +298,6 @@ public class GoTestDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       GoTestDescriptionArg args,
       GoPlatform platform) {
     Path packageName = getGoPackageName(resolver, buildTarget, args);
@@ -354,18 +326,14 @@ public class GoTestDescription
                         .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.getSrcs()))
                         .build();
                   });
-
       testLibrary =
           GoDescriptors.createGoCompileRule(
               buildTarget,
               projectFilesystem,
               testTargetParams,
               resolver,
-              cellRoots,
               goBuckConfig,
               goToolchain,
-              cxxBuckConfig,
-              getCxxPlatform(!args.getCgoSrcs().isEmpty()),
               packageName,
               ImmutableSet.<SourcePath>builder()
                   .addAll(libraryArg.getSrcs())
@@ -386,8 +354,6 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              args.getCgoSrcs(),
-              args.getCgoHeaders(),
               args.getCgoDeps());
     } else {
       testLibrary =
@@ -396,11 +362,8 @@ public class GoTestDescription
               projectFilesystem,
               params,
               resolver,
-              cellRoots,
               goBuckConfig,
               goToolchain,
-              cxxBuckConfig,
-              getCxxPlatform(!args.getCgoSrcs().isEmpty()),
               packageName,
               args.getSrcs(),
               args.getCompilerFlags(),
@@ -412,8 +375,6 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              args.getCgoSrcs(),
-              args.getCgoHeaders(),
               args.getCgoDeps());
     }
 
@@ -428,7 +389,7 @@ public class GoTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
-    CxxPlatform cxxPlatform = getCxxPlatform(!constructorArg.getCgoSrcs().isEmpty());
+    CxxPlatform cxxPlatform = getCxxPlatform(!constructorArg.getCgoDeps().isEmpty());
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
   }
 

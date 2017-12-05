@@ -16,52 +16,64 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDeclaredDeps;
-import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.immutables.value.Value;
 
-public class GoBinaryDescription
-    implements Description<GoBinaryDescriptionArg>,
-        ImplicitDepsInferringDescription<GoBinaryDescription.AbstractGoBinaryDescriptionArg>,
+public class CgoLibraryDescription
+    implements Description<CgoLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<CgoLibraryDescriptionArg>,
         Flavored {
 
   private final GoBuckConfig goBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public GoBinaryDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
+  public CgoLibraryDescription(
+      GoBuckConfig goBuckConfig, CxxBuckConfig cxxBuckConfig, ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
   @Override
-  public Class<GoBinaryDescriptionArg> getConstructorArgType() {
-    return GoBinaryDescriptionArg.class;
+  public Class<CgoLibraryDescriptionArg> getConstructorArgType() {
+    return CgoLibraryDescriptionArg.class;
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
+  }
+
+  private GoToolchain getGoToolchain() {
+    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
   }
 
   @Override
@@ -72,7 +84,7 @@ public class GoBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      GoBinaryDescriptionArg args) {
+      CgoLibraryDescriptionArg args) {
     GoToolchain goToolchain = getGoToolchain();
     GoPlatform platform =
         goToolchain
@@ -80,59 +92,64 @@ public class GoBinaryDescription
             .getValue(buildTarget)
             .orElse(goToolchain.getDefaultPlatform());
 
-    return GoDescriptors.createGoBinaryRule(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    return CGoLibrary.create(
         buildTarget,
         projectFilesystem,
-        params,
         resolver,
-        goBuckConfig,
-        goToolchain,
-        getCxxPlatform(!args.getCgoDeps().isEmpty()),
-        args.getSrcs(),
-        args.getCompilerFlags(),
-        args.getAssemblerFlags(),
-        args.getLinkerFlags(),
+        pathResolver,
+        cellRoots,
+        cxxBuckConfig,
+        getCxxPlatform(),
         platform,
-        args.getCgoDeps());
+        args,
+        args.getDeps(),
+        goToolchain.getCGo(),
+        args.getPackageName()
+            .map(Paths::get)
+            .orElse(goBuckConfig.getDefaultPackageName(buildTarget)));
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AbstractGoBinaryDescriptionArg constructorArg,
+      CgoLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
-    CxxPlatform cxxPlatform = getCxxPlatform(!constructorArg.getCgoDeps().isEmpty());
+    CxxPlatform cxxPlatform = getCxxPlatform();
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
   }
 
-  private CxxPlatform getCxxPlatform(boolean withCgo) {
+  private CxxPlatform getCxxPlatform() {
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-
-    if (withCgo) {
-      return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
-    }
-    return cxxPlatformsProviderFactory
-        .getCxxPlatforms()
-        .getValue(ImmutableSet.of(DefaultCxxPlatforms.FLAVOR))
-        .get();
-  }
-
-  private GoToolchain getGoToolchain() {
-    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+    return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractGoBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasCgo {
-    ImmutableList<String> getCompilerFlags();
+  @Value.Immutable(copy = true)
+  interface AbstractCgoLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
+    ImmutableList<String> getCgoCompilerFlags();
 
-    ImmutableList<String> getAssemblerFlags();
+    Optional<String> getPackageName();
 
-    ImmutableList<String> getLinkerFlags();
+    @Override
+    @Value.Default
+    default ImmutableList<StringWithMacros> getCompilerFlags() {
+      // used for compilers other than gcc (due to __gcc_struct__)
+      return wrapFlags(ImmutableList.of("-Wno-unknown-attributes"));
+    }
+  }
+
+  private static ImmutableList<StringWithMacros> wrapFlags(ImmutableList<String> flags) {
+    ImmutableList.Builder<StringWithMacros> builder = ImmutableList.builder();
+    for (String flag : flags) {
+      builder.add(StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag))));
+    }
+    return builder.build();
   }
 }
