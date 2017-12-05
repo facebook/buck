@@ -3,8 +3,22 @@ cxx_library(
     srcs = [
         "test.cpp",
     ],
+    compiler_flags = [
+        "-B$(location :cc_bin_dir)",
+    ],
     headers = [
         "unused.h",
         "used.h",
     ],
+    preprocessor_flags = [
+        "-include$(location :include.h)",
+    ],
+)
+
+export_file(
+    name = "include.h",
+)
+
+export_file(
+    name = "cc_bin_dir",
 )

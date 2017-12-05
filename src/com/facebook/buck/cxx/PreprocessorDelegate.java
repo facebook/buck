@@ -232,6 +232,11 @@ final class PreprocessorDelegate implements AddsToRuleKey {
       inputsBuilder.add(preprocessorFlags.getPrefixHeader().get());
     }
 
+    // Args can contain things like location macros, so extract any inputs we find.
+    for (Arg arg : preprocessorFlags.getOtherFlags().getAllFlags()) {
+      BuildableSupport.deriveInputs(arg).forEach(inputsBuilder);
+    }
+
     // Add any header/include inputs that our dependency file said we used.
     //
     // TODO(#9117006): We need to find out which `SourcePath` each line in the dep file refers to.

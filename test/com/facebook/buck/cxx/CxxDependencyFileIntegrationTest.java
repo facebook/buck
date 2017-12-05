@@ -161,6 +161,24 @@ public class CxxDependencyFileIntegrationTest {
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
 
+  @Test
+  public void modifyingPreprocessorFlagLocationMacroSourceCausesRebuild() throws IOException {
+    workspace.writeContentsToPath("#define SOMETHING", "include.h");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+  }
+
+  @Test
+  public void modifyingCompilerFlagLocationMacroSourceCausesRebuild() throws IOException {
+    workspace.writeContentsToPath("", "cc_bin_dir/some_extra_script");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+  }
+
   private ProjectWorkspace.ProcessResult runCommand(String... args) throws IOException {
     if (buckd) {
       return workspace.runBuckdCommand(args);
