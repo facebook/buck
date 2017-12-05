@@ -54,6 +54,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
   private final String coordinatorAddress;
   private volatile OptionalInt coordinatorPort;
+  private final int coordinatorConnectionTimeoutMillis;
   private final ListenableFuture<BuildExecutor> buildExecutorFuture;
   private final StampedeId stampedeId;
   private final BuildSlaveRunId buildSlaveRunId;
@@ -94,10 +95,12 @@ public class MinionModeRunner implements DistBuildModeRunner {
       int availableWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
       long minionPollLoopIntervalMillis,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      int coordinatorConnectionTimeoutMillis) {
     this(
         coordinatorAddress,
         coordinatorPort,
+        coordinatorConnectionTimeoutMillis,
         buildExecutorFuture,
         stampedeId,
         buildSlaveRunId,
@@ -113,6 +116,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
   public MinionModeRunner(
       String coordinatorAddress,
       OptionalInt coordinatorPort,
+      int coordinatorConnectionTimeoutMillis,
       ListenableFuture<BuildExecutor> buildExecutorFuture,
       StampedeId stampedeId,
       BuildSlaveRunId buildSlaveRunId,
@@ -121,6 +125,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
       long minionPollLoopIntervalMillis,
       UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
       ExecutorService buildExecutorService) {
+    this.coordinatorConnectionTimeoutMillis = coordinatorConnectionTimeoutMillis;
     this.minionPollLoopIntervalMillis = minionPollLoopIntervalMillis;
     this.buildExecutorFuture = buildExecutorFuture;
     this.stampedeId = stampedeId;
@@ -159,7 +164,8 @@ public class MinionModeRunner implements DistBuildModeRunner {
 
     final String minionId = generateMinionId(buildSlaveRunId);
     try (ThriftCoordinatorClient client =
-            new ThriftCoordinatorClient(coordinatorAddress, stampedeId);
+            new ThriftCoordinatorClient(
+                coordinatorAddress, stampedeId, coordinatorConnectionTimeoutMillis);
         Closeable healthCheck =
             heartbeatService.addCallback(
                 "MinionIsAlive", createHeartbeatCallback(client, minionId))) {

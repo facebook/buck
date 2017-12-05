@@ -44,21 +44,24 @@ public class ThriftCoordinatorClient implements Closeable {
 
   private final String remoteHost;
   private final StampedeId stampedeId;
+  private final int connectionTimeoutMillis;
 
   // NOTE(ruibm): Thrift Transport/Client is not thread safe so we can not interleave requests.
   //              All RPC calls from the client need to be synchronised.
   @Nullable private TFramedTransport transport;
   @Nullable private CoordinatorService.Client client;
 
-  public ThriftCoordinatorClient(String remoteHost, StampedeId stampedeId) {
+  public ThriftCoordinatorClient(
+      String remoteHost, StampedeId stampedeId, int connectionTimeoutMillis) {
     this.remoteHost = Preconditions.checkNotNull(remoteHost);
     this.stampedeId = stampedeId;
+    this.connectionTimeoutMillis = connectionTimeoutMillis;
   }
 
   /** Starts the thrift client. */
   public synchronized ThriftCoordinatorClient start(int remotePort) throws ThriftException {
     LOG.info("Starting ThriftCoordinatorClient (for MinionModeRunner)...");
-    transport = new TFramedTransport(new TSocket(remoteHost, remotePort));
+    transport = new TFramedTransport(new TSocket(remoteHost, remotePort, connectionTimeoutMillis));
 
     try {
       transport.open();
@@ -74,8 +77,8 @@ public class ThriftCoordinatorClient implements Closeable {
 
   /** Orderly stops the thrift client. */
   public synchronized ThriftCoordinatorClient stop() {
-    LOG.info("Stopping ThriftCoordinatorClient (for MinionModeRunner)...");
     Preconditions.checkNotNull(transport, "The client has already been stopped.");
+    LOG.info("Stopping ThriftCoordinatorClient (for MinionModeRunner)...");
     transport.close();
     LOG.info("Stopped ThriftCoordinatorClient.");
     transport = null;

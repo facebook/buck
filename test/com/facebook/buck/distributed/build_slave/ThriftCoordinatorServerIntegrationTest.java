@@ -36,12 +36,14 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   private static final String MINION_ID = "super cool minion";
   private static final int MAX_WORK_UNITS_TO_FETCH = 10;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
 
   @Test
   public void testMakingSimpleRequest() throws IOException {
     try (ThriftCoordinatorServer server =
             createServerOnRandomPort(BuildTargetsQueueFactory.newEmptyQueue());
-        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
       GetWorkResponse response =
@@ -66,7 +68,8 @@ public class ThriftCoordinatorServerIntegrationTest {
 
     try (ThriftCoordinatorServer server =
             createCoordinatorServer(OptionalInt.empty(), diamondQueue, eventListener);
-        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
 
@@ -160,7 +163,7 @@ public class ThriftCoordinatorServerIntegrationTest {
     try (ThriftCoordinatorServer server =
             createCoordinatorServer(OptionalInt.empty(), BuildTargetsQueueFactory.newEmptyQueue());
         ThriftCoordinatorClient client =
-            new ThriftCoordinatorClient("localhost", wrongStampedeId)) {
+            new ThriftCoordinatorClient("localhost", wrongStampedeId, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
       try {
@@ -191,7 +194,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 new NoOpBuildRuleFinishedPublisher(),
                 EasyMock.createNiceMock(MinionHealthTracker.class),
                 EasyMock.createNiceMock(DistBuildService.class));
-        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
       queueFuture.setException(new RuntimeException());

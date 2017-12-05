@@ -40,6 +40,7 @@ import org.junit.rules.TemporaryFolder;
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 8;
   private static final DistBuildService MOCK_SERVICE =
@@ -87,7 +88,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             MAX_PARALLEL_WORK_UNITS,
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
             POLL_LOOP_INTERVAL_MILLIS,
-            new NoOpUnexpectedSlaveCacheMissTracker());
+            new NoOpUnexpectedSlaveCacheMissTracker(),
+            CONNECTION_TIMEOUT_MILLIS);
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
     int exitCode = jointRunner.runAndReturnExitCode(heartbeatService);

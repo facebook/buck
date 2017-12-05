@@ -40,6 +40,11 @@ public class DistBuildConfig {
   private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
   private static final long REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(60);
 
+  // Connection and socket timeout used by minions in ThriftCoordinatorClient
+  private static final String COORDINATOR_CONNECTION_TIMEOUT_MILLIS =
+      "coordinator_connection_timeout_millis";
+  private static final int COORDINATOR_CONNECTION_TIMEOUT_MILLIS_DEFAULT_VALUE = 2000;
+
   @VisibleForTesting
   static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
 
@@ -156,6 +161,12 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS)
         .orElse(REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE);
+  }
+
+  public int getCoordinatorConnectionTimeoutMillis() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, COORDINATOR_CONNECTION_TIMEOUT_MILLIS)
+        .orElse(COORDINATOR_CONNECTION_TIMEOUT_MILLIS_DEFAULT_VALUE);
   }
 
   public BuildMode getBuildMode() {

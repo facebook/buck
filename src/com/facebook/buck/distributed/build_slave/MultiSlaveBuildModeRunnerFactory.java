@@ -158,7 +158,8 @@ public class MultiSlaveBuildModeRunnerFactory {
             .threadLimit,
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
-        unexpectedCacheMissTracker);
+        unexpectedCacheMissTracker,
+        distBuildConfig.getCoordinatorConnectionTimeoutMillis());
   }
 
   /**
