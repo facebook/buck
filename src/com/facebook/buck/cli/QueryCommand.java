@@ -27,6 +27,7 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PatternsMatcher;
@@ -112,12 +113,13 @@ public class QueryCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe("Must specify at least the query expression"));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     try (CommandThreadManager pool =
@@ -136,29 +138,32 @@ public class QueryCommand extends AbstractCommand {
           BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());
       return formatAndRunQuery(params, env);
     } catch (QueryException | BuildFileParseException e) {
+      // TODO(buck_team): return ExitCode.PARSE_ERROR if it is BuildFileParseException
       throw new HumanReadableException(e);
     }
   }
 
   @VisibleForTesting
-  int formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+  ExitCode formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
       throws IOException, InterruptedException, QueryException {
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());
     if (queryFormat.contains("%Ss")) {
       return runSingleQueryWithSet(params, env, queryFormat, formatArgs);
-    } else if (queryFormat.contains("%s")) {
+    }
+    if (queryFormat.contains("%s")) {
       return runMultipleQuery(params, env, queryFormat, formatArgs, shouldGenerateJsonOutput());
-    } else if (formatArgs.size() > 0) {
+    }
+    if (formatArgs.size() > 0) {
+      // TODO: buck_team: return ExitCode.COMMANDLINE_ERROR
       throw new HumanReadableException(
           "Must not specify format arguments without a %s or %Ss in the query");
-    } else {
-      return runSingleQuery(params, env, queryFormat);
     }
+    return runSingleQuery(params, env, queryFormat);
   }
 
   /** Format and evaluate the query using list substitution */
-  int runSingleQueryWithSet(
+  ExitCode runSingleQueryWithSet(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
@@ -200,7 +205,7 @@ public class QueryCommand extends AbstractCommand {
    * Evaluate multiple queries in a single `buck query` run. Usage: buck query <query format>
    * <input1> <input2> <...> <inputN>
    */
-  static int runMultipleQuery(
+  static ExitCode runMultipleQuery(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
@@ -213,7 +218,7 @@ public class QueryCommand extends AbstractCommand {
           .post(
               ConsoleEvent.severe(
                   "Specify one or more input targets after the query expression format"));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     // Do an initial pass over the query arguments and parse them into their expressions so we can
@@ -241,10 +246,10 @@ public class QueryCommand extends AbstractCommand {
     } else {
       CommandHelper.printToConsole(params, queryResultMap);
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
-  int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
+  ExitCode runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
     ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
 
@@ -258,7 +263,7 @@ public class QueryCommand extends AbstractCommand {
     } else {
       CommandHelper.printToConsole(params, queryResult);
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private void printDotOutput(

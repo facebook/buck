@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Stopwatch;
 import java.io.IOException;
@@ -42,7 +43,8 @@ public class DistBuildKillCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     Console console = params.getConsole();
     PrintStream stdout = console.getStdOut();
     StampedeId stampedeId = getStampedeId();
@@ -62,7 +64,8 @@ public class DistBuildKillCommand extends AbstractDistBuildCommand {
             String.format(
                 "Build is already finished so doing nothing. Took [%d millis] to execute.",
                 stopwatch.elapsed(TimeUnit.MILLISECONDS)));
-        return 0;
+        // Returning SUCCESS instead of NOTHING_TO_DO to possibly avoid breaking some contract
+        return ExitCode.SUCCESS;
       }
 
       String statusMessage =
@@ -77,7 +80,7 @@ public class DistBuildKillCommand extends AbstractDistBuildCommand {
           String.format(
               "Successfully killed the build in [%d millis].",
               stopwatch.elapsed(TimeUnit.MILLISECONDS)));
-      return 0;
+      return ExitCode.SUCCESS;
     }
   }
 }

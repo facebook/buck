@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,12 +36,12 @@ public class SuggestCommand extends AbstractCommand {
    * FineGrainedJavaDependencySuggester}.
    */
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     final Console console = params.getConsole();
     if (arguments.size() != 1) {
       console.printErrorText("Must specify exactly one argument to 'buck suggest'.");
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     String targetToBreakDown = Iterables.getOnlyElement(arguments);
@@ -61,10 +62,10 @@ public class SuggestCommand extends AbstractCommand {
     try {
       JavaBuildGraphProcessor.run(params, this, processor);
     } catch (JavaBuildGraphProcessor.ExitCodeException e) {
-      return e.exitCode;
+      return ExitCode.map(e.exitCode);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

@@ -60,6 +60,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
@@ -298,15 +299,17 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     try (CommandThreadManager pool =
         new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()))) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
       // Exit early if --resolve-alias is passed in: no need to parse any build files.
       if (isResolveAlias) {
-        return ResolveAliasHelper.resolveAlias(
+        ResolveAliasHelper.resolveAlias(
             params, executor, getEnableParserProfiling(), getArguments());
+        return ExitCode.SUCCESS;
       }
 
       return runWithExecutor(params, executor);
@@ -314,17 +317,17 @@ public class TargetsCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
     }
   }
 
-  private int runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
+  private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException, VersionException {
     Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
-      return 1;
+      return ExitCode.FATAL_GENERIC;
     }
 
     // shortcut to old plain simple format
@@ -333,17 +336,19 @@ public class TargetsCommand extends AbstractCommand {
         || isShowFullOutput
         || isShowRuleKey
         || isShowTargetHash)) {
-      return printResults(
+      printResults(
           params,
           executor,
           getMatchingNodes(
               params, buildTargetGraphAndTargets(params, executor), descriptionClasses));
+      return ExitCode.SUCCESS;
     }
 
     // shortcut to DOT format, it only works along with rule keys and transitive rule keys
     // because we want to construct action graph
     if (shouldUseDotFormat()) {
-      return printDotFormat(params, executor);
+      printDotFormat(params, executor);
+      return ExitCode.SUCCESS;
     }
 
     // plain or json output
@@ -378,14 +383,14 @@ public class TargetsCommand extends AbstractCommand {
       printShowRules(showRulesResult, params);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   /**
    * Output rules along with dependencies as a graph in DOT format As a part of invocation,
    * constructs both target and action graphs
    */
-  private int printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
+  private void printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           VersionException {
     TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
@@ -429,8 +434,6 @@ public class TargetsCommand extends AbstractCommand {
         .setNodeToTypeName(node -> node.getType())
         .build()
         .writeOutput(params.getConsole().getStdOut());
-
-    return 0;
   }
 
   private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
@@ -476,7 +479,7 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   /** Print out matching targets in alphabetical order. */
-  private int printResults(
+  private void printResults(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       SortedMap<String, TargetNode<?, ?>> matchingNodes)
@@ -491,7 +494,6 @@ public class TargetsCommand extends AbstractCommand {
         params.getConsole().getStdOut().println(target);
       }
     }
-    return 0;
   }
 
   private SortedMap<String, TargetNode<?, ?>> getMatchingNodes(

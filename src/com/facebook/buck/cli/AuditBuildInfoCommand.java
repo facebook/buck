@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.keys.impl.BuckBinaryHashProvider;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -53,14 +54,15 @@ public class AuditBuildInfoCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     try {
       collectAndDumpBuildInformation(params.getConsole(), arguments, generateJsonOutput);
     } catch (IllegalArgumentException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(e.getMessage()));
-      return 1;
+      return ExitCode.FATAL_GENERIC;
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   static void collectAndDumpBuildInformation(

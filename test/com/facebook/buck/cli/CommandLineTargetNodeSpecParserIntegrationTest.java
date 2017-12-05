@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -112,8 +113,9 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
 
     result = workspace.runBuckCommand("targets", "//simple:.");
-    result.assertFailure(
-        "No rule found when resolving target //simple:. in build file //simple/BUCK");
+    result.assertExitCode(
+        "No rule found when resolving target //simple:. in build file //simple/BUCK",
+        ExitCode.PARSE_ERROR);
   }
 
   @Test

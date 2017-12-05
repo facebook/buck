@@ -86,6 +86,7 @@ import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
@@ -371,7 +372,8 @@ public class CachingBuildEngineTest {
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
       buckEventBus.post(
-          CommandEvent.finished(CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
+          CommandEvent.finished(
+              CommandEvent.started("build", ImmutableList.of(), false, 23L), ExitCode.SUCCESS));
       verifyAll();
 
       RuleKey ruleToTestKey = defaultRuleKeyFactory.build(ruleToTest);
@@ -531,7 +533,8 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
+                    CommandEvent.started("build", ImmutableList.of(), false, 23L),
+                    ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
         verifyAll();
@@ -618,7 +621,8 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), false, 23L), 0));
+                    CommandEvent.started("build", ImmutableList.of(), false, 23L),
+                    ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
         verifyAll();

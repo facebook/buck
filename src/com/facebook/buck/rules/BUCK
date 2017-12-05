@@ -301,6 +301,7 @@ java_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
     ],
 )

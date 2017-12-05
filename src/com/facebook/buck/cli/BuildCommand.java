@@ -87,6 +87,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
@@ -331,8 +332,9 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executor)
       throws InterruptedException, IOException {
     BuildCommand buildCommand = new BuildCommand(buildTargets);
-    int exitCode = buildCommand.checkArguments(params);
-    if (exitCode != 0) {
+    boolean is_args = buildCommand.checkArguments(params);
+    if (!is_args) {
+      // TODO(buck_team) return ExitCode.COMMANDLINE_ERROR instead
       throw new HumanReadableException("The build targets are invalid.");
     }
 
@@ -348,10 +350,11 @@ public class BuildCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    int exitCode = checkArguments(params);
-    if (exitCode != 0) {
-      return exitCode;
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
+    boolean is_args = checkArguments(params);
+    if (!is_args) {
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
@@ -369,9 +372,9 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  protected int checkArguments(CommandRunnerParams params) {
+  protected boolean checkArguments(CommandRunnerParams params) {
     if (!getArguments().isEmpty()) {
-      return 0;
+      return true;
     }
     String message = "Must specify at least one build target.";
     ImmutableSet<String> aliases = params.getBuckConfig().getAliases().keySet();
@@ -384,10 +387,10 @@ public class BuildCommand extends AbstractCommand {
               Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)));
     }
     params.getConsole().printBuildFailure(message);
-    return 1;
+    return false;
   }
 
-  protected int run(
+  protected ExitCode run(
       CommandRunnerParams params,
       CommandThreadManager commandThreadManager,
       ImmutableSet<String> additionalTargets)
@@ -396,12 +399,12 @@ public class BuildCommand extends AbstractCommand {
       this.arguments.addAll(additionalTargets);
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
-    int exitCode = 0;
+    ExitCode exitCode = ExitCode.SUCCESS;
     try {
       exitCode = executeBuildAndProcessResult(params, commandThreadManager);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
-      exitCode = 1;
+      exitCode = ExitCode.PARSE_ERROR;
     } finally {
       params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
     }
@@ -460,10 +463,10 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private int executeBuildAndProcessResult(
+  private ExitCode executeBuildAndProcessResult(
       CommandRunnerParams params, CommandThreadManager commandThreadManager)
       throws IOException, InterruptedException, ActionGraphCreationException {
-    int exitCode;
+    ExitCode exitCode = ExitCode.SUCCESS;
     ActionAndTargetGraphs graphs = null;
     if (useDistributedBuild) {
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
@@ -526,7 +529,7 @@ public class BuildCommand extends AbstractCommand {
                 Optional.empty());
       }
     }
-    if (exitCode == 0) {
+    if (exitCode == ExitCode.SUCCESS) {
       exitCode = processSuccessfulBuild(params, graphs);
     }
     return exitCode;
@@ -544,7 +547,7 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private int processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
+  private ExitCode processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
       throws IOException {
     if (params.getBuckConfig().createBuildOutputSymLinksEnabled()) {
       symLinkBuildResults(params, graphs.actionGraph);
@@ -563,7 +566,7 @@ public class BuildCommand extends AbstractCommand {
                 String.format(
                     "%s does not have an output that is compatible with `buck build --out`",
                     loneTarget));
-        return 1;
+        return ExitCode.BUILD_ERROR;
       } else {
         SourcePath output =
             Preconditions.checkNotNull(
@@ -580,7 +583,7 @@ public class BuildCommand extends AbstractCommand {
             pathResolver.getAbsolutePath(output), outputPathForSingleBuildTarget);
       }
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private void symLinkBuildResults(
@@ -679,7 +682,7 @@ public class BuildCommand extends AbstractCommand {
         cellIndexer);
   }
 
-  private int executeDistBuild(
+  private ExitCode executeDistBuild(
       CommandRunnerParams params,
       DistBuildConfig distBuildConfig,
       ActionAndTargetGraphs graphs,
@@ -708,7 +711,7 @@ public class BuildCommand extends AbstractCommand {
       }
 
       BuildJobStateSerializer.serialize(jobState, filesystem.newFileOutputStream(stateDumpPath));
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
@@ -756,12 +759,13 @@ public class BuildCommand extends AbstractCommand {
                       try {
                         localBuildExitCode.set(
                             executeLocalBuild(
-                                params,
-                                graphs.actionGraph,
-                                executorService,
-                                Optional.empty(),
-                                remoteBuildSynchronizer,
-                                Optional.of(localBuildInitializationLatch)));
+                                    params,
+                                    graphs.actionGraph,
+                                    executorService,
+                                    Optional.empty(),
+                                    remoteBuildSynchronizer,
+                                    Optional.of(localBuildInitializationLatch))
+                                .getCode());
 
                         LOG.info("Distributed build local client has finished building");
                       } catch (IOException e) {
@@ -791,7 +795,7 @@ public class BuildCommand extends AbstractCommand {
         distBuildExitCode = distBuildResult.exitCode;
       } finally {
         BuildEvent.DistBuildFinished finished =
-            BuildEvent.distBuildFinished(started, distBuildExitCode);
+            BuildEvent.distBuildFinished(started, ExitCode.map(distBuildExitCode));
         params.getBuckEventBus().post(finished);
       }
 
@@ -876,7 +880,7 @@ public class BuildCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));
-      return exitCode;
+      return ExitCode.map(exitCode);
     }
   }
 
@@ -1016,7 +1020,7 @@ public class BuildCommand extends AbstractCommand {
     return actionGraphAndResolver;
   }
 
-  protected int executeLocalBuild(
+  protected ExitCode executeLocalBuild(
       CommandRunnerParams params,
       ActionGraphAndResolver actionGraphAndResolver,
       WeightedListeningExecutorService executor,
@@ -1052,11 +1056,11 @@ public class BuildCommand extends AbstractCommand {
               .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
               .transform(target -> target.getFullyQualifiedName())
               .toList();
-      int exitCode =
+      int code =
           builder.buildLocallyAndReturnExitCode(
               targetStrings, getPathToBuildReport(params.getBuckConfig()));
       builder.shutdown();
-      return exitCode;
+      return ExitCode.map(code);
     }
   }
 

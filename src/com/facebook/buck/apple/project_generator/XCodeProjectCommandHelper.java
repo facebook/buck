@@ -56,6 +56,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
@@ -119,7 +120,7 @@ public class XCodeProjectCommandHelper {
   private final PathOutputPresenter outputPresenter;
 
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
-  private final Function<ImmutableList<String>, Integer> buildRunner;
+  private final Function<ImmutableList<String>, ExitCode> buildRunner;
 
   public XCodeProjectCommandHelper(
       BuckEventBus buckEventBus,
@@ -145,7 +146,7 @@ public class XCodeProjectCommandHelper {
       boolean readOnly,
       PathOutputPresenter outputPresenter,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      Function<ImmutableList<String>, Integer> buildRunner) {
+      Function<ImmutableList<String>, ExitCode> buildRunner) {
     this.buckEventBus = buckEventBus;
     this.parser = parser;
     this.buckConfig = buckConfig;
@@ -172,7 +173,7 @@ public class XCodeProjectCommandHelper {
     this.buildRunner = buildRunner;
   }
 
-  public int parseTargetsAndRunXCodeGenerator(ListeningExecutorService executor)
+  public ExitCode parseTargetsAndRunXCodeGenerator(ListeningExecutorService executor)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> passedInTargetsSet;
     TargetGraph projectGraph;
@@ -193,9 +194,12 @@ public class XCodeProjectCommandHelper {
                       PerBuildState.SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
       projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
-    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
+    } catch (HumanReadableException e) {
+      buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.BUILD_ERROR;
     }
 
     LOG.debug("Xcode project generation: Killing existing Xcode if needed");
@@ -229,10 +233,12 @@ public class XCodeProjectCommandHelper {
     } catch (BuildFileParseException
         | TargetGraph.NoSuchNodeException
         | BuildTargetException
-        | VersionException
-        | HumanReadableException e) {
+        | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
+    } catch (HumanReadableException e) {
+      buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.BUILD_ERROR;
     }
 
     if (dryRun) {
@@ -240,7 +246,7 @@ public class XCodeProjectCommandHelper {
         console.getStdOut().println(targetNode.toString());
       }
 
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     LOG.debug("Xcode project generation: Run the project generator");
@@ -296,12 +302,12 @@ public class XCodeProjectCommandHelper {
   }
 
   /** Run xcode specific project generation actions. */
-  private int runXcodeProjectGenerator(
+  private ExitCode runXcodeProjectGenerator(
       ListeningExecutorService executor,
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet)
       throws IOException, InterruptedException {
-    int exitCode = 0;
+    ExitCode exitCode = ExitCode.SUCCESS;
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     ImmutableSet<ProjectGenerator.Option> options =
         buildWorkspaceGeneratorOptions(

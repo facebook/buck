@@ -26,6 +26,7 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreSuppliers;
@@ -106,19 +107,20 @@ public final class RunCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     if (!hasTargetSpecified()) {
       params.getBuckEventBus().post(ConsoleEvent.severe("No target given to run"));
       params.getBuckEventBus().post(ConsoleEvent.severe("buck run <target> <arg1> <arg2>..."));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     // Make sure the target is built.
     BuildCommand buildCommand =
         new BuildCommand(ImmutableList.of(getTarget(params.getBuckConfig())));
     try (Closeable contextCloser = buildCommand.prepareExecutionContext(params)) {
-      int exitCode = buildCommand.runWithoutHelp(params);
-      if (exitCode != 0) {
+      ExitCode exitCode = buildCommand.runWithoutHelp(params);
+      if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
       }
     }
@@ -143,7 +145,7 @@ public final class RunCommand extends AbstractCommand {
                   "target "
                       + targetName
                       + " is not a binary rule (only binary rules can be `run`)"));
-      return 1;
+      return ExitCode.BUILD_ERROR;
     }
 
     // If we're running with buckd, we want to disconnect from NailGun and run the rule in the
@@ -177,7 +179,7 @@ public final class RunCommand extends AbstractCommand {
       ListeningProcessExecutor.LaunchedProcess process =
           processExecutor.launchProcess(processExecutorParams, processListener);
       try {
-        return processExecutor.waitForProcess(process);
+        return ExitCode.map(processExecutor.waitForProcess(process));
       } finally {
         processExecutor.destroyProcess(process, /* force */ false);
         processExecutor.waitForProcess(process);
@@ -199,7 +201,7 @@ public final class RunCommand extends AbstractCommand {
                       .build(),
               "cwd", params.getCell().getFilesystem().getRootPath());
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
-      return 0;
+      return ExitCode.SUCCESS;
     }
   }
 

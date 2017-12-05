@@ -16,6 +16,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.macho.ObjectPathsAbsolutifier;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -24,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 public class MachOAbsolutifyObjectPathsCommand extends MachOAbstractCommand {
 
   @Override
-  protected int invokeWithParams(CommandRunnerParams params) throws IOException {
+  protected ExitCode invokeWithParams(CommandRunnerParams params) throws IOException {
     try (RandomAccessFile file = new RandomAccessFile(getOutput().toFile(), "rw")) {
       NulTerminatedCharsetDecoder decoder =
           new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());
@@ -38,7 +39,7 @@ public class MachOAbsolutifyObjectPathsCommand extends MachOAbstractCommand {
               decoder);
       updater.updatePaths();
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

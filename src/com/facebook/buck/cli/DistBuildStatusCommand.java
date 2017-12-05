@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +39,8 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     StampedeId stampedeId = getStampedeId();
     Console console = params.getConsole();
     ObjectMapper objectMapper =
@@ -52,7 +54,7 @@ public class DistBuildStatusCommand extends AbstractDistBuildCommand {
       console.getStdOut().println();
       console.printSuccess(
           String.format("Successfully fetched the build status for [%s].", stampedeId));
-      return 0;
+      return ExitCode.SUCCESS;
     }
   }
 }

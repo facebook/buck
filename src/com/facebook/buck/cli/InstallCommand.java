@@ -63,6 +63,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Optionals;
@@ -100,7 +101,8 @@ public class InstallCommand extends BuildCommand {
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 5s";
-  private static final InstallResult FAILURE = InstallResult.builder().setExitCode(1).build();
+  private static final InstallResult FAILURE =
+      InstallResult.builder().setExitCode(ExitCode.RUN_ERROR).build();
 
   @VisibleForTesting static final String RUN_LONG_ARG = "--run";
   @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
@@ -206,10 +208,10 @@ public class InstallCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    int exitCode = checkArguments(params);
-    if (exitCode != 0) {
-      return exitCode;
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
+    if (!checkArguments(params)) {
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     try (CommandThreadManager pool =
@@ -223,26 +225,22 @@ public class InstallCommand extends BuildCommand {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+        return ExitCode.PARSE_ERROR;
       }
 
       // Build the targets
-      exitCode = super.run(params, pool, installHelperTargets);
-      if (exitCode != 0) {
+      ExitCode exitCode = super.run(params, pool, installHelperTargets);
+      if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
       }
     }
 
     // Install the targets
     try {
-      exitCode = install(params);
+      return install(params);
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e.getHumanReadableErrorMessage());
     }
-    if (exitCode != 0) {
-      return exitCode;
-    }
-    return exitCode;
   }
 
   @Override
@@ -270,11 +268,11 @@ public class InstallCommand extends BuildCommand {
     return builder.build();
   }
 
-  private int install(CommandRunnerParams params)
+  private ExitCode install(CommandRunnerParams params)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
 
     Build build = super.getBuild();
-    int exitCode = 0;
+    ExitCode exitCode = ExitCode.SUCCESS;
 
     for (BuildTarget buildTarget : getBuildTargets()) {
 
@@ -285,7 +283,7 @@ public class InstallCommand extends BuildCommand {
       if (buildRule instanceof HasInstallableApk) {
         exitCode =
             installApk((HasInstallableApk) buildRule, getExecutionContext(), pathResolver, params);
-        if (exitCode != 0) {
+        if (exitCode != ExitCode.SUCCESS) {
           return exitCode;
         }
       } else if (buildRule instanceof AppleBundle) {
@@ -304,11 +302,11 @@ public class InstallCommand extends BuildCommand {
             .post(
                 InstallEvent.finished(
                     started,
-                    installResult.getExitCode() == 0,
+                    installResult.getExitCode() == ExitCode.SUCCESS,
                     installResult.getLaunchedPid(),
                     Optional.empty()));
         exitCode = installResult.getExitCode();
-        if (exitCode != 0) {
+        if (exitCode != ExitCode.SUCCESS) {
           return exitCode;
         }
       } else if (!(buildRule instanceof NoopInstallable)) {
@@ -320,7 +318,7 @@ public class InstallCommand extends BuildCommand {
                         "Specified rule %s must be of type android_binary() or apk_genrule() or "
                             + "apple_bundle() but was %s().\n",
                         buildRule.getFullyQualifiedName(), buildRule.getType())));
-        return 1;
+        return ExitCode.BUILD_ERROR;
       }
     }
     return exitCode;
@@ -405,7 +403,7 @@ public class InstallCommand extends BuildCommand {
     return installHelperTargets.build();
   }
 
-  private int installApk(
+  private ExitCode installApk(
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
       SourcePathResolver pathResolver,
@@ -434,7 +432,7 @@ public class InstallCommand extends BuildCommand {
       if (!adbHelper.installApk(
           pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process)) {
         params.getConsole().printBuildFailure("Install failed.");
-        return 1;
+        return ExitCode.RUN_ERROR;
       }
     } else if (shouldUninstallFirst()) {
       // TODO(cjhopman): Figure out how to support this (maybe write some options to the trigger
@@ -471,7 +469,7 @@ public class InstallCommand extends BuildCommand {
       }
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private InstallResult installAppleBundle(
@@ -635,7 +633,7 @@ public class InstallCommand extends BuildCommand {
         }
 
         if (helper.runBundleOnDevice(selectedUdid, appleBundleId.get())) {
-          return InstallResult.builder().setExitCode(0).build();
+          return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
         } else {
           params
               .getConsole()
@@ -650,7 +648,7 @@ public class InstallCommand extends BuildCommand {
           return FAILURE;
         }
       } else {
-        return InstallResult.builder().setExitCode(0).build();
+        return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
       }
     } else {
       params
@@ -843,7 +841,7 @@ public class InstallCommand extends BuildCommand {
                           "Successfully installed %s. (Use `buck install -r %s` to run.)"),
                   getArguments().get(0),
                   getArguments().get(0)));
-      return InstallResult.builder().setExitCode(0).build();
+      return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
     }
   }
 
@@ -905,7 +903,10 @@ public class InstallCommand extends BuildCommand {
                 waitForDebugger ? " (waiting for debugger)" : "",
                 launchedPid.get()));
 
-    return InstallResult.builder().setExitCode(0).setLaunchedPid(launchedPid.get()).build();
+    return InstallResult.builder()
+        .setExitCode(ExitCode.SUCCESS)
+        .setLaunchedPid(launchedPid.get())
+        .build();
   }
 
   private Optional<AppleSimulator> getAppleSimulatorForBundle(

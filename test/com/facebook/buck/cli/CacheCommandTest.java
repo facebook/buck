@@ -37,6 +37,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
@@ -64,8 +65,8 @@ public class CacheCommandTest extends EasyMockSupport {
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(
         fetchPrefix ? Collections.singletonList("fetch") : Collections.emptyList());
-    int exitCode = cacheCommand.run(commandRunnerParams);
-    assertEquals(1, exitCode);
+    ExitCode exitCode = cacheCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.COMMANDLINE_ERROR, exitCode);
     // "No cache keys specified." message is sent to event bus,
     // it is not available on test console.
 
@@ -111,8 +112,8 @@ public class CacheCommandTest extends EasyMockSupport {
 
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(arguments.build());
-    int exitCode = cacheCommand.run(commandRunnerParams);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cacheCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.SUCCESS, exitCode);
     assertThat(
         console.getTextWrittenToStdErr(),
         containsString("Successfully downloaded artifact with id " + ruleKeyHash + " at "));
@@ -154,8 +155,8 @@ public class CacheCommandTest extends EasyMockSupport {
 
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
-    int exitCode = cacheCommand.run(commandRunnerParams);
-    assertEquals(1, exitCode);
+    ExitCode exitCode = cacheCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.BUILD_ERROR, exitCode);
     assertThat(
         console.getTextWrittenToStdErr(),
         containsString("Failed to retrieve an artifact with id " + ruleKeyHash + "."));
@@ -184,8 +185,8 @@ public class CacheCommandTest extends EasyMockSupport {
 
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
-    int exitCode = cacheCommand.run(commandRunnerParams);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cacheCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.SUCCESS, exitCode);
     ImmutableList<String> lines =
         listener.createRenderLinesAtTime(commandRunnerParams.getClock().currentTimeMillis());
     StringBuilder strBuilder = new StringBuilder();

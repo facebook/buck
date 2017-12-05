@@ -28,6 +28,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
@@ -70,7 +71,7 @@ public class AuditInputCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // TargetNodes for the specified BuildTargets.
@@ -81,7 +82,7 @@ public class AuditInputCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe("Please specify at least one build target."));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     ImmutableSet<BuildTarget> targets =
@@ -113,7 +114,7 @@ public class AuditInputCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
     }
 
     if (shouldGenerateJsonOutput()) {
@@ -128,7 +129,7 @@ public class AuditInputCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  int printJsonInputs(final CommandRunnerParams params, TargetGraph graph) throws IOException {
+  ExitCode printJsonInputs(final CommandRunnerParams params, TargetGraph graph) throws IOException {
     final SortedMap<String, ImmutableSortedSet<Path>> targetToInputs = new TreeMap<>();
 
     new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(graph) {
@@ -160,10 +161,10 @@ public class AuditInputCommand extends AbstractCommand {
 
     ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetToInputs);
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
-  private int printInputs(final CommandRunnerParams params, TargetGraph graph) {
+  private ExitCode printInputs(final CommandRunnerParams params, TargetGraph graph) {
     // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
@@ -202,7 +203,7 @@ public class AuditInputCommand extends AbstractCommand {
       }
     }.traverse();
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

@@ -40,6 +40,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
@@ -151,7 +152,10 @@ public class SimpleConsoleEventBusListenerTest {
             threadId));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
+            1234L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     expectedOutput +=
         "BUILT  0.4s //banana:stand\n"
@@ -227,7 +231,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1234L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -279,7 +283,7 @@ public class SimpleConsoleEventBusListenerTest {
             buildEventStarted, 500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -346,7 +350,10 @@ public class SimpleConsoleEventBusListenerTest {
             threadId));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
+            1234L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     expectedOutput +=
         FINISHED_DOWNLOAD_STRING + "\n" + "BUILDING: FINISHED IN 1.2s\n" + "BUILD SUCCEEDED\n";

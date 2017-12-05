@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class AuditDependenciesCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "dependencies");
-    result.assertFailure();
+    result.assertExitCode("missing parameter is error", ExitCode.COMMANDLINE_ERROR);
     assertThat(result.getStderr(), containsString("Must specify at least one build target.\n"));
   }
 

@@ -23,6 +23,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ObjectMappers;
@@ -93,7 +94,8 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
         ProjectBuildFileParserFactory.createBuildFileParser(
@@ -130,10 +132,11 @@ public class AuditRulesCommand extends AbstractCommand {
         printRulesToStdout(params, rawRules, includeType);
       }
     } catch (BuildFileParseException e) {
+      // TODO(buck_team): return ExitCode.PARSE_ERROR
       throw new HumanReadableException("Unable to create parser");
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

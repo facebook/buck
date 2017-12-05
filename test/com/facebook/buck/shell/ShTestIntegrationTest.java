@@ -18,10 +18,10 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

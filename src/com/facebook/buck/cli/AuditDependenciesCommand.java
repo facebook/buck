@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -71,14 +72,14 @@ public class AuditDependenciesCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets =
         ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       params.getBuckEventBus().post(ConsoleEvent.severe("Must specify at least one build target."));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
@@ -124,7 +125,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      // TODO(buck_team): catch specific exceptions and return proper codes
+      return ExitCode.BUILD_ERROR;
     }
   }
 

@@ -41,6 +41,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
@@ -56,7 +57,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -83,7 +84,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private AtomicInteger localKeyUnchangedHits = new AtomicInteger(0);
 
   // Values to be written in the end of the log.
-  private OptionalInt exitCode = OptionalInt.empty();
+  private Optional<ExitCode> exitCode = Optional.empty();
 
   // Cache upload statistics
   private AtomicInteger cacheUploadSuccessCount = new AtomicInteger();
@@ -156,12 +157,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Subscribe
   public void commandFinished(CommandEvent.Finished event) {
-    exitCode = OptionalInt.of(event.getExitCode());
+    exitCode = Optional.of(event.getExitCode());
   }
 
   @Subscribe
   public synchronized void commandInterrupted(CommandEvent.Interrupted event) {
-    exitCode = OptionalInt.of(event.getExitCode());
+    exitCode = Optional.of(event.getExitCode());
   }
 
   @Subscribe
@@ -274,7 +275,9 @@ public class MachineReadableLoggerListener implements BuckEventListener {
                         cacheUploadFailureCount));
 
                 outputStream.write(
-                    String.format(PREFIX_EXIT_CODE + " {\"exitCode\":%d}", exitCode.orElse(-1))
+                    String.format(
+                            PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
+                            exitCode.map(code -> code.getCode()).orElse(-1))
                         .getBytes(Charsets.UTF_8));
 
                 outputStream.close();

@@ -106,6 +106,7 @@ import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
@@ -190,7 +191,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
@@ -541,9 +541,9 @@ public final class Main {
     }
 
     // Return help strings fast if the command is a help request.
-    OptionalInt result = command.runHelp(stdErr);
+    Optional<ExitCode> result = command.runHelp(stdErr);
     if (result.isPresent()) {
-      return ExitCode.SUCCESS;
+      return result.get();
     }
 
     // Initialize logging
@@ -1025,7 +1025,7 @@ public final class Main {
                 TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - initTimestamp)));
 
         try {
-          int code =
+          exitCode =
               command.run(
                   CommandRunnerParams.of(
                       console,
@@ -1062,26 +1062,8 @@ public final class Main {
                       processExecutor,
                       executableFinder,
                       pluginManager));
-
-          // TODO(buck_team) Have all commands return proper ExitCode object instead of remapping
-          final ImmutableMap<Integer, ExitCode> EXIT_CODE_MAPPING =
-              ImmutableMap.of(
-                  0,
-                  ExitCode.SUCCESS,
-                  32,
-                  ExitCode.TEST_ERROR,
-                  42,
-                  ExitCode.TEST_ERROR,
-                  64,
-                  ExitCode.TEST_NOTHING,
-                  70,
-                  ExitCode.TEST_ERROR);
-
-          exitCode = EXIT_CODE_MAPPING.getOrDefault(code, ExitCode.BUILD_ERROR);
-
         } catch (InterruptedException | ClosedByInterruptException e) {
-          buildEventBus.post(
-              CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT.getCode()));
+          buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
           throw e;
         }
 
@@ -1092,7 +1074,7 @@ public final class Main {
             "CounterAggregatorExecutor",
             counterAggregatorExecutor,
             COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS);
-        buildEventBus.post(CommandEvent.finished(startedEvent, exitCode.getCode()));
+        buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
       } catch (Throwable t) {
         LOG.debug(t, "Failing build on exception.");
         closeHttpExecutorService(cacheBuckConfig, Optional.empty(), httpWriteExecutorService);

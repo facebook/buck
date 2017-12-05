@@ -30,6 +30,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
@@ -94,7 +95,8 @@ public class VerifyCachesCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     boolean success = true;
 
     PrintStream stdOut = params.getConsole().getStdOut();
@@ -128,7 +130,7 @@ public class VerifyCachesCommand extends AbstractCommand {
                         recycler))
             .orElse(true);
 
-    return success ? 0 : 1;
+    return success ? ExitCode.SUCCESS : ExitCode.BUILD_ERROR;
   }
 
   @Override

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -90,7 +91,8 @@ public class UninstallCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
 
     // Parse all of the build targets specified by the user.
     BuildRuleResolver resolver;
@@ -120,7 +122,7 @@ public class UninstallCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
     }
 
     // Make sure that only one build target is specified.
@@ -128,7 +130,7 @@ public class UninstallCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe("Must specify exactly one android_binary() rule."));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
 
@@ -142,7 +144,7 @@ public class UninstallCommand extends AbstractCommand {
                   String.format(
                       "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
                       buildRule.getFullyQualifiedName(), buildRule.getType())));
-      return 1;
+      return ExitCode.BUILD_ERROR;
     }
     HasInstallableApk hasInstallableApk = (HasInstallableApk) buildRule;
 
@@ -153,7 +155,9 @@ public class UninstallCommand extends AbstractCommand {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     String appId =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
-    return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;
+    return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData())
+        ? ExitCode.SUCCESS
+        : ExitCode.RUN_ERROR;
   }
 
   @Override

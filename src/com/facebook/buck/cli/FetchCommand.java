@@ -41,6 +41,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
@@ -50,13 +51,14 @@ import java.io.IOException;
 public class FetchCommand extends BuildCommand {
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
 
     if (getArguments().isEmpty()) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe("Must specify at least one build target to fetch."));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
@@ -68,7 +70,7 @@ public class FetchCommand extends BuildCommand {
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
-    int exitCode;
+    int exitCodeInt;
     try (CommandThreadManager pool =
         new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()))) {
       ActionGraphAndResolver actionGraphAndResolver;
@@ -101,7 +103,7 @@ public class FetchCommand extends BuildCommand {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+        return ExitCode.PARSE_ERROR;
       }
 
       MetadataChecker.checkAndCleanIfNeeded(params.getCell());
@@ -149,7 +151,7 @@ public class FetchCommand extends BuildCommand {
                   params.getClock(),
                   getExecutionContext(),
                   isKeepGoing())) {
-        exitCode =
+        exitCodeInt =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,
                 params.getBuckEventBus(),
@@ -157,6 +159,8 @@ public class FetchCommand extends BuildCommand {
                 getPathToBuildReport(params.getBuckConfig()));
       }
     }
+
+    ExitCode exitCode = ExitCode.map(exitCodeInt);
 
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 

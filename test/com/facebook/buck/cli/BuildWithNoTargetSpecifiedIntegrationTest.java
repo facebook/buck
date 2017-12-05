@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import org.junit.Rule;
@@ -41,7 +42,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         "`buck build` should display an error message if no targets are provided.",
@@ -57,7 +58,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         "`buck build` should suggest the alias found in .buckconfig as a target.",
@@ -83,7 +84,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         Joiner.on(' ')
@@ -112,7 +113,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         Joiner.on(' ')

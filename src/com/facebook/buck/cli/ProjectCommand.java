@@ -31,6 +31,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -254,7 +255,8 @@ public class ProjectCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     final Ide projectIde =
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
@@ -263,12 +265,12 @@ public class ProjectCommand extends BuildCommand {
           .getConsole()
           .getStdErr()
           .println("\nCannot build a project: project IDE is not specified.");
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     int rc = runPreprocessScriptIfNeeded(params, projectIde);
     if (rc != 0) {
-      return rc;
+      return ExitCode.map(rc);
     }
 
     try (CommandThreadManager pool =
@@ -277,7 +279,7 @@ public class ProjectCommand extends BuildCommand {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
-      int result;
+      ExitCode result;
       try {
         switch (projectIde) {
           case INTELLIJ:
@@ -381,13 +383,13 @@ public class ProjectCommand extends BuildCommand {
     return false;
   }
 
-  private int runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
+  private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
       throws IOException, InterruptedException {
     BuildCommand buildCommand = new BuildCommand(arguments);
     return buildCommand.run(params);
   }
 
-  private int runBuild(
+  private ExitCode runBuild(
       CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching)
       throws IOException, InterruptedException {
     BuildCommand buildCommand =

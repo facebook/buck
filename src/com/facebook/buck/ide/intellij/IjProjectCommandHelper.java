@@ -49,6 +49,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
@@ -117,14 +118,14 @@ public class IjProjectCommandHelper {
     this.projectViewParameters = projectViewParameters;
   }
 
-  public int parseTargetsAndRunProjectGenerator(List<String> arguments)
+  public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
       throws IOException, InterruptedException {
     if (projectViewParameters.hasViewPath() && arguments.isEmpty()) {
       console
           .getStdErr()
           .println("\nParams are view_path target(s), but you didn't supply any targets");
 
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     List<String> targets = arguments;
@@ -149,9 +150,12 @@ public class IjProjectCommandHelper {
                       PerBuildState.SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
       projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
-    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
+    } catch (BuildTargetException | BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
+    } catch (HumanReadableException e) {
+      buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.BUILD_ERROR;
     }
 
     ImmutableSet<BuildTarget> graphRoots;
@@ -173,10 +177,12 @@ public class IjProjectCommandHelper {
     } catch (BuildFileParseException
         | TargetGraph.NoSuchNodeException
         | BuildTargetException
-        | VersionException
-        | HumanReadableException e) {
+        | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
+    } catch (HumanReadableException e) {
+      buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.BUILD_ERROR;
     }
 
     if (projectViewParameters.hasViewPath()) {
@@ -184,8 +190,12 @@ public class IjProjectCommandHelper {
         projectGraph = targetGraphAndTargets.getTargetGraph();
       }
 
-      return ProjectView.run(
-          projectViewParameters, projectGraph, passedInTargetsSet, getActionGraph(projectGraph));
+      return ExitCode.map(
+          ProjectView.run(
+              projectViewParameters,
+              projectGraph,
+              passedInTargetsSet,
+              getActionGraph(projectGraph)));
     }
 
     if (projectGeneratorParameters.isDryRun()) {
@@ -193,7 +203,7 @@ public class IjProjectCommandHelper {
         console.getStdOut().println(targetNode.toString());
       }
 
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     return runIntellijProjectGenerator(targetGraphAndTargets);
@@ -226,19 +236,19 @@ public class IjProjectCommandHelper {
   }
 
   /** Run intellij specific project generation actions. */
-  private int runIntellijProjectGenerator(final TargetGraphAndTargets targetGraphAndTargets)
+  private ExitCode runIntellijProjectGenerator(final TargetGraphAndTargets targetGraphAndTargets)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> requiredBuildTargets =
         writeProjectAndGetRequiredBuildTargets(targetGraphAndTargets);
 
     if (requiredBuildTargets.isEmpty()) {
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     if (projectConfig.isSkipBuildEnabled()) {
       ConsoleEvent.severe(
           "Please remember to buck build --deep the targets you intent to work with.");
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     return projectGeneratorParameters.isProcessAnnotations()
@@ -268,7 +278,7 @@ public class IjProjectCommandHelper {
     return project.write();
   }
 
-  private int buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
+  private ExitCode buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
       TargetGraphAndTargets targetGraphAndTargets, ImmutableSet<BuildTarget> requiredBuildTargets)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> annotatedTargets =
@@ -277,8 +287,8 @@ public class IjProjectCommandHelper {
     ImmutableSet<BuildTarget> unannotatedTargets =
         Sets.difference(requiredBuildTargets, annotatedTargets).immutableCopy();
 
-    int exitCode = runBuild(unannotatedTargets);
-    if (exitCode != 0) {
+    ExitCode exitCode = runBuild(unannotatedTargets);
+    if (exitCode != ExitCode.SUCCESS) {
       addBuildFailureError();
     }
 
@@ -286,15 +296,16 @@ public class IjProjectCommandHelper {
       return exitCode;
     }
 
-    int annotationExitCode = buckBuildRunner.runBuild(annotatedTargets, true);
-    if (exitCode == 0 && annotationExitCode != 0) {
+    ExitCode annotationExitCode = buckBuildRunner.runBuild(annotatedTargets, true);
+    if (exitCode == ExitCode.SUCCESS && annotationExitCode != ExitCode.SUCCESS) {
       addBuildFailureError();
     }
 
-    return exitCode == 0 ? annotationExitCode : exitCode;
+    return exitCode == ExitCode.SUCCESS ? annotationExitCode : exitCode;
   }
 
-  private int runBuild(ImmutableSet<BuildTarget> targets) throws IOException, InterruptedException {
+  private ExitCode runBuild(ImmutableSet<BuildTarget> targets)
+      throws IOException, InterruptedException {
     return buckBuildRunner.runBuild(targets, false);
   }
 

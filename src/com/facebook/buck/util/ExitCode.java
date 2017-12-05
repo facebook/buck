@@ -14,7 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.util;
+
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * ExitCode class defines Buck binary protocol, i.e. exit codes that Buck can report to a running
@@ -47,6 +50,10 @@ public enum ExitCode {
   COMMANDLINE_ERROR(3),
   /** There is nothing to build or evaluate for the command */
   NOTHING_TO_DO(4),
+  /** There was build file parsing or graph construction error */
+  PARSE_ERROR(5),
+  /** Running a binary or installing binary to a device has failed */
+  RUN_ERROR(6),
 
   // Fatal errors 10-19
 
@@ -56,6 +63,8 @@ public enum ExitCode {
   FATAL_BOOTSTRAP(11),
   /** Non-recoverable OutOfMemory error */
   FATAL_OOM(12),
+  /** Non-recoverable disk error */
+  FATAL_IO(13),
 
   // Other non-fatal errors 20 - 127
 
@@ -76,6 +85,7 @@ public enum ExitCode {
   }
 
   /** @return integer value of the exit code */
+  @JsonValue
   public int getCode() {
     return code;
   }
@@ -83,5 +93,26 @@ public enum ExitCode {
   /** @return true if error is Buck internal non-recoverable failure */
   public boolean isFatal() {
     return code >= 10 && code < 20;
+  }
+
+  static final ImmutableMap<Integer, ExitCode> EXIT_CODE_MAPPING =
+      ImmutableMap.of(
+          0,
+          ExitCode.SUCCESS,
+          32,
+          ExitCode.TEST_ERROR,
+          42,
+          ExitCode.TEST_ERROR,
+          64,
+          ExitCode.TEST_NOTHING,
+          70,
+          ExitCode.TEST_ERROR);
+
+  /**
+   * Map integer value received from custom toolchain subcall to one of appropriate ExitCode values.
+   * This function is for backwards compatibility only, please construct ExitCode directly instead
+   */
+  public static ExitCode map(int code) {
+    return EXIT_CODE_MAPPING.getOrDefault(code, ExitCode.BUILD_ERROR);
   }
 }

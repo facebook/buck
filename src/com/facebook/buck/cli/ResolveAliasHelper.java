@@ -40,7 +40,7 @@ public class ResolveAliasHelper {
    * qualified (non-alias) target to be verified by checking the build files. Prints the build
    * target that each alias maps to on its own line to standard out.
    */
-  public static int resolveAlias(
+  public static void resolveAlias(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       boolean enableProfiling,
@@ -69,8 +69,6 @@ public class ResolveAliasHelper {
     for (String resolvedAlias : resolvedAliases) {
       params.getConsole().getStdOut().println(resolvedAlias);
     }
-
-    return 0;
   }
 
   /** Verify that the given target is a valid full-qualified (non-alias) target. */

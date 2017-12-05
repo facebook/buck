@@ -73,6 +73,7 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
@@ -380,7 +381,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1234L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -707,7 +708,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1234L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -981,7 +982,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.distBuildFinished(distBuildStartedEvent, 0),
+            BuildEvent.distBuildFinished(distBuildStartedEvent, ExitCode.SUCCESS),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -998,7 +999,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1167,7 +1168,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1234L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1442,7 +1443,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1234L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1737,7 +1738,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1234L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2322,7 +2323,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1000L,
             TimeUnit.MILLISECONDS, /* threadId */
             0L));

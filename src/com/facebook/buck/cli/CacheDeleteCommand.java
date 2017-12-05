@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheDeleteResult;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,10 +40,11 @@ public class CacheDeleteCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
       params.getBuckEventBus().post(ConsoleEvent.severe("No cache keys specified."));
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     List<RuleKey> ruleKeys = arguments.stream().map(RuleKey::new).collect(Collectors.toList());
@@ -55,7 +57,9 @@ public class CacheDeleteCommand extends AbstractCommand {
       } catch (ExecutionException ex) {
         params.getConsole().printErrorText("Failed to delete artifacts.");
         ex.printStackTrace(params.getConsole().getStdErr());
-        return 1;
+        // Casting all errors to FATAL. Is there any possibility for user error, like missing cache
+        // key?
+        return ExitCode.FATAL_GENERIC;
       }
     }
 
@@ -67,7 +71,7 @@ public class CacheDeleteCommand extends AbstractCommand {
                 ruleKeys.size(),
                 deleteResult.getCacheNames().size(),
                 String.join(", ", deleteResult.getCacheNames())));
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

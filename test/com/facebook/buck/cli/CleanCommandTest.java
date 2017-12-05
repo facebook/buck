@@ -44,6 +44,7 @@ import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -89,8 +90,8 @@ public class CleanCommandTest extends EasyMockSupport {
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
 
     // Simulate `buck clean`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
@@ -110,8 +111,8 @@ public class CleanCommandTest extends EasyMockSupport {
     assertTrue(projectFilesystem.exists(additionalPath));
 
     // Simulate `buck clean --project`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(additionalPath));
   }
