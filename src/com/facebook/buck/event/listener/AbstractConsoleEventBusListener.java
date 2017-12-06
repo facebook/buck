@@ -44,7 +44,6 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.i18n.NumberFormatter;
 import com.facebook.buck.util.timing.Clock;
@@ -109,8 +108,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   private final int numberOfSlowRulesToShow;
   private final boolean showSlowRulesInConsole;
   private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
-
-  protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
 
   @Nullable protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
   @Nullable protected volatile ProjectBuildFileParseEvents.Finished projectBuildFileParseFinished;
@@ -204,8 +201,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.actionGraphEvents = new ConcurrentHashMap<>();
     this.buckFilesParsingEvents = new ConcurrentHashMap<>();
-
-    this.autoSparseState = new ConcurrentHashMap<>();
 
     this.buildStarted = null;
     this.buildFinished = null;
@@ -530,26 +525,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             pair == null
                 ? EventPair.builder().setFinish(finished).build()
                 : pair.withFinish(finished));
-  }
-
-  @Subscribe
-  public void autoSparseStateSparseRefreshStarted(
-      AutoSparseStateEvents.SparseRefreshStarted started) {
-    aggregateStartedEvent(autoSparseState, started);
-  }
-
-  @Subscribe
-  public void autoSparseStateSparseRefreshFinished(
-      AutoSparseStateEvents.SparseRefreshFinished finished) {
-    aggregateFinishedEvent(autoSparseState, finished);
-  }
-
-  @Subscribe
-  public void autoSparseStateRefreshFailed(AutoSparseStateEvents.SparseRefreshFailed failed) {
-    String failureDetails = failed.getFailureDetails();
-    if (failureDetails.length() > 0) {
-      printSevereWarningDirectly(failureDetails);
-    }
   }
 
   @Subscribe

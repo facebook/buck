@@ -77,11 +77,6 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   @Value.Default
-  public boolean getUseMercurialGlob() {
-    return false;
-  }
-
-  @Value.Default
   public boolean getFreezeGlobals() {
     return false;
   }

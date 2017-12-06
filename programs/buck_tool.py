@@ -45,7 +45,6 @@ EXPORTED_RESOURCES = [
     Resource("testrunner_classes"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
-    Resource("path_to_rawmanifest_py", basename='rawmanifest.py'),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
     Resource("path_to_pex"),
     Resource("path_to_pywatchman"),

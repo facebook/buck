@@ -73,7 +73,6 @@ public class ProjectBuildFileParserFactory {
         parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
     boolean watchmanUseGlobGenerator =
         cell.getWatchman().getCapabilities().contains(WatchmanFactory.Capability.GLOB_GENERATOR);
-    boolean useMercurialGlob = parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
@@ -96,7 +95,6 @@ public class ProjectBuildFileParserFactory {
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
             .setWatchman(cell.getWatchman())
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
-            .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(cell.getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build();

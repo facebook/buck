@@ -51,11 +51,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
         root,
         extractIgnorePaths(root, config, buckPaths),
         buckPaths,
-        ProjectFilesystemDelegateFactory.newInstance(
-            root,
-            buckPaths.getBuckOut(),
-            config.getValue("version_control", "hg_cmd").orElse("hg"),
-            config),
+        ProjectFilesystemDelegateFactory.newInstance(root, config),
         config.getBooleanValue("project", "windows_symlinks", false));
   }
 
