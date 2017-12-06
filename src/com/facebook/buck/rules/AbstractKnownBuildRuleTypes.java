@@ -346,8 +346,6 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider,
             appleConfig,
             appleLibraryDescription,
-            cxxPlatforms,
-            defaultCxxPlatform.getFlavor(),
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor)));
     builder.addDescriptions(new CommandAliasDescription(Platform.detect()));
     builder.addDescriptions(cxxBinaryDescription);

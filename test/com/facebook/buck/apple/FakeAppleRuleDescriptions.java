@@ -264,8 +264,6 @@ public class FakeAppleRuleDescriptions {
           createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           LIBRARY_DESCRIPTION,
-          DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_PLATFORM.getFlavor(),
           Suppliers.ofInstance(Optional.empty()));
 
   private static ToolchainProvider createTestToolchainProviderForSwiftPlatform(
