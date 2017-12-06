@@ -19,6 +19,7 @@ package com.facebook.buck.testutil.integration;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.ProvisioningProfileStore;
+import com.facebook.buck.apple.ProvisioningProfileStoreFactory;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.impl.CodeSignIdentityStoreFactory;
@@ -58,7 +59,7 @@ public class FakeAppleDeveloperEnvironment {
                   return false;
                 }
                 ProvisioningProfileStore store =
-                    ProvisioningProfileStore.fromSearchPath(
+                    ProvisioningProfileStoreFactory.fromSearchPath(
                         executor, ProvisioningProfileStore.DEFAULT_READ_COMMAND, searchPath);
                 Optional<ProvisioningProfileMetadata> profile =
                     store.getBestProvisioningProfile(

@@ -44,6 +44,7 @@ import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
+import com.facebook.buck.apple.ProvisioningProfileStoreFactory;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -255,7 +256,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
     ProvisioningProfileStore provisioningProfileStore =
-        ProvisioningProfileStore.fromSearchPath(
+        ProvisioningProfileStoreFactory.fromSearchPath(
             processExecutor,
             appleConfig.getProvisioningProfileReadCommand(),
             appleConfig.getProvisioningProfileSearchPath());

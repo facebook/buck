@@ -24,21 +24,11 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -71,7 +61,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
           "com.apple.developer.ubiquity-container-identifiers",
           "com.apple.developer.ubiquity-kvstore-identifier");
 
-  private ProvisioningProfileStore(
+  public ProvisioningProfileStore(
       Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier) {
     this.provisioningProfilesSupplier = provisioningProfilesSupplier;
   }
@@ -225,51 +215,6 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("provisioning-profile-store", getProvisioningProfiles());
-  }
-
-  public static ProvisioningProfileStore fromSearchPath(
-      final ProcessExecutor executor,
-      final ImmutableList<String> readCommand,
-      final Path searchPath) {
-    LOG.debug("Provisioning profile search path: " + searchPath);
-    return new ProvisioningProfileStore(
-        MoreSuppliers.memoize(
-            () -> {
-              final Builder<ProvisioningProfileMetadata> profilesBuilder = ImmutableList.builder();
-              try {
-                Files.walkFileTree(
-                    searchPath.toAbsolutePath(),
-                    new SimpleFileVisitor<Path>() {
-                      @Override
-                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                          throws IOException {
-                        if (file.toString().endsWith(".mobileprovision")) {
-                          try {
-                            ProvisioningProfileMetadata profile =
-                                ProvisioningProfileMetadata.fromProvisioningProfilePath(
-                                    executor, readCommand, file);
-                            profilesBuilder.add(profile);
-                          } catch (IOException | IllegalArgumentException e) {
-                            LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
-                          } catch (InterruptedException e) {
-                            throw new IOException(e);
-                          }
-                        }
-
-                        return FileVisitResult.CONTINUE;
-                      }
-                    });
-              } catch (NoSuchFileException e) {
-                LOG.debug(e, "The folder containing provisioning profile was not found.");
-              } catch (IOException e) {
-                if (e.getCause() instanceof InterruptedException) {
-                  LOG.error(e, "Interrupted while searching for mobileprovision files");
-                } else {
-                  LOG.error(e, "Error while searching for mobileprovision files");
-                }
-              }
-              return profilesBuilder.build();
-            }));
   }
 
   public static ProvisioningProfileStore fromProvisioningProfiles(
