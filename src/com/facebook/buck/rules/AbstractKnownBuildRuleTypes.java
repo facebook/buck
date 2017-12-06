@@ -339,12 +339,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new ApplePackageDescription(toolchainProvider, sandboxExecutionStrategy, appleConfig));
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
-            toolchainProvider,
-            appleBinaryDescription,
-            appleLibraryDescription,
-            cxxPlatforms,
-            defaultCxxPlatform.getFlavor(),
-            appleConfig);
+            toolchainProvider, appleBinaryDescription, appleLibraryDescription, appleConfig);
     builder.addDescriptions(appleBundleDescription);
     builder.addDescriptions(
         new AppleTestDescription(

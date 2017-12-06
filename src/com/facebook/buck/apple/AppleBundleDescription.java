@@ -24,6 +24,7 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -74,22 +75,16 @@ public class AppleBundleDescription
   private final ToolchainProvider toolchainProvider;
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
-  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final Flavor defaultCxxFlavor;
   private final AppleConfig appleConfig;
 
   public AppleBundleDescription(
       ToolchainProvider toolchainProvider,
       AppleBinaryDescription appleBinaryDescription,
       AppleLibraryDescription appleLibraryDescription,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
       AppleConfig appleConfig) {
     this.toolchainProvider = toolchainProvider;
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
-    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.defaultCxxFlavor = defaultCxxFlavor;
     this.appleConfig = appleConfig;
   }
 
@@ -152,9 +147,10 @@ public class AppleBundleDescription
           resolver.requireRule(
               buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     return AppleDescriptions.createAppleBundle(
-        cxxPlatformFlavorDomain,
-        defaultCxxFlavor,
+        cxxPlatformsProvider.getCxxPlatforms(),
+        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
         getAppleCxxPlatformFlavorDomain(),
         targetGraph,
         buildTarget,
@@ -192,8 +188,10 @@ public class AppleBundleDescription
       AbstractAppleBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget = buildTarget.withAppendedFlavors(defaultCxxFlavor);
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    if (!cxxPlatformsProvider.getCxxPlatforms().containsAnyOf(buildTarget.getFlavors())) {
+      buildTarget =
+          buildTarget.withAppendedFlavors(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
     }
 
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
@@ -207,7 +205,9 @@ public class AppleBundleDescription
     } else {
       cxxPlatform =
           ApplePlatforms.getCxxPlatformForBuildTarget(
-              cxxPlatformFlavorDomain, defaultCxxFlavor, buildTarget);
+              cxxPlatformsProvider.getCxxPlatforms(),
+              cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
+              buildTarget);
     }
 
     String platformName = cxxPlatform.getFlavor().getName();
@@ -230,11 +230,12 @@ public class AppleBundleDescription
     // BuildTargets.propagateFlavorsInDomainIfNotPresent()
     {
       FluentIterable<BuildTarget> targetsWithPlatformFlavors =
-          depsExcludingBinary.filter(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)::test);
+          depsExcludingBinary.filter(
+              BuildTargets.containsFlavors(cxxPlatformsProvider.getCxxPlatforms())::test);
 
       FluentIterable<BuildTarget> targetsWithoutPlatformFlavors =
           depsExcludingBinary.filter(
-              BuildTargets.containsFlavors(cxxPlatformFlavorDomain).negate()::test);
+              BuildTargets.containsFlavors(cxxPlatformsProvider.getCxxPlatforms()).negate()::test);
 
       FluentIterable<BuildTarget> watchTargets =
           targetsWithoutPlatformFlavors
@@ -252,7 +253,7 @@ public class AppleBundleDescription
               .append(
                   BuildTargets.propagateFlavorDomains(
                       buildTarget,
-                      ImmutableSet.of(cxxPlatformFlavorDomain),
+                      ImmutableSet.of(cxxPlatformsProvider.getCxxPlatforms()),
                       targetsWithoutPlatformFlavors));
     }
 
@@ -307,6 +308,11 @@ public class AppleBundleDescription
         toolchainProvider.getByName(
             AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
     return appleCxxPlatformsProvider.getAppleCxxPlatforms();
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

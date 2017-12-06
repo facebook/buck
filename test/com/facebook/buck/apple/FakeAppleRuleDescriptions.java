@@ -256,8 +256,6 @@ public class FakeAppleRuleDescriptions {
           createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
           BINARY_DESCRIPTION,
           LIBRARY_DESCRIPTION,
-          DEFAULT_APPLE_FLAVOR_DOMAIN,
-          DEFAULT_PLATFORM.getFlavor(),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
   /** A fake apple_test description with an iOS platform for use in tests. */
@@ -288,6 +286,9 @@ public class FakeAppleRuleDescriptions {
             CodeSignIdentityStore.DEFAULT_NAME,
             fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)))
         .withToolchain(ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.empty())
+        .withToolchain(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            CxxPlatformsProvider.of(DEFAULT_PLATFORM, DEFAULT_APPLE_FLAVOR_DOMAIN))
         .build();
   }
 
