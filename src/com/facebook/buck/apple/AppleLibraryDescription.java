@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -178,7 +179,6 @@ public class AppleLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxLibraryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
-  private final Flavor defaultCxxFlavor;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
 
@@ -186,14 +186,12 @@ public class AppleLibraryDescription
       ToolchainProvider toolchainProvider,
       CxxLibraryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
-      Flavor defaultCxxFlavor,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
-    this.defaultCxxFlavor = defaultCxxFlavor;
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
   }
@@ -380,7 +378,7 @@ public class AppleLibraryDescription
 
     return AppleDescriptions.createAppleBundle(
         delegate.getCxxPlatforms(),
-        defaultCxxFlavor,
+        getDefaultCxxFlavor(),
         getAppleCxxPlatformDomain(),
         targetGraph,
         buildTarget,
@@ -466,7 +464,7 @@ public class AppleLibraryDescription
                     Sets.intersection(
                         delegate.getCxxPlatforms().getFlavors(),
                         unstrippedBuildTarget.getFlavors()),
-                    defaultCxxFlavor));
+                    getDefaultCxxFlavor()));
 
     BuildTarget strippedBuildTarget =
         CxxStrip.restoreStripStyleFlavorInTarget(unstrippedBuildTarget, flavoredStripStyle);
@@ -989,5 +987,12 @@ public class AppleLibraryDescription
             AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
 
     return appleCxxPlatformsProvider.getAppleCxxPlatforms();
+  }
+
+  private Flavor getDefaultCxxFlavor() {
+    return toolchainProvider
+        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getDefaultCxxPlatform()
+        .getFlavor();
   }
 }

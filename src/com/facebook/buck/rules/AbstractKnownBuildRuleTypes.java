@@ -259,7 +259,6 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider,
             cxxLibraryDescription,
             swiftLibraryDescription,
-            defaultCxxPlatform.getFlavor(),
             appleConfig,
             swiftBuckConfig);
     builder.addDescriptions(appleLibraryDescription);
