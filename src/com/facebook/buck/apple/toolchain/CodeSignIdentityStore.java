@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Supplier;
 
@@ -36,9 +35,5 @@ public class CodeSignIdentityStore {
 
   public Supplier<ImmutableList<CodeSignIdentity>> getIdentitiesSupplier() {
     return identitiesSupplier;
-  }
-
-  public static CodeSignIdentityStore fromIdentities(Iterable<CodeSignIdentity> identities) {
-    return new CodeSignIdentityStore(Suppliers.ofInstance(ImmutableList.copyOf(identities)));
   }
 }
