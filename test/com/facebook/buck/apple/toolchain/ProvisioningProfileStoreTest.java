@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -24,10 +24,6 @@ import static org.junit.Assert.assertFalse;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.apple.toolchain.CodeSignIdentity;
-import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
-import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

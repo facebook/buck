@@ -8,6 +8,7 @@ java_immutables_library(
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/toolchain:toolchain",
+        "//third-party/java/dd-plist:dd-plist",
     ],
     visibility = [
         "PUBLIC",
@@ -18,6 +19,5 @@ java_immutables_library(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
-        "//third-party/java/dd-plist:dd-plist",
     ],
 )

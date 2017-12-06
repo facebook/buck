@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.model.Pair;
 import org.junit.Rule;
 import org.junit.Test;
