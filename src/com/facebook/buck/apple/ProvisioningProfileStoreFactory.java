@@ -51,7 +51,7 @@ public class ProvisioningProfileStoreFactory {
                         if (file.toString().endsWith(".mobileprovision")) {
                           try {
                             ProvisioningProfileMetadata profile =
-                                ProvisioningProfileMetadata.fromProvisioningProfilePath(
+                                ProvisioningProfileMetadataFactory.fromProvisioningProfilePath(
                                     executor, readCommand, file);
                             profilesBuilder.add(profile);
                           } catch (IOException | IllegalArgumentException e) {
