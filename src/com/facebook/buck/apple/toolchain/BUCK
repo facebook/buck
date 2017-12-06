@@ -5,6 +5,7 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/toolchain:toolchain",
     ],
@@ -13,8 +14,10 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/apple/platform_type:type",
+        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
+        "//third-party/java/dd-plist:dd-plist",
     ],
 )

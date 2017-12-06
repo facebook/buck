@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDate;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;

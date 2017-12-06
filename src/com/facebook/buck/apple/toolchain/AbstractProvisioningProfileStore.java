@@ -14,12 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
-import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
