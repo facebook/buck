@@ -116,11 +116,6 @@ public class PythonBuckConfig {
     return getPythonInterpreter(delegate.getValue(section, "interpreter"));
   }
 
-  /** @return the {@link Path} to the default python interpreter. */
-  public Path getPythonInterpreter() {
-    return getPythonInterpreter(SECTION);
-  }
-
   public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {
     return PATH_TO_TEST_MAIN.getUnchecked(filesystem);
   }
@@ -214,6 +209,10 @@ public class PythonBuckConfig {
 
   public Optional<BuildTarget> getCxxLibrary(String section) {
     return delegate.getBuildTarget(section, "library");
+  }
+
+  public String getDefaultSection() {
+    return SECTION;
   }
 
   public enum PackageStyle {

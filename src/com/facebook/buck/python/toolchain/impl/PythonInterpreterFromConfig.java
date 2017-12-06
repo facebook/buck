@@ -41,6 +41,6 @@ public class PythonInterpreterFromConfig implements PythonInterpreter {
 
   @Override
   public Path getPythonInterpreterPath() {
-    return pythonBuckConfig.getPythonInterpreter();
+    return pythonBuckConfig.getPythonInterpreter(pythonBuckConfig.getDefaultSection());
   }
 }

@@ -72,7 +72,7 @@ public class PythonBuckConfigTest {
     assertEquals(
         "Should return path to temp file.",
         configPythonFile.toAbsolutePath(),
-        config.getPythonInterpreter());
+        config.getPythonInterpreter(config.getDefaultSection()));
   }
 
   @Test
@@ -88,7 +88,7 @@ public class PythonBuckConfigTest {
                         .build())
                 .build(),
             new ExecutableFinder());
-    config.getPythonInterpreter();
+    config.getPythonInterpreter(config.getDefaultSection());
   }
 
   @Test
@@ -105,7 +105,7 @@ public class PythonBuckConfigTest {
                         .build())
                 .build(),
             new ExecutableFinder(Platform.WINDOWS));
-    config.getPythonInterpreter();
+    config.getPythonInterpreter(config.getDefaultSection());
   }
 
   @Test
@@ -123,7 +123,9 @@ public class PythonBuckConfigTest {
                 .build(),
             new ExecutableFinder());
     assertEquals(
-        "Should return path to python2.", python2.toAbsolutePath(), config.getPythonInterpreter());
+        "Should return path to python2.",
+        python2.toAbsolutePath(),
+        config.getPythonInterpreter(config.getDefaultSection()));
   }
 
   @Test(expected = HumanReadableException.class)
@@ -140,7 +142,7 @@ public class PythonBuckConfigTest {
                         .build())
                 .build(),
             new ExecutableFinder());
-    config.getPythonInterpreter();
+    config.getPythonInterpreter(config.getDefaultSection());
     fail("Should throw an exception when Python isn't found.");
   }
 
@@ -163,7 +165,9 @@ public class PythonBuckConfigTest {
                 .build(),
             new ExecutableFinder());
     assertEquals(
-        "Should return the first path", config.getPythonInterpreter(), pythonA.toAbsolutePath());
+        "Should return the first path",
+        config.getPythonInterpreter(config.getDefaultSection()),
+        pythonA.toAbsolutePath());
   }
 
   @Test

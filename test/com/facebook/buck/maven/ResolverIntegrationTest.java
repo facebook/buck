@@ -117,7 +117,10 @@ public class ResolverIntegrationTest {
         new PythonDslProjectBuildFileParser(
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(filesystem.getRootPath())
-                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter().toString())
+                .setPythonInterpreter(
+                    pythonBuckConfig
+                        .getPythonInterpreter(pythonBuckConfig.getDefaultSection())
+                        .toString())
                 .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
                 .setIgnorePaths(filesystem.getIgnorePaths())
                 .setBuildFileName(parserConfig.getBuildFileName())
