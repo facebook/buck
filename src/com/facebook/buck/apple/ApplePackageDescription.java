@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -62,17 +63,14 @@ public class ApplePackageDescription
 
   private final ToolchainProvider toolchainProvider;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
-  private final Flavor defaultCxxFlavor;
   private final AppleConfig config;
 
   public ApplePackageDescription(
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
-      AppleConfig config,
-      Flavor defaultCxxFlavor) {
+      AppleConfig config) {
     this.toolchainProvider = toolchainProvider;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
-    this.defaultCxxFlavor = defaultCxxFlavor;
     this.config = config;
   }
 
@@ -250,7 +248,11 @@ public class ApplePackageDescription
     Sets.SetView<Flavor> intersection =
         Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
     if (intersection.isEmpty()) {
-      return ImmutableSet.of(defaultCxxFlavor);
+      return ImmutableSet.of(
+          toolchainProvider
+              .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+              .getDefaultCxxPlatform()
+              .getFlavor());
     } else {
       return intersection.immutableCopy();
     }

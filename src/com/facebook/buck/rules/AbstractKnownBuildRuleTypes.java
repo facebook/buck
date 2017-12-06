@@ -336,11 +336,7 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
     builder.addDescriptions(new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(
-        new ApplePackageDescription(
-            toolchainProvider,
-            sandboxExecutionStrategy,
-            appleConfig,
-            defaultCxxPlatform.getFlavor()));
+        new ApplePackageDescription(toolchainProvider, sandboxExecutionStrategy, appleConfig));
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
             toolchainProvider,

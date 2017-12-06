@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -164,7 +163,6 @@ public class ApplePackageDescriptionTest {
                 "macosx_package_command = " + command.replace("$", "\\$"),
                 "macosx_package_extension = api")
             .build()
-            .getView(AppleConfig.class),
-        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+            .getView(AppleConfig.class));
   }
 }
