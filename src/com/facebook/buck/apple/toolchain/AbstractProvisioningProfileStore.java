@@ -218,9 +218,4 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
   public static ProvisioningProfileStore empty() {
     return ProvisioningProfileStore.of(Suppliers.ofInstance(ImmutableList.of()));
   }
-
-  public static ProvisioningProfileStore fromProvisioningProfiles(
-      Iterable<ProvisioningProfileMetadata> profiles) {
-    return ProvisioningProfileStore.of(Suppliers.ofInstance(ImmutableList.copyOf(profiles)));
-  }
 }

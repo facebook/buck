@@ -28,6 +28,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,10 +67,15 @@ public class ProvisioningProfileStoreTest {
         .build();
   }
 
+  private static ProvisioningProfileStore createStorefromProvisioningProfiles(
+      Iterable<ProvisioningProfileMetadata> profiles) {
+    return ProvisioningProfileStore.of(Suppliers.ofInstance(ImmutableList.copyOf(profiles)));
+  }
+
   @Test
   public void testExpiredProfilesAreIgnored() throws Exception {
     ProvisioningProfileStore profiles =
-        ProvisioningProfileStore.fromProvisioningProfiles(
+        createStorefromProvisioningProfiles(
             ImmutableList.of(
                 makeTestMetadata(
                     "AAAAAAAAAA.*", new Date(0), "00000000-0000-0000-0000-000000000000")));
@@ -91,7 +97,7 @@ public class ProvisioningProfileStoreTest {
             "AAAAAAAAAA.*", new Date(Long.MAX_VALUE), "00000000-0000-0000-0000-000000000000");
 
     ProvisioningProfileStore profiles =
-        ProvisioningProfileStore.fromProvisioningProfiles(
+        createStorefromProvisioningProfiles(
             ImmutableList.of(
                 expected,
                 makeTestMetadata(
@@ -144,7 +150,7 @@ public class ProvisioningProfileStoreTest {
             fakeProductionEntitlements);
 
     ProvisioningProfileStore profiles =
-        ProvisioningProfileStore.fromProvisioningProfiles(
+        createStorefromProvisioningProfiles(
             ImmutableList.of(
                 makeTestMetadata(
                     "AAAAAAAAAA.com.facebook.test",
@@ -239,7 +245,7 @@ public class ProvisioningProfileStoreTest {
                 validIdentity.getFingerprint().get(), otherIdentity.getFingerprint().get()));
 
     ProvisioningProfileStore profiles =
-        ProvisioningProfileStore.fromProvisioningProfiles(
+        createStorefromProvisioningProfiles(
             ImmutableList.of(
                 makeTestMetadata(
                     "AAAAAAAAAA.com.facebook.test",
@@ -266,7 +272,7 @@ public class ProvisioningProfileStoreTest {
             "BBBBBBBBBB.*", new Date(Long.MAX_VALUE), "11111111-1111-1111-1111-111111111111");
 
     ProvisioningProfileStore profiles =
-        ProvisioningProfileStore.fromProvisioningProfiles(
+        createStorefromProvisioningProfiles(
             ImmutableList.of(
                 expected,
                 makeTestMetadata(
@@ -289,7 +295,7 @@ public class ProvisioningProfileStoreTest {
             "00000000-0000-0000-0000-000000000000");
 
     ProvisioningProfileStore profiles =
-        ProvisioningProfileStore.fromProvisioningProfiles(
+        createStorefromProvisioningProfiles(
             ImmutableList.of(
                 expected,
                 makeTestMetadata(
@@ -314,7 +320,7 @@ public class ProvisioningProfileStoreTest {
             "BBBBBBBBBB.*", new Date(Long.MAX_VALUE), "00000000-0000-0000-0000-000000000000");
 
     ProvisioningProfileStore profiles =
-        ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of(expected));
+        createStorefromProvisioningProfiles(ImmutableList.of(expected));
 
     Optional<ProvisioningProfileMetadata> actual =
         profiles.getBestProvisioningProfile(
