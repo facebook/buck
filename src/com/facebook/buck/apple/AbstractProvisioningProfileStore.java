@@ -24,6 +24,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,16 +37,18 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /** A collection of provisioning profiles. */
-public class ProvisioningProfileStore implements RuleKeyAppendable {
+@Value.Immutable(builder = false, copy = false)
+@BuckStyleImmutable
+public abstract class AbstractProvisioningProfileStore implements RuleKeyAppendable {
   public static final Optional<ImmutableMap<String, NSObject>> MATCH_ANY_ENTITLEMENT =
       Optional.empty();
   public static final Optional<ImmutableList<CodeSignIdentity>> MATCH_ANY_IDENTITY =
       Optional.empty();
 
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
-  private final Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier;
 
   private static final ImmutableSet<String> FORCE_INCLUDE_ENTITLEMENTS =
       ImmutableSet.of(
@@ -59,13 +62,12 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
           "com.apple.developer.ubiquity-container-identifiers",
           "com.apple.developer.ubiquity-kvstore-identifier");
 
-  public ProvisioningProfileStore(
-      Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier) {
-    this.provisioningProfilesSupplier = provisioningProfilesSupplier;
-  }
+  @Value.Parameter
+  public abstract Supplier<ImmutableList<ProvisioningProfileMetadata>>
+      getProvisioningProfilesSupplier();
 
   public ImmutableList<ProvisioningProfileMetadata> getProvisioningProfiles() {
-    return provisioningProfilesSupplier.get();
+    return getProvisioningProfilesSupplier().get();
   }
 
   public Optional<ProvisioningProfileMetadata> getProvisioningProfileByUUID(
@@ -217,6 +219,6 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
 
   public static ProvisioningProfileStore fromProvisioningProfiles(
       Iterable<ProvisioningProfileMetadata> profiles) {
-    return new ProvisioningProfileStore(Suppliers.ofInstance(ImmutableList.copyOf(profiles)));
+    return ProvisioningProfileStore.of(Suppliers.ofInstance(ImmutableList.copyOf(profiles)));
   }
 }

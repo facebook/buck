@@ -37,7 +37,7 @@ public class ProvisioningProfileStoreFactory {
       final ImmutableList<String> readCommand,
       final Path searchPath) {
     LOG.debug("Provisioning profile search path: " + searchPath);
-    return new ProvisioningProfileStore(
+    return ProvisioningProfileStore.of(
         MoreSuppliers.memoize(
             () -> {
               final Builder<ProvisioningProfileMetadata> profilesBuilder = ImmutableList.builder();
