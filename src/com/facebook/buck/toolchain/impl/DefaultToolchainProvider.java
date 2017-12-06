@@ -24,7 +24,6 @@ import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
-import com.facebook.buck.apple.ProvisioningProfileStoreFactory;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
@@ -36,6 +35,7 @@ import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFac
 import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.CodeSignIdentityStoreFactory;
+import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;

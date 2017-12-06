@@ -17,12 +17,12 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.ProvisioningProfileStoreFactory;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.impl.CodeSignIdentityStoreFactory;
+import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
