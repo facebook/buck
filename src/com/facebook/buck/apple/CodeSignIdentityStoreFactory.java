@@ -35,7 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CodeSignIdentityStoreFactory {
-  private static final Logger LOG = Logger.get(CodeSignIdentityStore.class);
+  private static final Logger LOG = Logger.get(CodeSignIdentityStoreFactory.class);
 
   // Parse the fingerprint and name, but don't match invalid certificates (revoked, expired, etc).
   private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
