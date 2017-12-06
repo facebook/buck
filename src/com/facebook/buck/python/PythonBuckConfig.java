@@ -124,13 +124,18 @@ public class PythonBuckConfig {
     return delegate.getMaybeBuildTarget(SECTION, "path_to_pex");
   }
 
+  public String getPexFlags() {
+    return delegate.getValue(SECTION, "pex_flags").orElse("");
+  }
+
+  public Optional<Tool> getRawPexTool(BuildRuleResolver resolver) {
+    return delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
+  }
+
   public Tool getPexTool(BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
     CommandTool.Builder builder =
         new CommandTool.Builder(getRawPexTool(resolver, ruleKeyConfiguration));
-    for (String flag :
-        Splitter.on(' ')
-            .omitEmptyStrings()
-            .split(delegate.getValue(SECTION, "pex_flags").orElse(""))) {
+    for (String flag : Splitter.on(' ').omitEmptyStrings().split(getPexFlags())) {
       builder.addArg(flag);
     }
 
@@ -139,8 +144,7 @@ public class PythonBuckConfig {
 
   private Tool getRawPexTool(
       BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-    Optional<Tool> executable =
-        delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
+    Optional<Tool> executable = getRawPexTool(resolver);
     if (executable.isPresent()) {
       return executable.get();
     }
