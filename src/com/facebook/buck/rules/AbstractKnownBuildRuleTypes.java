@@ -342,11 +342,7 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider, appleBinaryDescription, appleLibraryDescription, appleConfig);
     builder.addDescriptions(appleBundleDescription);
     builder.addDescriptions(
-        new AppleTestDescription(
-            toolchainProvider,
-            appleConfig,
-            appleLibraryDescription,
-            appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor)));
+        new AppleTestDescription(toolchainProvider, appleConfig, appleLibraryDescription));
     builder.addDescriptions(new CommandAliasDescription(Platform.detect()));
     builder.addDescriptions(cxxBinaryDescription);
     builder.addDescriptions(cxxLibraryDescription);

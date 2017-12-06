@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -83,7 +84,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AppleTestDescription
@@ -116,17 +116,14 @@ public class AppleTestDescription
   private final ToolchainProvider toolchainProvider;
   private final AppleConfig appleConfig;
   private final AppleLibraryDescription appleLibraryDescription;
-  private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
 
   public AppleTestDescription(
       ToolchainProvider toolchainProvider,
       AppleConfig appleConfig,
-      AppleLibraryDescription appleLibraryDescription,
-      Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
+      AppleLibraryDescription appleLibraryDescription) {
     this.toolchainProvider = toolchainProvider;
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
-    this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
   }
 
   @Override
@@ -326,7 +323,9 @@ public class AppleTestDescription
         args.getContacts(),
         args.getLabels(),
         args.getRunTestSeparately(),
-        xcodeDeveloperDirectorySupplier,
+        toolchainProvider.getByName(
+            AppleDeveloperDirectoryForTestsProvider.DEFAULT_NAME,
+            AppleDeveloperDirectoryForTestsProvider.class),
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
         appleConfig.getTestLogLevelEnvironmentVariable(),
         appleConfig.getTestLogLevel(),

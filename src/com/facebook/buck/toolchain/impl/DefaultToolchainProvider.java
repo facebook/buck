@@ -25,12 +25,14 @@ import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
+import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryForTestsProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
@@ -91,6 +93,10 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               AppleDeveloperDirectoryProvider.DEFAULT_NAME,
               AppleDeveloperDirectoryProvider.class,
               AppleDeveloperDirectoryProviderFactory.class),
+          ToolchainDescriptor.of(
+              AppleDeveloperDirectoryForTestsProvider.DEFAULT_NAME,
+              AppleDeveloperDirectoryForTestsProvider.class,
+              AppleDeveloperDirectoryForTestsProviderFactory.class),
           ToolchainDescriptor.of(
               AppleToolchainProvider.DEFAULT_NAME,
               AppleToolchainProvider.class,

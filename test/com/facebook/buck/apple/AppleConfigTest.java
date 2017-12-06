@@ -59,50 +59,6 @@ public class AppleConfigTest {
   }
 
   @Test
-  public void getSpecifiedAppleDeveloperDirectorySupplier() {
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "apple", ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere")))
-            .build();
-    AppleConfig config = buckConfig.getView(AppleConfig.class);
-    Supplier<Optional<Path>> supplier =
-        config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
-    assertNotNull(supplier);
-    assertEquals(Optional.of(Paths.get("/path/to/somewhere")), supplier.get());
-
-    // Developer directory for tests should fall back to developer dir if not separately specified.
-    Supplier<Optional<Path>> supplierForTests =
-        config.getAppleDeveloperDirectorySupplierForTests(new FakeProcessExecutor());
-    assertNotNull(supplierForTests);
-    assertEquals(Optional.of(Paths.get("/path/to/somewhere")), supplierForTests.get());
-  }
-
-  @Test
-  public void getSpecifiedAppleDeveloperDirectorySupplierForTests() {
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "apple",
-                    ImmutableMap.of(
-                        "xcode_developer_dir", "/path/to/somewhere",
-                        "xcode_developer_dir_for_tests", "/path/to/somewhere2")))
-            .build();
-    AppleConfig config = buckConfig.getView(AppleConfig.class);
-    Supplier<Optional<Path>> supplier =
-        config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
-    assertNotNull(supplier);
-    assertEquals(Optional.of(Paths.get("/path/to/somewhere")), supplier.get());
-
-    Supplier<Optional<Path>> supplierForTests =
-        config.getAppleDeveloperDirectorySupplierForTests(new FakeProcessExecutor());
-    assertNotNull(supplierForTests);
-    assertEquals(Optional.of(Paths.get("/path/to/somewhere2")), supplierForTests.get());
-  }
-
-  @Test
   public void getExtraAppleDeveloperDirectories() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

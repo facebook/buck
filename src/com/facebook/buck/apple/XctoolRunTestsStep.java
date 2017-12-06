@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -54,7 +55,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -86,7 +86,7 @@ class XctoolRunTestsStep implements Step {
   private final Optional<Long> xctoolStutterTimeout;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
-  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
+  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
   private final TestSelectorList testSelectorList;
   private final Optional<String> logDirectoryEnvironmentVariable;
   private final Optional<Path> logDirectory;
@@ -161,7 +161,7 @@ class XctoolRunTestsStep implements Step {
       Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
-      Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
+      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
       TestSelectorList testSelectorList,
       boolean waitForDebugger,
       Optional<String> logDirectoryEnvironmentVariable,
@@ -194,7 +194,7 @@ class XctoolRunTestsStep implements Step {
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
-    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
+    this.appleDeveloperDirectoryForTestsProvider = appleDeveloperDirectoryForTestsProvider;
     this.testSelectorList = testSelectorList;
     this.logDirectoryEnvironmentVariable = logDirectoryEnvironmentVariable;
     this.logDirectory = logDirectory;
@@ -212,12 +212,9 @@ class XctoolRunTestsStep implements Step {
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
     Map<String, String> environment = new HashMap<>();
     environment.putAll(context.getEnvironment());
-    Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
-    if (xcodeDeveloperDir.isPresent()) {
-      environment.put("DEVELOPER_DIR", xcodeDeveloperDir.get().toString());
-    } else {
-      throw new RuntimeException("Cannot determine xcode developer dir");
-    }
+    Path xcodeDeveloperDir =
+        appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests();
+    environment.put("DEVELOPER_DIR", xcodeDeveloperDir.toString());
     // xctool will only pass through to the test environment variables whose names
     // start with `XCTOOL_TEST_ENV_`. (It will remove that prefix when passing them
     // to the test.)
