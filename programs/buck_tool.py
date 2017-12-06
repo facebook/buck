@@ -363,6 +363,8 @@ class BuckTool(object):
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                self._reporter.build_id = build_id
+
                 try:
                     repository = self._get_repository()
                     self._reporter.repository = repository
