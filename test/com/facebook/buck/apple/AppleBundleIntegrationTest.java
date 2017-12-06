@@ -938,11 +938,11 @@ public class AppleBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#iphoneos-arm64,no-debug");
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.verify(
-        Paths.get("DemoApp_watchos_output.expected"),
+        Paths.get("DemoApp_output.expected"),
         BuildTargets.getGenPath(
             filesystem,
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
