@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -43,7 +44,7 @@ public class PythonTestBuilder
         PythonTestDescriptionArg.Builder, PythonTestDescriptionArg, PythonTestDescription,
         PythonTest> {
 
-  protected PythonTestBuilder(
+  private PythonTestBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,
@@ -78,14 +79,39 @@ public class PythonTestBuilder
 
   public static PythonTestBuilder create(
       BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
-    return new PythonTestBuilder(
+    return create(
+        target, FakeBuckConfig.builder().build(), new ExecutableFinder(), pythonPlatforms);
+  }
+
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      BuckConfig buckConfig,
+      ExecutableFinder executableFinder,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, executableFinder);
+    return create(target, pythonBuckConfig, pythonPlatforms);
+  }
+
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      PythonBuckConfig buckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
+    return create(
         target,
-        pythonBuckConfig,
+        buckConfig,
         pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      PythonBuckConfig buckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    return new PythonTestBuilder(
+        target, buckConfig, pythonPlatforms, defaultCxxPlatform, cxxPlatforms);
   }
 
   public static PythonTestBuilder create(BuildTarget target) {

@@ -323,20 +323,17 @@ public class PythonTestDescriptionTest {
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
     PythonTestBuilder builder =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
-            new PythonBuckConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "python",
                         ImmutableMap.of(
-                            "python",
-                            ImmutableMap.of(
-                                "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
-                    .build(),
-                new AlwaysFoundExecutableFinder()),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+                            "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
+                .build(),
+            new AlwaysFoundExecutableFinder(),
+            PythonTestUtils.PYTHON_PLATFORMS);
     builder.setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pexExecutorBuilder.build(), builder.build());
@@ -358,20 +355,17 @@ public class PythonTestDescriptionTest {
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
     PythonTestBuilder builder =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
-            new PythonBuckConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "python",
                         ImmutableMap.of(
-                            "python",
-                            ImmutableMap.of(
-                                "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
-                    .build(),
-                new AlwaysFoundExecutableFinder()),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+                            "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
+                .build(),
+            new AlwaysFoundExecutableFinder(),
+            PythonTestUtils.PYTHON_PLATFORMS);
     builder.setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(pexExecutorBuilder.getTarget()));
   }
@@ -388,22 +382,14 @@ public class PythonTestDescriptionTest {
         };
 
     PythonTestBuilder inplaceBinary =
-        new PythonTestBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonTestBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
     assertThat(inplaceBinary.findImplicitDeps(), Matchers.not(Matchers.hasItem(pexBuilder)));
 
     PythonTestBuilder standaloneBinary =
-        new PythonTestBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonTestBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
   }
@@ -564,7 +550,7 @@ public class PythonTestDescriptionTest {
                 cxxPlatforms)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonTestBuilder binaryBuilder =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),
                 PythonTestUtils.PYTHON_CONFIG,
                 PythonTestUtils.PYTHON_PLATFORMS,
