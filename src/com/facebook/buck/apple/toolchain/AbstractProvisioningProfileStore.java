@@ -215,6 +215,10 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
     sink.setReflectively("provisioning-profile-store", getProvisioningProfiles());
   }
 
+  public static ProvisioningProfileStore empty() {
+    return ProvisioningProfileStore.of(Suppliers.ofInstance(ImmutableList.of()));
+  }
+
   public static ProvisioningProfileStore fromProvisioningProfiles(
       Iterable<ProvisioningProfileMetadata> profiles) {
     return ProvisioningProfileStore.of(Suppliers.ofInstance(ImmutableList.copyOf(profiles)));
