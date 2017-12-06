@@ -89,24 +89,19 @@ public class BuildTargetsQueue {
       seenFinishedNodes.add(node);
       EnqueuedTarget target = Preconditions.checkNotNull(allEnqueuedTargets.get(node));
       ImmutableList<String> dependents = target.getDependentTargets();
-      LOG.info(String.format("Complete node [%s] has [%s] dependents", node, dependents.size()));
+      LOG.debug(String.format("Complete node [%s] has [%s] dependents", node, dependents.size()));
       for (String dependent : dependents) {
         EnqueuedTarget dep = Preconditions.checkNotNull(allEnqueuedTargets.get(dependent));
         dep.decrementUnsatisfiedDeps(node);
 
-        LOG.info(
-            String.format(
-                "Dependent [%s] now has [%s] unsatisfied dependencies",
-                dep.getBuildTarget(), dep.unsatisfiedDependencies));
-
         if (dep.areAllDependenciesResolved() && !dep.partOfBuildingUnitOfWork) {
-          LOG.info(String.format("Dependent [%s] is ready to be built.", dep.getBuildTarget()));
+          LOG.debug(String.format("Dependent [%s] is ready to be built.", dep.getBuildTarget()));
           zeroDependencyTargets.add(dep);
         } else if (dep.areAllDependenciesResolved()) {
           // If a child node made a parent node ready to build, but that parent node is already
           // part of a work unit, then no need to add it to zero dependency list (it is already
           // being build by the minion that just completed the child).
-          LOG.info(
+          LOG.debug(
               String.format(
                   "Dependent [%s] is ready, but already build as part of work unit.",
                   dep.getBuildTarget()));
@@ -229,9 +224,16 @@ public class BuildTargetsQueue {
         throw new RuntimeException(errorMessage);
       }
 
-      LOG.debug(
-          String.format(
-              "Removing [%s] from remaining dependencies for [%s]", dependency, buildTarget));
+      if (LOG.isVerboseEnabled()) {
+        LOG.verbose(
+            String.format(
+                ("Removing [%s] from remaining dependencies for target [%s],"
+                    + " which now has [%s] unsatisfied dependencies."),
+                dependency,
+                buildTarget,
+                unsatisfiedDependencies));
+      }
+
       dependenciesRemaining.remove(dependency);
       --unsatisfiedDependencies;
       Preconditions.checkArgument(
