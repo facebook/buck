@@ -48,7 +48,7 @@ public class CodeSignIdentityStoreFactory {
    */
   public static CodeSignIdentityStore fromSystem(
       final ProcessExecutor processExecutor, ImmutableList<String> command) {
-    return new CodeSignIdentityStore(
+    return CodeSignIdentityStore.of(
         MoreSuppliers.memoize(
             () -> {
               ProcessExecutorParams processExecutorParams =

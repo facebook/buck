@@ -307,6 +307,6 @@ public class FakeAppleRuleDescriptions {
   }
 
   private static CodeSignIdentityStore fromIdentities(Iterable<CodeSignIdentity> identities) {
-    return new CodeSignIdentityStore(Suppliers.ofInstance(ImmutableList.copyOf(identities)));
+    return CodeSignIdentityStore.of(Suppliers.ofInstance(ImmutableList.copyOf(identities)));
   }
 }
