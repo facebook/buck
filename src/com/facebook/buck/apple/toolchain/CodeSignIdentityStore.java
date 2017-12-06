@@ -28,11 +28,6 @@ public class CodeSignIdentityStore {
     this.identitiesSupplier = identitiesSupplier;
   }
 
-  /** Get all the identities in the store. */
-  public ImmutableList<CodeSignIdentity> getIdentities() {
-    return identitiesSupplier.get();
-  }
-
   public Supplier<ImmutableList<CodeSignIdentity>> getIdentitiesSupplier() {
     return identitiesSupplier;
   }

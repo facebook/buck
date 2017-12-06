@@ -63,7 +63,7 @@ public class CodeSignIdentityStoreTest {
                     CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
                 .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
                 .build());
-    assertThat(store.getIdentities(), equalTo(expected));
+    assertThat(store.getIdentitiesSupplier().get(), equalTo(expected));
   }
 
   @Test
@@ -85,6 +85,6 @@ public class CodeSignIdentityStoreTest {
                 .setSubjectCommonName("iPhone Developer: Fake")
                 .build());
 
-    assertThat(store.getIdentities(), is(equalTo(expected)));
+    assertThat(store.getIdentitiesSupplier().get(), is(equalTo(expected)));
   }
 }

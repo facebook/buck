@@ -41,7 +41,8 @@ public class FakeAppleDeveloperEnvironment {
   private static final int numCodeSigningIdentities =
       CodeSignIdentityStoreFactory.fromSystem(
               new DefaultProcessExecutor(new TestConsole()), AppleConfig.DEFAULT_IDENTITIES_COMMAND)
-          .getIdentities()
+          .getIdentitiesSupplier()
+          .get()
           .size();
 
   private static final boolean hasWildcardProvisioningProfile =
