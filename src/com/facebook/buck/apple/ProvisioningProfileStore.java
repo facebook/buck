@@ -43,8 +43,6 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
       Optional.empty();
   public static final Optional<ImmutableList<CodeSignIdentity>> MATCH_ANY_IDENTITY =
       Optional.empty();
-  public static final ImmutableList<String> DEFAULT_READ_COMMAND =
-      ImmutableList.of("openssl", "smime", "-inform", "der", "-verify", "-noverify", "-in");
 
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
   private final Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier;

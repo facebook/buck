@@ -50,6 +50,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public static final ImmutableList<String> DEFAULT_IDENTITIES_COMMAND =
       ImmutableList.of("security", "find-identity", "-v", "-p", "codesigning");
+  public static final ImmutableList<String> DEFAULT_READ_COMMAND =
+      ImmutableList.of("openssl", "smime", "-inform", "der", "-verify", "-noverify", "-in");
 
   private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
   private static final String DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE = "FB_LOG_LEVEL";
@@ -325,7 +327,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getProvisioningProfileReadCommand() {
     Optional<String> value = delegate.getValue(APPLE_SECTION, "provisioning_profile_read_command");
     if (!value.isPresent()) {
-      return ProvisioningProfileStore.DEFAULT_READ_COMMAND;
+      return DEFAULT_READ_COMMAND;
     }
     return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }
