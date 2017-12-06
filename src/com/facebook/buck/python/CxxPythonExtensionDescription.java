@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -113,20 +114,16 @@ public class CxxPythonExtensionDescription
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public CxxPythonExtensionDescription(
-      ToolchainProvider toolchainProvider,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getPythonPlatforms(), cxxPlatforms, LIBRARY_TYPE));
+    return Optional.of(ImmutableSet.of(getPythonPlatforms(), getCxxPlatforms(), LIBRARY_TYPE));
   }
 
   @Override
@@ -412,6 +409,8 @@ public class CxxPythonExtensionDescription
     final Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
     if (type.isPresent()) {
 
+      FlavorDomain<CxxPlatform> cxxPlatforms = getCxxPlatforms();
+
       // If we *are* building a specific type of this lib, call into the type specific rule builder
       // methods.
       switch (type.get()) {
@@ -554,7 +553,7 @@ public class CxxPythonExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatforms().getValues()));
 
     for (PythonPlatform pythonPlatform : getPythonPlatforms().getValues()) {
       Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);
@@ -565,6 +564,12 @@ public class CxxPythonExtensionDescription
     return toolchainProvider
         .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
         .getPythonPlatforms();
+  }
+
+  private FlavorDomain<CxxPlatform> getCxxPlatforms() {
+    return toolchainProvider
+        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getCxxPlatforms();
   }
 
   @BuckStyleImmutable
