@@ -1455,12 +1455,8 @@ public class ProjectGeneratorTest {
 
       // Check the header map
       assertThat(
-          headerMap.lookup(key),
-          equalTo(
-              Paths.get("../../")
-                  .resolve(projectCell.getRoot().getFileName())
-                  .resolve(link)
-                  .toString()));
+          projectFilesystem.getBuckPaths().getConfiguredBuckOut().resolve(headerMap.lookup(key)),
+          equalTo(link));
     }
   }
 
