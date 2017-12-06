@@ -74,7 +74,7 @@ if __name__ == "__main__":
     try:
         reporter.report(exit_code)
     except Exception as e:
-        logging.warning(str(e))
+        logging.debug(str(e))
 
     # execute 'buck run' target
     if fn_exec is not None:
