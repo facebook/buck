@@ -66,6 +66,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -132,7 +133,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final ProvisioningProfileStore provisioningProfileStore;
 
-  @AddToRuleKey private final CodeSignIdentityStore codeSignIdentityStore;
+  @AddToRuleKey private final Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
 
   @AddToRuleKey private final Optional<Tool> codesignAllocatePath;
 
@@ -241,11 +242,11 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     if (needCodeSign() && !adHocCodeSignIsSufficient()) {
       this.provisioningProfileStore = provisioningProfileStore;
-      this.codeSignIdentityStore = codeSignIdentityStore;
+      this.codeSignIdentitiesSupplier = codeSignIdentityStore.getIdentitiesSupplier();
     } else {
       this.provisioningProfileStore =
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of());
-      this.codeSignIdentityStore = CodeSignIdentityStore.fromIdentities(ImmutableList.of());
+      this.codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.codesign = appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver);
@@ -571,7 +572,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 dryRunCodeSigning
                     ? bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE)
                     : signingEntitlementsTempPath.get(),
-                codeSignIdentityStore,
+                codeSignIdentitiesSupplier,
                 dryRunCodeSigning ? Optional.of(dryRunResultPath) : Optional.empty());
         stepsBuilder.add(provisioningProfileCopyStep);
 
@@ -596,9 +597,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 // No constraints, pick an arbitrary identity.
                 // If no identities are available, use an ad-hoc identity.
                 return Iterables.getFirst(
-                    codeSignIdentityStore.getIdentities(), CodeSignIdentity.AD_HOC);
+                    codeSignIdentitiesSupplier.get(), CodeSignIdentity.AD_HOC);
               }
-              for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
+              for (CodeSignIdentity identity : codeSignIdentitiesSupplier.get()) {
                 if (identity.getFingerprint().isPresent()
                     && fingerprints.contains(identity.getFingerprint().get())) {
                   return identity;

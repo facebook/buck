@@ -16,16 +16,14 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Supplier;
 
 /** A collection of code sign identities. */
-public class CodeSignIdentityStore implements AddsToRuleKey {
+public class CodeSignIdentityStore {
 
-  @AddToRuleKey private final Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier;
+  private final Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier;
 
   public CodeSignIdentityStore(Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier) {
     this.identitiesSupplier = identitiesSupplier;
@@ -34,6 +32,10 @@ public class CodeSignIdentityStore implements AddsToRuleKey {
   /** Get all the identities in the store. */
   public ImmutableList<CodeSignIdentity> getIdentities() {
     return identitiesSupplier.get();
+  }
+
+  public Supplier<ImmutableList<CodeSignIdentity>> getIdentitiesSupplier() {
+    return identitiesSupplier;
   }
 
   public static CodeSignIdentityStore fromIdentities(Iterable<CodeSignIdentity> identities) {

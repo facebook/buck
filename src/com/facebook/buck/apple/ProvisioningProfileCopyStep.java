@@ -22,7 +22,6 @@ import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
-import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -39,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -65,7 +65,7 @@ class ProvisioningProfileCopyStep implements Step {
   private final Path provisioningProfileDestination;
   private final Path signingEntitlementsTempPath;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final CodeSignIdentityStore codeSignIdentityStore;
+  private final Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
   private final Path infoPlist;
   private final SettableFuture<Optional<ProvisioningProfileMetadata>>
       selectedProvisioningProfileFuture = SettableFuture.create();
@@ -100,7 +100,7 @@ class ProvisioningProfileCopyStep implements Step {
       ProvisioningProfileStore provisioningProfileStore,
       Path provisioningProfileDestination,
       Path signingEntitlementsTempPath,
-      CodeSignIdentityStore codeSignIdentityStore,
+      Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier,
       Optional<Path> dryRunResultsPath) {
     this.filesystem = filesystem;
     this.provisioningProfileDestination = provisioningProfileDestination;
@@ -109,7 +109,7 @@ class ProvisioningProfileCopyStep implements Step {
     this.provisioningProfileUUID = provisioningProfileUUID;
     this.entitlementsPlist = entitlementsPlist;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.codeSignIdentityStore = codeSignIdentityStore;
+    this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
     this.signingEntitlementsTempPath = signingEntitlementsTempPath;
     this.dryRunResultsPath = dryRunResultsPath;
   }
@@ -139,8 +139,8 @@ class ProvisioningProfileCopyStep implements Step {
     }
 
     final Optional<ImmutableList<CodeSignIdentity>> identities;
-    if (!codeSignIdentityStore.getIdentities().isEmpty()) {
-      identities = Optional.of(codeSignIdentityStore.getIdentities());
+    if (!codeSignIdentitiesSupplier.get().isEmpty()) {
+      identities = Optional.of(codeSignIdentitiesSupplier.get());
     } else {
       identities = ProvisioningProfileStore.MATCH_ANY_IDENTITY;
     }
