@@ -42,6 +42,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
@@ -232,6 +233,32 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile, Arrays.asList("prebuilt_jar(name=package_name(), binary_jar='foo.jar')"));
     Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("pkg"));
+  }
+
+  @Test
+  public void canUsePrintInBuildFile() throws Exception {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(eventCollector);
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("print('hello world')"));
+    parser.getAll(buildFile, new AtomicLong());
+    Event printEvent = eventCollector.iterator().next();
+    assertThat(printEvent.getMessage(), equalTo("hello world"));
+    assertThat(printEvent.getKind(), equalTo(EventKind.DEBUG));
+  }
+
+  @Test
+  public void canUsePrintInExtensionFile() throws Exception {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(eventCollector);
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("load('//:ext.bzl', 'ext')"));
+    Path extensionFile = projectFilesystem.resolve("ext.bzl");
+    Files.write(extensionFile, Arrays.asList("ext = 'hello'", "print('hello world')"));
+    parser.getAll(buildFile, new AtomicLong());
+    Event printEvent = eventCollector.iterator().next();
+    assertThat(printEvent.getMessage(), equalTo("hello world"));
+    assertThat(printEvent.getKind(), equalTo(EventKind.DEBUG));
   }
 
   @Test

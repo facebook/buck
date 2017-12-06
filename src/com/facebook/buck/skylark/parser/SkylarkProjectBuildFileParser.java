@@ -242,6 +242,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .setGlobals(buckGlobalsSupplier.get())
             .setPhase(Environment.Phase.LOADING)
             .useDefaultSemantics()
+            .setEventHandler(eventHandler)
             .build();
     String basePath = getBasePath(buildFile);
     env.setupDynamic(Runtime.PKG_NAME, basePath);
@@ -309,7 +310,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             "Cannot parse extension file " + skylarkImport.getImportString());
       }
       Environment.Builder envBuilder =
-          Environment.builder(mutability).setGlobals(buckGlobalsSupplier.get());
+          Environment.builder(mutability)
+              .setEventHandler(eventHandler)
+              .setGlobals(buckGlobalsSupplier.get());
       if (!extensionAst.getImports().isEmpty()) {
         dependencies = loadExtensions(extensionAst.getImports());
         envBuilder.setImportedExtensions(toImportMap(dependencies));
