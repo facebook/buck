@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import org.junit.Test;
 
-public class CodeSignIdentityStoreTest {
+public class CodeSignIdentityStoreFactoryTest {
   @Test
   public void testInvalidIdentitiesAreIgnored() throws Exception {
     ProcessExecutorParams processExecutorParams =
