@@ -72,6 +72,10 @@ public abstract class AbstractGoToolchain implements Toolchain {
     return getGoTool("linker", "link", "linker_flags");
   }
 
+  public Tool getCover() {
+    return getGoTool("cover", "cover", "");
+  }
+
   private Tool getGoTool(
       final String configName, final String toolName, final String extraFlagsConfigKey) {
     Path toolPath = getGoBuckConfig().getPath(configName).orElse(getToolDir().resolve(toolName));

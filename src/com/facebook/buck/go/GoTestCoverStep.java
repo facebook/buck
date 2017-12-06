@@ -22,36 +22,47 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 
-public class GoTestMainStep extends ShellStep {
+public class GoTestCoverStep extends ShellStep {
+
+  enum Mode {
+    SET("set"),
+    COUNT("count"),
+    ATOMIC("atomic"),
+    NONE("");
+
+    private final String coverMode;
+
+    Mode(String coverMode) {
+      this.coverMode = coverMode;
+    }
+
+    String getMode() {
+      return coverMode;
+    }
+  }
+
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> generatorCommandPrefix;
-  private final GoTestCoverStep.Mode coverageMode;
-  private final ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables;
-  private final Path packageName;
-  private final ImmutableList<Path> testFiles;
-  private final Path output;
+  private final Mode coverageMode;
+  private final Path sourceFile;
+  private final Path targetFile;
 
-  public GoTestMainStep(
+  public GoTestCoverStep(
       BuildTarget buildTarget,
       Path workingDirectory,
+      Path sourceFile,
+      Path targetFile,
       ImmutableMap<String, String> environment,
       ImmutableList<String> generatorCommandPrefix,
-      GoTestCoverStep.Mode coverageMode,
-      ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables,
-      Path packageName,
-      ImmutableList<Path> testFiles,
-      Path output) {
+      Mode coverageMode) {
     super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
     this.coverageMode = coverageMode;
-    this.coverageVariables = coverageVariables;
-    this.packageName = packageName;
-    this.testFiles = testFiles;
-    this.output = output;
+    this.sourceFile = sourceFile;
+    this.targetFile = targetFile;
   }
 
   @Override
@@ -59,38 +70,10 @@ public class GoTestMainStep extends ShellStep {
     ImmutableList.Builder<String> command =
         ImmutableList.<String>builder()
             .addAll(generatorCommandPrefix)
-            .add("--output", output.toString())
-            .add("--import-path", packageName.toString())
-            .add("--cover-mode", coverageMode.getMode());
-
-    for (Map.Entry<Path, ImmutableMap<String, Path>> pkg : coverageVariables.entrySet()) {
-      if (pkg.getValue().isEmpty()) {
-        continue;
-      }
-
-      StringBuilder pkgFlag = new StringBuilder();
-      pkgFlag.append(pkg.getKey().toString());
-      pkgFlag.append(':');
-
-      boolean first = true;
-      for (Map.Entry<String, Path> pkgVars : pkg.getValue().entrySet()) {
-        if (!first) {
-          pkgFlag.append(',');
-        }
-        first = false;
-
-        pkgFlag.append(pkgVars.getKey());
-        pkgFlag.append('=');
-        pkgFlag.append(pkgVars.getValue().toString());
-      }
-
-      command.add("--cover-pkgs", pkgFlag.toString());
-    }
-
-    for (Path source : testFiles) {
-      command.add(source.toString());
-    }
-
+            .add("-mode", coverageMode.getMode())
+            .add("-var", "Var_" + targetFile.getFileName().toString().replace(".go", ""))
+            .add("-o", targetFile.toString())
+            .add(sourceFile.toString());
     return command.build();
   }
 
@@ -101,6 +84,6 @@ public class GoTestMainStep extends ShellStep {
 
   @Override
   public String getShortName() {
-    return "go test main gen";
+    return "go test cover gen";
   }
 }
