@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -59,15 +60,12 @@ public class PythonLibraryDescription
         MetadataProvidingDescription<PythonLibraryDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   private static final FlavorDomain<MetadataType> METADATA_TYPE =
       FlavorDomain.from("Python Metadata Type", MetadataType.class);
 
-  public PythonLibraryDescription(
-      ToolchainProvider toolchainProvider, FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public PythonLibraryDescription(ToolchainProvider toolchainProvider) {
     this.toolchainProvider = toolchainProvider;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
@@ -101,6 +99,11 @@ public class PythonLibraryDescription
     if (!optionalType.isPresent()) {
       return Optional.empty();
     }
+
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        toolchainProvider
+            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+            .getCxxPlatforms();
 
     Map.Entry<Flavor, MetadataType> type = optionalType.get();
 

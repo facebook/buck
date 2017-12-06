@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.toolchain.PythonPlatform;
@@ -45,8 +46,10 @@ public class PythonLibraryBuilder
                 .withToolchain(
                     PythonPlatformsProvider.DEFAULT_NAME,
                     PythonPlatformsProvider.of(pythonPlatforms))
-                .build(),
-            cxxPlatforms),
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM, cxxPlatforms))
+                .build()),
         target);
   }
 

@@ -406,7 +406,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new PrebuiltPythonLibraryDescription());
     builder.addDescriptions(pythonBinaryDescription);
     PythonLibraryDescription pythonLibraryDescription =
-        new PythonLibraryDescription(toolchainProvider, cxxPlatforms);
+        new PythonLibraryDescription(toolchainProvider);
     builder.addDescriptions(pythonLibraryDescription);
     builder.addDescriptions(
         new PythonTestDescription(
