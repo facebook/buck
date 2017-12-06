@@ -213,12 +213,7 @@ abstract class AbstractKnownBuildRuleTypes {
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, executableFinder);
     PythonBinaryDescription pythonBinaryDescription =
         new PythonBinaryDescription(
-            toolchainProvider,
-            ruleKeyConfiguration,
-            pyConfig,
-            cxxBuckConfig,
-            defaultCxxPlatform,
-            cxxPlatforms);
+            toolchainProvider, ruleKeyConfiguration, pyConfig, cxxBuckConfig);
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 

@@ -64,12 +64,13 @@ public class PythonTestBuilder
                     .withToolchain(
                         PythonPlatformsProvider.DEFAULT_NAME,
                         PythonPlatformsProvider.of(pythonPlatforms))
+                    .withToolchain(
+                        CxxPlatformsProvider.DEFAULT_NAME,
+                        CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
                     .build(),
                 TestRuleKeyConfigurationFactory.create(),
                 pythonBuckConfig,
-                CxxPlatformUtils.DEFAULT_CONFIG,
-                defaultCxxPlatform,
-                cxxPlatforms),
+                CxxPlatformUtils.DEFAULT_CONFIG),
             pythonBuckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG),
         target);
