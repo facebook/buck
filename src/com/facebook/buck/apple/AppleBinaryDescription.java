@@ -98,7 +98,6 @@ public class AppleBinaryDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxBinaryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
-  private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
 
@@ -106,14 +105,12 @@ public class AppleBinaryDescription
       ToolchainProvider toolchainProvider,
       CxxBinaryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
-      CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
     this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
     // TODO(T22135033): Make apple_binary not use a Swift delegate
     this.swiftDelegate = Optional.of(swiftDelegate);
-    this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
   }
@@ -353,7 +350,8 @@ public class AppleBinaryDescription
         projectFilesystem,
         params,
         resolver,
-        codeSignIdentityStore,
+        toolchainProvider.getByName(
+            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
         provisioningProfileStore,
         binaryTarget,
         Either.ofLeft(AppleBundleExtension.APP),

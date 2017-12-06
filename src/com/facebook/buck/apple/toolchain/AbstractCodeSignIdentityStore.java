@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.toolchain;
 
+import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Supplier;
@@ -24,7 +25,9 @@ import org.immutables.value.Value;
 /** A collection of code sign identities. */
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public interface AbstractCodeSignIdentityStore {
+public interface AbstractCodeSignIdentityStore extends Toolchain {
+  String DEFAULT_NAME = "apple-code-sign-identities";
+
   @Value.Parameter
   Supplier<ImmutableList<CodeSignIdentity>> getIdentitiesSupplier();
 }

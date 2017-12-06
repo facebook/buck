@@ -19,6 +19,9 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
@@ -34,7 +37,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CodeSignIdentityStoreFactory {
+public class CodeSignIdentityStoreFactory implements ToolchainFactory<CodeSignIdentityStore> {
   private static final Logger LOG = Logger.get(CodeSignIdentityStoreFactory.class);
 
   // Parse the fingerprint and name, but don't match invalid certificates (revoked, expired, etc).
@@ -105,5 +108,14 @@ public class CodeSignIdentityStoreFactory {
               }
               return allValidIdentities;
             }));
+  }
+
+  @Override
+  public Optional<CodeSignIdentityStore> createToolchain(
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+    AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
+    return Optional.of(
+        CodeSignIdentityStoreFactory.fromSystem(
+            context.getProcessExecutor(), appleConfig.getCodeSignIdentitiesCommand()));
   }
 }

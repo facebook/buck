@@ -178,7 +178,6 @@ public class AppleLibraryDescription
   private final CxxLibraryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final Flavor defaultCxxFlavor;
-  private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -188,7 +187,6 @@ public class AppleLibraryDescription
       CxxLibraryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
       Flavor defaultCxxFlavor,
-      CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
@@ -197,7 +195,6 @@ public class AppleLibraryDescription
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
     this.defaultCxxFlavor = defaultCxxFlavor;
-    this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
@@ -392,7 +389,8 @@ public class AppleLibraryDescription
         projectFilesystem,
         params,
         resolver,
-        codeSignIdentityStore,
+        toolchainProvider.getByName(
+            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
         provisioningProfileStore,
         buildTarget,
         Either.ofLeft(AppleBundleExtension.FRAMEWORK),

@@ -12,6 +12,7 @@ java_library(
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
+        "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/apple/toolchain/impl:impl",
         "//src/com/facebook/buck/file/downloader/impl:impl",
         "//src/com/facebook/buck/io:executable-finder",
