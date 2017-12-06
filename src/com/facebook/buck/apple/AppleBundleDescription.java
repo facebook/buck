@@ -76,7 +76,6 @@ public class AppleBundleDescription
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final Flavor defaultCxxFlavor;
-  private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
 
   public AppleBundleDescription(
@@ -85,14 +84,12 @@ public class AppleBundleDescription
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Flavor defaultCxxFlavor,
-      ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
     this.toolchainProvider = toolchainProvider;
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.defaultCxxFlavor = defaultCxxFlavor;
-    this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
   }
 
@@ -166,7 +163,8 @@ public class AppleBundleDescription
         resolver,
         toolchainProvider.getByName(
             CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
-        provisioningProfileStore,
+        toolchainProvider.getByName(
+            ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         args.getBinary(),
         args.getExtension(),
         args.getProductName(),

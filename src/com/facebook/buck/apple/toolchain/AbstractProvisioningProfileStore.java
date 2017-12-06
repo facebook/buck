@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -40,11 +41,13 @@ import org.immutables.value.Value;
 /** A collection of provisioning profiles. */
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public abstract class AbstractProvisioningProfileStore implements RuleKeyAppendable {
+public abstract class AbstractProvisioningProfileStore implements RuleKeyAppendable, Toolchain {
   public static final Optional<ImmutableMap<String, NSObject>> MATCH_ANY_ENTITLEMENT =
       Optional.empty();
   public static final Optional<ImmutableList<CodeSignIdentity>> MATCH_ANY_IDENTITY =
       Optional.empty();
+
+  public static final String DEFAULT_NAME = "apple-provisioning-profiles";
 
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
 

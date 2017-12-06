@@ -235,7 +235,6 @@ public class FakeAppleRuleDescriptions {
               DEFAULT_APPLE_FLAVOR_DOMAIN),
           SWIFT_LIBRARY_DESCRIPTION,
           DEFAULT_PLATFORM.getFlavor(),
-          ProvisioningProfileStore.empty(),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
 
@@ -249,7 +248,6 @@ public class FakeAppleRuleDescriptions {
               DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
               DEFAULT_APPLE_FLAVOR_DOMAIN),
           SWIFT_LIBRARY_DESCRIPTION,
-          ProvisioningProfileStore.empty(),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
   /** A fake apple_bundle description with an iOS platform for use in tests. */
@@ -260,7 +258,6 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM.getFlavor(),
-          ProvisioningProfileStore.empty(),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
   /** A fake apple_test description with an iOS platform for use in tests. */
@@ -271,7 +268,6 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM.getFlavor(),
-          ProvisioningProfileStore.empty(),
           Suppliers.ofInstance(Optional.empty()));
 
   private static ToolchainProvider createTestToolchainProviderForSwiftPlatform(
@@ -291,6 +287,7 @@ public class FakeAppleRuleDescriptions {
         .withToolchain(
             CodeSignIdentityStore.DEFAULT_NAME,
             fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)))
+        .withToolchain(ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.empty())
         .build();
   }
 
@@ -306,6 +303,7 @@ public class FakeAppleRuleDescriptions {
         .withToolchain(
             CodeSignIdentityStore.DEFAULT_NAME,
             fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)))
+        .withToolchain(ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.empty())
         .build();
   }
 

@@ -43,9 +43,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
-import com.facebook.buck.apple.ProvisioningProfileStoreFactory;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
-import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxGenruleDescription;
@@ -255,11 +253,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(swiftLibraryDescription);
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
-    ProvisioningProfileStore provisioningProfileStore =
-        ProvisioningProfileStoreFactory.fromSearchPath(
-            processExecutor,
-            appleConfig.getProvisioningProfileReadCommand(),
-            appleConfig.getProvisioningProfileSearchPath());
 
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
@@ -267,7 +260,6 @@ abstract class AbstractKnownBuildRuleTypes {
             cxxLibraryDescription,
             swiftLibraryDescription,
             defaultCxxPlatform.getFlavor(),
-            provisioningProfileStore,
             appleConfig,
             swiftBuckConfig);
     builder.addDescriptions(appleLibraryDescription);
@@ -277,11 +269,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     AppleBinaryDescription appleBinaryDescription =
         new AppleBinaryDescription(
-            toolchainProvider,
-            cxxBinaryDescription,
-            swiftLibraryDescription,
-            provisioningProfileStore,
-            appleConfig);
+            toolchainProvider, cxxBinaryDescription, swiftLibraryDescription, appleConfig);
     builder.addDescriptions(appleBinaryDescription);
 
     if (javaConfig.getDxThreadCount().isPresent()) {
@@ -361,7 +349,6 @@ abstract class AbstractKnownBuildRuleTypes {
             appleLibraryDescription,
             cxxPlatforms,
             defaultCxxPlatform.getFlavor(),
-            provisioningProfileStore,
             appleConfig);
     builder.addDescriptions(appleBundleDescription);
     builder.addDescriptions(
@@ -371,7 +358,6 @@ abstract class AbstractKnownBuildRuleTypes {
             appleLibraryDescription,
             cxxPlatforms,
             defaultCxxPlatform.getFlavor(),
-            provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor)));
     builder.addDescriptions(new CommandAliasDescription(Platform.detect()));
     builder.addDescriptions(cxxBinaryDescription);

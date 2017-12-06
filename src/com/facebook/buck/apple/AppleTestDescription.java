@@ -117,7 +117,6 @@ public class AppleTestDescription
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final Flavor defaultCxxFlavor;
-  private final ProvisioningProfileStore provisioningProfileStore;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
 
   public AppleTestDescription(
@@ -126,14 +125,12 @@ public class AppleTestDescription
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Flavor defaultCxxFlavor,
-      ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
     this.toolchainProvider = toolchainProvider;
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.defaultCxxFlavor = defaultCxxFlavor;
-    this.provisioningProfileStore = provisioningProfileStore;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
   }
 
@@ -293,7 +290,8 @@ public class AppleTestDescription
             resolver,
             toolchainProvider.getByName(
                 CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
-            provisioningProfileStore,
+            toolchainProvider.getByName(
+                ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
             library.getBuildTarget(),
             args.getExtension(),
             Optional.empty(),

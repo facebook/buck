@@ -24,11 +24,13 @@ import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
+import com.facebook.buck.apple.ProvisioningProfileStoreFactory;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
@@ -103,6 +105,10 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               CodeSignIdentityStore.DEFAULT_NAME,
               CodeSignIdentityStore.class,
               CodeSignIdentityStoreFactory.class),
+          ToolchainDescriptor.of(
+              ProvisioningProfileStore.DEFAULT_NAME,
+              ProvisioningProfileStore.class,
+              ProvisioningProfileStoreFactory.class),
           ToolchainDescriptor.of(
               SwiftPlatformsProvider.DEFAULT_NAME,
               SwiftPlatformsProvider.class,

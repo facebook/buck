@@ -19,6 +19,9 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
@@ -30,9 +33,22 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
 
-public class ProvisioningProfileStoreFactory {
+public class ProvisioningProfileStoreFactory implements ToolchainFactory<ProvisioningProfileStore> {
   private static final Logger LOG = Logger.get(ProvisioningProfileStoreFactory.class);
+
+  @Override
+  public Optional<ProvisioningProfileStore> createToolchain(
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+    AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
+    ProvisioningProfileStore provisioningProfileStore =
+        ProvisioningProfileStoreFactory.fromSearchPath(
+            context.getProcessExecutor(),
+            appleConfig.getProvisioningProfileReadCommand(),
+            appleConfig.getProvisioningProfileSearchPath());
+    return Optional.of(provisioningProfileStore);
+  }
 
   public static ProvisioningProfileStore fromSearchPath(
       final ProcessExecutor executor,
