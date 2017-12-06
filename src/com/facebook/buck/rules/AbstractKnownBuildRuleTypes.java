@@ -410,12 +410,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(pythonLibraryDescription);
     builder.addDescriptions(
         new PythonTestDescription(
-            toolchainProvider,
-            pythonBinaryDescription,
-            pyConfig,
-            cxxBuckConfig,
-            defaultCxxPlatform,
-            cxxPlatforms));
+            toolchainProvider, pythonBinaryDescription, pyConfig, cxxBuckConfig));
     builder.addDescriptions(new RemoteFileDescription(toolchainProvider));
     builder.addDescriptions(
         new RobolectricTestDescription(

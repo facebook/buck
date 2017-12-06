@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -54,6 +55,9 @@ public class PythonTestBuilder
                 .withToolchain(
                     PythonPlatformsProvider.DEFAULT_NAME,
                     PythonPlatformsProvider.of(pythonPlatforms))
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
                 .build(),
             new PythonBinaryDescription(
                 new ToolchainProviderBuilder()
@@ -67,9 +71,7 @@ public class PythonTestBuilder
                 defaultCxxPlatform,
                 cxxPlatforms),
             pythonBuckConfig,
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            defaultCxxPlatform,
-            cxxPlatforms),
+            CxxPlatformUtils.DEFAULT_CONFIG),
         target);
   }
 
