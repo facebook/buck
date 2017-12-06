@@ -1392,12 +1392,7 @@ public class ProjectGenerator {
       if (isFocusedOnTarget) {
         ImmutableSet<Path> recursiveHeaderSearchPaths =
             collectRecursiveHeaderSearchPaths(targetNode);
-        ImmutableSet<Path> headerMapBases =
-            recursiveHeaderSearchPaths.isEmpty()
-                ? ImmutableSet.of()
-                : ImmutableSet.of(
-                    pathRelativizer.outputDirToRootRelative(
-                        buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
+        ImmutableSet<Path> headerMapBases = collectRecursiveHeaderMapBases(targetNode);
 
         ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
         appendConfigsBuilder.putAll(
@@ -2725,6 +2720,28 @@ public class ProjectGenerator {
       builder.add(halideHeaderPath);
     }
 
+    return builder.build();
+  }
+
+  private ImmutableSet<Path> collectRecursiveHeaderMapBases(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    if (shouldMergeHeaderMaps()) {
+      return ImmutableSet.of();
+    } else {
+      visitRecursiveHeaderSymlinkTrees(
+          targetNode,
+          (nativeNode, headerVisibility) -> {
+            builder.add(
+                targetNode
+                    .getFilesystem()
+                    .resolve(outputDirectory)
+                    .relativize(
+                        nativeNode
+                            .getFilesystem()
+                            .resolve(nativeNode.getFilesystem().getBuckPaths().getBuckOut())));
+          });
+    }
     return builder.build();
   }
 

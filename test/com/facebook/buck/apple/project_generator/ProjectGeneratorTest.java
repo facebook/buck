@@ -5074,8 +5074,7 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + "../buck-out/gen/_p/YAYFR3hXIb-priv/.hmap "
-            + "../buck-out/gen/_p/pub-hmap/.hmap "
-            + "../buck-out",
+            + "../buck-out/gen/_p/pub-hmap/.hmap",
         buildSettings2.get("HEADER_SEARCH_PATHS"));
 
     ProjectGenerator projectGeneratorLib1 =
@@ -5130,8 +5129,7 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap "
-            + "../buck-out/gen/_p/pub-hmap/.hmap "
-            + "../buck-out",
+            + "../buck-out/gen/_p/pub-hmap/.hmap",
         buildSettings1.get("HEADER_SEARCH_PATHS"));
 
     // For //foo:test
@@ -5146,8 +5144,7 @@ public class ProjectGeneratorTest {
         "$(inherited) "
             + "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap "
             + "../buck-out/gen/_p/pub-hmap/.hmap "
-            + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap "
-            + "../buck-out",
+            + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap",
         buildSettingsTest.get("HEADER_SEARCH_PATHS"));
   }
 
