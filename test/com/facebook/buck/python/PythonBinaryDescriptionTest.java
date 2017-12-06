@@ -207,12 +207,7 @@ public class PythonBinaryDescriptionTest {
                 .build(),
             new AlwaysFoundExecutableFinder());
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
-            target,
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(target, config, PythonTestUtils.PYTHON_PLATFORMS);
     PythonBinary binary = builder.setMainModule("main").build(resolver);
     assertThat(
         pathResolver
@@ -347,12 +342,7 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
-            target,
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(target, config, PythonTestUtils.PYTHON_PLATFORMS);
     PythonPackagedBinary binary =
         (PythonPackagedBinary) builder.setMainModule("main").build(resolver);
     assertThat(
@@ -406,12 +396,7 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
-            target,
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(target, config, PythonTestUtils.PYTHON_PLATFORMS);
     PythonPackagedBinary binary =
         (PythonPackagedBinary) builder.setMainModule("main").build(resolver);
     assertThat(binary.getBuildDeps(), Matchers.hasItem(pexTool));
@@ -440,12 +425,8 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
@@ -489,12 +470,8 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
@@ -540,12 +517,8 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            pythonPlatforms,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, pythonPlatforms);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
 
@@ -592,12 +565,8 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder pythonBinaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     pythonBinaryBuilder.setMainModule("main");
     pythonBinaryBuilder.setDeps(ImmutableSortedSet.of(pythonLibraryBuilder.getTarget()));
     TargetGraph targetGraph =
@@ -656,12 +625,8 @@ public class PythonBinaryDescriptionTest {
             }
           };
       PythonBinaryBuilder binaryBuilder =
-          new PythonBinaryBuilder(
-              BuildTargetFactory.newInstance("//:bin"),
-              config,
-              PythonTestUtils.PYTHON_PLATFORMS,
-              CxxPlatformUtils.DEFAULT_PLATFORM,
-              CxxPlatformUtils.DEFAULT_PLATFORMS);
+          PythonBinaryBuilder.create(
+              BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
       binaryBuilder.setMainModule("main");
       binaryBuilder.setPreloadDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
       BuildRuleResolver resolver =
@@ -684,7 +649,7 @@ public class PythonBinaryDescriptionTest {
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
+        PythonBinaryBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
             new PythonBuckConfig(
                 FakeBuckConfig.builder()
@@ -695,9 +660,7 @@ public class PythonBinaryDescriptionTest {
                                 "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
                     .build(),
                 new AlwaysFoundExecutableFinder()),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+            PythonTestUtils.PYTHON_PLATFORMS);
     builder.setMainModule("main").setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(pexExecutorBuilder.getTarget()));
   }
@@ -720,12 +683,8 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setLinkerFlags(ImmutableList.of("-flag"));
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
@@ -770,12 +729,8 @@ public class PythonBinaryDescriptionTest {
             }
           };
       PythonBinaryBuilder binaryBuilder =
-          new PythonBinaryBuilder(
-              BuildTargetFactory.newInstance("//:bin"),
-              config,
-              PythonTestUtils.PYTHON_PLATFORMS,
-              CxxPlatformUtils.DEFAULT_PLATFORM,
-              CxxPlatformUtils.DEFAULT_PLATFORMS);
+          PythonBinaryBuilder.create(
+              BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
       binaryBuilder.setMainModule("main");
       binaryBuilder.setDeps(
           ImmutableSortedSet.of(
@@ -824,12 +779,8 @@ public class PythonBinaryDescriptionTest {
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
     binaryBuilder.setPreloadDeps(ImmutableSet.of(preloadCxxBuilder.getTarget()));
@@ -866,22 +817,14 @@ public class PythonBinaryDescriptionTest {
         };
 
     PythonBinaryBuilder inplaceBinary =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
     assertThat(inplaceBinary.findImplicitDeps(), Matchers.not(Matchers.hasItem(pexBuilder)));
 
     PythonBinaryBuilder standaloneBinary =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
   }
@@ -906,12 +849,8 @@ public class PythonBinaryDescriptionTest {
         };
 
     PythonBinary standaloneBinary =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setMainModule("hello")
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
             .build(resolver);
@@ -1018,7 +957,7 @@ public class PythonBinaryDescriptionTest {
                 cxxPlatforms)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
+        PythonBinaryBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),
                 PythonTestUtils.PYTHON_CONFIG,
                 PythonTestUtils.PYTHON_PLATFORMS,

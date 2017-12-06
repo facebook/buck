@@ -41,7 +41,7 @@ public class PythonBinaryBuilder
         PythonBinaryDescriptionArg.Builder, PythonBinaryDescriptionArg, PythonBinaryDescription,
         PythonBinary> {
 
-  public PythonBinaryBuilder(
+  private PythonBinaryBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,
@@ -67,6 +67,28 @@ public class PythonBinaryBuilder
       BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
+    return new PythonBinaryBuilder(
+        target,
+        pythonBuckConfig,
+        pythonPlatforms,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonBinaryBuilder create(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    return new PythonBinaryBuilder(
+        target, pythonBuckConfig, pythonPlatforms, defaultCxxPlatform, cxxPlatforms);
+  }
+
+  public static PythonBinaryBuilder create(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,

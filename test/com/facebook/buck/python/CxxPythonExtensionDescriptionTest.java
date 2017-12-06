@@ -451,22 +451,14 @@ public class CxxPythonExtensionDescriptionTest {
                         ImmutableSortedSet.of(depBuilder.getTarget()))
                     .build());
     PythonBinaryBuilder binary2Builder =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin2"),
-                pythonBuckConfig,
-                pythonPlatforms,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxTestUtils.createDefaultPlatforms())
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin2"), pythonBuckConfig, pythonPlatforms)
             .setMainModule("test")
             .setPlatform(PY2.getFlavor().toString())
             .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
     PythonBinaryBuilder binary3Builder =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin3"),
-                pythonBuckConfig,
-                pythonPlatforms,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxTestUtils.createDefaultPlatforms())
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin3"), pythonBuckConfig, pythonPlatforms)
             .setMainModule("test")
             .setPlatform(PY3.getFlavor().toString())
             .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
