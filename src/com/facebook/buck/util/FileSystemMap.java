@@ -18,8 +18,8 @@ package com.facebook.buck.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -75,20 +75,20 @@ public class FileSystemMap<T> {
     //       Otherwise, the node exists only as a mean to reach its children/leaves and will have
     //       a `null` value.
     private volatile @Nullable T value;
-    private final Path key;
+    private final PathFragment key;
 
-    private Entry(Path path) {
+    private Entry(PathFragment path) {
       // We're creating an empty node here, so it is associated with no value.
       this(path, null);
     }
 
-    private Entry(Path path, @Nullable T value) {
+    private Entry(PathFragment path, @Nullable T value) {
       this.key = path;
       this.value = value;
     }
 
     @VisibleForTesting
-    Path getKey() {
+    PathFragment getKey() {
       return key;
     }
 
@@ -106,7 +106,7 @@ public class FileSystemMap<T> {
       if (this.value == null) {
         synchronized (this) {
           if (this.value == null) {
-            this.value = loader.load(this.key);
+            this.value = loader.load(PathFragments.fragmentToPath(this.key));
           }
         }
       }
@@ -118,8 +118,10 @@ public class FileSystemMap<T> {
     }
   }
 
-  @VisibleForTesting final Entry<T> root = new Entry<>(Paths.get(""));
-  @VisibleForTesting final ConcurrentHashMap<Path, Entry<T>> map = new ConcurrentHashMap<>();
+  @VisibleForTesting final Entry<T> root = new Entry<>(PathFragment.create(""));
+
+  @VisibleForTesting
+  final ConcurrentHashMap<PathFragment, Entry<T>> map = new ConcurrentHashMap<>();
 
   private final ValueLoader<T> loader;
 
@@ -134,10 +136,15 @@ public class FileSystemMap<T> {
    * @param value The value to associate to the given path.
    */
   public void put(Path path, T value) {
-    Entry<T> maybe = map.get(path);
+    put(PathFragments.pathToFragment(path), value);
+  }
+
+  /** @see #put(Path, Object) */
+  public void put(PathFragment fragment, T value) {
+    Entry<T> maybe = map.get(fragment);
     if (maybe == null) {
       synchronized (root) {
-        maybe = map.computeIfAbsent(path, this::putEntry);
+        maybe = map.computeIfAbsent(fragment, this::putEntry);
       }
     }
     maybe.set(value);
@@ -145,18 +152,18 @@ public class FileSystemMap<T> {
 
   // Creates the intermediate (and/or the leaf node) if needed and returns the leaf associated
   // with the given path.
-  private Entry<T> putEntry(Path path) {
+  private Entry<T> putEntry(PathFragment path) {
     synchronized (root) {
       Entry<T> parent = root;
-      Path relPath = parent.getKey();
-      for (Path p : path) {
-        relPath = Paths.get(relPath.toString(), p.toString());
+      PathFragment relPath = parent.getKey();
+      for (String p : path.getSegments()) {
+        relPath = relPath.getRelative(p);
         // Create the intermediate node only if it's missing.
-        if (!parent.subLevels.containsKey(p.toString())) {
+        if (!parent.subLevels.containsKey(p)) {
           Entry<T> newEntry = new Entry<>(relPath);
-          parent.subLevels.put(p.toString(), newEntry);
+          parent.subLevels.put(p, newEntry);
         }
-        parent = parent.subLevels.get(p.toString());
+        parent = parent.subLevels.get(p);
         // parent should never be null.
         Preconditions.checkNotNull(parent);
       }
@@ -262,27 +269,33 @@ public class FileSystemMap<T> {
    * @return The value associated with the path.
    */
   public T get(Path path) {
-    Entry<T> maybe = map.get(path);
+    return get(PathFragments.pathToFragment(path));
+  }
+
+  /** @see #get(Path) */
+  public T get(PathFragment fragment) {
+    Entry<T> entry = map.get(fragment);
     // get() and remove() shouldn't overlap, but for performance reason (to hold the root lock for
     // less time), we opted for allowing overlap provided that *the entry creation is atomic*.
     // That is, the entry creation is guaranteed to not overlap with anything else, but the entry
     // filling is not: this is because the caller of the get() will still need to get a value,
     // even if the entry is removed meanwhile.
-    if (maybe == null) {
+    if (entry == null) {
       synchronized (root) {
-        maybe = map.computeIfAbsent(path, this::putEntry);
+        entry = map.computeIfAbsent(fragment, this::putEntry);
       }
     }
     // Maybe here we receive a request for getting an intermediate node (a folder) whose
     // value was never computed before (or has been removed).
-    if (maybe.value == null) {
+    if (entry.value == null) {
       // It is possible that maybe.load() will call back into other methods on this FileSystemMap.
       // Those methods might acquire the root lock. If there's any flow that calls maybe.load()
       // while already holding that lock, there's likely a flow w/ lock inversion.
       Preconditions.checkState(!Thread.holdsLock(root));
-      maybe.load(loader);
+      entry.load(loader);
     }
-    return maybe.value;
+    return Preconditions.checkNotNull(
+        entry.value, "Should either be loaded or not null in the first place.");
   }
 
   /**
@@ -293,7 +306,13 @@ public class FileSystemMap<T> {
    */
   @Nullable
   public T getIfPresent(Path path) {
-    Entry<T> entry = map.get(path);
+    return getIfPresent(PathFragments.pathToFragment(path));
+  }
+
+  /** @see #getIfPresent(Path) */
+  @Nullable
+  public T getIfPresent(PathFragment fragment) {
+    Entry<T> entry = map.get(fragment);
     return entry == null ? null : entry.value;
   }
 
@@ -305,8 +324,9 @@ public class FileSystemMap<T> {
     ImmutableMap.Builder<Path, T> builder = ImmutableMap.builder();
     map.forEach(
         (k, v) -> {
-          if (v.value != null) {
-            builder.put(k, v.value);
+          T value = v.value;
+          if (value != null) {
+            builder.put(PathFragments.fragmentToPath(k), value);
           }
         });
     return builder.build();
