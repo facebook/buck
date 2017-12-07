@@ -17,6 +17,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,8 +32,7 @@ import java.util.Set;
 
 // NOTE: Not thread safe. Caller needs to synchronize access if using multiple threads.
 public class BuildTargetsQueue {
-  private static final Logger LOG = Logger.get(BuildTargetsQueue.class);
-
+  private static final TimedLogger LOG = new TimedLogger(Logger.get(BuildTargetsQueue.class));
   private List<EnqueuedTarget> zeroDependencyTargets;
   private final Map<String, EnqueuedTarget> allEnqueuedTargets;
   private final Set<String> seenFinishedNodes = new HashSet<>();
@@ -41,8 +41,9 @@ public class BuildTargetsQueue {
   BuildTargetsQueue(
       List<EnqueuedTarget> zeroDependencyTargets, Map<String, EnqueuedTarget> allEnqueuedTargets) {
     LOG.verbose(
-        "Constructing queue with [%d] zero dependency targets and [%d] total targets.",
-        zeroDependencyTargets.size(), allEnqueuedTargets.size());
+        String.format(
+            "Constructing queue with [%d] zero dependency targets and [%d] total targets.",
+            zeroDependencyTargets.size(), allEnqueuedTargets.size()));
     this.zeroDependencyTargets = zeroDependencyTargets;
     this.allEnqueuedTargets = allEnqueuedTargets;
   }

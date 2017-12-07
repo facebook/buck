@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
@@ -39,9 +40,7 @@ import org.apache.thrift.transport.TTransportException;
 /** This class is ThreadSafe. No more than one RPC request is allowed at a time. */
 @ThreadSafe
 public class ThriftCoordinatorClient implements Closeable {
-
-  private static final Logger LOG = Logger.get(ThriftCoordinatorClient.class);
-
+  private static final TimedLogger LOG = new TimedLogger(Logger.get(ThriftCoordinatorClient.class));
   private final String remoteHost;
   private final StampedeId stampedeId;
   private final int connectionTimeoutMillis;

@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -69,7 +70,8 @@ public class DistBuildSlaveEventBusListener
         BuckEventListener,
         Closeable {
 
-  private static final Logger LOG = Logger.get(DistBuildSlaveEventBusListener.class);
+  private static final TimedLogger LOG =
+      new TimedLogger(Logger.get(DistBuildSlaveEventBusListener.class));
 
   private static final int DEFAULT_SERVER_UPDATE_PERIOD_MILLIS = 500;
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;

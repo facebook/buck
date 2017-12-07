@@ -27,6 +27,7 @@ import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -111,7 +112,7 @@ public class ThriftCoordinatorServer implements Closeable {
   public static final int DEAD_MINION_FOUND_EXIT_CODE = 46;
   public static final int BUILD_TERMINATED_REMOTELY_EXIT_CODE = 47;
 
-  private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
+  private static final TimedLogger LOG = new TimedLogger(Logger.get(ThriftCoordinatorServer.class));
 
   private static final long MAX_TEAR_DOWN_MILLIS = TimeUnit.SECONDS.toMillis(2);
   private static final long MAX_DIST_BUILD_DURATION_MILLIS = TimeUnit.HOURS.toMillis(2);
@@ -300,7 +301,7 @@ public class ThriftCoordinatorServer implements Closeable {
         return handler.reportMinionAlive(request);
       } catch (Throwable e) {
         LOG.error(
-            "reportIAmAlive() failed: internal state may be corrupted, so exiting coordinator.", e);
+            e, "reportIAmAlive() failed: internal state may be corrupted, so exiting coordinator.");
         String msg =
             String.format(
                 "Failed to handle ReportMinionAliveRequest for minion [%s].",
@@ -315,7 +316,7 @@ public class ThriftCoordinatorServer implements Closeable {
       try {
         return getWorkUnsafe(request);
       } catch (Throwable e) {
-        LOG.error("getWork() failed: internal state may be corrupted, so exiting coordinator.", e);
+        LOG.error(e, "getWork() failed: internal state may be corrupted, so exiting coordinator.");
         String msg =
             String.format(
                 "Failed to handle GetWorkRequest for minion [%s].", request.getMinionId());
