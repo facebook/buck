@@ -66,7 +66,7 @@ public class FileSystemMap<T> {
    */
   @VisibleForTesting
   static class Entry<T> {
-    Map<Path, Entry<T>> subLevels = new HashMap<>();
+    Map<String, Entry<T>> subLevels = new HashMap<>();
 
     // The value of the Entry is the actual value the node is associated with:
     //   - If this is a leaf node, value is never null.
@@ -77,31 +77,34 @@ public class FileSystemMap<T> {
     private volatile @Nullable T value;
     private final Path key;
 
+    @VisibleForTesting
     Entry(Path path) {
       // We're creating an empty node here, so it is associated with no value.
-      this.key = path;
-      this.value = null;
+      this(path, null);
     }
 
-    public Path getKey() {
-      return key;
-    }
-
+    @VisibleForTesting
     Entry(Path path, @Nullable T value) {
       this.key = path;
       this.value = value;
     }
 
-    void set(@Nullable T value) {
+    @VisibleForTesting
+    Path getKey() {
+      return key;
+    }
+
+    private void set(@Nullable T value) {
       this.value = value;
     }
 
+    @VisibleForTesting
     @Nullable
     T getWithoutLoading() {
       return this.value;
     }
 
-    T load(ValueLoader<T> loader) {
+    private void load(ValueLoader<T> loader) {
       if (this.value == null) {
         synchronized (this) {
           if (this.value == null) {
@@ -109,9 +112,9 @@ public class FileSystemMap<T> {
           }
         }
       }
-      return this.value;
     }
 
+    @VisibleForTesting
     int size() {
       return subLevels.size();
     }
@@ -131,7 +134,6 @@ public class FileSystemMap<T> {
    *
    * @param path The path to store.
    * @param value The value to associate to the given path.
-   * @return The entry just created.
    */
   public void put(Path path, T value) {
     Entry<T> maybe = map.get(path);
@@ -152,11 +154,11 @@ public class FileSystemMap<T> {
       for (Path p : path) {
         relPath = Paths.get(relPath.toString(), p.toString());
         // Create the intermediate node only if it's missing.
-        if (!parent.subLevels.containsKey(p)) {
+        if (!parent.subLevels.containsKey(p.toString())) {
           Entry<T> newEntry = new Entry<>(relPath);
-          parent.subLevels.put(p, newEntry);
+          parent.subLevels.put(p.toString(), newEntry);
         }
-        parent = parent.subLevels.get(p);
+        parent = parent.subLevels.get(p.toString());
         // parent should never be null.
         Preconditions.checkNotNull(parent);
       }
@@ -182,7 +184,7 @@ public class FileSystemMap<T> {
       // Walk the tree to fetch the node requested by the path, or the closest intermediate node.
       boolean partial = false;
       for (Path p : path) {
-        entry = entry.subLevels.get(p);
+        entry = entry.subLevels.get(p.toString());
         // We're trying to remove a path that doesn't exist, no point in going deeper.
         // Break and proceed to remove whatever path we found so far.
         if (entry == null) {
@@ -207,27 +209,27 @@ public class FileSystemMap<T> {
         if (partial) {
           map.remove(leaf.key);
           if (leaf.size() == 0 && path != null && !stack.empty()) {
-            stack.peek().subLevels.remove(path.getFileName());
+            stack.peek().subLevels.remove(path.getFileName().toString());
           } else {
             leaf.set(null);
           }
         } else {
           removeSubtreeFromMap(leaf);
-          stack.peek().subLevels.remove(path.getFileName());
+          stack.peek().subLevels.remove(path.getFileName().toString());
         }
 
         // Plus, check everything above in order to remove unused stumps.
         while (!stack.empty()) {
           // This will never throw NPE because if it does, then the stack was empty at the beginning
           // of the iteration (we went upper than the root node, which doesn't make sense).
-          path = path.getParent();
+          path = Preconditions.checkNotNull(path).getParent();
           Entry<T> current = stack.pop();
 
           // Remove only if it's a cached entry.
           map.remove(current.key);
 
           if (current.size() == 0 && path != null && !stack.empty()) {
-            stack.peek().subLevels.remove(path.getFileName());
+            stack.peek().subLevels.remove(path.getFileName().toString());
           } else {
             current.set(null);
           }
