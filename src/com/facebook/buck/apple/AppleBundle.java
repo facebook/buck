@@ -736,7 +736,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private void copyAnotherCopyOfWatchKitStub(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
-    if ((isLegacyWatchApp() || (platform.getName().contains("watch") && minOSVersion.equals("2.0")))
+    if ((isLegacyWatchApp() || platform.getName().contains("watch"))
         && binary.get() instanceof WriteFile) {
       final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
