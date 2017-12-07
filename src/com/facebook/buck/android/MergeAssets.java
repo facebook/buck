@@ -132,7 +132,7 @@ public class MergeAssets extends AbstractBuildRule {
                           !Files.getFileExtension(file.toString()).equals("gz"),
                           "BUCK doesn't support adding .gz files to assets (%s).",
                           file);
-                      assets.put(absolutePath, absolutePath.relativize(file));
+                      assets.put(absolutePath, absolutePath.relativize(file.normalize()));
                       return super.visitFile(file, attrs);
                     }
                   });
