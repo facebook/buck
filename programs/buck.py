@@ -61,12 +61,12 @@ if __name__ == "__main__":
         # this is raised once 'buck run' has the binary
         # it can get here only if exit_code of corresponding buck build is 0
         fn_exec = e.execve
-    except NoBuckConfigFoundException as e:
-        exception = e
+    except NoBuckConfigFoundException:
+        exc_type, exception, exc_traceback = sys.exc_info()
         # buck is started outside project root
         exit_code = 3  # COMMANDLINE_ERROR
     except IOError as e:
-        exception = e
+        exc_type, exception, exc_traceback = sys.exc_info()
         if e.errno == errno.ENOSPC:
             exit_code = 14  # FATAL_DISK_FULL
         elif e.errno == errno.EPIPE:
@@ -76,13 +76,13 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         reporter.status_message = 'Python wrapper keyboard interrupt'
         exit_code = 130  # SIGNAL_INTERRUPT
-    except Exception as e:
-        exception = e
+    except Exception:
+        exc_type, exception, exc_traceback = sys.exc_info()
         # 11 is fatal bootstrapper error
         exit_code = 11
 
     if exception is not None:
-        logging.error(str(exception))
+        logging.error(exception, exc_info=(exc_type, exception, exc_traceback))
         if reporter.status_message is None:
             reporter.status_message = str(exception)
 
