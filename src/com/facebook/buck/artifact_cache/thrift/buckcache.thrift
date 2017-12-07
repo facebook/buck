@@ -178,6 +178,10 @@ struct BuckCacheDeleteResponse {
 struct BuckCacheRequest {
   1: optional BuckCacheRequestType type = BuckCacheRequestType.UNKNOWN;
 
+  // Can be unset if request is not initiated by buck build,
+  // e. g. if buckcache is called by command-line fetch utility.
+  2: optional string buckBuildId;
+
   100: optional list<PayloadInfo> payloads;
   101: optional BuckCacheFetchRequest fetchRequest;
   102: optional BuckCacheStoreRequest storeRequest;
