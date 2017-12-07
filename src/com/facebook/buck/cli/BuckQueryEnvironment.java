@@ -117,7 +117,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
                             cell.getFilesystem(), cell.getBuildFileName())));
     this.executor = executor;
     this.targetPatternEvaluator = targetPatternEvaluator;
-    this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator);
+    this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator, executor);
   }
 
   public static BuckQueryEnvironment from(
@@ -131,7 +131,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   public static BuckQueryEnvironment from(
-      CommandRunnerParams params, PerBuildState parserState, ListeningExecutorService executor) {
+      CommandRunnerParams params,
+      PerBuildState parserState,
+      ListeningExecutorService executor,
+      boolean enableProfiling) {
     return from(
         params.getCell(),
         OwnersReport.builder(params.getCell(), params.getParser(), params.getBuckEventBus()),
@@ -141,8 +144,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             params.getCell(),
             params.getBuckConfig(),
             params.getParser(),
-            parserState,
-            params.getBuckEventBus()));
+            params.getBuckEventBus(),
+            enableProfiling));
   }
 
   public DirectedAcyclicGraph<TargetNode<?, ?>> getTargetGraph() {
@@ -156,7 +159,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public void preloadTargetPatterns(Iterable<String> patterns)
       throws QueryException, InterruptedException {
     try {
-      targetPatternEvaluator.preloadTargetPatterns(patterns);
+      targetPatternEvaluator.preloadTargetPatterns(patterns, executor);
     } catch (IOException e) {
       throw new QueryException(
           e, "Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
@@ -488,16 +491,19 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
     private final TargetPatternEvaluator evaluator;
+    private final ListeningExecutorService executor;
 
-    private TargetEvaluator(TargetPatternEvaluator evaluator) {
+    private TargetEvaluator(TargetPatternEvaluator evaluator, ListeningExecutorService executor) {
       this.evaluator = evaluator;
+      this.executor = executor;
     }
 
     @Override
     public ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException {
       try {
         return ImmutableSet.copyOf(
-            Iterables.concat(evaluator.resolveTargetPatterns(ImmutableList.of(target)).values()));
+            Iterables.concat(
+                evaluator.resolveTargetPatterns(ImmutableList.of(target), executor).values()));
       } catch (BuildTargetException
           | BuildFileParseException
           | InterruptedException

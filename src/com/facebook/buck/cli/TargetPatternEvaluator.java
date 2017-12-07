@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -50,8 +51,8 @@ public class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
 
   private final Parser parser;
-  private final PerBuildState parserState;
   private final BuckEventBus eventBus;
+  private final boolean enableProfiling;
   private final Path projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private final BuckConfig buckConfig;
@@ -63,12 +64,12 @@ public class TargetPatternEvaluator {
       Cell rootCell,
       BuckConfig buckConfig,
       Parser parser,
-      PerBuildState parserState,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      boolean enableProfiling) {
     this.rootCell = rootCell;
     this.parser = parser;
-    this.parserState = parserState;
     this.eventBus = eventBus;
+    this.enableProfiling = enableProfiling;
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
     this.targetNodeSpecParser =
@@ -76,12 +77,13 @@ public class TargetPatternEvaluator {
   }
 
   /** Attempts to parse and load the given collection of patterns. */
-  public void preloadTargetPatterns(Iterable<String> patterns)
+  public void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
-    resolveTargetPatterns(patterns);
+    resolveTargetPatterns(patterns, executor);
   }
 
-  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveTargetPatterns(Iterable<String> patterns)
+  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveTargetPatterns(
+      Iterable<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     ImmutableMap.Builder<String, ImmutableSet<QueryTarget>> resolved = ImmutableMap.builder();
 
@@ -116,7 +118,7 @@ public class TargetPatternEvaluator {
     // Resolve any remaining target patterns using the parser.
     ImmutableMap<String, ImmutableSet<QueryTarget>> results =
         MoreMaps.transformKeys(
-            resolveBuildTargetPatterns(ImmutableList.copyOf(unresolved.keySet())),
+            resolveBuildTargetPatterns(ImmutableList.copyOf(unresolved.keySet()), executor),
             Functions.forMap(unresolved));
     resolved.putAll(results);
     resolvedTargets.putAll(results);
@@ -136,7 +138,8 @@ public class TargetPatternEvaluator {
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(List<String> patterns)
+  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
+      List<String> patterns, ListeningExecutorService executor)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
     // Build up an ordered list of patterns and pass them to the parse to get resolved in one go.
@@ -147,10 +150,12 @@ public class TargetPatternEvaluator {
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         parser.resolveTargetSpecs(
-            parserState,
             eventBus,
             rootCell,
+            enableProfiling,
+            executor,
             specs,
+            PerBuildState.SpeculativeParsing.DISABLED,
             // We disable mapping //path/to:lib to //path/to:lib#default,static
             // because the query engine doesn't handle flavors very well.
             ParserConfig.ApplyDefaultFlavorsMode.DISABLED);

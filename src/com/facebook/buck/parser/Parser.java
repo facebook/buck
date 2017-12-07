@@ -430,7 +430,7 @@ public class Parser {
     }
   }
 
-  public synchronized ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+  private ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       PerBuildState state,
       BuckEventBus eventBus,
       Cell rootCell,

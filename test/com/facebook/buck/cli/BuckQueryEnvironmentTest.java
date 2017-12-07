@@ -97,7 +97,6 @@ public class BuckQueryEnvironmentTest {
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider);
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     parserState =
         new PerBuildState(
             parser,
@@ -110,8 +109,9 @@ public class BuckQueryEnvironmentTest {
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            cell, FakeBuckConfig.builder().build(), parser, parserState, eventBus);
+            cell, FakeBuckConfig.builder().build(), parser, eventBus, /* enableProfiling */ false);
     OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, eventBus);
+    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
             cell, ownersReportBuilder, parserState, executor, targetPatternEvaluator);
