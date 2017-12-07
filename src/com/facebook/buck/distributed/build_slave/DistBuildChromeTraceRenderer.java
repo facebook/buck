@@ -124,7 +124,26 @@ public class DistBuildChromeTraceRenderer {
 
         for (int lineIndex = 0; lineIndex < minionTraceIntermediate.lines.size(); lineIndex++) {
           MinionRenderLine line = minionTraceIntermediate.lines.get(lineIndex);
+
+          long lastEventFinishMicros = 0;
+
           for (RuleTrace historyEntry : line.ruleTraces) {
+            // Work around Chrome trace renderer: it renders new lines
+            // for zero width events connected to previous events.
+            // So we are adjusting events so that:
+            // * each event is at least 1 microsecond
+            // * adjusted events do not overlap
+            // For example, this sequence event would produce two lines:
+            // | 5ms event | 0ms event | 5ms event |
+            // So we render these events like this:
+            // | 5ms event | 0us event | 4ms499us event |
+
+            long startMicros =
+                Math.max(historyEntry.startEpochMillis * 1000, lastEventFinishMicros);
+
+            lastEventFinishMicros =
+                Math.max(historyEntry.finishEpochMillis * 1000, startMicros + 1);
+
             chromeTraceWriter.writeEvent(
                 new ChromeTraceEvent(
                     "buck",
@@ -132,7 +151,7 @@ public class DistBuildChromeTraceRenderer {
                     Phase.BEGIN,
                     processIndexInTrace,
                     lineIndex,
-                    historyEntry.startEpochMillis * 1000,
+                    startMicros,
                     0,
                     ImmutableMap.of()));
             chromeTraceWriter.writeEvent(
@@ -142,7 +161,7 @@ public class DistBuildChromeTraceRenderer {
                     Phase.END,
                     processIndexInTrace,
                     lineIndex,
-                    historyEntry.finishEpochMillis * 1000,
+                    lastEventFinishMicros,
                     0,
                     ImmutableMap.of()));
           }
