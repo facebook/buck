@@ -15,6 +15,7 @@ standard_java_test(
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/slb:slb",

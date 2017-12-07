@@ -59,6 +59,7 @@ standard_java_test(
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:caching_build_engine_delegates",
+        "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/rules:rule_key",
