@@ -77,14 +77,12 @@ public class FileSystemMap<T> {
     private volatile @Nullable T value;
     private final Path key;
 
-    @VisibleForTesting
-    Entry(Path path) {
+    private Entry(Path path) {
       // We're creating an empty node here, so it is associated with no value.
       this(path, null);
     }
 
-    @VisibleForTesting
-    Entry(Path path, @Nullable T value) {
+    private Entry(Path path, @Nullable T value) {
       this.key = path;
       this.value = value;
     }
@@ -169,10 +167,14 @@ public class FileSystemMap<T> {
   /**
    * Removes the given path.
    *
-   * <p>Removing a path involves the following: - all the child nodes of the given path are
-   * discarded as well. - all the paths upstream lose their value. - each path upstream will be
-   * removed if after the removal of the leaf the node is left with no children (that is, it has
-   * become a stump).
+   * <p>Removing a path involves the following:
+   *
+   * <ul>
+   *   <li>all the child nodes of the given path are discarded as well.
+   *   <li>all the paths upstream lose their value.
+   *   <li>each path upstream will be removed if after the removal of the leaf the node is left with
+   *       no children (that is, it has become a stump).
+   * </ul>
    *
    * @param path The path specifying the branch to remove.
    */
