@@ -4,6 +4,7 @@ java_immutables_library(
     name = "cache",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//third-party/java/bazel:skylark-lang",
     ],
     visibility = ["PUBLIC"],
     deps = [

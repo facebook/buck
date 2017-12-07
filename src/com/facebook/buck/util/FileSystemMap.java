@@ -54,7 +54,7 @@ public class FileSystemMap<T> {
    * @param <T>
    */
   public interface ValueLoader<T> {
-    T load(Path path);
+    T load(PathFragment path);
   }
 
   /**
@@ -106,7 +106,7 @@ public class FileSystemMap<T> {
       if (this.value == null) {
         synchronized (this) {
           if (this.value == null) {
-            this.value = loader.load(PathFragments.fragmentToPath(this.key));
+            this.value = loader.load(this.key);
           }
         }
       }
