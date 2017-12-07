@@ -1,4 +1,4 @@
-From 3a91bfba8228339401b1bda2c10fd8b4fe3a39da Mon Sep 17 00:00:00 2001
+From d4c5d5b51a418c7149ff37b03ae144e3970cdaf4 Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
 Subject: [PATCH] Compute referenced resources in D8 and disable
@@ -16,19 +16,19 @@ trywithresources can be disabled if targeting ICS+
  5 files changed, 35 insertions(+), 6 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8.java b/src/main/java/com/android/tools/r8/D8.java
-index c3b30e82..cbe94045 100644
+index adb780ec..bfcab237 100644
 --- a/src/main/java/com/android/tools/r8/D8.java
 +++ b/src/main/java/com/android/tools/r8/D8.java
-@@ -97,7 +97,8 @@ public final class D8 {
-       CompilationResult result =
-           run(command.getInputApp(), compatSink, options, executor);
-       assert result != null;
--      return new D8Output(compatSink.build(), command.getOutputMode());
-+      return new D8Output(compatSink.build(), command.getOutputMode(),
-+         result.appInfo.dexItemFactory.computeReferencedResources());
-     } catch (IOException io) {
-       command.getReporter().error(new IOExceptionDiagnostic(io));
-       throw new CompilationFailedException(io);
+@@ -98,7 +98,8 @@ public final class D8 {
+         CompilationResult result =
+             run(command.getInputApp(), compatSink, options, executor);
+         assert result != null;
+-        D8Output d8Output = new D8Output(compatSink.build(), command.getOutputMode());
++        D8Output d8Output = new D8Output(compatSink.build(), command.getOutputMode(),
++            result.appInfo.dexItemFactory.computeReferencedResources());
+         command.getReporter().failIfPendingErrors();
+         return d8Output;
+       } catch (IOException io) {
 diff --git a/src/main/java/com/android/tools/r8/D8Output.java b/src/main/java/com/android/tools/r8/D8Output.java
 index 1910e9b7..4cc80eee 100644
 --- a/src/main/java/com/android/tools/r8/D8Output.java
@@ -91,7 +91,7 @@ index 27dedb19..84beffea 100644
          throw new ApiLevelException(
              AndroidApiLevel.N,
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index dcf29a49..9a4bcb7c 100644
+index bf88172b..d955274d 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 @@ -23,9 +23,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -106,7 +106,7 @@ index dcf29a49..9a4bcb7c 100644
  import java.util.concurrent.ConcurrentHashMap;
  import java.util.function.Consumer;
  
-@@ -547,4 +549,17 @@ public class DexItemFactory {
+@@ -558,4 +560,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -125,10 +125,10 @@ index dcf29a49..9a4bcb7c 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/utils/InternalOptions.java b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-index 08403930..4efb865f 100644
+index eb425066..36df7b4a 100644
 --- a/src/main/java/com/android/tools/r8/utils/InternalOptions.java
 +++ b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-@@ -107,9 +107,12 @@ public class InternalOptions {
+@@ -108,9 +108,12 @@ public class InternalOptions {
    // Flag to turn on/off desugaring in D8/R8.
    public boolean enableDesugaring = true;
    // Defines interface method rewriter behavior.
