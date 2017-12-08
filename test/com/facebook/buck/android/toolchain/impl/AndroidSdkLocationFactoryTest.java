@@ -28,6 +28,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
@@ -77,7 +78,8 @@ public class AndroidSdkLocationFactoryTest {
                 FakeBuckConfig.builder().build(),
                 projectFilesystem,
                 new DefaultProcessExecutor(new TestConsole()),
-                new ExecutableFinder()));
+                new ExecutableFinder(),
+                TestRuleKeyConfigurationFactory.create()));
 
     assertFalse(toolchain.isPresent());
   }
@@ -111,7 +113,8 @@ public class AndroidSdkLocationFactoryTest {
                 FakeBuckConfig.builder().build(),
                 projectFilesystem,
                 new DefaultProcessExecutor(new TestConsole()),
-                new ExecutableFinder()));
+                new ExecutableFinder(),
+                TestRuleKeyConfigurationFactory.create()));
 
     assertEquals(sdkLocation, toolchain.get().getSdkRootPath());
   }

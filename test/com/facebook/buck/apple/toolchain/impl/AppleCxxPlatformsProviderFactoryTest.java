@@ -33,6 +33,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -82,7 +83,8 @@ public class AppleCxxPlatformsProviderFactoryTest {
             buckConfig,
             projectFilesystem,
             processExecutor,
-            new ExecutableFinder());
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create());
 
     Optional<Path> appleDeveloperDir =
         new AppleDeveloperDirectoryProviderFactory()

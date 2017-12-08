@@ -79,6 +79,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.TestConsole;
@@ -254,7 +255,12 @@ public class ParserTest {
 
     ToolchainCreationContext toolchainCreationContext =
         ToolchainCreationContext.of(
-            ImmutableMap.of(), config, filesystem, processExecutor, new ExecutableFinder());
+            ImmutableMap.of(),
+            config,
+            filesystem,
+            processExecutor,
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create());
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =

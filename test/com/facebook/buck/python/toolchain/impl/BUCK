@@ -14,6 +14,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/toolchain/impl:testutil",
     ],

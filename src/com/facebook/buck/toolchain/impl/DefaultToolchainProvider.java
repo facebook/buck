@@ -49,6 +49,7 @@ import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.python.toolchain.impl.PythonInterpreterFactory;
 import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactory;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformsProviderFactory;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
@@ -160,10 +161,16 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
       BuckConfig buckConfig,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      ExecutableFinder executableFinder) {
+      ExecutableFinder executableFinder,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     toolchainCreationContext =
         ToolchainCreationContext.of(
-            environment, buckConfig, projectFilesystem, processExecutor, executableFinder);
+            environment,
+            buckConfig,
+            projectFilesystem,
+            processExecutor,
+            executableFinder,
+            ruleKeyConfiguration);
 
     toolchainDescriptors = loadToolchainDescriptors(pluginManager);
 

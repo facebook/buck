@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
@@ -80,7 +81,8 @@ public class DefaultToolchainProviderTest {
             FakeBuckConfig.builder().build(),
             new FakeProjectFilesystem(),
             new FakeProcessExecutor(),
-            new ExecutableFinder());
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create());
 
     try {
       toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);

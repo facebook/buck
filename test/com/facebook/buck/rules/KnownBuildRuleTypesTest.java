@@ -40,6 +40,7 @@ import com.facebook.buck.ocaml.OcamlLibraryDescription;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -168,7 +169,8 @@ public class KnownBuildRuleTypesTest {
             buckConfig,
             filesystem,
             createExecutor(),
-            executableFinder);
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
 
     KnownBuildRuleTypes buildRuleTypes =
         KnownBuildRuleTypesTestUtil.getDefaultKnownBuildRuleTypes(
@@ -214,7 +216,13 @@ public class KnownBuildRuleTypesTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
-            pluginManager, environment, buckConfig, filesystem, createExecutor(), executableFinder);
+            pluginManager,
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
 
     KnownBuildRuleTypes knownBuildRuleTypes1 =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
@@ -228,7 +236,13 @@ public class KnownBuildRuleTypesTest {
 
     toolchainProvider =
         new DefaultToolchainProvider(
-            pluginManager, environment, buckConfig, filesystem, createExecutor(), executableFinder);
+            pluginManager,
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
 
     KnownBuildRuleTypes knownBuildRuleTypes2 =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
@@ -251,7 +265,8 @@ public class KnownBuildRuleTypesTest {
             buckConfig,
             filesystem,
             createExecutor(),
-            executableFinder);
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
 
     // This would throw if "default" weren't available as a platform.
     KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
@@ -273,7 +288,8 @@ public class KnownBuildRuleTypesTest {
             buckConfig,
             filesystem,
             createExecutor(),
-            executableFinder);
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
     CxxPlatformsProvider cxxPlatformsProvider =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     assertThat(
@@ -299,7 +315,8 @@ public class KnownBuildRuleTypesTest {
             buckConfig,
             filesystem,
             createExecutor(),
-            executableFinder);
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
@@ -325,7 +342,8 @@ public class KnownBuildRuleTypesTest {
             buckConfig,
             filesystem,
             createExecutor(),
-            executableFinder);
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
     KnownBuildRuleTypes knownBuildRuleTypes =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
     OcamlLibraryDescription ocamlLibraryDescription =
@@ -365,7 +383,8 @@ public class KnownBuildRuleTypesTest {
             buckConfig,
             filesystem,
             createExecutor(),
-            executableFinder);
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
     KnownBuildRuleTypes knownBuildRuleTypes =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
     JavaBinaryDescription javaBinaryDescription =

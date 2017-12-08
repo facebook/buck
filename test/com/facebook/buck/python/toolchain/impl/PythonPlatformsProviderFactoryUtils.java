@@ -21,6 +21,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PythonEnvironment;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -43,7 +44,8 @@ public class PythonPlatformsProviderFactoryUtils {
                 buckConfig,
                 new FakeProjectFilesystem(),
                 processExecutor,
-                executableFinder))
+                executableFinder,
+                TestRuleKeyConfigurationFactory.create()))
         .get()
         .getPythonPlatforms()
         .getValue(PythonBuckConfig.DEFAULT_PYTHON_PLATFORM);
