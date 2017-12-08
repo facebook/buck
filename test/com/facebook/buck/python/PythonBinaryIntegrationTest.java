@@ -145,7 +145,7 @@ public class PythonBinaryIntegrationTest {
         link, workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
     ProcessExecutor.Result result =
         workspace.runCommand(
-            new PythonInterpreterFromConfig(getPythonBuckConfig())
+            new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
                 .getPythonInterpreterPath()
                 .toString(),
             link.toString());
@@ -351,6 +351,6 @@ public class PythonBinaryIntegrationTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
-    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    return new PythonBuckConfig(buckConfig);
   }
 }

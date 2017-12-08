@@ -18,7 +18,6 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -57,11 +56,9 @@ public class PythonBuckConfig {
               });
 
   private final BuckConfig delegate;
-  private final ExecutableFinder exeFinder;
 
-  public PythonBuckConfig(BuckConfig config, ExecutableFinder exeFinder) {
+  public PythonBuckConfig(BuckConfig config) {
     this.delegate = config;
-    this.exeFinder = exeFinder;
   }
 
   public BuckConfig getDelegate() {
@@ -70,10 +67,6 @@ public class PythonBuckConfig {
 
   public Optional<String> getInterpreter(String section) {
     return delegate.getValue(section, "interpreter");
-  }
-
-  public ExecutableFinder getExeFinder() {
-    return exeFinder;
   }
 
   public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {

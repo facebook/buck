@@ -61,7 +61,6 @@ import com.facebook.buck.graphql.GraphqlLibraryDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryDescription;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
@@ -206,9 +205,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     DxConfig dxConfig = new DxConfig(config);
 
-    ExecutableFinder executableFinder = new ExecutableFinder();
-
-    PythonBuckConfig pyConfig = new PythonBuckConfig(config, executableFinder);
+    PythonBuckConfig pyConfig = new PythonBuckConfig(config);
     PythonBinaryDescription pythonBinaryDescription =
         new PythonBinaryDescription(toolchainProvider, pyConfig, cxxBuckConfig);
 

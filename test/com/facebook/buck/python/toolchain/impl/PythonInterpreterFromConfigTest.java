@@ -50,9 +50,9 @@ public class PythonInterpreterFromConfigTest {
                         "python",
                         ImmutableMap.of(
                             "interpreter", configPythonFile.toAbsolutePath().toString())))
-                .build(),
-            new ExecutableFinder());
-    PythonInterpreter pythonInterpreter = new PythonInterpreterFromConfig(config);
+                .build());
+    PythonInterpreter pythonInterpreter =
+        new PythonInterpreterFromConfig(config, new ExecutableFinder());
 
     assertEquals(
         "Should return path to temp file.",
@@ -71,9 +71,9 @@ public class PythonInterpreterFromConfigTest {
                         .put("PATH", temporaryFolder.getRoot().toAbsolutePath().toString())
                         .put("PATHEXT", "")
                         .build())
-                .build(),
-            new ExecutableFinder());
-    PythonInterpreter pythonInterpreter = new PythonInterpreterFromConfig(config);
+                .build());
+    PythonInterpreter pythonInterpreter =
+        new PythonInterpreterFromConfig(config, new ExecutableFinder());
 
     pythonInterpreter.getPythonInterpreterPath(config.getDefaultSection());
   }
@@ -90,9 +90,9 @@ public class PythonInterpreterFromConfigTest {
                         .put("PATH", temporaryFolder.getRoot().toAbsolutePath().toString())
                         .put("PATHEXT", ".exe")
                         .build())
-                .build(),
-            new ExecutableFinder(Platform.WINDOWS));
-    PythonInterpreter pythonInterpreter = new PythonInterpreterFromConfig(config);
+                .build());
+    PythonInterpreter pythonInterpreter =
+        new PythonInterpreterFromConfig(config, new ExecutableFinder(Platform.WINDOWS));
 
     pythonInterpreter.getPythonInterpreterPath(config.getDefaultSection());
   }
@@ -109,9 +109,9 @@ public class PythonInterpreterFromConfigTest {
                         .put("PATH", temporaryFolder.getRoot().toAbsolutePath().toString())
                         .put("PATHEXT", "")
                         .build())
-                .build(),
-            new ExecutableFinder());
-    PythonInterpreter pythonInterpreter = new PythonInterpreterFromConfig(config);
+                .build());
+    PythonInterpreter pythonInterpreter =
+        new PythonInterpreterFromConfig(config, new ExecutableFinder());
 
     assertEquals(
         "Should return path to python2.",
@@ -131,9 +131,9 @@ public class PythonInterpreterFromConfigTest {
                         .put("PATH", temporaryFolder.getRoot().toAbsolutePath().toString())
                         .put("PATHEXT", "")
                         .build())
-                .build(),
-            new ExecutableFinder());
-    PythonInterpreter pythonInterpreter = new PythonInterpreterFromConfig(config);
+                .build());
+    PythonInterpreter pythonInterpreter =
+        new PythonInterpreterFromConfig(config, new ExecutableFinder());
 
     pythonInterpreter.getPythonInterpreterPath(config.getDefaultSection());
     fail("Should throw an exception when Python isn't found.");
@@ -155,9 +155,9 @@ public class PythonInterpreterFromConfigTest {
                         .put("PATH", path)
                         .put("PATHEXT", "")
                         .build())
-                .build(),
-            new ExecutableFinder());
-    PythonInterpreter pythonInterpreter = new PythonInterpreterFromConfig(config);
+                .build());
+    PythonInterpreter pythonInterpreter =
+        new PythonInterpreterFromConfig(config, new ExecutableFinder());
 
     assertEquals(
         "Should return the first path",

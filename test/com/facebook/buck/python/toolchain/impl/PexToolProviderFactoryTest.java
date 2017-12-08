@@ -59,7 +59,7 @@ public class PexToolProviderFactoryTest {
                     .withToolchain(
                         PythonInterpreter.DEFAULT_NAME,
                         new PythonInterpreterFromConfig(
-                            new PythonBuckConfig(buckConfig, new ExecutableFinder())))
+                            new PythonBuckConfig(buckConfig), new ExecutableFinder()))
                     .build(),
                 ToolchainCreationContext.of(
                     ImmutableMap.of(),

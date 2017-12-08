@@ -105,7 +105,7 @@ public class ResolverIntegrationTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
 
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
@@ -119,7 +119,7 @@ public class ResolverIntegrationTest {
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(filesystem.getRootPath())
                 .setPythonInterpreter(
-                    new PythonInterpreterFromConfig(pythonBuckConfig)
+                    new PythonInterpreterFromConfig(pythonBuckConfig, new ExecutableFinder())
                         .getPythonInterpreterPath()
                         .toString())
                 .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())

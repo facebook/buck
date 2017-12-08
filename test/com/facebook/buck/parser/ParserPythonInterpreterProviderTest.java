@@ -49,7 +49,7 @@ public class ParserPythonInterpreterProviderTest {
             .build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonInterpreter pythonInterpreter =
-        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig, new ExecutableFinder()));
+        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig), new ExecutableFinder());
     ParserPythonInterpreterProvider provider =
         new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig);
     assertEquals(
@@ -68,7 +68,7 @@ public class ParserPythonInterpreterProviderTest {
             .build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonInterpreter pythonInterpreter =
-        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig, new ExecutableFinder()));
+        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig), new ExecutableFinder());
     ParserPythonInterpreterProvider provider =
         new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig);
     try {
@@ -92,7 +92,7 @@ public class ParserPythonInterpreterProviderTest {
             .build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonInterpreter pythonInterpreter =
-        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig, new ExecutableFinder()));
+        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig), new ExecutableFinder());
     ParserPythonInterpreterProvider provider =
         new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig);
     assertEquals(

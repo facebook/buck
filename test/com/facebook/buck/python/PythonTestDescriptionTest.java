@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -374,7 +375,7 @@ public class PythonTestDescriptionTest {
   public void pexBuilderAddedToParseTimeDeps() {
     final BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<BuildTarget> getPexExecutorTarget() {
             return Optional.of(pexBuilder);
@@ -383,13 +384,19 @@ public class PythonTestDescriptionTest {
 
     PythonTestBuilder inplaceBinary =
         PythonTestBuilder.create(
-                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
+                BuildTargetFactory.newInstance("//:bin"),
+                config,
+                new AlwaysFoundExecutableFinder(),
+                PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
     assertThat(inplaceBinary.findImplicitDeps(), Matchers.not(Matchers.hasItem(pexBuilder)));
 
     PythonTestBuilder standaloneBinary =
         PythonTestBuilder.create(
-                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
+                BuildTargetFactory.newInstance("//:bin"),
+                config,
+                new AlwaysFoundExecutableFinder(),
+                PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
   }
@@ -553,6 +560,7 @@ public class PythonTestDescriptionTest {
         PythonTestBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),
                 PythonTestUtils.PYTHON_CONFIG,
+                new ExecutableFinder(),
                 PythonTestUtils.PYTHON_PLATFORMS,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 cxxPlatforms)

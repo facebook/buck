@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -205,8 +204,7 @@ public class PythonBinaryDescriptionTest {
                 .setSections(
                     ImmutableMap.of(
                         "python", ImmutableMap.of("pex_extension", ".different_extension")))
-                .build(),
-            new AlwaysFoundExecutableFinder());
+                .build());
     PythonBinaryBuilder builder =
         PythonBinaryBuilder.create(target, config, PythonTestUtils.PYTHON_PLATFORMS);
     PythonBinary binary = builder.setMainModule("main").build(resolver);
@@ -336,7 +334,7 @@ public class PythonBinaryDescriptionTest {
     final Path executor = Paths.get("/root/executor");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
             return Optional.of(new HashedFileTool(PathSourcePath.of(filesystem, executor)));
@@ -381,8 +379,7 @@ public class PythonBinaryDescriptionTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:pex_tool"))
             .setOut("pex-tool")
             .build(resolver);
-    PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder());
+    PythonBuckConfig config = new PythonBuckConfig(FakeBuckConfig.builder().build());
     PexToolProvider pexToolProvider =
         (__) ->
             new CommandTool.Builder()
@@ -416,7 +413,7 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
@@ -461,7 +458,7 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.SEPARATE;
@@ -508,7 +505,7 @@ public class PythonBinaryDescriptionTest {
     extensionBuilder.setBaseModule("hello");
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
@@ -556,7 +553,7 @@ public class PythonBinaryDescriptionTest {
                     ImmutableSortedSet.of(FakeSourcePath.of("prebuilt.so"))))
             .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
@@ -615,8 +612,7 @@ public class PythonBinaryDescriptionTest {
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
       PythonBuckConfig config =
-          new PythonBuckConfig(
-              FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          new PythonBuckConfig(FakeBuckConfig.builder().build()) {
             @Override
             public NativeLinkStrategy getNativeLinkStrategy() {
               return strategy;
@@ -656,8 +652,7 @@ public class PythonBinaryDescriptionTest {
                             "python",
                             ImmutableMap.of(
                                 "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
-                    .build(),
-                new AlwaysFoundExecutableFinder()),
+                    .build()),
             PythonTestUtils.PYTHON_PLATFORMS);
     builder.setMainModule("main").setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(pexExecutorBuilder.getTarget()));
@@ -674,7 +669,7 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
@@ -719,8 +714,7 @@ public class PythonBinaryDescriptionTest {
               .setStaticLib(FakeSourcePath.of("libdep2.a"))
               .setForceStatic(true);
       PythonBuckConfig config =
-          new PythonBuckConfig(
-              FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          new PythonBuckConfig(FakeBuckConfig.builder().build()) {
             @Override
             public NativeLinkStrategy getNativeLinkStrategy() {
               return strategy;
@@ -770,7 +764,7 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
@@ -807,7 +801,7 @@ public class PythonBinaryDescriptionTest {
   public void pexBuilderAddedToParseTimeDeps() {
     final BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<BuildTarget> getPexExecutorTarget() {
             return Optional.of(pexBuilder);
@@ -839,7 +833,7 @@ public class PythonBinaryDescriptionTest {
             .build(resolver);
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
             return Optional.of(pyTool.getExecutableCommand());

@@ -43,7 +43,7 @@ public class PythonPlatformsProviderFactoryUtils {
                 .withToolchain(
                     PythonInterpreter.DEFAULT_NAME,
                     new PythonInterpreterFromConfig(
-                        new PythonBuckConfig(buckConfig, executableFinder)))
+                        new PythonBuckConfig(buckConfig), executableFinder))
                 .build(),
             ToolchainCreationContext.of(
                 ImmutableMap.of(),

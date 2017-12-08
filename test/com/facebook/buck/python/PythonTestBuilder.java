@@ -72,17 +72,19 @@ public class PythonTestBuilder
       BuckConfig buckConfig,
       ExecutableFinder executableFinder,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, executableFinder);
-    return create(target, pythonBuckConfig, pythonPlatforms);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
+    return create(target, pythonBuckConfig, executableFinder, pythonPlatforms);
   }
 
   public static PythonTestBuilder create(
       BuildTarget target,
       PythonBuckConfig buckConfig,
+      ExecutableFinder executableFinder,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     return create(
         target,
         buckConfig,
+        executableFinder,
         pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
@@ -91,6 +93,7 @@ public class PythonTestBuilder
   public static PythonTestBuilder create(
       BuildTarget target,
       PythonBuckConfig buckConfig,
+      ExecutableFinder executableFinder,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
@@ -108,7 +111,7 @@ public class PythonTestBuilder
                     new ToolchainProviderBuilder()
                         .withToolchain(
                             PythonInterpreter.DEFAULT_NAME,
-                            new PythonInterpreterFromConfig(buckConfig))
+                            new PythonInterpreterFromConfig(buckConfig, executableFinder))
                         .build(),
                     buckConfig,
                     TestRuleKeyConfigurationFactory.create()))

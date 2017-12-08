@@ -28,8 +28,7 @@ public class PexToolProviderFactory implements ToolchainFactory<PexToolProvider>
   @Override
   public Optional<PexToolProvider> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(context.getBuckConfig());
     return Optional.of(
         new DefaultPexToolProvider(
             toolchainProvider, pythonBuckConfig, context.getRuleKeyConfiguration()));

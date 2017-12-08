@@ -38,8 +38,7 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
   @Override
   public Optional<PythonPlatformsProvider> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(context.getBuckConfig());
     PythonInterpreter pythonInterpreter =
         toolchainProvider.getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class);
     ImmutableList<PythonPlatform> pythonPlatformsList =

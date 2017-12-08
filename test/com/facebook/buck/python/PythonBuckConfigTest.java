@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -70,8 +69,7 @@ public class PythonBuckConfigTest {
                     ImmutableMap.of(
                         "python", ImmutableMap.of("path_to_pex_executer", pexExecuter.toString())))
                 .setFilesystem(projectFilesystem)
-                .build(),
-            new ExecutableFinder());
+                .build());
     assertThat(
         config.getPexExecutor(resolver).get().getCommandPrefix(pathResolver),
         Matchers.contains(projectDir.resolve(pexExecuter).toString()));

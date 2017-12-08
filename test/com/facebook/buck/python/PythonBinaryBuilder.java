@@ -58,6 +58,7 @@ public class PythonBinaryBuilder
   private PythonBinaryBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
+      ExecutableFinder executableFinder,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
@@ -73,7 +74,7 @@ public class PythonBinaryBuilder
                     new ToolchainProviderBuilder()
                         .withToolchain(
                             PythonInterpreter.DEFAULT_NAME,
-                            new PythonInterpreterFromConfig(pythonBuckConfig))
+                            new PythonInterpreterFromConfig(pythonBuckConfig, executableFinder))
                         .build(),
                     pythonBuckConfig,
                     TestRuleKeyConfigurationFactory.create()))
@@ -84,11 +85,11 @@ public class PythonBinaryBuilder
 
   public static PythonBinaryBuilder create(
       BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,
+        new ExecutableFinder(),
         pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
@@ -101,7 +102,12 @@ public class PythonBinaryBuilder
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     return new PythonBinaryBuilder(
-        target, pythonBuckConfig, pythonPlatforms, defaultCxxPlatform, cxxPlatforms);
+        target,
+        pythonBuckConfig,
+        new ExecutableFinder(),
+        pythonPlatforms,
+        defaultCxxPlatform,
+        cxxPlatforms);
   }
 
   public static PythonBinaryBuilder create(
@@ -111,6 +117,7 @@ public class PythonBinaryBuilder
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,
+        new ExecutableFinder(),
         pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);

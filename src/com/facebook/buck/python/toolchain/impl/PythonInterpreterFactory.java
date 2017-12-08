@@ -28,8 +28,8 @@ public class PythonInterpreterFactory implements ToolchainFactory<PythonInterpre
   @Override
   public Optional<PythonInterpreter> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
-    return Optional.of(new PythonInterpreterFromConfig(pythonBuckConfig));
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(context.getBuckConfig());
+    return Optional.of(
+        new PythonInterpreterFromConfig(pythonBuckConfig, context.getExecutableFinder()));
   }
 }

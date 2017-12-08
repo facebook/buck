@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python.toolchain.impl;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.util.HumanReadableException;
@@ -33,9 +34,12 @@ public class PythonInterpreterFromConfig implements PythonInterpreter {
       ImmutableList.of("python2", "python");
 
   private final PythonBuckConfig pythonBuckConfig;
+  private final ExecutableFinder executableFinder;
 
-  public PythonInterpreterFromConfig(PythonBuckConfig pythonBuckConfig) {
+  public PythonInterpreterFromConfig(
+      PythonBuckConfig pythonBuckConfig, ExecutableFinder executableFinder) {
     this.pythonBuckConfig = pythonBuckConfig;
+    this.executableFinder = executableFinder;
   }
 
   @Override
@@ -57,10 +61,8 @@ public class PythonInterpreterFromConfig implements PythonInterpreter {
     Preconditions.checkArgument(!interpreterNames.isEmpty());
     for (String interpreterName : interpreterNames) {
       Optional<Path> python =
-          pythonBuckConfig
-              .getExeFinder()
-              .getOptionalExecutable(
-                  Paths.get(interpreterName), pythonBuckConfig.getDelegate().getEnvironment());
+          executableFinder.getOptionalExecutable(
+              Paths.get(interpreterName), pythonBuckConfig.getDelegate().getEnvironment());
       if (python.isPresent()) {
         return python.get().toAbsolutePath();
       }
