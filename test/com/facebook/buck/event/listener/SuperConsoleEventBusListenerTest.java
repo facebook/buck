@@ -104,10 +104,8 @@ public class SuperConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String TARGET_THREE = "TARGET_THREE";
-  private static final String DOWNLOAD_STRING =
-      "Downloading... 0.00 bytes/sec, 0 artifacts, 0.00 bytes";
-  private static final String FINISHED_DOWNLOAD_STRING =
-      "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes";
+  private static final String DOWNLOAD_STRING = "Downloading... 0 artifacts, 0.00 bytes";
+  private static final String FINISHED_DOWNLOAD_STRING = "Downloaded 0 artifacts, 0.00 bytes";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
   private static final TestResultSummaryVerbosity noisySummaryVerbosity =
@@ -2255,7 +2253,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project... 0.9 sec (20%)",
-            "Downloading... 0.00 bytes/sec, 0 artifacts, 0.00 bytes",
+            "Downloading... 0 artifacts, 0.00 bytes",
             "Building... 0.1 sec"));
 
     eventBus.postWithoutConfiguring(
@@ -2272,7 +2270,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project... 1.0 sec (20%)",
-            "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes",
+            "Downloaded 0 artifacts, 0.00 bytes",
             "Building: finished in 0.2 sec"));
 
     eventBus.postWithoutConfiguring(
@@ -2286,7 +2284,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project: finished in 1.2 sec (100%)",
-            "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes",
+            "Downloaded 0 artifacts, 0.00 bytes",
             "Building: finished in 0.2 sec",
             "  Total time: 1.2 sec"));
   }

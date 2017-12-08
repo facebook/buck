@@ -681,25 +681,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             ? convertToAllCapsIfNeeded("Downloaded")
             : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
-    if (finishedEvent != null) {
-      Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();
-      Pair<Double, SizeUnit> readableSpeed =
-          SizeUnit.getHumanReadableSize(avgDownloadSpeed.getFirst(), avgDownloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale,
-              "%s/" + convertToAllCapsIfNeeded("sec") + " " + convertToAllCapsIfNeeded("avg"),
-              convertToAllCapsIfNeeded(SizeUnit.toHumanReadableString(readableSpeed, locale))));
-    } else {
-      Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
-      Pair<Double, SizeUnit> readableDownloadSpeed =
-          SizeUnit.getHumanReadableSize(downloadSpeed.getFirst(), downloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale,
-              "%s/" + convertToAllCapsIfNeeded("sec"),
-              SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
-    }
     Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
     Pair<Double, SizeUnit> readableBytesDownloaded =
         SizeUnit.getHumanReadableSize(bytesDownloaded.getFirst(), bytesDownloaded.getSecond());
@@ -811,8 +792,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
       httpArtifactUploadsStartedCount.incrementAndGet();
-    } else {
-      networkStatsKeeper.artifactDownloadedStarted(event);
     }
   }
 
@@ -829,7 +808,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         httpArtifactUploadFailedCount.incrementAndGet();
       }
     } else {
-      networkStatsKeeper.artifactDownloadFinished(event);
+      networkStatsKeeper.artifactDownloadFinished();
     }
   }
 
@@ -938,7 +917,5 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void outputTrace(BuildId buildId) {}
 
   @Override
-  public void close() throws IOException {
-    networkStatsKeeper.stopScheduler();
-  }
+  public void close() throws IOException {}
 }
