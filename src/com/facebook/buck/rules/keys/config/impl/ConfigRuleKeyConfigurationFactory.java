@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys.impl;
+package com.facebook.buck.rules.keys.config.impl;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.model.BuckVersion;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 
 /** Creates {@link RuleKeyConfiguration} using information from {@link BuckConfig}. */
 public class ConfigRuleKeyConfigurationFactory {

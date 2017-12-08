@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys;
+package com.facebook.buck.rules.keys.config;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;

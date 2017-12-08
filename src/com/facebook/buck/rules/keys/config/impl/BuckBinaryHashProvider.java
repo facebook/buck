@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys.impl;
+package com.facebook.buck.rules.keys.config.impl;
 
 import com.google.common.base.Preconditions;
 

@@ -37,6 +37,7 @@
   "//src/com/facebook/buck/parser:rule_pattern",
   "//src/com/facebook/buck/rules/coercer:interface",
   "//src/com/facebook/buck/rules/keys:keys",
+  "//src/com/facebook/buck/rules/keys/config:config",
   "//src/com/facebook/buck/rules/query:types",
   "//src/com/facebook/buck/rules:abstract_description_arg",
   "//src/com/facebook/buck/rules:build_event",
