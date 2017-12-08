@@ -230,10 +230,13 @@ public class FakeAppleRuleDescriptions {
           createTestToolchainProvider(
               DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN, DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
           new CxxLibraryDescription(
+              new ToolchainProviderBuilder()
+                  .withToolchain(
+                      CxxPlatformsProvider.DEFAULT_NAME,
+                      CxxPlatformsProvider.of(DEFAULT_PLATFORM, DEFAULT_APPLE_FLAVOR_DOMAIN))
+                  .build(),
               CxxPlatformUtils.DEFAULT_CONFIG,
-              DEFAULT_PLATFORM.getFlavor(),
-              new InferBuckConfig(DEFAULT_BUCK_CONFIG),
-              DEFAULT_APPLE_FLAVOR_DOMAIN),
+              new InferBuckConfig(DEFAULT_BUCK_CONFIG)),
           SWIFT_LIBRARY_DESCRIPTION,
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));

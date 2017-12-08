@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -60,6 +61,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -148,21 +150,18 @@ public class CxxLibraryDescription
   private static final FlavorDomain<HeaderMode> HEADER_MODE =
       FlavorDomain.from("C/C++ Header Mode", HeaderMode.class);
 
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final Flavor defaultCxxFlavor;
   private final InferBuckConfig inferBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxLibraryDescription(
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      Flavor defaultCxxFlavor,
-      InferBuckConfig inferBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      InferBuckConfig inferBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxFlavor = defaultCxxFlavor;
     this.inferBuckConfig = inferBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
@@ -173,12 +172,14 @@ public class CxxLibraryDescription
             // Missing: CXX Compilation Database
             // Missing: CXX Description Enhancer
             // Missing: CXX Infer Enhancer
-            cxxPlatforms, LinkerMapMode.FLAVOR_DOMAIN, StripStyle.FLAVOR_DOMAIN));
+            getCxxPlatformsProvider().getCxxPlatforms(),
+            LinkerMapMode.FLAVOR_DOMAIN,
+            StripStyle.FLAVOR_DOMAIN));
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxPlatforms.containsAnyOf(flavors)
+    return getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)
         || flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)
@@ -786,6 +787,10 @@ public class CxxLibraryDescription
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
@@ -1033,15 +1038,8 @@ public class CxxLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
-  }
-
-  public FlavorDomain<CxxPlatform> getCxxPlatforms() {
-    return cxxPlatforms;
-  }
-
-  public Flavor getDefaultCxxFlavor() {
-    return defaultCxxFlavor;
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   /**
@@ -1111,7 +1109,8 @@ public class CxxLibraryDescription
       case CXX_PREPROCESSOR_INPUT:
         {
           Map.Entry<Flavor, CxxPlatform> platform =
-              cxxPlatforms
+              getCxxPlatformsProvider()
+                  .getCxxPlatforms()
                   .getFlavorAndValue(buildTarget)
                   .orElseThrow(IllegalArgumentException::new);
           Map.Entry<Flavor, HeaderVisibility> visibility =
@@ -1196,7 +1195,9 @@ public class CxxLibraryDescription
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
       ImmutableSortedSet<Flavor> argDefaultFlavors, BuildRuleType... types) {
     Optional<Flavor> typeFlavor = LIBRARY_TYPE.getFlavor(argDefaultFlavors);
-    Optional<Flavor> platformFlavor = getCxxPlatforms().getFlavor(argDefaultFlavors);
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    Optional<Flavor> platformFlavor =
+        cxxPlatformsProvider.getCxxPlatforms().getFlavor(argDefaultFlavors);
 
     LOG.debug("Got arg default type %s platform %s", typeFlavor, platformFlavor);
 
@@ -1219,10 +1220,15 @@ public class CxxLibraryDescription
         ImmutableSortedSet.of(
             // Default to static if not otherwise specified.
             typeFlavor.orElse(CxxDescriptionEnhancer.STATIC_FLAVOR),
-            platformFlavor.orElse(defaultCxxFlavor));
+            platformFlavor.orElse(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor()));
 
     LOG.debug("Got default flavors %s for rule types %s", result, Arrays.toString(types));
     return result;
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   /**

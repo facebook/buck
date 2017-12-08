@@ -223,8 +223,7 @@ abstract class AbstractKnownBuildRuleTypes {
             cxxBuckConfig, inferBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms);
 
     CxxLibraryDescription cxxLibraryDescription =
-        new CxxLibraryDescription(
-            cxxBuckConfig, defaultCxxPlatform.getFlavor(), inferBuckConfig, cxxPlatforms);
+        new CxxLibraryDescription(toolchainProvider, cxxBuckConfig, inferBuckConfig);
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(

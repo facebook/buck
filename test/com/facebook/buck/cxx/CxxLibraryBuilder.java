@@ -20,6 +20,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -49,10 +51,13 @@ public class CxxLibraryBuilder
       BuildTarget target, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(CxxPlatformUtils.build(cxxBuckConfig), cxxPlatforms))
+                .build(),
             cxxBuckConfig,
-            CxxPlatformUtils.build(cxxBuckConfig).getFlavor(),
-            new InferBuckConfig(FakeBuckConfig.builder().build()),
-            cxxPlatforms),
+            new InferBuckConfig(FakeBuckConfig.builder().build())),
         target);
   }
 
