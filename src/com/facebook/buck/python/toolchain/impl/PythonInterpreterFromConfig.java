@@ -18,10 +18,19 @@ package com.facebook.buck.python.toolchain.impl;
 
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 public class PythonInterpreterFromConfig implements PythonInterpreter {
+
+  // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
+  private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
+      ImmutableList.of("python2", "python");
 
   private final PythonBuckConfig pythonBuckConfig;
 
@@ -31,16 +40,53 @@ public class PythonInterpreterFromConfig implements PythonInterpreter {
 
   @Override
   public Path getPythonInterpreterPath(Optional<String> config) {
-    return pythonBuckConfig.getPythonInterpreter(config);
+    return getPythonInterpreter(config);
   }
 
   @Override
   public Path getPythonInterpreterPath(String section) {
-    return pythonBuckConfig.getPythonInterpreter(section);
+    return getPythonInterpreter(section);
   }
 
   @Override
   public Path getPythonInterpreterPath() {
-    return pythonBuckConfig.getPythonInterpreter(pythonBuckConfig.getDefaultSection());
+    return getPythonInterpreter(pythonBuckConfig.getDefaultSection());
+  }
+
+  private Path findInterpreter(ImmutableList<String> interpreterNames) {
+    Preconditions.checkArgument(!interpreterNames.isEmpty());
+    for (String interpreterName : interpreterNames) {
+      Optional<Path> python =
+          pythonBuckConfig
+              .getExeFinder()
+              .getOptionalExecutable(
+                  Paths.get(interpreterName), pythonBuckConfig.getDelegate().getEnvironment());
+      if (python.isPresent()) {
+        return python.get().toAbsolutePath();
+      }
+    }
+    throw new HumanReadableException(
+        "No python interpreter found (searched %s).", Joiner.on(", ").join(interpreterNames));
+  }
+
+  /**
+   * Returns the path to python interpreter. If python is specified in 'interpreter' key of the
+   * 'python' section that is used and an error reported if invalid.
+   *
+   * @return The found python interpreter.
+   */
+  private Path getPythonInterpreter(Optional<String> config) {
+    if (!config.isPresent()) {
+      return findInterpreter(PYTHON_INTERPRETER_NAMES);
+    }
+    Path configPath = Paths.get(config.get());
+    if (!configPath.isAbsolute()) {
+      return findInterpreter(ImmutableList.of(config.get()));
+    }
+    return configPath;
+  }
+
+  private Path getPythonInterpreter(String section) {
+    return getPythonInterpreter(pythonBuckConfig.getInterpreter(section));
   }
 }

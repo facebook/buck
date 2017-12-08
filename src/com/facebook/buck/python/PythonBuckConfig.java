@@ -28,16 +28,10 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -48,10 +42,6 @@ public class PythonBuckConfig {
 
   private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
-
-  // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
-  private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
-      ImmutableList.of("python2", "python");
 
   private static final LoadingCache<ProjectFilesystem, PathSourcePath> PATH_TO_TEST_MAIN =
       CacheBuilder.newBuilder()
@@ -74,38 +64,16 @@ public class PythonBuckConfig {
     this.exeFinder = exeFinder;
   }
 
-  private Path findInterpreter(ImmutableList<String> interpreterNames) {
-    Preconditions.checkArgument(!interpreterNames.isEmpty());
-    for (String interpreterName : interpreterNames) {
-      Optional<Path> python =
-          exeFinder.getOptionalExecutable(Paths.get(interpreterName), delegate.getEnvironment());
-      if (python.isPresent()) {
-        return python.get().toAbsolutePath();
-      }
-    }
-    throw new HumanReadableException(
-        "No python interpreter found (searched %s).", Joiner.on(", ").join(interpreterNames));
+  public BuckConfig getDelegate() {
+    return delegate;
   }
 
-  /**
-   * Returns the path to python interpreter. If python is specified in 'interpreter' key of the
-   * 'python' section that is used and an error reported if invalid.
-   *
-   * @return The found python interpreter.
-   */
-  public Path getPythonInterpreter(Optional<String> config) {
-    if (!config.isPresent()) {
-      return findInterpreter(PYTHON_INTERPRETER_NAMES);
-    }
-    Path configPath = Paths.get(config.get());
-    if (!configPath.isAbsolute()) {
-      return findInterpreter(ImmutableList.of(config.get()));
-    }
-    return configPath;
+  public Optional<String> getInterpreter(String section) {
+    return delegate.getValue(section, "interpreter");
   }
 
-  public Path getPythonInterpreter(String section) {
-    return getPythonInterpreter(delegate.getValue(section, "interpreter"));
+  public ExecutableFinder getExeFinder() {
+    return exeFinder;
   }
 
   public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {

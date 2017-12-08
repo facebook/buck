@@ -20,6 +20,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -38,7 +39,12 @@ public class PythonPlatformsProviderFactoryUtils {
       BuckConfig buckConfig, ProcessExecutor processExecutor, ExecutableFinder executableFinder) {
     return new PythonPlatformsProviderFactory()
         .createToolchain(
-            new ToolchainProviderBuilder().build(),
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    PythonInterpreter.DEFAULT_NAME,
+                    new PythonInterpreterFromConfig(
+                        new PythonBuckConfig(buckConfig, executableFinder)))
+                .build(),
             ToolchainCreationContext.of(
                 ImmutableMap.of(),
                 buckConfig,

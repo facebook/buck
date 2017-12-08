@@ -39,6 +39,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -118,8 +119,8 @@ public class ResolverIntegrationTest {
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(filesystem.getRootPath())
                 .setPythonInterpreter(
-                    pythonBuckConfig
-                        .getPythonInterpreter(pythonBuckConfig.getDefaultSection())
+                    new PythonInterpreterFromConfig(pythonBuckConfig)
+                        .getPythonInterpreterPath()
                         .toString())
                 .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
                 .setIgnorePaths(filesystem.getIgnorePaths())

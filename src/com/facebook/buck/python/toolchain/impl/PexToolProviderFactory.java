@@ -31,6 +31,7 @@ public class PexToolProviderFactory implements ToolchainFactory<PexToolProvider>
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
     return Optional.of(
-        new DefaultPexToolProvider(pythonBuckConfig, context.getRuleKeyConfiguration()));
+        new DefaultPexToolProvider(
+            toolchainProvider, pythonBuckConfig, context.getRuleKeyConfiguration()));
   }
 }

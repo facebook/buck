@@ -26,9 +26,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.toolchain.PexToolProvider;
+import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.python.toolchain.impl.DefaultPexToolProvider;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -102,7 +104,14 @@ public class PythonTestBuilder
                 CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
             .withToolchain(
                 PexToolProvider.DEFAULT_NAME,
-                new DefaultPexToolProvider(buckConfig, TestRuleKeyConfigurationFactory.create()))
+                new DefaultPexToolProvider(
+                    new ToolchainProviderBuilder()
+                        .withToolchain(
+                            PythonInterpreter.DEFAULT_NAME,
+                            new PythonInterpreterFromConfig(buckConfig))
+                        .build(),
+                    buckConfig,
+                    TestRuleKeyConfigurationFactory.create()))
             .build(),
         buckConfig);
   }

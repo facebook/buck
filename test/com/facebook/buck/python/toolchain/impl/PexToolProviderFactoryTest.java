@@ -22,7 +22,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PexToolProvider;
+import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -52,7 +55,12 @@ public class PexToolProviderFactoryTest {
     PexToolProvider pexToolProvider =
         pexToolProviderFactory
             .createToolchain(
-                new ToolchainProviderBuilder().build(),
+                new ToolchainProviderBuilder()
+                    .withToolchain(
+                        PythonInterpreter.DEFAULT_NAME,
+                        new PythonInterpreterFromConfig(
+                            new PythonBuckConfig(buckConfig, new ExecutableFinder())))
+                    .build(),
                 ToolchainCreationContext.of(
                     ImmutableMap.of(),
                     buckConfig,
