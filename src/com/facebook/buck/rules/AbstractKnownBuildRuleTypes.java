@@ -89,12 +89,6 @@ import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlBuckConfig;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
 import com.facebook.buck.ocaml.PrebuiltOcamlLibraryDescription;
-import com.facebook.buck.python.CxxPythonExtensionDescription;
-import com.facebook.buck.python.PrebuiltPythonLibraryDescription;
-import com.facebook.buck.python.PythonBinaryDescription;
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.python.PythonLibraryDescription;
-import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.CommandAliasDescription;
@@ -204,10 +198,6 @@ abstract class AbstractKnownBuildRuleTypes {
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     DxConfig dxConfig = new DxConfig(config);
-
-    PythonBuckConfig pyConfig = new PythonBuckConfig(config);
-    PythonBinaryDescription pythonBinaryDescription =
-        new PythonBinaryDescription(toolchainProvider, pyConfig, cxxBuckConfig);
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 
@@ -338,7 +328,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new CxxGenruleDescription(
             cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
-    builder.addDescriptions(new CxxPythonExtensionDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(
         new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms));
     builder.addDescriptions(new ExportFileDescription());
@@ -391,14 +380,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
     builder.addDescriptions(new PrebuiltNativeLibraryDescription());
     builder.addDescriptions(new PrebuiltOcamlLibraryDescription());
-    builder.addDescriptions(new PrebuiltPythonLibraryDescription());
-    builder.addDescriptions(pythonBinaryDescription);
-    PythonLibraryDescription pythonLibraryDescription =
-        new PythonLibraryDescription(toolchainProvider);
-    builder.addDescriptions(pythonLibraryDescription);
-    builder.addDescriptions(
-        new PythonTestDescription(
-            toolchainProvider, pythonBinaryDescription, pyConfig, cxxBuckConfig));
     builder.addDescriptions(new RemoteFileDescription(toolchainProvider));
     builder.addDescriptions(
         new RobolectricTestDescription(
