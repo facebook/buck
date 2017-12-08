@@ -63,7 +63,6 @@ java_test(
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/plugin:plugin",
-        "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_event",
         "//src/com/facebook/buck/rules:build_rule",
