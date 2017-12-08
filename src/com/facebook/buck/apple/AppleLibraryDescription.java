@@ -241,12 +241,10 @@ public class AppleLibraryDescription
     Optional<Map.Entry<Flavor, Type>> maybeType = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     return maybeType.flatMap(
         type -> {
+          FlavorDomain<CxxPlatform> cxxPlatforms = getCxxPlatformsProvider().getCxxPlatforms();
           if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
-                delegate
-                    .getCxxPlatforms()
-                    .getValue(buildTarget)
-                    .orElseThrow(IllegalArgumentException::new);
+                cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
@@ -257,10 +255,7 @@ public class AppleLibraryDescription
                     HeaderVisibility.PUBLIC));
           } else if (type.getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
-                delegate
-                    .getCxxPlatforms()
-                    .getValue(buildTarget)
-                    .orElseThrow(IllegalArgumentException::new);
+                cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
@@ -271,10 +266,7 @@ public class AppleLibraryDescription
                     HeaderVisibility.PRIVATE));
           } else if (type.getValue().equals(Type.SWIFT_COMPILE)) {
             CxxPlatform cxxPlatform =
-                delegate
-                    .getCxxPlatforms()
-                    .getValue(buildTarget)
-                    .orElseThrow(IllegalArgumentException::new);
+                cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
             // TODO(mgd): Must handle 'default' platform
             AppleCxxPlatform applePlatform =
@@ -376,9 +368,11 @@ public class AppleLibraryDescription
       return resolver.requireRule(buildTarget.withAppendedFlavors(debugFormat.getFlavor()));
     }
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     return AppleDescriptions.createAppleBundle(
-        delegate.getCxxPlatforms(),
-        getDefaultCxxFlavor(),
+        cxxPlatformsProvider.getCxxPlatforms(),
+        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
         getAppleCxxPlatformDomain(),
         targetGraph,
         buildTarget,
@@ -453,18 +447,18 @@ public class AppleLibraryDescription
       return unstrippedBinaryRule;
     }
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+
     // If we built a multiarch binary, we can just use the strip tool from any platform.
     // We pick the platform in this odd way due to FlavorDomain's restriction of allowing only one
     // matching flavor in the build target.
     CxxPlatform representativePlatform =
-        delegate
-            .getCxxPlatforms()
-            .getValue(
-                Iterables.getFirst(
-                    Sets.intersection(
-                        delegate.getCxxPlatforms().getFlavors(),
-                        unstrippedBuildTarget.getFlavors()),
-                    getDefaultCxxFlavor()));
+        cxxPlatforms.getValue(
+            Iterables.getFirst(
+                Sets.intersection(cxxPlatforms.getFlavors(), unstrippedBuildTarget.getFlavors()),
+                defaultCxxFlavor));
 
     BuildTarget strippedBuildTarget =
         CxxStrip.restoreStripStyleFlavorInTarget(unstrippedBuildTarget, flavoredStripStyle);
@@ -487,8 +481,8 @@ public class AppleLibraryDescription
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
-        delegate.getCxxPlatforms(),
-        delegate.getDefaultCxxFlavor(),
+        cxxPlatforms,
+        defaultCxxFlavor,
         getAppleCxxPlatformDomain());
   }
 
@@ -660,7 +654,8 @@ public class AppleLibraryDescription
 
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
         && buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
-      Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
+      Optional<Flavor> cxxPlatformFlavor =
+          getCxxPlatformsProvider().getCxxPlatforms().getFlavor(buildTarget);
       Preconditions.checkState(
           cxxPlatformFlavor.isPresent(),
           "Could not find cxx platform in:\n%s",
@@ -989,10 +984,8 @@ public class AppleLibraryDescription
     return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 
-  private Flavor getDefaultCxxFlavor() {
-    return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-        .getDefaultCxxPlatform()
-        .getFlavor();
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 }
