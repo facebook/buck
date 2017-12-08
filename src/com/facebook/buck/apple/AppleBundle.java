@@ -171,6 +171,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final boolean hasBinary;
   private final boolean cacheable;
+  private final boolean verifyResources;
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -197,6 +198,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable,
+      boolean verifyResources,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
       Optional<Boolean> ibtoolModuleFlag) {
@@ -233,6 +235,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.cacheable = cacheable;
+    this.verifyResources = verifyResources;
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
     this.ibtoolModuleParams =
@@ -431,7 +434,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             resources.getResourceDirs(),
             resources.getDirsContainingResourceDirs(),
             resources.getResourceFiles()))) {
-      verifyResourceConflicts(resources, context.getSourcePathResolver());
+      if (verifyResources) {
+        verifyResourceConflicts(resources, context.getSourcePathResolver());
+      }
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -679,17 +684,17 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private void verifyResourceConflicts(AppleBundleResources resources,
                                        SourcePathResolver resolver) {
     // Ensure there are no resources that will overwrite each other
-    Set<Path> filenames = new HashSet<>();
+    // TODO: handle ResourceDirsContainingResourceDirs
+    Set<Path> resourcePaths = new HashSet<>();
     for (SourcePath path : Iterables.concat(
         resources.getResourceDirs(),
-        resources.getDirsContainingResourceDirs(),
         resources.getResourceFiles())) {
-      Path filename = resolver.getRelativePath(path).getFileName();
-      if (filenames.contains(filename)) {
+      Path pathInBundle = resolver.getRelativePath(path).getFileName();
+      if (resourcePaths.contains(pathInBundle)) {
         throw new HumanReadableException(
-            "Bundle contains multiple resources with filename %s", filename);
+            "Bundle contains multiple resources with path %s", pathInBundle);
       } else {
-        filenames.add(filename);
+        resourcePaths.add(pathInBundle);
       }
     }
   }

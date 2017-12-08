@@ -577,6 +577,7 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       boolean dryRunCodeSigning,
       boolean cacheable,
+      boolean verifyResources,
       AppleAssetCatalog.ValidationType assetCatalogValidation,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
@@ -795,6 +796,7 @@ public class AppleDescriptions {
         provisioningProfileStore,
         dryRunCodeSigning,
         cacheable,
+        verifyResources,
         codesignFlags,
         codesignAdhocIdentity,
         ibtoolModuleFlag);

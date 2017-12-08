@@ -269,6 +269,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);
   }
 
+  public boolean shouldVerifyBundleResources() {
+    return delegate.getBooleanValue(APPLE_SECTION, "verify_bundle_resources", false);
+  }
+
   public AppleAssetCatalog.ValidationType assetCatalogValidation() {
     return delegate
         .getEnum(APPLE_SECTION, "asset_catalog_validation", AppleAssetCatalog.ValidationType.class)

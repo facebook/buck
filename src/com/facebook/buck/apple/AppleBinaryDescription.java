@@ -362,6 +362,7 @@ public class AppleBinaryDescription
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
+        appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
         ImmutableList.of(),
         Optional.empty(),

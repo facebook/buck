@@ -399,6 +399,7 @@ public class AppleLibraryDescription
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
+        appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
         ImmutableList.of(),
         Optional.empty(),

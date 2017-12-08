@@ -623,9 +623,19 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appBundleWithConflictingResources() throws Exception {
+  public void appBundleWithConflictingFileAndFolderResources() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_conflicting_resources", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertFailure();
+  }
+
+  @Test
+  public void appBundleWithConflictingNestedFolderResources() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_conflicting_nested_resources", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
