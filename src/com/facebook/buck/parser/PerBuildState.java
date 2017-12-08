@@ -30,21 +30,17 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,8 +59,6 @@ public class PerBuildState implements AutoCloseable {
   private final BuckEventBus eventBus;
   private final boolean enableProfiling;
 
-  private final PrintStream stdout;
-  private final PrintStream stderr;
   private final Console console;
 
   private final Map<Path, Cell> cells;
@@ -110,9 +104,7 @@ public class PerBuildState implements AutoCloseable {
     this.buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
     this.symlinkExistenceCache = new ConcurrentHashMap<>();
 
-    this.stdout = new PrintStream(ByteStreams.nullOutputStream());
-    this.stderr = new PrintStream(ByteStreams.nullOutputStream());
-    this.console = new Console(Verbosity.STANDARD_INFORMATION, stdout, stderr, Ansi.withoutTty());
+    this.console = Console.createNullConsole();
 
     TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = this::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
@@ -343,8 +335,6 @@ public class PerBuildState implements AutoCloseable {
 
   @Override
   public void close() throws BuildFileParseException {
-    stdout.close();
-    stderr.close();
     targetNodeParsePipeline.close();
     rawNodeParsePipeline.close();
     projectBuildFileParserPool.close();

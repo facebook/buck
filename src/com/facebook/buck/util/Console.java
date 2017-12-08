@@ -30,11 +30,14 @@ public class Console {
   private final DirtyPrintStreamDecorator stdErr;
   private final Ansi ansi;
 
+  private static final PrintStream NULL_PRINT_STREAM =
+      new PrintStream(ByteStreams.nullOutputStream());
+  private static final Console NULL_CONSOLE =
+      new Console(Verbosity.SILENT, NULL_PRINT_STREAM, NULL_PRINT_STREAM, Ansi.withoutTty());
+
   /** Returns a {@link Console} that simply discards written bytes. */
   public static Console createNullConsole() {
-    PrintStream stdout = new PrintStream(ByteStreams.nullOutputStream());
-    PrintStream stderr = new PrintStream(ByteStreams.nullOutputStream());
-    return new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
+    return NULL_CONSOLE;
   }
 
   public Console(Verbosity verbosity, PrintStream stdOut, PrintStream stdErr, Ansi ansi) {
