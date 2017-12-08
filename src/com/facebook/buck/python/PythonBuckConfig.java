@@ -24,18 +24,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.VersionedTool;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -56,10 +52,6 @@ public class PythonBuckConfig {
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
       ImmutableList.of("python2", "python");
-
-  private static final Path DEFAULT_PATH_TO_PEX =
-      Paths.get(System.getProperty("buck.path_to_pex", "src/com/facebook/buck/python/make_pex.py"))
-          .toAbsolutePath();
 
   private static final LoadingCache<ProjectFilesystem, PathSourcePath> PATH_TO_TEST_MAIN =
       CacheBuilder.newBuilder()
@@ -130,30 +122,6 @@ public class PythonBuckConfig {
 
   public Optional<Tool> getRawPexTool(BuildRuleResolver resolver) {
     return delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
-  }
-
-  public Tool getPexTool(BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-    CommandTool.Builder builder =
-        new CommandTool.Builder(getRawPexTool(resolver, ruleKeyConfiguration));
-    for (String flag : Splitter.on(' ').omitEmptyStrings().split(getPexFlags())) {
-      builder.addArg(flag);
-    }
-
-    return builder.build();
-  }
-
-  private Tool getRawPexTool(
-      BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-    Optional<Tool> executable = getRawPexTool(resolver);
-    if (executable.isPresent()) {
-      return executable.get();
-    }
-    return VersionedTool.builder()
-        .setName("pex")
-        .setVersion(ruleKeyConfiguration.getCoreKey())
-        .setPath(getPythonInterpreter(SECTION))
-        .addExtraArgs(DEFAULT_PATH_TO_PEX.toString())
-        .build();
   }
 
   public Optional<BuildTarget> getPexExecutorTarget() {

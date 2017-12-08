@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -46,7 +47,6 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
@@ -78,15 +78,12 @@ public class PythonBinaryDescription
   private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   public PythonBinaryDescription(
       ToolchainProvider toolchainProvider,
-      RuleKeyConfiguration ruleKeyConfiguration,
       PythonBuckConfig pythonBuckConfig,
       CxxBuckConfig cxxBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.pythonBuckConfig = pythonBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
   }
@@ -242,7 +239,9 @@ public class PythonBinaryDescription
             params,
             ruleFinder,
             pythonPlatform,
-            pythonBuckConfig.getPexTool(resolver, ruleKeyConfiguration),
+            toolchainProvider
+                .getByName(PexToolProvider.DEFAULT_NAME, PexToolProvider.class)
+                .getPexTool(resolver),
             buildArgs,
             pythonBuckConfig.getPexExecutor(resolver).orElse(pythonPlatform.getEnvironment()),
             extension.orElse(pythonBuckConfig.getPexExtension()),

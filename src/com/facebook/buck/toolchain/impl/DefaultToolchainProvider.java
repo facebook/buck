@@ -45,8 +45,10 @@ import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.python.toolchain.impl.PexToolProviderFactory;
 import com.facebook.buck.python.toolchain.impl.PythonInterpreterFactory;
 import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -128,6 +130,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               CxxPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class),
+          ToolchainDescriptor.of(
+              PexToolProvider.DEFAULT_NAME, PexToolProvider.class, PexToolProviderFactory.class),
           ToolchainDescriptor.of(
               PythonInterpreter.DEFAULT_NAME,
               PythonInterpreter.class,

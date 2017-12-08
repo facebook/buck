@@ -96,7 +96,6 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestDescription;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.CommandAliasDescription;
@@ -185,7 +184,6 @@ abstract class AbstractKnownBuildRuleTypes {
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
       PluginManager pluginManager,
-      RuleKeyConfiguration ruleKeyConfiguration,
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory)
       throws InterruptedException, IOException {
 
@@ -212,8 +210,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, executableFinder);
     PythonBinaryDescription pythonBinaryDescription =
-        new PythonBinaryDescription(
-            toolchainProvider, ruleKeyConfiguration, pyConfig, cxxBuckConfig);
+        new PythonBinaryDescription(toolchainProvider, pyConfig, cxxBuckConfig);
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 

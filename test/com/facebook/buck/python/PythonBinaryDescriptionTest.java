@@ -34,6 +34,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonEnvironment;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonVersion;
@@ -64,7 +65,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -74,6 +74,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.base.Preconditions;
@@ -381,22 +382,19 @@ public class PythonBinaryDescriptionTest {
             .setOut("pex-tool")
             .build(resolver);
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
-          @Override
-          public PackageStyle getPackageStyle() {
-            return PackageStyle.STANDALONE;
-          }
-
-          @Override
-          public Tool getPexTool(
-              BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-            return new CommandTool.Builder()
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder());
+    PexToolProvider pexToolProvider =
+        (__) ->
+            new CommandTool.Builder()
                 .addArg(SourcePathArg.of(pexTool.getSourcePathToOutput()))
                 .build();
-          }
-        };
     PythonBinaryBuilder builder =
-        PythonBinaryBuilder.create(target, config, PythonTestUtils.PYTHON_PLATFORMS);
+        PythonBinaryBuilder.create(
+            target,
+            config,
+            new ToolchainProviderBuilder()
+                .withToolchain(PexToolProvider.DEFAULT_NAME, pexToolProvider),
+            PythonTestUtils.PYTHON_PLATFORMS);
     PythonPackagedBinary binary =
         (PythonPackagedBinary) builder.setMainModule("main").build(resolver);
     assertThat(binary.getBuildDeps(), Matchers.hasItem(pexTool));

@@ -16,14 +16,12 @@
 
 package com.facebook.buck.python;
 
-import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,7 +31,6 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
@@ -197,24 +194,5 @@ public class PythonBuckConfigTest {
     assertThat(
         config.getPexExecutor(resolver).get().getCommandPrefix(pathResolver),
         Matchers.contains(projectDir.resolve(pexExecuter).toString()));
-  }
-
-  @Test
-  public void testPexArgs() throws Exception {
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of("python", ImmutableMap.of("pex_flags", "--hello --world")))
-                .build(),
-            new AlwaysFoundExecutableFinder());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    assertThat(
-        config
-            .getPexTool(resolver, TestRuleKeyConfigurationFactory.create())
-            .getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))),
-        hasConsecutiveItems("--hello", "--world"));
   }
 }
