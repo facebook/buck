@@ -225,8 +225,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new CxxLibraryDescription(toolchainProvider, cxxBuckConfig, inferBuckConfig);
 
     SwiftLibraryDescription swiftLibraryDescription =
-        new SwiftLibraryDescription(
-            toolchainProvider, cxxBuckConfig, swiftBuckConfig, cxxPlatforms);
+        new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
     builder.addDescriptions(swiftLibraryDescription);
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
