@@ -366,7 +366,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new KotlinTestDescription(
             kotlinBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
-    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);
+    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config);
     builder.addDescriptions(new OcamlBinaryDescription(toolchainProvider, ocamlBuckConfig));
     builder.addDescriptions(new OcamlLibraryDescription(toolchainProvider, ocamlBuckConfig));
     builder.addDescriptions(new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig));

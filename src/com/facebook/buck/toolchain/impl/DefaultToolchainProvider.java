@@ -45,6 +45,8 @@ import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.ocaml.OcamlToolchain;
+import com.facebook.buck.ocaml.OcamlToolchainFactory;
 import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
@@ -130,6 +132,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               CxxPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class),
+          ToolchainDescriptor.of(
+              OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class, OcamlToolchainFactory.class),
           ToolchainDescriptor.of(
               PexToolProvider.DEFAULT_NAME, PexToolProvider.class, PexToolProviderFactory.class),
           ToolchainDescriptor.of(

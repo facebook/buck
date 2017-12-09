@@ -32,7 +32,6 @@ import com.facebook.buck.cxx.CxxSourceRuleFactoryHelper;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.ExecutableFinder;
@@ -84,10 +83,7 @@ public class OCamlIntegrationTest {
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(filesystem.getRootPath(), rawConfig));
 
-    OcamlBuckConfig ocamlBuckConfig =
-        new OcamlBuckConfig(
-            buckConfig,
-            DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig)));
+    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(buckConfig);
 
     assumeTrue(ocamlBuckConfig.getOcamlCompiler().isPresent());
     assumeTrue(ocamlBuckConfig.getOcamlBytecodeCompiler().isPresent());
