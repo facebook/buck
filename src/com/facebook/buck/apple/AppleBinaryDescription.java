@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.file.WriteFile;
@@ -273,6 +274,7 @@ public class AppleBinaryDescription
       AppleBinaryDescriptionArg args,
       BuildTarget unstrippedBinaryBuildTarget,
       HasAppleDebugSymbolDeps unstrippedBinaryRule) {
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     BuildTarget strippedBinaryBuildTarget =
         unstrippedBinaryBuildTarget.withAppendedFlavors(
             StripStyle.FLAVOR_DOMAIN
@@ -295,8 +297,8 @@ public class AppleBinaryDescription
         strippedBinaryRule,
         unstrippedBinaryRule,
         AppleDebugFormat.FLAVOR_DOMAIN.getRequiredValue(buildTarget),
-        delegate.getCxxPlatforms(),
-        delegate.getDefaultCxxFlavor(),
+        cxxPlatformsProvider.getCxxPlatforms(),
+        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
         appleCxxPlatformsFlavorDomain);
   }
 
@@ -320,12 +322,12 @@ public class AppleBinaryDescription
     if (!buildTarget.getFlavors().contains(flavoredDebugFormat.getFlavor())) {
       return resolver.requireRule(buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
       CxxPlatform cxxPlatform =
-          delegate
-              .getCxxPlatforms()
-              .getValue(buildTarget)
-              .orElse(delegate.getCxxPlatforms().getValue(delegate.getDefaultCxxFlavor()));
+          cxxPlatforms.getValue(buildTarget).orElse(cxxPlatforms.getValue(defaultCxxFlavor));
       ApplePlatform applePlatform =
           appleCxxPlatformsFlavorDomain
               .getValue(cxxPlatform.getFlavor())
@@ -340,8 +342,8 @@ public class AppleBinaryDescription
     }
     BuildTarget binaryTarget = buildTarget.withoutFlavors(APP_FLAVOR);
     return AppleDescriptions.createAppleBundle(
-        delegate.getCxxPlatforms(),
-        delegate.getDefaultCxxFlavor(),
+        cxxPlatforms,
+        defaultCxxFlavor,
         appleCxxPlatformsFlavorDomain,
         targetGraph,
         buildTarget,
@@ -539,7 +541,8 @@ public class AppleBinaryDescription
           buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
     }
 
-    Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
+    Optional<Flavor> cxxPlatformFlavor =
+        getCxxPlatformsProvider().getCxxPlatforms().getFlavor(buildTarget);
     Preconditions.checkState(
         cxxPlatformFlavor.isPresent(),
         "Could not find cxx platform in:\n%s",
@@ -588,6 +591,11 @@ public class AppleBinaryDescription
       extraDepsBuilder.addAll(
           delegate.findDepsForTargetFromConstructorArgs(buildTarget, Optional.empty()));
     }
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

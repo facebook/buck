@@ -332,14 +332,6 @@ public class CxxBinaryDescription
     return flavors.isEmpty();
   }
 
-  public FlavorDomain<CxxPlatform> getCxxPlatforms() {
-    return getCxxPlatformsProvider().getCxxPlatforms();
-  }
-
-  public Flavor getDefaultCxxFlavor() {
-    return getCxxPlatformsProvider().getDefaultCxxPlatform().getFlavor();
-  }
-
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
@@ -365,7 +357,8 @@ public class CxxBinaryDescription
 
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
       ImmutableSortedSet<Flavor> argDefaultFlavors, BuildRuleType... types) {
-    Optional<Flavor> platformFlavor = getCxxPlatforms().getFlavor(argDefaultFlavors);
+    Optional<Flavor> platformFlavor =
+        getCxxPlatformsProvider().getCxxPlatforms().getFlavor(argDefaultFlavors);
 
     for (BuildRuleType type : types) {
       ImmutableMap<String, Flavor> libraryDefaults =
