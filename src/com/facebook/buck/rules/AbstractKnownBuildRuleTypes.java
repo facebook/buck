@@ -350,11 +350,11 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new JavaTestDescription(
+            toolchainProvider,
             javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
-            defaultJavaCxxPlatform,
-            cxxPlatforms));
+            defaultJavaCxxPlatform));
     builder.addDescriptions(new JsBundleDescription(toolchainProvider));
     builder.addDescriptions(
         new JsBundleGenruleDescription(toolchainProvider, sandboxExecutionStrategy));

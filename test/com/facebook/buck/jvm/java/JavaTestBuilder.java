@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -36,11 +37,11 @@ public class JavaTestBuilder
   private JavaTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new JavaTestDescription(
+            new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
             javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
             DEFAULT_JAVAC_OPTIONS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS),
+            CxxPlatformUtils.DEFAULT_PLATFORM),
         target);
   }
 

@@ -19,12 +19,12 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -43,6 +43,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
@@ -68,23 +69,23 @@ public class JavaTestDescription
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
   private final CxxPlatform defaultCxxPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public JavaTestDescription(
+      ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateJavacOptions,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxPlatform defaultCxxPlatform) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateJavacOptions = templateJavacOptions;
     this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
@@ -93,7 +94,13 @@ public class JavaTestDescription
   }
 
   private CxxPlatform getCxxPlatform(AbstractJavaTestDescriptionArg args) {
-    return args.getDefaultCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform);
+    return args.getDefaultCxxPlatform()
+        .map(
+            toolchainProvider
+                    .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                    .getCxxPlatforms()
+                ::getValue)
+        .orElse(defaultCxxPlatform);
   }
 
   @Override
