@@ -35,8 +35,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.ocaml.OcamlBinaryDescription;
-import com.facebook.buck.ocaml.OcamlLibraryDescription;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -321,47 +319,6 @@ public class KnownBuildRuleTypesTest {
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
     KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
-  }
-
-  @Test
-  public void ocamlUsesConfiguredDefaultPlatform() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Flavor flavor = InternalFlavor.of("flavor");
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "cxx",
-            ImmutableMap.of("default_platform", flavor.toString()),
-            "cxx#" + flavor,
-            ImmutableMap.of());
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            BuckPluginManagerFactory.createPluginManager(),
-            environment,
-            buckConfig,
-            filesystem,
-            createExecutor(),
-            executableFinder,
-            TestRuleKeyConfigurationFactory.create());
-    KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
-    OcamlLibraryDescription ocamlLibraryDescription =
-        (OcamlLibraryDescription)
-            knownBuildRuleTypes.getDescription(
-                knownBuildRuleTypes.getBuildRuleType("ocaml_library"));
-    CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    assertThat(
-        ocamlLibraryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
-    OcamlBinaryDescription ocamlBinaryDescription =
-        (OcamlBinaryDescription)
-            knownBuildRuleTypes.getDescription(
-                knownBuildRuleTypes.getBuildRuleType("ocaml_binary"));
-    assertThat(
-        ocamlBinaryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
   }
 
   @Test

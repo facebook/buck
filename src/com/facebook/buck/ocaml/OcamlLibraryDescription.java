@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -44,9 +46,12 @@ public class OcamlLibraryDescription
             OcamlLibraryDescription.AbstractOcamlLibraryDescriptionArg>,
         VersionPropagator<OcamlLibraryDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final OcamlBuckConfig ocamlBuckConfig;
 
-  public OcamlLibraryDescription(OcamlBuckConfig ocamlBuckConfig) {
+  public OcamlLibraryDescription(
+      ToolchainProvider toolchainProvider, OcamlBuckConfig ocamlBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.ocamlBuckConfig = ocamlBuckConfig;
   }
 
@@ -86,6 +91,7 @@ public class OcamlLibraryDescription
     boolean nativePlugin = !bytecodeOnly && args.getNativePlugin();
 
     return OcamlRuleBuilder.createBuildRule(
+        toolchainProvider,
         ocamlBuckConfig,
         buildTarget,
         projectFilesystem,
@@ -106,7 +112,11 @@ public class OcamlLibraryDescription
       AbstractOcamlLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(ocamlBuckConfig.getCxxPlatform()));
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            toolchainProvider
+                .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                .getDefaultCxxPlatform()));
   }
 
   @BuckStyleImmutable

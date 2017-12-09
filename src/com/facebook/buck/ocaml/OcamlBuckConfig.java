@@ -104,10 +104,6 @@ public class OcamlBuckConfig {
     return getTool(SECTION, "debug", DEFAULT_OCAML_DEBUG);
   }
 
-  public CxxPlatform getCxxPlatform() {
-    return cxxPlatform;
-  }
-
   private Optional<Path> getExecutable(String section, String label, Path defaultValue) {
     return new ExecutableFinder()
         .getOptionalExecutable(
