@@ -386,11 +386,11 @@ abstract class AbstractKnownBuildRuleTypes {
         new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new ScalaTestDescription(
+            toolchainProvider,
             scalaConfig,
             javaConfig,
             defaultJavacOptions,
-            defaultJavaOptionsForTests,
-            defaultCxxPlatform));
+            defaultJavaOptionsForTests));
     builder.addDescriptions(new SceneKitAssetsDescription());
     builder.addDescriptions(new ShBinaryDescription());
     builder.addDescriptions(new ShTestDescription(config));
