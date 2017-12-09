@@ -338,8 +338,7 @@ abstract class AbstractKnownBuildRuleTypes {
             groovyBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new GwtBinaryDescription(defaultJavaOptions));
     builder.addDescriptions(
-        new HalideLibraryDescription(
-            cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, halideBuckConfig));
+        new HalideLibraryDescription(toolchainProvider, cxxBuckConfig, halideBuckConfig));
     builder.addDescriptions(
         new JavaBinaryDescription(
             defaultJavaOptions,
