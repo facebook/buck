@@ -109,6 +109,7 @@ class ClassVisitorDriverFromElement {
         return Opcodes.V1_7;
       case RELEASE_8:
         return Opcodes.V1_8;
+      //$CASES-OMITTED$ No RELEASE_9 support yet
       default:
         throw new IllegalArgumentException(String.format("Unexpected source version: %s", version));
     }

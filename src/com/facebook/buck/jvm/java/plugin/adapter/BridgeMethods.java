@@ -48,7 +48,14 @@ public class BridgeMethods {
   }
 
   public List<BridgeMethod> getBridgeMethods(TypeElement typeElement) {
-    return allBridgeMethods.computeIfAbsent(typeElement, this::calculateBridgeMethods);
+    // must not use computeIfAbsent here because calculateBridgeMethods does as well
+    List<BridgeMethod> methods = allBridgeMethods.get(typeElement);
+    if (methods == null) {
+      List<BridgeMethod> newValue = calculateBridgeMethods(typeElement);
+      allBridgeMethods.put(typeElement, newValue);
+      return newValue;
+    }
+    return methods;
   }
 
   public List<BridgeMethod> getBridgeMethods(TypeElement typeElement, Name name) {

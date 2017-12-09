@@ -121,14 +121,14 @@
     <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="dd-plist/dd-plist.jar" />
     <include name="d8/d8.jar" />
-    <include name="eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar"/>
-    <include name="eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar"/>
-    <include name="eclipse/org.eclipse.core.resources_3.11.0.v20160422-0304.jar"/>
-    <include name="eclipse/org.eclipse.core.runtime_3.12.0.v20160427-1901.jar"/>
-    <include name="eclipse/org.eclipse.equinox.common_3.8.0.v20160422-1942.jar"/>
-    <include name="eclipse/org.eclipse.equinox.preferences_3.6.0.v20160120-1756.jar"/>
-    <include name="eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar"/>
-    <include name="eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
+    <include name="eclipse/org.eclipse.core.contenttype_3.6.0.v20170207-1037.jar"/>
+    <include name="eclipse/org.eclipse.core.jobs_3.9.1.v20170714-0547.jar"/>
+    <include name="eclipse/org.eclipse.core.resources_3.12.0.v20170417-1558.jar"/>
+    <include name="eclipse/org.eclipse.core.runtime_3.13.0.v20170207-1030.jar"/>
+    <include name="eclipse/org.eclipse.equinox.common_3.9.0.v20170207-1454.jar"/>
+    <include name="eclipse/org.eclipse.equinox.preferences_3.7.0.v20170126-2132.jar"/>
+    <include name="eclipse/org.eclipse.jdt.core_3.13.50.v20171007-0855.jar"/>
+    <include name="eclipse/org.eclipse.osgi_3.12.50.v20170928-1321.jar"/>
     <include name="eden/eden.jar" />
     <include name="eden/java-thrift-dependencies.jar" />
     <include name="fastutil/fastutil-7.2.0.jar" />
@@ -254,6 +254,7 @@
            debug="on"
            includeAntRuntime="no"
             >
+        <compilerarg line="--add-modules java.xml.ws.annotation" />
     </javac>
   </target>
 
@@ -423,13 +424,14 @@
           http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2FJavaCore.html
           Apparently Eclipse refuses to publish traditional Javadoc with manageable URLs.
         -->
+        <compilerarg line="--add-modules java.xml.ws.annotation" />
         <compilerarg line="-properties '${eclipse.dir}/${eclipse.jdt.core.prefs.file}'" />
         <compilerarg value="-Xlint:rawtypes" />
         <compilerarg value="-Xlint:unchecked" />
         <compilerarg value="-Xlint:serial" />
         <compilerarg value="-time" />
         <compilerclasspath>
-          <pathelement location="${eclipse.dir}/ecj-4.6.2.jar" />
+          <pathelement location="${eclipse.dir}/ecj-4.8M4.jar" />
         </compilerclasspath>
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />

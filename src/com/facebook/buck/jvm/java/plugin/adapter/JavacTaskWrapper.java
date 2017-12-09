@@ -95,4 +95,9 @@ abstract class JavacTaskWrapper extends JavacTask {
   public Boolean call() {
     return inner.call();
   }
+
+  @Override
+  public void addModules(Iterable<String> moduleNames) {
+    inner.addModules(moduleNames);
+  }
 }

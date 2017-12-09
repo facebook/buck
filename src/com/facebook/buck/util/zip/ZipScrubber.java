@@ -120,7 +120,7 @@ public class ZipScrubber {
   @SuppressWarnings("unused")
   private static String localEntryName(ByteBuffer entry) {
     byte[] nameBytes = new byte[entry.getShort(ZipEntry.LOCNAM)];
-    ((ByteBuffer) entry.slice().position(ZipEntry.LOCHDR)).get(nameBytes);
+    entry.slice().position(ZipEntry.LOCHDR).get(nameBytes);
     return new String(nameBytes);
   }
 

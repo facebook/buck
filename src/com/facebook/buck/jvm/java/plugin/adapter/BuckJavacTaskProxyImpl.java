@@ -130,4 +130,9 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   public Boolean call() {
     return javacTask.call();
   }
+
+  @Override
+  public void addModules(Iterable<String> moduleNames) {
+    javacTask.addModules(moduleNames);
+  }
 }
