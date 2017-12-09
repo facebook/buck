@@ -26,6 +26,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
+import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
@@ -582,6 +583,15 @@ public final class Main {
     checkJavaSpecificationVersions(buckConfig);
 
     Verbosity verbosity = VerbosityParser.parse(args);
+
+    // Switch to async file logging, if configured. A few log samples will have already gone
+    // via the regular file logger, but that's OK.
+    boolean isDistributedBuild =
+        command.subcommand != null && command.subcommand instanceof DistBuildCommand;
+    if (isDistributedBuild) {
+      DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
+      LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
+    }
 
     // Setup the console.
     final Console console = makeCustomConsole(context, verbosity, buckConfig);

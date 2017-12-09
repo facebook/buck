@@ -98,6 +98,9 @@ public class DistBuildConfig {
   private static final String ENABLE_DEEP_REMOTE_BUILD = "enable_deep_remote_build";
   private static final boolean DEFAULT_ENABLE_DEEP_REMOTE_BUILD = false;
 
+  private static final String ENABLE_ASYNC_LOGGING = "enable_async_logging";
+  private static final boolean DEFAULT_ENABLE_ASYNC_LOGGING = true;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -218,6 +221,11 @@ public class DistBuildConfig {
   public boolean isDeepRemoteBuildEnabled() {
     return buckConfig.getBooleanValue(
         STAMPEDE_SECTION, ENABLE_DEEP_REMOTE_BUILD, DEFAULT_ENABLE_DEEP_REMOTE_BUILD);
+  }
+
+  public boolean isAsyncLoggingEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_ASYNC_LOGGING, DEFAULT_ENABLE_ASYNC_LOGGING);
   }
 
   public long getHearbeatServiceRateMillis() {
