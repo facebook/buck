@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -61,19 +61,16 @@ public class JavaBinaryDescription
   private final JavaOptions javaOptions;
   private final JavacOptions javacOptions;
   private final JavaBuckConfig javaBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
 
   public JavaBinaryDescription(
       ToolchainProvider toolchainProvider,
       JavaOptions javaOptions,
       JavacOptions javacOptions,
-      JavaBuckConfig javaBuckConfig,
-      CxxPlatform defaultCxxPlatform) {
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaOptions = javaOptions;
     this.javacOptions = javacOptions;
     this.javaBuckConfig = javaBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -88,7 +85,10 @@ public class JavaBinaryDescription
                     .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
                     .getCxxPlatforms()
                 ::getValue)
-        .orElse(defaultCxxPlatform);
+        .orElse(
+            toolchainProvider
+                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getDefaultJavaCxxPlatform());
   }
 
   @Override
@@ -170,11 +170,6 @@ public class JavaBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
-  }
-
-  @VisibleForTesting
-  public CxxPlatform getDefaultCxxPlatform() {
-    return defaultCxxPlatform;
   }
 
   @BuckStyleImmutable

@@ -27,10 +27,8 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -319,45 +317,6 @@ public class KnownBuildRuleTypesTest {
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
     KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
-  }
-
-  @Test
-  public void javaDefaultCxxPlatform() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Flavor flavor = InternalFlavor.of("flavor");
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "cxx#" + flavor,
-            ImmutableMap.of(),
-            "java",
-            ImmutableMap.of("default_cxx_platform", flavor.toString()));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            BuckPluginManagerFactory.createPluginManager(),
-            environment,
-            buckConfig,
-            filesystem,
-            createExecutor(),
-            executableFinder,
-            TestRuleKeyConfigurationFactory.create());
-    KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
-    JavaBinaryDescription javaBinaryDescription =
-        (JavaBinaryDescription)
-            knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));
-    CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    assertThat(
-        javaBinaryDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
-    JavaTestDescription javaTestDescription =
-        (JavaTestDescription)
-            knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_test"));
-    assertThat(
-        javaTestDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(cxxPlatformsProvider.getCxxPlatforms().getValue(flavor)));
   }
 
   private ProcessExecutor createExecutor() throws IOException {

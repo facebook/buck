@@ -17,6 +17,7 @@ java_library(
         "//src/com/facebook/buck/file/downloader/impl:impl",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java/toolchain/impl:impl",
         "//src/com/facebook/buck/ocaml:ocaml",
         "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//src/com/facebook/buck/swift/toolchain/impl:impl",

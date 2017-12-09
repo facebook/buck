@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.macros.MacroException;
@@ -47,7 +48,6 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,19 +73,16 @@ public class JavaTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
-  private final CxxPlatform defaultCxxPlatform;
 
   public JavaTestDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
-      JavacOptions templateJavacOptions,
-      CxxPlatform defaultCxxPlatform) {
+      JavacOptions templateJavacOptions) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateJavacOptions = templateJavacOptions;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -100,7 +97,10 @@ public class JavaTestDescription
                     .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
                     .getCxxPlatforms()
                 ::getValue)
-        .orElse(defaultCxxPlatform);
+        .orElse(
+            toolchainProvider
+                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getDefaultJavaCxxPlatform());
   }
 
   @Override
@@ -192,11 +192,6 @@ public class JavaTestDescription
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }
     }
-  }
-
-  @VisibleForTesting
-  public CxxPlatform getDefaultCxxPlatform() {
-    return defaultCxxPlatform;
   }
 
   public interface CoreArg extends HasContacts, HasTestTimeout, JavaLibraryDescription.CoreArg {

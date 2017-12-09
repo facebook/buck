@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -37,11 +38,15 @@ public class JavaTestBuilder
   private JavaTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new JavaTestDescription(
-            new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
+            new ToolchainProviderBuilder()
+                .withDefaultCxxPlatforms()
+                .withToolchain(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM))
+                .build(),
             javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
-            DEFAULT_JAVAC_OPTIONS,
-            CxxPlatformUtils.DEFAULT_PLATFORM),
+            DEFAULT_JAVAC_OPTIONS),
         target);
   }
 

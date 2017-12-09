@@ -53,8 +53,6 @@ import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.graphql.GraphqlLibraryDescription;
@@ -83,8 +81,6 @@ import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlBuckConfig;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
@@ -184,15 +180,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
-    CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-
-    // Build up the final list of C/C++ platforms.
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
-
-    // Get the default target platform from config.
-    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
-
     HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
@@ -205,12 +192,6 @@ abstract class AbstractKnownBuildRuleTypes {
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
     JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
     JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();
-    CxxPlatform defaultJavaCxxPlatform =
-        javaConfig
-            .getDefaultCxxPlatform()
-            .map(InternalFlavor::of)
-            .map(cxxPlatforms::getValue)
-            .orElse(defaultCxxPlatform);
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
 
@@ -341,20 +322,12 @@ abstract class AbstractKnownBuildRuleTypes {
         new HalideLibraryDescription(toolchainProvider, cxxBuckConfig, halideBuckConfig));
     builder.addDescriptions(
         new JavaBinaryDescription(
-            toolchainProvider,
-            defaultJavaOptions,
-            defaultJavacOptions,
-            javaConfig,
-            defaultJavaCxxPlatform));
+            toolchainProvider, defaultJavaOptions, defaultJavacOptions, javaConfig));
     builder.addDescriptions(new JavaAnnotationProcessorDescription());
     builder.addDescriptions(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new JavaTestDescription(
-            toolchainProvider,
-            javaConfig,
-            defaultJavaOptionsForTests,
-            defaultJavacOptions,
-            defaultJavaCxxPlatform));
+            toolchainProvider, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new JsBundleDescription(toolchainProvider));
     builder.addDescriptions(
         new JsBundleGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
