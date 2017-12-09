@@ -40,6 +40,7 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -316,6 +317,30 @@ public class KnownBuildRuleTypesTest {
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
+  }
+
+  @Test
+  public void toolchainAreNotCreated() throws Exception {
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create()) {
+          @Override
+          public Toolchain getByName(String toolchainName) {
+            throw new IllegalStateException(
+                "Toolchain creation is not allowed during construction of KnownBuildRuleTypesTest");
+          }
+        };
+
     KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
   }
 
