@@ -324,8 +324,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(cxxLibraryDescription);
     builder.addDescriptions(
         new CxxGenruleDescription(cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy));
-    builder.addDescriptions(
-        new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms));
+    builder.addDescriptions(new CxxTestDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(new ExportFileDescription());
     builder.addDescriptions(
         new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
