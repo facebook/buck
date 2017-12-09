@@ -369,7 +369,7 @@ abstract class AbstractKnownBuildRuleTypes {
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);
     builder.addDescriptions(new OcamlBinaryDescription(ocamlBuckConfig));
     builder.addDescriptions(new OcamlLibraryDescription(ocamlBuckConfig));
-    builder.addDescriptions(new PrebuiltCxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
+    builder.addDescriptions(new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
     builder.addDescriptions(new PrebuiltNativeLibraryDescription());
