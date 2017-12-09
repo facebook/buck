@@ -341,11 +341,11 @@ abstract class AbstractKnownBuildRuleTypes {
         new HalideLibraryDescription(toolchainProvider, cxxBuckConfig, halideBuckConfig));
     builder.addDescriptions(
         new JavaBinaryDescription(
+            toolchainProvider,
             defaultJavaOptions,
             defaultJavacOptions,
             javaConfig,
-            defaultJavaCxxPlatform,
-            cxxPlatforms));
+            defaultJavaCxxPlatform));
     builder.addDescriptions(new JavaAnnotationProcessorDescription());
     builder.addDescriptions(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
     builder.addDescriptions(

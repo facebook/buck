@@ -22,10 +22,12 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
@@ -43,7 +45,15 @@ public class JavaBinaryRuleBuilder
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new JavaBinaryDescription(
-            javaOptions, javacOptions, javaBuckConfig, defaultCxxPlatform, cxxPlatforms),
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+                .build(),
+            javaOptions,
+            javacOptions,
+            javaBuckConfig,
+            defaultCxxPlatform),
         target);
   }
 
