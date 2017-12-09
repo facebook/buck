@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -74,7 +74,6 @@ public class RobolectricTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions templateOptions;
-  private final CxxPlatform cxxPlatform;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public RobolectricTestDescription(
@@ -82,13 +81,11 @@ public class RobolectricTestDescription
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions templateOptions,
-      CxxPlatform cxxPlatform,
       AndroidLibraryCompilerFactory compilerFactory) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.templateOptions = templateOptions;
-    this.cxxPlatform = cxxPlatform;
     this.compilerFactory = compilerFactory;
   }
 
@@ -167,7 +164,9 @@ public class RobolectricTestDescription
             args.getCxxLibraryWhitelist(),
             resolver,
             ruleFinder,
-            cxxPlatform);
+            toolchainProvider
+                .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                .getDefaultCxxPlatform());
     params = cxxLibraryEnhancement.updatedParams;
 
     BuildTarget testLibraryBuildTarget =

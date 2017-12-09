@@ -381,7 +381,6 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
-            defaultCxxPlatform,
             defaultAndroidCompilerFactory));
     builder.addDescriptions(
         new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));

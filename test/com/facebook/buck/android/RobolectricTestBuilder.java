@@ -36,7 +36,7 @@ public class RobolectricTestBuilder
 
   public static final AndroidLibraryCompilerFactory DEFAULT_ANDROID_COMPILER_FACTORY =
       new DefaultAndroidLibraryCompilerFactory(
-          new ToolchainProviderBuilder().build(),
+          new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
           DEFAULT_JAVA_CONFIG,
           new ScalaBuckConfig(FakeBuckConfig.builder().build()),
           new KotlinBuckConfig(FakeBuckConfig.builder().build()));
@@ -44,11 +44,10 @@ public class RobolectricTestBuilder
   private RobolectricTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new RobolectricTestDescription(
-            new ToolchainProviderBuilder().build(),
+            new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
             javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target);
   }
@@ -56,11 +55,10 @@ public class RobolectricTestBuilder
   private RobolectricTestBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
         new RobolectricTestDescription(
-            new ToolchainProviderBuilder().build(),
+            new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
             DEFAULT_JAVA_CONFIG,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
         filesystem);
@@ -70,11 +68,10 @@ public class RobolectricTestBuilder
       BuildTarget target, ProjectFilesystem filesystem, JavaBuckConfig javaBuckConfig) {
     super(
         new RobolectricTestDescription(
-            new ToolchainProviderBuilder().build(),
+            new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
             javaBuckConfig,
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
         filesystem);
