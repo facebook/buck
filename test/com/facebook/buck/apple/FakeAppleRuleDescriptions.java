@@ -246,10 +246,15 @@ public class FakeAppleRuleDescriptions {
       new AppleBinaryDescription(
           createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
           new CxxBinaryDescription(
+              new ToolchainProviderBuilder()
+                  .withToolchain(
+                      CxxPlatformsProvider.DEFAULT_NAME,
+                      CxxPlatformsProvider.of(
+                          DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
+                          DEFAULT_APPLE_FLAVOR_DOMAIN))
+                  .build(),
               CxxPlatformUtils.DEFAULT_CONFIG,
-              new InferBuckConfig(DEFAULT_BUCK_CONFIG),
-              DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
-              DEFAULT_APPLE_FLAVOR_DOMAIN),
+              new InferBuckConfig(DEFAULT_BUCK_CONFIG)),
           SWIFT_LIBRARY_DESCRIPTION,
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 

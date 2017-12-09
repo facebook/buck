@@ -219,8 +219,7 @@ abstract class AbstractKnownBuildRuleTypes {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     CxxBinaryDescription cxxBinaryDescription =
-        new CxxBinaryDescription(
-            cxxBuckConfig, inferBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms);
+        new CxxBinaryDescription(toolchainProvider, cxxBuckConfig, inferBuckConfig);
 
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(toolchainProvider, cxxBuckConfig, inferBuckConfig);
