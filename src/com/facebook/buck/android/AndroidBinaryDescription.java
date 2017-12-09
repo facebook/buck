@@ -27,6 +27,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
@@ -134,7 +135,6 @@ public class AndroidBinaryDescription
   private final BuckConfig buckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
-  private final ListeningExecutorService dxExecutorService;
   private final AndroidInstallConfig androidInstallConfig;
 
   public AndroidBinaryDescription(
@@ -143,7 +143,6 @@ public class AndroidBinaryDescription
       JavaOptions javaOptions,
       JavacOptions javacOptions,
       ProGuardConfig proGuardConfig,
-      ListeningExecutorService dxExecutorService,
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
@@ -154,7 +153,6 @@ public class AndroidBinaryDescription
     this.proGuardConfig = proGuardConfig;
     this.buckConfig = buckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.dxExecutorService = dxExecutorService;
     this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
   }
@@ -257,6 +255,11 @@ public class AndroidBinaryDescription
           RichStream.from(buildRulesToExcludeFromDex)
               .filter(JavaLibrary.class)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+
+      ListeningExecutorService dxExecutorService =
+          toolchainProvider
+              .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+              .getDxExecutorService();
 
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
           NonPredexedDexBuildableArgs.builder()

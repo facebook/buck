@@ -24,6 +24,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -63,7 +64,6 @@ public class AndroidInstrumentationApkDescription
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
-  private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
 
@@ -72,14 +72,12 @@ public class AndroidInstrumentationApkDescription
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
-      ListeningExecutorService dxExecutorService,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
-    this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
   }
@@ -123,6 +121,11 @@ public class AndroidInstrumentationApkDescription
             Iterables.concat(
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
+
+    ListeningExecutorService dxExecutorService =
+        toolchainProvider
+            .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+            .getDxExecutorService();
 
     boolean shouldProguard =
         apkUnderTest.getProguardConfig().isPresent()

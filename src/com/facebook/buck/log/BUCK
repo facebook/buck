@@ -40,6 +40,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:steps",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/distributed/build_slave:build_slave",

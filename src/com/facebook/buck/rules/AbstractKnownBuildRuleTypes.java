@@ -35,7 +35,6 @@ import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
-import com.facebook.buck.android.SmartDexingStep;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -79,8 +78,6 @@ import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
-import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlBuckConfig;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
@@ -103,13 +100,10 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedAliasDescription;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
@@ -117,8 +111,6 @@ import org.pf4j.PluginManager;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractKnownBuildRuleTypes {
-
-  private static final Logger LOG = Logger.get(AbstractKnownBuildRuleTypes.class);
 
   /** @return all the underlying {@link Description}s. */
   @Value.Parameter
@@ -228,22 +220,6 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider, cxxBinaryDescription, swiftLibraryDescription, appleConfig);
     builder.addDescriptions(appleBinaryDescription);
 
-    if (javaConfig.getDxThreadCount().isPresent()) {
-      LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
-    }
-
-    // Create an executor service exclusively for the smart dexing step.
-    ListeningExecutorService dxExecutorService =
-        MoreExecutors.listeningDecorator(
-            Executors.newFixedThreadPool(
-                dxConfig
-                    .getDxMaxThreadCount()
-                    .orElse(
-                        javaConfig
-                            .getDxThreadCount()
-                            .orElse(SmartDexingStep.determineOptimalThreadCount())),
-                new CommandThreadFactory("SmartDexing")));
-
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
         new DefaultAndroidLibraryCompilerFactory(
             toolchainProvider, javaConfig, scalaConfig, kotlinBuckConfig);
@@ -266,7 +242,6 @@ abstract class AbstractKnownBuildRuleTypes {
             defaultJavaOptions,
             defaultJavacOptions,
             proGuardConfig,
-            dxExecutorService,
             config,
             cxxBuckConfig,
             dxConfig));
@@ -277,7 +252,6 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             proGuardConfig,
             defaultJavacOptions,
-            dxExecutorService,
             cxxBuckConfig,
             dxConfig));
     builder.addDescriptions(
