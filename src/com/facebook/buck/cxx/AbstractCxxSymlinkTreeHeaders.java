@@ -27,10 +27,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -62,7 +60,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   public abstract Optional<SourcePath> getHeaderMap();
 
   @Value.Auxiliary
-  abstract ImmutableMap<Path, SourcePath> getNameToPathMap();
+  abstract ImmutableSortedMap<Path, SourcePath> getNameToPathMap();
 
   /** The build target that this object is modeling. */
   abstract BuildTarget getBuildTarget();
@@ -89,17 +87,13 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // This needs to be done with direct calls to setReflectively for depfiles to work
-    // correctly.
-    AbstractCxxSymlinkTreeHeaders.this
-        .getNameToPathMap()
-        .entrySet()
-        .stream()
-        .sorted(Comparator.comparing(Entry::getKey))
-        .forEachOrdered(
-            entry ->
-                sink.setReflectively(
-                    "include(" + entry.getKey().toString() + ")", entry.getValue()));
+    // Add stringified paths as keys. The paths in this map represent include directives rather
+    // than actual on-disk locations. Also, manually wrap the beginning and end of the structure to
+    // delimit the contents of this map from other fields that may have the same key.
+    sink.setReflectively(".nameToPathMap", "start");
+    getNameToPathMap()
+        .forEach((path, sourcePath) -> sink.setReflectively(path.toString(), sourcePath));
+    sink.setReflectively(".nameToPathMap", "end");
   }
 
   /** @return a {@link CxxHeaders} constructed from the given {@link HeaderSymlinkTree}. */
