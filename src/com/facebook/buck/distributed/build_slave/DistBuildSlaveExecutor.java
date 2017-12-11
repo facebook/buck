@@ -126,7 +126,8 @@ public class DistBuildSlaveExecutor {
                   args.getRemoteCoordinatorAddress(),
                   OptionalInt.of(args.getRemoteCoordinatorPort()),
                   args.getDistBuildConfig(),
-                  args.getUnexpectedSlaveCacheMissTracker());
+                  args.getUnexpectedSlaveCacheMissTracker(),
+                  args.getDistBuildConfig().getMinionBuildCapacityRatio());
           break;
 
         case COORDINATOR_AND_MINION:
@@ -147,7 +148,8 @@ public class DistBuildSlaveExecutor {
                   args.getExecutorService(),
                   args.getArtifactCacheFactory().newInstance(true, true),
                   args.getRuleKeyConfiguration(),
-                  args.getTimingStatsTracker());
+                  args.getTimingStatsTracker(),
+                  args.getDistBuildConfig().getCoordinatorBuildCapacityRatio());
           break;
 
         case COORDINATOR:

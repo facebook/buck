@@ -101,6 +101,16 @@ public class DistBuildConfig {
   private static final String ENABLE_ASYNC_LOGGING = "enable_async_logging";
   private static final boolean DEFAULT_ENABLE_ASYNC_LOGGING = true;
 
+  // Percentage of available CPU cores to use for the coordinator build.
+  // Default this to 75% to ensure coordinator is always responsive to requests from minions
+  private static final String COORDINATOR_BUILD_CAPACITY_RATIO = "coordinator_build_capacity_ratio";
+  private static final Double DEFAULT_COORDINATOR_BUILD_CAPACITY_RATIO = 0.75;
+
+  // Percentage of available CPU cores to use for the minion builds.
+  // Default this to 90% to ensure we never timeout requests to the coordinator.
+  private static final String MINION_BUILD_CAPACITY_RATIO = "minion_build_capacity_ratio";
+  private static final Double DEFAULT_MINION_BUILD_CAPACITY_RATIO = 0.9;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -238,6 +248,24 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, MAX_MINION_SILENCE_MILLIS)
         .orElse(DEFAULT_MAX_MINION_SILENCE_MILLIS);
+  }
+
+  /** @return Ratio of available build capacity that should be used by coordinator */
+  public double getCoordinatorBuildCapacityRatio() {
+    Optional<String> configValue =
+        buckConfig.getValue(STAMPEDE_SECTION, COORDINATOR_BUILD_CAPACITY_RATIO);
+    return configValue.isPresent()
+        ? Double.valueOf(configValue.get())
+        : DEFAULT_COORDINATOR_BUILD_CAPACITY_RATIO;
+  }
+
+  /** @return Ratio of available build capacity that should be used by minions */
+  public double getMinionBuildCapacityRatio() {
+    Optional<String> configValue =
+        buckConfig.getValue(STAMPEDE_SECTION, MINION_BUILD_CAPACITY_RATIO);
+    return configValue.isPresent()
+        ? Double.valueOf(configValue.get())
+        : DEFAULT_MINION_BUILD_CAPACITY_RATIO;
   }
 
   /**
