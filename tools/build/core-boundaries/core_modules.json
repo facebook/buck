@@ -1,9 +1,5 @@
 [
-  "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-  "//src/com/facebook/buck/android:config",
-  "//src/com/facebook/buck/android:cxxruntime",
-  "//src/com/facebook/buck/android:guava.jar",
-  "//src/com/facebook/buck/android:utils",
+  "//src/com/facebook/buck/android:utils_api",
   "//src/com/facebook/buck/artifact_cache/config:config",
   "//src/com/facebook/buck/artifact_cache:artifact_cache",
   "//src/com/facebook/buck/build_type:build_type",
