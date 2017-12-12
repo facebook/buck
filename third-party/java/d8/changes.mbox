@@ -1,4 +1,4 @@
-From d4c5d5b51a418c7149ff37b03ae144e3970cdaf4 Mon Sep 17 00:00:00 2001
+From 0758ad0794e755b1d2baf754178fb3e48aaee19b Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
 Subject: [PATCH] Compute referenced resources in D8 and disable
@@ -8,59 +8,40 @@ Computing referenced resources is used to trim the Uber R.java.
 Interface desugaring requires classpaths available during dexing.
 trywithresources can be disabled if targeting ICS+
 ---
- src/main/java/com/android/tools/r8/D8.java                |  3 ++-
- src/main/java/com/android/tools/r8/D8Output.java          | 10 +++++++++-
+ src/main/java/com/android/tools/r8/D8Command.java         |  8 +++++++-
  src/main/java/com/android/tools/r8/dex/FileWriter.java    |  6 ++++--
  .../java/com/android/tools/r8/graph/DexItemFactory.java   | 15 +++++++++++++++
  .../java/com/android/tools/r8/utils/InternalOptions.java  |  7 +++++--
- 5 files changed, 35 insertions(+), 6 deletions(-)
+ 4 files changed, 31 insertions(+), 5 deletions(-)
 
-diff --git a/src/main/java/com/android/tools/r8/D8.java b/src/main/java/com/android/tools/r8/D8.java
-index adb780ec..bfcab237 100644
---- a/src/main/java/com/android/tools/r8/D8.java
-+++ b/src/main/java/com/android/tools/r8/D8.java
-@@ -98,7 +98,8 @@ public final class D8 {
-         CompilationResult result =
-             run(command.getInputApp(), compatSink, options, executor);
-         assert result != null;
--        D8Output d8Output = new D8Output(compatSink.build(), command.getOutputMode());
-+        D8Output d8Output = new D8Output(compatSink.build(), command.getOutputMode(),
-+            result.appInfo.dexItemFactory.computeReferencedResources());
-         command.getReporter().failIfPendingErrors();
-         return d8Output;
-       } catch (IOException io) {
-diff --git a/src/main/java/com/android/tools/r8/D8Output.java b/src/main/java/com/android/tools/r8/D8Output.java
-index 1910e9b7..4cc80eee 100644
---- a/src/main/java/com/android/tools/r8/D8Output.java
-+++ b/src/main/java/com/android/tools/r8/D8Output.java
-@@ -7,16 +7,24 @@ import com.android.tools.r8.utils.AndroidApp;
- import com.android.tools.r8.utils.OutputMode;
- import java.io.IOException;
- import java.nio.file.Path;
-+import java.util.Collection;
+diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
+index fece59d1..aecb6afe 100644
+--- a/src/main/java/com/android/tools/r8/D8Command.java
++++ b/src/main/java/com/android/tools/r8/D8Command.java
+@@ -184,6 +184,11 @@ public class D8Command extends BaseCompilerCommand {
+       "  --help                  # Print this message."));
  
- /** Represents the output of a D8 compilation. */
- public class D8Output extends BaseOutput {
- 
--  D8Output(AndroidApp app, OutputMode outputMode) {
-+  private final Collection<String> referencedResources;
+   private boolean intermediate = false;
++  private DexItemFactory dexItemFactory;
 +
-+  D8Output(AndroidApp app, OutputMode outputMode, Collection<String> referencedResources) {
-     super(app, outputMode);
-+    this.referencedResources = referencedResources;
-   }
++  public DexItemFactory getDexItemFactory() {
++    return dexItemFactory;
++  }
+ 
+   public static Builder builder() {
+     return new Builder();
+@@ -309,7 +314,8 @@ public class D8Command extends BaseCompilerCommand {
  
    @Override
-   public void write(Path output) throws IOException {
-     getAndroidApp().write(output, getOutputMode());
-   }
-+
-+  public Collection<String> getReferencedResources() {
-+    return referencedResources;
-+  }
- }
+   InternalOptions getInternalOptions() {
+-    InternalOptions internal = new InternalOptions(new DexItemFactory(), getReporter());
++    dexItemFactory = new DexItemFactory();
++    InternalOptions internal = new InternalOptions(dexItemFactory, getReporter());
+     assert !internal.debug;
+     internal.debug = getMode() == CompilationMode.DEBUG;
+     internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/dex/FileWriter.java b/src/main/java/com/android/tools/r8/dex/FileWriter.java
-index 27dedb19..84beffea 100644
+index ced33f61..51814a68 100644
 --- a/src/main/java/com/android/tools/r8/dex/FileWriter.java
 +++ b/src/main/java/com/android/tools/r8/dex/FileWriter.java
 @@ -51,6 +51,7 @@ import com.android.tools.r8.utils.AndroidApiLevel;
@@ -91,7 +72,7 @@ index 27dedb19..84beffea 100644
          throw new ApiLevelException(
              AndroidApiLevel.N,
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index bf88172b..d955274d 100644
+index e9207519..0589c1c0 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 @@ -23,9 +23,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -106,7 +87,7 @@ index bf88172b..d955274d 100644
  import java.util.concurrent.ConcurrentHashMap;
  import java.util.function.Consumer;
  
-@@ -558,4 +560,17 @@ public class DexItemFactory {
+@@ -560,4 +562,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -125,10 +106,10 @@ index bf88172b..d955274d 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/utils/InternalOptions.java b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-index eb425066..36df7b4a 100644
+index 2eba6c13..5e8ef8d8 100644
 --- a/src/main/java/com/android/tools/r8/utils/InternalOptions.java
 +++ b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-@@ -108,9 +108,12 @@ public class InternalOptions {
+@@ -146,9 +146,12 @@ public class InternalOptions {
    // Flag to turn on/off desugaring in D8/R8.
    public boolean enableDesugaring = true;
    // Defines interface method rewriter behavior.
@@ -141,8 +122,8 @@ index eb425066..36df7b4a 100644
 +  // despite the official policy being that KK is required
 +  public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Off;
  
-   // Application writing mode.
-   public OutputMode outputMode = OutputMode.Indexed;
+   // Whether or not to check for valid multi-dex builds.
+   //
 -- 
 2.14.1
 
