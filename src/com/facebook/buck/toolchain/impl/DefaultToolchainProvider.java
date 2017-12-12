@@ -48,7 +48,11 @@ import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.impl.JavaCxxPlatformProviderFactory;
+import com.facebook.buck.jvm.java.toolchain.impl.JavaOptionsProviderFactory;
+import com.facebook.buck.jvm.java.toolchain.impl.JavacOptionsProviderFactory;
 import com.facebook.buck.ocaml.OcamlToolchain;
 import com.facebook.buck.ocaml.OcamlToolchainFactory;
 import com.facebook.buck.python.toolchain.PexToolProvider;
@@ -142,6 +146,14 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               JavaCxxPlatformProvider.DEFAULT_NAME,
               JavaCxxPlatformProvider.class,
               JavaCxxPlatformProviderFactory.class),
+          ToolchainDescriptor.of(
+              JavacOptionsProvider.DEFAULT_NAME,
+              JavacOptionsProvider.class,
+              JavacOptionsProviderFactory.class),
+          ToolchainDescriptor.of(
+              JavaOptionsProvider.DEFAULT_NAME,
+              JavaOptionsProvider.class,
+              JavaOptionsProviderFactory.class),
           ToolchainDescriptor.of(
               OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class, OcamlToolchainFactory.class),
           ToolchainDescriptor.of(
