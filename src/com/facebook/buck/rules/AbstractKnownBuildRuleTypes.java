@@ -276,9 +276,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new JavaBinaryDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new JavaAnnotationProcessorDescription());
     builder.addDescriptions(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
-    builder.addDescriptions(
-        new JavaTestDescription(
-            toolchainProvider, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
+    builder.addDescriptions(new JavaTestDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new JsBundleDescription(toolchainProvider));
     builder.addDescriptions(
         new JsBundleGenruleDescription(toolchainProvider, sandboxExecutionStrategy));

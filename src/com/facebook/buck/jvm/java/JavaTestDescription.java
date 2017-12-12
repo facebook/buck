@@ -24,6 +24,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.macros.MacroException;
@@ -71,18 +73,10 @@ public class JavaTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavaOptions javaOptions;
-  private final JavacOptions templateJavacOptions;
 
-  public JavaTestDescription(
-      ToolchainProvider toolchainProvider,
-      JavaBuckConfig javaBuckConfig,
-      JavaOptions javaOptions,
-      JavacOptions templateJavacOptions) {
+  public JavaTestDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javaOptions = javaOptions;
-    this.templateJavacOptions = templateJavacOptions;
   }
 
   @Override
@@ -114,7 +108,13 @@ public class JavaTestDescription
       JavaTestDescriptionArg args) {
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
-            templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -159,7 +159,10 @@ public class JavaTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
-        javaOptions.getJavaRuntimeLauncher(),
+        toolchainProvider
+            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
+            .getJavaOptionsForTests()
+            .getJavaRuntimeLauncher(),
         args.getVmArgs(),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()
