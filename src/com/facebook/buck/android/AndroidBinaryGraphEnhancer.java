@@ -137,6 +137,7 @@ public class AndroidBinaryGraphEnhancer {
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
       EnumSet<RType> bannedDuplicateResourceTypes,
+      Optional<SourcePath> duplicateResourceWhitelistPath,
       Optional<String> resourceUnionPackage,
       ImmutableSet<String> locales,
       Optional<SourcePath> manifest,
@@ -236,6 +237,7 @@ public class AndroidBinaryGraphEnhancer {
             skipCrunchPngs,
             includesVectorDrawables,
             bannedDuplicateResourceTypes,
+            duplicateResourceWhitelistPath,
             manifestEntries,
             postFilterResourcesCmd,
             noAutoVersionResources);

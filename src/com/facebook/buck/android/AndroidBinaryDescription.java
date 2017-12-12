@@ -301,6 +301,7 @@ public class AndroidBinaryDescription
               args.getResourceCompression(),
               resourceFilter,
               args.getEffectiveBannedDuplicateResourceTypes(),
+              args.getDuplicateResourceWhitelist(),
               args.getResourceUnionPackage(),
               addFallbackLocales(args.getLocales()),
               args.getManifest(),
@@ -663,6 +664,8 @@ public class AndroidBinaryDescription
     Set<RType> getAllowedDuplicateResourceTypes();
 
     Set<RType> getBannedDuplicateResourceTypes();
+
+    Optional<SourcePath> getDuplicateResourceWhitelist();
 
     @Value.Default
     default AndroidBinary.AaptMode getAaptMode() {

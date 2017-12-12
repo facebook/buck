@@ -47,6 +47,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SortedSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -54,6 +55,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -103,6 +105,7 @@ public class MergeAndroidResourcesStepTest {
             ImmutableMap.of(),
             Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            ImmutableSet.of(),
             entriesBuilder.getProjectFilesystem(),
             false);
 
@@ -173,6 +176,7 @@ public class MergeAndroidResourcesStepTest {
             ImmutableMap.of(),
             Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            ImmutableSet.of(),
             entriesBuilder.getProjectFilesystem(),
             false);
 
@@ -293,6 +297,7 @@ public class MergeAndroidResourcesStepTest {
                     .build()),
         Optional.empty(),
         /* bannedDuplicateResourceTypes */ EnumSet.of(RType.STRING),
+        ImmutableSet.of(),
         entriesBuilder.getProjectFilesystem(),
         false);
   }
@@ -402,6 +407,7 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* filteredResourcesProvider */ Optional.empty(),
+            Optional.empty(),
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false);
@@ -487,6 +493,7 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* filteredResourcesProvider */ Optional.empty(),
+            Optional.empty(),
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false);
@@ -732,7 +739,8 @@ public class MergeAndroidResourcesStepTest {
         resourceDeps,
         EnumSet.noneOf(RType.class),
         ImmutableList.of(),
-        ImmutableList.of("app_name", "android_drawable"));
+        ImmutableList.of("app_name", "android_drawable"),
+        Optional.empty());
 
     checkDuplicatesDetected(
         resolver,
@@ -740,7 +748,8 @@ public class MergeAndroidResourcesStepTest {
         resourceDeps,
         EnumSet.of(RType.STRING),
         ImmutableList.of("app_name"),
-        ImmutableList.of("android_drawable"));
+        ImmutableList.of("android_drawable"),
+        Optional.empty());
 
     checkDuplicatesDetected(
         resolver,
@@ -748,7 +757,17 @@ public class MergeAndroidResourcesStepTest {
         resourceDeps,
         EnumSet.allOf(RType.class),
         ImmutableList.of("app_name", "android_drawable"),
-        ImmutableList.of());
+        ImmutableList.of(),
+        Optional.empty());
+
+    checkDuplicatesDetected(
+        resolver,
+        filesystem,
+        resourceDeps,
+        EnumSet.allOf(RType.class),
+        ImmutableList.of("android_drawable"),
+        ImmutableList.of("app_name"),
+        Optional.of(ImmutableList.of("string app_name", "color android_drawable")));
   }
 
   private void checkDuplicatesDetected(
@@ -757,8 +776,18 @@ public class MergeAndroidResourcesStepTest {
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       EnumSet<RType> rtypes,
       ImmutableList<String> duplicateResources,
-      ImmutableList<String> ignoredDuplicates)
+      ImmutableList<String> ignoredDuplicates,
+      Optional<List<String>> duplicateWhitelist)
       throws IOException, InterruptedException {
+
+    Optional<Path> duplicateWhitelistPath =
+        duplicateWhitelist.map(
+            whitelist -> {
+              Path whitelistPath = filesystem.resolve("duplicate-whitelist.txt");
+              filesystem.writeLinesToPath(whitelist, whitelistPath);
+              return whitelistPath;
+            });
+
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
             filesystem,
@@ -768,6 +797,7 @@ public class MergeAndroidResourcesStepTest {
             Paths.get("output"),
             true,
             rtypes,
+            duplicateWhitelistPath,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
