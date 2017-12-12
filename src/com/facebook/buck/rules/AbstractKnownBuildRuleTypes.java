@@ -278,7 +278,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new GroovyTestDescription(
             groovyBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
-    builder.addDescriptions(new GwtBinaryDescription(defaultJavaOptions));
+    builder.addDescriptions(new GwtBinaryDescription(toolchainProvider));
     builder.addDescriptions(
         new JavaBinaryDescription(
             toolchainProvider, defaultJavaOptions, defaultJavacOptions, javaConfig));
