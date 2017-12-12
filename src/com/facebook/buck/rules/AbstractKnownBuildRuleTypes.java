@@ -57,8 +57,6 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.graphql.GraphqlLibraryDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
-import com.facebook.buck.halide.HalideBuckConfig;
-import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
@@ -172,8 +170,6 @@ abstract class AbstractKnownBuildRuleTypes {
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-
-    HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
@@ -293,8 +289,6 @@ abstract class AbstractKnownBuildRuleTypes {
         new GroovyTestDescription(
             groovyBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new GwtBinaryDescription(defaultJavaOptions));
-    builder.addDescriptions(
-        new HalideLibraryDescription(toolchainProvider, cxxBuckConfig, halideBuckConfig));
     builder.addDescriptions(
         new JavaBinaryDescription(
             toolchainProvider, defaultJavaOptions, defaultJavacOptions, javaConfig));

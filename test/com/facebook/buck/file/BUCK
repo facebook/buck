@@ -145,7 +145,6 @@ standard_java_test(
         "//src/com/facebook/buck/file/downloader:downloader",
         "//src/com/facebook/buck/file/downloader/impl:impl",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/halide:halide",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:transport",
