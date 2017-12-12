@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -37,6 +38,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 class CodeSignStep implements Step {
+
+  private static final Logger LOG = Logger.get(CodeSignStep.class);
+
   private final SourcePathResolver resolver;
   private final Path pathToSign;
   private final Optional<Path> pathToSigningEntitlements;
@@ -104,6 +108,9 @@ class CodeSignStep implements Step {
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("codesign command: %s", Joiner.on(" ").join(processExecutorParams.getCommand()));
+    }
     ProcessExecutor.Result result =
         processExecutor.launchAndExecute(
             processExecutorParams,
