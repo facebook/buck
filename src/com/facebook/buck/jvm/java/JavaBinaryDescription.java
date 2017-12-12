@@ -22,6 +22,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -58,18 +60,10 @@ public class JavaBinaryDescription
   private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = InternalFlavor.of("inner-jar");
 
   private final ToolchainProvider toolchainProvider;
-  private final JavaOptions javaOptions;
-  private final JavacOptions javacOptions;
   private final JavaBuckConfig javaBuckConfig;
 
-  public JavaBinaryDescription(
-      ToolchainProvider toolchainProvider,
-      JavaOptions javaOptions,
-      JavacOptions javacOptions,
-      JavaBuckConfig javaBuckConfig) {
+  public JavaBinaryDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.javaOptions = javaOptions;
-    this.javacOptions = javacOptions;
     this.javaBuckConfig = javaBuckConfig;
   }
 
@@ -113,6 +107,11 @@ public class JavaBinaryDescription
       binaryBuildTarget = binaryBuildTarget.withAppendedFlavors(FAT_JAR_INNER_JAR_FLAVOR);
     }
 
+    JavaOptions javaOptions =
+        toolchainProvider
+            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
+            .getJavaOptions();
+
     // Construct the build rule to build the binary JAR.
     ImmutableSet<JavaLibrary> transitiveClasspathDeps =
         JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getBuildDeps());
@@ -153,7 +152,9 @@ public class JavaBinaryDescription
                               .addAll(nativeLibraries.values())
                               .build()))),
               JavacFactory.create(ruleFinder, javaBuckConfig, null),
-              javacOptions,
+              toolchainProvider
+                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getJavacOptions(),
               innerJar,
               nativeLibraries,
               javaOptions.getJavaRuntimeLauncher());

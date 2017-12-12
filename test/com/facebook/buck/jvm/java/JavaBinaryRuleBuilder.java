@@ -24,6 +24,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -53,9 +55,12 @@ public class JavaBinaryRuleBuilder
                 .withToolchain(
                     JavaCxxPlatformProvider.DEFAULT_NAME,
                     JavaCxxPlatformProvider.of(defaultCxxPlatform))
+                .withToolchain(
+                    JavaOptionsProvider.DEFAULT_NAME,
+                    JavaOptionsProvider.of(javaOptions, javaOptions))
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(javacOptions))
                 .build(),
-            javaOptions,
-            javacOptions,
             javaBuckConfig),
         target);
   }

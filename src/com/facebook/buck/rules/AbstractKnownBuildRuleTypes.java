@@ -178,7 +178,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
-    JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
     JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
@@ -279,9 +278,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new GroovyTestDescription(
             groovyBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new GwtBinaryDescription(toolchainProvider));
-    builder.addDescriptions(
-        new JavaBinaryDescription(
-            toolchainProvider, defaultJavaOptions, defaultJavacOptions, javaConfig));
+    builder.addDescriptions(new JavaBinaryDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new JavaAnnotationProcessorDescription());
     builder.addDescriptions(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
     builder.addDescriptions(
