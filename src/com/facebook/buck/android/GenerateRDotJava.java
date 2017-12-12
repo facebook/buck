@@ -45,7 +45,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
   @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
   @AddToRuleKey private final SourcePath pathToRDotTxtFile;
   @AddToRuleKey private final Optional<SourcePath> pathToOverrideSymbolsFile;
-  @AddToRuleKey private Optional<String> resourceUnionPackage;
+  @AddToRuleKey private final Optional<String> resourceUnionPackage;
 
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   private FilteredResourcesProvider resourcesProvider;
