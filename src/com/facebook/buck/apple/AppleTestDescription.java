@@ -72,6 +72,7 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -80,6 +81,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
@@ -343,8 +346,25 @@ public class AppleTestDescription
     // can use that directly.
     if (appleConfig.getXctoolZipTarget().isPresent()) {
       final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
+
+      // Since the content is unzipped in a directory that might differ for each cell the tests are
+      // from, we append a flavor that depends on the root path of the projectFilesystem
+      // in order to get a different rule for each cell the tests are from.
+      final String relativeRootPathString =
+          xctoolZipBuildRule
+              .getBuildTarget()
+              .getCellPath()
+              .relativize(projectFilesystem.getRootPath())
+              .toString();
+      Hasher hasher = Hashing.sha1().newHasher();
+      hasher.putBytes(relativeRootPathString.getBytes(Charsets.UTF_8));
+      String sha1Hash = hasher.hash().toString();
+
       BuildTarget unzipXctoolTarget =
-          xctoolZipBuildRule.getBuildTarget().withAppendedFlavors(UNZIP_XCTOOL_FLAVOR);
+          xctoolZipBuildRule
+              .getBuildTarget()
+              .withAppendedFlavors(UNZIP_XCTOOL_FLAVOR)
+              .withAppendedFlavors(InternalFlavor.of(sha1Hash));
       final Path outputDirectory =
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       resolver.computeIfAbsent(
