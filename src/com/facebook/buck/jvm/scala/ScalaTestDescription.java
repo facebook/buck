@@ -22,12 +22,13 @@ import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
@@ -65,20 +66,12 @@ public class ScalaTestDescription
   private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig config;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions templateJavacOptions;
-  private final JavaOptions javaOptions;
 
   public ScalaTestDescription(
-      ToolchainProvider toolchainProvider,
-      ScalaBuckConfig config,
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions templateOptions,
-      JavaOptions javaOptions) {
+      ToolchainProvider toolchainProvider, ScalaBuckConfig config, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.config = config;
     this.javaBuckConfig = javaBuckConfig;
-    this.templateJavacOptions = templateOptions;
-    this.javaOptions = javaOptions;
   }
 
   @Override
@@ -114,7 +107,13 @@ public class ScalaTestDescription
 
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
-            templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
 
     DefaultJavaLibraryRules scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(
@@ -145,7 +144,10 @@ public class ScalaTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
-        javaOptions.getJavaRuntimeLauncher(),
+        toolchainProvider
+            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
+            .getJavaOptionsForTests()
+            .getJavaRuntimeLauncher(),
         args.getVmArgs(),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()

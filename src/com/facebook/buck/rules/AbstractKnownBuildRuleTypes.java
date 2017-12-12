@@ -66,7 +66,6 @@ import com.facebook.buck.jvm.java.JavaAnnotationProcessorDescription;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -178,7 +177,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
-    JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
 
@@ -301,13 +299,7 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory));
     builder.addDescriptions(
         new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));
-    builder.addDescriptions(
-        new ScalaTestDescription(
-            toolchainProvider,
-            scalaConfig,
-            javaConfig,
-            defaultJavacOptions,
-            defaultJavaOptionsForTests));
+    builder.addDescriptions(new ScalaTestDescription(toolchainProvider, scalaConfig, javaConfig));
     builder.addDescriptions(new SceneKitAssetsDescription());
     builder.addDescriptions(new ShBinaryDescription());
     builder.addDescriptions(new ShTestDescription(config));
