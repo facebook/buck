@@ -1,12 +1,15 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
-java_immutables_library(
+java_library_with_plugins(
     name = "graphql",
     srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/graphql:graphql",
     ],
-    visibility = ["PUBLIC"],
+    visibility = [
+        "//src/com/facebook/buck/cli:main",
+        "//test/com/facebook/buck/graphql:graphql",
+    ],
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",
