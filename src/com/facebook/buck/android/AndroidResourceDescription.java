@@ -70,7 +70,7 @@ public class AndroidResourceDescription
           ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
   private final ToolchainProvider toolchainProvider;
-  private final boolean isGrayscaleImageProcessingEnabled;
+  private final AndroidBuckConfig androidBuckConfig;
 
   @VisibleForTesting
   static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR = InternalFlavor.of("resources-symlink-tree");
@@ -84,9 +84,9 @@ public class AndroidResourceDescription
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
   public AndroidResourceDescription(
-      ToolchainProvider toolchainProvider, boolean enableGrayscaleImageProcessing) {
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;
+    this.androidBuckConfig = androidBuckConfig;
   }
 
   @Override
@@ -197,7 +197,7 @@ public class AndroidResourceDescription
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
         args.getResourceUnion(),
-        isGrayscaleImageProcessingEnabled);
+        androidBuckConfig.isGrayscaleImageProcessingEnabled());
   }
 
   private SymlinkTree createSymlinkTree(

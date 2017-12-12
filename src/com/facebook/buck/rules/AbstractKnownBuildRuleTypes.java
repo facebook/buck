@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidAppModularityDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidInstrumentationTestDescription;
@@ -264,7 +265,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new AndroidResourceDescription(
-            toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
+            toolchainProvider, new AndroidBuckConfig(config, Platform.detect())));
     builder.addDescriptions(new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(
         new ApplePackageDescription(toolchainProvider, sandboxExecutionStrategy, appleConfig));
