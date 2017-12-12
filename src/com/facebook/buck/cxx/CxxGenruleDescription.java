@@ -50,12 +50,14 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
@@ -730,14 +732,31 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       Path linkOutput = BuildTargets.getGenPath(filesystem, buildTarget, "%s").resolve(out);
       Path absLinkOut = buildTarget.getCellPath().resolve(linkOutput);
       SymlinkTree symlinkTree = requireSymlinkTree(resolver, rules);
-      return ImmutableList.copyOf(
-          StringArg.from(
-              Linkers.iXlinker(
-                  "-rpath",
-                  String.format(
-                      "%s/%s",
-                      cxxPlatform.getLd().resolve(resolver).origin(),
-                      absLinkOut.getParent().relativize(symlinkTree.getRoot()).toString()))));
+      return RichStream.from(
+              StringArg.from(
+                  Linkers.iXlinker(
+                      "-rpath",
+                      String.format(
+                          "%s/%s",
+                          cxxPlatform.getLd().resolve(resolver).origin(),
+                          absLinkOut.getParent().relativize(symlinkTree.getRoot()).toString()))))
+          .map(
+              arg ->
+                  new ProxyArg(arg) {
+                    // This is added so that the arg's rulekey properly reflects its deps.
+                    @AddToRuleKey
+                    private final NonHashableSourcePathContainer symlinkTreeRef =
+                        new NonHashableSourcePathContainer(symlinkTree.getSourcePathToOutput());
+
+                    @Override
+                    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+                      return ImmutableList.<BuildRule>builder()
+                          .add(symlinkTree)
+                          .addAll(super.getDeps(ruleFinder))
+                          .build();
+                    }
+                  })
+          .collect(ImmutableList.toImmutableList());
     }
 
     private NativeLinkableInput getNativeLinkableInput(
@@ -812,9 +831,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
               .stream()
               .flatMap(arg -> arg.getDeps(ruleFinder).stream())
               .iterator());
-      if (depType == Linker.LinkableDepType.SHARED) {
-        deps.add(requireSymlinkTree(resolver, rules));
-      }
       return deps.build();
     }
 
