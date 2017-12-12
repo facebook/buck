@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidAppModularityDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidInstrumentationTestDescription;
@@ -35,7 +36,6 @@ import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
-import com.facebook.buck.android.SmartDexingStep;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -53,14 +53,9 @@ import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.graphql.GraphqlLibraryDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
-import com.facebook.buck.halide.HalideBuckConfig;
-import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
@@ -81,10 +76,6 @@ import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
-import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlBuckConfig;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
@@ -107,13 +98,10 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedAliasDescription;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
@@ -121,8 +109,6 @@ import org.pf4j.PluginManager;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractKnownBuildRuleTypes {
-
-  private static final Logger LOG = Logger.get(AbstractKnownBuildRuleTypes.class);
 
   /** @return all the underlying {@link Description}s. */
   @Value.Parameter
@@ -184,17 +170,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
-    CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-
-    // Build up the final list of C/C++ platforms.
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
-
-    // Get the default target platform from config.
-    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
-
-    HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
-
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     DxConfig dxConfig = new DxConfig(config);
@@ -203,14 +178,7 @@ abstract class AbstractKnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
-    JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
     JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();
-    CxxPlatform defaultJavaCxxPlatform =
-        javaConfig
-            .getDefaultCxxPlatform()
-            .map(InternalFlavor::of)
-            .map(cxxPlatforms::getValue)
-            .orElse(defaultCxxPlatform);
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
 
@@ -219,15 +187,13 @@ abstract class AbstractKnownBuildRuleTypes {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     CxxBinaryDescription cxxBinaryDescription =
-        new CxxBinaryDescription(
-            cxxBuckConfig, inferBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms);
+        new CxxBinaryDescription(toolchainProvider, cxxBuckConfig, inferBuckConfig);
 
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(toolchainProvider, cxxBuckConfig, inferBuckConfig);
 
     SwiftLibraryDescription swiftLibraryDescription =
-        new SwiftLibraryDescription(
-            toolchainProvider, cxxBuckConfig, swiftBuckConfig, cxxPlatforms);
+        new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
     builder.addDescriptions(swiftLibraryDescription);
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
@@ -249,22 +215,6 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider, cxxBinaryDescription, swiftLibraryDescription, appleConfig);
     builder.addDescriptions(appleBinaryDescription);
 
-    if (javaConfig.getDxThreadCount().isPresent()) {
-      LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
-    }
-
-    // Create an executor service exclusively for the smart dexing step.
-    ListeningExecutorService dxExecutorService =
-        MoreExecutors.listeningDecorator(
-            Executors.newFixedThreadPool(
-                dxConfig
-                    .getDxMaxThreadCount()
-                    .orElse(
-                        javaConfig
-                            .getDxThreadCount()
-                            .orElse(SmartDexingStep.determineOptimalThreadCount())),
-                new CommandThreadFactory("SmartDexing")));
-
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
         new DefaultAndroidLibraryCompilerFactory(
             toolchainProvider, javaConfig, scalaConfig, kotlinBuckConfig);
@@ -282,15 +232,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new AndroidAppModularityDescription());
     builder.addDescriptions(
         new AndroidBinaryDescription(
-            toolchainProvider,
-            javaConfig,
-            defaultJavaOptions,
-            defaultJavacOptions,
-            proGuardConfig,
-            dxExecutorService,
-            config,
-            cxxBuckConfig,
-            dxConfig));
+            toolchainProvider, javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig));
     builder.addDescriptions(new AndroidBuildConfigDescription(javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new AndroidInstrumentationApkDescription(
@@ -298,11 +240,9 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             proGuardConfig,
             defaultJavacOptions,
-            dxExecutorService,
             cxxBuckConfig,
             dxConfig));
-    builder.addDescriptions(
-        new AndroidInstrumentationTestDescription(config, toolchainProvider, defaultJavaOptions));
+    builder.addDescriptions(new AndroidInstrumentationTestDescription(config, toolchainProvider));
     builder.addDescriptions(
         new AndroidLibraryDescription(
             javaConfig, defaultJavacOptions, defaultAndroidCompilerFactory));
@@ -311,7 +251,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new AndroidResourceDescription(
-            toolchainProvider, config.isGrayscaleImageProcessingEnabled()));
+            toolchainProvider, new AndroidBuckConfig(config, Platform.detect())));
     builder.addDescriptions(new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(
         new ApplePackageDescription(toolchainProvider, sandboxExecutionStrategy, appleConfig));
@@ -325,41 +265,25 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(cxxBinaryDescription);
     builder.addDescriptions(cxxLibraryDescription);
     builder.addDescriptions(
-        new CxxGenruleDescription(
-            cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy, cxxPlatforms));
-    builder.addDescriptions(
-        new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms));
+        new CxxGenruleDescription(cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy));
+    builder.addDescriptions(new CxxTestDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(new ExportFileDescription());
     builder.addDescriptions(
         new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
     builder.addDescriptions(new GenAidlDescription(toolchainProvider));
-    builder.addDescriptions(new GraphqlLibraryDescription());
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.addDescriptions(
         new GroovyLibraryDescription(groovyBuckConfig, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new GroovyTestDescription(
             groovyBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
-    builder.addDescriptions(new GwtBinaryDescription(defaultJavaOptions));
-    builder.addDescriptions(
-        new HalideLibraryDescription(
-            cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, halideBuckConfig));
-    builder.addDescriptions(
-        new JavaBinaryDescription(
-            defaultJavaOptions,
-            defaultJavacOptions,
-            javaConfig,
-            defaultJavaCxxPlatform,
-            cxxPlatforms));
+    builder.addDescriptions(new GwtBinaryDescription(toolchainProvider));
+    builder.addDescriptions(new JavaBinaryDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new JavaAnnotationProcessorDescription());
     builder.addDescriptions(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new JavaTestDescription(
-            javaConfig,
-            defaultJavaOptionsForTests,
-            defaultJavacOptions,
-            defaultJavaCxxPlatform,
-            cxxPlatforms));
+            toolchainProvider, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new JsBundleDescription(toolchainProvider));
     builder.addDescriptions(
         new JsBundleGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
@@ -371,10 +295,10 @@ abstract class AbstractKnownBuildRuleTypes {
         new KotlinTestDescription(
             kotlinBuckConfig, javaConfig, defaultJavaOptionsForTests, defaultJavacOptions));
     builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
-    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);
-    builder.addDescriptions(new OcamlBinaryDescription(ocamlBuckConfig));
-    builder.addDescriptions(new OcamlLibraryDescription(ocamlBuckConfig));
-    builder.addDescriptions(new PrebuiltCxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
+    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config);
+    builder.addDescriptions(new OcamlBinaryDescription(toolchainProvider, ocamlBuckConfig));
+    builder.addDescriptions(new OcamlLibraryDescription(toolchainProvider, ocamlBuckConfig));
+    builder.addDescriptions(new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
     builder.addDescriptions(new PrebuiltNativeLibraryDescription());
@@ -386,17 +310,16 @@ abstract class AbstractKnownBuildRuleTypes {
             javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
-            defaultCxxPlatform,
             defaultAndroidCompilerFactory));
     builder.addDescriptions(
         new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
         new ScalaTestDescription(
+            toolchainProvider,
             scalaConfig,
             javaConfig,
             defaultJavacOptions,
-            defaultJavaOptionsForTests,
-            defaultCxxPlatform));
+            defaultJavaOptionsForTests));
     builder.addDescriptions(new SceneKitAssetsDescription());
     builder.addDescriptions(new ShBinaryDescription());
     builder.addDescriptions(new ShTestDescription(config));

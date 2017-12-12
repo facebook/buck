@@ -222,8 +222,7 @@ public class FakeAppleRuleDescriptions {
       new SwiftLibraryDescription(
           createTestToolchainProviderForSwiftPlatform(DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
           CxxPlatformUtils.DEFAULT_CONFIG,
-          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
-          DEFAULT_APPLE_FLAVOR_DOMAIN);
+          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
   /** A fake apple_library description with an iOS platform for use in tests. */
   public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
       new AppleLibraryDescription(
@@ -246,10 +245,15 @@ public class FakeAppleRuleDescriptions {
       new AppleBinaryDescription(
           createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
           new CxxBinaryDescription(
+              new ToolchainProviderBuilder()
+                  .withToolchain(
+                      CxxPlatformsProvider.DEFAULT_NAME,
+                      CxxPlatformsProvider.of(
+                          DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
+                          DEFAULT_APPLE_FLAVOR_DOMAIN))
+                  .build(),
               CxxPlatformUtils.DEFAULT_CONFIG,
-              new InferBuckConfig(DEFAULT_BUCK_CONFIG),
-              DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
-              DEFAULT_APPLE_FLAVOR_DOMAIN),
+              new InferBuckConfig(DEFAULT_BUCK_CONFIG)),
           SWIFT_LIBRARY_DESCRIPTION,
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
 
@@ -273,6 +277,9 @@ public class FakeAppleRuleDescriptions {
     return new ToolchainProviderBuilder()
         .withToolchain(
             SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.of(swiftFlavorDomain))
+        .withToolchain(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            CxxPlatformsProvider.of(DEFAULT_PLATFORM, DEFAULT_APPLE_FLAVOR_DOMAIN))
         .build();
   }
 

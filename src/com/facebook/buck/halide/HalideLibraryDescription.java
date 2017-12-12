@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
@@ -55,6 +56,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -73,25 +75,22 @@ public class HalideLibraryDescription
   public static final Flavor HALIDE_COMPILER_FLAVOR = InternalFlavor.of("halide-compiler");
   public static final Flavor HALIDE_COMPILE_FLAVOR = InternalFlavor.of("halide-compile");
 
-  private final CxxPlatform defaultCxxPlatform;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final HalideBuckConfig halideBuckConfig;
 
   public HalideLibraryDescription(
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
       HalideBuckConfig halideBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
     this.halideBuckConfig = halideBuckConfig;
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxPlatforms.containsAnyOf(flavors)
+    return getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)
         || flavors.contains(HALIDE_COMPILE_FLAVOR)
         || flavors.contains(HALIDE_COMPILER_FLAVOR)
         || StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
@@ -123,6 +122,7 @@ public class HalideLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
+      CxxPlatformsProvider cxxPlatformsProvider,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> halideSources,
       ImmutableList<StringWithMacros> compilerFlags,
@@ -196,7 +196,7 @@ public class HalideLibraryDescription
         cxxLinkAndCompileRules.executable,
         ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
-        buildTarget.withoutFlavors(cxxPlatforms.getFlavors()));
+        buildTarget.withoutFlavors(cxxPlatformsProvider.getCxxPlatforms().getFlavors()));
   }
 
   private BuildRule createHalideStaticLibrary(
@@ -285,10 +285,14 @@ public class HalideLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       HalideLibraryDescriptionArg args) {
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform =
+        cxxPlatforms.getValue(flavors).orElse(cxxPlatformsProvider.getDefaultCxxPlatform());
 
     if (flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)) {
       ImmutableMap.Builder<Path, SourcePath> headersBuilder = ImmutableMap.builder();
@@ -326,6 +330,7 @@ public class HalideLibraryDescription
           pathResolver,
           ruleFinder,
           cellRoots,
+          cxxPlatformsProvider,
           hostCxxPlatform,
           args.getSrcs(),
           args.getCompilerFlags(),
@@ -357,6 +362,11 @@ public class HalideLibraryDescription
 
     return new HalideLibrary(
         buildTarget, projectFilesystem, params, resolver, args.getSupportedPlatformsRegex());
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

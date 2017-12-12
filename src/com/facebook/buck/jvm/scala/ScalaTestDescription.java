@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -42,6 +42,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -61,23 +62,23 @@ public class ScalaTestDescription
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
+  private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig config;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions templateJavacOptions;
   private final JavaOptions javaOptions;
-  private final CxxPlatform cxxPlatform;
 
   public ScalaTestDescription(
+      ToolchainProvider toolchainProvider,
       ScalaBuckConfig config,
       JavaBuckConfig javaBuckConfig,
       JavacOptions templateOptions,
-      JavaOptions javaOptions,
-      CxxPlatform cxxPlatform) {
+      JavaOptions javaOptions) {
+    this.toolchainProvider = toolchainProvider;
     this.config = config;
     this.javaBuckConfig = javaBuckConfig;
     this.templateJavacOptions = templateOptions;
     this.javaOptions = javaOptions;
-    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -104,7 +105,9 @@ public class ScalaTestDescription
             args.getCxxLibraryWhitelist(),
             resolver,
             ruleFinder,
-            cxxPlatform);
+            toolchainProvider
+                .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                .getDefaultCxxPlatform());
     BuildRuleParams params = cxxLibraryEnhancement.updatedParams;
     BuildTarget javaLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);

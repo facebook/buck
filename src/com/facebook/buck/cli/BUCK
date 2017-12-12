@@ -67,7 +67,6 @@ java_immutables_library(
         "//src/com/facebook/buck/file/downloader/impl:impl",
         "//src/com/facebook/buck/config/resources:resources",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/halide:halide",
         "//src/com/facebook/buck/httpserver:httpserver",
         # Autdeps is not finding this dep, but it is needed for the bootstrapper
         "//src/com/facebook/buck/ide/intellij:intellij",
@@ -231,6 +230,7 @@ java_binary(
         "//src/com/facebook/buck/event/listener:BroadcastEventListener",
         "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/graphql:graphql",
         "//src/com/facebook/buck/halide:halide",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",

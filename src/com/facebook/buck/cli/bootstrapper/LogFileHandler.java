@@ -22,7 +22,7 @@ import java.util.logging.LogRecord;
 
 public final class LogFileHandler extends Handler implements Callable<Handler> {
   private static final Class<?> HANDLER_CLASS =
-      ClassLoaderBootstrapper.loadClass("com.facebook.buck.log.LogFileHandler");
+      ClassLoaderBootstrapper.loadClass("com.facebook.buck.log.LogFileHandlerDispatcher");
 
   private final Handler inner;
 

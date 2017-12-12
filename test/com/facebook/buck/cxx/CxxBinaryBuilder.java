@@ -20,6 +20,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,10 +48,13 @@ public class CxxBinaryBuilder
       BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxBinaryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+                .build(),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new InferBuckConfig(FakeBuckConfig.builder().build()),
-            defaultCxxPlatform.getFlavor(),
-            cxxPlatforms),
+            new InferBuckConfig(FakeBuckConfig.builder().build())),
         target);
   }
 
@@ -60,10 +65,13 @@ public class CxxBinaryBuilder
       CxxBuckConfig cxxBuckConfig) {
     super(
         new CxxBinaryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+                .build(),
             cxxBuckConfig,
-            new InferBuckConfig(FakeBuckConfig.builder().build()),
-            defaultCxxPlatform.getFlavor(),
-            cxxPlatforms),
+            new InferBuckConfig(FakeBuckConfig.builder().build())),
         target);
   }
 

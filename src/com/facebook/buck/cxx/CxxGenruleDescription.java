@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -102,16 +103,13 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         VersionPropagator<CxxGenruleDescriptionArg>,
         TargetTranslatorOverridingDescription<CxxGenruleDescriptionArg> {
 
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxGenruleDescription(
       CxxBuckConfig cxxBuckConfig,
       ToolchainProvider toolchainProvider,
-      SandboxExecutionStrategy sandboxExecutionStrategy,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      SandboxExecutionStrategy sandboxExecutionStrategy) {
     super(toolchainProvider, sandboxExecutionStrategy, false);
-    this.cxxPlatforms = cxxPlatforms;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
@@ -189,12 +187,14 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxPlatforms.containsAnyOf(flavors)
+    return getCxxPlatforms().containsAnyOf(flavors)
         || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
   @Override
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
+    FlavorDomain<CxxPlatform> cxxPlatforms = getCxxPlatforms();
+
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
     macros.put("location", new LocationMacroExpander());
@@ -228,7 +228,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildRuleResolver resolver,
       TargetGraph targetGraph,
       CxxGenruleDescriptionArg args) {
-    Optional<CxxPlatform> maybeCxxPlatform = cxxPlatforms.getValue(buildTarget);
+    Optional<CxxPlatform> maybeCxxPlatform = getCxxPlatforms().getValue(buildTarget);
     if (!maybeCxxPlatform.isPresent()) {
       return Optional.empty();
     }
@@ -282,7 +282,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxGenruleDescriptionArg args) {
-    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(buildTarget);
+    Optional<CxxPlatform> cxxPlatform = getCxxPlatforms().getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           targetGraph,
@@ -304,7 +304,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
-    for (CxxPlatform cxxPlatform : cxxPlatforms.getValues()) {
+    for (CxxPlatform cxxPlatform : getCxxPlatforms().getValues()) {
       extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
     }
 
@@ -392,6 +392,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
             .getCmdExe()
             .map(c -> translateCmd(target, cellNames, translator, "cmd_exe", c)));
     return Optional.of(newConstructorArgBuilder.build());
+  }
+
+  private FlavorDomain<CxxPlatform> getCxxPlatforms() {
+    return toolchainProvider
+        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getCxxPlatforms();
   }
 
   @BuckStyleImmutable

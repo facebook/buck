@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
@@ -70,18 +72,13 @@ public class CxxTestDescription
 
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final Flavor defaultCxxFlavor;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final ImmutableSet<Flavor> declaredPlatforms;
 
-  public CxxTestDescription(
-      CxxBuckConfig cxxBuckConfig,
-      Flavor defaultCxxFlavor,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public CxxTestDescription(ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxFlavor = defaultCxxFlavor;
-    this.cxxPlatforms = cxxPlatforms;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
@@ -115,6 +112,8 @@ public class CxxTestDescription
 
   private CxxPlatform getCxxPlatform(
       BuildTarget target, CxxBinaryDescription.CommonArg constructorArg) {
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
 
     // First check if the build target is setting a particular target.
     Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
@@ -128,7 +127,7 @@ public class CxxTestDescription
     }
 
     // Otherwise, fallback to the description-level default platform.
-    return cxxPlatforms.getValue(defaultCxxFlavor);
+    return cxxPlatforms.getValue(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
   }
 
   @Override
@@ -177,7 +176,7 @@ public class CxxTestDescription
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          cxxPlatforms.getValue(buildTarget).isPresent()
+          getCxxPlatformsProvider().getCxxPlatforms().getValue(buildTarget).isPresent()
               ? buildTarget
               : buildTarget.withAppendedFlavors(cxxPlatform.getFlavor()),
           projectFilesystem,
@@ -384,7 +383,7 @@ public class CxxTestDescription
       return true;
     }
 
-    return cxxPlatforms.containsAnyOf(flavors)
+    return getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)
         || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
@@ -401,8 +400,13 @@ public class CxxTestDescription
       return Optional.empty();
     }
     return CxxDescriptionEnhancer.createCompilationDatabaseDependencies(
-            buildTarget, cxxPlatforms, resolver, args)
+            buildTarget, getCxxPlatformsProvider().getCxxPlatforms(), resolver, args)
         .map(metadataClass::cast);
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

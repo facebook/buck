@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -129,11 +130,15 @@ public class AndroidInstrumentationApkTest {
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
-                    new ToolchainProviderBuilder().withDefaultNdkCxxPlatforms().build(),
+                    new ToolchainProviderBuilder()
+                        .withDefaultNdkCxxPlatforms()
+                        .withToolchain(
+                            DxToolchain.DEFAULT_NAME,
+                            DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+                        .build(),
                     DEFAULT_JAVA_CONFIG,
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
                     DEFAULT_JAVAC_OPTIONS,
-                    MoreExecutors.newDirectExecutorService(),
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(

@@ -17,13 +17,9 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CompilerProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -40,23 +36,13 @@ public class OcamlBuckConfig {
   private static final Path DEFAULT_OCAML_LEX_COMPILER = Paths.get("ocamllex.opt");
 
   private final BuckConfig delegate;
-  private final CxxPlatform cxxPlatform;
 
-  public OcamlBuckConfig(BuckConfig delegate, CxxPlatform cxxPlatform) {
+  public OcamlBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.cxxPlatform = cxxPlatform;
   }
 
   public Optional<Tool> getOcamlCompiler() {
     return getTool(SECTION, "ocaml.compiler", DEFAULT_OCAML_COMPILER);
-  }
-
-  public CompilerProvider getCCompiler() {
-    return cxxPlatform.getCc();
-  }
-
-  public PreprocessorProvider getCPreprocessor() {
-    return cxxPlatform.getCpp();
   }
 
   public Optional<Tool> getOcamlDepTool() {
@@ -83,29 +69,8 @@ public class OcamlBuckConfig {
     return getTool(SECTION, "ocaml.bytecode.compiler", DEFAULT_OCAML_BYTECODE_COMPILER);
   }
 
-  public CompilerProvider getCxxCompiler() {
-    return cxxPlatform.getCxx();
-  }
-
-  /** @return all C/C++ platform flags used to preprocess, compiler, and assemble C sources. */
-  public ImmutableList<String> getCFlags() {
-    return ImmutableList.<String>builder()
-        .addAll(cxxPlatform.getCppflags())
-        .addAll(cxxPlatform.getCflags())
-        .addAll(cxxPlatform.getAsflags())
-        .build();
-  }
-
-  public ImmutableList<String> getLdFlags() {
-    return cxxPlatform.getLdflags();
-  }
-
   public Optional<Tool> getOcamlDebug() {
     return getTool(SECTION, "debug", DEFAULT_OCAML_DEBUG);
-  }
-
-  public CxxPlatform getCxxPlatform() {
-    return cxxPlatform;
   }
 
   private Optional<Path> getExecutable(String section, String label, Path defaultValue) {

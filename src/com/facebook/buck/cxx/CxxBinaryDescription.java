@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
@@ -44,6 +45,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
@@ -65,21 +67,18 @@ public class CxxBinaryDescription
         MetadataProvidingDescription<CxxBinaryDescriptionArg>,
         VersionRoot<CxxBinaryDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
-  private final Flavor defaultCxxFlavor;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxBinaryDescription(
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      InferBuckConfig inferBuckConfig,
-      Flavor defaultCxxFlavor,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      InferBuckConfig inferBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
-    this.defaultCxxFlavor = defaultCxxFlavor;
-    this.cxxPlatforms = cxxPlatforms;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
@@ -111,6 +110,9 @@ public class CxxBinaryDescription
   private CxxPlatform getCxxPlatform(
       BuildTarget target, Optional<Flavor> defaultCxxPlatformFlavor) {
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
     // First check if the build target is setting a particular target.
     Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
     if (targetPlatform.isPresent()) {
@@ -123,7 +125,7 @@ public class CxxBinaryDescription
     }
 
     // Otherwise, fallback to the description-level default platform.
-    return cxxPlatforms.getValue(defaultCxxFlavor);
+    return cxxPlatforms.getValue(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
   }
 
   @Override
@@ -185,11 +187,15 @@ public class CxxBinaryDescription
           target, projectFilesystem, cxxLinkAndCompileRules.compileRules);
     }
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           cxxPlatforms.getValue(flavors).isPresent()
               ? target
-              : target.withAppendedFlavors(defaultCxxFlavor),
+              : target.withAppendedFlavors(
+                  cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor()),
           projectFilesystem,
           resolver);
     }
@@ -289,7 +295,9 @@ public class CxxBinaryDescription
             // Missing: CXX Compilation Database
             // Missing: CXX Description Enhancer
             // Missing: CXX Infer Enhancer
-            cxxPlatforms, LinkerMapMode.FLAVOR_DOMAIN, StripStyle.FLAVOR_DOMAIN));
+            getCxxPlatformsProvider().getCxxPlatforms(),
+            LinkerMapMode.FLAVOR_DOMAIN,
+            StripStyle.FLAVOR_DOMAIN));
   }
 
   @Override
@@ -297,7 +305,10 @@ public class CxxBinaryDescription
     Set<Flavor> flavors = inputFlavors;
 
     Set<Flavor> platformFlavors =
-        Sets.intersection(flavors, Sets.union(cxxPlatforms.getFlavors(), declaredPlatforms));
+        Sets.intersection(
+            flavors,
+            Sets.union(
+                getCxxPlatformsProvider().getCxxPlatforms().getFlavors(), declaredPlatforms));
     if (platformFlavors.size() > 1) {
       return false;
     }
@@ -321,14 +332,6 @@ public class CxxBinaryDescription
     return flavors.isEmpty();
   }
 
-  public FlavorDomain<CxxPlatform> getCxxPlatforms() {
-    return cxxPlatforms;
-  }
-
-  public Flavor getDefaultCxxFlavor() {
-    return defaultCxxFlavor;
-  }
-
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
@@ -342,7 +345,7 @@ public class CxxBinaryDescription
       return Optional.empty();
     }
     return CxxDescriptionEnhancer.createCompilationDatabaseDependencies(
-            buildTarget, cxxPlatforms, resolver, args)
+            buildTarget, getCxxPlatformsProvider().getCxxPlatforms(), resolver, args)
         .map(metadataClass::cast);
   }
 
@@ -354,7 +357,8 @@ public class CxxBinaryDescription
 
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
       ImmutableSortedSet<Flavor> argDefaultFlavors, BuildRuleType... types) {
-    Optional<Flavor> platformFlavor = getCxxPlatforms().getFlavor(argDefaultFlavors);
+    Optional<Flavor> platformFlavor =
+        getCxxPlatformsProvider().getCxxPlatforms().getFlavor(argDefaultFlavors);
 
     for (BuildRuleType type : types) {
       ImmutableMap<String, Flavor> libraryDefaults =
@@ -373,6 +377,11 @@ public class CxxBinaryDescription
       // we'll default to no flavor, which implicitly builds the default platform.
       return ImmutableSortedSet.of();
     }
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse, HasDepsQuery {

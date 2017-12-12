@@ -19,8 +19,10 @@ package com.facebook.buck.toolchain.impl;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
+import com.facebook.buck.android.toolchain.impl.DxToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
@@ -45,6 +47,14 @@ import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.impl.JavaCxxPlatformProviderFactory;
+import com.facebook.buck.jvm.java.toolchain.impl.JavaOptionsProviderFactory;
+import com.facebook.buck.jvm.java.toolchain.impl.JavacOptionsProviderFactory;
+import com.facebook.buck.ocaml.OcamlToolchain;
+import com.facebook.buck.ocaml.OcamlToolchainFactory;
 import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
@@ -130,6 +140,22 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               CxxPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class),
+          ToolchainDescriptor.of(
+              DxToolchain.DEFAULT_NAME, DxToolchain.class, DxToolchainFactory.class),
+          ToolchainDescriptor.of(
+              JavaCxxPlatformProvider.DEFAULT_NAME,
+              JavaCxxPlatformProvider.class,
+              JavaCxxPlatformProviderFactory.class),
+          ToolchainDescriptor.of(
+              JavacOptionsProvider.DEFAULT_NAME,
+              JavacOptionsProvider.class,
+              JavacOptionsProviderFactory.class),
+          ToolchainDescriptor.of(
+              JavaOptionsProvider.DEFAULT_NAME,
+              JavaOptionsProvider.class,
+              JavaOptionsProviderFactory.class),
+          ToolchainDescriptor.of(
+              OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class, OcamlToolchainFactory.class),
           ToolchainDescriptor.of(
               PexToolProvider.DEFAULT_NAME, PexToolProvider.class, PexToolProviderFactory.class),
           ToolchainDescriptor.of(

@@ -138,12 +138,33 @@ public class MultiSlaveBuildModeRunnerFactory {
       String coordinatorAddress,
       OptionalInt coordinatorPort,
       DistBuildConfig distBuildConfig,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      double availableBuildCapacityRatio) {
+    Preconditions.checkArgument(
+        availableBuildCapacityRatio > 0, availableBuildCapacityRatio + " is not > 0");
+    Preconditions.checkArgument(
+        availableBuildCapacityRatio <= 1, availableBuildCapacityRatio + " is not <= 1");
+
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = distBuildService.getCurrentBuildJobState(stampedeId);
           return BuildStatusUtil.isTerminalBuildStatus(job.getStatus());
         };
+
+    int availableBuildCapacity =
+        distBuildConfig
+            .getBuckConfig()
+            .getView(ResourcesConfig.class)
+            .getConcurrencyLimit()
+            .threadLimit;
+
+    // Adjust by ratio. E.g. if ratio is 0.5 and we have 8 cores, minion will use 4 cores.
+    Double availableCapacityDouble =
+        Double.valueOf(availableBuildCapacityRatio * availableBuildCapacity);
+    availableBuildCapacity = availableCapacityDouble.intValue();
+
+    // Ensure value wasn't rounded down to 0. We always need more than 1 core to make progress.
+    availableBuildCapacity = Math.max(1, availableBuildCapacity);
 
     return new MinionModeRunner(
         coordinatorAddress,
@@ -151,11 +172,7 @@ public class MultiSlaveBuildModeRunnerFactory {
         localBuildExecutor,
         stampedeId,
         buildSlaveRunId,
-        distBuildConfig
-            .getBuckConfig()
-            .getView(ResourcesConfig.class)
-            .getConcurrencyLimit()
-            .threadLimit,
+        availableBuildCapacity,
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
         unexpectedCacheMissTracker,
@@ -184,7 +201,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
       RuleKeyConfiguration rkConfigForCache,
-      BuildSlaveTimingStatsTracker timingStatsTracker) {
+      BuildSlaveTimingStatsTracker timingStatsTracker,
+      double coordinatorBuildCapacityRatio) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             delegateAndGraphsFuture,
@@ -214,6 +232,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),
             distBuildConfig,
-            unexpectedCacheMissTracker));
+            unexpectedCacheMissTracker,
+            coordinatorBuildCapacityRatio));
   }
 }

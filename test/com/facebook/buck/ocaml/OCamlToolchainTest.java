@@ -18,22 +18,20 @@ package com.facebook.buck.ocaml;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class OCamlBuckConfigTest {
+public class OCamlToolchainTest {
 
   @Test
   public void getCFlags() {
-    OcamlBuckConfig config =
-        new OcamlBuckConfig(
-            FakeBuckConfig.builder().build(),
+    OcamlToolchain toolchain =
+        new OcamlToolchain(
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .withCppflags("-cppflag")
                 .withCflags("-cflag")
                 .withAsflags("-asflag"));
-    assertThat(config.getCFlags(), Matchers.contains("-cppflag", "-cflag", "-asflag"));
+    assertThat(toolchain.getCFlags(), Matchers.contains("-cppflag", "-cflag", "-asflag"));
   }
 }

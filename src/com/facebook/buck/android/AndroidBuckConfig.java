@@ -97,6 +97,10 @@ public class AndroidBuckConfig {
     return delegate.getListWithoutComments("ndk", "extra_ldflags", ' ');
   }
 
+  public boolean isGrayscaleImageProcessingEnabled() {
+    return delegate.getBooleanValue("resources", "resource_grayscale_enabled", false);
+  }
+
   /**
    * Returns the path to the platform specific aapt executable that is overridden by the current
    * project. If not specified, the Android platform aapt will be used.
