@@ -28,7 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -81,19 +81,16 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   private final AndroidManifestDescription androidManifestDescription;
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions javacOptions;
 
   public AndroidAarDescription(
       ToolchainProvider toolchainProvider,
       AndroidManifestDescription androidManifestDescription,
       CxxBuckConfig cxxBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions javacOptions) {
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacOptions = javacOptions;
   }
 
   @Override
@@ -227,7 +224,9 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               Optional.empty(),
               resolver,
               JavacFactory.create(ruleFinder, javaBuckConfig, args),
-              javacOptions,
+              toolchainProvider
+                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getJavacOptions(),
               packageableCollection);
       buildConfigRules.forEach(resolver::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
