@@ -230,12 +230,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new AndroidBuildConfigDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(
         new AndroidInstrumentationApkDescription(
-            toolchainProvider,
-            javaConfig,
-            proGuardConfig,
-            defaultJavacOptions,
-            cxxBuckConfig,
-            dxConfig));
+            toolchainProvider, javaConfig, proGuardConfig, cxxBuckConfig, dxConfig));
     builder.addDescriptions(new AndroidInstrumentationTestDescription(config, toolchainProvider));
     builder.addDescriptions(
         new AndroidLibraryDescription(

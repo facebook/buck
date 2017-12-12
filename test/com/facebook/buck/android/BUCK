@@ -417,6 +417,7 @@ java_test(
         "//src/com/facebook/buck/jvm/java/autodeps:SymbolExtractor",
         "//src/com/facebook/buck/jvm/java/autodeps:autodeps",
         "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",

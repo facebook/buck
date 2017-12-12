@@ -31,7 +31,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -63,7 +63,6 @@ public class AndroidInstrumentationApkDescription
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
-  private final JavacOptions javacOptions;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
 
@@ -71,13 +70,11 @@ public class AndroidInstrumentationApkDescription
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
-      JavacOptions androidJavacOptions,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
-    this.javacOptions = androidJavacOptions;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
   }
@@ -192,7 +189,9 @@ public class AndroidInstrumentationApkDescription
             /* noAutoVersionResources */ false,
             javaBuckConfig,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
-            javacOptions,
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.empty(),
             /* buildConfigValuesFile */ Optional.empty(),

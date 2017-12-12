@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -135,10 +136,12 @@ public class AndroidInstrumentationApkTest {
                         .withToolchain(
                             DxToolchain.DEFAULT_NAME,
                             DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+                        .withToolchain(
+                            JavacOptionsProvider.DEFAULT_NAME,
+                            JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
                         .build(),
                     DEFAULT_JAVA_CONFIG,
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
-                    DEFAULT_JAVAC_OPTIONS,
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
