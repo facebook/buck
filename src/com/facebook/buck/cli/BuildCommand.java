@@ -22,6 +22,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_BUILD_ANALYSIS;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
@@ -842,7 +843,14 @@ public class BuildCommand extends AbstractCommand {
         try {
           Set<String> cacheMissRequestKeys =
               distBuildClientEventListener.getDefaultCacheMissRequestKeys();
-          List<RuleKeyLogEntry> ruleKeyLogs = service.fetchRuleKeyLogs(cacheMissRequestKeys);
+          ArtifactCacheBuckConfig artifactCacheBuckConfig =
+              ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
+          List<RuleKeyLogEntry> ruleKeyLogs =
+              service.fetchRuleKeyLogs(
+                  cacheMissRequestKeys,
+                  artifactCacheBuckConfig.getRepository(),
+                  artifactCacheBuckConfig.getScheduleType(),
+                  true /* distributedBuildModeEnabled */);
           params
               .getBuckEventBus()
               .post(
