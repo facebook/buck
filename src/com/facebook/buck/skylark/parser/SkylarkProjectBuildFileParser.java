@@ -36,6 +36,9 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -69,6 +72,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -100,6 +104,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
   private final Supplier<ClassObject> nativeModuleSupplier;
   private final Supplier<Environment.Frame> buckGlobalsSupplier;
+  private final LoadingCache<SkylarkImport, ExtensionData> extensionDataCache;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -118,6 +123,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     this.buckRuleFunctionsSupplier = MoreSuppliers.memoize(this::getBuckRuleFunctions);
     this.nativeModuleSupplier = MoreSuppliers.memoize(this::newNativeModule);
     this.buckGlobalsSupplier = MoreSuppliers.memoize(this::getBuckGlobals);
+    this.extensionDataCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<SkylarkImport, ExtensionData>() {
+                  @Override
+                  public ExtensionData load(@Nonnull SkylarkImport skylarkImport) throws Exception {
+                    return loadExtension(skylarkImport);
+                  }
+                });
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -273,14 +287,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /** Loads all extensions identified by corresponding {@link SkylarkImport}s. */
-  private ImmutableList<ExtensionData> loadExtensions(ImmutableList<SkylarkImport> skylarkImports)
-      throws IOException, InterruptedException, BuildFileParseException {
-    ImmutableList.Builder<ExtensionData> extensionsBuilder = ImmutableList.builder();
-    for (SkylarkImport skylarkImport : skylarkImports) {
-      ExtensionData extensionData = loadExtension(skylarkImport);
-      extensionsBuilder.add(extensionData);
-    }
-    return extensionsBuilder.build();
+  private ImmutableList<ExtensionData> loadExtensions(ImmutableList<SkylarkImport> skylarkImports) {
+    return skylarkImports
+        .stream()
+        .map(extensionDataCache::getUnchecked)
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**
