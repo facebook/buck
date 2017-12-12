@@ -23,13 +23,14 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
@@ -72,20 +73,14 @@ public class RobolectricTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavaOptions javaOptions;
-  private final JavacOptions templateOptions;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public RobolectricTestDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
-      JavaOptions javaOptions,
-      JavacOptions templateOptions,
       AndroidLibraryCompilerFactory compilerFactory) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javaOptions = javaOptions;
-    this.templateOptions = templateOptions;
     this.compilerFactory = compilerFactory;
   }
 
@@ -119,7 +114,14 @@ public class RobolectricTestDescription
     }
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(templateOptions, buildTarget, projectFilesystem, resolver, args);
+        JavacOptionsFactory.create(
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
@@ -203,7 +205,9 @@ public class RobolectricTestDescription
         args.getLabels(),
         args.getContacts(),
         TestType.JUNIT,
-        javaOptions,
+        toolchainProvider
+            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
+            .getJavaOptionsForTests(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         dummyRDotJava,

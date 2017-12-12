@@ -298,11 +298,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new RemoteFileDescription(toolchainProvider));
     builder.addDescriptions(
         new RobolectricTestDescription(
-            toolchainProvider,
-            javaConfig,
-            defaultJavaOptionsForTests,
-            defaultJavacOptions,
-            defaultAndroidCompilerFactory));
+            toolchainProvider, javaConfig, defaultAndroidCompilerFactory));
     builder.addDescriptions(
         new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));
     builder.addDescriptions(
