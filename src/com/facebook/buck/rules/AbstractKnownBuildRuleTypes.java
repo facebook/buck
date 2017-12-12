@@ -236,8 +236,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new AndroidLibraryDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory));
     builder.addDescriptions(new AndroidManifestDescription());
-    builder.addDescriptions(
-        new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig, defaultJavacOptions));
+    builder.addDescriptions(new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(
         new AndroidResourceDescription(
             toolchainProvider, new AndroidBuckConfig(config, Platform.detect())));
