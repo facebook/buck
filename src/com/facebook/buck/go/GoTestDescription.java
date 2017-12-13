@@ -48,6 +48,7 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +64,8 @@ public class GoTestDescription
     implements Description<GoTestDescriptionArg>,
         Flavored,
         MetadataProvidingDescription<GoTestDescriptionArg>,
-        ImplicitDepsInferringDescription<GoTestDescription.AbstractGoTestDescriptionArg> {
+        ImplicitDepsInferringDescription<GoTestDescription.AbstractGoTestDescriptionArg>,
+        VersionRoot<GoTestDescriptionArg> {
 
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
 
