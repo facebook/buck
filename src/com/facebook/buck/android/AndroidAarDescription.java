@@ -78,17 +78,17 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
       InternalFlavor.of("aar_android_resource");
 
   private final ToolchainProvider toolchainProvider;
-  private final AndroidManifestDescription androidManifestDescription;
+  private final AndroidManifestFactory androidManifestFactory;
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
 
   public AndroidAarDescription(
       ToolchainProvider toolchainProvider,
-      AndroidManifestDescription androidManifestDescription,
+      AndroidManifestFactory androidManifestFactory,
       CxxBuckConfig cxxBuckConfig,
       JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.androidManifestDescription = androidManifestDescription;
+    this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
   }
@@ -118,22 +118,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     BuildTarget androidManifestTarget =
         buildTarget.withAppendedFlavors(AAR_ANDROID_MANIFEST_FLAVOR);
 
-    AndroidManifestDescriptionArg androidManifestArgs =
-        AndroidManifestDescriptionArg.builder()
-            .setName(androidManifestTarget.getShortName())
-            .setSkeleton(args.getManifestSkeleton())
-            .setDeps(args.getDeps())
-            .build();
-
     AndroidManifest manifest =
-        androidManifestDescription.createBuildRule(
-            targetGraph,
+        androidManifestFactory.createBuildRule(
             androidManifestTarget,
             projectFilesystem,
-            originalBuildRuleParams,
             resolver,
-            cellRoots,
-            androidManifestArgs);
+            args.getDeps(),
+            args.getManifestSkeleton());
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
     final APKModuleGraph apkModuleGraph =

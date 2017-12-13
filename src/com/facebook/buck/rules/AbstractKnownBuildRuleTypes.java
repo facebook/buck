@@ -26,6 +26,7 @@ import com.facebook.buck.android.AndroidInstrumentationTestDescription;
 import com.facebook.buck.android.AndroidLibraryCompilerFactory;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidManifestDescription;
+import com.facebook.buck.android.AndroidManifestFactory;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
@@ -218,9 +219,11 @@ abstract class AbstractKnownBuildRuleTypes {
     SandboxExecutionStrategy sandboxExecutionStrategy =
         sandboxExecutionStrategyFactory.create(processExecutor, config);
 
+    AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
+
     builder.addDescriptions(
         new AndroidAarDescription(
-            toolchainProvider, new AndroidManifestDescription(), cxxBuckConfig, javaConfig));
+            toolchainProvider, androidManifestFactory, cxxBuckConfig, javaConfig));
     builder.addDescriptions(new AndroidAppModularityDescription());
     builder.addDescriptions(
         new AndroidBinaryDescription(
@@ -233,7 +236,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new AndroidLibraryDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory));
-    builder.addDescriptions(new AndroidManifestDescription());
+    builder.addDescriptions(new AndroidManifestDescription(androidManifestFactory));
     builder.addDescriptions(new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(
         new AndroidResourceDescription(

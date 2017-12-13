@@ -74,6 +74,7 @@ RULES_SRCS = [
     "AndroidLibraryGraphEnhancer.java",
     "AndroidManifest.java",
     "AndroidManifestDescription.java",
+    "AndroidManifestFactory.java",
     "AndroidNativeLibsPackageableGraphEnhancer.java",
     "AndroidPrebuiltAar.java",
     "AndroidPrebuiltAarCollection.java",
