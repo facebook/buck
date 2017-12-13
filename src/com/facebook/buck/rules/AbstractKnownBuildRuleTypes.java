@@ -35,7 +35,6 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
@@ -212,7 +211,6 @@ abstract class AbstractKnownBuildRuleTypes {
         new GroovyLibraryDescription(toolchainProvider, groovyBuckConfig, javaConfig));
     builder.addDescriptions(
         new GroovyTestDescription(toolchainProvider, groovyBuckConfig, javaConfig));
-    builder.addDescriptions(new GwtBinaryDescription(toolchainProvider));
     builder.addDescriptions(new JavaBinaryDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new JavaAnnotationProcessorDescription());
     builder.addDescriptions(new JavaLibraryDescription(toolchainProvider, javaConfig));

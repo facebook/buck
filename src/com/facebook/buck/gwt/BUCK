@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
-java_immutables_library(
+java_library_with_plugins(
     name = "gwt",
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
