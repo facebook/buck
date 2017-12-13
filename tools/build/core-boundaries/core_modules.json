@@ -45,6 +45,8 @@
   "//src/com/facebook/buck/rules:rules",
   "//src/com/facebook/buck/rules:source_path",
   "//src/com/facebook/buck/rules/visibility:visibility",
+  "//src/com/facebook/buck/sandbox:sandbox",
+  "//src/com/facebook/buck/shell/programrunner:programrunner",
   "//src/com/facebook/buck/skylark/json:json",
   "//src/com/facebook/buck/slb:slb",
   "//src/com/facebook/buck/step/fs:fs",

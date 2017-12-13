@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -191,7 +190,6 @@ abstract class AbstractKnownBuildRuleTypes {
     SandboxExecutionStrategy sandboxExecutionStrategy =
         sandboxExecutionStrategyFactory.create(processExecutor, config);
 
-    builder.addDescriptions(new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(
         new ApplePackageDescription(toolchainProvider, sandboxExecutionStrategy, appleConfig));
     AppleBundleDescription appleBundleDescription =
@@ -245,10 +243,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new WorkerToolDescription(config));
 
     DescriptionCreationContext descriptionCreationContext =
-        DescriptionCreationContext.builder()
-            .setBuckConfig(config)
-            .setToolchainProvider(toolchainProvider)
-            .build();
+        DescriptionCreationContext.of(config, toolchainProvider, sandboxExecutionStrategy);
     List<DescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(DescriptionProvider.class);
     for (DescriptionProvider provider : descriptionProviders) {

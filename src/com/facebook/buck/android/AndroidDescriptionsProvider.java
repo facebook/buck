@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
@@ -35,6 +36,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
 
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
+    SandboxExecutionStrategy sandboxExecutionStrategy = context.getSandboxExecutionStrategy();
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig config = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
@@ -69,6 +71,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
         new NdkLibraryDescription(toolchainProvider),
-        new GenAidlDescription(toolchainProvider));
+        new GenAidlDescription(toolchainProvider),
+        new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
   }
 }
