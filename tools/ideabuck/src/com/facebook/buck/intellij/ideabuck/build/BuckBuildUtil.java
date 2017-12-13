@@ -51,6 +51,15 @@ public final class BuckBuildUtil {
   }
 
   /**
+   * @param target The build target in absolute (<code>//apps/myapp:app</code>}) or relative (<code>
+   *     :app</code>) pattern.
+   * @return The name of the target, for example <code>app</code>.
+   */
+  public static String extractTargetName(String target) {
+    return target.substring(target.lastIndexOf(":") + 1);
+  }
+
+  /**
    * Return the virtual file of the BUCK file of the given target. TODO(#7908675): Use Buck's
    * BuildTargetFactory and deprecate this class.
    */
