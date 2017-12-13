@@ -40,9 +40,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.KeystoreDescription;
-import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
-import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
-import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
@@ -144,8 +141,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
 
-    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
-
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
@@ -204,10 +199,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new JavaLibraryDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new JavaTestDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new KeystoreDescription());
-    builder.addDescriptions(
-        new KotlinLibraryDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
-    builder.addDescriptions(
-        new KotlinTestDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config);
     builder.addDescriptions(new OcamlBinaryDescription(toolchainProvider, ocamlBuckConfig));
     builder.addDescriptions(new OcamlLibraryDescription(toolchainProvider, ocamlBuckConfig));
