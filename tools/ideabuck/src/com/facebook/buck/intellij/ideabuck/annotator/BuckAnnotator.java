@@ -70,9 +70,8 @@ public class BuckAnnotator implements Annotator {
     if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
       return;
     }
-    VirtualFile buckDir =
-        project.getBaseDir().findFileByRelativePath(BuckBuildUtil.extractAbsoluteTarget(target));
-    VirtualFile targetBuckFile = buckDir != null ? buckDir.findChild("BUCK") : null;
+    @Nullable
+    VirtualFile targetBuckFile = BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target);
 
     if (targetBuckFile == null) {
       TextRange range =
