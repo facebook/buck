@@ -692,13 +692,13 @@ public class PythonBinaryDescriptionTest {
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
     PythonBinary binary = binaryBuilder.build(resolver);
-    for (SourcePath path : binary.getComponents().getNativeLibraries().values()) {
-      CxxLink link =
-          resolver
-              .getRuleOptionalWithType(((BuildTargetSourcePath) path).getTarget(), CxxLink.class)
-              .get();
-      assertThat(Arg.stringify(link.getArgs(), pathResolver), Matchers.hasItem("-flag"));
-    }
+    SourcePath mergedLib =
+        binary.getComponents().getNativeLibraries().get(Paths.get("libomnibus.so"));
+    CxxLink link =
+        resolver
+            .getRuleOptionalWithType(((BuildTargetSourcePath) mergedLib).getTarget(), CxxLink.class)
+            .get();
+    assertThat(Arg.stringify(link.getArgs(), pathResolver), Matchers.hasItem("-flag"));
   }
 
   @Test

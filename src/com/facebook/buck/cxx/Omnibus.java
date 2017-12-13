@@ -611,7 +611,7 @@ public class Omnibus {
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      ImmutableList<? extends Arg> extraLdflags,
+      ImmutableList<? extends Arg> extraOmnibusLdflags,
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots) {
 
@@ -630,7 +630,7 @@ public class Omnibus {
             ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
-            extraLdflags);
+            extraOmnibusLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
     for (NativeLinkTarget target : spec.getRoots().values()) {
@@ -646,7 +646,7 @@ public class Omnibus {
             ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
-            extraLdflags,
+            ImmutableList.of(),
             spec,
             dummyOmnibus,
             target);
@@ -659,7 +659,7 @@ public class Omnibus {
                 ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
-                extraLdflags,
+                ImmutableList.of(),
                 spec,
                 dummyOmnibus,
                 target);
@@ -679,7 +679,7 @@ public class Omnibus {
               ruleFinder,
               cxxBuckConfig,
               cxxPlatform,
-              extraLdflags,
+              extraOmnibusLdflags,
               spec);
       libs.addLibraries(omnibus);
       realOmnibus = Optional.of(omnibus.getPath());
@@ -697,7 +697,7 @@ public class Omnibus {
                 ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
-                extraLdflags,
+                ImmutableList.of(),
                 spec,
                 realOmnibus.orElse(dummyOmnibus),
                 target);
