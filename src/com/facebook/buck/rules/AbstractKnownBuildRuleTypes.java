@@ -42,18 +42,11 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
-import com.facebook.buck.shell.CommandAliasDescription;
-import com.facebook.buck.shell.ExportFileDescription;
-import com.facebook.buck.shell.GenruleDescription;
-import com.facebook.buck.shell.ShBinaryDescription;
-import com.facebook.buck.shell.ShTestDescription;
-import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedAliasDescription;
 import com.google.common.collect.ImmutableList;
@@ -176,15 +169,11 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(appleBundleDescription);
     builder.addDescriptions(
         new AppleTestDescription(toolchainProvider, appleConfig, appleLibraryDescription));
-    builder.addDescriptions(new CommandAliasDescription(Platform.detect()));
     builder.addDescriptions(cxxBinaryDescription);
     builder.addDescriptions(cxxLibraryDescription);
     builder.addDescriptions(
         new CxxGenruleDescription(cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(new CxxTestDescription(toolchainProvider, cxxBuckConfig));
-    builder.addDescriptions(new ExportFileDescription());
-    builder.addDescriptions(
-        new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
     builder.addDescriptions(new JavaBinaryDescription(toolchainProvider, javaConfig));
     builder.addDescriptions(new JavaAnnotationProcessorDescription());
     builder.addDescriptions(new JavaLibraryDescription(toolchainProvider, javaConfig));
@@ -194,9 +183,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
     builder.addDescriptions(new SceneKitAssetsDescription());
-    builder.addDescriptions(new ShBinaryDescription());
-    builder.addDescriptions(new ShTestDescription(config));
-    builder.addDescriptions(new WorkerToolDescription(config));
 
     DescriptionCreationContext descriptionCreationContext =
         DescriptionCreationContext.of(config, toolchainProvider, sandboxExecutionStrategy);
