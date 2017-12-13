@@ -48,7 +48,6 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.versions.VersionedAliasDescription;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -193,8 +192,6 @@ abstract class AbstractKnownBuildRuleTypes {
         builder.addDescriptions(description);
       }
     }
-
-    builder.addDescriptions(VersionedAliasDescription.of());
 
     return builder.build();
   }
