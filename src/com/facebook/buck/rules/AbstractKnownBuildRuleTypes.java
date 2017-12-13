@@ -34,7 +34,6 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
-import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
@@ -231,7 +230,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
     builder.addDescriptions(new PrebuiltOcamlLibraryDescription());
-    builder.addDescriptions(new RemoteFileDescription(toolchainProvider));
     builder.addDescriptions(
         new ScalaLibraryDescription(toolchainProvider, scalaConfig, javaConfig));
     builder.addDescriptions(new ScalaTestDescription(toolchainProvider, scalaConfig, javaConfig));
