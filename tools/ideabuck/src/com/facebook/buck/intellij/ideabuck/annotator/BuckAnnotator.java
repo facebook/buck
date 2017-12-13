@@ -27,7 +27,6 @@ import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -74,10 +73,8 @@ public class BuckAnnotator implements Annotator {
     VirtualFile targetBuckFile = BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target);
 
     if (targetBuckFile == null) {
-      TextRange range =
-          new TextRange(
-              psiElement.getTextRange().getStartOffset(), psiElement.getTextRange().getEndOffset());
-      annotationHolder.createErrorAnnotation(range, ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET);
+      annotationHolder.createErrorAnnotation(
+          psiElement.getTextRange(), ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET);
       project
           .getMessageBus()
           .syncPublisher(IntellijBuckAction.EVENT)
@@ -102,11 +99,8 @@ public class BuckAnnotator implements Annotator {
     VirtualFile loadTargetFile =
         packageDirectory != null ? packageDirectory.findChild(fileName) : null;
     if (loadTargetFile == null) {
-      TextRange range =
-          new TextRange(
-              loadTargetArgument.getTextRange().getStartOffset(),
-              loadTargetArgument.getTextRange().getEndOffset());
-      annotationHolder.createErrorAnnotation(range, "Cannot locate extension file " + fileName);
+      annotationHolder.createErrorAnnotation(
+          loadTargetArgument.getTextRange(), "Cannot locate extension file " + fileName);
       project
           .getMessageBus()
           .syncPublisher(IntellijBuckAction.EVENT)
