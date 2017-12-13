@@ -171,6 +171,7 @@ public class AppleBundleDescription
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
+        appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
         args.getCodesignFlags(),
         args.getCodesignIdentity(),

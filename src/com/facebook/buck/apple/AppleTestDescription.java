@@ -301,6 +301,7 @@ public class AppleTestDescription
             debugFormat,
             appleConfig.useDryRunCodeSigning(),
             appleConfig.cacheBundlesAndPackages(),
+            appleConfig.shouldVerifyBundleResources(),
             appleConfig.assetCatalogValidation(),
             args.getCodesignFlags(),
             args.getCodesignIdentity(),

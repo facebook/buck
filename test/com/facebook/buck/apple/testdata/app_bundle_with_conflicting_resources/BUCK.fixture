@@ -1,0 +1,45 @@
+apple_resource(
+    name = "DemoAppResources",
+    dirs = ["Images"],
+    files = glob(["*.png"]),
+    variants = [
+        "aa.lproj/Localizable.strings",
+        "bb.lproj/Localizable.strings",
+        "cc.lproj/Localizable.strings",
+        "Strings/xx.lproj/Localizable.strings",
+        "Strings/yy.lproj/Localizable.strings",
+        "Strings/zz.lproj/Localizable.strings",
+    ],
+)
+
+apple_resource(
+    name = "ConflictingResources",
+    dirs = [],
+    files = ["Images/Image.png"],
+)
+
+apple_bundle(
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "DemoAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [":DemoAppResources",":ConflictingResources"],
+)

@@ -79,6 +79,7 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -170,6 +171,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final boolean hasBinary;
   private final boolean cacheable;
+  private final boolean verifyResources;
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -196,6 +198,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable,
+      boolean verifyResources,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
       Optional<Boolean> ibtoolModuleFlag) {
@@ -232,6 +235,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.cacheable = cacheable;
+    this.verifyResources = verifyResources;
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
     this.ibtoolModuleParams =
@@ -430,6 +434,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             resources.getResourceDirs(),
             resources.getDirsContainingResourceDirs(),
             resources.getResourceFiles()))) {
+      if (verifyResources) {
+        verifyResourceConflicts(resources, context.getSourcePathResolver());
+      }
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -672,6 +679,24 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return stepsBuilder.build();
+  }
+
+  private void verifyResourceConflicts(AppleBundleResources resources,
+                                       SourcePathResolver resolver) {
+    // Ensure there are no resources that will overwrite each other
+    // TODO: handle ResourceDirsContainingResourceDirs
+    Set<Path> resourcePaths = new HashSet<>();
+    for (SourcePath path : Iterables.concat(
+        resources.getResourceDirs(),
+        resources.getResourceFiles())) {
+      Path pathInBundle = resolver.getRelativePath(path).getFileName();
+      if (resourcePaths.contains(pathInBundle)) {
+        throw new HumanReadableException(
+            "Bundle contains multiple resources with path %s", pathInBundle);
+      } else {
+        resourcePaths.add(pathInBundle);
+      }
+    }
   }
 
   private boolean needsPkgInfoFile() {
