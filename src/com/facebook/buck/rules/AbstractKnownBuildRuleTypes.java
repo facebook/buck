@@ -67,7 +67,6 @@ import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
@@ -176,7 +175,6 @@ abstract class AbstractKnownBuildRuleTypes {
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
-    JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
 
@@ -292,7 +290,7 @@ abstract class AbstractKnownBuildRuleTypes {
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory));
     builder.addDescriptions(
-        new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));
+        new ScalaLibraryDescription(toolchainProvider, scalaConfig, javaConfig));
     builder.addDescriptions(new ScalaTestDescription(toolchainProvider, scalaConfig, javaConfig));
     builder.addDescriptions(new SceneKitAssetsDescription());
     builder.addDescriptions(new ShBinaryDescription());
