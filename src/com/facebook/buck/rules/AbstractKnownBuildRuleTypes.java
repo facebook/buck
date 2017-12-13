@@ -40,9 +40,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.KeystoreDescription;
-import com.facebook.buck.jvm.scala.ScalaBuckConfig;
-import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
-import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.ocaml.OcamlBinaryDescription;
 import com.facebook.buck.ocaml.OcamlBuckConfig;
 import com.facebook.buck.ocaml.OcamlLibraryDescription;
@@ -141,8 +138,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
 
-    ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
-
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     CxxBinaryDescription cxxBinaryDescription =
@@ -206,9 +201,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
     builder.addDescriptions(new PrebuiltOcamlLibraryDescription());
-    builder.addDescriptions(
-        new ScalaLibraryDescription(toolchainProvider, scalaConfig, javaConfig));
-    builder.addDescriptions(new ScalaTestDescription(toolchainProvider, scalaConfig, javaConfig));
     builder.addDescriptions(new SceneKitAssetsDescription());
     builder.addDescriptions(new ShBinaryDescription());
     builder.addDescriptions(new ShTestDescription(config));
