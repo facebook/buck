@@ -2425,7 +2425,14 @@ public class ProjectGenerator {
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
     } else {
-      throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());
+      String message =
+          "Unexpected type: "
+              + targetNode.getDescription().getClass()
+              + " for target "
+              + targetNode.getBuildTarget()
+              + "\n"
+              + "It means that it's been added as a dependency of another target but it's not a supported type of dependency.";
+      throw new RuntimeException(message);
     }
   }
 
