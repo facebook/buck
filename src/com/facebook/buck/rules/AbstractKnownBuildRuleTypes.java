@@ -34,12 +34,6 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
-import com.facebook.buck.jvm.java.JavaAnnotationProcessorDescription;
-import com.facebook.buck.jvm.java.JavaBinaryDescription;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaTestDescription;
-import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -124,8 +118,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 
-    JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
-
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     CxxBinaryDescription cxxBinaryDescription =
@@ -173,11 +165,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(
         new CxxGenruleDescription(cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(new CxxTestDescription(toolchainProvider, cxxBuckConfig));
-    builder.addDescriptions(new JavaBinaryDescription(toolchainProvider, javaConfig));
-    builder.addDescriptions(new JavaAnnotationProcessorDescription());
-    builder.addDescriptions(new JavaLibraryDescription(toolchainProvider, javaConfig));
-    builder.addDescriptions(new JavaTestDescription(toolchainProvider, javaConfig));
-    builder.addDescriptions(new KeystoreDescription());
     builder.addDescriptions(new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
