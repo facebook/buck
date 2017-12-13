@@ -16,27 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.AndroidAarDescription;
-import com.facebook.buck.android.AndroidAppModularityDescription;
-import com.facebook.buck.android.AndroidBinaryDescription;
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidBuildConfigDescription;
-import com.facebook.buck.android.AndroidInstrumentationApkDescription;
-import com.facebook.buck.android.AndroidInstrumentationTestDescription;
-import com.facebook.buck.android.AndroidLibraryCompilerFactory;
-import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.AndroidManifestDescription;
-import com.facebook.buck.android.AndroidManifestFactory;
-import com.facebook.buck.android.AndroidPrebuiltAarDescription;
-import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
-import com.facebook.buck.android.DefaultAndroidLibraryCompilerFactory;
-import com.facebook.buck.android.DxConfig;
-import com.facebook.buck.android.GenAidlDescription;
-import com.facebook.buck.android.NdkLibraryDescription;
-import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
-import com.facebook.buck.android.ProGuardConfig;
-import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -169,10 +149,6 @@ abstract class AbstractKnownBuildRuleTypes {
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
-    ProGuardConfig proGuardConfig = new ProGuardConfig(config);
-
-    DxConfig dxConfig = new DxConfig(config);
-
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
@@ -212,35 +188,9 @@ abstract class AbstractKnownBuildRuleTypes {
             toolchainProvider, cxxBinaryDescription, swiftLibraryDescription, appleConfig);
     builder.addDescriptions(appleBinaryDescription);
 
-    AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
-        new DefaultAndroidLibraryCompilerFactory(
-            toolchainProvider, javaConfig, scalaConfig, kotlinBuckConfig);
-
     SandboxExecutionStrategy sandboxExecutionStrategy =
         sandboxExecutionStrategyFactory.create(processExecutor, config);
 
-    AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
-
-    builder.addDescriptions(
-        new AndroidAarDescription(
-            toolchainProvider, androidManifestFactory, cxxBuckConfig, javaConfig));
-    builder.addDescriptions(new AndroidAppModularityDescription());
-    builder.addDescriptions(
-        new AndroidBinaryDescription(
-            toolchainProvider, javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig));
-    builder.addDescriptions(new AndroidBuildConfigDescription(toolchainProvider, javaConfig));
-    builder.addDescriptions(
-        new AndroidInstrumentationApkDescription(
-            toolchainProvider, javaConfig, proGuardConfig, cxxBuckConfig, dxConfig));
-    builder.addDescriptions(new AndroidInstrumentationTestDescription(config, toolchainProvider));
-    builder.addDescriptions(
-        new AndroidLibraryDescription(
-            toolchainProvider, javaConfig, defaultAndroidCompilerFactory));
-    builder.addDescriptions(new AndroidManifestDescription(androidManifestFactory));
-    builder.addDescriptions(new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig));
-    builder.addDescriptions(
-        new AndroidResourceDescription(
-            toolchainProvider, new AndroidBuckConfig(config, Platform.detect())));
     builder.addDescriptions(new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
     builder.addDescriptions(
         new ApplePackageDescription(toolchainProvider, sandboxExecutionStrategy, appleConfig));
@@ -259,7 +209,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new ExportFileDescription());
     builder.addDescriptions(
         new GenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
-    builder.addDescriptions(new GenAidlDescription(toolchainProvider));
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.addDescriptions(
         new GroovyLibraryDescription(toolchainProvider, groovyBuckConfig, javaConfig));
@@ -279,19 +228,14 @@ abstract class AbstractKnownBuildRuleTypes {
         new KotlinLibraryDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
     builder.addDescriptions(
         new KotlinTestDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
-    builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config);
     builder.addDescriptions(new OcamlBinaryDescription(toolchainProvider, ocamlBuckConfig));
     builder.addDescriptions(new OcamlLibraryDescription(toolchainProvider, ocamlBuckConfig));
     builder.addDescriptions(new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig));
     builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
     builder.addDescriptions(new CxxPrecompiledHeaderDescription());
-    builder.addDescriptions(new PrebuiltNativeLibraryDescription());
     builder.addDescriptions(new PrebuiltOcamlLibraryDescription());
     builder.addDescriptions(new RemoteFileDescription(toolchainProvider));
-    builder.addDescriptions(
-        new RobolectricTestDescription(
-            toolchainProvider, javaConfig, defaultAndroidCompilerFactory));
     builder.addDescriptions(
         new ScalaLibraryDescription(toolchainProvider, scalaConfig, javaConfig));
     builder.addDescriptions(new ScalaTestDescription(toolchainProvider, scalaConfig, javaConfig));

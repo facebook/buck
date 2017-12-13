@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
 CXXRUNTIME_SRCS = [
     "AbstractNdkCxxPlatformCompiler.java",
@@ -63,6 +63,7 @@ RULES_SRCS = [
     "AndroidBuildConfig.java",
     "AndroidBuildConfigDescription.java",
     "AndroidBuildConfigJavaLibrary.java",
+    "AndroidDescriptionsProvider.java",
     "AndroidInstrumentationApk.java",
     "AndroidInstrumentationApkDescription.java",
     "AndroidInstrumentationTest.java",
@@ -134,7 +135,7 @@ RULES_SRCS = [
     "relinker/Symbols.java",
 ]
 
-java_immutables_library(
+java_library_with_plugins(
     name = "rules",
     srcs = RULES_SRCS,
     exported_deps = [
