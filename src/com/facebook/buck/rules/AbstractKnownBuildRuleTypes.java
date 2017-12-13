@@ -275,7 +275,7 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(new JsLibraryDescription());
     builder.addDescriptions(new KeystoreDescription());
     builder.addDescriptions(
-        new KotlinLibraryDescription(kotlinBuckConfig, javaConfig, defaultJavacOptions));
+        new KotlinLibraryDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
     builder.addDescriptions(
         new KotlinTestDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
     builder.addDescriptions(new NdkLibraryDescription(toolchainProvider));
