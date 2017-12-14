@@ -30,12 +30,9 @@ import org.immutables.value.Value;
  * a top-level native linkable rule (e.g. C++ binary) can use this to contribute components to the
  * final link.
  */
-@Value.Immutable(copy = true)
+@Value.Immutable(copy = true, singleton = true)
 @BuckStyleImmutable
 abstract class AbstractNativeLinkableInput {
-
-  private static final NativeLinkableInput EMPTY =
-      NativeLinkableInput.of(ImmutableList.of(), ImmutableSet.of(), ImmutableSet.of());
 
   // Arguments to pass to the linker.  In the future it'd be nice to make this more aware of
   // the differences between archives, objects, flags, etc.
@@ -63,9 +60,5 @@ abstract class AbstractNativeLinkableInput {
     }
 
     return NativeLinkableInput.of(args.build(), frameworks.build(), libraries.build());
-  }
-
-  public static NativeLinkableInput of() {
-    return EMPTY;
   }
 }
