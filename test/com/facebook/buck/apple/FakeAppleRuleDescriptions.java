@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.CxxBinaryFlavored;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -227,21 +228,31 @@ public class FakeAppleRuleDescriptions {
           CxxPlatformUtils.DEFAULT_CONFIG,
           new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
   /** A fake apple_library description with an iOS platform for use in tests. */
-  public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
-      new AppleLibraryDescription(
-          createTestToolchainProvider(
-              DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN, DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
-          new CxxLibraryDescription(
-              new ToolchainProviderBuilder()
-                  .withToolchain(
-                      CxxPlatformsProvider.DEFAULT_NAME,
-                      CxxPlatformsProvider.of(DEFAULT_PLATFORM, DEFAULT_APPLE_FLAVOR_DOMAIN))
-                  .build(),
-              CxxPlatformUtils.DEFAULT_CONFIG,
-              new InferBuckConfig(DEFAULT_BUCK_CONFIG)),
-          SWIFT_LIBRARY_DESCRIPTION,
-          DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
-          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
+  public static final AppleLibraryDescription LIBRARY_DESCRIPTION = createAppleLibraryDescription();
+
+  private static AppleLibraryDescription createAppleLibraryDescription() {
+    ToolchainProvider toolchainProvider =
+        createTestToolchainProvider(
+            DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN, DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN);
+    CxxLibraryFlavored cxxLibraryFlavored =
+        new CxxLibraryFlavored(toolchainProvider, CxxPlatformUtils.DEFAULT_CONFIG);
+
+    return new AppleLibraryDescription(
+        toolchainProvider,
+        new CxxLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(DEFAULT_PLATFORM, DEFAULT_APPLE_FLAVOR_DOMAIN))
+                .build(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new InferBuckConfig(DEFAULT_BUCK_CONFIG),
+            cxxLibraryFlavored),
+        SWIFT_LIBRARY_DESCRIPTION,
+        DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
+        new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
+        cxxLibraryFlavored);
+  }
 
   /** A fake apple_binary description with an iOS platform for use in tests. */
   public static final AppleBinaryDescription BINARY_DESCRIPTION = createAppleBinaryDescription();

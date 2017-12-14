@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
-import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -153,41 +152,27 @@ public class CxxLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
-  private final ImmutableSet<Flavor> declaredPlatforms;
+  private final CxxLibraryFlavored cxxLibraryFlavored;
 
   public CxxLibraryDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      InferBuckConfig inferBuckConfig) {
+      InferBuckConfig inferBuckConfig,
+      CxxLibraryFlavored cxxLibraryFlavored) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
-    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
+    this.cxxLibraryFlavored = cxxLibraryFlavored;
   }
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(
-        ImmutableSet.of(
-            // Missing: CXX Compilation Database
-            // Missing: CXX Description Enhancer
-            // Missing: CXX Infer Enhancer
-            getCxxPlatformsProvider().getCxxPlatforms(),
-            LinkerMapMode.FLAVOR_DOMAIN,
-            StripStyle.FLAVOR_DOMAIN));
+    return cxxLibraryFlavored.flavorDomains();
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)
-        || flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
-        || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
-        || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)
-        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor())
-        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-        || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-        || LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors)
-        || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
+    return cxxLibraryFlavored.hasFlavors(flavors);
   }
 
   /**
