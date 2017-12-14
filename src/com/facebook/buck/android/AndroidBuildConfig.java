@@ -33,6 +33,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
@@ -236,7 +237,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
       values = BuildConfigFields.fromFieldDeclarations(filesystem.readLines(valuesFile));
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

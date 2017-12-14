@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.abi.StubJar;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -51,10 +52,10 @@ public class CalculateClassAbiStep implements Step {
       new StubJar(binJar).setCompatibilityMode(compatibilityMode).writeTo(filesystem, abiJar);
     } catch (IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

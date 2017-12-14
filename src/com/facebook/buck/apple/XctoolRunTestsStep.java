@@ -23,6 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Console;
@@ -274,7 +275,7 @@ class XctoolRunTestsStep implements Step {
                     Locale.US,
                     "No tests found matching specified filter (%s)",
                     testSelectorList.getExplanation()));
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
       processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
     }

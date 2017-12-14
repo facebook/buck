@@ -51,6 +51,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -704,7 +705,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     .writeLinesToPath(
                         Iterables.transform(classpathEntries, Object::toString),
                         getClassPathFile());
-                return StepExecutionResult.SUCCESS;
+                return StepExecutionResults.SUCCESS;
               }
             })
         .build();

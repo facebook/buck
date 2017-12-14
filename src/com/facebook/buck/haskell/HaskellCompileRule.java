@@ -45,6 +45,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
@@ -471,7 +472,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                     return super.postVisitDirectory(dir, exc);
                   }
                 });
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }

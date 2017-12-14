@@ -37,6 +37,7 @@ import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
@@ -214,7 +215,7 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
       getProjectFilesystem()
           .writeLinesToPath(
               Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER::apply), getArgfile());
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

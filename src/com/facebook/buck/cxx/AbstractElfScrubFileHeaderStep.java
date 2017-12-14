@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
@@ -62,7 +63,7 @@ abstract class AbstractElfScrubFileHeaderStep implements Step {
       // Write the new header back out.
       header.write(buffer);
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

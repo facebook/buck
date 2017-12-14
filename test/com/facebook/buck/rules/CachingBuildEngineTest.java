@@ -79,6 +79,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -355,7 +356,7 @@ public class CachingBuildEngineTest {
               Path outputPath = pathResolver.getRelativePath(ruleToTest.getSourcePathToOutput());
               filesystem.mkdirs(outputPath.getParent());
               filesystem.touch(outputPath);
-              return StepExecutionResult.SUCCESS;
+              return StepExecutionResults.SUCCESS;
             }
           });
 
@@ -560,7 +561,7 @@ public class CachingBuildEngineTest {
           .anyTimes();
       expect(buildStep.getShortName()).andReturn("Some Short Name").anyTimes();
       expect(buildStep.execute(anyObject(ExecutionContext.class)))
-          .andReturn(StepExecutionResult.SUCCESS);
+          .andReturn(StepExecutionResults.SUCCESS);
 
       BuildRule buildRule =
           createRule(
@@ -887,7 +888,7 @@ public class CachingBuildEngineTest {
               } catch (TimeoutException e) {
                 throw new RuntimeException(e);
               }
-              return StepExecutionResult.SUCCESS;
+              return StepExecutionResults.SUCCESS;
             }
           };
       BuildRule interleavedRuleOne =
@@ -937,7 +938,7 @@ public class CachingBuildEngineTest {
             @Override
             public StepExecutionResult execute(ExecutionContext context)
                 throws IOException, InterruptedException {
-              return StepExecutionResult.ERROR;
+              return StepExecutionResults.ERROR;
             }
           };
       BuildRule ruleToTest =
@@ -981,7 +982,7 @@ public class CachingBuildEngineTest {
                 throws IOException, InterruptedException {
               System.out.println("Failing");
               failedSteps.incrementAndGet();
-              return StepExecutionResult.ERROR;
+              return StepExecutionResults.ERROR;
             }
           };
       ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
@@ -1042,7 +1043,7 @@ public class CachingBuildEngineTest {
             @Override
             public StepExecutionResult execute(ExecutionContext context)
                 throws IOException, InterruptedException {
-              return StepExecutionResult.ERROR;
+              return StepExecutionResults.ERROR;
             }
           };
       BuildRule ruleToTest =
@@ -1079,7 +1080,7 @@ public class CachingBuildEngineTest {
             @Override
             public StepExecutionResult execute(ExecutionContext context)
                 throws IOException, InterruptedException {
-              return StepExecutionResult.ERROR;
+              return StepExecutionResults.ERROR;
             }
           };
       BuildRule ruleToTest =
@@ -1952,7 +1953,7 @@ public class CachingBuildEngineTest {
               @Override
               public StepExecutionResult execute(ExecutionContext context)
                   throws IOException, InterruptedException {
-                return StepExecutionResult.ERROR;
+                return StepExecutionResults.ERROR;
               }
             });
       }
@@ -2095,7 +2096,7 @@ public class CachingBuildEngineTest {
                     @Override
                     public StepExecutionResult execute(ExecutionContext context)
                         throws IOException, InterruptedException {
-                      return StepExecutionResult.ERROR;
+                      return StepExecutionResults.ERROR;
                     }
                   });
             }
@@ -3268,7 +3269,7 @@ public class CachingBuildEngineTest {
                   throws IOException, InterruptedException {
                 started.release();
                 finish.acquire();
-                return StepExecutionResult.SUCCESS;
+                return StepExecutionResults.SUCCESS;
               }
             });
       }
@@ -4345,7 +4346,7 @@ public class CachingBuildEngineTest {
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
       Thread.sleep(millis);
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 
@@ -4358,7 +4359,7 @@ public class CachingBuildEngineTest {
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
   }
 

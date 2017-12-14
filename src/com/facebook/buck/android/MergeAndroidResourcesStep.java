@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -252,7 +253,7 @@ public class MergeAndroidResourcesStep implements Step {
       if (!emptyPackages.isEmpty()) {
         writeEmptyRDotJavaForPackages(emptyPackages, filesystem);
       }
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     } catch (DuplicateResourceException e) {
       return StepExecutionResult.of(1, Optional.of(e.getMessage()));
     }

@@ -56,6 +56,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
@@ -948,7 +949,7 @@ class NativeLibraryMergeEnhancer {
                 fixSection(elf, ".dynsym", ".dynstr");
                 fixSection(elf, ".symtab", ".strtab");
               }
-              return StepExecutionResult.SUCCESS;
+              return StepExecutionResults.SUCCESS;
             }
 
             void fixSection(Elf elf, String sectionName, String stringSectionName)

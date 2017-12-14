@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
@@ -83,7 +84,7 @@ class CodeSignStep implements Step {
       dryRunResult.put("use-entitlements", pathToSigningEntitlements.isPresent());
       dryRunResult.put("identity", getIdentityArg(codeSignIdentitySupplier.get()));
       filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
@@ -127,7 +128,7 @@ class CodeSignStep implements Step {
     if (result.getExitCode() != 0) {
       return StepExecutionResult.of(result);
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -58,7 +59,7 @@ public class ReplaceManifestPlaceholdersStep implements Step {
             Files.readAllBytes(projectFilesystem.resolve(androidManifest)), StandardCharsets.UTF_8);
     String replaced = replacePlaceholders(content, manifestEntries);
     projectFilesystem.writeContentsToPath(replaced, replacedManifest);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

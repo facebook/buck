@@ -42,6 +42,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreSuppliers;
@@ -367,7 +368,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 java.nio.file.Files.createDirectories(symlinkPath.getParent());
                 java.nio.file.Files.createSymbolicLink(symlinkPath, symlinkTarget);
               }
-              return StepExecutionResult.SUCCESS;
+              return StepExecutionResults.SUCCESS;
             }
           });
 
@@ -486,7 +487,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                     secondaryDexDirectoriesBuilder.build().stream().map(t -> t.toString())
                         ::iterator,
                     getSecondaryDexListing());
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
     buildableContext.recordArtifact(getRootGenPath());
@@ -528,7 +529,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                   AccumulateClassNamesStep.calculateClassHashes(
                       context, getProjectFilesystem(), path);
               if (!hashes.isPresent()) {
-                return StepExecutionResult.ERROR;
+                return StepExecutionResults.ERROR;
               }
               builder.putAll(hashes.get());
 
@@ -542,7 +543,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 classesToSources.put(className, path);
               }
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
 

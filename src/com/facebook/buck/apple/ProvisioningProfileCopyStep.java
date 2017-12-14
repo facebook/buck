@@ -30,6 +30,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
@@ -180,7 +181,7 @@ class ProvisioningProfileCopyStep implements Step {
           "No valid non-expired provisioning profiles match for " + prefix + "." + bundleID;
       if (dryRunResultsPath.isPresent()) {
         LOG.warn(message);
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       } else {
         throw new HumanReadableException(message);
       }

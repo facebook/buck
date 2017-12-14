@@ -32,6 +32,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -103,7 +104,7 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
                 .writeContentsToPath(
                     serializeDirectoryContents(ImmutableSortedMap.copyOf(contents)), outputPath);
             buildableContext.recordArtifact(outputPath);
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
   }

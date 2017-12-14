@@ -40,7 +40,7 @@ public final class DefaultStepRunner implements StepRunner {
     StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
     LOG.verbose(started.toString());
     context.getBuckEventBus().post(started);
-    StepExecutionResult executionResult = StepExecutionResult.ERROR;
+    StepExecutionResult executionResult = StepExecutionResults.ERROR;
     try {
       executionResult = step.execute(context);
     } catch (IOException | RuntimeException e) {

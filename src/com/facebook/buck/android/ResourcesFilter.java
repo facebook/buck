@@ -37,6 +37,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
@@ -242,7 +243,7 @@ public class ResourcesFilter extends AbstractBuildRule
                     stringFilesBuilder.build().stream().map(Object::toString)::iterator,
                     stringFiles);
             buildableContext.recordArtifact(stringFiles);
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
 

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 
 public class ApkInstallStep implements Step {
@@ -39,13 +40,13 @@ public class ApkInstallStep implements Step {
       throws IOException, InterruptedException {
     AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
     if (adbHelper.getDevices(true).isEmpty()) {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     if (!adbHelper.installApk(pathResolver, hasInstallableApk, false, true, null)) {
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
