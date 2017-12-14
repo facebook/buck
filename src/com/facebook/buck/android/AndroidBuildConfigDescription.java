@@ -192,7 +192,7 @@ public class AndroidBuildConfigDescription
 
     @Value.Default
     default BuildConfigFields getValues() {
-      return BuildConfigFields.empty();
+      return BuildConfigFields.of();
     }
 
     /** If present, contents of file can override those of {@link #getValues}. */

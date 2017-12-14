@@ -536,7 +536,7 @@ public class AndroidBinaryGraphEnhancer {
         packageableCollection.getBuildConfigs().entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.
       BuildConfigFields totalBuildConfigValues =
-          BuildConfigFields.empty()
+          BuildConfigFields.of()
               .putAll(entry.getValue())
               .putAll(buildConfigValues)
               .putAll(buildConfigConstants);

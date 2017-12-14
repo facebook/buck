@@ -290,7 +290,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
     @Value.Default
     default BuildConfigFields getBuildConfigValues() {
-      return BuildConfigFields.empty();
+      return BuildConfigFields.of();
     }
 
     @Value.Default

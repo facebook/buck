@@ -69,7 +69,7 @@ public class BuildConfigs {
   public static String generateBuildConfigDotJava(
       UnflavoredBuildTarget source, String javaPackage) {
     return generateBuildConfigDotJava(
-        source, javaPackage, /* useConstantExpressions */ false, BuildConfigFields.empty());
+        source, javaPackage, /* useConstantExpressions */ false, BuildConfigFields.of());
   }
 
   /**

@@ -746,7 +746,7 @@ public class AndroidBinaryDescription
 
     @Value.Default
     default BuildConfigFields getBuildConfigValues() {
-      return BuildConfigFields.empty();
+      return BuildConfigFields.of();
     }
 
     @Value.Default

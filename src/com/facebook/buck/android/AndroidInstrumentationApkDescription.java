@@ -194,7 +194,7 @@ public class AndroidInstrumentationApkDescription
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             EnumSet.noneOf(ExopackageMode.class),
-            /* buildConfigValues */ BuildConfigFields.empty(),
+            /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFile */ Optional.empty(),
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
