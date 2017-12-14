@@ -58,12 +58,16 @@ public class CxxLibraryBuilder
             .build();
     CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
+    CxxLibraryFactory cxxLibraryFactory =
+        new CxxLibraryFactory(
+            toolchainProvider,
+            cxxBuckConfig,
+            new InferBuckConfig(FakeBuckConfig.builder().build()));
     return new CxxLibraryDescription(
         toolchainProvider,
-        cxxBuckConfig,
-        new InferBuckConfig(FakeBuckConfig.builder().build()),
         cxxLibraryImplicitFlavors,
-        new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig));
+        new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig),
+        cxxLibraryFactory);
   }
 
   public CxxLibraryBuilder(

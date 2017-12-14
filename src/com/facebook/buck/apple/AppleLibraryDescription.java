@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLibraryDescriptionDelegate;
+import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -186,6 +187,7 @@ public class AppleLibraryDescription
   private final SwiftBuckConfig swiftBuckConfig;
   private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
   private final CxxLibraryFlavored cxxLibraryFlavored;
+  private final CxxLibraryFactory cxxLibraryFactory;
 
   public AppleLibraryDescription(
       ToolchainProvider toolchainProvider,
@@ -194,11 +196,13 @@ public class AppleLibraryDescription
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
       CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
-      CxxLibraryFlavored cxxLibraryFlavored) {
+      CxxLibraryFlavored cxxLibraryFlavored,
+      CxxLibraryFactory cxxLibraryFactory) {
     this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
     this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
+    this.cxxLibraryFactory = cxxLibraryFactory;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
     this.appleConfig = appleConfig;
@@ -614,7 +618,7 @@ public class AppleLibraryDescription
         unstrippedTarget1 -> {
           Optional<CxxLibraryDescriptionDelegate> cxxDelegate =
               swiftDelegate.isPresent() ? Optional.empty() : Optional.of(this);
-          return delegate.createBuildRule(
+          return cxxLibraryFactory.createBuildRule(
               unstrippedTarget1,
               projectFilesystem,
               newParams,

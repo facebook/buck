@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderDescription;
@@ -146,14 +147,12 @@ abstract class AbstractKnownBuildRuleTypes {
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxLibraryFlavored cxxLibraryFlavored =
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig);
+    CxxLibraryFactory cxxLibraryFactory =
+        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
 
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
-            toolchainProvider,
-            cxxBuckConfig,
-            inferBuckConfig,
-            cxxLibraryImplicitFlavors,
-            cxxLibraryFlavored);
+            toolchainProvider, cxxLibraryImplicitFlavors, cxxLibraryFlavored, cxxLibraryFactory);
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
@@ -169,7 +168,8 @@ abstract class AbstractKnownBuildRuleTypes {
             appleConfig,
             swiftBuckConfig,
             cxxLibraryImplicitFlavors,
-            cxxLibraryFlavored);
+            cxxLibraryFlavored,
+            cxxLibraryFactory);
     builder.addDescriptions(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
         new PrebuiltAppleFrameworkDescription(toolchainProvider, cxxBuckConfig);
