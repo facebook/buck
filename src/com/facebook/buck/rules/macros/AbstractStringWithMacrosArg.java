@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.args;
+package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
@@ -23,9 +23,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
-import com.facebook.buck.rules.macros.Macro;
-import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
@@ -37,8 +35,8 @@ import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /**
- * Packages a {@link StringWithMacros} along with necessary objects to implement the {@link Arg}
- * interface.
+ * Packages a {@link com.facebook.buck.rules.macros.StringWithMacros} along with necessary objects
+ * to implement the {@link Arg} interface.
  */
 @Value.Immutable
 @BuckStyleTuple

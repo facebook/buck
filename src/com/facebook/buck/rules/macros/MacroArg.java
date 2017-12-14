@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.args;
+package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
@@ -24,8 +24,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.rules.macros.WorkerMacroExpander;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
 import java.util.HashMap;
 import java.util.Map;

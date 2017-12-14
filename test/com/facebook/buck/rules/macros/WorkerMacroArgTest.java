@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.args;
+package com.facebook.buck.rules.macros;
 
 import static org.junit.Assert.assertThat;
 
@@ -31,8 +31,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.shell.WorkerToolBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

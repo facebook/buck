@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.args;
+package com.facebook.buck.rules.macros;
 
 import static org.junit.Assert.assertThat;
 
@@ -32,11 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellPathResolver;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
-import com.facebook.buck.rules.macros.LocationMacro;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.Macro;
-import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
