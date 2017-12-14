@@ -17,11 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
-import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -96,15 +93,7 @@ abstract class AbstractKnownBuildRuleTypes {
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory)
       throws InterruptedException, IOException {
 
-    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
-
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
-
-    SwiftLibraryDescription swiftLibraryDescription =
-        new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
-    builder.addDescriptions(swiftLibraryDescription);
 
     SandboxExecutionStrategy sandboxExecutionStrategy =
         sandboxExecutionStrategyFactory.create(processExecutor, config);
