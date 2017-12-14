@@ -17,12 +17,14 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.model.Pair;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 public class MoreIterables {
 
@@ -64,6 +66,17 @@ public class MoreIterables {
       result.addAll(round);
       round.clear();
     }
+  }
+
+  /** Provides convenient consumption of a pair of Iterables of the same length. */
+  public static <L, R> void forEachPair(
+      Iterable<L> left, Iterable<R> right, BiConsumer<? super L, ? super R> consumer) {
+    Iterator<L> leftIter = left.iterator();
+    Iterator<R> rightIter = right.iterator();
+    while (leftIter.hasNext() && rightIter.hasNext()) {
+      consumer.accept(leftIter.next(), rightIter.next());
+    }
+    Preconditions.checkState(!leftIter.hasNext() && !rightIter.hasNext());
   }
 
   /**
