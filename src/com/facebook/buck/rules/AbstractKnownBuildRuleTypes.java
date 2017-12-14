@@ -16,25 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleBundleDescription;
-import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.ApplePackageDescription;
-import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
-import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.CxxBinaryFactory;
-import com.facebook.buck.cxx.CxxBinaryFlavored;
-import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
-import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
-import com.facebook.buck.cxx.CxxLibraryFactory;
-import com.facebook.buck.cxx.CxxLibraryFlavored;
-import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
-import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -119,69 +102,12 @@ abstract class AbstractKnownBuildRuleTypes {
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
-
-    CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
-        new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
-    CxxBinaryFactory cxxBinaryFactory =
-        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
-    CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
-        new CxxBinaryMetadataFactory(toolchainProvider);
-    CxxBinaryFlavored cxxBinaryFlavored = new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig);
-
-    CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
-        new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
-    CxxLibraryFlavored cxxLibraryFlavored =
-        new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig);
-    CxxLibraryFactory cxxLibraryFactory =
-        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
-    CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
-        new CxxLibraryMetadataFactory(toolchainProvider);
-
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
     builder.addDescriptions(swiftLibraryDescription);
 
-    AppleConfig appleConfig = config.getView(AppleConfig.class);
-
-    AppleLibraryDescription appleLibraryDescription =
-        new AppleLibraryDescription(
-            toolchainProvider,
-            swiftLibraryDescription,
-            appleConfig,
-            swiftBuckConfig,
-            cxxLibraryImplicitFlavors,
-            cxxLibraryFlavored,
-            cxxLibraryFactory,
-            cxxLibraryMetadataFactory);
-    builder.addDescriptions(appleLibraryDescription);
-    PrebuiltAppleFrameworkDescription appleFrameworkDescription =
-        new PrebuiltAppleFrameworkDescription(toolchainProvider, cxxBuckConfig);
-    builder.addDescriptions(appleFrameworkDescription);
-
-    AppleBinaryDescription appleBinaryDescription =
-        new AppleBinaryDescription(
-            toolchainProvider,
-            swiftLibraryDescription,
-            appleConfig,
-            cxxBinaryImplicitFlavors,
-            cxxBinaryFactory,
-            cxxBinaryMetadataFactory,
-            cxxBinaryFlavored);
-    builder.addDescriptions(appleBinaryDescription);
-
     SandboxExecutionStrategy sandboxExecutionStrategy =
         sandboxExecutionStrategyFactory.create(processExecutor, config);
-
-    builder.addDescriptions(
-        new ApplePackageDescription(toolchainProvider, sandboxExecutionStrategy, appleConfig));
-    AppleBundleDescription appleBundleDescription =
-        new AppleBundleDescription(
-            toolchainProvider, appleBinaryDescription, appleLibraryDescription, appleConfig);
-    builder.addDescriptions(appleBundleDescription);
-    builder.addDescriptions(
-        new AppleTestDescription(toolchainProvider, appleConfig, appleLibraryDescription));
-    builder.addDescriptions(new SceneKitAssetsDescription());
 
     DescriptionCreationContext descriptionCreationContext =
         DescriptionCreationContext.of(config, toolchainProvider, sandboxExecutionStrategy);
