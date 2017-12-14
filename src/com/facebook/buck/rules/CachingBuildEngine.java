@@ -68,7 +68,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   public static final ResourceAmounts RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS =
       ResourceAmounts.of(0, 0, 1, 0);
-  public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS = ResourceAmounts.ZERO;
+  public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS =
+      ResourceAmounts.zero();
 
   static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
   static final String STEP_TYPE_CONTEXT_KEY = "step_type";

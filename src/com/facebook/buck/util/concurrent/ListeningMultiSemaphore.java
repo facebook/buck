@@ -37,7 +37,7 @@ public class ListeningMultiSemaphore {
 
   public ListeningMultiSemaphore(
       ResourceAmounts availableResources, ResourceAllocationFairness fairness) {
-    this.usedValues = ResourceAmounts.ZERO;
+    this.usedValues = ResourceAmounts.zero();
     this.maximumValues = availableResources;
     this.fairness = fairness;
   }
@@ -53,7 +53,7 @@ public class ListeningMultiSemaphore {
    * @return Future that will be completed once resource will be acquired.
    */
   public synchronized ListenableFuture<Void> acquire(ResourceAmounts resources) {
-    if (resources.equals(ResourceAmounts.ZERO)) {
+    if (resources.equals(ResourceAmounts.zero())) {
       return Futures.immediateFuture(null);
     }
 
@@ -74,7 +74,7 @@ public class ListeningMultiSemaphore {
    *     used during resource acquiring.
    */
   public void release(ResourceAmounts resources) {
-    if (resources.equals(ResourceAmounts.ZERO)) {
+    if (resources.equals(ResourceAmounts.zero())) {
       return;
     }
 
@@ -88,7 +88,7 @@ public class ListeningMultiSemaphore {
     ImmutableList.Builder<ListeningSemaphoreArrayPendingItem> builder = ImmutableList.builder();
 
     Iterator<ListeningSemaphoreArrayPendingItem> iterator = pending.iterator();
-    while (!getAvailableResources().equals(ResourceAmounts.ZERO) && iterator.hasNext()) {
+    while (!getAvailableResources().equals(ResourceAmounts.zero()) && iterator.hasNext()) {
       ListeningSemaphoreArrayPendingItem item = iterator.next();
       if (checkIfResourcesAvailable(item.getResources())) {
         builder.add(item);
@@ -142,7 +142,7 @@ public class ListeningMultiSemaphore {
   private synchronized void decreaseUsedResources(ResourceAmounts resources) {
     ResourceAmounts updatedAmounts = usedValues.subtract(resources);
     Preconditions.checkArgument(
-        !updatedAmounts.containsValuesLessThan(ResourceAmounts.ZERO),
+        !updatedAmounts.containsValuesLessThan(ResourceAmounts.zero()),
         "Cannot increase available resources by %s. Current: %s, Maximum: %s",
         resources,
         usedValues,
@@ -151,7 +151,7 @@ public class ListeningMultiSemaphore {
   }
 
   private void processPendingFutures(ImmutableList<ListeningSemaphoreArrayPendingItem> items) {
-    ResourceAmounts failedAmounts = ResourceAmounts.ZERO;
+    ResourceAmounts failedAmounts = ResourceAmounts.zero();
 
     for (ListeningSemaphoreArrayPendingItem item : items) {
       if (!item.getFuture().set(null)) {
@@ -159,7 +159,7 @@ public class ListeningMultiSemaphore {
       }
     }
 
-    if (!failedAmounts.equals(ResourceAmounts.ZERO)) {
+    if (!failedAmounts.equals(ResourceAmounts.zero())) {
       release(failedAmounts);
     }
   }
