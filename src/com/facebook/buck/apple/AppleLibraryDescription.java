@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLibraryDescriptionDelegate;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
+import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
@@ -183,6 +184,7 @@ public class AppleLibraryDescription
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
   private final CxxLibraryFlavored cxxLibraryFlavored;
 
   public AppleLibraryDescription(
@@ -191,9 +193,11 @@ public class AppleLibraryDescription
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
+      CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
       CxxLibraryFlavored cxxLibraryFlavored) {
     this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
+    this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
@@ -793,7 +797,7 @@ public class AppleLibraryDescription
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
     // Use defaults.apple_library if present, but fall back to defaults.cxx_library otherwise.
-    return delegate.addImplicitFlavorsForRuleTypes(
+    return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
         Description.getBuildRuleType(this),
         Description.getBuildRuleType(CxxLibraryDescription.class));

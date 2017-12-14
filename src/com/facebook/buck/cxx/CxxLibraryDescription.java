@@ -31,7 +31,6 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -41,7 +40,6 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -76,7 +74,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -94,8 +91,6 @@ public class CxxLibraryDescription
         Flavored,
         MetadataProvidingDescription<CxxLibraryDescriptionArg>,
         VersionPropagator<CxxLibraryDescriptionArg> {
-
-  private static final Logger LOG = Logger.get(CxxLibraryDescription.class);
 
   public enum Type implements FlavorConvertible {
     HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -120,7 +115,7 @@ public class CxxLibraryDescription
     }
   }
 
-  private static final FlavorDomain<Type> LIBRARY_TYPE =
+  static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   public enum MetadataType implements FlavorConvertible {
@@ -152,16 +147,19 @@ public class CxxLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
+  private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
   private final CxxLibraryFlavored cxxLibraryFlavored;
 
   public CxxLibraryDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
       InferBuckConfig inferBuckConfig,
+      CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
       CxxLibraryFlavored cxxLibraryFlavored) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
+    this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
   }
 
@@ -1175,41 +1173,8 @@ public class CxxLibraryDescription
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
-    return addImplicitFlavorsForRuleTypes(argDefaultFlavors, Description.getBuildRuleType(this));
-  }
-
-  public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
-      ImmutableSortedSet<Flavor> argDefaultFlavors, BuildRuleType... types) {
-    Optional<Flavor> typeFlavor = LIBRARY_TYPE.getFlavor(argDefaultFlavors);
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    Optional<Flavor> platformFlavor =
-        cxxPlatformsProvider.getCxxPlatforms().getFlavor(argDefaultFlavors);
-
-    LOG.debug("Got arg default type %s platform %s", typeFlavor, platformFlavor);
-
-    for (BuildRuleType type : types) {
-      ImmutableMap<String, Flavor> libraryDefaults =
-          cxxBuckConfig.getDefaultFlavorsForRuleType(type);
-
-      if (!typeFlavor.isPresent()) {
-        typeFlavor =
-            Optional.ofNullable(libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_LIBRARY_TYPE));
-      }
-
-      if (!platformFlavor.isPresent()) {
-        platformFlavor =
-            Optional.ofNullable(libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
-      }
-    }
-
-    ImmutableSortedSet<Flavor> result =
-        ImmutableSortedSet.of(
-            // Default to static if not otherwise specified.
-            typeFlavor.orElse(CxxDescriptionEnhancer.STATIC_FLAVOR),
-            platformFlavor.orElse(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor()));
-
-    LOG.debug("Got default flavors %s for rule types %s", result, Arrays.toString(types));
-    return result;
+    return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors, Description.getBuildRuleType(this));
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider() {

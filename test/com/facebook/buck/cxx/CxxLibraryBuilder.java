@@ -56,11 +56,13 @@ public class CxxLibraryBuilder
                 CxxPlatformsProvider.DEFAULT_NAME,
                 CxxPlatformsProvider.of(CxxPlatformUtils.build(cxxBuckConfig), cxxPlatforms))
             .build();
-
+    CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
+        new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     return new CxxLibraryDescription(
         toolchainProvider,
         cxxBuckConfig,
         new InferBuckConfig(FakeBuckConfig.builder().build()),
+        cxxLibraryImplicitFlavors,
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig));
   }
 
