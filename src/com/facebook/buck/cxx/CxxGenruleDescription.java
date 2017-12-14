@@ -55,6 +55,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
@@ -613,7 +614,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
               preprocessor,
               /* pch */ Optional.empty());
-      return com.facebook.buck.rules.args.Arg.stringify(flags.getAllFlags(), pathResolver)
+      return Arg.stringify(flags.getAllFlags(), pathResolver)
           .stream()
           .map(Escaper.SHELL_ESCAPER)
           .collect(Collectors.joining(" "));
@@ -673,10 +674,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     /**
-     * @return the list of {@link com.facebook.buck.rules.args.Arg} required for dynamic linking so
-     *     that linked binaries can find their shared library dependencies at runtime.
+     * @return the list of {@link Arg} required for dynamic linking so that linked binaries can find
+     *     their shared library dependencies at runtime.
      */
-    private ImmutableList<com.facebook.buck.rules.args.Arg> getSharedLinkArgs(
+    private ImmutableList<Arg> getSharedLinkArgs(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules) throws MacroException {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
@@ -738,10 +739,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     /** Return the args formed by the transitive native linkable input for the given rules. */
-    private ImmutableList<com.facebook.buck.rules.args.Arg> getLinkerArgs(
+    private ImmutableList<Arg> getLinkerArgs(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
-      ImmutableList.Builder<com.facebook.buck.rules.args.Arg> args = ImmutableList.builder();
+      ImmutableList.Builder<Arg> args = ImmutableList.builder();
       args.addAll(StringArg.from(cxxPlatform.getLdflags()));
       if (depType == Linker.LinkableDepType.SHARED) {
         args.addAll(getSharedLinkArgs(resolver, rules));
@@ -759,7 +760,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
       return shquoteJoin(
-          com.facebook.buck.rules.args.Arg.stringify(
+          Arg.stringify(
               getLinkerArgs(resolver, rules, filter),
               DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))));
     }

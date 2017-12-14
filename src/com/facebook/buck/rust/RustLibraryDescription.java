@@ -47,6 +47,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -96,7 +97,7 @@ public class RustLibraryDescription
       RustBuckConfig rustBuckConfig,
       ImmutableList<String> extraFlags,
       ImmutableList<String> extraLinkerFlags,
-      Iterable<com.facebook.buck.rules.args.Arg> linkerInputs,
+      Iterable<Arg> linkerInputs,
       String crate,
       CrateType crateType,
       Linker.LinkableDepType depType,
@@ -205,7 +206,7 @@ public class RustLibraryDescription
     return new RustLibrary(buildTarget, projectFilesystem, params) {
       // RustLinkable
       @Override
-      public com.facebook.buck.rules.args.Arg getLinkerArg(
+      public Arg getLinkerArg(
           boolean direct,
           boolean isCheck,
           CxxPlatform cxxPlatform,

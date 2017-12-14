@@ -57,6 +57,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -881,7 +882,7 @@ public class HaskellLibraryDescription
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
           ImmutableSet<LanguageExtensions> languageExtensions) {
-        Iterable<com.facebook.buck.rules.args.Arg> linkArgs;
+        Iterable<Arg> linkArgs;
         switch (type) {
           case STATIC:
           case STATIC_PIC:

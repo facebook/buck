@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -75,7 +76,7 @@ public class OcamlLibraryDescription
       OcamlLibraryDescriptionArg args) {
 
     ImmutableList<OcamlSource> srcs = args.getSrcs();
-    ImmutableList.Builder<com.facebook.buck.rules.args.Arg> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(
         OcamlDescriptionEnhancer.toStringWithMacrosArgs(
             buildTarget, cellRoots, resolver, args.getCompilerFlags()));

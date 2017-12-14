@@ -100,13 +100,6 @@ public class MacroHandler {
   public ImmutableMap<String, MacroReplacer> getMacroReplacers(
       final BuildTarget target,
       final CellPathResolver cellNames,
-      final BuildRuleResolver resolver) {
-    return getMacroReplacers(target, cellNames, resolver, new HashMap<>());
-  }
-
-  public ImmutableMap<String, MacroReplacer> getMacroReplacers(
-      final BuildTarget target,
-      final CellPathResolver cellNames,
       final BuildRuleResolver resolver,
       Map<MacroMatchResult, Object> precomputedWorkCache) {
     ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();

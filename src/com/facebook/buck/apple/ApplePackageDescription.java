@@ -37,6 +37,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
@@ -172,7 +173,7 @@ public class ApplePackageDescription
    * @throws HumanReadableException if there are multiple possible package configs.
    */
   private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(
-      BuildTarget target, Function<String, com.facebook.buck.rules.args.Arg> macroExpander) {
+      BuildTarget target, Function<String, Arg> macroExpander) {
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain = getAppleCxxPlatformFlavorDomain();
     Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target, appleCxxPlatformFlavorDomain);
 
