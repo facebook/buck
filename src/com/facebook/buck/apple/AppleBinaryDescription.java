@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
+import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
@@ -106,6 +107,7 @@ public class AppleBinaryDescription
   private final AppleConfig appleConfig;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
+  private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
 
   public AppleBinaryDescription(
       ToolchainProvider toolchainProvider,
@@ -113,7 +115,8 @@ public class AppleBinaryDescription
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
-      CxxBinaryFactory cxxBinaryFactory) {
+      CxxBinaryFactory cxxBinaryFactory,
+      CxxBinaryMetadataFactory cxxBinaryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
     // TODO(T22135033): Make apple_binary not use a Swift delegate
@@ -121,6 +124,7 @@ public class AppleBinaryDescription
     this.appleConfig = appleConfig;
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
+    this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
   }
 
   @Override
@@ -547,8 +551,8 @@ public class AppleBinaryDescription
           delegateArg,
           args,
           buildTarget);
-      return delegate.createMetadata(
-          buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
+      return cxxBinaryMetadataFactory.createMetadata(
+          buildTarget, resolver, delegateArg.build().getDeps(), metadataClass);
     }
 
     Optional<Flavor> cxxPlatformFlavor =

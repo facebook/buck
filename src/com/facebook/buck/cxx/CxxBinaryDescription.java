@@ -69,16 +69,19 @@ public class CxxBinaryDescription
   private final ImmutableSet<Flavor> declaredPlatforms;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
+  private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
 
   public CxxBinaryDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
-      CxxBinaryFactory cxxBinaryFactory) {
+      CxxBinaryFactory cxxBinaryFactory,
+      CxxBinaryMetadataFactory cxxBinaryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
+    this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
   }
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ binary. */
@@ -189,13 +192,8 @@ public class CxxBinaryDescription
       CxxBinaryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       final Class<U> metadataClass) {
-    if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class)
-        || !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return Optional.empty();
-    }
-    return CxxDescriptionEnhancer.createCompilationDatabaseDependencies(
-            buildTarget, getCxxPlatformsProvider().getCxxPlatforms(), resolver, args)
-        .map(metadataClass::cast);
+    return cxxBinaryMetadataFactory.createMetadata(
+        buildTarget, resolver, args.getDeps(), metadataClass);
   }
 
   @Override

@@ -63,7 +63,8 @@ public class CxxBinaryBuilder
         new CxxBinaryFactory(
             toolchainProvider,
             cxxBuckConfig,
-            new InferBuckConfig(FakeBuckConfig.builder().build())));
+            new InferBuckConfig(FakeBuckConfig.builder().build())),
+        new CxxBinaryMetadataFactory(toolchainProvider));
   }
 
   public CxxBinaryBuilder(

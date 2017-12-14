@@ -402,7 +402,7 @@ public class CxxTestDescription
       return Optional.empty();
     }
     return CxxDescriptionEnhancer.createCompilationDatabaseDependencies(
-            buildTarget, getCxxPlatformsProvider().getCxxPlatforms(), resolver, args)
+            buildTarget, getCxxPlatformsProvider().getCxxPlatforms(), resolver, args.getDeps())
         .map(metadataClass::cast);
   }
 

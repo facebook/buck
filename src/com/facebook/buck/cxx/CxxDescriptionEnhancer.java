@@ -1142,7 +1142,7 @@ public class CxxDescriptionEnhancer {
       BuildTarget buildTarget,
       FlavorDomain<CxxPlatform> platforms,
       BuildRuleResolver resolver,
-      CxxConstructorArg args) {
+      ImmutableSortedSet<BuildTarget> deps) {
     Preconditions.checkState(
         buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE));
     Optional<Flavor> cxxPlatformFlavor = platforms.getFlavor(buildTarget);
@@ -1151,7 +1151,7 @@ public class CxxDescriptionEnhancer {
         "Could not find cxx platform in:\n%s",
         Joiner.on(", ").join(buildTarget.getFlavors()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-    for (BuildTarget dep : args.getDeps()) {
+    for (BuildTarget dep : deps) {
       Optional<CxxCompilationDatabaseDependencies> compilationDatabases =
           resolver.requireMetadata(
               dep.withAppendedFlavors(
