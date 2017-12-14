@@ -35,6 +35,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
+import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
@@ -149,10 +150,16 @@ abstract class AbstractKnownBuildRuleTypes {
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig);
     CxxLibraryFactory cxxLibraryFactory =
         new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
+    CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
+        new CxxLibraryMetadataFactory(toolchainProvider);
 
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
-            toolchainProvider, cxxLibraryImplicitFlavors, cxxLibraryFlavored, cxxLibraryFactory);
+            toolchainProvider,
+            cxxLibraryImplicitFlavors,
+            cxxLibraryFlavored,
+            cxxLibraryFactory,
+            cxxLibraryMetadataFactory);
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
@@ -163,13 +170,13 @@ abstract class AbstractKnownBuildRuleTypes {
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
             toolchainProvider,
-            cxxLibraryDescription,
             swiftLibraryDescription,
             appleConfig,
             swiftBuckConfig,
             cxxLibraryImplicitFlavors,
             cxxLibraryFlavored,
-            cxxLibraryFactory);
+            cxxLibraryFactory,
+            cxxLibraryMetadataFactory);
     builder.addDescriptions(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
         new PrebuiltAppleFrameworkDescription(toolchainProvider, cxxBuckConfig);

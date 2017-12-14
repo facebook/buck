@@ -585,7 +585,7 @@ public class AppleTestDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     return appleLibraryDescription.createMetadataForLibrary(
-        buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
+        buildTarget, resolver, cellRoots, args, metadataClass);
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider() {

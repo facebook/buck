@@ -63,11 +63,14 @@ public class CxxLibraryBuilder
             toolchainProvider,
             cxxBuckConfig,
             new InferBuckConfig(FakeBuckConfig.builder().build()));
+    CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
+        new CxxLibraryMetadataFactory(toolchainProvider);
     return new CxxLibraryDescription(
         toolchainProvider,
         cxxLibraryImplicitFlavors,
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig),
-        cxxLibraryFactory);
+        cxxLibraryFactory,
+        cxxLibraryMetadataFactory);
   }
 
   public CxxLibraryBuilder(

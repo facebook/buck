@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.CxxLibraryDescriptionDelegate;
 import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
+import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
@@ -181,28 +182,28 @@ public class AppleLibraryDescription
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final ToolchainProvider toolchainProvider;
-  private final CxxLibraryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
   private final CxxLibraryFlavored cxxLibraryFlavored;
   private final CxxLibraryFactory cxxLibraryFactory;
+  private final CxxLibraryMetadataFactory cxxLibraryMetadataFactory;
 
   public AppleLibraryDescription(
       ToolchainProvider toolchainProvider,
-      CxxLibraryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
       CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
       CxxLibraryFlavored cxxLibraryFlavored,
-      CxxLibraryFactory cxxLibraryFactory) {
+      CxxLibraryFactory cxxLibraryFactory,
+      CxxLibraryMetadataFactory cxxLibraryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
-    this.delegate = delegate;
     this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
     this.cxxLibraryFactory = cxxLibraryFactory;
+    this.cxxLibraryMetadataFactory = cxxLibraryMetadataFactory;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
     this.appleConfig = appleConfig;
@@ -650,7 +651,6 @@ public class AppleLibraryDescription
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
@@ -662,8 +662,8 @@ public class AppleLibraryDescription
       CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           pathResolver, delegateArg, args, buildTarget);
-      return delegate.createMetadata(
-          buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
+      return cxxLibraryMetadataFactory.createMetadata(
+          buildTarget, resolver, cellRoots, delegateArg.build(), metadataClass);
     }
 
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
@@ -793,8 +793,7 @@ public class AppleLibraryDescription
       AppleLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    return createMetadataForLibrary(
-        buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
+    return createMetadataForLibrary(buildTarget, resolver, cellRoots, args, metadataClass);
   }
 
   @Override

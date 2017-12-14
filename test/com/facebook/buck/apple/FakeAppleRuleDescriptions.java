@@ -32,10 +32,10 @@ import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryFlavored;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
-import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
+import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -245,24 +245,18 @@ public class FakeAppleRuleDescriptions {
             toolchainProvider,
             CxxPlatformUtils.DEFAULT_CONFIG,
             new InferBuckConfig(DEFAULT_BUCK_CONFIG));
+    CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
+        new CxxLibraryMetadataFactory(toolchainProvider);
 
     return new AppleLibraryDescription(
         toolchainProvider,
-        new CxxLibraryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(DEFAULT_PLATFORM, DEFAULT_APPLE_FLAVOR_DOMAIN))
-                .build(),
-            cxxLibraryImplicitFlavors,
-            cxxLibraryFlavored,
-            cxxLibraryFactory),
         SWIFT_LIBRARY_DESCRIPTION,
         DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
         new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
         cxxLibraryImplicitFlavors,
         cxxLibraryFlavored,
-        cxxLibraryFactory);
+        cxxLibraryFactory,
+        cxxLibraryMetadataFactory);
   }
 
   /** A fake apple_binary description with an iOS platform for use in tests. */
