@@ -76,11 +76,16 @@ public class CxxTestDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableSet<Flavor> declaredPlatforms;
+  private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
 
-  public CxxTestDescription(ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+  public CxxTestDescription(
+      ToolchainProvider toolchainProvider,
+      CxxBuckConfig cxxBuckConfig,
+      CxxBinaryMetadataFactory cxxBinaryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
+    this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
   }
 
   private ImmutableSet<BuildTarget> getImplicitFrameworkDeps(
@@ -397,13 +402,8 @@ public class CxxTestDescription
       CxxTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       final Class<U> metadataClass) {
-    if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class)
-        || !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return Optional.empty();
-    }
-    return CxxDescriptionEnhancer.createCompilationDatabaseDependencies(
-            buildTarget, getCxxPlatformsProvider().getCxxPlatforms(), resolver, args.getDeps())
-        .map(metadataClass::cast);
+    return cxxBinaryMetadataFactory.createMetadata(
+        buildTarget, resolver, args.getDeps(), metadataClass);
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider() {

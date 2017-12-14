@@ -30,6 +30,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,20 +43,26 @@ public class CxxTestBuilder
     extends AbstractNodeBuilder<
         CxxTestDescriptionArg.Builder, CxxTestDescriptionArg, CxxTestDescription, CxxTest> {
 
+  private static CxxTestDescription createCxxTestDescription(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+            .build();
+    return new CxxTestDescription(
+        toolchainProvider, cxxBuckConfig, new CxxBinaryMetadataFactory(toolchainProvider));
+  }
+
   public CxxTestBuilder(
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(
-        new CxxTestDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
-                .build(),
-            cxxBuckConfig),
-        target);
+    super(createCxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
   }
 
   public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
