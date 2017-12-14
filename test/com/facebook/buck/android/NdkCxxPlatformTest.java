@@ -61,6 +61,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -174,11 +175,12 @@ public class NdkCxxPlatformTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+      FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
       BuildRule rule =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               CxxPlatformUtils.DEFAULT_CONFIG,
               entry.getValue().getCxxPlatform(),
-              new FakeProjectFilesystem(),
+              filesystem,
               resolver,
               pathResolver,
               ruleFinder,
@@ -197,7 +199,8 @@ public class NdkCxxPlatformTest {
               NativeLinkableInput.builder()
                   .setArgs(SourcePathArg.from(FakeSourcePath.of("input.o")))
                   .build(),
-              Optional.empty());
+              Optional.empty(),
+              TestCellPathResolver.get(filesystem));
       ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));
     }
     return ruleKeys.build();

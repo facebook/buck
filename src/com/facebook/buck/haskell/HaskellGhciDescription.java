@@ -251,6 +251,7 @@ public class HaskellGhciDescription
 
   /** Give a rule for an omnibus object to be loaded into a ghci session */
   public static synchronized BuildRule requireOmnibusSharedObject(
+      CellPathResolver cellPathResolver,
       BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
@@ -278,7 +279,8 @@ public class HaskellGhciDescription
                     .resolve("libghci_dependencies.so"),
                 ImmutableMap.of(),
                 Optional.of("libghci_dependencies.so"),
-                getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, body, deps).getArgs()));
+                getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, body, deps).getArgs(),
+                cellPathResolver));
   }
 
   // Return the C/C++ platform to build against.
@@ -313,6 +315,7 @@ public class HaskellGhciDescription
         buildTarget,
         projectFilesystem,
         params,
+        cellPathResolver,
         resolver,
         platform,
         cxxBuckConfig,

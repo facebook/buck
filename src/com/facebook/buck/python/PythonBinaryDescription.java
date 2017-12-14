@@ -328,6 +328,7 @@ public class PythonBinaryDescription
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             params,

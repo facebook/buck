@@ -292,6 +292,7 @@ public class AndroidBinaryDescription
 
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
+              cellRoots,
               buildTarget,
               projectFilesystem,
               androidLegacyToolchain,

@@ -160,6 +160,7 @@ public class AndroidInstrumentationApkDescription
 
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             androidLegacyToolchain,

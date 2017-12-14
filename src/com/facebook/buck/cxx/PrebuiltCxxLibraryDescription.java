@@ -310,7 +310,8 @@ public class PrebuiltCxxLibraryDescription
             .addAllArgs(
                 cxxPlatform.getLd().resolve(ruleResolver).linkWhole(SourcePathArg.of(library)))
             .build(),
-        Optional.empty());
+        Optional.empty(),
+        cellRoots);
   }
 
   /**

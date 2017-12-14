@@ -61,6 +61,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -128,6 +129,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            TestCellPathResolver.get(filesystem),
             apkTarget,
             filesystem,
             TestAndroidLegacyToolchainFactory.create(),
@@ -285,6 +287,7 @@ public class AndroidBinaryGraphEnhancerTest {
     Keystore keystore = createStrictMock(Keystore.class);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             apkTarget,
             projectFilesystem,
             TestAndroidLegacyToolchainFactory.create(),
@@ -413,6 +416,7 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             target,
             projectFilesystem,
             TestAndroidLegacyToolchainFactory.create(),
@@ -482,6 +486,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRuleParams originalParams = TestBuildRuleParams.create();
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             target,
             projectFilesystem,
             TestAndroidLegacyToolchainFactory.create(),
@@ -580,6 +585,7 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             target,
             projectFilesystem,
             TestAndroidLegacyToolchainFactory.create(),

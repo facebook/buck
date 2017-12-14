@@ -208,6 +208,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         switch (type.get().getValue()) {
           case SHARED:
             return createSharedLibraryBuildRule(
+                cellRoots,
                 projectFilesystem,
                 params,
                 resolver,
@@ -323,6 +324,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   private BuildRule createSharedLibraryBuildRule(
+      CellPathResolver cellPathResolver,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -380,7 +382,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             ImmutableSet.of(),
             ImmutableSet.of(),
             inputBuilder.build(),
-            Optional.empty()));
+            Optional.empty(),
+            cellPathResolver));
   }
 
   public Optional<BuildRule> createCompanionBuildRule(

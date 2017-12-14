@@ -267,6 +267,7 @@ public class PythonTestDescription
             .collect(ImmutableList.toImmutableList());
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             params,

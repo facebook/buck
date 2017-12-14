@@ -66,6 +66,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -860,7 +861,8 @@ public class AppleCxxPlatformsTest {
               NativeLinkableInput.builder()
                   .setArgs(SourcePathArg.from(FakeSourcePath.of("input.o")))
                   .build(),
-              Optional.empty());
+              Optional.empty(),
+              TestCellPathResolver.get(projectFilesystem));
       ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));
     }
     return ruleKeys.build();

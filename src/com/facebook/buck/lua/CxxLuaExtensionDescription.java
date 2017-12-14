@@ -264,7 +264,8 @@ public class CxxLuaExtensionDescription
                     luaPlatform,
                     args))
             .build(),
-        Optional.empty());
+        Optional.empty(),
+        cellRoots);
   }
 
   @Override

@@ -753,6 +753,7 @@ public class HaskellLibraryDescription
               buildTarget,
               projectFilesystem,
               params,
+              cellRoots,
               resolver,
               platform,
               cxxBuckConfig,

@@ -63,6 +63,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
@@ -469,7 +470,8 @@ public class CxxPrecompiledHeaderRuleTest {
             ImmutableSet.of(), // blacklist,
             ImmutableSet.of(libTarget), // linkWholeDeps,
             NativeLinkableInput.builder().addAllArgs(SourcePathArg.from(binObjects)).build(),
-            Optional.<LinkOutputPostprocessor>empty());
+            Optional.<LinkOutputPostprocessor>empty(),
+            TestCellPathResolver.get(filesystem));
 
     CxxWriteArgsToFileStep argsToFile = null;
     for (Step step :

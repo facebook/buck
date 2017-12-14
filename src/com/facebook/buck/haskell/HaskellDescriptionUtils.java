@@ -48,6 +48,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -406,6 +407,7 @@ public class HaskellDescriptionUtils {
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      CellPathResolver cellPathResolver,
       final BuildRuleResolver resolver,
       HaskellPlatform platform,
       CxxBuckConfig cxxBuckConfig,
@@ -493,6 +495,7 @@ public class HaskellDescriptionUtils {
     // Construct the omnibus shared library.
     BuildRule omnibusSharedObject =
         HaskellGhciDescription.requireOmnibusSharedObject(
+            cellPathResolver,
             buildTarget,
             projectFilesystem,
             resolver,

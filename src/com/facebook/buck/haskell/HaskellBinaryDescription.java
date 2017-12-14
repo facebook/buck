@@ -140,6 +140,7 @@ public class HaskellBinaryDescription
           buildTarget,
           projectFilesystem,
           params,
+          cellRoots,
           resolver,
           platform,
           cxxBuckConfig,

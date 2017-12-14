@@ -235,6 +235,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     /* native_libraries */
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            cellRoots,
             resolver,
             buildTarget,
             projectFilesystem,

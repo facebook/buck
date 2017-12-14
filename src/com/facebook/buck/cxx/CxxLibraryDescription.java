@@ -524,7 +524,8 @@ public class CxxLibraryDescription
             .setFrameworks(frameworks)
             .setLibraries(libraries)
             .build(),
-        Optional.empty());
+        Optional.empty(),
+        cellRoots);
   }
 
   @Override

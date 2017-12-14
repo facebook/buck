@@ -366,7 +366,8 @@ public class CxxPythonExtensionDescription
             .setFrameworks(args.getFrameworks())
             .setLibraries(args.getLibraries())
             .build(),
-        Optional.empty());
+        Optional.empty(),
+        cellRoots);
   }
 
   private BuildRule createCompilationDatabase(
