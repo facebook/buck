@@ -16,14 +16,11 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.cxx.toolchain.LinkerMapMode;
-import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -52,9 +49,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.util.Optional;
-import java.util.Set;
 import org.immutables.value.Value;
 
 public class CxxBinaryDescription
@@ -66,22 +61,22 @@ public class CxxBinaryDescription
         VersionRoot<CxxBinaryDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
-  private final ImmutableSet<Flavor> declaredPlatforms;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
   private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
+  private final CxxBinaryFlavored cxxBinaryFlavored;
 
   public CxxBinaryDescription(
       ToolchainProvider toolchainProvider,
-      CxxBuckConfig cxxBuckConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
       CxxBinaryFactory cxxBinaryFactory,
-      CxxBinaryMetadataFactory cxxBinaryMetadataFactory) {
+      CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
+      CxxBinaryFlavored cxxBinaryFlavored) {
     this.toolchainProvider = toolchainProvider;
-    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
     this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
+    this.cxxBinaryFlavored = cxxBinaryFlavored;
   }
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ binary. */
@@ -142,46 +137,12 @@ public class CxxBinaryDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(
-        ImmutableSet.of(
-            // Missing: CXX Compilation Database
-            // Missing: CXX Description Enhancer
-            // Missing: CXX Infer Enhancer
-            getCxxPlatformsProvider().getCxxPlatforms(),
-            LinkerMapMode.FLAVOR_DOMAIN,
-            StripStyle.FLAVOR_DOMAIN));
+    return cxxBinaryFlavored.flavorDomains();
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
-    Set<Flavor> flavors = inputFlavors;
-
-    Set<Flavor> platformFlavors =
-        Sets.intersection(
-            flavors,
-            Sets.union(
-                getCxxPlatformsProvider().getCxxPlatforms().getFlavors(), declaredPlatforms));
-    if (platformFlavors.size() > 1) {
-      return false;
-    }
-    flavors = Sets.difference(flavors, platformFlavors);
-
-    flavors =
-        Sets.difference(
-            flavors,
-            ImmutableSet.of(
-                CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
-                CxxCompilationDatabase.COMPILATION_DATABASE,
-                CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
-                CxxInferEnhancer.InferFlavors.INFER.getFlavor(),
-                CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor(),
-                CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor(),
-                StripStyle.ALL_SYMBOLS.getFlavor(),
-                StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
-                StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(),
-                LinkerMapMode.NO_LINKER_MAP.getFlavor()));
-
-    return flavors.isEmpty();
+    return cxxBinaryFlavored.hasFlavors(inputFlavors);
   }
 
   @Override

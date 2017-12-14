@@ -24,6 +24,7 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxBinaryFactory;
+import com.facebook.buck.cxx.CxxBinaryFlavored;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -102,29 +103,29 @@ public class AppleBinaryDescription
           LinkerMapMode.NO_LINKER_MAP.getFlavor());
 
   private final ToolchainProvider toolchainProvider;
-  private final CxxBinaryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
   private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
+  private final CxxBinaryFlavored cxxBinaryFlavored;
 
   public AppleBinaryDescription(
       ToolchainProvider toolchainProvider,
-      CxxBinaryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
       CxxBinaryFactory cxxBinaryFactory,
-      CxxBinaryMetadataFactory cxxBinaryMetadataFactory) {
+      CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
+      CxxBinaryFlavored cxxBinaryFlavored) {
     this.toolchainProvider = toolchainProvider;
-    this.delegate = delegate;
     // TODO(T22135033): Make apple_binary not use a Swift delegate
     this.swiftDelegate = Optional.of(swiftDelegate);
     this.appleConfig = appleConfig;
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
     this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
+    this.cxxBinaryFlavored = cxxBinaryFlavored;
   }
 
   @Override
@@ -139,7 +140,7 @@ public class AppleBinaryDescription
     ImmutableSet<FlavorDomain<?>> localDomains = ImmutableSet.of(AppleDebugFormat.FLAVOR_DOMAIN);
 
     builder.addAll(localDomains);
-    delegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    cxxBinaryFlavored.flavorDomains().ifPresent(domains -> builder.addAll(domains));
     swiftDelegate
         .flatMap(swift -> swift.flavorDomains())
         .ifPresent(domains -> builder.addAll(domains));
@@ -169,9 +170,9 @@ public class AppleBinaryDescription
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinDelegateFlavors(delegateFlavors);
     if (thinFlavorSets.size() > 0) {
-      return Iterables.all(thinFlavorSets, delegate::hasFlavors);
+      return Iterables.all(thinFlavorSets, cxxBinaryFlavored::hasFlavors);
     } else {
-      return delegate.hasFlavors(delegateFlavors);
+      return cxxBinaryFlavored.hasFlavors(delegateFlavors);
     }
   }
 

@@ -58,13 +58,13 @@ public class CxxBinaryBuilder
 
     return new CxxBinaryDescription(
         toolchainProvider,
-        cxxBuckConfig,
         new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig),
         new CxxBinaryFactory(
             toolchainProvider,
             cxxBuckConfig,
             new InferBuckConfig(FakeBuckConfig.builder().build())),
-        new CxxBinaryMetadataFactory(toolchainProvider));
+        new CxxBinaryMetadataFactory(toolchainProvider),
+        new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig));
   }
 
   public CxxBinaryBuilder(
