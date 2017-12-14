@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -60,6 +61,6 @@ public class SourcePathArgTest {
             .setOut("output")
             .build(resolver);
     SourcePathArg arg = SourcePathArg.of(rule.getSourcePathToOutput());
-    assertThat(arg.getDeps(ruleFinder), Matchers.contains(rule));
+    assertThat(BuildableSupport.getDepsCollection(arg, ruleFinder), Matchers.contains(rule));
   }
 }

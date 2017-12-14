@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -96,7 +97,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(haddockTool.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(haddockTool, ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(ifaces))
                     .addAll(ruleFinder.filterBuildRuleInputs(outDirs))
                     .build());

@@ -46,6 +46,7 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -284,7 +285,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                       .addAll(cxxDeps.getDeps(ruleFinder))
                       // This is only used for generating include args and may not be actually
                       // needed.
-                      .addAll(preprocessor.getDeps(ruleFinder))
+                      .addAll(BuildableSupport.getDepsCollection(preprocessor, ruleFinder))
                       .build()),
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),

@@ -78,7 +78,7 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(noMacrosArg.getDeps(pathFinder), Matchers.empty());
+    assertThat(BuildableSupport.getDepsCollection(noMacrosArg, pathFinder), Matchers.empty());
 
     // Test one embedded macros.
     StringWithMacrosArg oneMacrosArg =
@@ -89,7 +89,8 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(oneMacrosArg.getDeps(pathFinder), Matchers.contains(rule1));
+    assertThat(
+        BuildableSupport.getDepsCollection(oneMacrosArg, pathFinder), Matchers.contains(rule1));
 
     // Test multiple embedded macros.
     StringWithMacrosArg multipleMacrosArg =
@@ -104,7 +105,9 @@ public class StringWithMacrosArgTest {
             TARGET,
             CELL_PATH_RESOLVER,
             resolver);
-    assertThat(multipleMacrosArg.getDeps(pathFinder), Matchers.contains(rule1, rule2, rule1));
+    assertThat(
+        BuildableSupport.getDepsCollection(multipleMacrosArg, pathFinder),
+        Matchers.contains(rule1, rule2, rule1));
   }
 
   @Test

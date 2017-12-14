@@ -122,9 +122,9 @@ class CompilerDelegate implements AddsToRuleKey {
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(getCompiler().getDeps(ruleFinder));
+    deps.addAll(BuildableSupport.getDepsCollection(getCompiler(), ruleFinder));
     RichStream.from(getCompilerFlags().getAllFlags())
-        .flatMap(a -> a.getDeps(ruleFinder).stream())
+        .flatMap(a -> BuildableSupport.getDepsCollection(a, ruleFinder).stream())
         .forEach(deps::add);
     return deps.build();
   }

@@ -33,6 +33,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -119,8 +120,8 @@ public class CxxLinkableEnhancer {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         () ->
             FluentIterable.from(allArgs)
-                .transformAndConcat(arg -> arg.getDeps(ruleFinder))
-                .append(linker.getDeps(ruleFinder))
+                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
+                .append(BuildableSupport.getDepsCollection(linker, ruleFinder))
                 .toSortedSet(Ordering.natural());
     return new CxxLink(
         target,

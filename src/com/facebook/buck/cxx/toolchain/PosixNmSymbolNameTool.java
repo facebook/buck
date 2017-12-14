@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -82,7 +83,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                 baseParams
                     .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(nm.getDeps(ruleFinder))
+                            .addAll(BuildableSupport.getDepsCollection(nm, ruleFinder))
                             .addAll(ruleFinder.filterBuildRuleInputs(linkerInputs))
                             .build())
                     .withoutExtraDeps(),

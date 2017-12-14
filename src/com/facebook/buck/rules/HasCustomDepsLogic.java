@@ -16,24 +16,18 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.stream.Stream;
 
-/** Implementation of a Tool that just delegates to another. */
-public abstract class DelegatingTool implements Tool {
-  @AddToRuleKey private final Tool tool;
-
-  public DelegatingTool(Tool tool) {
-    this.tool = tool;
-  }
-
-  @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return tool.getCommandPrefix(resolver);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return tool.getEnvironment(resolver);
-  }
+/**
+ * Deriving deps directly from the @AddToRuleKey annotated fields of some objects doesn't work
+ * correctly or is too slow. When deriving deps from an object that implements HasCustomDepsLogic,
+ * the framework (BuildableSupport/ModernBuildRule) will call getDeps() instead of deriving
+ * from @AddToRuleKey fields.
+ *
+ * <p>This is primarily meant to ease the transition to a state where all deps are derived
+ * automatically.
+ */
+@Deprecated
+public interface HasCustomDepsLogic {
+  Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 }

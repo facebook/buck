@@ -33,7 +33,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractVersionedTool implements AbstractTool {
+abstract class AbstractVersionedTool implements Tool {
 
   /** The path to the tool. The contents or path to the tool do not contribute to the rule key. */
   @Value.Parameter

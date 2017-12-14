@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -104,7 +105,9 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return Stream.concat(getDeclaredDeps().stream(), wrappedBinary.getDeps(ruleFinder).stream())
+    return Stream.concat(
+            getDeclaredDeps().stream(),
+            BuildableSupport.getDepsCollection(wrappedBinary, ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
 }

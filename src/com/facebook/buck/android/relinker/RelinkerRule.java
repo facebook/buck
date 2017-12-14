@@ -31,6 +31,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
@@ -111,7 +112,8 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static BuildRuleParams withDepsFromArgs(
       BuildRuleParams params, SourcePathRuleFinder ruleFinder, ImmutableList<Arg> args) {
     return params.copyAppendingExtraDeps(
-        Iterables.concat(Iterables.transform(args, arg -> arg.getDeps(ruleFinder))));
+        Iterables.concat(
+            Iterables.transform(args, arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))));
   }
 
   private static String getVersionScript(

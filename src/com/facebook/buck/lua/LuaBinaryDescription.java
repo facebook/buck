@@ -42,11 +42,11 @@ import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
@@ -612,7 +612,7 @@ public class LuaBinaryDescription
       nativeLibsLinktree.add(symlinkTree);
     }
 
-    return new AbstractTool() {
+    return new Tool() {
       @AddToRuleKey private final LuaPackageComponents toolComponents = components;
       @AddToRuleKey private final SourcePath toolStarter = starter;
 
@@ -673,8 +673,8 @@ public class LuaBinaryDescription
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(ruleFinder.filterBuildRuleInputs(starter))
                             .addAll(components.getDeps(ruleFinder))
-                            .addAll(lua.getDeps(ruleFinder))
-                            .addAll(packager.getDeps(ruleFinder))
+                            .addAll(BuildableSupport.getDepsCollection(lua, ruleFinder))
+                            .addAll(BuildableSupport.getDepsCollection(packager, ruleFinder))
                             .build())
                     .withoutExtraDeps(),
                 packager,
@@ -805,7 +805,7 @@ public class LuaBinaryDescription
     return new LuaBinary(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(binary.getDeps(ruleFinder)),
+        params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(binary, ruleFinder)),
         getOutputPath(buildTarget, projectFilesystem, luaPlatform),
         binary,
         args.getMainModule(),

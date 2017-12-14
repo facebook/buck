@@ -23,6 +23,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
@@ -174,7 +175,9 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                       ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
                       Stream.of(cmd, bash, cmdExe)
                           .flatMap(Optionals::toStream)
-                          .flatMap(input -> input.getDeps(ruleFinder).stream()))
+                          .flatMap(
+                              input ->
+                                  BuildableSupport.getDepsCollection(input, ruleFinder).stream()))
                   .collect(
                       ImmutableSortedSet.toImmutableSortedSet(
                           Comparator.<BuildRule>naturalOrder()))),

@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractTool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -26,7 +26,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** Interface for a kotlin compiler. */
-public interface Kotlinc extends AbstractTool {
+public interface Kotlinc extends Tool {
 
   KotlincVersion getVersion();
 

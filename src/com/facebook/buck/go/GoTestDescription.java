@@ -28,6 +28,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -167,7 +168,7 @@ public class GoTestDescription
             params
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(testMainGenerator.getDeps(ruleFinder))
+                        .addAll(BuildableSupport.getDepsCollection(testMainGenerator, ruleFinder))
                         .addAll(extraDeps)
                         .build())
                 .withoutExtraDeps(),

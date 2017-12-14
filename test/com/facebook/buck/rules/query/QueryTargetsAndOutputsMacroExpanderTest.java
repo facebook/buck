@@ -135,38 +135,6 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   }
 
   @Test
-  public void extractBuildTimeDeps() throws Exception {
-    Object precomputed =
-        expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"));
-    assertEquals(
-        ImmutableList.of(dep),
-        expander.extractBuildTimeDeps(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"),
-            precomputed));
-    Object precomputed2 =
-        expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"));
-    assertEquals(
-        ImmutableList.of(dep, rule),
-        expander.extractBuildTimeDeps(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"),
-            precomputed2));
-  }
-
-  @Test
   public void canUseCacheOfPrecomputedWork() throws Exception {
     assertEquals(
         ImmutableList.of(dep, rule),

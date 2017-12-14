@@ -42,13 +42,11 @@ import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
@@ -87,13 +85,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -425,6 +421,18 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     protected String expand(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rule, Optional<Pattern> filter)
         throws MacroException {
+      // This expander should only be used to determine parse-time deps.
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public Object extractRuleKeyAppendablesFrom(
+        BuildTarget target,
+        CellPathResolver cellNames,
+        BuildRuleResolver resolver,
+        FilterAndTargets input)
+        throws MacroException {
+      // This expander should only be used to determine parse-time deps.
       throw new IllegalStateException();
     }
   }
@@ -444,13 +452,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       SourcePathResolver pathResolver =
           DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
       return shquoteJoin(tool.getCommandPrefix(pathResolver));
-    }
-
-    @Override
-    public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      return ImmutableList.copyOf(tool.getDeps(ruleFinder));
     }
 
     @Override
@@ -520,24 +521,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return expand(resolver, resolve(resolver, input.targets), input.filter);
     }
 
-    protected ImmutableList<BuildRule> extractBuildTimeDeps(
-        @SuppressWarnings("unused") BuildRuleResolver resolver,
-        ImmutableList<BuildRule> rules,
-        @SuppressWarnings("unused") Optional<Pattern> filter)
-        throws MacroException {
-      return rules;
-    }
-
-    @Override
-    public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        FilterAndTargets input)
-        throws MacroException {
-      return extractBuildTimeDeps(resolver, resolve(resolver, input.targets), input.filter);
-    }
-
     @Override
     public void extractParseTimeDepsFrom(
         BuildTarget target,
@@ -549,18 +532,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public Object extractRuleKeyAppendablesFrom(
+    public abstract Object extractRuleKeyAppendablesFrom(
         BuildTarget target,
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
         FilterAndTargets input)
-        throws MacroException {
-      return input
-          .targets
-          .stream()
-          .map(DefaultBuildTargetSourcePath::of)
-          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-    }
+        throws MacroException;
   }
 
   /**
@@ -568,7 +545,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    * input.
    */
   private static class CxxPreprocessorFlagsExpander extends FilterAndTargetsExpander {
-
     private final CxxPlatform cxxPlatform;
     private final CxxSource.Type sourceType;
 
@@ -644,37 +620,13 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    protected ImmutableList<BuildRule> extractBuildTimeDeps(
-        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
-        throws MacroException {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-      for (CxxPreprocessorInput input : getCxxPreprocessorInput(rules)) {
-        deps.addAll(input.getDeps(resolver, ruleFinder));
-      }
-      return deps.build();
-    }
-
-    @Override
     public Object extractRuleKeyAppendablesFrom(
         final BuildTarget target,
         final CellPathResolver cellNames,
         final BuildRuleResolver resolver,
         FilterAndTargets input)
         throws MacroException {
-      final Iterable<CxxPreprocessorInput> transitivePreprocessorInput =
-          getCxxPreprocessorInput(resolve(resolver, input.targets));
-      final PreprocessorFlags ppFlags = getPreprocessorFlags(transitivePreprocessorInput);
-
-      return new AddsToRuleKey() {
-        @AddToRuleKey private final PreprocessorFlags preprocessorFlags = ppFlags;
-
-        @AddToRuleKey
-        private List<CxxHeaders> headers =
-            FluentIterable.from(transitivePreprocessorInput)
-                .transformAndConcat(CxxPreprocessorInput::getIncludes)
-                .toList();
-      };
+      return getPreprocessorFlags(getCxxPreprocessorInput(resolve(resolver, input.targets)));
     }
   }
 
@@ -747,14 +699,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                     @AddToRuleKey
                     private final NonHashableSourcePathContainer symlinkTreeRef =
                         new NonHashableSourcePathContainer(symlinkTree.getSourcePathToOutput());
-
-                    @Override
-                    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-                      return ImmutableList.<BuildRule>builder()
-                          .add(symlinkTree)
-                          .addAll(super.getDeps(ruleFinder))
-                          .build();
-                    }
                   })
           .collect(ImmutableList.toImmutableList());
     }
@@ -818,20 +762,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           com.facebook.buck.rules.args.Arg.stringify(
               getLinkerArgs(resolver, rules, filter),
               DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))));
-    }
-
-    @Override
-    protected ImmutableList<BuildRule> extractBuildTimeDeps(
-        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
-        throws MacroException {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-      deps.addAll(
-          getLinkerArgs(resolver, rules, filter)
-              .stream()
-              .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-              .iterator());
-      return deps.build();
     }
 
     @Override

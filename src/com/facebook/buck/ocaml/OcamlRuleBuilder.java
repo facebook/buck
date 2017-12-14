@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -247,16 +248,23 @@ public class OcamlRuleBuilder {
     allDepsBuilder.addAll(
         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
             .flatMap(input -> input.getArgs().stream())
-            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+            .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
             .iterator());
     for (OcamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
     }
-    allDepsBuilder.addAll(ocamlToolchain.getCCompiler().resolve(resolver).getDeps(ruleFinder));
-    allDepsBuilder.addAll(ocamlToolchain.getCxxCompiler().resolve(resolver).getDeps(ruleFinder));
     allDepsBuilder.addAll(
-        argFlags.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()).iterator());
+        BuildableSupport.getDepsCollection(
+            ocamlToolchain.getCCompiler().resolve(resolver), ruleFinder));
+    allDepsBuilder.addAll(
+        BuildableSupport.getDepsCollection(
+            ocamlToolchain.getCxxCompiler().resolve(resolver), ruleFinder));
+    allDepsBuilder.addAll(
+        argFlags
+            .stream()
+            .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+            .iterator());
 
     // The bulk rule will do preprocessing on sources, and so needs deps from the preprocessor
     // input object.
@@ -414,15 +422,21 @@ public class OcamlRuleBuilder {
                     .addAll(
                         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
                             .flatMap(input -> input.getArgs().stream())
-                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .flatMap(
+                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
                             .iterator())
                     .addAll(
                         argFlags
                             .stream()
-                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .flatMap(
+                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
                             .iterator())
-                    .addAll(ocamlToolchain.getCCompiler().resolve(resolver).getDeps(ruleFinder))
-                    .addAll(ocamlToolchain.getCxxCompiler().resolve(resolver).getDeps(ruleFinder))
+                    .addAll(
+                        BuildableSupport.getDepsCollection(
+                            ocamlToolchain.getCCompiler().resolve(resolver), ruleFinder))
+                    .addAll(
+                        BuildableSupport.getDepsCollection(
+                            ocamlToolchain.getCxxCompiler().resolve(resolver), ruleFinder))
                     .build())
             .withoutExtraDeps();
 

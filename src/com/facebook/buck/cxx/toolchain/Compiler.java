@@ -16,14 +16,14 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.rules.AbstractTool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
 /** Interface for a c/c++ compiler. */
-public interface Compiler extends AbstractTool {
+public interface Compiler extends Tool {
 
   ImmutableList<String> getFlagsForReproducibleBuild(
       String alternativeCompilationDir, Path currentCellPath);

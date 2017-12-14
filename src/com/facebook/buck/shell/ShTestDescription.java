@@ -21,6 +21,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
@@ -102,7 +103,8 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
             () ->
                 FluentIterable.from(testArgs)
                     .append(testEnv.values())
-                    .transformAndConcat(arg -> arg.getDeps(ruleFinder))),
+                    .transformAndConcat(
+                        arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))),
         testArgs,
         testEnv,
         FluentIterable.from(args.getResources())

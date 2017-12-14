@@ -19,17 +19,14 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroMatchResult;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableCollection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -64,16 +61,6 @@ public class MacroArg implements Arg, RuleKeyAppendable {
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
     try {
       consumer.accept(expander.expand(target, cellNames, resolver, unexpanded));
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    try {
-      return expander.extractBuildTimeDeps(
-          target, cellNames, resolver, unexpanded, precomputedWorkCache);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }

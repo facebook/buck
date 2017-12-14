@@ -31,6 +31,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
@@ -211,7 +212,8 @@ public class CxxTestDescription
     BuildRuleParams testParams =
         params
             .withDeclaredDeps(cxxLinkAndCompileRules.deps)
-            .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
+            .copyAppendingExtraDeps(
+                BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, ruleFinder));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, String> testEnv =

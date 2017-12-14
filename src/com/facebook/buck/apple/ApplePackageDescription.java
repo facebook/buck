@@ -29,6 +29,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
@@ -112,10 +113,8 @@ public class ApplePackageDescription
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .add(bundle)
                       .addAll(
-                          applePackageConfigAndPlatformInfo
-                              .get()
-                              .getExpandedArg()
-                              .getDeps(ruleFinder))
+                          BuildableSupport.getDepsCollection(
+                              applePackageConfigAndPlatformInfo.get().getExpandedArg(), ruleFinder))
                       .build()),
           applePackageConfigAndPlatformInfo.get(),
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),

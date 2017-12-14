@@ -17,14 +17,10 @@
 package com.facebook.buck.python.toolchain;
 
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /** Tool based on a particular python configuration. */
@@ -43,11 +39,6 @@ public class PythonEnvironment implements Tool {
 
   public PythonVersion getPythonVersion() {
     return pythonVersion;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableSortedSet.of();
   }
 
   @Override

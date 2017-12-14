@@ -18,20 +18,16 @@ package com.facebook.buck.rules.args;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -88,16 +84,6 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
     return new HumanReadableException(e, "%s: %s", getBuildTarget(), e.getMessage());
   }
 
-  private <M extends Macro> ImmutableCollection<BuildRule> extractDeps(M macro) {
-    try {
-      return getExpander(macro)
-          .extractBuildTimeDepsFrom(
-              getBuildTarget(), getCellPathResolver(), getBuildRuleResolver(), macro);
-    } catch (MacroException e) {
-      throw toHumanReadableException(e);
-    }
-  }
-
   @Nullable
   private <M extends Macro> Object extractRuleKeyAppendables(M macro) {
     try {
@@ -116,19 +102,6 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
     } catch (MacroException e) {
       throw toHumanReadableException(e);
     }
-  }
-
-  /** @return the build-time deps from all embedded macros. */
-  public ImmutableCollection<BuildRule> getDeps() {
-    return RichStream.from(getStringWithMacros().getMacros())
-        .map(this::extractDeps)
-        .flatMap(ImmutableCollection::stream)
-        .toImmutableList();
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return getDeps();
   }
 
   /** Expands all macros to strings and append them to the given builder. */

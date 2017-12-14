@@ -46,6 +46,7 @@ import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -184,7 +185,7 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getBuildDeps(),
         Matchers.hasItems(
             FluentIterable.from(depInput.getArgs())
-                .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
                 .toArray(BuildRule.class)));
   }
 

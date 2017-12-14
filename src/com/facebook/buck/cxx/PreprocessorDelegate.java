@@ -317,7 +317,7 @@ final class PreprocessorDelegate implements AddsToRuleKey {
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableList.<BuildRule>builder()
-        .addAll(getPreprocessor().getDeps(ruleFinder))
+        .addAll(BuildableSupport.getDepsCollection(getPreprocessor(), ruleFinder))
         .addAll(getPreprocessorFlags().getDeps(ruleFinder))
         .build();
   }

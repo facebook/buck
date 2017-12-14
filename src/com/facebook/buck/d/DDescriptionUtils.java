@@ -34,6 +34,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -233,7 +234,7 @@ abstract class DDescriptionUtils {
               }
 
               ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-              depsBuilder.addAll(compiler.getDeps(ruleFinder));
+              depsBuilder.addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder));
               depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(src));
               for (DIncludes dIncludes : transitiveIncludes.values()) {
                 depsBuilder.addAll(dIncludes.getDeps(ruleFinder));

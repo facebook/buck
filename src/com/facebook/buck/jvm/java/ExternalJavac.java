@@ -22,15 +22,12 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.Console;
@@ -46,7 +43,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,7 +70,7 @@ public class ExternalJavac implements Javac {
       this.javac =
           MoreSuppliers.<Tool>memoize(
               () ->
-                  new AbstractTool() {
+                  new Tool() {
                     @AddToRuleKey
                     private final NonHashableSourcePathContainer container =
                         new NonHashableSourcePathContainer(buildTargetPath);
@@ -130,11 +126,6 @@ public class ExternalJavac implements Javac {
   @VisibleForTesting
   Either<Path, BuildTargetSourcePath> getActualPath() {
     return actualPath;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return javac.get().getDeps(ruleFinder);
   }
 
   @Override

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.SourcePath;
@@ -178,7 +179,7 @@ public class ResourcesFilter extends AbstractBuildRule
         .addAll(rulesWithResourceDirectories)
         .addAll(
             RichStream.from(postFilterResourcesCmd)
-                .flatMap(a -> a.getDeps(ruleFinder).stream())
+                .flatMap(a -> BuildableSupport.getDepsCollection(a, ruleFinder).stream())
                 .toOnceIterable())
         .build();
   }

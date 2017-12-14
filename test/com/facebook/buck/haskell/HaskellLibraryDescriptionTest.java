@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -232,7 +233,8 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
     assertThat(
         FluentIterable.from(staticInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(new SourcePathRuleFinder(resolver)))
+            .transformAndConcat(
+                arg -> BuildableSupport.getDepsCollection(arg, new SourcePathRuleFinder(resolver)))
             .transform(BuildRule::getBuildTarget)
             .toList(),
         Matchers.hasItem(

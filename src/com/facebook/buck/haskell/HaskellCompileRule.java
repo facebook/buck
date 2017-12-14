@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -169,7 +170,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compiler.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder))
                     .addAll(ppFlags.getDeps(ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(includes))
                     .addAll(sources.getDeps(ruleFinder))
