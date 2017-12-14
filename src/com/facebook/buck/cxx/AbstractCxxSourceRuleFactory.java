@@ -33,12 +33,15 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -47,6 +50,10 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
+import com.facebook.buck.rules.keys.NoopRuleKeyScopedHasher;
+import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -59,6 +66,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,6 +77,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.immutables.value.Value;
 
@@ -632,10 +642,8 @@ abstract class AbstractCxxSourceRuleFactory {
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
     final String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
 
-    final String pchBaseID =
-        "pch-" + langCode + "-" + preprocessorDelegateCacheValue.getBaseHash(compilerFlags);
     final String pchFullID =
-        pchBaseID + "-" + preprocessorDelegateCacheValue.getFullHash(compilerFlags);
+        String.format("pch-%s-%s", langCode, preprocessorDelegateCacheValue.getHash(compilerFlags));
 
     return requirePrecompiledHeader(
         preprocessorDelegateCacheValue.getPreprocessorDelegate(),
@@ -871,55 +879,30 @@ abstract class AbstractCxxSourceRuleFactory {
     ImmutableList<String> getSourceFlags();
   }
 
-  @VisibleForTesting
-  public ImmutableList<Arg> getFlagsForSource(CxxSource source, boolean allowIncludePathFlags) {
-    PreprocessorDelegateCacheValue preprocessorDelegateValue =
-        preprocessorDelegates.apply(
-            PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
-    CxxToolFlags flags = computeCompilerFlags(source.getType(), source.getFlags());
-    PreprocessorDelegateCacheValue.HashStrings hashStrings = preprocessorDelegateValue.get(flags);
-    return allowIncludePathFlags ? hashStrings.fullFlags : hashStrings.baseFlags;
-  }
-
-  private static class PreprocessorDelegateCacheValue {
+  private class PreprocessorDelegateCacheValue {
+    private final Function<AddsToRuleKey, String> commandHashCache = memoize(this::computeHash);
     private final PreprocessorDelegate preprocessorDelegate;
+    private final String preprocessorHash;
+    private final String preprocessorFullHash;
 
-    // Note: this hash call is mainly for the benefit of precompiled headers, to produce
-    // the PCH's hash of build flags.  (Since there's no PCH yet, the PCH argument is
-    // passed as empty here.)
-    private final Function<CxxToolFlags, HashStrings> commandHashCache = memoize(HashStrings::new);
-
-    class HashStrings {
-      /** List of build flags (as strings), except for those related to header search paths. */
-      public final ImmutableList<Arg> baseFlags;
-      /** Complete list of all build flags (as strings), including header search paths. */
-      public final ImmutableList<Arg> fullFlags;
-
-      public final String baseHash;
-      public final String fullHash;
-
-      public HashStrings(CxxToolFlags compilerFlags) {
-        ImmutableList.Builder<Arg> builder = ImmutableList.builder();
-
-        // Add the build command itself first
-        builder.addAll(StringArg.from(preprocessorDelegate.getCommandPrefix()));
-        // Then preprocessor + compiler args, not including include path args like -I, -isystem, ...
-        builder.addAll(preprocessorDelegate.getNonIncludePathFlags(Optional.empty()).getAllFlags());
-        builder.addAll(compilerFlags.getAllFlags());
-        // Output what we have so far, to this list, then hash it.
-        this.baseFlags = builder.build();
-        this.baseHash = preprocessorDelegate.hashCommand(this.baseFlags).substring(0, 10);
-
-        // Continue building.  Using the same builder; add header search paths, to the above flags.
-        builder.addAll(preprocessorDelegate.getIncludePathFlags().getAllFlags());
-        // Output this super-set of flags to this list, then hash it.
-        this.fullFlags = builder.build();
-        this.fullHash = preprocessorDelegate.hashCommand(this.fullFlags).substring(0, 10);
-      }
+    private String computeHash(AddsToRuleKey object) {
+      HashBuilder builder = new HashBuilder(commandHashCache);
+      AlterRuleKeys.amendKey(builder, object);
+      return builder.build();
     }
 
     PreprocessorDelegateCacheValue(PreprocessorDelegate preprocessorDelegate) {
       this.preprocessorDelegate = preprocessorDelegate;
+      this.preprocessorHash =
+          computeHash(
+              new AddsToRuleKey() {
+                @AddToRuleKey Preprocessor preprocessor = preprocessorDelegate.getPreprocessor();
+
+                @AddToRuleKey
+                CxxToolFlags nonIncludePathFlags =
+                    preprocessorDelegate.getNonIncludePathFlags(Optional.empty());
+              });
+      this.preprocessorFullHash = computeHash(preprocessorDelegate.getIncludePathFlags());
     }
 
     PreprocessorDelegate getPreprocessorDelegate() {
@@ -927,16 +910,20 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     @VisibleForTesting
-    public HashStrings get(CxxToolFlags flags) {
+    public String get(CxxToolFlags flags) {
       return this.commandHashCache.apply(flags);
     }
 
-    String getBaseHash(CxxToolFlags flags) {
-      return get(flags).baseHash;
+    public String getHash(CxxToolFlags compilerFlags) {
+      return preprocessorHash
+          + "-"
+          + preprocessorFullHash
+          + "-"
+          + commandHashCache.apply(compilerFlags);
     }
 
-    String getFullHash(CxxToolFlags flags) {
-      return get(flags).fullHash;
+    public String getBaseHash(CxxToolFlags compilerFlags) {
+      return preprocessorHash + "-" + commandHashCache.apply(compilerFlags);
     }
   }
 
@@ -944,5 +931,78 @@ abstract class AbstractCxxSourceRuleFactory {
   private static <K, V> Function<K, V> memoize(Function<K, V> mappingFunction) {
     HashMap<K, V> cache = new HashMap<>();
     return k -> cache.computeIfAbsent(k, mappingFunction);
+  }
+
+  private class HashBuilder extends AbstractRuleKeyBuilder<String> {
+    private final GuavaRuleKeyHasher hasher =
+        new GuavaRuleKeyHasher(Hashing.murmur3_32().newHasher());
+    private final Function<AddsToRuleKey, String> commandHashCache;
+
+    public HashBuilder(Function<AddsToRuleKey, String> commandHashCache) {
+      super(new NoopRuleKeyScopedHasher());
+      this.commandHashCache = commandHashCache;
+    }
+
+    @Override
+    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
+      // This matches default rulekey computation (skipping the hash, though).
+      if (ideallyRelative.isAbsolute()) {
+        hasher.putString(ideallyRelative.getFileName().toString());
+      } else {
+        hasher.putString(ideallyRelative.toString());
+      }
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setSingleValue(@Nullable Object val) {
+      if (val == null) { // Null value first
+        hasher.putNull();
+      } else if (val instanceof Boolean) { // JRE types
+        hasher.putBoolean((boolean) val);
+      } else if (val instanceof Enum) {
+        hasher.putString(String.valueOf(val));
+      } else if (val instanceof Number) {
+        hasher.putNumber((Number) val);
+      } else if (val instanceof String) {
+        hasher.putString((String) val);
+      } else if (val instanceof Pattern) {
+        hasher.putPattern((Pattern) val);
+      } else if (val instanceof byte[]) {
+        hasher.putBytes((byte[]) val);
+      } else {
+        throw new RuntimeException("Unsupported value type: " + val.getClass());
+      }
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setBuildRule(BuildRule rule) {
+      throw new IllegalStateException();
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setAddsToRuleKey(AddsToRuleKey appendable) {
+      hasher.putString(commandHashCache.apply(appendable));
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setSourcePath(SourcePath sourcePath) {
+      setPath(
+          getPathResolver().getAbsolutePath(sourcePath),
+          getPathResolver().getIdeallyRelativePath(sourcePath));
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setNonHashingSourcePath(SourcePath sourcePath) {
+      return setSourcePath(sourcePath);
+    }
+
+    @Override
+    public String build() {
+      return hasher.hash().toString();
+    }
   }
 }
