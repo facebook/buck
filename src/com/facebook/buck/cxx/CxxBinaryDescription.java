@@ -110,27 +110,6 @@ public class CxxBinaryDescription
     return CxxBinaryDescriptionArg.class;
   }
 
-  private CxxPlatform getCxxPlatform(
-      BuildTarget target, Optional<Flavor> defaultCxxPlatformFlavor) {
-
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
-
-    // First check if the build target is setting a particular target.
-    Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
-    if (targetPlatform.isPresent()) {
-      return targetPlatform.get();
-    }
-
-    // Next, check for a constructor arg level default platform.
-    if (defaultCxxPlatformFlavor.isPresent()) {
-      return cxxPlatforms.getValue(defaultCxxPlatformFlavor.get());
-    }
-
-    // Otherwise, fallback to the description-level default platform.
-    return cxxPlatforms.getValue(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
-  }
-
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -160,10 +139,13 @@ public class CxxBinaryDescription
     target = CxxStrip.removeStripStyleFlavorInTarget(target, flavoredStripStyle);
     target = LinkerMapMode.removeLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode);
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(target.getFlavors());
-    CxxPlatform cxxPlatform = getCxxPlatform(target, args.getDefaultPlatform());
+    CxxPlatform cxxPlatform =
+        CxxPlatforms.getCxxPlatform(cxxPlatformsProvider, target, args.getDefaultPlatform());
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
       flavors =
           ImmutableSet.copyOf(
@@ -190,7 +172,6 @@ public class CxxBinaryDescription
           target, projectFilesystem, cxxLinkAndCompileRules.compileRules);
     }
 
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
 
     if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
@@ -274,24 +255,14 @@ public class CxxBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
-        findDepsForTargetFromConstructorArgs(buildTarget, constructorArg.getDefaultPlatform()));
+        CxxPlatforms.findDepsForTargetFromConstructorArgs(
+            getCxxPlatformsProvider(), buildTarget, constructorArg.getDefaultPlatform()));
     constructorArg
         .getDepsQuery()
         .ifPresent(
             depsQuery ->
                 QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
                     .forEach(extraDepsBuilder::add));
-  }
-
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget, Optional<Flavor> defaultCxxPlatformFlavor) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-
-    // Get any parse time deps from the C/C++ platforms.
-    deps.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatform(buildTarget, defaultCxxPlatformFlavor)));
-
-    return deps.build();
   }
 
   @Override

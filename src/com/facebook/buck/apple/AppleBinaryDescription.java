@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -586,15 +587,17 @@ public class AppleBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinDelegateFlavors(buildTarget.getFlavors());
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     if (thinFlavorSets.size() > 0) {
       for (ImmutableSortedSet<Flavor> flavors : thinFlavorSets) {
         extraDepsBuilder.addAll(
-            delegate.findDepsForTargetFromConstructorArgs(
-                buildTarget.withFlavors(flavors), Optional.empty()));
+            CxxPlatforms.findDepsForTargetFromConstructorArgs(
+                cxxPlatformsProvider, buildTarget.withFlavors(flavors), Optional.empty()));
       }
     } else {
       extraDepsBuilder.addAll(
-          delegate.findDepsForTargetFromConstructorArgs(buildTarget, Optional.empty()));
+          CxxPlatforms.findDepsForTargetFromConstructorArgs(
+              cxxPlatformsProvider, buildTarget, Optional.empty()));
     }
   }
 
