@@ -71,7 +71,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       ArtifactCache remoteCache,
       RuleKeyConfiguration rkConfigForCache,
       ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> asyncRuleKeyCalculatorOptional,
-      BuildSlaveTimingStatsTracker timingStatsTracker) {
+      BuildSlaveTimingStatsTracker timingStatsTracker,
+      HealthCheckStatsTracker healthCheckStatsTracker) {
 
     ListenableFuture<BuildTargetsQueue> queueFuture =
         Futures.transformAsync(
@@ -105,7 +106,12 @@ public class MultiSlaveBuildModeRunnerFactory {
         new CoordinatorEventListener(
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
     MinionHealthTracker minionHealthTracker =
-        new MinionHealthTracker(new DefaultClock(), distBuildConfig.getMaxMinionSilenceMillis());
+        new MinionHealthTracker(
+            new DefaultClock(),
+            distBuildConfig.getMaxMinionSilenceMillis(),
+            distBuildConfig.getHearbeatServiceRateMillis(),
+            distBuildConfig.getSlowHeartbeatWarningThresholdMillis(),
+            healthCheckStatsTracker);
 
     ChromeTraceBuckConfig chromeTraceBuckConfig =
         distBuildConfig.getBuckConfig().getView(ChromeTraceBuckConfig.class);
@@ -172,7 +178,11 @@ public class MultiSlaveBuildModeRunnerFactory {
         localBuildExecutor,
         stampedeId,
         buildSlaveRunId,
-        availableBuildCapacity,
+        distBuildConfig
+            .getBuckConfig()
+            .getView(ResourcesConfig.class)
+            .getConcurrencyLimit()
+            .threadLimit,
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
         unexpectedCacheMissTracker,
@@ -202,6 +212,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       ArtifactCache remoteCache,
       RuleKeyConfiguration rkConfigForCache,
       BuildSlaveTimingStatsTracker timingStatsTracker,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       double coordinatorBuildCapacityRatio) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
@@ -223,7 +234,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                 buildExecutor ->
                     Optional.of(buildExecutor.getCachingBuildEngine().getRuleKeyCalculator()),
                 executorService),
-            timingStatsTracker),
+            timingStatsTracker,
+            healthCheckStatsTracker),
         createMinion(
             localBuildExecutor,
             distBuildService,

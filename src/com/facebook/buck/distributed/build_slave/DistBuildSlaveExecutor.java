@@ -95,7 +95,8 @@ public class DistBuildSlaveExecutor {
               args.getArtifactCacheFactory().newInstance(true, true),
               args.getRuleKeyConfiguration(),
               /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()),
-              args.getTimingStatsTracker());
+              args.getTimingStatsTracker(),
+              args.getHealthCheckStatsTracker());
       return setPreparationCallbackAndRunWithHeartbeatService(runner);
     }
 
@@ -149,6 +150,7 @@ public class DistBuildSlaveExecutor {
                   args.getArtifactCacheFactory().newInstance(true, true),
                   args.getRuleKeyConfiguration(),
                   args.getTimingStatsTracker(),
+                  args.getHealthCheckStatsTracker(),
                   args.getDistBuildConfig().getCoordinatorBuildCapacityRatio());
           break;
 

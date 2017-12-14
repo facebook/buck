@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.NoOpUnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -106,6 +107,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
+
+  private final HealthCheckStatsTracker healthCheckStatsTracker = new HealthCheckStatsTracker();
 
   private final BuildSlaveTimingStatsTracker timeStatsTracker = new BuildSlaveTimingStatsTracker();
 
@@ -196,6 +199,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   stampedeId,
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
+                  healthCheckStatsTracker,
                   timeStatsTracker,
                   getBuildRuleFinishedPublisher(),
                   getUnexpectedSlaveCacheMissTracker());
@@ -316,6 +320,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               new DefaultClock(),
               timeStatsTracker,
               fileMaterializationStatsTracker,
+              healthCheckStatsTracker,
               scheduledExecutorService);
 
       buildRuleFinishedPublisher = slaveEventListener;

@@ -92,6 +92,12 @@ public class DistBuildConfig {
       "heartbeat_service_interval_millis";
   private static final long DEFAULT_HEARTBEAT_SERVICE_INTERVAL_MILLIS = 10000;
 
+  // If heartbeat takes longer than slow_heartbeat_warning_threshold_millis, record this as a
+  // warning.
+  private static final String SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS =
+      "slow_heartbeat_warning_threshold_millis";
+  private static final long DEFAULT_SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS = 15000;
+
   private static final String MAX_MINION_SILENCE_MILLIS = "max_minion_silence_millis";
   private static final long DEFAULT_MAX_MINION_SILENCE_MILLIS = TimeUnit.SECONDS.toMillis(30);
 
@@ -242,6 +248,12 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, HEARTBEAT_SERVICE_INTERVAL_MILLIS)
         .orElse(DEFAULT_HEARTBEAT_SERVICE_INTERVAL_MILLIS);
+  }
+
+  public long getSlowHeartbeatWarningThresholdMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS)
+        .orElse(DEFAULT_SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS);
   }
 
   public long getMaxMinionSilenceMillis() {

@@ -31,6 +31,7 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutorArgs;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -109,6 +110,7 @@ public abstract class DistBuildFactory {
       Optional<StampedeId> stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       BuildSlaveTimingStatsTracker timingStatsTracker,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
       UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker) {
@@ -149,6 +151,7 @@ public abstract class DistBuildFactory {
                 .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
                 .setBuildRuleFinishedPublisher(buildRuleFinishedPublisher)
                 .setUnexpectedSlaveCacheMissTracker(unexpectedSlaveCacheMissTracker)
+                .setHealthCheckStatsTracker(healthCheckStatsTracker)
                 .build());
     return executor;
   }

@@ -79,6 +79,16 @@ struct BuildSlaveStatus {
     30: optional i32 filesMaterializedCount;
 }
 
+struct HealthCheckStats {
+    1: optional i32 slowHeartbeatsReceivedCount;
+    2: optional i32 heartbeatsReceivedCount;
+    3: optional i64 averageHeartbeatIntervalMillis;
+    4: optional i64 slowestHeartbeatIntervalMillis;
+    5: optional string slowestHeartbeatMinionId;
+    6: optional i32 slowDeadMinionChecksCount;
+    7: optional i64 slowestDeadMinionCheckIntervalMillis;
+}
+
 struct FileMaterializationStats {
     1: optional i32 totalFilesMaterializedCount;
     2: optional i32 filesMaterializedFromCASCount;
@@ -106,4 +116,5 @@ struct BuildSlaveFinishedStats {
     4: optional BuildSlavePerStageTimingStats buildSlavePerStageTimingStats;
     5: optional string hostname;
     6: optional string distBuildMode;
+    7: optional HealthCheckStats healthCheckStats;
 }
