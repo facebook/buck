@@ -49,6 +49,7 @@ def buck_module(
         visibility = [
             "//programs:bucklib",
             "//programs:calculate-buck-binary-hash",
+            "//test/...",
         ],
     )
 

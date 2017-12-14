@@ -18,6 +18,10 @@ package com.facebook.buck.rules.keys.config.impl;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.model.BuckVersion;
+import com.facebook.buck.module.BuckModuleHashStrategy;
+import com.facebook.buck.module.impl.BuckModuleHashProvider;
+import com.facebook.buck.module.impl.DefaultBuckModuleHashStrategy;
+import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 
 /** Creates {@link RuleKeyConfiguration} using information from {@link BuckConfig}. */
@@ -29,6 +33,7 @@ public class ConfigRuleKeyConfigurationFactory {
         .setSeed(buckConfig.getKeySeed())
         .setCoreKey(getCoreKey(buckConfig))
         .setBuildInputRuleKeyFileSizeLimit(inputKeySizeLimit)
+        .setBuckModuleHashStrategy(createBuckModuleHashStrategy(buckConfig))
         .build();
   }
 
@@ -40,5 +45,15 @@ public class ConfigRuleKeyConfigurationFactory {
       coreKey = BuckVersion.getVersion();
     }
     return coreKey;
+  }
+
+  private static BuckModuleHashStrategy createBuckModuleHashStrategy(BuckConfig buckConfig) {
+    BuckModuleHashStrategy hashStrategy;
+    if (buckConfig.useBuckBinaryHash()) {
+      hashStrategy = new DefaultBuckModuleHashStrategy(new BuckModuleHashProvider());
+    } else {
+      hashStrategy = new NoOpBuckModuleHashStrategy();
+    }
+    return hashStrategy;
   }
 }

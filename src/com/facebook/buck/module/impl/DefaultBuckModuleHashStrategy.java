@@ -14,27 +14,25 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys.config;
+package com.facebook.buck.module.impl;
 
 import com.facebook.buck.module.BuckModuleHashStrategy;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
 
-/** Provides rule key configuration options. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRuleKeyConfiguration {
+public class DefaultBuckModuleHashStrategy implements BuckModuleHashStrategy {
 
-  /** The seed of all rule keys. */
-  @Value.Parameter
-  public abstract int getSeed();
+  private final BuckModuleHashProvider hashProvider;
 
-  @Value.Parameter
-  public abstract String getCoreKey();
+  public DefaultBuckModuleHashStrategy(BuckModuleHashProvider hashProvider) {
+    this.hashProvider = hashProvider;
+  }
 
-  @Value.Parameter
-  public abstract long getBuildInputRuleKeyFileSizeLimit();
+  @Override
+  public boolean needToAddModuleHashToRuleKey(Class<?> cls) {
+    return hashProvider.canProvideModuleHash(cls);
+  }
 
-  @Value.Parameter
-  public abstract BuckModuleHashStrategy getBuckModuleHashStrategy();
+  @Override
+  public String getModuleHash(Class<?> cls) {
+    return hashProvider.getModuleHash(cls);
+  }
 }

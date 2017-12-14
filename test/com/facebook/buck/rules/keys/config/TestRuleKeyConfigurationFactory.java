@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys.config;
 
 import com.facebook.buck.model.BuckVersion;
+import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
 
 public class TestRuleKeyConfigurationFactory {
 
@@ -25,6 +26,7 @@ public class TestRuleKeyConfigurationFactory {
         .setSeed(0)
         .setCoreKey(BuckVersion.getVersion())
         .setBuildInputRuleKeyFileSizeLimit(Long.MAX_VALUE)
+        .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
         .build();
   }
 
@@ -33,6 +35,7 @@ public class TestRuleKeyConfigurationFactory {
         .setSeed(seed)
         .setCoreKey(BuckVersion.getVersion())
         .setBuildInputRuleKeyFileSizeLimit(Long.MAX_VALUE)
+        .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
         .build();
   }
 }

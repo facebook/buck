@@ -28,6 +28,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -105,6 +106,7 @@ public class BuildTargetsQueueTest {
                 .setCoreKey("dummy")
                 .setSeed(0)
                 .setBuildInputRuleKeyFileSizeLimit(100)
+                .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
                 .build(),
             Optional.empty())
         .newQueue(topLevelTargets);
@@ -147,6 +149,7 @@ public class BuildTargetsQueueTest {
                 .setCoreKey("dummy")
                 .setSeed(0)
                 .setBuildInputRuleKeyFileSizeLimit(100)
+                .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
                 .build(),
             Optional.of(ruleKeyCalculator))
         .newQueue(topLevelTargets);
@@ -367,6 +370,7 @@ public class BuildTargetsQueueTest {
                 .setCoreKey("dummy")
                 .setSeed(0)
                 .setBuildInputRuleKeyFileSizeLimit(100)
+                .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
                 .build(),
             Optional.of(rkCalculator));
 

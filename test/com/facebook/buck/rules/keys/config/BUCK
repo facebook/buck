@@ -14,5 +14,6 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/module/impl:impl",
     ],
 )
