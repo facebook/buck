@@ -25,21 +25,14 @@ import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryFlavored;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
-import com.facebook.buck.cxx.CxxGenruleDescription;
-import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
 import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
-import com.facebook.buck.cxx.CxxPrecompiledHeaderDescription;
-import com.facebook.buck.cxx.CxxTestDescription;
-import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
-import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -136,14 +129,6 @@ abstract class AbstractKnownBuildRuleTypes {
         new CxxBinaryMetadataFactory(toolchainProvider);
     CxxBinaryFlavored cxxBinaryFlavored = new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig);
 
-    CxxBinaryDescription cxxBinaryDescription =
-        new CxxBinaryDescription(
-            toolchainProvider,
-            cxxBinaryImplicitFlavors,
-            cxxBinaryFactory,
-            cxxBinaryMetadataFactory,
-            cxxBinaryFlavored);
-
     CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxLibraryFlavored cxxLibraryFlavored =
@@ -152,14 +137,6 @@ abstract class AbstractKnownBuildRuleTypes {
         new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(toolchainProvider);
-
-    CxxLibraryDescription cxxLibraryDescription =
-        new CxxLibraryDescription(
-            toolchainProvider,
-            cxxLibraryImplicitFlavors,
-            cxxLibraryFlavored,
-            cxxLibraryFactory,
-            cxxLibraryMetadataFactory);
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
@@ -204,15 +181,6 @@ abstract class AbstractKnownBuildRuleTypes {
     builder.addDescriptions(appleBundleDescription);
     builder.addDescriptions(
         new AppleTestDescription(toolchainProvider, appleConfig, appleLibraryDescription));
-    builder.addDescriptions(cxxBinaryDescription);
-    builder.addDescriptions(cxxLibraryDescription);
-    builder.addDescriptions(
-        new CxxGenruleDescription(cxxBuckConfig, toolchainProvider, sandboxExecutionStrategy));
-    builder.addDescriptions(
-        new CxxTestDescription(toolchainProvider, cxxBuckConfig, cxxBinaryMetadataFactory));
-    builder.addDescriptions(new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig));
-    builder.addDescriptions(PrebuiltCxxLibraryGroupDescription.of());
-    builder.addDescriptions(new CxxPrecompiledHeaderDescription());
     builder.addDescriptions(new SceneKitAssetsDescription());
 
     DescriptionCreationContext descriptionCreationContext =
