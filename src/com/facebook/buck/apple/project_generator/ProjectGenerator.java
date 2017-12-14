@@ -69,6 +69,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
@@ -611,7 +612,7 @@ public class ProjectGenerator {
         new NewNativeTargetProjectMutator(pathRelativizer, this::resolveSourcePath);
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
-        .setProduct(ProductType.STATIC_LIBRARY, productName, outputPath)
+        .setProduct(ProductTypes.STATIC_LIBRARY, productName, outputPath)
         .setPreBuildRunScriptPhases(ImmutableList.of(scriptPhase));
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
@@ -840,7 +841,7 @@ public class ProjectGenerator {
             project,
             Optional.empty(),
             targetNode,
-            ProductType.TOOL,
+            ProductTypes.TOOL,
             "%s",
             Optional.empty(),
             /* includeFrameworks */ true,
@@ -880,7 +881,7 @@ public class ProjectGenerator {
       throws IOException {
     boolean isShared =
         targetNode.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProductType productType = isShared ? ProductType.DYNAMIC_LIBRARY : ProductType.STATIC_LIBRARY;
+    ProductType productType = isShared ? ProductTypes.DYNAMIC_LIBRARY : ProductTypes.STATIC_LIBRARY;
     PBXNativeTarget target =
         generateBinaryTarget(
             project,
@@ -1224,7 +1225,7 @@ public class ProjectGenerator {
       extraSettingsBuilder
           .put("TARGET_NAME", buildTargetName)
           .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
-      if (productType == ProductType.UI_TEST && isFocusedOnTarget) {
+      if (productType == ProductTypes.UI_TEST && isFocusedOnTarget) {
         if (bundleLoaderNode.isPresent()) {
           BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
           extraSettingsBuilder.put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
@@ -1609,7 +1610,7 @@ public class ProjectGenerator {
   }
 
   private boolean isFrameworkProductType(ProductType productType) {
-    return productType == ProductType.FRAMEWORK || productType == ProductType.STATIC_FRAMEWORK;
+    return productType == ProductTypes.FRAMEWORK || productType == ProductTypes.STATIC_FRAMEWORK;
   }
 
   private void addPBXTargetDependency(PBXNativeTarget pbxTarget, BuildTarget dependency) {
@@ -3128,24 +3129,24 @@ public class ProjectGenerator {
             return productType.get();
           }
         } else if (extension == AppleBundleExtension.FRAMEWORK) {
-          return ProductType.STATIC_FRAMEWORK;
+          return ProductTypes.STATIC_FRAMEWORK;
         }
       } else if (binaryNode.getDescription() instanceof AppleBinaryDescription) {
         if (extension == AppleBundleExtension.APP) {
-          return ProductType.APPLICATION;
+          return ProductTypes.APPLICATION;
         }
       } else if (binaryNode.getDescription() instanceof AppleTestDescription) {
         TargetNode<AppleTestDescriptionArg, ?> testNode =
             binaryNode.castArg(AppleTestDescriptionArg.class).get();
         if (testNode.getConstructorArg().getIsUiTest()) {
-          return ProductType.UI_TEST;
+          return ProductTypes.UI_TEST;
         } else {
-          return ProductType.UNIT_TEST;
+          return ProductTypes.UNIT_TEST;
         }
       }
     }
 
-    return ProductType.BUNDLE;
+    return ProductTypes.BUNDLE;
   }
 
   private boolean shouldGenerateReadOnlyFiles() {
@@ -3246,13 +3247,13 @@ public class ProjectGenerator {
       AppleBundleExtension extension) {
     switch (extension) {
       case FRAMEWORK:
-        return Optional.of(ProductType.FRAMEWORK);
+        return Optional.of(ProductTypes.FRAMEWORK);
       case APPEX:
-        return Optional.of(ProductType.APP_EXTENSION);
+        return Optional.of(ProductTypes.APP_EXTENSION);
       case BUNDLE:
-        return Optional.of(ProductType.BUNDLE);
+        return Optional.of(ProductTypes.BUNDLE);
       case XCTEST:
-        return Optional.of(ProductType.UNIT_TEST);
+        return Optional.of(ProductTypes.UNIT_TEST);
         // $CASES-OMITTED$
       default:
         return Optional.empty();
@@ -3269,7 +3270,7 @@ public class ProjectGenerator {
     if (targetNode.getDescription() instanceof AppleBundleDescription) {
       AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
       return arg.getXcodeProductType()
-          .equals(Optional.of(ProductType.WATCH_APPLICATION.getIdentifier()));
+          .equals(Optional.of(ProductTypes.WATCH_APPLICATION.getIdentifier()));
     }
     return false;
   }

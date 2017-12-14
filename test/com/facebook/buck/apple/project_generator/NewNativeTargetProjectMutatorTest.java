@@ -46,7 +46,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.js.JsBundleGenruleBuilder;
 import com.facebook.buck.js.JsTestScenario;
@@ -106,7 +106,7 @@ public class NewNativeTargetProjectMutatorTest {
         new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
     mutator
         .setTargetName("TestTarget")
-        .setProduct(ProductType.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
+        .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
         .buildTargetAndAddToProject(generatedProject, true);
 
     assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
@@ -120,7 +120,7 @@ public class NewNativeTargetProjectMutatorTest {
     mutator
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
-        .setProduct(ProductType.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
+        .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
         .buildTargetAndAddToProject(generatedProject, true);
 
     assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
@@ -138,7 +138,7 @@ public class NewNativeTargetProjectMutatorTest {
             .setTargetName("TestTarget")
             .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
             .setProduct(
-                ProductType.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
+                ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
             .buildTargetAndAddToProject(generatedProject, false);
 
     assertFalse(result.targetGroup.isPresent());
@@ -446,7 +446,8 @@ public class NewNativeTargetProjectMutatorTest {
         new NewNativeTargetProjectMutator(relativizer, pathResolver::getRelativePath);
     mutator
         .setTargetName("TestTarget")
-        .setProduct(ProductType.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"));
+        .setProduct(
+            ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"));
     return mutator;
   }
 

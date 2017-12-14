@@ -66,6 +66,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.config.BuckConfig;
@@ -1511,7 +1512,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
@@ -1593,7 +1594,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
@@ -1622,7 +1623,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals("../Foo/Foo-Prefix.pch", settings.get("GCC_PREFIX_HEADER"));
@@ -1655,7 +1656,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(libraryTarget, target, "Debug");
     assertEquals("../Foo/Foo-Prefix.pch", settings.get("GCC_PREFIX_HEADER"));
@@ -1681,7 +1682,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(
             projectGenerator.getGeneratedProject(), "//hi:lib#shared");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.DYNAMIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.DYNAMIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -1707,7 +1708,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2255,7 +2256,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     assertKeepsConfigurationsInMainGroup(projectGenerator.getGeneratedProject(), target);
@@ -2580,7 +2581,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
-    assertEquals(target.getProductType(), ProductType.UNIT_TEST);
+    assertEquals(target.getProductType(), ProductTypes.UNIT_TEST);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("xctest.xctest", productReference.getName());
@@ -2622,7 +2623,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:binary");
     assertHasConfigurations(target, "Debug");
-    assertEquals(target.getProductType(), ProductType.TOOL);
+    assertEquals(target.getProductType(), ProductTypes.TOOL);
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
@@ -2775,7 +2776,7 @@ public class ProjectGeneratorTest {
 
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    assertEquals(target.getProductType(), ProductType.FRAMEWORK);
+    assertEquals(target.getProductType(), ProductTypes.FRAMEWORK);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("bundle.framework", productReference.getName());
@@ -3015,7 +3016,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(target.getProductType(), ProductType.APPLICATION);
+    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
 
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
@@ -3120,7 +3121,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/libshared.dylib"));
@@ -3179,7 +3180,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
@@ -3249,7 +3250,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
@@ -3276,7 +3277,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 0, target.getBuildPhases().size());
   }
 
@@ -3914,7 +3915,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getProductType(), ProductType.UI_TEST);
+    assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
     assertPBXTargetHasDependency(
         projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:HostApp");
 
@@ -3966,7 +3967,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getProductType(), ProductType.UI_TEST);
+    assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
     assertPBXTargetHasDependency(
         projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
@@ -4006,7 +4007,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getProductType(), ProductType.UI_TEST);
+    assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
     assertPBXTargetHasDependency(
         projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
@@ -4400,7 +4401,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(
             projectGenerator.getGeneratedProject(), "//foo:framework_1#default,shared");
-    assertEquals(target.getProductType(), ProductType.FRAMEWORK);
+    assertEquals(target.getProductType(), ProductTypes.FRAMEWORK);
     for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
       if (buildPhase instanceof PBXCopyFilesBuildPhase) {
         PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
@@ -4499,7 +4500,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bundle");
-    assertEquals(target.getProductType(), ProductType.APPLICATION);
+    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
     assertThat(target.getBuildPhases().size(), Matchers.equalTo(1));
 
     PBXBuildPhase buildPhase = target.getBuildPhases().get(0);
@@ -4584,7 +4585,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(
             projectGenerator.getGeneratedProject(), bundleTarget.getFullyQualifiedName());
-    assertEquals(target.getProductType(), ProductType.APPLICATION);
+    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
     for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
       assertFalse(buildPhase instanceof PBXCopyFilesBuildPhase);
     }
