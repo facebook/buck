@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,7 +16,25 @@
 
 package com.facebook.buck.model.macros;
 
-/** Interface to define replacement behavior for @{link MacroFinder}. */
-public interface MacroReplacer<T> {
-  T replace(MacroMatchResult matchResult) throws MacroException;
+/**
+ * A simple MacroCombiner for {@code MacroReplacer<String>} that just concatenates the strings and
+ * expanded macros.
+ */
+public class StringMacroCombiner implements MacroCombiner<String> {
+  private final StringBuilder builder = new StringBuilder();
+
+  @Override
+  public String build() {
+    return builder.toString();
+  }
+
+  @Override
+  public void addString(String part) {
+    builder.append(part);
+  }
+
+  @Override
+  public void add(String expandedMacro) {
+    builder.append(expandedMacro);
+  }
 }

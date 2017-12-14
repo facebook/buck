@@ -38,6 +38,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
+import com.facebook.buck.model.macros.StringMacroCombiner;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -174,9 +175,10 @@ public class PrebuiltCxxLibraryDescription
       try {
         return MacroFinder.replace(
             ImmutableMap.of(
-                "platform", new FunctionMacroReplacer(f -> cxxPlatform.getFlavor().toString())),
+                "platform", new FunctionMacroReplacer<>(f -> cxxPlatform.getFlavor().toString())),
             str,
-            true);
+            true,
+            new StringMacroCombiner());
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s in \"%s\"", target, e.getMessage(), str);
       }

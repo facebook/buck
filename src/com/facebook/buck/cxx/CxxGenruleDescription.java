@@ -38,6 +38,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.model.macros.MacroReplacer;
+import com.facebook.buck.model.macros.StringMacroCombiner;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -312,12 +313,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
-  private ImmutableMap<String, MacroReplacer> getMacroReplacersForTargetTranslation(
+  private ImmutableMap<String, MacroReplacer<String>> getMacroReplacersForTargetTranslation(
       BuildTarget target, CellPathResolver cellNames, TargetNodeTranslator translator) {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forBaseName(target.getBaseName());
 
-    ImmutableMap.Builder<String, MacroReplacer> macros = ImmutableMap.builder();
+    ImmutableMap.Builder<String, MacroReplacer<String>> macros = ImmutableMap.builder();
 
     ImmutableList.of("exe", "location", "location-platform", "cppflags", "cxxppflags", "solibs")
         .forEach(
@@ -362,7 +363,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       String cmd) {
     try {
       return MacroFinder.replace(
-          getMacroReplacersForTargetTranslation(root, cellNames, translator), cmd, false);
+          getMacroReplacersForTargetTranslation(root, cellNames, translator),
+          cmd,
+          false,
+          new StringMacroCombiner());
     } catch (MacroException e) {
       throw new HumanReadableException(
           e, "%s: \"%s\": error expanding macros: %s", root, field, e.getMessage());
@@ -809,7 +813,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
   }
 
-  private static class AsIsMacroReplacer implements MacroReplacer {
+  private static class AsIsMacroReplacer implements MacroReplacer<String> {
 
     private final String name;
 
@@ -828,7 +832,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
   }
 
-  private static class TargetTranslatorMacroReplacer implements MacroReplacer {
+  private static class TargetTranslatorMacroReplacer implements MacroReplacer<String> {
 
     private final AsIsMacroReplacer asIsMacroReplacer;
     private final Filter filter;
