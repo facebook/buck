@@ -35,8 +35,6 @@ import org.immutables.value.Value;
  * <p>Users should use the API in this class instead of the concrete implementations.
  */
 public abstract class CxxToolFlags implements AddsToRuleKey {
-  private static final CxxToolFlags EMPTY_FLAGS = CxxToolFlags.explicitBuilder().build();
-
   /** Flags that precede flags from {@code #getRuleFlags()}. */
   public abstract ImmutableList<Arg> getPlatformFlags();
 
@@ -55,7 +53,7 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
 
   /** Returns the empty lists of flags. */
   public static CxxToolFlags of() {
-    return EMPTY_FLAGS;
+    return ExplicitCxxToolFlags.of();
   }
 
   /** Directly construct an instance from the given members. */
@@ -80,7 +78,7 @@ interface CxxToolFlagsBuilder {
 }
 
 /** {@code CxxToolFlags} implementation where the flags are stored explicitly as lists. */
-@Value.Immutable
+@Value.Immutable(singleton = true, copy = false)
 @BuckStyleImmutable
 abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
   public abstract static class Builder implements CxxToolFlagsBuilder {}
