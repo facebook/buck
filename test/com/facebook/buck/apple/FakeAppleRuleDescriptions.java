@@ -29,6 +29,7 @@ import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -241,21 +242,30 @@ public class FakeAppleRuleDescriptions {
           new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
 
   /** A fake apple_binary description with an iOS platform for use in tests. */
-  public static final AppleBinaryDescription BINARY_DESCRIPTION =
-      new AppleBinaryDescription(
-          createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
-          new CxxBinaryDescription(
-              new ToolchainProviderBuilder()
-                  .withToolchain(
-                      CxxPlatformsProvider.DEFAULT_NAME,
-                      CxxPlatformsProvider.of(
-                          DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
-                          DEFAULT_APPLE_FLAVOR_DOMAIN))
-                  .build(),
-              CxxPlatformUtils.DEFAULT_CONFIG,
-              new InferBuckConfig(DEFAULT_BUCK_CONFIG)),
-          SWIFT_LIBRARY_DESCRIPTION,
-          DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
+  public static final AppleBinaryDescription BINARY_DESCRIPTION = createAppleBinaryDescription();
+
+  private static AppleBinaryDescription createAppleBinaryDescription() {
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(
+                    DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(), DEFAULT_APPLE_FLAVOR_DOMAIN))
+            .build();
+    CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
+        new CxxBinaryImplicitFlavors(toolchainProvider, CxxPlatformUtils.DEFAULT_CONFIG);
+
+    return new AppleBinaryDescription(
+        createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
+        new CxxBinaryDescription(
+            toolchainProvider,
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new InferBuckConfig(DEFAULT_BUCK_CONFIG),
+            cxxBinaryImplicitFlavors),
+        SWIFT_LIBRARY_DESCRIPTION,
+        DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
+        cxxBinaryImplicitFlavors);
+  }
 
   /** A fake apple_bundle description with an iOS platform for use in tests. */
   public static final AppleBundleDescription BUNDLE_DESCRIPTION =

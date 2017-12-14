@@ -34,6 +34,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -44,17 +45,29 @@ public class CxxBinaryBuilder
     extends AbstractNodeBuilder<
         CxxBinaryDescriptionArg.Builder, CxxBinaryDescriptionArg, CxxBinaryDescription, CxxBinary> {
 
+  private static CxxBinaryDescription createCxxBinaryDescription(
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxBuckConfig cxxBuckConfig) {
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+            .build();
+
+    return new CxxBinaryDescription(
+        toolchainProvider,
+        cxxBuckConfig,
+        new InferBuckConfig(FakeBuckConfig.builder().build()),
+        new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig));
+  }
+
   public CxxBinaryBuilder(
       BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
-        new CxxBinaryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
-                .build(),
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            new InferBuckConfig(FakeBuckConfig.builder().build())),
+        createCxxBinaryDescription(
+            defaultCxxPlatform, cxxPlatforms, CxxPlatformUtils.DEFAULT_CONFIG),
         target);
   }
 
@@ -63,16 +76,7 @@ public class CxxBinaryBuilder
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxBuckConfig cxxBuckConfig) {
-    super(
-        new CxxBinaryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
-                .build(),
-            cxxBuckConfig,
-            new InferBuckConfig(FakeBuckConfig.builder().build())),
-        target);
+    super(createCxxBinaryDescription(defaultCxxPlatform, cxxPlatforms, cxxBuckConfig), target);
   }
 
   public CxxBinaryBuilder(BuildTarget target) {

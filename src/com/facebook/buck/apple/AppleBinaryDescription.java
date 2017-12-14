@@ -23,6 +23,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
+import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
@@ -101,17 +102,20 @@ public class AppleBinaryDescription
   private final CxxBinaryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
+  private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
 
   public AppleBinaryDescription(
       ToolchainProvider toolchainProvider,
       CxxBinaryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
-      AppleConfig appleConfig) {
+      AppleConfig appleConfig,
+      CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors) {
     this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
     // TODO(T22135033): Make apple_binary not use a Swift delegate
     this.swiftDelegate = Optional.of(swiftDelegate);
     this.appleConfig = appleConfig;
+    this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
   }
 
   @Override
@@ -567,7 +571,7 @@ public class AppleBinaryDescription
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
     // Use defaults.apple_binary if present, but fall back to defaults.cxx_binary otherwise.
-    return delegate.addImplicitFlavorsForRuleTypes(
+    return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
         Description.getBuildRuleType(this),
         Description.getBuildRuleType(CxxBinaryDescription.class));

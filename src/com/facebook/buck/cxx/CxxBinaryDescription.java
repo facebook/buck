@@ -33,7 +33,6 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -72,15 +71,18 @@ public class CxxBinaryDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
   private final ImmutableSet<Flavor> declaredPlatforms;
+  private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
 
   public CxxBinaryDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      InferBuckConfig inferBuckConfig) {
+      InferBuckConfig inferBuckConfig,
+      CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
+    this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
   }
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ binary. */
@@ -356,31 +358,8 @@ public class CxxBinaryDescription
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
-    return addImplicitFlavorsForRuleTypes(argDefaultFlavors, Description.getBuildRuleType(this));
-  }
-
-  public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
-      ImmutableSortedSet<Flavor> argDefaultFlavors, BuildRuleType... types) {
-    Optional<Flavor> platformFlavor =
-        getCxxPlatformsProvider().getCxxPlatforms().getFlavor(argDefaultFlavors);
-
-    for (BuildRuleType type : types) {
-      ImmutableMap<String, Flavor> libraryDefaults =
-          cxxBuckConfig.getDefaultFlavorsForRuleType(type);
-
-      if (!platformFlavor.isPresent()) {
-        platformFlavor =
-            Optional.ofNullable(libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
-      }
-    }
-
-    if (platformFlavor.isPresent()) {
-      return ImmutableSortedSet.of(platformFlavor.get());
-    } else {
-      // To avoid changing the output path of binaries built without a flavor,
-      // we'll default to no flavor, which implicitly builds the default platform.
-      return ImmutableSortedSet.of();
-    }
+    return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors, Description.getBuildRuleType(this));
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider() {
