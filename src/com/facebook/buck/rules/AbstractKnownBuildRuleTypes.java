@@ -26,6 +26,7 @@ import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -123,10 +124,12 @@ abstract class AbstractKnownBuildRuleTypes {
 
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
         new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
+    CxxBinaryFactory cxxBinaryFactory =
+        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
 
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
-            toolchainProvider, cxxBuckConfig, inferBuckConfig, cxxBinaryImplicitFlavors);
+            toolchainProvider, cxxBuckConfig, cxxBinaryImplicitFlavors, cxxBinaryFactory);
 
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(toolchainProvider, cxxBuckConfig, inferBuckConfig);
@@ -155,7 +158,8 @@ abstract class AbstractKnownBuildRuleTypes {
             cxxBinaryDescription,
             swiftLibraryDescription,
             appleConfig,
-            cxxBinaryImplicitFlavors);
+            cxxBinaryImplicitFlavors,
+            cxxBinaryFactory);
     builder.addDescriptions(appleBinaryDescription);
 
     SandboxExecutionStrategy sandboxExecutionStrategy =

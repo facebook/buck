@@ -29,6 +29,7 @@ import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -254,17 +255,23 @@ public class FakeAppleRuleDescriptions {
             .build();
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
         new CxxBinaryImplicitFlavors(toolchainProvider, CxxPlatformUtils.DEFAULT_CONFIG);
+    CxxBinaryFactory cxxBinaryFactory =
+        new CxxBinaryFactory(
+            toolchainProvider,
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            new InferBuckConfig(DEFAULT_BUCK_CONFIG));
 
     return new AppleBinaryDescription(
         createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
         new CxxBinaryDescription(
             toolchainProvider,
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new InferBuckConfig(DEFAULT_BUCK_CONFIG),
-            cxxBinaryImplicitFlavors),
+            cxxBinaryImplicitFlavors,
+            cxxBinaryFactory),
         SWIFT_LIBRARY_DESCRIPTION,
         DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
-        cxxBinaryImplicitFlavors);
+        cxxBinaryImplicitFlavors,
+        cxxBinaryFactory);
   }
 
   /** A fake apple_bundle description with an iOS platform for use in tests. */

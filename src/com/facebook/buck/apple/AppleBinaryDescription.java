@@ -23,6 +23,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
+import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -104,19 +105,22 @@ public class AppleBinaryDescription
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
+  private final CxxBinaryFactory cxxBinaryFactory;
 
   public AppleBinaryDescription(
       ToolchainProvider toolchainProvider,
       CxxBinaryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
-      CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors) {
+      CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
+      CxxBinaryFactory cxxBinaryFactory) {
     this.toolchainProvider = toolchainProvider;
     this.delegate = delegate;
     // TODO(T22135033): Make apple_binary not use a Swift delegate
     this.swiftDelegate = Optional.of(swiftDelegate);
     this.appleConfig = appleConfig;
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
+    this.cxxBinaryFactory = cxxBinaryFactory;
   }
 
   @Override
@@ -492,7 +496,7 @@ public class AppleBinaryDescription
                 CxxBinaryDescriptionArg.builder().from(args);
             AppleDescriptions.populateCxxBinaryDescriptionArg(
                 pathResolver, delegateArg, args, buildTarget);
-            return delegate.createBuildRule(
+            return cxxBinaryFactory.createBuildRule(
                 buildTarget,
                 projectFilesystem,
                 resolver,
