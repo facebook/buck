@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -472,8 +473,8 @@ public class AppleTestDescription
       extraDepsBuilder.add(xctoolZipTarget.get());
     }
     extraDepsBuilder.addAll(appleConfig.getCodesignProvider().getParseTimeDeps());
-    appleLibraryDescription.findDepsForTargetFromConstructorArgs(
-        buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   private AppleBundle getBuildRuleForTestHostAppTarget(

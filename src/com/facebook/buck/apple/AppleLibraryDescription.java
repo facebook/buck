@@ -39,6 +39,7 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -805,22 +806,8 @@ public class AppleLibraryDescription
       final AbstractAppleLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    findDepsForTargetFromConstructorArgs(
-        buildTarget,
-        cellRoots,
-        (AppleNativeTargetDescriptionArg) constructorArg,
-        extraDepsBuilder,
-        targetGraphOnlyDepsBuilder);
-  }
-
-  public void findDepsForTargetFromConstructorArgs(
-      final BuildTarget buildTarget,
-      final CellPathResolver cellRoots,
-      final AppleNativeTargetDescriptionArg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    delegate.findDepsForTargetFromConstructorArgs(
-        buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(
