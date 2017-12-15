@@ -557,17 +557,8 @@ public final class Main {
       return result.get();
     }
 
-    // Initialize logging
-    try {
-      setupLogging(commandMode, command, args);
-    } catch (Throwable e) {
-      // Explicitly catch error and print to stderr
-      // because it is possible that logger is partially initialized
-      // and exception will be logged nowhere.
-      stdErr.println("Failed to initialize logger");
-      e.printStackTrace(stdErr);
-      return ExitCode.FATAL_GENERIC;
-    }
+    // statically configure Buck logging environment based on Buck config, usually buck-x.log files
+    setupLogging(commandMode, command, args);
 
     if (pluginManager == null) {
       pluginManager = BuckPluginManagerFactory.createPluginManager();
