@@ -1,7 +1,7 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 standard_java_test(
-    name = "event",
+    name = "chrome_trace",
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/event/chrome_trace:chrome_trace",
