@@ -35,8 +35,11 @@ STARTUP = """\
 def __run():
     import glob
     import os
+    import os.path
     import runpy
+    import shutil
     import sys
+    import zipfile
 
     # Set `argv[0]` to the executing script.
     assert sys.argv[0] == '-c'
@@ -46,8 +49,34 @@ def __run():
     assert sys.path[0] == ''
     sys.path[0] = {pythonpath!r}
 
-    for path in glob.glob(os.path.join({prebuilt_libs!r}, "*")):
-        sys.path.insert(1, path)
+    # Extract Whls to "install them"
+    prebuilt_libs = {prebuilt_libs!r}
+    wheels = glob.glob(os.path.join(prebuilt_libs, "*.whl"))
+    if wheels:
+        conflict_map = {{}}
+        for whl in wheels:
+            short_whl = os.path.basename(whl)
+            whl_path = os.path.join(prebuilt_libs, short_whl + "-installed")
+            with zipfile.ZipFile(whl) as zip:
+                names = zip.namelist()
+                for name in names:
+                    if name in conflict_map:
+                        raise Exception(
+                            'Wheel path {{}} from {{}} conflicts with {{}}'
+                            .format(name, short_whl, conflict_map[name])
+                        )
+                    conflict_map[name] = short_whl
+                    extract = False
+                    if not os.path.exists(whl_path):
+                        extract = True
+                    elif os.stat(whl).st_mtime > os.stat(whl_path).st_mtime:
+                        # whl newer than extract dir, force an extract
+                        extract = True
+                        shutil.rmtree(whl_path)
+
+                    if extract:
+                        zip.extractall(whl_path)
+            sys.path.insert(0, whl_path)
 
     def setenv(var, val):
         if val is None:
