@@ -193,7 +193,7 @@ public class CxxLibraryDescription
                     deps,
                     // Also add private deps if we are _not_ reexporting all deps.
                     args.isReexportAllHeaderDependencies()
-                        ? CxxDeps.EMPTY
+                        ? CxxDeps.of()
                         : args.getPrivateCxxDeps()))
             .toOnceIterable(),
         args.getIncludeDirs(),
