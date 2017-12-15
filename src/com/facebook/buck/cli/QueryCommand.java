@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.PerBuildState;
@@ -27,6 +26,7 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -116,10 +116,7 @@ public class QueryCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Must specify at least the query expression"));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("must specify at least the query expression");
     }
 
     try (CommandThreadManager pool =
@@ -212,12 +209,8 @@ public class QueryCommand extends AbstractCommand {
       boolean generateJsonOutput)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe(
-                  "Specify one or more input targets after the query expression format"));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException(
+          "specify one or more input targets after the query expression format");
     }
 
     // Do an initial pass over the query arguments and parse them into their expressions so we can

@@ -30,6 +30,7 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.zip.Unzip;
@@ -112,8 +113,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     if (arguments.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("No cache keys specified."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("no cache keys specified");
     }
 
     if (outputDir != null) {

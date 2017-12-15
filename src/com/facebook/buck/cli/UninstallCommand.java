@@ -35,6 +35,7 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -127,10 +128,7 @@ public class UninstallCommand extends AbstractCommand {
 
     // Make sure that only one build target is specified.
     if (buildTargets.size() != 1) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Must specify exactly one android_binary() rule."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("must specify exactly one android_binary() rule");
     }
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
 

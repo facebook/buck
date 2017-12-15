@@ -31,6 +31,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
@@ -261,11 +262,7 @@ public class ProjectCommand extends BuildCommand {
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
     if (projectIde == null) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("\nCannot build a project: project IDE is not specified.");
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("project IDE is not specified in Buck config or --ide");
     }
 
     int rc = runPreprocessScriptIfNeeded(params, projectIde);

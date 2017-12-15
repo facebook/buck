@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
@@ -106,10 +107,7 @@ public class AuditClasspathCommand extends AbstractCommand {
             .collect(ImmutableSet.toImmutableSet());
 
     if (targets.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Please specify at least one build target."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     TargetGraph targetGraph;

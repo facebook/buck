@@ -48,6 +48,7 @@ import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -121,11 +122,8 @@ public class IjProjectCommandHelper {
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
       throws IOException, InterruptedException {
     if (projectViewParameters.hasViewPath() && arguments.isEmpty()) {
-      console
-          .getStdErr()
-          .println("\nParams are view_path target(s), but you didn't supply any targets");
-
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException(
+          "params are view_path target(s), but you didn't supply any targets");
     }
 
     List<String> targets = arguments;

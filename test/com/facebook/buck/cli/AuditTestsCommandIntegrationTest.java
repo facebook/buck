@@ -42,7 +42,7 @@ public class AuditTestsCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "tests");
     result.assertExitCode("missing parameter is error", ExitCode.COMMANDLINE_ERROR);
-    assertThat(result.getStderr(), containsString("Must specify at least one build target.\n"));
+    assertThat(result.getStderr(), containsString("must specify at least one build target"));
   }
 
   @Test

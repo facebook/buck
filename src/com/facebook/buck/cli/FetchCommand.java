@@ -41,6 +41,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
@@ -55,10 +56,7 @@ public class FetchCommand extends BuildCommand {
       throws IOException, InterruptedException {
 
     if (getArguments().isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Must specify at least one build target to fetch."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.

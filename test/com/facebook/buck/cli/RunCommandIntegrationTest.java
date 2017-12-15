@@ -47,7 +47,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
 
     result.assertExitCode("missing argument is error", ExitCode.COMMANDLINE_ERROR);
     assertThat(result.getStderr(), containsString("buck run <target> <arg1> <arg2>..."));
-    assertThat(result.getStderr(), containsString("No target given to run"));
+    assertThat(result.getStderr(), containsString("no target given to run"));
   }
 
   @Test

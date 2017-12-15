@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
@@ -80,10 +80,7 @@ public class AuditConfigCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     if (shouldGenerateTabbedOutput() && shouldGenerateJsonOutput()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("--json and --tab cannot both be specified"));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("--json and --tab cannot both be specified");
     }
 
     final BuckConfig buckConfig = params.getBuckConfig();

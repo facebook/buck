@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableList;
@@ -78,8 +79,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
         ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("Must specify at least one build target."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     if (params.getConsole().getAnsi().isAnsiTerminal()) {

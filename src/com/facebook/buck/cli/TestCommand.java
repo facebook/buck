@@ -62,6 +62,7 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -305,11 +306,8 @@ public class TestCommand extends BuildCommand {
       throws InterruptedException, IOException {
 
     if (!withDashArguments.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe("Unexpected arguments after \"--\" when using internal runner"));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException(
+          "unexpected arguments after \"--\" when using internal runner");
     }
 
     ResourcesConfig resourcesConfig = params.getBuckConfig().getView(ResourcesConfig.class);

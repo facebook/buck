@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheDeleteResult;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
@@ -43,8 +43,7 @@ public class CacheDeleteCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("No cache keys specified."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("no cache keys specified");
     }
 
     List<RuleKey> ruleKeys = arguments.stream().map(RuleKey::new).collect(Collectors.toList());
