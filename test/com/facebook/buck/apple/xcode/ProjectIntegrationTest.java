@@ -468,6 +468,44 @@ public class ProjectIntegrationTest {
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
   }
 
+  @Test
+  public void testBuckProjectWithCellAndMergedHeaderMap() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project", "--config", "apple.merge_header_maps_in_xcode=true", "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  @Test
+  public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "--config",
+            "apple.merge_header_maps_in_xcode=true",
+            "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
   private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
       throws IOException, InterruptedException {
     ProcessExecutor.Result processResult =

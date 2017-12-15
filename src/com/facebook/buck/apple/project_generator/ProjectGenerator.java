@@ -2054,7 +2054,7 @@ public class ProjectGenerator {
               .resolve(targetNode.getBuildTarget().getCellPath())
               .resolve(headerSymlinkTreeRoot);
     } else {
-      basePath = projectFilesystem.getRootPath().resolve(targetNode.getBuildTarget().getCellPath());
+      basePath = projectFilesystem.getRootPath();
     }
     for (Map.Entry<Path, SourcePath> entry : getPublicCxxHeaders(targetNode).entrySet()) {
       Path path;
@@ -3301,10 +3301,9 @@ public class ProjectGenerator {
     return Optional.of(pch.sourcePath);
   }
 
-  private ProjectFilesystem getFilesystemForNode(
-      Optional<TargetNode<? extends CxxLibraryDescription.CommonArg, ?>> node) {
-    if (node.isPresent()) {
-      Path cellPath = node.get().getBuildTarget().getCellPath();
+  private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
+    if (target.isPresent()) {
+      Path cellPath = target.get().getCellPath();
       Cell cell = projectCell.getCellProvider().getCellByPath(cellPath);
       return cell.getFilesystem();
     } else {
@@ -3312,9 +3311,8 @@ public class ProjectGenerator {
     }
   }
 
-  private Path getPathToHeaderMapsRoot(
-      Optional<TargetNode<? extends CxxLibraryDescription.CommonArg, ?>> node) {
-    ProjectFilesystem filesystem = getFilesystemForNode(node);
+  private Path getPathToHeaderMapsRoot(Optional<BuildTarget> target) {
+    ProjectFilesystem filesystem = getFilesystemForTarget(target);
     return filesystem.getBuckPaths().getGenDir().resolve("_p");
   }
 
@@ -3338,14 +3336,14 @@ public class ProjectGenerator {
 
   private Path getPathToHeadersPath(
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode, String suffix) {
-    return getPathToHeaderMapsRoot(Optional.of(targetNode))
+    return getPathToHeaderMapsRoot(Optional.of(targetNode.getBuildTarget()))
         .resolve(getFilenameToHeadersPath(targetNode, suffix));
   }
 
   private Path getAbsolutePathToHeaderSymlinkTree(
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode,
       HeaderVisibility headerVisibility) {
-    ProjectFilesystem filesystem = getFilesystemForNode(Optional.of(targetNode));
+    ProjectFilesystem filesystem = getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()));
     return filesystem.resolve(getPathToHeaderSymlinkTree(targetNode, headerVisibility));
   }
 
@@ -3357,6 +3355,6 @@ public class ProjectGenerator {
   }
 
   private Path getPathToMergedHeaderMap() {
-    return getPathToHeaderMapsRoot(Optional.empty()).resolve("pub-hmap");
+    return getPathToHeaderMapsRoot(Optional.of(workspaceTarget.get())).resolve("pub-hmap");
   }
 }
