@@ -26,20 +26,6 @@ import com.facebook.buck.android.toolchain.impl.DxToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
-import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
-import com.facebook.buck.apple.toolchain.AppleSdkLocation;
-import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
-import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
-import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
-import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
-import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryForTestsProviderFactory;
-import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
-import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
-import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
-import com.facebook.buck.apple.toolchain.impl.CodeSignIdentityStoreFactory;
-import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;
@@ -104,32 +90,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               NdkCxxPlatformsProvider.DEFAULT_NAME,
               NdkCxxPlatformsProvider.class,
               NdkCxxPlatformsProviderFactory.class),
-          ToolchainDescriptor.of(
-              AppleDeveloperDirectoryProvider.DEFAULT_NAME,
-              AppleDeveloperDirectoryProvider.class,
-              AppleDeveloperDirectoryProviderFactory.class),
-          ToolchainDescriptor.of(
-              AppleDeveloperDirectoryForTestsProvider.DEFAULT_NAME,
-              AppleDeveloperDirectoryForTestsProvider.class,
-              AppleDeveloperDirectoryForTestsProviderFactory.class),
-          ToolchainDescriptor.of(
-              AppleToolchainProvider.DEFAULT_NAME,
-              AppleToolchainProvider.class,
-              AppleToolchainProviderFactory.class),
-          ToolchainDescriptor.of(
-              AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.class, AppleSdkLocationFactory.class),
-          ToolchainDescriptor.of(
-              AppleCxxPlatformsProvider.DEFAULT_NAME,
-              AppleCxxPlatformsProvider.class,
-              AppleCxxPlatformsProviderFactory.class),
-          ToolchainDescriptor.of(
-              CodeSignIdentityStore.DEFAULT_NAME,
-              CodeSignIdentityStore.class,
-              CodeSignIdentityStoreFactory.class),
-          ToolchainDescriptor.of(
-              ProvisioningProfileStore.DEFAULT_NAME,
-              ProvisioningProfileStore.class,
-              ProvisioningProfileStoreFactory.class),
           ToolchainDescriptor.of(
               SwiftPlatformsProvider.DEFAULT_NAME,
               SwiftPlatformsProvider.class,
