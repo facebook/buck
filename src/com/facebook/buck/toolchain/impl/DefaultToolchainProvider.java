@@ -16,13 +16,7 @@
 
 package com.facebook.buck.toolchain.impl;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
-import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
-import com.facebook.buck.android.toolchain.impl.DxToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
@@ -77,14 +71,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   ImmutableList<ToolchainDescriptor<?>> DEFAULT_TOOLCHAIN_DESCRIPTORS =
       ImmutableList.of(
           ToolchainDescriptor.of(
-              AndroidLegacyToolchain.DEFAULT_NAME,
-              AndroidLegacyToolchain.class,
-              DefaultAndroidLegacyToolchainFactory.class),
-          ToolchainDescriptor.of(
-              AndroidSdkLocation.DEFAULT_NAME,
-              AndroidSdkLocation.class,
-              AndroidSdkLocationFactory.class),
-          ToolchainDescriptor.of(
               AndroidNdk.DEFAULT_NAME, AndroidNdk.class, AndroidNdkFactory.class),
           ToolchainDescriptor.of(
               NdkCxxPlatformsProvider.DEFAULT_NAME,
@@ -100,8 +86,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
               CxxPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class),
-          ToolchainDescriptor.of(
-              DxToolchain.DEFAULT_NAME, DxToolchain.class, DxToolchainFactory.class),
           ToolchainDescriptor.of(
               JavaCxxPlatformProvider.DEFAULT_NAME,
               JavaCxxPlatformProvider.class,
