@@ -126,9 +126,15 @@ public class Console {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
 
-  /** Prints error message to console in red, also sends a warning to log */
+  /** Prints error message to console in red, also logs stacktrace but does not display it */
   public void printFailure(Throwable t, String failureMessage) {
     LOG.warn(t, failureMessage);
     ansi.printlnHighlightedFailureText(stdErr, failureMessage);
+  }
+
+  /** Prints error message to console in red, logs and displays stacktrace */
+  public void printFailureWithStacktrace(Throwable t, String failureMessage) {
+    printFailure(t, failureMessage);
+    t.printStackTrace(stdErr);
   }
 }

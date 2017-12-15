@@ -403,20 +403,22 @@ public final class Main {
               initTimestamp,
               ImmutableList.copyOf(args));
     } catch (InterruptedException | ClosedByInterruptException e) {
-      // We're about to exit, so it's acceptable to swallow interrupts here.
       exitCode = ExitCode.SIGNAL_INTERRUPT;
-      LOG.debug(e, "Interrupted");
+      // Interrupts are usually triggered by user, so do not display anything to the console -
+      // this behavior is expected
+      LOG.info(e, "Execution of the command was interrupted (SIGINT)");
     } catch (IOException e) {
       if (e.getMessage().startsWith("No space left on device")) {
         exitCode = ExitCode.FATAL_DISK_FULL;
         console.printBuildFailure(e.getMessage());
       } else {
         exitCode = ExitCode.FATAL_IO;
-        LOG.error(e);
+        console.printFailureWithStacktrace(e, e.getMessage());
       }
     } catch (OutOfMemoryError e) {
       exitCode = ExitCode.FATAL_OOM;
-      LOG.error(e, "Out of memory");
+      console.printFailureWithStacktrace(
+          e, "Buck ran out of memory, you may consider increasing heap size with java args");
     } catch (BuildFileParseException e) {
       exitCode = ExitCode.PARSE_ERROR;
       console.printBuildFailure(e.getHumanReadableErrorMessage());
@@ -436,7 +438,7 @@ public final class Main {
       LOG.warn(e, "Fallout because buck was already dying");
     } catch (Throwable t) {
       exitCode = ExitCode.FATAL_GENERIC;
-      LOG.error(t, "Uncaught exception at top level");
+      console.printFailureWithStacktrace(t, "UNKNOWN ERROR: " + t.getMessage());
     } finally {
       LOG.debug("Done.");
       LogConfig.flushLogs();
