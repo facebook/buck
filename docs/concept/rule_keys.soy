@@ -22,7 +22,7 @@
     </p>
     <p>
       RuleKeys are used to encapsulate all of the factors which may contribute to the output of a BuildRule into a single value - a hashcode.
-      If any RuleKey of a BuildRule has not changed, the output of that BuildRule cannot have changed.
+      If the RuleKey of a BuildRule has not changed, the output of that BuildRule cannot have changed.
     <p>
     <p>
       The goal of the RuleKeys is to help buck minimise the amount of BuildRules that need to be built locally on each buck run.
