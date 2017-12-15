@@ -62,7 +62,7 @@ import java.util.Map;
  * DexClassLoader instance which loads the given DexFiles. To unload a DexFile, the entire delegate
  * DexClassLoader is dropped and a new one is built.
  */
-class DelegatingClassLoader extends ClassLoader {
+public class DelegatingClassLoader extends ClassLoader {
 
   private static final String TAG = "DelegatingCL";
   private File mDexOptDir;
@@ -89,7 +89,7 @@ class DelegatingClassLoader extends ClassLoader {
   }
 
   /** @return (and potentially create) an instance of DelegatingClassLoader */
-  static DelegatingClassLoader getInstance() {
+  public static DelegatingClassLoader getInstance() {
     if (sInstalledClassLoader == null) {
       Log.d(TAG, "Installing DelegatingClassLoader");
       final ClassLoader parent = DelegatingClassLoader.class.getClassLoader();
