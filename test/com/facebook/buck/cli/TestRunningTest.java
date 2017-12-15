@@ -381,6 +381,7 @@ public class TestRunningTest {
     Element passResultEl = (Element) resultsList.item(0);
     assertEquals(passResultEl.getAttribute("name"), "passTest");
     assertEquals(passResultEl.getAttribute("time"), "5000");
+    assertEquals(passResultEl.getAttribute("status"), "PASS");
     checkXmlTextContents(passResultEl, "message", "");
     checkXmlTextContents(passResultEl, "stacktrace", "");
 
@@ -389,6 +390,7 @@ public class TestRunningTest {
     Element failResultEl1 = (Element) resultsList.item(1);
     assertEquals(failResultEl1.getAttribute("name"), "failWithMsg");
     assertEquals(failResultEl1.getAttribute("time"), "7000");
+    assertEquals(failResultEl1.getAttribute("status"), "FAIL");
     checkXmlTextContents(failResultEl1, "message", "Index out of bounds!");
     checkXmlTextContents(failResultEl1, "stacktrace", "Stacktrace");
 
@@ -396,6 +398,7 @@ public class TestRunningTest {
     Element failResultEl2 = (Element) resultsList.item(2);
     assertEquals(failResultEl2.getAttribute("name"), "failNoMsg");
     assertEquals(failResultEl2.getAttribute("time"), "4000");
+    assertEquals(failResultEl2.getAttribute("status"), "PASS");
     checkXmlTextContents(failResultEl2, "message", "");
     checkXmlTextContents(failResultEl2, "stacktrace", "");
   }
