@@ -42,6 +42,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
@@ -591,6 +592,9 @@ public class ProjectWorkspace {
       } catch (CommandLineException e) {
         stderr.println(e.getMessage());
         exitCode = ExitCode.COMMANDLINE_ERROR;
+      } catch (BuildFileParseException e) {
+        stderr.println(e.getHumanReadableErrorMessage());
+        exitCode = ExitCode.PARSE_ERROR;
       }
 
       return new ProcessResult(

@@ -90,7 +90,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
@@ -340,8 +339,7 @@ public class BuildCommand extends AbstractCommand {
     try {
       graphs = buildCommand.createGraphs(params, executor, Optional.empty());
     } catch (ActionGraphCreationException e) {
-      params.getConsole().printBuildFailure(e.getMessage());
-      throw new RuntimeException(e);
+      throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
 
     return buildCommand.computeDistBuildState(params, graphs, executor).getFirst();
@@ -451,7 +449,7 @@ public class BuildCommand extends AbstractCommand {
     // As such, we have to get the result of createTargetGraph() before we can do this check.
     if (outputPathForSingleBuildTarget != null
         && targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
-      throw new ActionGraphCreationException(
+      throw new CommandLineException(
           String.format(
               "When using %s you must specify exactly one build target, but you specified %s",
               OUT_LONG_ARG, targetGraphAndBuildTargets.getBuildTargets()));
@@ -886,7 +884,7 @@ public class BuildCommand extends AbstractCommand {
     if (buckBinary == null) {
       String gitHash = System.getProperty(BUCK_GIT_COMMIT_KEY, null);
       if (gitHash == null) {
-        throw new HumanReadableException(
+        throw new CommandLineException(
             String.format(
                 "Property [%s] is not set and the command line flag [%s] was not passed.",
                 BUCK_GIT_COMMIT_KEY, BUCK_BINARY_STRING_ARG));
@@ -897,7 +895,7 @@ public class BuildCommand extends AbstractCommand {
 
     Path binaryPath = Paths.get(buckBinary);
     if (!Files.isRegularFile(binaryPath)) {
-      throw new HumanReadableException(
+      throw new CommandLineException(
           String.format(
               "Buck binary [%s] passed under flag [%s] does not exist.",
               binaryPath, BUCK_BINARY_STRING_ARG));
@@ -907,7 +905,8 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void showOutputs(
-      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver) {
+      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver)
+      throws IOException {
     TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     SourcePathRuleFinder ruleFinder =
@@ -950,11 +949,7 @@ public class BuildCommand extends AbstractCommand {
     if (showJsonOutput || showFullJsonOutput) {
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
-      try {
-        ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
       String output = stringWriter.getBuffer().toString();
       params.getConsole().getStdOut().println(output);
     }
@@ -975,7 +970,7 @@ public class BuildCommand extends AbstractCommand {
               executor,
               parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
               parserConfig.getDefaultFlavorsMode());
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
   }
