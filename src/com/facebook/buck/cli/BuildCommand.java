@@ -88,6 +88,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -333,11 +334,7 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executor)
       throws InterruptedException, IOException {
     BuildCommand buildCommand = new BuildCommand(buildTargets);
-    boolean is_args = buildCommand.checkArguments(params);
-    if (!is_args) {
-      // TODO(buck_team) return ExitCode.COMMANDLINE_ERROR instead
-      throw new HumanReadableException("The build targets are invalid.");
-    }
+    buildCommand.assertArguments(params);
 
     ActionAndTargetGraphs graphs = null;
     try {
@@ -353,10 +350,7 @@ public class BuildCommand extends AbstractCommand {
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    boolean is_args = checkArguments(params);
-    if (!is_args) {
-      return ExitCode.COMMANDLINE_ERROR;
-    }
+    assertArguments(params);
 
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     try (CommandThreadManager pool =
@@ -373,9 +367,10 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  protected boolean checkArguments(CommandRunnerParams params) {
+  /** @throw CommandLineException if arguments provided are incorrect */
+  protected void assertArguments(CommandRunnerParams params) {
     if (!getArguments().isEmpty()) {
-      return true;
+      return;
     }
     String message = "Must specify at least one build target.";
     ImmutableSet<String> aliases = params.getBuckConfig().getAliases().keySet();
@@ -387,8 +382,7 @@ public class BuildCommand extends AbstractCommand {
               "%nTry building one of the following targets:%n%s",
               Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)));
     }
-    params.getConsole().printBuildFailure(message);
-    return false;
+    throw new CommandLineException(message);
   }
 
   protected ExitCode run(

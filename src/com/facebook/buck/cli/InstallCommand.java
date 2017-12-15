@@ -210,9 +210,7 @@ public class InstallCommand extends BuildCommand {
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    if (!checkArguments(params)) {
-      return ExitCode.COMMANDLINE_ERROR;
-    }
+    assertArguments(params);
 
     try (CommandThreadManager pool =
             new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));

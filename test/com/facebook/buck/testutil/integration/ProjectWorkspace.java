@@ -50,6 +50,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreStrings;
@@ -588,6 +589,9 @@ public class ProjectWorkspace {
         e.printStackTrace(stderr);
         exitCode = ExitCode.BUILD_ERROR;
         Threads.interruptCurrentThread();
+      } catch (CommandLineException e) {
+        stderr.println(e.getMessage());
+        exitCode = ExitCode.COMMANDLINE_ERROR;
       }
 
       return new ProcessResult(

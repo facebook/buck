@@ -106,6 +106,7 @@ import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.BuckIsDyingException;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
@@ -401,6 +402,9 @@ public final class Main {
       LOG.error(e, "Out of memory");
     } catch (BuildFileParseException e) {
       exitCode = ExitCode.PARSE_ERROR;
+      makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
+    } catch (CommandLineException e) {
+      exitCode = ExitCode.COMMANDLINE_ERROR;
       makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (HumanReadableException e) {
       exitCode = ExitCode.BUILD_ERROR;
