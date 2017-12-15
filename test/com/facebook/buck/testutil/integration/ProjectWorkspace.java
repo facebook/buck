@@ -571,15 +571,14 @@ public class ProjectWorkspace {
 
       Main main =
           knownBuildRuleTypesFactoryFactory == null
-              ? new Main(stdout, stderr, stdin)
-              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
+              ? new Main(stdout, stderr, stdin, context)
+              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory, context);
       ExitCode exitCode;
       try {
         exitCode =
             main.runMainWithExitCode(
                 new BuildId(),
                 repoRoot,
-                context,
                 sanizitedEnv,
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,

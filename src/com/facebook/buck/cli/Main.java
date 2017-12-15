@@ -256,6 +256,10 @@ public final class Main {
 
   private final Platform platform;
 
+  private Console console;
+
+  private Optional<NGContext> context;
+
   // Ignore changes to generated Xcode project files and editors' backup files
   // so we don't dump buckd caches on every command.
   private static final ImmutableSet<PathOrGlobMatcher> DEFAULT_IGNORE_GLOBS =
@@ -340,23 +344,37 @@ public final class Main {
       PrintStream stdOut,
       PrintStream stdErr,
       InputStream stdIn,
-      KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory) {
+      KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory,
+      Optional<NGContext> context) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
     this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
+    this.context = context;
+
+    // Create default console to start outputting errors immediately, if any
+    // console may be overridden with custom console later once we have enough information to
+    // construct it
+    this.console =
+        new Console(
+            Verbosity.STANDARD_INFORMATION,
+            stdOut,
+            stdErr,
+            new Ansi(
+                AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
+                    platform, getClientEnvironment(context))));
   }
 
   @VisibleForTesting
-  public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
-    this(stdOut, stdErr, stdIn, DefaultKnownBuildRuleTypesFactory::of);
+  public Main(
+      PrintStream stdOut, PrintStream stdErr, InputStream stdIn, Optional<NGContext> context) {
+    this(stdOut, stdErr, stdIn, DefaultKnownBuildRuleTypesFactory::of, context);
   }
 
   /* Define all error handling surrounding main command */
-  private void runMainThenExit(
-      String[] args, Optional<NGContext> context, final long initTimestamp) {
+  private void runMainThenExit(String[] args, final long initTimestamp) {
     installUncaughtExceptionHandler(context);
 
     Path projectRoot = Paths.get(".");
@@ -379,7 +397,6 @@ public final class Main {
           runMainWithExitCode(
               buildId,
               projectRoot,
-              context,
               clientEnvironment,
               commandMode,
               watchmanFreshInstanceAction,
@@ -392,7 +409,7 @@ public final class Main {
     } catch (IOException e) {
       if (e.getMessage().startsWith("No space left on device")) {
         exitCode = ExitCode.FATAL_DISK_FULL;
-        makeStandardConsole(context).printBuildFailure(e.getMessage());
+        console.printBuildFailure(e.getMessage());
       } else {
         exitCode = ExitCode.FATAL_IO;
         LOG.error(e);
@@ -402,13 +419,13 @@ public final class Main {
       LOG.error(e, "Out of memory");
     } catch (BuildFileParseException e) {
       exitCode = ExitCode.PARSE_ERROR;
-      makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
+      console.printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (CommandLineException e) {
       exitCode = ExitCode.COMMANDLINE_ERROR;
-      makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
+      console.printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (HumanReadableException e) {
       exitCode = ExitCode.BUILD_ERROR;
-      makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
+      console.printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (InterruptionFailedException e) { // Command could not be interrupted.
       exitCode = ExitCode.SIGNAL_INTERRUPT;
       if (context.isPresent()) {
@@ -427,16 +444,6 @@ public final class Main {
       // keep the VM alive.
       System.exit(exitCode.getCode());
     }
-  }
-
-  private Console makeStandardConsole(Optional<NGContext> context) {
-    return new Console(
-        Verbosity.STANDARD_INFORMATION,
-        stdOut,
-        stdErr,
-        new Ansi(
-            AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
-                platform, getClientEnvironment(context))));
   }
 
   private void setupLogging(
@@ -512,7 +519,6 @@ public final class Main {
 
   /**
    * @param buildId an identifier for this command execution.
-   * @param context an optional NGContext that is present if running inside a Nailgun server.
    * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
    * @param unexpandedCommandLineArgs command line arguments
    * @return an ExitCode representing the result of the command
@@ -521,7 +527,6 @@ public final class Main {
   public ExitCode runMainWithExitCode(
       BuildId buildId,
       Path projectRoot,
-      Optional<NGContext> context,
       ImmutableMap<String, String> clientEnvironment,
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
@@ -592,6 +597,9 @@ public final class Main {
 
     Verbosity verbosity = VerbosityParser.parse(args);
 
+    // Setup the console.
+    console = makeCustomConsole(context, verbosity, buckConfig);
+
     // Switch to async file logging, if configured. A few log samples will have already gone
     // via the regular file logger, but that's OK.
     boolean isDistributedBuild =
@@ -600,9 +608,6 @@ public final class Main {
       DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
       LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
     }
-
-    // Setup the console.
-    final Console console = makeCustomConsole(context, verbosity, buckConfig);
 
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
@@ -1683,8 +1688,8 @@ public final class Main {
   }
 
   public static void main(String[] args) {
-    new Main(System.out, System.err, System.in)
-        .runMainThenExit(args, Optional.empty(), System.nanoTime());
+    new Main(System.out, System.err, System.in, Optional.empty())
+        .runMainThenExit(args, System.nanoTime());
   }
 
   private static void markFdCloseOnExec(int fd) {
@@ -1882,8 +1887,8 @@ public final class Main {
     try (IdleKiller.CommandExecutionScope ignored =
         DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
       DaemonBootstrap.cancelGC();
-      new Main(context.out, context.err, context.in)
-          .runMainThenExit(context.getArgs(), Optional.of(context), System.nanoTime());
+      new Main(context.out, context.err, context.in, Optional.of(context))
+          .runMainThenExit(context.getArgs(), System.nanoTime());
     } finally {
       // Reclaim memory after a command finishes.
       DaemonBootstrap.scheduleGC();
