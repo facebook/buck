@@ -114,15 +114,15 @@ public interface RichStream<T> extends Stream<T> {
   }
 
   default ImmutableList<T> toImmutableList() {
-    return collect(MoreCollectors.toImmutableList());
+    return collect(ImmutableList.toImmutableList());
   }
 
   default ImmutableSet<T> toImmutableSet() {
-    return collect(MoreCollectors.toImmutableSet());
+    return collect(ImmutableSet.toImmutableSet());
   }
 
   default ImmutableSortedSet<T> toImmutableSortedSet(Comparator<? super T> ordering) {
-    return collect(MoreCollectors.toImmutableSortedSet(ordering));
+    return collect(ImmutableSortedSet.toImmutableSortedSet(ordering));
   }
 
   default Iterable<T> toOnceIterable() {

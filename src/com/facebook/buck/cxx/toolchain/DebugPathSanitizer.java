@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +62,7 @@ public abstract class DebugPathSanitizer {
   public ImmutableList<String> sanitizeFlags(Iterable<String> flags) {
     return StreamSupport.stream(flags.spliterator(), false)
         .map(sanitize(Optional.empty()))
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**

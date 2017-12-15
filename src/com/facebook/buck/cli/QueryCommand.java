@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.PerBuildState;
@@ -27,6 +26,8 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PatternsMatcher;
@@ -48,12 +49,16 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 public class QueryCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(QueryCommand.class);
+
+  /** String used to separate distinct sets when using `%Ss` in a query */
+  public static final String SET_SEPARATOR = "--";
 
   /**
    * Example usage:
@@ -99,7 +104,8 @@ public class QueryCommand extends AbstractCommand {
     return !outputAttributes.get().isEmpty();
   }
 
-  @Argument private List<String> arguments = new ArrayList<>();
+  @Argument(handler = QueryMultiSetOptionHandler.class)
+  private List<String> arguments = new ArrayList<>();
 
   @VisibleForTesting
   void setArguments(List<String> arguments) {
@@ -107,12 +113,10 @@ public class QueryCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Must specify at least the query expression"));
-      return 1;
+      throw new CommandLineException("must specify at least the query expression");
     }
 
     try (CommandThreadManager pool =
@@ -130,39 +134,66 @@ public class QueryCommand extends AbstractCommand {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());
       return formatAndRunQuery(params, env);
-    } catch (QueryException | BuildFileParseException e) {
+    } catch (QueryException e) {
       throw new HumanReadableException(e);
     }
   }
 
   @VisibleForTesting
-  int formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+  ExitCode formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
       throws IOException, InterruptedException, QueryException {
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());
     if (queryFormat.contains("%Ss")) {
       return runSingleQueryWithSet(params, env, queryFormat, formatArgs);
-    } else if (queryFormat.contains("%s")) {
+    }
+    if (queryFormat.contains("%s")) {
       return runMultipleQuery(params, env, queryFormat, formatArgs, shouldGenerateJsonOutput());
-    } else if (formatArgs.size() > 0) {
+    }
+    if (formatArgs.size() > 0) {
+      // TODO: buck_team: return ExitCode.COMMANDLINE_ERROR
       throw new HumanReadableException(
           "Must not specify format arguments without a %s or %Ss in the query");
-    } else {
-      return runSingleQuery(params, env, queryFormat);
     }
+    return runSingleQuery(params, env, queryFormat);
   }
 
   /** Format and evaluate the query using list substitution */
-  int runSingleQueryWithSet(
+  ExitCode runSingleQueryWithSet(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
       List<String> formatArgs)
       throws InterruptedException, QueryException, IOException {
-    String argsList =
-        Joiner.on(' ').join(Iterables.transform(formatArgs, input -> "'" + input + "'"));
-    String setRepresentation = "set(" + argsList + ")";
-    String formattedQuery = queryFormat.replace("%Ss", setRepresentation);
+    // No separators means 1 set, a single separator means 2 sets, etc
+    int numberOfSetsProvided = Iterables.frequency(formatArgs, SET_SEPARATOR) + 1;
+    int numberOfSetsRequested = StringUtils.countMatches(queryFormat, "%Ss");
+    if (numberOfSetsProvided != numberOfSetsRequested && numberOfSetsProvided > 1) {
+      String message =
+          String.format(
+              "Incorrect number of sets. Query uses `%%Ss` %d times but %d sets were given",
+              numberOfSetsRequested, numberOfSetsProvided);
+      throw new HumanReadableException(message);
+    }
+
+    // If they only provided one list as args, use that for every instance of `%Ss`
+    if (numberOfSetsProvided == 1) {
+      String formattedQuery = queryFormat.replace("%Ss", getSetRepresentation(formatArgs));
+      return runSingleQuery(params, env, formattedQuery);
+    }
+
+    List<String> unusedFormatArgs = formatArgs;
+    String formattedQuery = queryFormat;
+    while (formattedQuery.contains("%Ss")) {
+      int nextSeparatorIndex = unusedFormatArgs.indexOf(SET_SEPARATOR);
+      List<String> currentSet =
+          nextSeparatorIndex == -1
+              ? unusedFormatArgs
+              : unusedFormatArgs.subList(0, nextSeparatorIndex);
+      // +1 so we don't include the separator in the next list
+      unusedFormatArgs = unusedFormatArgs.subList(nextSeparatorIndex + 1, unusedFormatArgs.size());
+      formattedQuery = formattedQuery.replaceFirst("%Ss", getSetRepresentation(currentSet));
+    }
     return runSingleQuery(params, env, formattedQuery);
   }
 
@@ -170,7 +201,7 @@ public class QueryCommand extends AbstractCommand {
    * Evaluate multiple queries in a single `buck query` run. Usage: buck query <query format>
    * <input1> <input2> <...> <inputN>
    */
-  static int runMultipleQuery(
+  static ExitCode runMultipleQuery(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
@@ -178,12 +209,8 @@ public class QueryCommand extends AbstractCommand {
       boolean generateJsonOutput)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe(
-                  "Specify one or more input targets after the query expression format"));
-      return 1;
+      throw new CommandLineException(
+          "specify one or more input targets after the query expression format");
     }
 
     // Do an initial pass over the query arguments and parse them into their expressions so we can
@@ -211,10 +238,10 @@ public class QueryCommand extends AbstractCommand {
     } else {
       CommandHelper.printToConsole(params, queryResultMap);
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
-  int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
+  ExitCode runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
     ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
 
@@ -228,7 +255,7 @@ public class QueryCommand extends AbstractCommand {
     } else {
       CommandHelper.printToConsole(params, queryResult);
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private void printDotOutput(
@@ -308,6 +335,11 @@ public class QueryCommand extends AbstractCommand {
 
   public static String getEscapedArgumentsListAsString(List<String> arguments) {
     return Joiner.on(" ").join(Lists.transform(arguments, arg -> "'" + arg + "'"));
+  }
+
+  private static String getSetRepresentation(List<String> args) {
+    String argsList = Joiner.on(' ').join(Iterables.transform(args, input -> "'" + input + "'"));
+    return "set(" + argsList + ")";
   }
 
   static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {

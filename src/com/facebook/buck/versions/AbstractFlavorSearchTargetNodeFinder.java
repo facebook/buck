@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
@@ -42,7 +41,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 @SuppressWarnings(
-    "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
+    "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode
+                // not TargetNode<?, ?>
 abstract class AbstractFlavorSearchTargetNodeFinder {
 
   /** @return a map of nodes indexed by their "base" target. */
@@ -71,7 +71,7 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
     return getBaseTargetIndex()
         .values()
         .stream()
-        .collect(MoreCollectors.toImmutableMap(TargetNode::getBuildTarget, n -> n));
+        .collect(ImmutableMap.toImmutableMap(TargetNode::getBuildTarget, n -> n));
   }
 
   // Build the flavor map, which maps all unflavored targets to the flavors they have in the

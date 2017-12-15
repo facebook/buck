@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CellPathResolverView;
 import com.facebook.buck.rules.DefaultCellPathResolver;

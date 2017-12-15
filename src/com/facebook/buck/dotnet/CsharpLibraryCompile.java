@@ -22,10 +22,10 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,7 +80,7 @@ public class CsharpLibraryCompile extends ShellStep {
     args.addAll(
         srcs.stream()
             .map(input -> Escaper.escapeAsShellString(input.toAbsolutePath().toString()))
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     return args.build();
   }

@@ -56,5 +56,7 @@ public interface AndroidDevice {
 
   void killProcess(String processName) throws Exception;
 
+  void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception;
+
   String getSerialNumber();
 }

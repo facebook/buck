@@ -20,9 +20,10 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -32,10 +33,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -116,7 +117,7 @@ public class WorkerToolTest {
         workerToolBuilder.findImplicitDeps(), Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerTool.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
+        workerTool.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
         Joiner.on(' ').join(workerTool.getTool().getCommandPrefix(pathResolver)),
@@ -152,7 +153,7 @@ public class WorkerToolTest {
         workerToolBuilder.findImplicitDeps(), Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerTool.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
+        workerTool.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
         workerTool.getTool().getEnvironment(pathResolver),
@@ -184,6 +185,8 @@ public class WorkerToolTest {
     WorkerTool workerTool = workerToolBuilder.build(resolver);
 
     assertThat(
-        workerTool.getTool().getInputs(), Matchers.hasItem(exportFileRule.getSourcePathToOutput()));
+        BuildableSupport.deriveInputs(workerTool.getTool())
+            .collect(ImmutableList.toImmutableList()),
+        Matchers.hasItem(exportFileRule.getSourcePathToOutput()));
   }
 }

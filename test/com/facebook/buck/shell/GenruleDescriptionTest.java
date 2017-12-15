@@ -33,14 +33,13 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -56,7 +55,7 @@ public class GenruleDescriptionTest {
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
     GenruleDescription genruleDescription =
         new GenruleDescription(
-            new TestToolchainProvider(),
+            new ToolchainProviderBuilder().build(),
             FakeBuckConfig.builder().build(),
             new NoSandboxExecutionStrategy());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -103,7 +102,7 @@ public class GenruleDescriptionTest {
             .getExtraDeps()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test

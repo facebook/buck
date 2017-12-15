@@ -31,11 +31,13 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutorArgs;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
+import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.rules.keys.impl.ConfigRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
@@ -108,15 +110,16 @@ public abstract class DistBuildFactory {
       Optional<StampedeId> stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
-      DistBuildConfig distBuildConfig,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       BuildSlaveTimingStatsTracker timingStatsTracker,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
     // overridden with the local buck config (i.e. the build slave).
     ArtifactCacheFactory distBuildArtifactCacheFactory =
-        params.getArtifactCacheFactory().cloneWith(state.getRootCell().getBuckConfig());
+        params.getArtifactCacheFactory().cloneWith(state.getRemoteRootCellConfig());
 
     DistBuildSlaveExecutor executor =
         new DistBuildSlaveExecutor(
@@ -130,7 +133,7 @@ public abstract class DistBuildFactory {
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
                 .setRuleKeyConfiguration(
-                    ConfigRuleKeyConfigurationFactory.create(state.getRootCell().getBuckConfig()))
+                    ConfigRuleKeyConfigurationFactory.create(state.getRemoteRootCellConfig()))
                 .setConsole(params.getConsole())
                 .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)
@@ -143,11 +146,12 @@ public abstract class DistBuildFactory {
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
                 .setDistBuildService(service)
-                .setDistBuildConfig(distBuildConfig)
                 .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
                 .setTimingStatsTracker(timingStatsTracker)
                 .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
                 .setBuildRuleFinishedPublisher(buildRuleFinishedPublisher)
+                .setUnexpectedSlaveCacheMissTracker(unexpectedSlaveCacheMissTracker)
+                .setHealthCheckStatsTracker(healthCheckStatsTracker)
                 .build());
     return executor;
   }

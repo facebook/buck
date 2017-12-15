@@ -22,6 +22,8 @@ import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -58,7 +60,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -156,8 +157,8 @@ public class AppleDescriptions {
                     .orElse(Stream.empty())
                     .distinct() // allow duplicate entries as long as they map to the same path
                     .collect(
-                        MoreCollectors.toImmutableSortedMap(
-                            Map.Entry::getKey, Map.Entry::getValue)));
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue)));
 
     return headersMapBuilder.build();
   }
@@ -253,8 +254,8 @@ public class AppleDescriptions {
                             .stream())
                     .distinct() // allow duplicate entries as long as they map to the same path
                     .collect(
-                        MoreCollectors.toImmutableSortedMap(
-                            Map.Entry::getKey, Map.Entry::getValue)))
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue)))
             .build();
 
     ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
@@ -442,7 +443,7 @@ public class AppleDescriptions {
               coreDataModelArgs
                   .stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
-                  .collect(MoreCollectors.toImmutableSet())));
+                  .collect(ImmutableSet.toImmutableSet())));
     }
   }
 
@@ -475,7 +476,7 @@ public class AppleDescriptions {
               sceneKitAssetsArgs
                   .stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
-                  .collect(MoreCollectors.toImmutableSet())));
+                  .collect(ImmutableSet.toImmutableSet())));
     }
   }
 
@@ -550,7 +551,7 @@ public class AppleDescriptions {
                   unstrippedBinaryRule
                       .getAppleDebugSymbolDeps()
                       .map(BuildRule::getSourcePathToOutput)
-                      .collect(MoreCollectors.toImmutableSortedSet()),
+                      .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
                   AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem));
             });
   }
@@ -576,6 +577,7 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       boolean dryRunCodeSigning,
       boolean cacheable,
+      boolean verifyResources,
       AppleAssetCatalog.ValidationType assetCatalogValidation,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
@@ -761,7 +763,7 @@ public class AppleDescriptions {
                             .concat(frameworks.stream())
                             .filter(BuildTargetSourcePath.class)
                             .map(BuildTargetSourcePath::getTarget)
-                            .collect(MoreCollectors.toImmutableSet())))
+                            .collect(ImmutableSet.toImmutableSet())))
                 .addAll(Optionals.toStream(appleDsym).iterator())
                 .addAll(extraBinaries)
                 .build());
@@ -794,6 +796,7 @@ public class AppleDescriptions {
         provisioningProfileStore,
         dryRunCodeSigning,
         cacheable,
+        verifyResources,
         codesignFlags,
         codesignAdhocIdentity,
         ibtoolModuleFlag);
@@ -898,7 +901,7 @@ public class AppleDescriptions {
                 .get()
                 .stream()
                 .filter(notOriginalBinaryRule)
-                .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())));
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   private static ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(

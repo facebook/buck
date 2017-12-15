@@ -17,13 +17,12 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.jvm.core.HasJavaAbi;
-import com.facebook.buck.jvm.java.abi.MoreElements;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -70,7 +69,7 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
             .map(Optional::get)
             .filter(rule -> rule instanceof HasJavaAbi)
             .map(rule -> (HasJavaAbi) rule)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     targetsRequiredForSourceOnlyAbi =
         sourceOnlyAbiClasspaths
@@ -82,7 +81,7 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
             .map(BuildRule::getBuildTarget)
             .map(BuildTarget::getUnflavoredBuildTarget)
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     abiJarClasspathRules =
         fullJarClasspathRules
@@ -91,7 +90,7 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
                 rule ->
                     targetsRequiredForSourceOnlyAbi.contains(
                         rule.getBuildTarget().getUnflavoredBuildTarget().toString()))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
   }
 
   @Override

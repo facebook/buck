@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -92,7 +91,7 @@ public final class IjModuleGraphFactory {
                     targetNode ->
                         shouldConvertToIjModule(projectConfig.getProjectRoot(), targetNode)))
             .collect(
-                MoreCollectors.toImmutableListMultimap(
+                ImmutableListMultimap.toImmutableListMultimap(
                     targetNode -> targetNode.getBuildTarget().getBasePath(),
                     targetNode -> targetNode));
 
@@ -136,7 +135,7 @@ public final class IjModuleGraphFactory {
             .entrySet()
             .stream()
             .collect(
-                MoreCollectors.toImmutableMap(
+                ImmutableMap.toImmutableMap(
                     Map.Entry::getKey,
                     pathWithTargetNode ->
                         aggregationModuleFactory.createAggregationModule(
@@ -202,7 +201,7 @@ public final class IjModuleGraphFactory {
               return elements.stream();
             })
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**

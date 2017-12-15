@@ -120,7 +120,6 @@ class BuckTest(unittest.TestCase):
             self.watchman_client,
             False,              # watchman_glob_stat_results
             False,              # watchman_use_glob_generator
-            False,              # use_mercurial_glob
             self.project_import_whitelist,
             includes or [],
             **kwargs)
@@ -581,6 +580,104 @@ class BuckTest(unittest.TestCase):
         self.assertEquals(
             get_config_from_results(result),
             {'hello': {'world': 'foo', 'bar': None, 'goo': None}})
+
+    def test_struct_is_available(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                's = struct(name="foo")',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "s")',
+                'foo_rule(',
+                '  name=s.name,',
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'foo')
+
+    def test_provider_is_available(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'Info = provider()',
+                'info = Info(name="foo")',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "info")',
+                'foo_rule(',
+                '  name=info.name,',
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'foo')
+
+    def test_package_name_is_available(self):
+        package_dir = os.path.join(self.project_root, 'pkg')
+        os.makedirs(package_dir)
+        build_file = ProjectFile(
+            self.project_root,
+            path='pkg/BUCK',
+            contents=(
+                'foo_rule(',
+                '  name=package_name(),',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'pkg')
+
+    def test_package_name_in_extension_returns_build_file_package(self):
+        package_dir = os.path.join(self.project_root, 'pkg')
+        os.makedirs(package_dir)
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'def foo():',
+                '  return package_name()',
+            ))
+        self.write_file(extension_file)
+        build_file = ProjectFile(
+            self.project_root,
+            path='pkg/BUCK',
+            contents=(
+                'load("//:ext.bzl", "foo")',
+                'foo_rule(',
+                '  name=foo(),',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'pkg')
 
     def test_add_build_file_dep(self):
         """
@@ -1072,6 +1169,38 @@ class BuckTest(unittest.TestCase):
             with self.assertRaises(KeyError) as e:
                 processor.process(self.project_root, None, 'BUCK_fail', [])
             self.assertEqual(e.exception.message, expected_msg)
+
+    def test_fail_function_throws_an_error(self):
+        build_file = ProjectFile(
+            root=self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'fail("expected error")',
+            )
+        )
+        self.write_files(build_file)
+
+        processor = self.create_build_file_processor()
+
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(AssertionError, "expected error"):
+                processor.process(self.project_root, None, 'BUCK_fail', [])
+
+    def test_fail_function_includes_attribute_information(self):
+        build_file = ProjectFile(
+            root=self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'fail("error", "foo")',
+            )
+        )
+        self.write_files(build_file)
+
+        processor = self.create_build_file_processor()
+
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(AssertionError, "attribute foo: error"):
+                processor.process(self.project_root, None, 'BUCK_fail', [])
 
     def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
         defs_file = ProjectFile(

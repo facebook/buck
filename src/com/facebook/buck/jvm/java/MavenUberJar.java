@@ -33,7 +33,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -128,7 +127,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .map(pathResolver::getAbsolutePath)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override

@@ -18,8 +18,8 @@ package com.facebook.buck.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -54,7 +54,7 @@ public class FileSystemMap<T> {
    * @param <T>
    */
   public interface ValueLoader<T> {
-    T load(Path path);
+    T load(PathFragment path);
   }
 
   /**
@@ -66,7 +66,7 @@ public class FileSystemMap<T> {
    */
   @VisibleForTesting
   static class Entry<T> {
-    Map<Path, Entry<T>> subLevels = new HashMap<>();
+    Map<String, Entry<T>> subLevels = new HashMap<>();
 
     // The value of the Entry is the actual value the node is associated with:
     //   - If this is a leaf node, value is never null.
@@ -75,33 +75,34 @@ public class FileSystemMap<T> {
     //       Otherwise, the node exists only as a mean to reach its children/leaves and will have
     //       a `null` value.
     private volatile @Nullable T value;
-    private final Path key;
+    private final PathFragment key;
 
-    Entry(Path path) {
+    private Entry(PathFragment path) {
       // We're creating an empty node here, so it is associated with no value.
-      this.key = path;
-      this.value = null;
+      this(path, null);
     }
 
-    public Path getKey() {
+    private Entry(PathFragment path, @Nullable T value) {
+      this.key = path;
+      this.value = value;
+    }
+
+    @VisibleForTesting
+    PathFragment getKey() {
       return key;
     }
 
-    Entry(Path path, @Nullable T value) {
-      this.key = path;
+    private void set(@Nullable T value) {
       this.value = value;
     }
 
-    void set(@Nullable T value) {
-      this.value = value;
-    }
-
+    @VisibleForTesting
     @Nullable
     T getWithoutLoading() {
       return this.value;
     }
 
-    T load(ValueLoader<T> loader) {
+    private void load(ValueLoader<T> loader) {
       if (this.value == null) {
         synchronized (this) {
           if (this.value == null) {
@@ -109,16 +110,18 @@ public class FileSystemMap<T> {
           }
         }
       }
-      return this.value;
     }
 
+    @VisibleForTesting
     int size() {
       return subLevels.size();
     }
   }
 
-  @VisibleForTesting final Entry<T> root = new Entry<>(Paths.get(""));
-  @VisibleForTesting final ConcurrentHashMap<Path, Entry<T>> map = new ConcurrentHashMap<>();
+  @VisibleForTesting final Entry<T> root = new Entry<>(PathFragment.create(""));
+
+  @VisibleForTesting
+  final ConcurrentHashMap<PathFragment, Entry<T>> map = new ConcurrentHashMap<>();
 
   private final ValueLoader<T> loader;
 
@@ -131,13 +134,17 @@ public class FileSystemMap<T> {
    *
    * @param path The path to store.
    * @param value The value to associate to the given path.
-   * @return The entry just created.
    */
   public void put(Path path, T value) {
-    Entry<T> maybe = map.get(path);
+    put(PathFragments.pathToFragment(path), value);
+  }
+
+  /** @see #put(Path, Object) */
+  public void put(PathFragment fragment, T value) {
+    Entry<T> maybe = map.get(fragment);
     if (maybe == null) {
       synchronized (root) {
-        maybe = map.computeIfAbsent(path, this::putEntry);
+        maybe = map.computeIfAbsent(fragment, this::putEntry);
       }
     }
     maybe.set(value);
@@ -145,12 +152,12 @@ public class FileSystemMap<T> {
 
   // Creates the intermediate (and/or the leaf node) if needed and returns the leaf associated
   // with the given path.
-  private Entry<T> putEntry(Path path) {
+  private Entry<T> putEntry(PathFragment path) {
     synchronized (root) {
       Entry<T> parent = root;
-      Path relPath = parent.getKey();
-      for (Path p : path) {
-        relPath = Paths.get(relPath.toString(), p.toString());
+      PathFragment relPath = parent.getKey();
+      for (String p : path.getSegments()) {
+        relPath = relPath.getRelative(p);
         // Create the intermediate node only if it's missing.
         if (!parent.subLevels.containsKey(p)) {
           Entry<T> newEntry = new Entry<>(relPath);
@@ -167,10 +174,14 @@ public class FileSystemMap<T> {
   /**
    * Removes the given path.
    *
-   * <p>Removing a path involves the following: - all the child nodes of the given path are
-   * discarded as well. - all the paths upstream lose their value. - each path upstream will be
-   * removed if after the removal of the leaf the node is left with no children (that is, it has
-   * become a stump).
+   * <p>Removing a path involves the following:
+   *
+   * <ul>
+   *   <li>all the child nodes of the given path are discarded as well.
+   *   <li>all the paths upstream lose their value.
+   *   <li>each path upstream will be removed if after the removal of the leaf the node is left with
+   *       no children (that is, it has become a stump).
+   * </ul>
    *
    * @param path The path specifying the branch to remove.
    */
@@ -182,7 +193,7 @@ public class FileSystemMap<T> {
       // Walk the tree to fetch the node requested by the path, or the closest intermediate node.
       boolean partial = false;
       for (Path p : path) {
-        entry = entry.subLevels.get(p);
+        entry = entry.subLevels.get(p.toString());
         // We're trying to remove a path that doesn't exist, no point in going deeper.
         // Break and proceed to remove whatever path we found so far.
         if (entry == null) {
@@ -207,27 +218,27 @@ public class FileSystemMap<T> {
         if (partial) {
           map.remove(leaf.key);
           if (leaf.size() == 0 && path != null && !stack.empty()) {
-            stack.peek().subLevels.remove(path.getFileName());
+            stack.peek().subLevels.remove(path.getFileName().toString());
           } else {
             leaf.set(null);
           }
         } else {
           removeSubtreeFromMap(leaf);
-          stack.peek().subLevels.remove(path.getFileName());
+          stack.peek().subLevels.remove(path.getFileName().toString());
         }
 
         // Plus, check everything above in order to remove unused stumps.
         while (!stack.empty()) {
           // This will never throw NPE because if it does, then the stack was empty at the beginning
           // of the iteration (we went upper than the root node, which doesn't make sense).
-          path = path.getParent();
+          path = Preconditions.checkNotNull(path).getParent();
           Entry<T> current = stack.pop();
 
           // Remove only if it's a cached entry.
           map.remove(current.key);
 
           if (current.size() == 0 && path != null && !stack.empty()) {
-            stack.peek().subLevels.remove(path.getFileName());
+            stack.peek().subLevels.remove(path.getFileName().toString());
           } else {
             current.set(null);
           }
@@ -258,27 +269,33 @@ public class FileSystemMap<T> {
    * @return The value associated with the path.
    */
   public T get(Path path) {
-    Entry<T> maybe = map.get(path);
+    return get(PathFragments.pathToFragment(path));
+  }
+
+  /** @see #get(Path) */
+  public T get(PathFragment fragment) {
+    Entry<T> entry = map.get(fragment);
     // get() and remove() shouldn't overlap, but for performance reason (to hold the root lock for
     // less time), we opted for allowing overlap provided that *the entry creation is atomic*.
     // That is, the entry creation is guaranteed to not overlap with anything else, but the entry
     // filling is not: this is because the caller of the get() will still need to get a value,
     // even if the entry is removed meanwhile.
-    if (maybe == null) {
+    if (entry == null) {
       synchronized (root) {
-        maybe = map.computeIfAbsent(path, this::putEntry);
+        entry = map.computeIfAbsent(fragment, this::putEntry);
       }
     }
     // Maybe here we receive a request for getting an intermediate node (a folder) whose
     // value was never computed before (or has been removed).
-    if (maybe.value == null) {
+    if (entry.value == null) {
       // It is possible that maybe.load() will call back into other methods on this FileSystemMap.
       // Those methods might acquire the root lock. If there's any flow that calls maybe.load()
       // while already holding that lock, there's likely a flow w/ lock inversion.
       Preconditions.checkState(!Thread.holdsLock(root));
-      maybe.load(loader);
+      entry.load(loader);
     }
-    return maybe.value;
+    return Preconditions.checkNotNull(
+        entry.value, "Should either be loaded or not null in the first place.");
   }
 
   /**
@@ -289,7 +306,13 @@ public class FileSystemMap<T> {
    */
   @Nullable
   public T getIfPresent(Path path) {
-    Entry<T> entry = map.get(path);
+    return getIfPresent(PathFragments.pathToFragment(path));
+  }
+
+  /** @see #getIfPresent(Path) */
+  @Nullable
+  public T getIfPresent(PathFragment fragment) {
+    Entry<T> entry = map.get(fragment);
     return entry == null ? null : entry.value;
   }
 
@@ -301,8 +324,9 @@ public class FileSystemMap<T> {
     ImmutableMap.Builder<Path, T> builder = ImmutableMap.builder();
     map.forEach(
         (k, v) -> {
-          if (v.value != null) {
-            builder.put(k, v.value);
+          T value = v.value;
+          if (value != null) {
+            builder.put(PathFragments.fragmentToPath(k), value);
           }
         });
     return builder.build();

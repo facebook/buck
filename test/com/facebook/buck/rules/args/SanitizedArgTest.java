@@ -68,14 +68,14 @@ public class SanitizedArgTest {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
-    SanitizedArg arg = new SanitizedArg(Functions.constant("sanitized"), "unsanitized");
+    SanitizedArg arg = SanitizedArg.create(Functions.constant("sanitized"), "unsanitized");
     assertThat(Arg.stringifyList(arg, pathResolver), Matchers.contains("unsanitized"));
   }
 
   @Test
   public void appendToRuleKey() {
-    SanitizedArg arg1 = new SanitizedArg(Functions.constant("sanitized"), "unsanitized 1");
-    SanitizedArg arg2 = new SanitizedArg(Functions.constant("sanitized"), "unsanitized 2");
+    SanitizedArg arg1 = SanitizedArg.create(Functions.constant("sanitized"), "unsanitized 1");
+    SanitizedArg arg2 = SanitizedArg.create(Functions.constant("sanitized"), "unsanitized 2");
     RuleKeyBuilder<HashCode> builder1 = createRuleKeyBuilder();
     RuleKeyBuilder<HashCode> builder2 = createRuleKeyBuilder();
     AlterRuleKeys.amendKey(builder1, arg1);

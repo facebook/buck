@@ -17,6 +17,9 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
+import com.google.common.base.Preconditions;
+import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -25,14 +28,14 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.Elements;
+import javax.lang.model.util.ElementFilter;
 import org.objectweb.asm.Opcodes;
 
 /** Computes the access flags (see JVMS8 4.1, 4.5, 4.6) for {@link Element}s. */
 public final class AccessFlags {
-  private final Elements elements;
+  private final ElementsExtended elements;
 
-  public AccessFlags(Elements elements) {
+  public AccessFlags(ElementsExtended elements) {
     this.elements = elements;
   }
 
@@ -68,8 +71,18 @@ public final class AccessFlags {
     try {
       kind = typeElement.getKind();
     } catch (CannotInferException e) {
-      // We should never call this method with an inferred type.
-      throw new AssertionError("Unexpected call to getAccessFlags with an inferred type.", e);
+      Preconditions.checkState(typeElement.getNestingKind().isNested());
+
+      // We cannot know the access flags of an inferred type element. However, the only
+      // flag that matters in the InnerClasses table is ACC_STATIC. When reading the
+      // InnerClasses table, the compiler may create ClassSymbols for types it hasn't
+      // seen before, and the absence of ACC_STATIC will cause it to mark those
+      // ClassSymbols as inner classes, and it will not correct that when later loading
+      // the class from its definitive class file. However, it is safe to mark
+      // everything with ACC_STATIC, because the compiler *will* properly update
+      // non-static classes when loading their definitive class files.
+      // (http://hg.openjdk.java.net/jdk8u/jdk8u/langtools/file/9986bf97a48d/src/share/classes/com/sun/tools/javac/jvm/ClassReader.java#l2272)
+      return Opcodes.ACC_STATIC;
     }
 
     int result = getCommonAccessFlags(typeElement);
@@ -84,11 +97,9 @@ public final class AccessFlags {
         result = result | Opcodes.ACC_SUPER; // JVMS 4.1
         result = result | Opcodes.ACC_ENUM;
 
-        // Enums have this lovely property that you can't declare them abstract in source, even
-        // if they have abstract methods or incompletely implemented interfaces, yet the class
-        // file will have ACC_ABSTRACT in that case. Because it's a pain to figure out if an
-        // enum is abstract (and impossible in the no-deps case), and you can't instantiate or
-        // subclass one directly anyway, we just leave the flag off.
+        if (isAbstractEnum(typeElement)) {
+          result = result & ~Opcodes.ACC_FINAL | Opcodes.ACC_ABSTRACT;
+        }
         break;
       case INTERFACE:
         // No ACC_SUPER here per JVMS 4.1
@@ -102,6 +113,29 @@ public final class AccessFlags {
     }
 
     return result;
+  }
+
+  private boolean isAbstractEnum(TypeElement typeElement) {
+    List<ExecutableElement> methods = ElementFilter.methodsIn(elements.getAllMembers(typeElement));
+
+    return methods
+        .stream()
+        .filter(
+            it ->
+                !isOverridden(
+                    it, elements.getAllMethods(typeElement, it.getSimpleName()), typeElement))
+        .anyMatch(it -> it.getModifiers().contains(Modifier.ABSTRACT));
+  }
+
+  private boolean isOverridden(
+      ExecutableElement overridden, List<ExecutableElement> methods, TypeElement inType) {
+    for (ExecutableElement overriding : methods) {
+      if (elements.overrides(overriding, overridden, inType)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

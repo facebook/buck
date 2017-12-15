@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -59,7 +60,7 @@ abstract class AbstractElfClearProgramHeadersStep implements Step {
         buffer.put((byte) 0);
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

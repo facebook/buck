@@ -1,17 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_immutables_library(
+buck_module(
     name = "go",
     srcs = glob(["*.java"]),
-    resources = [
-        "LICENSE",
-        "testmaingen.go",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/rules:types",
-        "//test/com/facebook/buck/go/...",
-    ],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
@@ -24,6 +16,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:command_tool",
@@ -39,6 +32,7 @@ java_immutables_library(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
@@ -46,5 +40,13 @@ java_immutables_library(
         "//src/com/facebook/buck/versions:types",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    resources = [
+        "LICENSE",
+        "testmaingen.go.in",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:main",
+        "//test/com/facebook/buck/go/...",
     ],
 )

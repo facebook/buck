@@ -21,7 +21,6 @@ import com.facebook.buck.io.windowspipe.WindowsNamedPipe;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ForwardingProcessListener;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.RichStream;
@@ -41,7 +40,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /** Factory that is responsible for creating instances of {@link Watchman}. */
 public class WatchmanFactory {
@@ -49,11 +47,15 @@ public class WatchmanFactory {
   public static final String NULL_CLOCK = "c:0:0";
   public static final Watchman NULL_WATCHMAN =
       new Watchman(
-          ImmutableMap.of(),
-          ImmutableSet.of(),
-          ImmutableMap.of(),
-          Optional.empty(),
-          Optional.empty());
+          /* projectWatches */ ImmutableMap.of(),
+          /* capabilities */ ImmutableSet.of(),
+          /* clockIds */ ImmutableMap.of(),
+          /* transportPath */ Optional.empty()) {
+        @Override
+        public WatchmanClient createClient() throws IOException {
+          throw new IOException("NULL_WATCHMAN cannot create a WatchmanClient.");
+        }
+      };
   static final ImmutableSet<String> REQUIRED_CAPABILITIES = ImmutableSet.of("cmd-watch-project");
   static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
       ImmutableMap.<String, Capability>builder()
@@ -66,14 +68,34 @@ public class WatchmanFactory {
           .build();
   static final Path WATCHMAN = Paths.get("watchman");
   private static final int WATCHMAN_CLOCK_SYNC_TIMEOUT = 100;
-  private static final Logger LOG = Logger.get(Watchman.class);
+  private static final Logger LOG = Logger.get(WatchmanFactory.class);
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
   // Crawling a large repo in `watch-project` might take a long time on a slow disk.
   private static final long DEFAULT_COMMAND_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(45);
+  private final InitialWatchmanClientFactory initialWatchmanClientFactory;
 
-  private WatchmanFactory() {}
+  /** Exists to allow us to inject behavior in unit tests. */
+  interface InitialWatchmanClientFactory {
+    /**
+     * This is used to create a {@link WatchmanClient} after the socket path to Watchman has been
+     * found. This client will be passed to {@link #getWatchman} to create a {@link Watchman} object
+     * that reflects the capabilities, clock ids, etc. of the Watchman instance that is running
+     * locally.
+     */
+    WatchmanClient tryCreateClientToFetchInitialWatchmanData(
+        Path socketPath, Console console, Clock clock) throws IOException;
+  }
 
-  public static Watchman build(
+  public WatchmanFactory() {
+    this((socketPath, console, clock) -> createWatchmanClient(socketPath, console, clock));
+  }
+
+  public WatchmanFactory(InitialWatchmanClientFactory factory) {
+    this.initialWatchmanClientFactory = factory;
+  }
+
+  /** @return new instance of {@link Watchman} using the specified params. */
+  public Watchman build(
       ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> env,
       Console console,
@@ -82,7 +104,6 @@ public class WatchmanFactory {
       throws InterruptedException {
     return build(
         new ListeningProcessExecutor(),
-        localWatchmanConnector(console, clock),
         projectWatchList,
         env,
         new ExecutableFinder(),
@@ -92,10 +113,9 @@ public class WatchmanFactory {
   }
 
   @VisibleForTesting
-  @SuppressWarnings("PMD.PrematureDeclaration")
-  static Watchman build(
+  @SuppressWarnings("PMD.PrematureDeclaration") // endTimeNanos
+  Watchman build(
       ListeningProcessExecutor executor,
-      Function<Path, Optional<WatchmanClient>> watchmanConnector,
       ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
@@ -104,120 +124,163 @@ public class WatchmanFactory {
       Optional<Long> commandTimeoutMillis)
       throws InterruptedException {
     LOG.info("Creating for: " + projectWatchList);
-    Optional<WatchmanClient> watchmanClient = Optional.empty();
+    Path pathToTransport;
+    long timeoutMillis = commandTimeoutMillis.orElse(DEFAULT_COMMAND_TIMEOUT_MILLIS);
+    long endTimeNanos = clock.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
     try {
-      Path watchmanPath = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath();
-      Optional<? extends Map<String, ?>> result;
-
-      long timeoutMillis = commandTimeoutMillis.orElse(DEFAULT_COMMAND_TIMEOUT_MILLIS);
-      long endTimeNanos = clock.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
-      result =
-          execute(
-              executor,
-              console,
-              clock,
-              timeoutMillis,
-              TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
-              watchmanPath,
-              "get-sockname");
-
-      if (!result.isPresent()) {
+      Optional<Path> pathToTransportOpt =
+          determineWatchmanTransportPath(executor, env, exeFinder, console, clock, timeoutMillis);
+      if (pathToTransportOpt.isPresent()) {
+        pathToTransport = pathToTransportOpt.get();
+      } else {
+        LOG.warn("Could not determine the socket to talk to Watchman, disabling.");
         return NULL_WATCHMAN;
       }
-
-      String rawSockname = (String) result.get().get("sockname");
-      if (rawSockname == null) {
-        return NULL_WATCHMAN;
-      }
-      Path transportPath = Paths.get(rawSockname);
-
-      LOG.info(
-          "Connecting to Watchman version %s at %s", result.get().get("version"), transportPath);
-      watchmanClient = watchmanConnector.apply(transportPath);
-      if (!watchmanClient.isPresent()) {
-        LOG.warn("Could not connect to Watchman, disabling.");
-        return NULL_WATCHMAN;
-      }
-      LOG.debug("Connected to Watchman");
-
-      long versionQueryStartTimeNanos = clock.nanoTime();
-      result =
-          watchmanClient
-              .get()
-              .queryWithTimeout(
-                  endTimeNanos - versionQueryStartTimeNanos,
-                  "version",
-                  ImmutableMap.of(
-                      "required", REQUIRED_CAPABILITIES, "optional", ALL_CAPABILITIES.keySet()));
-
-      LOG.info(
-          "Took %d ms to query capabilities %s",
-          TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - versionQueryStartTimeNanos),
-          ALL_CAPABILITIES);
-
-      if (!result.isPresent()) {
-        LOG.warn("Could not get version response from Watchman, disabling Watchman");
-        watchmanClient.get().close();
-        return NULL_WATCHMAN;
-      }
-
-      ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
-      if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
-        LOG.warn("Could not extract capabilities, disabling Watchman");
-        watchmanClient.get().close();
-        return NULL_WATCHMAN;
-      }
-      ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
-      LOG.debug("Got Watchman capabilities: %s", capabilities);
-
-      ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
-      for (Path projectRoot : projectWatchList) {
-        Optional<ProjectWatch> projectWatch =
-            queryWatchProject(
-                watchmanClient.get(), projectRoot, clock, endTimeNanos - clock.nanoTime());
-        if (!projectWatch.isPresent()) {
-          watchmanClient.get().close();
-          return NULL_WATCHMAN;
-        }
-        projectWatchesBuilder.put(projectRoot, projectWatch.get());
-      }
-      ImmutableMap<Path, ProjectWatch> projectWatches = projectWatchesBuilder.build();
-      Iterable<String> watchRoots =
-          RichStream.from(projectWatches.values())
-              .map(ProjectWatch::getWatchRoot)
-              .distinct()
-              .toOnceIterable();
-
-      ImmutableMap.Builder<String, String> clockIdsBuilder = ImmutableMap.builder();
-      for (String watchRoot : watchRoots) {
-        Optional<String> clockId =
-            queryClock(
-                watchmanClient.get(),
-                watchRoot,
-                capabilities,
-                clock,
-                endTimeNanos - clock.nanoTime());
-        if (clockId.isPresent()) {
-          clockIdsBuilder.put(watchRoot, clockId.get());
-        }
-      }
-
-      return new Watchman(
-          projectWatches,
-          capabilities,
-          clockIdsBuilder.build(),
-          Optional.of(transportPath),
-          watchmanClient);
-    } catch (ClassCastException | HumanReadableException | IOException e) {
+    } catch (IOException e) {
       LOG.warn(e, "Unable to determine the version of watchman. Going without.");
-      if (watchmanClient.isPresent()) {
-        try {
-          watchmanClient.get().close();
-        } catch (IOException ioe) {
-          LOG.warn(ioe, "Could not close watchman query client");
-        }
-      }
       return NULL_WATCHMAN;
+    }
+
+    try (WatchmanClient client =
+        initialWatchmanClientFactory.tryCreateClientToFetchInitialWatchmanData(
+            pathToTransport, console, clock)) {
+      Watchman watchman =
+          getWatchman(client, pathToTransport, projectWatchList, console, clock, endTimeNanos);
+      LOG.debug("Connected to Watchman");
+      return watchman;
+    } catch (ClassCastException | IOException e) {
+      LOG.warn(e, "Unable to determine the version of watchman. Going without.");
+      return NULL_WATCHMAN;
+    }
+  }
+
+  private static Optional<Path> determineWatchmanTransportPath(
+      ListeningProcessExecutor executor,
+      ImmutableMap<String, String> env,
+      ExecutableFinder exeFinder,
+      Console console,
+      Clock clock,
+      long timeoutMillis)
+      throws IOException, InterruptedException {
+    Optional<Path> watchmanPathOpt = exeFinder.getOptionalExecutable(WATCHMAN, env);
+    if (!watchmanPathOpt.isPresent()) {
+      return Optional.empty();
+    }
+
+    Path watchmanPath = watchmanPathOpt.get().toAbsolutePath();
+    Optional<? extends Map<String, ?>> result =
+        execute(
+            executor,
+            console,
+            clock,
+            timeoutMillis,
+            TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
+            watchmanPath,
+            "get-sockname");
+
+    if (!result.isPresent()) {
+      return Optional.empty();
+    }
+
+    String rawSockname = (String) result.get().get("sockname");
+    if (rawSockname == null) {
+      return Optional.empty();
+    }
+
+    Path transportPath = Paths.get(rawSockname);
+    LOG.info("Connecting to Watchman version %s at %s", result.get().get("version"), transportPath);
+    return Optional.of(transportPath);
+  }
+
+  private static Watchman getWatchman(
+      WatchmanClient client,
+      Path transportPath,
+      ImmutableSet<Path> projectWatchList,
+      Console console,
+      Clock clock,
+      long endTimeNanos)
+      throws IOException, InterruptedException {
+    long versionQueryStartTimeNanos = clock.nanoTime();
+    Optional<? extends Map<String, ?>> result =
+        client.queryWithTimeout(
+            endTimeNanos - versionQueryStartTimeNanos,
+            "version",
+            ImmutableMap.of(
+                "required", REQUIRED_CAPABILITIES, "optional", ALL_CAPABILITIES.keySet()));
+
+    LOG.info(
+        "Took %d ms to query capabilities %s",
+        TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - versionQueryStartTimeNanos),
+        ALL_CAPABILITIES);
+
+    if (!result.isPresent()) {
+      LOG.warn("Could not get version response from Watchman, disabling Watchman");
+      return NULL_WATCHMAN;
+    }
+
+    ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
+    if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
+      LOG.warn("Could not extract capabilities, disabling Watchman");
+      return NULL_WATCHMAN;
+    }
+    ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
+    LOG.debug("Got Watchman capabilities: %s", capabilities);
+
+    ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
+    for (Path projectRoot : projectWatchList) {
+      Optional<ProjectWatch> projectWatch =
+          queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
+      if (!projectWatch.isPresent()) {
+        return NULL_WATCHMAN;
+      }
+      projectWatchesBuilder.put(projectRoot, projectWatch.get());
+    }
+    ImmutableMap<Path, ProjectWatch> projectWatches = projectWatchesBuilder.build();
+    Iterable<String> watchRoots =
+        RichStream.from(projectWatches.values())
+            .map(ProjectWatch::getWatchRoot)
+            .distinct()
+            .toOnceIterable();
+
+    ImmutableMap.Builder<String, String> clockIdsBuilder = ImmutableMap.builder();
+    for (String watchRoot : watchRoots) {
+      Optional<String> clockId =
+          queryClock(client, watchRoot, capabilities, clock, endTimeNanos - clock.nanoTime());
+      if (clockId.isPresent()) {
+        clockIdsBuilder.put(watchRoot, clockId.get());
+      }
+    }
+
+    return new Watchman(
+        projectWatches, capabilities, clockIdsBuilder.build(), Optional.of(transportPath)) {
+      @Override
+      public WatchmanClient createClient() throws IOException {
+        return createWatchmanClient(transportPath, console, clock);
+      }
+    };
+  }
+
+  @VisibleForTesting
+  static Optional<WatchmanClient> tryCreateWatchmanClient(
+      Path transportPath, Console console, Clock clock) {
+    try {
+      return Optional.of(createWatchmanClient(transportPath, console, clock));
+    } catch (IOException e) {
+      LOG.warn(e, "Could not connect to Watchman at path %s", transportPath);
+      return Optional.empty();
+    }
+  }
+
+  private static WatchmanClient createWatchmanClient(
+      Path transportPath, Console console, Clock clock) throws IOException {
+    return new WatchmanTransportClient(console, clock, createLocalWatchmanTransport(transportPath));
+  }
+
+  private static Transport createLocalWatchmanTransport(Path transportPath) throws IOException {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return WindowsNamedPipe.createPipeWithPath(transportPath.toString());
+    } else {
+      return UnixDomainSocket.createSocketWithPath(transportPath);
     }
   }
 
@@ -423,32 +486,6 @@ public class WatchmanFactory {
       return Optional.empty();
     }
     return Optional.of((Map<String, Object>) response);
-  }
-
-  @VisibleForTesting
-  static Function<Path, Optional<WatchmanClient>> localWatchmanConnector(
-      final Console console, final Clock clock) {
-    return new Function<Path, Optional<WatchmanClient>>() {
-      @Override
-      public Optional<WatchmanClient> apply(Path transportPath) {
-        try {
-          return Optional.of(
-              new WatchmanTransportClient(
-                  console, clock, createLocalWatchmanTransport(transportPath)));
-        } catch (IOException e) {
-          LOG.warn(e, "Could not connect to Watchman at path %s", transportPath);
-          return Optional.empty();
-        }
-      }
-
-      private Transport createLocalWatchmanTransport(Path transportPath) throws IOException {
-        if (Platform.detect() == Platform.WINDOWS) {
-          return WindowsNamedPipe.createPipeWithPath(transportPath.toString());
-        } else {
-          return UnixDomainSocket.createSocketWithPath(transportPath);
-        }
-      }
-    };
   }
 
   /**

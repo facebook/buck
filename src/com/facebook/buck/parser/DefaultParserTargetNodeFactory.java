@@ -28,6 +28,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
@@ -35,12 +36,11 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
@@ -138,7 +138,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
                 .getFlavors()
                 .stream()
                 .map(Flavor::toString)
-                .collect(MoreCollectors.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
         String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
         throw new HumanReadableException(
             "The following flavor(s) are not supported on target %s:\n"

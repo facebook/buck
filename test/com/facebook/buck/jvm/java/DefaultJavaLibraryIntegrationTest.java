@@ -50,6 +50,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -229,7 +230,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // Run `buck build`.
     ProcessResult buildResult =
         workspace.runBuckCommand("build", "//:raz", "-b", "FIRST_ORDER_ONLY");
-    buildResult.assertFailure("Build should have failed.");
+    buildResult.assertSpecialExitCode("invalid option -b", ExitCode.COMMANDLINE_ERROR);
 
     workspace.verify();
   }

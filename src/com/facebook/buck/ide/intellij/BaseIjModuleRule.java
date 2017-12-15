@@ -36,8 +36,8 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -78,7 +78,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     return paths
         .stream()
         .collect(
-            MoreCollectors.toImmutableMultimap(
+            ImmutableListMultimap.toImmutableListMultimap(
                 path -> {
                   Path parent = path.getParent();
                   return parent == null ? defaultParent : parent;
@@ -138,7 +138,9 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
               .entries()
               .stream()
               .filter(entry -> !resourcePaths.contains(entry.getValue()))
-              .collect(MoreCollectors.toImmutableMultimap(Map.Entry::getKey, Map.Entry::getValue));
+              .collect(
+                  ImmutableListMultimap.toImmutableListMultimap(
+                      Map.Entry::getKey, Map.Entry::getValue));
     }
 
     addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
@@ -207,7 +209,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
         .map(PathSourcePath::getRelativePath)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   protected ImmutableSet<Path> getResourcePaths(
@@ -218,7 +220,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         .map(PathSourcePath.class::cast)
         .map(PathSourcePath::getRelativePath)
         .filter(path -> path.startsWith(resourcesRoot))
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   protected ImmutableMultimap<Path, Path> getResourcesRootsToResources(
@@ -226,7 +228,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     return resourcePaths
         .stream()
         .collect(
-            MoreCollectors.toImmutableMultimap(
+            ImmutableListMultimap.toImmutableListMultimap(
                 path ->
                     MorePaths.stripCommonSuffix(
                             path.getParent(), packageFinder.findJavaPackageFolder(path))
@@ -313,7 +315,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         .filter(Objects::nonNull)
         .map(pattern -> pattern.replaceAll("%name%", buildTarget.getShortNameAndFlavorPostfix()))
         .map(path -> BuildTargets.getGenPath(projectFilesystem, buildTarget, path))
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override

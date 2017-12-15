@@ -22,6 +22,9 @@ import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.List;
@@ -36,6 +39,12 @@ public class NoopArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return Futures.immediateFuture(null);
+  }
+
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    return Futures.immediateFuture(Maps.toMap(ruleKeys, k -> CacheResult.miss()));
   }
 
   @Override
@@ -64,6 +73,11 @@ public class NoopArtifactCache implements ArtifactCache {
 
     @Override
     public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+      return new NoopArtifactCache();
+    }
+
+    @Override
+    public ArtifactCache newInstance(boolean onlyRemote, boolean distributedBuildModeEnabled) {
       return new NoopArtifactCache();
     }
 

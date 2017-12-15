@@ -22,15 +22,7 @@ import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
-import com.facebook.buck.util.autosparse.AbstractAutoSparseConfig;
-import com.facebook.buck.util.autosparse.AbstractAutoSparseFactory;
-import com.facebook.buck.util.autosparse.AutoSparseConfig;
-import com.facebook.buck.util.autosparse.AutoSparseProjectFilesystemDelegate;
-import com.facebook.buck.util.autosparse.AutoSparseState;
 import com.facebook.buck.util.config.Config;
-import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -46,8 +38,8 @@ public final class ProjectFilesystemDelegateFactory {
   private ProjectFilesystemDelegateFactory() {}
 
   /** Must always create a new delegate for the specified {@code root}. */
-  public static ProjectFilesystemDelegate newInstance(
-      Path root, Path buckOut, String hgCmd, Config config) throws InterruptedException {
+  public static ProjectFilesystemDelegate newInstance(Path root, Config config)
+      throws InterruptedException {
     Optional<EdenClientPool> pool = EdenClientPool.tryToCreateEdenClientPool(root);
 
     if (pool.isPresent()) {
@@ -60,24 +52,6 @@ public final class ProjectFilesystemDelegateFactory {
             config);
       } else {
         LOG.error("Failed to find Eden client for %s.", root);
-      }
-    }
-
-    if (AbstractAutoSparseConfig.isAutosparseEnabled(config)) {
-      AutoSparseConfig autoSparseConfig = AutoSparseConfig.of(config);
-      // Grab a copy of the current environment; Mercurial sometimes cares (or more specifically,
-      // a remote connection command like ssh cares). We rather not pass in an environment via the
-      // ProjectFilesystem here because that'd make the ProjectFilesystem variant on the env, not
-      // a can of worms you want to go open just to make Mercurial happy.
-      ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
-      HgCmdLineInterface hgCmdLine =
-          new HgCmdLineInterface(new PrintStreamProcessExecutorFactory(), root, hgCmd, environment);
-      AutoSparseState autoSparseState =
-          AbstractAutoSparseFactory.getAutoSparseState(root, buckOut, hgCmdLine, autoSparseConfig);
-      if (autoSparseState != null) {
-        LOG.debug("Autosparse enabled, using AutoSparseProjectFilesystemDelegate");
-        return new AutoSparseProjectFilesystemDelegate(
-            autoSparseState, new DefaultProjectFilesystemDelegate(root));
       }
     }
 

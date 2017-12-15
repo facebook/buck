@@ -22,7 +22,6 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,7 +66,7 @@ public class BuildableSupportTest {
 
     MoreAsserts.assertSetEquals(
         rules,
-        BuildableSupport.deriveDeps(rule, ruleFinder).collect(MoreCollectors.toImmutableSet()));
+        BuildableSupport.deriveDeps(rule, ruleFinder).collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test
@@ -91,7 +90,7 @@ public class BuildableSupportTest {
 
     MoreAsserts.assertSetEquals(
         ImmutableSet.of(path1, path2, path3),
-        BuildableSupport.deriveInputs(rule).collect(MoreCollectors.toImmutableSet()));
+        BuildableSupport.deriveInputs(rule).collect(ImmutableSet.toImmutableSet()));
   }
 
   private BuildRule makeRule(

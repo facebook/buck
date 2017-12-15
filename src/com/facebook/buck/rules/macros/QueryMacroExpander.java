@@ -32,7 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -153,7 +152,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     ImmutableList<QueryTarget> results;
 
     public QueryResults(Stream<QueryTarget> results) {
-      this.results = results.collect(MoreCollectors.toImmutableList());
+      this.results = results.collect(ImmutableList.toImmutableList());
     }
   }
 }

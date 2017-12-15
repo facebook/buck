@@ -17,6 +17,8 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.log.Logger;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 
 public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
@@ -29,6 +31,12 @@ public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
       CoordinatorModeRunner coordinatorModeRunner, MinionModeRunner minionModeRunner) {
     this.coordinatorModeRunner = coordinatorModeRunner;
     this.minionModeRunner = minionModeRunner;
+  }
+
+  @Override
+  public ListenableFuture<?> getAsyncPrepFuture() {
+    return Futures.allAsList(
+        coordinatorModeRunner.getAsyncPrepFuture(), minionModeRunner.getAsyncPrepFuture());
   }
 
   @Override

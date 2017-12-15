@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -115,7 +116,9 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   public void fatJarWithExitCode() throws IOException {
     setUpProjectWorkspaceForScenario("fat_jar");
 
-    workspace.runBuckCommand("run", "//:bin-exit-code").assertSpecialExitCode("error", 5);
+    workspace
+        .runBuckCommand("run", "//:bin-exit-code")
+        .assertSpecialExitCode("error", ExitCode.BUILD_ERROR);
   }
 
   @Test

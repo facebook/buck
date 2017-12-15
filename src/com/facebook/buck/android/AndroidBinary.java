@@ -48,13 +48,13 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -247,7 +247,7 @@ public class AndroidBinary extends AbstractBuildRule
         params.withExtraDeps(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     this.buildRuleParams = params;
   }
 
@@ -386,7 +386,7 @@ public class AndroidBinary extends AbstractBuildRule
             .getClasspathEntriesToDex()
             .stream()
             .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Override

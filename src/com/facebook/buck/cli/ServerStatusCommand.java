@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -53,7 +54,8 @@ public class ServerStatusCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
     if (isShowHttpserverPort()) {
@@ -78,7 +80,7 @@ public class ServerStatusCommand extends AbstractCommand {
       }
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

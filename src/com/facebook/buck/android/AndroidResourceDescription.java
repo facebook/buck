@@ -41,7 +41,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
@@ -71,7 +70,7 @@ public class AndroidResourceDescription
           ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
   private final ToolchainProvider toolchainProvider;
-  private final boolean isGrayscaleImageProcessingEnabled;
+  private final AndroidBuckConfig androidBuckConfig;
 
   @VisibleForTesting
   static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR = InternalFlavor.of("resources-symlink-tree");
@@ -85,9 +84,9 @@ public class AndroidResourceDescription
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
   public AndroidResourceDescription(
-      ToolchainProvider toolchainProvider, boolean enableGrayscaleImageProcessing) {
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;
+    this.androidBuckConfig = androidBuckConfig;
   }
 
   @Override
@@ -198,7 +197,7 @@ public class AndroidResourceDescription
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
         args.getResourceUnion(),
-        isGrayscaleImageProcessingEnabled);
+        androidBuckConfig.isGrayscaleImageProcessingEnabled());
   }
 
   private SymlinkTree createSymlinkTree(
@@ -225,7 +224,7 @@ public class AndroidResourceDescription
             RichStream.from(symlinkAttribute.get().getRight().entrySet())
                 .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
                 .filter(e -> isPossibleResourcePath(e.getKey()))
-                .collect(MoreCollectors.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
       }
     }
     Path symlinkTreeRoot =

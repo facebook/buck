@@ -33,7 +33,6 @@
 package com.facebook.buck.android.support.exopackage;
 
 import android.util.Log;
-import dalvik.system.BaseDexClassLoader;
 import dalvik.system.DexFile;
 import dalvik.system.PathClassLoader;
 import java.io.File;
@@ -41,9 +40,9 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * A {@link ClassLoader} similar to {@link dalvik.system.DexClassLoader}. This loader aims to allow
@@ -63,34 +62,38 @@ import java.util.Set;
  * DexClassLoader instance which loads the given DexFiles. To unload a DexFile, the entire delegate
  * DexClassLoader is dropped and a new one is built.
  */
-class DelegatingClassLoader extends ClassLoader {
+public class DelegatingClassLoader extends ClassLoader {
 
   private static final String TAG = "DelegatingCL";
   private File mDexOptDir;
 
   private PathClassLoader mDelegate;
-  private Set<String> mManagedClasses = new HashSet<>();
+
+  // Map classes to the dex files where they live. In the future, once we can read the modular
+  // metadata in order to build a package name => module name mapping, here we will just want to map
+  // module name => list of dex files, which will be marginally less efficient for lookups, and take
+  // far less memory/time to instantiate
+  private Map<String, DexFile> mManagedClassesToDexFile = new HashMap<String, DexFile>();
 
   private static DelegatingClassLoader sInstalledClassLoader;
 
-  private static final Method sFIND_CLASS;
+  private static final Method sFIND_LOADED_CLASS;
 
   static {
     try {
-      sFIND_CLASS = BaseDexClassLoader.class.getDeclaredMethod("findClass", String.class);
-      sFIND_CLASS.setAccessible(true);
+      sFIND_LOADED_CLASS = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+      sFIND_LOADED_CLASS.setAccessible(true);
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
   }
 
   /** @return (and potentially create) an instance of DelegatingClassLoader */
-  static DelegatingClassLoader getInstance() {
+  public static DelegatingClassLoader getInstance() {
     if (sInstalledClassLoader == null) {
       Log.d(TAG, "Installing DelegatingClassLoader");
       final ClassLoader parent = DelegatingClassLoader.class.getClassLoader();
       sInstalledClassLoader = new DelegatingClassLoader(parent);
-      sInstalledClassLoader.installHelperAboveApplicationClassLoader();
     }
     return sInstalledClassLoader;
   }
@@ -100,10 +103,15 @@ class DelegatingClassLoader extends ClassLoader {
   }
 
   /**
-   * Install the helper classloader above the application's ClassLoader, and below the system CL.
-   * See {@link AboveAppClassLoader} below for a detailed explanation of its purpose.
+   * Install the helper classloader above the application's ClassLoader, and below the system CL. If
+   * the host application's default ClassLoader needs to load a class from our delegate, we need to
+   * intercept that class request. We cannot/do not want to install DelegatingClassLoader above the
+   * AppCL because we need to allow managed classes to request classes from the primary dex, thus we
+   * need to query the AppCL from the DCL. Placing the DCL above the AppCL would create a loop, so
+   * we install this AboveAppClassLoader to catch any requests for managed classes (e.g. resolution
+   * of an Activity from an Intent) which the AppCL receives.
    */
-  private void installHelperAboveApplicationClassLoader() {
+  public void installHelperAboveApplicationClassLoader() {
     try {
       ClassLoader appClassLoader = getClass().getClassLoader();
       Field parentField = ClassLoader.class.getDeclaredField("parent");
@@ -116,14 +124,7 @@ class DelegatingClassLoader extends ClassLoader {
     }
   }
 
-  /**
-   * If the host application's default ClassLoader needs to load a class from our delegate, we need
-   * to intercept that class request. We cannot/do not want to install DelegatingClassLoader above
-   * the AppCL because we need to allow managed classes to request classes from the primary dex,
-   * thus we need to query the AppCL from the DCL. Placing the DCL above the AppCL would create a
-   * loop, so we install this AboveAppClassLoader to catch any requests for managed classes (e.g.
-   * resolution of an Activity from an Intent) which the AppCL receives.
-   */
+  /** {@see #installHelperAboveApplicationClassLoader()} for an explanation of this functionality */
   private class AboveAppClassLoader extends ClassLoader {
     private AboveAppClassLoader(ClassLoader parent) {
       super(parent);
@@ -132,7 +133,7 @@ class DelegatingClassLoader extends ClassLoader {
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
       final DelegatingClassLoader instance = DelegatingClassLoader.getInstance();
-      if (mManagedClasses.contains(name)) {
+      if (mManagedClassesToDexFile.containsKey(name)) {
         return instance.loadManagedClass(name);
       } else {
         throw new ClassNotFoundException(name);
@@ -148,7 +149,7 @@ class DelegatingClassLoader extends ClassLoader {
   @Override
   public Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
     Class<?> clazz;
-    if (mManagedClasses.contains(className)) {
+    if (mManagedClassesToDexFile.containsKey(className)) {
       clazz = loadManagedClass(className);
     } else {
       clazz = getParent().loadClass(className);
@@ -170,7 +171,19 @@ class DelegatingClassLoader extends ClassLoader {
           "DelegatingCL was not initialized via ExopackageDexLoader.loadExopackageJars");
     }
     try {
-      return (Class) sFIND_CLASS.invoke(mDelegate, className);
+      // First try loading the class from the cache
+      Class<?> clazz = (Class<?>) sFIND_LOADED_CLASS.invoke(mDelegate, className);
+      if (clazz == null) {
+        // Otherwise, load it from the relevant dex file
+        DexFile origin = mManagedClassesToDexFile.get(className);
+        if (origin == null) {
+          throw new ClassNotFoundException("Unable to find class " + className);
+        }
+        // attribute all classloads to the same classloader so that package-scoping works correctly
+        // and so that we can use its loaded class cache
+        clazz = origin.loadClass(className, mDelegate);
+      }
+      return clazz;
     } catch (Exception e) {
       throw new ClassNotFoundException("Unable to find class " + className, e.getCause());
     }
@@ -188,14 +201,13 @@ class DelegatingClassLoader extends ClassLoader {
    */
   void resetDelegate(List<File> dexJars) {
     mDelegate = new PathClassLoader("", "", this);
-    mManagedClasses.clear();
-    SystemClassLoaderAdder.installDexJars(mDelegate, mDexOptDir, dexJars);
+    mManagedClassesToDexFile.clear();
     for (File dexJar : dexJars) {
       try {
         DexFile dexFile = new DexFile(dexJar);
         final Enumeration<String> entries = dexFile.entries();
         while (entries.hasMoreElements()) {
-          mManagedClasses.add(entries.nextElement());
+          mManagedClassesToDexFile.put(entries.nextElement(), dexFile);
         }
       } catch (IOException e) {
         // Pass for now

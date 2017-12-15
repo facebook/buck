@@ -187,7 +187,7 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return preprocessorDelegate.getCoveredByDepfilePredicate();
+    return preprocessorDelegate.getCoveredByDepFilePredicate();
   }
 
   @Override
@@ -199,7 +199,10 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     try {
-      return preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context));
+      return ImmutableList.<SourcePath>builder()
+          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context)))
+          .add(input)
+          .build();
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);
     }

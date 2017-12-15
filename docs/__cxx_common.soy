@@ -313,14 +313,37 @@
 {/template}
 
 /***/
+{template .reexport_all_header_dependencies_arg}
+{call buck.arg}
+  {param name : 'reexport_all_header_dependencies' /}
+  {param default: 'True' /}
+  {param desc}
+  Whether to automatically re-export the exported headers of all dependencies.
+  <p>
+  When this is set to false, only exported headers from
+   {sp}<code>exported_deps</code> are re-exported.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .exported_deps_arg}
 {call buck.arg}
   {param name : 'exported_deps' /}
   {param default: '[]' /}
   {param desc}
-  Dependencies that will also appear to belong to any rules that depend on this one.  Currently, this
-  only affects linking: exported dependencies will also be included in the link line of dependents of
-  this rules, but normal dependencies will not.
+  Dependencies that will also appear to belong to any rules that depend on this
+  one. This has two effects:
+  <ul>
+    <li>
+      Exported dependencies will also be included in the link line of
+      dependents of this rules, but normal dependencies will not.
+    </li>
+    <li>
+      When <code>reexport_all_header_dependencies = False</code>, only exported
+      headers of the rules specified here are re-exported.
+    </li>
+  </ul>
   {/param}
 {/call}
 {/template}

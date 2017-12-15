@@ -17,6 +17,7 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.rules.BuildEngineResult;
+import com.facebook.buck.rules.CachingBuildEngine;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -57,6 +58,12 @@ public interface BuildExecutor {
       Iterable<String> targetsToBuild,
       List<BuildEngineResult> resultFutures,
       Optional<Path> pathToBuildReport);
+
+  /**
+   * Accessor method for the {@link CachingBuildEngine} instance being used by this {@link
+   * BuildExecutor}.
+   */
+  CachingBuildEngine getCachingBuildEngine();
 
   /**
    * Destroy any resources associated with this builder. Call this once only, when all

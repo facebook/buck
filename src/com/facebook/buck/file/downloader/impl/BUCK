@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/file/downloader:downloader",
+        "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/util:exceptions",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/log:api",
+    ],
+)

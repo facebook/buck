@@ -57,6 +57,50 @@ public class InnerClassesTable {
     this.topElement = topElement;
   }
 
+  public void addTypeReferences(Element element) {
+    new ElementScanner8<Void, Void>() {
+      @Override
+      public Void visitType(TypeElement e, Void aVoid) {
+        if (e != element) {
+          return null;
+        }
+
+        addTypeReferences(e.getAnnotationMirrors());
+        e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
+        addTypeReferences(e.getSuperclass());
+        e.getInterfaces().forEach(InnerClassesTable.this::addTypeReferences);
+        // Members will be visited in the call to super, below
+
+        return super.visitType(e, aVoid);
+      }
+
+      @Override
+      public Void visitExecutable(ExecutableElement e, Void aVoid) {
+        addTypeReferences(e.getAnnotationMirrors());
+        e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
+        addTypeReferences(e.getReturnType());
+        addTypeReferences(e.getDefaultValue());
+        // Parameters will be visited in the call to super, below
+        e.getThrownTypes().forEach(InnerClassesTable.this::addTypeReferences);
+        return super.visitExecutable(e, aVoid);
+      }
+
+      @Override
+      public Void visitVariable(VariableElement e, Void aVoid) {
+        addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(e.asType());
+        return super.visitVariable(e, aVoid);
+      }
+
+      @Override
+      public Void visitTypeParameter(TypeParameterElement e, Void aVoid) {
+        addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(e.asType());
+        return super.visitTypeParameter(e, aVoid);
+      }
+    }.scan(element);
+  }
+
   public void addTypeReferences(TypeMirror type) {
     new TypeScanner8<Void, Void>() {
       @Override
@@ -92,7 +136,7 @@ public class InnerClassesTable {
     }.scan(type);
   }
 
-  private void addTypeReferences(List<? extends AnnotationMirror> annotationMirrors) {
+  public void addTypeReferences(List<? extends AnnotationMirror> annotationMirrors) {
     annotationMirrors.forEach(this::addTypeReferences);
   }
 
@@ -159,38 +203,9 @@ public class InnerClassesTable {
               return null;
             }
 
-            addTypeReferences(e.getAnnotationMirrors());
-            e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
-            addTypeReferences(e.getSuperclass());
-            e.getInterfaces().forEach(InnerClassesTable.this::addTypeReferences);
-            // Members will be visited in the call to super, below
+            addTypeReferences(e);
 
             return super.visitType(e, aVoid);
-          }
-
-          @Override
-          public Void visitExecutable(ExecutableElement e, Void aVoid) {
-            addTypeReferences(e.getAnnotationMirrors());
-            e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
-            addTypeReferences(e.getReturnType());
-            addTypeReferences(e.getDefaultValue());
-            // Parameters will be visited in the call to super, below
-            e.getThrownTypes().forEach(InnerClassesTable.this::addTypeReferences);
-            return super.visitExecutable(e, aVoid);
-          }
-
-          @Override
-          public Void visitVariable(VariableElement e, Void aVoid) {
-            addTypeReferences(e.getAnnotationMirrors());
-            addTypeReferences(e.asType());
-            return super.visitVariable(e, aVoid);
-          }
-
-          @Override
-          public Void visitTypeParameter(TypeParameterElement e, Void aVoid) {
-            addTypeReferences(e.getAnnotationMirrors());
-            addTypeReferences(e.asType());
-            return super.visitTypeParameter(e, aVoid);
           }
         };
     elementScanner.scan(topElement);
@@ -202,11 +217,7 @@ public class InnerClassesTable {
             descriptorFactory.getInternalName(element),
             descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
             element.getSimpleName().toString(),
-            element == topElement
-                ? accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER
-                // It is not strictly required to mark enclosing classes ACC_STATIC here, but it
-                // does make SourceAbiCompatibleVisitor's job easier.
-                : Opcodes.ACC_STATIC);
+            accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
       }
     }
 
@@ -230,20 +241,7 @@ public class InnerClassesTable {
                   descriptorFactory.getInternalName(element),
                   descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
                   element.getSimpleName().toString(),
-                  // We cannot know the access flags of an inferred type element. However, the only
-                  // flag that matters in the InnerClasses table is ACC_STATIC. When reading the
-                  // InnerClasses table, the compiler may create ClassSymbols for types it hasn't
-                  // seen before, and the absence of ACC_STATIC will cause it to mark those
-                  // ClassSymbols as inner classes, and it will not correct that when later loading
-                  // the class from its definitive class file. However, it is safe to mark
-                  // everything with ACC_STATIC, because the compiler *will* properly update
-                  // non-static classes when loading their definitive class files.
-                  // (http://hg.openjdk.java.net/jdk8u/jdk8u/langtools/file/9986bf97a48d/src/share/classes/com/sun/tools/javac/jvm/ClassReader.java#l2272)
-                  //
-                  // We mark everything ACC_STATIC (rather than just the inferred types) so that
-                  // we can more easily update the class ABI to match so that ABI diffing still
-                  // works for testing.
-                  Opcodes.ACC_STATIC);
+                  accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
             });
   }
 }

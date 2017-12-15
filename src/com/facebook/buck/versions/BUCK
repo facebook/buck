@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
 TYPES_SRCS = [
     "AbstractExactConstraint.java",
@@ -36,7 +36,7 @@ java_library(
     ],
 )
 
-java_immutables_library(
+java_library_with_plugins(
     name = "versions",
     srcs = glob(
         ["*.java"],
@@ -60,6 +60,7 @@ java_immutables_library(
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/query:query",

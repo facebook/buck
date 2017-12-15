@@ -29,7 +29,6 @@ import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
@@ -69,7 +68,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   public static final ResourceAmounts RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS =
       ResourceAmounts.of(0, 0, 1, 0);
-  public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS = ResourceAmounts.ZERO;
+  public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS =
+      ResourceAmounts.zero();
 
   static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
   static final String STEP_TYPE_CONTEXT_KEY = "step_type";
@@ -281,6 +281,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
   }
 
+  /// We might want to share rule-key calculation with other parts of code.
+  public ParallelRuleKeyCalculator<RuleKey> getRuleKeyCalculator() {
+    return ruleKeyCalculator;
+  }
+
   /**
    * We have a lot of places where tasks are submitted into a service implicitly. There is no way to
    * assign custom weights to such tasks. By creating a temporary service with adjusted weights it
@@ -389,7 +394,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
     List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
     ImmutableSet<BuildRule> runtimeDeps =
-        resolver.getAllRules(runtimeDepPaths.collect(MoreCollectors.toImmutableSet()));
+        resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
     for (BuildRule dep : runtimeDeps) {
       runtimeDepResults.add(
           getBuildRuleResultWithRuntimeDepsUnlocked(dep, buildContext, executionContext));

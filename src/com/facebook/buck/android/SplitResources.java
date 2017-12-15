@@ -34,9 +34,11 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -82,7 +84,7 @@ public class SplitResources extends AbstractBuildRule {
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
     return BuildableSupport.deriveDeps(this, ruleFinder)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -154,7 +156,7 @@ public class SplitResources extends AbstractBuildRule {
           getProjectFilesystem().getPathForRelativePath(primaryResourcesOutputPath),
           getProjectFilesystem().getPathForRelativePath(getUnalignedExoPath()),
           getProjectFilesystem().getPathForRelativePath(rDotTxtOutputPath));
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

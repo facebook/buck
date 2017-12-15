@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxFlags;
+import com.facebook.buck.cxx.CxxFlags.TranslateMacrosAppendableFunction;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxSource;
@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
@@ -42,6 +43,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -55,6 +57,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -73,25 +76,22 @@ public class HalideLibraryDescription
   public static final Flavor HALIDE_COMPILER_FLAVOR = InternalFlavor.of("halide-compiler");
   public static final Flavor HALIDE_COMPILE_FLAVOR = InternalFlavor.of("halide-compile");
 
-  private final CxxPlatform defaultCxxPlatform;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final HalideBuckConfig halideBuckConfig;
 
   public HalideLibraryDescription(
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
       HalideBuckConfig halideBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
     this.halideBuckConfig = halideBuckConfig;
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxPlatforms.containsAnyOf(flavors)
+    return getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)
         || flavors.contains(HALIDE_COMPILE_FLAVOR)
         || flavors.contains(HALIDE_COMPILER_FLAVOR)
         || StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
@@ -123,6 +123,7 @@ public class HalideLibraryDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
+      CxxPlatformsProvider cxxPlatformsProvider,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> halideSources,
       ImmutableList<StringWithMacros> compilerFlags,
@@ -189,14 +190,15 @@ public class HalideLibraryDescription
     return new CxxBinary(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
+        params.copyAppendingExtraDeps(
+            BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, ruleFinder)),
         ruleResolver,
         cxxPlatform,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
         ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
-        buildTarget.withoutFlavors(cxxPlatforms.getFlavors()));
+        buildTarget.withoutFlavors(cxxPlatformsProvider.getCxxPlatforms().getFlavors()));
   }
 
   private BuildRule createHalideStaticLibrary(
@@ -243,7 +245,8 @@ public class HalideLibraryDescription
       Optional<ImmutableList<String>> optionalFlags, CxxPlatform platform) {
     if (optionalFlags.isPresent()) {
       RuleKeyAppendableFunction<String, String> macroMapper =
-          CxxFlags.getTranslateMacrosFn(platform);
+          new TranslateMacrosAppendableFunction(
+              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
       ImmutableList<String> flags = optionalFlags.get();
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       for (String flag : flags) {
@@ -284,10 +287,14 @@ public class HalideLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       HalideLibraryDescriptionArg args) {
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform =
+        cxxPlatforms.getValue(flavors).orElse(cxxPlatformsProvider.getDefaultCxxPlatform());
 
     if (flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)) {
       ImmutableMap.Builder<Path, SourcePath> headersBuilder = ImmutableMap.builder();
@@ -325,6 +332,7 @@ public class HalideLibraryDescription
           pathResolver,
           ruleFinder,
           cellRoots,
+          cxxPlatformsProvider,
           hostCxxPlatform,
           args.getSrcs(),
           args.getCompilerFlags(),
@@ -356,6 +364,11 @@ public class HalideLibraryDescription
 
     return new HalideLibrary(
         buildTarget, projectFilesystem, params, resolver, args.getSupportedPlatformsRegex());
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

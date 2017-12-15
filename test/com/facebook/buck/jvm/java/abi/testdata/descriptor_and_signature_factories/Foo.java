@@ -1,9 +1,7 @@
 package com.facebook.foo;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -13,6 +11,7 @@ import java.util.Set;
 public abstract class Foo {
   // Primitives
   abstract void voidReturn();
+
   boolean booleanField;
   byte byteField;
   char charField;
@@ -41,32 +40,52 @@ public abstract class Foo {
 
   // Methods
   abstract Dependency parameterlessMethod();
+
   abstract int methodWithParameters(int p1, int p2);
+
   abstract void methodWithGenericParams(Dependency<String> a, int b);
+
   abstract void methodWithGenericParams2(List<Dependency> a, int b);
+
   abstract <X, Y, Z> Z methodWithTypeVarParameters(X x, List<Y> y, Set<? extends Z> z);
+
   abstract String parameterlessThrowingMethod() throws DependencyException;
+
   abstract <T extends Exception> void typevarThrowingMethod() throws T, Exception;
+
   abstract <T extends Exception> void nonGenericThrowingGenericMethod() throws Exception;
+
   abstract Dependency<String> genericReturningMethod();
+
   abstract List<Dependency> genericReturningMethod2();
 
   // Type vars
-  abstract <T extends Dependency & DependencyInterface> void typeVarWithClassAndInterfaceBounds(T t);
+  abstract <T extends Dependency & DependencyInterface> void typeVarWithClassAndInterfaceBounds(
+      T t);
+
   abstract <T extends Runnable & DependencyInterface> void typeVarWithMultipleBounds(T t);
+
   abstract <T extends DependencyInterface & Runnable> void typeVarWithDifferentOrderBounds(T t);
 
   // Classes
   class NonGenericClass {}
+
   class SimpleGenericClass<T> {}
+
   interface SimpleGenericInterface<T> {}
+
   abstract class ClassWithTypeVariableParameterizedSuper<T> extends Dependency<T> {}
+
   abstract class ClassWithParameterizedSuper extends Dependency<Integer> {}
+
   abstract class ClassWithParameterizedInterfaces
       implements DependencyInterface<Integer>, Comparable<Dependency> {}
+
   class ClassWithInterfaceBoundedTypeParameter<T extends DependencyInterface & Collection> {}
+
   class ClassWithClassBoundedTypeParameter<T extends Dependency> {}
-  class ClassWithTypeVarBoundedTypeParameter<T extends U, U extends Dependency> {}
+
+  class ClassWithTypeVarBoundedTypeParameter<T extends U, U extends Runnable> {}
 
   // Weird stuff
   Dependency<Integer>.NonGenericInner.GenericInnerer<String>

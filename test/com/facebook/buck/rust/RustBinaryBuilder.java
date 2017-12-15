@@ -16,12 +16,12 @@
 
 package com.facebook.buck.rust;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class RustBinaryBuilder
@@ -36,9 +36,8 @@ public class RustBinaryBuilder
   public static RustBinaryBuilder from(String target) {
     return new RustBinaryBuilder(
         new RustBinaryDescription(
-            FakeRustConfig.FAKE_RUST_CONFIG,
-            CxxPlatformUtils.DEFAULT_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM),
+            new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
+            FakeRustConfig.FAKE_RUST_CONFIG),
         BuildTargetFactory.newInstance(target));
   }
 

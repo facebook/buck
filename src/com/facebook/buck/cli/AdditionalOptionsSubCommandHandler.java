@@ -17,8 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreStrings;
+import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -85,6 +85,6 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
         .filter(pair -> pair.getSecond() <= maxDistance)
         .sorted(Comparator.comparing(Pair::getSecond))
         .map(Pair::getFirst)
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 }

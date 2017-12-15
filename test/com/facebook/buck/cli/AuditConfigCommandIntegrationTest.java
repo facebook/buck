@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -119,7 +120,7 @@ public class AuditConfigCommandIntegrationTest {
             "second_section.some_property",
             "ignored_section.short_value",
             "ignored_section.long_value");
-    result.assertFailure();
+    result.assertExitCode("--json and --tab are incompatible", ExitCode.COMMANDLINE_ERROR);
     assertThat(result.getStderr(), containsString("--json and --tab cannot both be specified"));
   }
 }

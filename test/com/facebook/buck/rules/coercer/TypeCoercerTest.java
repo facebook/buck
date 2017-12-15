@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;

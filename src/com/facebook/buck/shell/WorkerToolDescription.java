@@ -34,15 +34,14 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -111,7 +110,7 @@ public class WorkerToolDescription
             .stream()
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)
-            .collect(MoreCollectors.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
     Function<String, Arg> toArg =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
@@ -147,7 +146,7 @@ public class WorkerToolDescription
     return new DefaultWorkerTool(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(tool.getDeps(new SourcePathRuleFinder(resolver))),
+        new SourcePathRuleFinder(resolver),
         tool,
         maxWorkers,
         args.getPersistent()

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.MoreElements;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

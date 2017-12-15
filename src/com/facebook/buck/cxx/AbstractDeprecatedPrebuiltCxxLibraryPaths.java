@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -74,11 +73,8 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
   private String expandMacros(
       BuildRuleResolver resolver, CellPathResolver cellRoots, CxxPlatform cxxPlatform, String str) {
     try {
-      return MacroFinder.replace(
-          getMacroHandler(Optional.of(cxxPlatform))
-              .getMacroReplacers(getTarget(), cellRoots, resolver),
-          str,
-          true);
+      return getMacroHandler(Optional.of(cxxPlatform))
+          .expand(getTarget(), cellRoots, resolver, str);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s in \"%s\"", getTarget(), e.getMessage(), str);
     }

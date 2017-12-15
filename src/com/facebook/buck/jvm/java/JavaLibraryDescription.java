@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.HasSources;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -38,10 +39,9 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -64,12 +64,13 @@ public class JavaLibraryDescription
           HasJavaAbi.SOURCE_ABI_FLAVOR,
           HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  @VisibleForTesting private final JavacOptions defaultOptions;
 
-  public JavaLibraryDescription(JavaBuckConfig javaBuckConfig, JavacOptions defaultOptions) {
+  public JavaLibraryDescription(
+      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.defaultOptions = defaultOptions;
   }
 
   @Override
@@ -114,7 +115,7 @@ public class JavaLibraryDescription
               .filter(HasSources.class::isInstance)
               .map(rule -> ((HasSources) rule).getSources())
               .flatMap(Collection::stream)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
 
       // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
       // javadoc wants to have classes being documented have all their deps be available somewhere.
@@ -173,7 +174,14 @@ public class JavaLibraryDescription
     }
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
+        JavacOptionsFactory.create(
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         DefaultJavaLibrary.rulesBuilder(

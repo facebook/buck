@@ -46,7 +46,7 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -193,6 +193,36 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
+  public void addsResourcesDirectoryAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "RES_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToResources()).toString()));
+  }
+
+  @Test
+  public void addsMiscDirectoryAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "MISC_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToMisc()).toString()));
+  }
+
+  @Test
   public void exportsResourcesOfJsBundle() {
     assertEquals(
         setup.jsBundle().getSourcePathToResources(), setup.genrule().getSourcePathToResources());
@@ -224,7 +254,8 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void addAppleBundleResourcesIsDelegatedToUnderlyingBundle() {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
-    new JsBundleGenruleDescription(new TestToolchainProvider(), new NoSandboxExecutionStrategy())
+    new JsBundleGenruleDescription(
+            new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
             setup.targetNode(),
@@ -247,6 +278,11 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
+  public void exportsMiscOfJsBundle() {
+    assertEquals(setup.jsBundle().getSourcePathToMisc(), setup.genrule().getSourcePathToMisc());
+  }
+
+  @Test
   public void exposesSourceMapOfJsBundleWithSpecialFlavor() {
     setUp(JsFlavors.SOURCE_MAP);
 
@@ -254,6 +290,17 @@ public class JsBundleGenruleDescriptionTest {
 
     assertEquals(
         pathResolver.getRelativePath(setup.jsBundle().getSourcePathToSourceMap()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void exposesMiscOfJsBundleWithSpecialFlavor() {
+    setUp(JsFlavors.MISC);
+
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.jsBundle().getSourcePathToMisc()),
         pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
   }
 

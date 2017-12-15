@@ -30,11 +30,14 @@ from zipfile import ZipFile
 
 
 def main():
-    if len(sys.argv) < 2:
-        print_help()
+    argv = get_argv()
 
-    zip_file_path = sys.argv[1]
-    filename_patterns = sys.argv[2:]
+    if len(argv) < 2:
+        print_help()
+        return 0
+
+    zip_file_path = argv[1]
+    filename_patterns = argv[2:]
 
     logging.info("Analyzing %s" % zip_file_path)
     zip_file_entries = find_entries_in_zip_file(zip_file_path, filename_patterns)
@@ -49,6 +52,15 @@ def main():
     reversed_entries = reverse_dict(class_entries)
 
     return check_entries_and_report_duplicates(reversed_entries)
+
+
+def get_argv():
+    if len(sys.argv) > 2 and (sys.argv[1] == '-v' or sys.argv[1] == '--verbose'):
+        logging.getLogger().setLevel(logging.INFO)
+        argv = sys.argv[0:0] + sys.argv[1:]
+    else:
+        argv = sys.argv
+    return argv
 
 
 def find_entries_in_zip_file(zip_file_path, filename_patterns):
@@ -167,7 +179,7 @@ def reverse_dict(dict_to_reverse):
     result = {}
     for k in dict_to_reverse.keys():
         for v in dict_to_reverse[k]:
-            result.setdefault(v, []).append(v)
+            result.setdefault(v, []).append(k)
     return result
 
 

@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.config.Config;
@@ -234,7 +233,7 @@ public class BuckConfig implements ConfigPathGetter {
                           resolve,
                           String.format(
                               "Error in %s.%s: Cell-relative path not found: ", section, field)))
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       return Optional.of(paths);
     }
 
@@ -252,7 +251,7 @@ public class BuckConfig implements ConfigPathGetter {
     return buildTargets
         .stream()
         .map(buildTarget -> buildTarget.getFullyQualifiedName() + suffix)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<BuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {
@@ -489,7 +488,7 @@ public class BuckConfig implements ConfigPathGetter {
     return ImmutableSet.copyOf(getListWithoutComments("extensions", "listeners"));
   }
 
-  /** Return Strings so as to avoid a dependency on {@link LabelSelector}! */
+  /** Return Strings so as to avoid a dependency on {@link com.facebook.buck.cli.LabelSelector}! */
   public ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     return getListWithoutComments("test", "excluded_labels");
   }
@@ -945,10 +944,6 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("project", "buck_out_compat_link", false);
   }
 
-  public boolean isGrayscaleImageProcessingEnabled() {
-    // TODO(tyurins): move to android section
-    return config.getBooleanValue("resources", "resource_grayscale_enabled", false);
-  }
   /** @return whether to enabled versions on build/test command. */
   public boolean getBuildVersions() {
     return getBooleanValue("build", "versions", false);
@@ -1009,5 +1004,10 @@ public class BuckConfig implements ConfigPathGetter {
 
   public Optional<String> getPathToBuildPrehookScript() {
     return getValue("build", "prehook_script");
+  }
+
+  /** The timeout to apply to entire test rules. */
+  public Optional<Long> getDefaultTestRuleTimeoutMs() {
+    return config.getLong(TEST_SECTION_HEADER, "rule_timeout");
   }
 }

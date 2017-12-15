@@ -17,9 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -77,13 +77,10 @@ public class AuditConfigCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     if (shouldGenerateTabbedOutput() && shouldGenerateJsonOutput()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("--json and --tab cannot both be specified"));
-      return 1;
+      throw new CommandLineException("--json and --tab cannot both be specified");
     }
 
     final BuckConfig buckConfig = params.getBuckConfig();
@@ -124,7 +121,7 @@ public class AuditConfigCommand extends AbstractCommand {
                           input, parts[0], parts[1], buckConfig.getValue(parts[0], parts[1])));
                 })
             .collect(
-                MoreCollectors.toImmutableSortedSet(
+                ImmutableSortedSet.toImmutableSortedSet(
                     Comparator.comparing(ConfigValue::getSection)
                         .thenComparing(ConfigValue::getKey)));
 
@@ -135,7 +132,7 @@ public class AuditConfigCommand extends AbstractCommand {
     } else {
       printBuckconfigOutput(params, configs);
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private void printTabbedOutput(

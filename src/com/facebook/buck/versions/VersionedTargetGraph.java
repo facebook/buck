@@ -23,7 +23,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,7 +44,7 @@ public class VersionedTargetGraph extends TargetGraph {
         graph
             .getNodes()
             .stream()
-            .collect(MoreCollectors.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
+            .collect(ImmutableMap.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
     for (TargetNode<?, ?> node : graph.getNodes()) {
       Preconditions.checkArgument(
           !TargetGraphVersionTransformations.getVersionedNode(node).isPresent());

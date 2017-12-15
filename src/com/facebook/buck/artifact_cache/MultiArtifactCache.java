@@ -20,17 +20,20 @@ import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -50,7 +53,7 @@ public class MultiArtifactCache implements ArtifactCache {
         artifactCaches
             .stream()
             .filter(c -> c.getCacheReadMode().equals(CacheReadMode.READWRITE))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
   }
 
@@ -115,6 +118,51 @@ public class MultiArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return storeToCaches(writableArtifactCaches, info, output);
+  }
+
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    Map<RuleKey, CacheResult> initialResults = new HashMap<>(ruleKeys.size());
+    for (RuleKey ruleKey : ruleKeys) {
+      initialResults.put(ruleKey, CacheResult.miss());
+    }
+
+    ListenableFuture<Map<RuleKey, CacheResult>> cacheResultFuture =
+        Futures.immediateFuture(initialResults);
+
+    for (ArtifactCache nextCache : artifactCaches) {
+      cacheResultFuture =
+          Futures.transformAsync(
+              cacheResultFuture,
+              mergedResults -> {
+                ImmutableSet<RuleKey> missingKeys =
+                    mergedResults
+                        .entrySet()
+                        .stream()
+                        .filter(e -> !e.getValue().getType().isSuccess())
+                        .map(Map.Entry::getKey)
+                        .collect(ImmutableSet.toImmutableSet());
+
+                if (missingKeys.isEmpty()) {
+                  return Futures.immediateFuture(mergedResults);
+                }
+
+                ListenableFuture<ImmutableMap<RuleKey, CacheResult>> more =
+                    nextCache.multiContainsAsync(missingKeys);
+                return Futures.transform(
+                    more,
+                    results -> {
+                      mergedResults.putAll(results);
+                      return mergedResults;
+                    },
+                    MoreExecutors.directExecutor());
+              },
+              MoreExecutors.directExecutor());
+    }
+
+    return Futures.transform(
+        cacheResultFuture, ImmutableMap::copyOf, MoreExecutors.directExecutor());
   }
 
   @Override

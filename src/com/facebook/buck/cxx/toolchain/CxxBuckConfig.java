@@ -30,7 +30,6 @@ import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -333,7 +332,11 @@ public class CxxBuckConfig {
         .getListWithoutComments(cxxSection, "declared_platforms")
         .stream()
         .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
+  public BuckConfig getDelegate() {
+    return delegate;
   }
 
   @Value.Immutable

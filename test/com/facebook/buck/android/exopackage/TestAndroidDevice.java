@@ -21,10 +21,11 @@ import static org.junit.Assert.assertTrue;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.io.file.MoreFiles;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,7 +56,7 @@ public class TestAndroidDevice implements AndroidDevice {
         .stream()
         .filter(p -> p.getFileName().equals(APK_FILE_NAME))
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 p -> p.getParent().getFileName().toString(),
                 p -> resolve(APK_INSTALL_DIR.resolve(p))));
   }
@@ -64,7 +65,7 @@ public class TestAndroidDevice implements AndroidDevice {
     return Files.walk(stateDirectory)
         .filter(s -> s.toFile().isFile())
         .filter(p -> !p.startsWith(resolve(APK_INSTALL_DIR)))
-        .collect(MoreCollectors.toImmutableMap(this::toDevicePath, p -> p));
+        .collect(ImmutableMap.toImmutableMap(this::toDevicePath, p -> p));
   }
 
   public interface ApkInfoReader {
@@ -178,7 +179,7 @@ public class TestAndroidDevice implements AndroidDevice {
     return Files.walk(devicePath)
         .filter(s -> s.toFile().isFile())
         .map(devicePath::relativize)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -229,6 +230,11 @@ public class TestAndroidDevice implements AndroidDevice {
 
   @Override
   public void killProcess(String packageName) throws Exception {
+    // noop
+  }
+
+  @Override
+  public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
     // noop
   }
 

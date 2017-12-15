@@ -45,7 +45,8 @@ public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAnd
   @Override
   public final Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
-            getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
+            getDeclaredDeps().stream(),
+            BuildableSupport.getDepsCollection(getExecutableCommand(), ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
 }

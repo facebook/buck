@@ -29,7 +29,7 @@ java_library(
         "//test/com/facebook/buck/doctor:",
         "//test/com/facebook/buck/event/listener:",
         "//test/com/facebook/buck/event/listener/integration:",
-        "//test/com/facebook/buck/file:file",
+        "//test/com/facebook/buck/file/...",
         "//test/com/facebook/buck/httpserver:",
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/maven:testutil",

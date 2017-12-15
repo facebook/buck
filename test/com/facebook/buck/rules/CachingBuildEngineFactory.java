@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;

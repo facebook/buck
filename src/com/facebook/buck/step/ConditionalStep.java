@@ -36,7 +36,7 @@ public class ConditionalStep implements Step {
     if (shouldRunStep.get()) {
       return step.execute(context);
     } else {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 

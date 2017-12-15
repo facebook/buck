@@ -22,19 +22,21 @@ import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.build_slave.RemoteBuildModeRunner.FinalBuildStatusSetter;
+import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DistBuildSlaveExecutor {
@@ -45,32 +47,64 @@ public class DistBuildSlaveExecutor {
   private final DistBuildSlaveExecutorArgs args;
   private final DelegateAndGraphsInitializer initializer;
 
+  private final Object buildPreparationLock = new Object();
+  private boolean buildPreparationCompleted = false;
+  private Optional<Runnable> postPreparationCallback = Optional.empty();
+
   public DistBuildSlaveExecutor(DistBuildSlaveExecutorArgs args) {
     this.args = args;
     this.initializer =
         new DelegateAndGraphsInitializer(args.createDelegateAndGraphsInitiazerArgs());
   }
 
+  /**
+   * Register a callback to be executed after the preparation is complete and the actual build is
+   * about to start. This function does not guarantee that the actual build has not started, but it
+   * does guarantee that the preparation has finished when the callback is executed.
+   */
+  public void onBuildSlavePreparationCompleted(Runnable callback) {
+    boolean alreadyCompleted;
+    synchronized (buildPreparationLock) {
+      this.postPreparationCallback = Optional.of(callback);
+      alreadyCompleted = buildPreparationCompleted;
+    }
+
+    if (alreadyCompleted) {
+      callback.run();
+    }
+  }
+
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
+    Optional<BuildId> clientBuildId = fetchClientBuildId();
+
     DistBuildModeRunner runner = null;
     if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
       runner =
           MultiSlaveBuildModeRunnerFactory.createCoordinator(
-              initializer.getActionGraphAndResolver(),
+              initializer.getDelegateAndGraphs(),
               getTopLevelTargetsToBuild(),
               args.getDistBuildConfig(),
               args.getDistBuildService(),
               args.getStampedeId(),
+              clientBuildId,
               false,
               args.getLogDirectoryPath(),
-              args.getBuildRuleFinishedPublisher());
-      return runWithHeartbeatService(runner);
+              args.getBuildRuleFinishedPublisher(),
+              args.getBuckEventBus(),
+              args.getExecutorService(),
+              args.getArtifactCacheFactory().newInstance(true, true),
+              args.getRuleKeyConfiguration(),
+              /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()),
+              args.getTimingStatsTracker(),
+              args.getHealthCheckStatsTracker());
+      return setPreparationCallbackAndRunWithHeartbeatService(runner);
     }
 
     BuildExecutorArgs builderArgs = args.createBuilderArgs();
     try (ExecutionContext executionContext =
         LocalBuildExecutor.createExecutionContext(builderArgs)) {
-      BuildExecutor localBuildExecutor = createBuilder(builderArgs, executionContext);
+      ListenableFuture<BuildExecutor> localBuildExecutor =
+          createBuilder(builderArgs, executionContext);
 
       switch (args.getDistBuildMode()) {
         case REMOTE_BUILD:
@@ -92,21 +126,32 @@ public class DistBuildSlaveExecutor {
                   args.getBuildSlaveRunId(),
                   args.getRemoteCoordinatorAddress(),
                   OptionalInt.of(args.getRemoteCoordinatorPort()),
-                  args.getDistBuildConfig());
+                  args.getDistBuildConfig(),
+                  args.getUnexpectedSlaveCacheMissTracker(),
+                  args.getDistBuildConfig().getMinionBuildCapacityRatio());
           break;
 
         case COORDINATOR_AND_MINION:
           runner =
               MultiSlaveBuildModeRunnerFactory.createCoordinatorAndMinion(
-                  initializer.getActionGraphAndResolver(),
+                  initializer.getDelegateAndGraphs(),
                   getTopLevelTargetsToBuild(),
                   args.getDistBuildConfig(),
                   args.getDistBuildService(),
                   args.getStampedeId(),
+                  clientBuildId,
                   args.getBuildSlaveRunId(),
                   localBuildExecutor,
                   args.getLogDirectoryPath(),
-                  args.getBuildRuleFinishedPublisher());
+                  args.getBuildRuleFinishedPublisher(),
+                  args.getUnexpectedSlaveCacheMissTracker(),
+                  args.getBuckEventBus(),
+                  args.getExecutorService(),
+                  args.getArtifactCacheFactory().newInstance(true, true),
+                  args.getRuleKeyConfiguration(),
+                  args.getTimingStatsTracker(),
+                  args.getHealthCheckStatsTracker(),
+                  args.getDistBuildConfig().getCoordinatorBuildCapacityRatio());
           break;
 
         case COORDINATOR:
@@ -116,13 +161,43 @@ public class DistBuildSlaveExecutor {
           LOG.error("Unknown distributed build mode [%s].", args.getDistBuildMode().toString());
           return -1;
       }
-    }
 
-    return runWithHeartbeatService(runner);
+      return setPreparationCallbackAndRunWithHeartbeatService(runner);
+    }
   }
 
-  private int runWithHeartbeatService(DistBuildModeRunner runner)
+  private Optional<BuildId> fetchClientBuildId() {
+    BuildJob job;
+    try {
+      job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to fetch build job object", e);
+    }
+
+    if (job.getBuckBuildUuid() != null && !job.getBuckBuildUuid().isEmpty()) {
+      return Optional.of(new BuildId(job.getBuckBuildUuid()));
+    } else {
+      // TODO(nga): throw if unset after both client and server upgraded
+      LOG.warn("buckBuildUuid field is not set; need to update buck client or stampede frontend");
+      return Optional.empty();
+    }
+  }
+
+  private int setPreparationCallbackAndRunWithHeartbeatService(DistBuildModeRunner runner)
       throws IOException, InterruptedException {
+    runner
+        .getAsyncPrepFuture()
+        .addListener(
+            () -> {
+              Optional<Runnable> callbackToRun;
+              synchronized (buildPreparationLock) {
+                buildPreparationCompleted = true;
+                callbackToRun = postPreparationCallback;
+              }
+              callbackToRun.ifPresent(Runnable::run);
+            },
+            args.getExecutorService());
+
     try (HeartbeatService service =
         new HeartbeatService(args.getDistBuildConfig().getHearbeatServiceRateMillis())) {
       return runner.runAndReturnExitCode(service);
@@ -143,34 +218,26 @@ public class DistBuildSlaveExecutor {
     };
   }
 
-  private BuildExecutor createBuilder(
+  private ListenableFuture<BuildExecutor> createBuilder(
       BuildExecutorArgs builderArgs, ExecutionContext executionContext) {
-    Supplier<BuildExecutor> builderSupplier =
-        () -> {
-          DelegateAndGraphs delegateAndGraphs = null;
-          try {
-            delegateAndGraphs = initializer.getDelegateAndGraphs().get();
-          } catch (InterruptedException | ExecutionException e) {
-            String msg = String.format("Failed to get the DelegateAndGraphs.");
-            LOG.error(e, msg);
-            throw new RuntimeException(msg, e);
-          }
-          return new LocalBuildExecutor(
-              builderArgs,
-              executionContext,
-              delegateAndGraphs.getActionGraphAndResolver(),
-              delegateAndGraphs.getCachingBuildEngineDelegate(),
-              args.getExecutorService(),
-              KEEP_GOING,
-              true,
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              // Only the client side build needs to synchronize, not the slave.
-              // (as the co-ordinator synchronizes artifacts between slaves).
-              new NoOpRemoteBuildRuleCompletionWaiter());
-        };
-    return new LazyInitBuilder(builderSupplier);
+    return Futures.transform(
+        initializer.getDelegateAndGraphs(),
+        delegateAndGraphs ->
+            new LocalBuildExecutor(
+                builderArgs,
+                executionContext,
+                delegateAndGraphs.getActionGraphAndResolver(),
+                delegateAndGraphs.getCachingBuildEngineDelegate(),
+                args.getExecutorService(),
+                KEEP_GOING,
+                true,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                // Only the client side build needs to synchronize, not the slave.
+                // (as the co-ordinator synchronizes artifacts between slaves).
+                new NoOpRemoteBuildRuleCompletionWaiter()),
+        args.getExecutorService());
   }
 
   private List<BuildTarget> getTopLevelTargetsToBuild() {

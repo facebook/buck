@@ -22,9 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidResourceBuilder;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -115,7 +113,6 @@ public class TargetsCommandTest {
         TestProjectFilesystems.createProjectFilesystem(
             workspace.getDestPath().toRealPath().normalize());
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
@@ -124,7 +121,6 @@ public class TargetsCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             console,
             cell,
-            androidDirectoryResolver,
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),

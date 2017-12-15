@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.ExitCode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -72,7 +73,7 @@ public abstract class MachOAbstractCommand extends AbstractCommand {
   }
 
   @Override
-  public final int runWithoutHelp(CommandRunnerParams params)
+  public final ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     Preconditions.checkNotNull(binary, BINARY_OPTION + " must be set");
     Preconditions.checkNotNull(output, OUTPUT_OPTION + " must be set");
@@ -98,5 +99,5 @@ public abstract class MachOAbstractCommand extends AbstractCommand {
   }
 
   /** The override point for subclasses. */
-  protected abstract int invokeWithParams(CommandRunnerParams params) throws IOException;
+  protected abstract ExitCode invokeWithParams(CommandRunnerParams params) throws IOException;
 }

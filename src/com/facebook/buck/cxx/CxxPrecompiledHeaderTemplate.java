@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
@@ -156,14 +155,14 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
     return getCxxPreprocessorInputs(cxxPlatform)
         .stream()
         .flatMap(input -> input.getIncludes().stream())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   private ImmutableSet<FrameworkPath> getFrameworks(CxxPlatform cxxPlatform) {
     return getCxxPreprocessorInputs(cxxPlatform)
         .stream()
         .flatMap(input -> input.getFrameworks().stream())
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   private ImmutableSortedSet<BuildRule> getPreprocessDeps(

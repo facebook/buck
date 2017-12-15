@@ -41,10 +41,10 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.Arrays;
 import java.util.stream.Stream;
 import org.hamcrest.BaseMatcher;
@@ -278,7 +278,7 @@ public class JsLibraryDescriptionTest {
     assertEquals(
         deps.stream()
             .map(BuildRule::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet()),
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         lib.getLibraryDependencies());
   }
 
@@ -296,7 +296,7 @@ public class JsLibraryDescriptionTest {
     assertEquals(
         deps.stream()
             .map(BuildRule::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet()),
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         lib.getLibraryDependencies());
   }
 

@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -84,7 +83,7 @@ public class BuildRules {
     final ImmutableSet.Builder<BuildTarget> runtimeDeps = ImmutableSet.builder();
     AbstractBreadthFirstTraversal<BuildTarget> visitor =
         new AbstractBreadthFirstTraversal<BuildTarget>(
-            rule.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet())) {
+            rule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet())) {
           @Override
           public Iterable<BuildTarget> visit(BuildTarget runtimeDep) {
             runtimeDeps.add(runtimeDep);
@@ -92,7 +91,7 @@ public class BuildRules {
             if (rule.isPresent() && rule.get() instanceof HasRuntimeDeps) {
               return ((HasRuntimeDeps) rule.get())
                   .getRuntimeDeps(ruleFinder)
-                  .collect(MoreCollectors.toImmutableSet());
+                  .collect(ImmutableSet.toImmutableSet());
             }
             return ImmutableSet.of();
           }

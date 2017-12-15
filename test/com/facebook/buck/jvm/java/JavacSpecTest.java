@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -116,7 +118,9 @@ public class JavacSpecTest {
     specBuilder.setJavacJarPath(javacJarPath);
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(javacJarPath));
+    assertThat(
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
+        Matchers.contains(javacJarPath));
   }
 
   @Test
@@ -131,7 +135,9 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either);
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
+    assertThat(
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
+        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test
@@ -149,7 +155,9 @@ public class JavacSpecTest {
             PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
+    assertThat(
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
+        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test

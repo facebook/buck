@@ -35,6 +35,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -112,7 +113,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
                       return true;
                     },
                     true);
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
   }

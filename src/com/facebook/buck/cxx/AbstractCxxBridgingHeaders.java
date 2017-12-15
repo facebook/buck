@@ -47,7 +47,7 @@ abstract class AbstractCxxBridgingHeaders extends CxxHeaders {
   public abstract SourcePath getBridgingHeader();
 
   @Override
-  public void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder) {
+  public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
     builder.addBridgingHeader(getBridgingHeader());
   }
 

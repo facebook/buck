@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.facebook.buck.util.xml.DocumentLocation;
@@ -184,7 +185,7 @@ public class MiniAapt implements Step {
       processXmlFilesForIds(filesystem, references);
     } catch (XPathExpressionException | ResourceParseException e) {
       context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
     Set<RDotTxtEntry> missing = verifyReferences(filesystem, references.build());
@@ -195,7 +196,7 @@ public class MiniAapt implements Step {
               ConsoleEvent.severe(
                   "The following resources were not found when processing %s: \n%s\n",
                   resDirectory, Joiner.on('\n').join(missing)));
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
     if (resourceUnion) {
@@ -223,7 +224,7 @@ public class MiniAapt implements Step {
           androidResourceIndexCollector.getResourceIndex());
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   /**

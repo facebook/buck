@@ -103,6 +103,11 @@ run_command() {
       outfile=$(echo "$2" | sed -n 's/.*"outputPath":"\([^"]*\)".*/\1/p')
     fi
 
+    if [[ "$command" == "transform" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"sourceJsFilePath":"\([^"]*\)".*/\1/p')
+      outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
+    fi
+
   else
 
     # Process args_string ($2) as command-line arguments
@@ -155,7 +160,8 @@ run_command() {
 
   if [[ -z "$outfile" ]]; then
     echo "No output file given" >&2
-    return ',{"id": %d, "type": "error", "exit_code": 1}' "$message_id"
+    printf ',{"id": %d, "type": "error", "exit_code": 1}' "$message_id"
+    return
   fi
 
   mkdir -p "$(dirname "$outfile")"

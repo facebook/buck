@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import java.io.IOException;
@@ -46,7 +47,8 @@ public class DistBuildLogsCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     Console console = params.getConsole();
     PrintStream stdout = console.getStdOut();
     StampedeId stampedeId = getStampedeId();
@@ -85,13 +87,14 @@ public class DistBuildLogsCommand extends AbstractDistBuildCommand {
             String.format(
                 "Successfully materialized all logs into [%s] in [%d millis].",
                 logDir.toAbsolutePath().toString(), stopwatch.elapsed(TimeUnit.MILLISECONDS)));
-        return 0;
+        return ExitCode.SUCCESS;
       } else if (notMaterialized.size() == buildSlaves.size()) {
         console.printErrorText(
             String.format(
                 "Failed to materialize all logs. Duration=[%d millis].",
                 stopwatch.elapsed(TimeUnit.MILLISECONDS)));
-        return 1;
+        // TODO: buck(team) proper disambiguate between user errors and fatals
+        return ExitCode.BUILD_ERROR;
       } else {
         stdout.println(
             console
@@ -103,7 +106,7 @@ public class DistBuildLogsCommand extends AbstractDistBuildCommand {
                         buildSlaves.size(),
                         logDir.toAbsolutePath().toString(),
                         stopwatch.elapsed(TimeUnit.MILLISECONDS))));
-        return 2;
+        return ExitCode.BUILD_ERROR;
       }
     }
   }

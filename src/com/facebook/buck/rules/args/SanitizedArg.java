@@ -19,6 +19,8 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,12 +42,20 @@ import java.util.function.Function;
  * }</pre>
  */
 public class SanitizedArg implements Arg {
+
+  // Args are cached in various rule key caches which tend to key on object identity. Empirically,
+  // buck creates many instances of this class containing largely identical contents. This leads to
+  // a lot of cache pollution where these simple objects are cached again and again. Until we
+  // improve rule key caches or how we handle args, this interner serves to deduplicate instances
+  // to avoid bloating the rule key caches.
+  private static final Interner<SanitizedArg> INTERNER = Interners.newWeakInterner();
+
   private final String unsanitized;
   @AddToRuleKey private final String sanitized;
 
-  public SanitizedArg(Function<? super String, String> sanitizer, String unsanitized) {
+  private SanitizedArg(String unsanitized, String sanitized) {
     this.unsanitized = unsanitized;
-    this.sanitized = sanitizer.apply(unsanitized);
+    this.sanitized = sanitized;
   }
 
   @Override
@@ -76,10 +86,16 @@ public class SanitizedArg implements Arg {
     return Objects.hash(sanitized, unsanitized);
   }
 
+  /** Create a SanitizedArg by applying the given sanitizer function to an arg string. */
+  public static SanitizedArg create(
+      Function<? super String, String> sanitizer, String unsanitized) {
+    return INTERNER.intern(new SanitizedArg(unsanitized, sanitizer.apply(unsanitized)));
+  }
+
   public static ImmutableList<Arg> from(Function<String, String> sanitizer, Iterable<String> args) {
     ImmutableList.Builder<Arg> converted = ImmutableList.builder();
     for (String arg : args) {
-      converted.add(new SanitizedArg(sanitizer, arg));
+      converted.add(create(sanitizer, arg));
     }
     return converted.build();
   }

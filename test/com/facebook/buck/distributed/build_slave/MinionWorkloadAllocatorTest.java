@@ -16,13 +16,22 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.testutil.DummyFileHashCache;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,8 +47,23 @@ public class MinionWorkloadAllocatorTest {
   @Before
   public void setUp() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = BuildTargetsQueueTest.createDiamondDependencyResolver();
-    target = BuildTargetFactory.newInstance(BuildTargetsQueueTest.TARGET_NAME);
-    queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
+    target = BuildTargetFactory.newInstance(BuildTargetsQueueTest.ROOT_TARGET);
+    queue =
+        new BuildTargetsQueueFactory(
+                resolver,
+                MoreExecutors.newDirectExecutorService(),
+                false,
+                new NoopArtifactCache(),
+                new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+                new DummyFileHashCache(),
+                RuleKeyConfiguration.builder()
+                    .setCoreKey("dummy")
+                    .setSeed(0)
+                    .setBuildInputRuleKeyFileSizeLimit(100)
+                    .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
+                    .build(),
+                Optional.empty())
+            .newQueue(ImmutableList.of(target));
   }
 
   @Test
@@ -68,7 +92,7 @@ public class MinionWorkloadAllocatorTest {
 
     List<WorkUnit> fourthTargets =
         allocator.dequeueZeroDependencyNodes(
-            MINION_ONE, ImmutableList.of(BuildTargetsQueueTest.TARGET_NAME), MAX_WORK_UNITS);
+            MINION_ONE, ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET), MAX_WORK_UNITS);
     Assert.assertEquals(0, fourthTargets.size());
     Assert.assertTrue(allocator.isBuildFinished());
   }

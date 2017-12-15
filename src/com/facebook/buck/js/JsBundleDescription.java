@@ -48,13 +48,13 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.Collection;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -124,6 +124,20 @@ public class JsBundleDescription
           bundleOutputs.getSourcePathToSourceMap());
     }
 
+    if (flavors.contains(JsFlavors.MISC)) {
+      BuildTarget bundleTarget = buildTarget.withoutFlavors(JsFlavors.MISC);
+      resolver.requireRule(bundleTarget);
+      JsBundleOutputs bundleOutputs = resolver.getRuleWithType(bundleTarget, JsBundleOutputs.class);
+
+      return new ExportFile(
+          buildTarget,
+          projectFilesystem,
+          new SourcePathRuleFinder(resolver),
+          bundleOutputs.getBundleName() + "-misc",
+          ExportFileDescription.Mode.REFERENCE,
+          bundleOutputs.getSourcePathToMisc());
+    }
+
     // For Android, we bundle JS output as assets, and images etc. as resources.
     // To facilitate this, we return a build rule that in turn depends on a `JsBundle` and
     // an `AndroidResource`. The `AndroidResource` rule also depends on the `JsBundle`
@@ -150,7 +164,7 @@ public class JsBundleDescription
         libraryDeps
             .stream()
             .map(JsLibrary::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     ImmutableSet<String> entryPoints =
         entryPoint.isLeft() ? entryPoint.getLeft() : ImmutableSet.of(entryPoint.getRight());
 
@@ -173,9 +187,12 @@ public class JsBundleDescription
                 group ->
                     group
                         .stream()
-                        .map(lib -> libsResolver.requireLibrary(lib).getSourcePathToOutput())
-                        .collect(MoreCollectors.<SourcePath>toImmutableSet()))
-            .collect(MoreCollectors.toImmutableList());
+                        .map(
+                            lib ->
+                                (SourcePath)
+                                    libsResolver.requireLibrary(lib).getSourcePathToOutput())
+                        .collect(ImmutableSet.toImmutableSet()))
+            .collect(ImmutableList.toImmutableList());
 
     String bundleName = getBundleName(args, buildTarget.getFlavors());
 
@@ -350,7 +367,7 @@ public class JsBundleDescription
                       JsLibraryDescription.FLAVOR_DOMAINS
                           .stream()
                           .anyMatch(domain -> domain.contains(flavor)))
-              .collect(MoreCollectors.toImmutableSortedSet());
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       ruleFinder = new SourcePathRuleFinder(resolver);
     }
 
@@ -400,7 +417,7 @@ public class JsBundleDescription
                                       + "js_library targets as lib",
                                   library.getBuildTarget(), sourcePath)))
           .map(BuildRule::getBuildTarget)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
     }
   }
 }

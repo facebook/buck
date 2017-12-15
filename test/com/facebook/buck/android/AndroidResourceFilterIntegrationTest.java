@@ -355,7 +355,7 @@ public class AndroidResourceFilterIntegrationTest {
     // TODO(dreiss): Remove this when aapt2 is everywhere.
     ProjectWorkspace.ProcessResult foundAapt2 =
         workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+    Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
 
     String target = "//apps/sample:app_en";
     workspace.replaceFileContents("apps/sample/BUCK", "'aapt1', # app_en", "'aapt2',");

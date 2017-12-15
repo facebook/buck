@@ -4,15 +4,24 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/toolchain:toolchain",
     ],
+    tests = [
+        "//test/com/facebook/buck/toolchain/impl:impl",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
+        "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/apple/toolchain/impl:impl",
+        "//src/com/facebook/buck/file/downloader/impl:impl",
+        "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java/toolchain/impl:impl",
+        "//src/com/facebook/buck/ocaml:ocaml",
+        "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//src/com/facebook/buck/swift/toolchain/impl:impl",
         "//src/com/facebook/buck/util:exceptions",
-        "//third-party/java/jsr:jsr305",
+        "//third-party/java/pf4j:pf4j",
     ],
 )

@@ -16,28 +16,49 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactInfo;
+import com.facebook.buck.artifact_cache.DummyArtifactCache;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
+import com.facebook.buck.rules.RuleDepsCache;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFactory;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
+import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,11 +70,13 @@ public class BuildTargetsQueueTest {
   public static final String HAS_RUNTIME_DEP_RULE = "//:runtime_dep";
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  public static final String TARGET_NAME = "//foo:one";
-  public static final String LEAF_TARGET = TARGET_NAME + "_leaf";
-  public static final String RIGHT_TARGET = TARGET_NAME + "_right";
-  public static final String LEFT_TARGET = TARGET_NAME + "_left";
-  public static final String CHAIN_TOP_TARGET = TARGET_NAME + "_chain_top";
+  public static final String ROOT_TARGET = "//foo:one";
+  public static final String LEAF_TARGET = ROOT_TARGET + "_leaf";
+  public static final String RIGHT_TARGET = ROOT_TARGET + "_right";
+  public static final String LEFT_TARGET = ROOT_TARGET + "_left";
+  public static final String CHAIN_TOP_TARGET = ROOT_TARGET + "_chain_top";
+  public static final RuleKey CACHE_HIT_RULE_KEY = new RuleKey("cafebabe");
+  public static final RuleKey CACHE_MISS_RULE_KEY = new RuleKey("deadbeef");
 
   private static class FakeHasRuntimeDepsRule extends FakeBuildRule implements HasRuntimeDeps {
     private final ImmutableSortedSet<BuildRule> runtimeDeps;
@@ -70,9 +93,71 @@ public class BuildTargetsQueueTest {
     }
   }
 
+  private static BuildTargetsQueue createQueueWithoutRemoteCache(
+      BuildRuleResolver resolver, Iterable<BuildTarget> topLevelTargets) {
+    return new BuildTargetsQueueFactory(
+            resolver,
+            MoreExecutors.newDirectExecutorService(),
+            false,
+            new NoopArtifactCache(),
+            new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+            new DummyFileHashCache(),
+            RuleKeyConfiguration.builder()
+                .setCoreKey("dummy")
+                .setSeed(0)
+                .setBuildInputRuleKeyFileSizeLimit(100)
+                .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
+                .build(),
+            Optional.empty())
+        .newQueue(topLevelTargets);
+  }
+
+  private static BuildTargetsQueue createQueueWithRemoteCacheHits(
+      BuildRuleResolver resolver,
+      Iterable<BuildTarget> topLevelTargets,
+      List<BuildTarget> cacheHitTargets) {
+
+    ArtifactCache remoteCache = new DummyArtifactCache();
+    remoteCache.store(
+        ArtifactInfo.builder().setRuleKeys(ImmutableList.of(CACHE_HIT_RULE_KEY)).build(), null);
+
+    RuleKeyFactory<RuleKey> ruleKeyFactory =
+        new FakeRuleKeyFactory(
+            Maps.toMap(
+                MoreIterables.dedupKeepLast(resolver.getBuildRules())
+                    .stream()
+                    .map(rule -> rule.getBuildTarget())
+                    .collect(ImmutableSet.toImmutableSet()),
+                target ->
+                    cacheHitTargets.contains(target) ? CACHE_HIT_RULE_KEY : CACHE_MISS_RULE_KEY));
+
+    ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator =
+        new ParallelRuleKeyCalculator<>(
+            MoreExecutors.newDirectExecutorService(),
+            ruleKeyFactory,
+            new RuleDepsCache(resolver),
+            (eventBus, rule) -> () -> {});
+
+    return new BuildTargetsQueueFactory(
+            resolver,
+            MoreExecutors.newDirectExecutorService(),
+            false,
+            remoteCache,
+            new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+            new DummyFileHashCache(),
+            RuleKeyConfiguration.builder()
+                .setCoreKey("dummy")
+                .setSeed(0)
+                .setBuildInputRuleKeyFileSizeLimit(100)
+                .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
+                .build(),
+            Optional.of(ruleKeyCalculator))
+        .newQueue(topLevelTargets);
+  }
+
   @Test
   public void testEmptyQueue() {
-    BuildTargetsQueue queue = BuildTargetsQueue.newEmptyQueue();
+    BuildTargetsQueue queue = BuildTargetsQueueFactory.newEmptyQueue();
     List<WorkUnit> zeroDepTargets =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepTargets.size());
@@ -87,7 +172,7 @@ public class BuildTargetsQueueTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of());
+    BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of());
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(0, zeroDepTargets.size());
   }
@@ -95,8 +180,8 @@ public class BuildTargetsQueueTest {
   @Test
   public void testResolverWithOnSingleTarget() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = createSimpleResolver();
-    BuildTarget target = BuildTargetFactory.newInstance(TARGET_NAME);
-    BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
+    BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(1, zeroDepTargets.get(0).getBuildTargets().size());
@@ -116,7 +201,7 @@ public class BuildTargetsQueueTest {
       throws NoSuchBuildTargetException, InterruptedException {
     BuildRuleResolver resolver = createRuntimeDepsResolver();
     BuildTarget target = BuildTargetFactory.newInstance(HAS_RUNTIME_DEP_RULE);
-    BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
+    BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(2, zeroDepTargets.get(0).getBuildTargets().size());
@@ -137,15 +222,15 @@ public class BuildTargetsQueueTest {
   @Test
   public void testResolverWithDiamondDependencyTarget() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = createDiamondDependencyResolver();
-    BuildTarget target = BuildTargetFactory.newInstance(TARGET_NAME);
-    BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
+    BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
 
     List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepWorkUnits.size());
     WorkUnit leafNodeWorkUnit = zeroDepWorkUnits.get(0);
     List<String> leafNodeTargets = leafNodeWorkUnit.getBuildTargets();
     Assert.assertEquals(1, leafNodeTargets.size());
-    Assert.assertEquals(TARGET_NAME + "_leaf", leafNodeTargets.get(0));
+    Assert.assertEquals(LEAF_TARGET, leafNodeTargets.get(0));
 
     zeroDepWorkUnits = queue.dequeueZeroDependencyNodes(leafNodeTargets, MAX_UNITS_OF_WORK);
     Assert.assertEquals(2, zeroDepWorkUnits.size());
@@ -166,7 +251,7 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(1, zeroDepWorkUnits.size());
     WorkUnit rootWorkUnit = zeroDepWorkUnits.get(0);
     Assert.assertEquals(1, rootWorkUnit.getBuildTargets().size());
-    Assert.assertEquals(TARGET_NAME, rootWorkUnit.getBuildTargets().get(0));
+    Assert.assertEquals(ROOT_TARGET, rootWorkUnit.getBuildTargets().get(0));
 
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(rootWorkUnit.getBuildTargets(), MAX_UNITS_OF_WORK);
@@ -177,12 +262,12 @@ public class BuildTargetsQueueTest {
   public void testDiamondDependencyResolverWithChainFromLeaf() throws NoSuchBuildTargetException {
     // Graph structure:
     //        / right \
-    // root -          - chain top - chain bottom
+    // root -          - chain top - leaf
     //        \ left  /
 
     BuildRuleResolver resolver = createDiamondDependencyResolverWithChainFromLeaf();
-    BuildTarget target = BuildTargetFactory.newInstance(TARGET_NAME);
-    BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
+    BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
 
     List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepWorkUnits.size());
@@ -215,11 +300,87 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(1, zeroDepWorkUnits.size());
     WorkUnit rootWorkUnit = zeroDepWorkUnits.get(0);
     Assert.assertEquals(1, rootWorkUnit.getBuildTargets().size());
-    Assert.assertEquals(TARGET_NAME, rootWorkUnit.getBuildTargets().get(0));
+    Assert.assertEquals(ROOT_TARGET, rootWorkUnit.getBuildTargets().get(0));
 
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(rootWorkUnit.getBuildTargets(), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
+  }
+
+  @Test
+  public void testDiamondDependencyGraphWithRemoteCacheHits() throws NoSuchBuildTargetException {
+    // Graph structure:
+    //               / right (hit) \
+    // root (miss) -                 - chain top (miss) - chain bottom (hit)
+    //              \ left (miss) /
+
+    BuildRuleResolver resolver = createDiamondDependencyResolverWithChainFromLeaf();
+    BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
+    BuildTarget rightTarget = BuildTargetFactory.newInstance(RIGHT_TARGET);
+    BuildTarget leafTarget = BuildTargetFactory.newInstance(LEAF_TARGET);
+
+    BuildTargetsQueue queue =
+        createQueueWithRemoteCacheHits(
+            resolver, ImmutableList.of(rootTarget), ImmutableList.of(rightTarget, leafTarget));
+
+    List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
+    Assert.assertEquals(1, zeroDepWorkUnits.size());
+    WorkUnit workUnit = zeroDepWorkUnits.get(0);
+    List<String> targets = workUnit.getBuildTargets();
+    Assert.assertEquals(3, targets.size());
+    Assert.assertEquals(CHAIN_TOP_TARGET, targets.get(0));
+    Assert.assertEquals(LEFT_TARGET, targets.get(1));
+    Assert.assertEquals(ROOT_TARGET, targets.get(2));
+
+    zeroDepWorkUnits = queue.dequeueZeroDependencyNodes(targets, MAX_UNITS_OF_WORK);
+    Assert.assertEquals(0, zeroDepWorkUnits.size());
+  }
+
+  @Test
+  public void testGraphWithTopLevelCacheHit() throws NoSuchBuildTargetException {
+    BuildRuleResolver resolver = createSimpleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
+    BuildTargetsQueue queue =
+        createQueueWithRemoteCacheHits(
+            resolver, ImmutableList.of(target), ImmutableList.of(target));
+    List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
+    Assert.assertEquals(0, zeroDepTargets.size());
+  }
+
+  @Test
+  public void testDeepBuildDoesNotCalculateRuleKeysOrUseRemoteCache()
+      throws NoSuchBuildTargetException {
+    BuildRuleResolver resolver = createDiamondDependencyResolverWithChainFromLeaf();
+    BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
+
+    ParallelRuleKeyCalculator<RuleKey> rkCalculator =
+        EasyMock.createMock(ParallelRuleKeyCalculator.class);
+    EasyMock.expect(rkCalculator.getAllKnownTargets()).andReturn(ImmutableSet.of()).anyTimes();
+    ArtifactCache artifactCache = EasyMock.createMock(ArtifactCache.class);
+
+    BuildTargetsQueueFactory factory =
+        new BuildTargetsQueueFactory(
+            resolver,
+            MoreExecutors.newDirectExecutorService(),
+            true,
+            artifactCache,
+            new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+            new DummyFileHashCache(),
+            RuleKeyConfiguration.builder()
+                .setCoreKey("dummy")
+                .setSeed(0)
+                .setBuildInputRuleKeyFileSizeLimit(100)
+                .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
+                .build(),
+            Optional.of(rkCalculator));
+
+    EasyMock.replay(artifactCache);
+    EasyMock.replay(rkCalculator);
+
+    factory.newQueue(ImmutableList.of(rootTarget));
+
+    EasyMock.verify(artifactCache);
+    EasyMock.verify(rkCalculator);
   }
 
   private static BuildRuleResolver createSimpleResolver() throws NoSuchBuildTargetException {
@@ -228,7 +389,7 @@ public class BuildTargetsQueueTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET_NAME))
+            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(ROOT_TARGET))
                 .build(resolver),
             JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:two"))
                 .build(resolver));
@@ -268,7 +429,7 @@ public class BuildTargetsQueueTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildTarget root = BuildTargetFactory.newInstance(TARGET_NAME);
+    BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget right = BuildTargetFactory.newInstance(RIGHT_TARGET);
     BuildTarget leaf = BuildTargetFactory.newInstance(LEAF_TARGET);
@@ -284,18 +445,22 @@ public class BuildTargetsQueueTest {
   }
 
   public static BuildTargetsQueue createDiamondDependencyQueue() throws NoSuchBuildTargetException {
-    return BuildTargetsQueue.newQueue(
+    return createQueueWithoutRemoteCache(
         createDiamondDependencyResolver(),
-        ImmutableList.of(BuildTargetFactory.newInstance(TARGET_NAME)));
+        ImmutableList.of(BuildTargetFactory.newInstance(ROOT_TARGET)));
   }
 
+  // Graph structure:
+  //        / right \
+  // root -          - chain top - leaf
+  //        \ left  /
   private static BuildRuleResolver createDiamondDependencyResolverWithChainFromLeaf()
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
-    BuildTarget root = BuildTargetFactory.newInstance(TARGET_NAME);
+    BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget right = BuildTargetFactory.newInstance(RIGHT_TARGET);
     BuildTarget chainTop = BuildTargetFactory.newInstance(CHAIN_TOP_TARGET);
@@ -310,5 +475,12 @@ public class BuildTargetsQueueTest {
             JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
     buildRules.forEach(resolver::addToIndex);
     return resolver;
+  }
+
+  public static BuildTargetsQueue createDiamondDependencyQueueWithChainFromLeaf()
+      throws NoSuchBuildTargetException {
+    return createQueueWithoutRemoteCache(
+        createDiamondDependencyResolverWithChainFromLeaf(),
+        ImmutableList.of(BuildTargetFactory.newInstance(ROOT_TARGET)));
   }
 }

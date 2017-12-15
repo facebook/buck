@@ -26,6 +26,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -109,7 +110,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
       dexInputsToHashes.put(path, Sha1HashCode.fromHashCode(hasher.hash()));
     }
     stepFinished = true;
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

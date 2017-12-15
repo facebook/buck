@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.google.common.collect.ImmutableMap;

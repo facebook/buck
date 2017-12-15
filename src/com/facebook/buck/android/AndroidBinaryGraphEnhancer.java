@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidBinary.AaptMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
@@ -45,12 +46,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -64,6 +65,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -128,15 +130,17 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
 
   AndroidBinaryGraphEnhancer(
+      CellPathResolver cellPathResolver,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
-      AndroidBinary.AaptMode aaptMode,
+      AaptMode aaptMode,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
       EnumSet<RType> bannedDuplicateResourceTypes,
+      Optional<SourcePath> duplicateResourceWhitelistPath,
       Optional<String> resourceUnionPackage,
       ImmutableSet<String> locales,
       Optional<SourcePath> manifest,
@@ -204,6 +208,7 @@ public class AndroidBinaryGraphEnhancer {
     this.nativeLibraryProguardConfigGenerator = nativeLibraryProguardConfigGenerator;
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            cellPathResolver,
             ruleResolver,
             originalBuildTarget,
             projectFilesystem,
@@ -236,6 +241,7 @@ public class AndroidBinaryGraphEnhancer {
             skipCrunchPngs,
             includesVectorDrawables,
             bannedDuplicateResourceTypes,
+            duplicateResourceWhitelistPath,
             manifestEntries,
             postFilterResourcesCmd,
             noAutoVersionResources);
@@ -274,7 +280,7 @@ public class AndroidBinaryGraphEnhancer {
                   .values()
                   .stream()
                   .map(CopyNativeLibraries::getSourcePathToAllLibsDir)
-                  .collect(MoreCollectors.toImmutableList()));
+                  .collect(ImmutableList.toImmutableList()));
 
       ruleResolver.addToIndex(nativeLibraryProguardGenerator);
       proguardConfigsBuilder.add(nativeLibraryProguardGenerator.getSourcePathToOutput());
@@ -444,7 +450,7 @@ public class AndroidBinaryGraphEnhancer {
                 additionalJavaLibraries
                     .stream()
                     .map(BuildRule::getSourcePathToOutput)
-                    .collect(MoreCollectors.toImmutableList()))
+                    .collect(ImmutableList.toImmutableList()))
             .build();
     SourcePath aaptGeneratedProguardConfigFile =
         resourcesEnhancementResult.getAaptGeneratedProguardConfigFile();
@@ -530,7 +536,7 @@ public class AndroidBinaryGraphEnhancer {
         packageableCollection.getBuildConfigs().entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.
       BuildConfigFields totalBuildConfigValues =
-          BuildConfigFields.empty()
+          BuildConfigFields.of()
               .putAll(entry.getValue())
               .putAll(buildConfigValues)
               .putAll(buildConfigConstants);
@@ -669,13 +675,13 @@ public class AndroidBinaryGraphEnhancer {
         rulesToExcludeFromDex
             .stream()
             .flatMap((javaLibrary) -> javaLibrary.getImmediateClasspaths().stream())
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths =
         Optional.of(
             RichStream.from(classpathEntriesToDex)
                 .concat(RichStream.of(compiledUberRDotJava.getSourcePathToOutput()))
-                .collect(MoreCollectors.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
         moduleMappedClasspathEntriesToDex =
             Optional.of(

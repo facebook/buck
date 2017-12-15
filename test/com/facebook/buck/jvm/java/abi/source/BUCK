@@ -11,6 +11,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",
@@ -44,6 +45,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java/abi:abi",
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
         "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",

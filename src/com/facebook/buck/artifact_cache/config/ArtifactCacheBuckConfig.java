@@ -21,7 +21,6 @@ import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -237,7 +236,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
                     "Unusable %s.mode: '%s'", CACHE_SECTION_NAME, input);
               }
             })
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public Optional<DirCacheEntry> getServedLocalCache() {
@@ -306,7 +305,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return getSQLiteCacheNames()
         .parallelStream()
         .map(this::obtainSQLiteEntryForName)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   // It's important that this number is greater than the `-j` parallelism,

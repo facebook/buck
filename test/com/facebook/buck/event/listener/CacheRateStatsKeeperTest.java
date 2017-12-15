@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
@@ -153,6 +154,24 @@ public class CacheRateStatsKeeperTest {
     assertThat(stats.getCacheMissRate(), Matchers.is(0.0));
     assertThat(stats.getCacheHitCount(), Matchers.is(0));
     assertThat(stats.getUpdatedRulesCount(), Matchers.is(1));
+  }
+
+  @Test
+  public void unexpectedStampedeSlaveCacheMisses() {
+    CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
+    cacheRateStatsKeeper.recordUnexpectedCacheMisses(6);
+    cacheRateStatsKeeper.recordUnexpectedCacheMisses(7);
+
+    CacheRateStats serializableStats = cacheRateStatsKeeper.getSerializableStats();
+
+    assertThat(serializableStats.getUnexpectedCacheMissesCount(), Matchers.is(13));
+    assertThat(serializableStats.getCacheErrorsCount(), Matchers.is(0));
+    assertThat(serializableStats.getCacheHitsCount(), Matchers.is(0));
+    assertThat(serializableStats.getCacheMissesCount(), Matchers.is(0));
+    assertThat(serializableStats.getTotalRulesCount(), Matchers.is(0));
+    assertThat(serializableStats.getUpdatedRulesCount(), Matchers.is(0));
+    assertThat(serializableStats.getCacheIgnoresCount(), Matchers.is(0));
+    assertThat(serializableStats.getCacheLocalKeyUnchangedHitsCount(), Matchers.is(0));
   }
 
   @Test

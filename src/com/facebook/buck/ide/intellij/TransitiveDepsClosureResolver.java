@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,7 +70,7 @@ public class TransitiveDepsClosureResolver {
             .flatMap(
                 target ->
                     Stream.concat(getTransitiveDepsClosure(target).stream(), Stream.of(target)))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     index.put(buildTarget, transitiveDepsClosure);
     return transitiveDepsClosure;

@@ -43,8 +43,8 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -431,7 +431,7 @@ public class RobolectricTestRuleTest {
     assertThat(
         robolectricTest
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(resGenRule.getBuildTarget(), assetsGenRule.getBuildTarget()));
   }
 }

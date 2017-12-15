@@ -29,6 +29,7 @@ public class SwiftBuckConfig {
   public static final String USE_FILELIST = "use_filelist";
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
+  public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
 
   private final BuckConfig delegate;
 
@@ -68,5 +69,13 @@ public class SwiftBuckConfig {
   /** If enabled, turns on Whole Module Optimization for any targets that contain Swift. */
   public boolean getProjectWMO() {
     return delegate.getBooleanValue(SECTION_NAME, PROJECT_WMO, false);
+  }
+
+  /**
+   * If enabled, AST paths to the .swiftmodules will be added as part of the linker invocation. This
+   * is necessary for lldb to be able to debug statically linked Swift libraries.
+   */
+  public boolean getProjectAddASTPaths() {
+    return delegate.getBooleanValue(SECTION_NAME, PROJECT_ADD_AST_PATHS, false);
   }
 }

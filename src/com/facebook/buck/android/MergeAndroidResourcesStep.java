@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -72,6 +73,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final Path outputDir;
   private final boolean forceFinalResourceIds;
   private final EnumSet<RType> bannedDuplicateResourceTypes;
+  private final Optional<Path> duplicateResourceWhitelistPath;
   private final Optional<String> unionPackage;
   private final String rName;
   private final boolean useOldStyleableFormat;
@@ -92,6 +94,7 @@ public class MergeAndroidResourcesStep implements Step {
       Path outputDir,
       boolean forceFinalResourceIds,
       EnumSet<RType> bannedDuplicateResourceTypes,
+      Optional<Path> duplicateResourceWhitelistPath,
       Optional<Path> overrideSymbolsPath,
       Optional<String> unionPackage,
       Optional<String> rName,
@@ -103,6 +106,7 @@ public class MergeAndroidResourcesStep implements Step {
     this.outputDir = outputDir;
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
+    this.duplicateResourceWhitelistPath = duplicateResourceWhitelistPath;
     this.unionPackage = unionPackage;
     this.overrideSymbolsPath = overrideSymbolsPath;
     this.rName = rName.orElse("R");
@@ -127,6 +131,7 @@ public class MergeAndroidResourcesStep implements Step {
         forceFinalResourceIds,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
         Optional.empty(),
+        Optional.empty(),
         unionPackage,
         rName,
         useOldStyleableFormat);
@@ -139,6 +144,7 @@ public class MergeAndroidResourcesStep implements Step {
       Path uberRDotTxt,
       Path outputDir,
       EnumSet<RType> bannedDuplicateResourceTypes,
+      Optional<Path> duplicateResourceWhitelistPath,
       Optional<Path> overrideSymbolsPath,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
@@ -149,6 +155,7 @@ public class MergeAndroidResourcesStep implements Step {
         outputDir,
         /* forceFinalResourceIds */ true,
         bannedDuplicateResourceTypes,
+        duplicateResourceWhitelistPath,
         overrideSymbolsPath,
         unionPackage,
         /* rName */ Optional.empty(),
@@ -168,8 +175,8 @@ public class MergeAndroidResourcesStep implements Step {
       throws IOException, InterruptedException {
     try {
       // In order to convert a symbols file to R.java, all resources of the same type are grouped
-      // into a static class of that name. The static class contains static values that correspond to
-      // the resource (type, name, value) tuples. See RDotTxtEntry.
+      // into a static class of that name. The static class contains static values that correspond
+      // to the resource (type, name, value) tuples. See RDotTxtEntry.
       //
       // The first step is to merge symbol files of the same package type and resource type/name.
       // That is, within a package type, each resource type/name pair must be unique. If there are
@@ -206,6 +213,12 @@ public class MergeAndroidResourcesStep implements Step {
           overrideSymbolsPath.isPresent()
               ? loadOverrideSymbols(overrideSymbolsPath.get())
               : Optional.empty();
+
+      ImmutableSet<String> duplciateResourceWhitelist =
+          (duplicateResourceWhitelistPath.isPresent())
+              ? ImmutableSet.copyOf(filesystem.readLines(duplicateResourceWhitelistPath.get()))
+              : ImmutableSet.of();
+
       SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources =
           sortSymbols(
               symbolsFileToRDotJavaPackage,
@@ -213,6 +226,7 @@ public class MergeAndroidResourcesStep implements Step {
               symbolsFileToResourceDeps.build(),
               overrideSymbols,
               bannedDuplicateResourceTypes,
+              duplciateResourceWhitelist,
               filesystem,
               useOldStyleableFormat);
 
@@ -239,7 +253,7 @@ public class MergeAndroidResourcesStep implements Step {
       if (!emptyPackages.isEmpty()) {
         writeEmptyRDotJavaForPackages(emptyPackages, filesystem);
       }
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     } catch (DuplicateResourceException e) {
       return StepExecutionResult.of(1, Optional.of(e.getMessage()));
     }
@@ -352,6 +366,7 @@ public class MergeAndroidResourcesStep implements Step {
       ImmutableMap<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps,
       Optional<SetMultimap<String, RDotTxtEntry>> overrides,
       EnumSet<RType> bannedDuplicateResourceTypes,
+      Set<String> duplicateResourceWhitelist,
       ProjectFilesystem filesystem,
       boolean useOldStyleableFormat)
       throws DuplicateResourceException {
@@ -460,8 +475,8 @@ public class MergeAndroidResourcesStep implements Step {
     for (Map.Entry<RDotTxtEntry, Collection<Path>> resourceAndSymbolsFiles :
         bannedDuplicateResourceToSymbolsFiles.asMap().entrySet()) {
       Collection<Path> paths = resourceAndSymbolsFiles.getValue();
-      if (paths.size() > 1) {
-        RDotTxtEntry resource = resourceAndSymbolsFiles.getKey();
+      RDotTxtEntry resource = resourceAndSymbolsFiles.getKey();
+      if (paths.size() > 1 && !duplicateIsWhitelisted(resource, duplicateResourceWhitelist)) {
         duplicateResourcesMessage.append(
             String.format(
                 "Resource '%s' (%s) is duplicated across: ", resource.name, resource.type));
@@ -482,6 +497,10 @@ public class MergeAndroidResourcesStep implements Step {
     }
 
     return rDotJavaPackageToSymbolsFiles;
+  }
+
+  private static boolean duplicateIsWhitelisted(RDotTxtEntry resource, Set<String> whitelist) {
+    return whitelist.contains(resource.type.toString().toLowerCase() + " " + resource.name);
   }
 
   private static Map<RDotTxtEntry, String> getStyleableResources(

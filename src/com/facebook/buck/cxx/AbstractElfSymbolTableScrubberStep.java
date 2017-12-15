@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.annotations.VisibleForTesting;
@@ -158,7 +159,7 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
       Optional<ElfSectionLookupResult> sectionResult = elf.getSectionByName(getSection());
       if (!sectionResult.isPresent()) {
         if (isAllowMissing()) {
-          return StepExecutionResult.SUCCESS;
+          return StepExecutionResults.SUCCESS;
         } else {
           throw new IOException(
               String.format(
@@ -209,7 +210,7 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
       }
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

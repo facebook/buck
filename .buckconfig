@@ -22,9 +22,9 @@
     maven-importer = //src/com/facebook/buck/maven:resolver
 [log]
     rule_key_logger_enabled = True
-[cache]
-    ; Disable the default directory cache.
-    mode =
+# [cache]
+#   ; Disable the default directory cache.
+#   mode = 
 [build]
     metadata_storage = sqlite
 [download]

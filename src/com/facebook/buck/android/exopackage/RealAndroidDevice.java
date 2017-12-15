@@ -30,6 +30,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
@@ -837,6 +838,27 @@ public class RealAndroidDevice implements AndroidDevice {
               "No matching process found: %s. "
                   + "Check to ensure the process exists and is running.",
               processName));
+    }
+  }
+
+  @Override
+  public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
+    StringBuilder commandBuilder = new StringBuilder();
+    commandBuilder.append("am broadcast -a ").append(action);
+    stringExtras
+        .entrySet()
+        .forEach(
+            entry ->
+                commandBuilder
+                    .append(" --es ")
+                    .append(Escaper.escapeAsShellString(entry.getKey()))
+                    .append(" ")
+                    .append(Escaper.escapeAsShellString(entry.getValue())));
+    try {
+      executeCommandWithErrorChecking(commandBuilder.toString());
+      eventBus.post(ConsoleEvent.warning("Successfully sent broadcast " + action));
+    } catch (AdbHelper.CommandFailedException e) {
+      eventBus.post(ConsoleEvent.warning("Unable to send broadcast " + action));
     }
   }
 

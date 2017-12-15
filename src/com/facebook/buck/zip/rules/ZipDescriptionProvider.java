@@ -17,6 +17,7 @@
 package com.facebook.buck.zip.rules;
 
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +26,7 @@ import org.pf4j.Extension;
 @Extension
 public class ZipDescriptionProvider implements DescriptionProvider {
   @Override
-  public Collection<Description<?>> getDescriptions() {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     return Collections.singleton(new ZipFileDescription());
   }
 }

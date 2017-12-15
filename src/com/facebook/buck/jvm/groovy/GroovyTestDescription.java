@@ -21,12 +21,13 @@ import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
@@ -37,9 +38,10 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -58,23 +60,17 @@ public class GroovyTestDescription
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
+  private final ToolchainProvider toolchainProvider;
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavaOptions javaOptions;
-  private final JavacOptions defaultJavacOptions;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public GroovyTestDescription(
+      ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavaOptions javaOptions,
-      JavacOptions defaultJavacOptions,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.groovyBuckConfig = groovyBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.javaOptions = javaOptions;
-    this.defaultJavacOptions = defaultJavacOptions;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -96,7 +92,13 @@ public class GroovyTestDescription
 
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
-            defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         new DefaultJavaLibraryRules.Builder(
@@ -127,10 +129,15 @@ public class GroovyTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
-        javaOptions.getJavaRuntimeLauncher(),
+        toolchainProvider
+            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
+            .getJavaOptionsForTests()
+            .getJavaRuntimeLauncher(),
         args.getVmArgs(),
         /* nativeLibsEnvironment */ ImmutableMap.of(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(groovyBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toMacroArgFunction::apply)),
         args.getRunTestSeparately(),

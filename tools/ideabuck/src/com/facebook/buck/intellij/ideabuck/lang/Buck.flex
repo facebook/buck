@@ -41,6 +41,7 @@ WHITE_SPACE=({LINE_WS}|{EOL})+
 BOOLEAN=(True|False)
 LINE_COMMENT=#.*
 GLOB_KEYWORD=(glob|subdir_glob)
+LOAD_KEYWORD=load
 MACROS=[A-Z_]([A-Z0-9_])+
 DOUBLE_QUOTED_STRING=\"([^\\\"\r\n]|\\[^\r\n])*\"?
 SINGLE_QUOTED_STRING='([^\\'\r\n]|\\[^\r\n])*'?
@@ -71,6 +72,7 @@ IDENTIFIER=[:jletter:] [:jletterdigit:]*
   {BOOLEAN}                   { return BOOLEAN; }
   {LINE_COMMENT}              { return LINE_COMMENT; }
   {GLOB_KEYWORD}              { return GLOB_KEYWORD; }
+  {LOAD_KEYWORD}              { return LOAD_KEYWORD; }
   {MACROS}                    { return MACROS; }
   {DOUBLE_QUOTED_STRING}      { return DOUBLE_QUOTED_STRING; }
   {SINGLE_QUOTED_STRING}      { return SINGLE_QUOTED_STRING; }

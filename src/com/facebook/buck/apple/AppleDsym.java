@@ -38,7 +38,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -86,7 +85,7 @@ public class AppleDsym extends AbstractBuildRule
         Stream.concat(
                 Stream.of(this.unstrippedBinarySourcePath), this.additionalSymbolDeps.stream())
             .flatMap(sourcePathRuleFinder.FILTER_BUILD_RULE_INPUTS)
-            .collect(MoreCollectors.toImmutableSortedSet(Comparator.naturalOrder()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     checkFlavorCorrectness(buildTarget);
   }
 

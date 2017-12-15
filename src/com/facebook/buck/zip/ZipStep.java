@@ -26,6 +26,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
@@ -98,7 +99,7 @@ public class ZipStep implements Step {
     if (filesystem.exists(pathToZipFile)) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
@@ -189,7 +190,7 @@ public class ZipStep implements Step {
       }
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

@@ -16,8 +16,9 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.util.HumanReadableException;

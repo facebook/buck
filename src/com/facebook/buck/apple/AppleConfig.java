@@ -47,6 +47,12 @@ import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
+
+  public static final ImmutableList<String> DEFAULT_IDENTITIES_COMMAND =
+      ImmutableList.of("security", "find-identity", "-v", "-p", "codesigning");
+  public static final ImmutableList<String> DEFAULT_READ_COMMAND =
+      ImmutableList.of("openssl", "smime", "-inform", "der", "-verify", "-noverify", "-in");
+
   private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
   private static final String DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE = "FB_LOG_LEVEL";
   private static final String DEFAULT_TEST_LOG_LEVEL = "debug";
@@ -89,23 +95,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     }
   }
 
-  /**
-   * If specified, the value of {@code [apple] xcode_developer_dir_for_tests} wrapped in a {@link
-   * Supplier}. Otherwise, this falls back to {@code [apple] xcode_developer_dir} and finally {@code
-   * xcode-select --print-path}.
-   */
-  public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplierForTests(
-      ProcessExecutor processExecutor) {
-    Optional<String> xcodeDeveloperDirectory =
-        delegate.getValue(APPLE_SECTION, "xcode_developer_dir_for_tests");
-    if (xcodeDeveloperDirectory.isPresent()) {
-      Path developerDirectory =
-          delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
-              Paths.get(xcodeDeveloperDirectory.get()));
-      return Suppliers.ofInstance(Optional.of(normalizePath(developerDirectory)));
-    } else {
-      return getAppleDeveloperDirectorySupplier(processExecutor);
-    }
+  public Optional<String> getXcodeDeveloperDirectoryForTests() {
+    return delegate.getValue(APPLE_SECTION, "xcode_developer_dir_for_tests");
   }
 
   public ImmutableList<Path> getExtraToolchainPaths() {
@@ -278,6 +269,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);
   }
 
+  public boolean shouldVerifyBundleResources() {
+    return delegate.getBooleanValue(APPLE_SECTION, "verify_bundle_resources", false);
+  }
+
   public AppleAssetCatalog.ValidationType assetCatalogValidation() {
     return delegate
         .getEnum(APPLE_SECTION, "asset_catalog_validation", AppleAssetCatalog.ValidationType.class)
@@ -321,7 +316,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getProvisioningProfileReadCommand() {
     Optional<String> value = delegate.getValue(APPLE_SECTION, "provisioning_profile_read_command");
     if (!value.isPresent()) {
-      return ProvisioningProfileStore.DEFAULT_READ_COMMAND;
+      return DEFAULT_READ_COMMAND;
     }
     return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }
@@ -329,7 +324,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getCodeSignIdentitiesCommand() {
     Optional<String> value = delegate.getValue(APPLE_SECTION, "code_sign_identities_command");
     if (!value.isPresent()) {
-      return CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND;
+      return DEFAULT_IDENTITIES_COMMAND;
     }
     return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }

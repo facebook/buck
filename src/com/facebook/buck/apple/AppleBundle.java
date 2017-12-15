@@ -24,6 +24,10 @@ import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.CodeSignIdentity;
+import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.NativeTestable;
@@ -64,6 +68,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,6 +79,7 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -130,7 +136,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final ProvisioningProfileStore provisioningProfileStore;
 
-  @AddToRuleKey private final CodeSignIdentityStore codeSignIdentityStore;
+  @AddToRuleKey private final Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
 
   @AddToRuleKey private final Optional<Tool> codesignAllocatePath;
 
@@ -165,6 +171,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final boolean hasBinary;
   private final boolean cacheable;
+  private final boolean verifyResources;
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -191,6 +198,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable,
+      boolean verifyResources,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
       Optional<Boolean> ibtoolModuleFlag) {
@@ -227,6 +235,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.cacheable = cacheable;
+    this.verifyResources = verifyResources;
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
     this.ibtoolModuleParams =
@@ -239,11 +248,10 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     if (needCodeSign() && !adHocCodeSignIsSufficient()) {
       this.provisioningProfileStore = provisioningProfileStore;
-      this.codeSignIdentityStore = codeSignIdentityStore;
+      this.codeSignIdentitiesSupplier = codeSignIdentityStore.getIdentitiesSupplier();
     } else {
-      this.provisioningProfileStore =
-          ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of());
-      this.codeSignIdentityStore = CodeSignIdentityStore.fromIdentities(ImmutableList.of());
+      this.provisioningProfileStore = ProvisioningProfileStore.empty();
+      this.codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.codesign = appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver);
@@ -426,6 +434,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             resources.getResourceDirs(),
             resources.getDirsContainingResourceDirs(),
             resources.getResourceFiles()))) {
+      if (verifyResources) {
+        verifyResourceConflicts(resources, context.getSourcePathResolver());
+      }
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -569,7 +580,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 dryRunCodeSigning
                     ? bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE)
                     : signingEntitlementsTempPath.get(),
-                codeSignIdentityStore,
+                codeSignIdentitiesSupplier,
                 dryRunCodeSigning ? Optional.of(dryRunResultPath) : Optional.empty());
         stepsBuilder.add(provisioningProfileCopyStep);
 
@@ -594,9 +605,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 // No constraints, pick an arbitrary identity.
                 // If no identities are available, use an ad-hoc identity.
                 return Iterables.getFirst(
-                    codeSignIdentityStore.getIdentities(), CodeSignIdentity.AD_HOC);
+                    codeSignIdentitiesSupplier.get(), CodeSignIdentity.AD_HOC);
               }
-              for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
+              for (CodeSignIdentity identity : codeSignIdentitiesSupplier.get()) {
                 if (identity.getFingerprint().isPresent()
                     && fingerprints.contains(identity.getFingerprint().get())) {
                   return identity;
@@ -668,6 +679,24 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return stepsBuilder.build();
+  }
+
+  private void verifyResourceConflicts(AppleBundleResources resources,
+                                       SourcePathResolver resolver) {
+    // Ensure there are no resources that will overwrite each other
+    // TODO: handle ResourceDirsContainingResourceDirs
+    Set<Path> resourcePaths = new HashSet<>();
+    for (SourcePath path : Iterables.concat(
+        resources.getResourceDirs(),
+        resources.getResourceFiles())) {
+      Path pathInBundle = resolver.getRelativePath(path).getFileName();
+      if (resourcePaths.contains(pathInBundle)) {
+        throw new HumanReadableException(
+            "Bundle contains multiple resources with path %s", pathInBundle);
+      } else {
+        resourcePaths.add(pathInBundle);
+      }
+    }
   }
 
   private boolean needsPkgInfoFile() {

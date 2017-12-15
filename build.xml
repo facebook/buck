@@ -9,6 +9,8 @@
   <property name="build.successful.file" value="${build.dir}/successful-build" />
   <property name="classes.dir.name" value="classes" />
   <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
+  <property name="buck.modules.classes.dir.name" value="buck-modules-classes" />
+  <property name="buck.modules.classes.dir" value="${build.dir}/${buck.modules.classes.dir.name}" />
   <property name="buck.modules.annotation.processor.src.dir" value="com/facebook/buck/module/annotationprocessor" />
   <property name="buck.modules.ap.classes.dir.name" value="buck-modules-ap-classes" />
   <property name="buck.modules.annotation.processor.classes.dir" value="${build.dir}/${buck.modules.ap.classes.dir.name}" />
@@ -67,6 +69,7 @@
 
   <property name="buck.hash.dir" value="${build.dir}/classes/META-INF"/>
   <property name="buck.hash.file" value="${buck.hash.dir}/buck-binary-hash.txt"/>
+  <property name="buck.combined.hash.file" value="${buck.hash.dir}/buck-combined-binary-hash.txt"/>
 
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
   <property name="buck.info.error.file" value="${build.dir}/buck-info-error.txt"/>
@@ -301,6 +304,7 @@
         <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
+        <include name="com/facebook/buck/jvm/java/lang/model/*.java" />
       </javac-params>
     </ecj>
     <jar destfile="${bootstrapper.jar}">
@@ -463,11 +467,17 @@
             and are deliberately isolated from Buck's core.
           -->
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
+          <exclude name="com/facebook/buck/d/**" />
           <exclude name="com/facebook/buck/dotnet/**" />
           <exclude name="com/facebook/buck/event/api/**" />
+          <exclude name="com/facebook/buck/go/**" />
+          <exclude name="com/facebook/buck/haskell/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
+          <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
+          <exclude name="com/facebook/buck/lua/**" />
           <exclude name="com/facebook/buck/module/annotationprocessor/**" />
+          <exclude name="com/facebook/buck/rust/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
           <exclude name="com/facebook/buck/zip/bundler/**" />
           <exclude name="com/facebook/buck/zip/rules/**" />
@@ -495,12 +505,58 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-dotnet, build-module-zipbundler, build-module-ziprules"/>
+  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-go, build-module-haskell, build-module-lua, build-module-rust, build-module-zipbundler, build-module-ziprules"/>
+
+  <target name="build-module-d" depends="compile">
+    <build-buck-module-jar module-name="d">
+      <module-javac-params>
+        <include name="com/facebook/buck/d/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
 
   <target name="build-module-dotnet" depends="compile">
     <build-buck-module-jar module-name="dotnet">
       <module-javac-params>
         <include name="com/facebook/buck/dotnet/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-go" depends="compile">
+    <build-buck-module-jar-with-resources module-name="go">
+      <module-javac-params>
+        <include name="com/facebook/buck/go/**/*.java" />
+      </module-javac-params>
+      <module-resources>
+        <include name="com/facebook/buck/go/*.in"/>
+      </module-resources>
+    </build-buck-module-jar-with-resources>
+  </target>
+
+  <target name="build-module-haskell" depends="compile">
+    <build-buck-module-jar module-name="haskell">
+      <module-javac-params>
+        <include name="com/facebook/buck/haskell/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-lua" depends="compile">
+    <build-buck-module-jar-with-resources module-name="lua">
+      <module-javac-params>
+        <include name="com/facebook/buck/lua/**/*.java" />
+      </module-javac-params>
+      <module-resources>
+        <include name="com/facebook/buck/lua/*.in"/>
+      </module-resources>
+    </build-buck-module-jar-with-resources>
+  </target>
+
+  <target name="build-module-rust" depends="compile">
+    <build-buck-module-jar module-name="rust">
+      <module-javac-params>
+        <include name="com/facebook/buck/rust/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>
@@ -592,17 +648,14 @@
     <copy todir="${classes.dir}">
       <fileset dir="${src.dir}">
         <include name="com/facebook/buck/apple/project_generator/*.st"/>
-        <include name="com/facebook/buck/go/testmaingen.go"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/ide/intellij/templates/*"/>
-        <include name="com/facebook/buck/lua/*.in"/>
         <include name="com/facebook/buck/maven/build-file.st"/>
         <include name="com/facebook/buck/python/*.py"/>
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
         <include name="com/facebook/buck/rules/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
-        <include name="com/facebook/buck/util/versioncontrol/rawmanifest.py"/>
       </fileset>
     </copy>
   </target>
@@ -678,6 +731,12 @@
     </exec>
   </target>
 
+  <target name="verify-core-rules-boundaries" depends="default">
+    <exec dir="${user.dir}/tools/build/core-boundaries" executable="python" failonerror="true">
+      <arg line="verify-core-rules-boundaries.py" />
+    </exec>
+  </target>
+
   <!--
   Copy classpath jars to a directory buck_repo.py can use, so that buck built with ant continues
   to work after checking out a different revision or making changes to classpaths file.
@@ -737,9 +796,10 @@
 
   <macrodef name="build-buck-module-jar">
     <attribute name="module-name" />
-    <attribute name="module-classes-dir" default="${build.dir}/classes/${modules.dir.name}/@{module-name}" />
+    <attribute name="module-classes-dir" default="${buck.modules.classes.dir}/@{module-name}" />
     <attribute name="module-jar" default="${build.dir}/${modules.dir.name}/@{module-name}.jar" />
-    <attribute name="module-gen-dir" default="${build.dir}/gen/buck-modules/@{module-name}"/>
+    <attribute name="module-gen-dir" default="${buck.modules.classes.dir}/gen/@{module-name}"/>
+    <attribute name="module-binary-hash-file" default="@{module-classes-dir}/META-INF/module-binary-hash.txt"/>
     <element name="module-javac-params" optional="true" />
     <element name="additional-classpath-entries" optional="true" />
     <sequential>
@@ -761,13 +821,71 @@
           <module-javac-params/>
         </javac-params>
       </ecj>
+      <delete file="@{module-binary-hash-file}"/>
+      <checksum todir="${build.dir}/buck-modules-checksums/@{module-name}" totalproperty="@{module-name}.module.hash.value">
+        <fileset dir="@{module-classes-dir}">
+          <include name="**"/>
+        </fileset>
+      </checksum>
+      <echo file="@{module-binary-hash-file}">${@{module-name}.module.hash.value}</echo>
+      <echo>Generated module hash: ${@{module-name}.module.hash.value}</echo>
       <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
         <fileset dir="@{module-classes-dir}" />
       </jar>
     </sequential>
   </macrodef>
 
-  <target name="lint" depends="pmd, missing-test-files-check" />
+  <!--
+   Builds a jar of a module with resources
+   -->
+  <macrodef name="build-buck-module-jar-with-resources">
+    <attribute name="module-name" />
+    <attribute name="module-classes-dir" default="${buck.modules.classes.dir}/@{module-name}" />
+    <attribute name="module-jar" default="${build.dir}/${modules.dir.name}/@{module-name}.jar" />
+    <attribute name="module-gen-dir" default="${buck.modules.classes.dir}/gen/@{module-name}"/>
+    <attribute name="module-binary-hash-file" default="@{module-classes-dir}/META-INF/module-binary-hash.txt"/>
+    <element name="module-javac-params" optional="true" />
+    <element name="additional-classpath-entries" optional="true" />
+    <element name="module-resources" />
+    <sequential>
+      <mkdir dir="@{module-classes-dir}" />
+      <mkdir dir="${build.dir}/${modules.dir.name}" />
+      <path id="@{module-name}-classpath">
+        <pathelement location="${classes.dir}" />
+        <path refid="classpath-no-src" />
+        <fileset dir="${build.dir}/${modules.dir.name}">
+          <additional-classpath-entries/>
+        </fileset>
+      </path>
+      <ecj destdir="@{module-classes-dir}" classpathref="@{module-name}-classpath"
+        gensrcdir="@{module-gen-dir}">
+        <javac-params>
+          <compilerarg value="-processorpath" />
+          <compilerarg value="${module.processorpath}" />
+          <compilerarg value="${pf4j-annotation-processor-storage-config}" />
+          <module-javac-params/>
+        </javac-params>
+      </ecj>
+      <copy todir="@{module-classes-dir}">
+        <fileset dir="${src.dir}">
+          <module-resources/>
+        </fileset>
+      </copy>
+      <delete file="@{module-binary-hash-file}"/>
+      <checksum todir="${build.dir}/buck-modules-checksums/@{module-name}" totalproperty="@{module-name}.module.hash.value">
+        <fileset dir="@{module-classes-dir}">
+          <include name="**"/>
+        </fileset>
+      </checksum>
+      <echo file="@{module-binary-hash-file}">${@{module-name}.module.hash.value}</echo>
+      <echo>Generated module hash: ${@{module-name}.module.hash.value}</echo>
+      <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
+        <fileset dir="@{module-classes-dir}" />
+      </jar>
+    </sequential>
+  </macrodef>
+
+  <target name="lint" depends="pmd, missing-test-files-check, verify-core-rules-boundaries" />
 
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />
@@ -785,6 +903,7 @@
                windowtitle="Buck"
                failonerror="true"
                additionalparam="${javadoc.doclint}"
+               useexternalfile="true"
                >
         <arg value="-notimestamp"/>
         <fileset dir="${src.dir}">
@@ -793,6 +912,7 @@
           <exclude name="com/facebook/buck/intellij/**" />
         </fileset>
         <fileset dir="${gensrc.dir}" />
+        <fileset dir="${buck.modules.classes.dir}/gen/" />
         <link href="http://docs.oracle.com/javase/7/docs/api/"
               offline="true"
               packagelistloc="third-party/java/javase" />
@@ -809,7 +929,7 @@
     </sequential>
   </macrodef>
 
-  <target name="-javadoc-deps" depends="compile" />
+  <target name="-javadoc-deps" depends="compile, build-modules" />
 
   <path id="javadoc.classpath">
     <path refid="classpath" />

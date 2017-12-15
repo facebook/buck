@@ -20,7 +20,6 @@ import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -305,7 +304,7 @@ public class Unzip {
             existingFileMode)
         .stream()
         .map(input -> destination.resolve(input).toAbsolutePath())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public static ImmutableSet<Path> getZipMembers(Path archiveAbsolutePath) throws IOException {
@@ -315,7 +314,7 @@ public class Unzip {
           .filter(path -> !Files.isDirectory(path))
           .map(root::relativize)
           .map(path -> Paths.get(path.toString())) // Clear the filesystem from the path
-          .collect(MoreCollectors.toImmutableSet());
+          .collect(ImmutableSet.toImmutableSet());
     } catch (ZipError error) {
       // For some reason the zip filesystem support throws an error when an IOException would do
       // just as well.

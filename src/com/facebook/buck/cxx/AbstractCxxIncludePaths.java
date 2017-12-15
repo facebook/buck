@@ -21,11 +21,11 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
@@ -94,7 +94,7 @@ abstract class AbstractCxxIncludePaths {
                 .filter(x -> !x.isSDKROOTFrameworkPath())
                 .map(frameworkPathTransformer)
                 .map(Object::toString)
-                .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()))));
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()))));
 
     return builder.build();
   }

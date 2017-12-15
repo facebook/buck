@@ -28,6 +28,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -178,7 +179,7 @@ public class OcamlBuildStep implements Step {
                   ocamlContext.getBytecodeIncludeFlags()));
       return debugLauncher.execute(context);
     } else {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 
@@ -214,7 +215,7 @@ public class OcamlBuildStep implements Step {
         return compileExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private StepExecutionResult executeNativeLinking(
@@ -334,7 +335,7 @@ public class OcamlBuildStep implements Step {
         return compileExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private StepExecutionResult executeMLBytecodeCompilation(
@@ -387,7 +388,7 @@ public class OcamlBuildStep implements Step {
         return compileExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private StepExecutionResult generateSources(ExecutionContext context, Path workingDirectory)
@@ -435,7 +436,7 @@ public class OcamlBuildStep implements Step {
         return lexExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private ImmutableList<Path> sortDependency(

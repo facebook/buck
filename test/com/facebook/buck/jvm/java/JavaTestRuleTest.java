@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -30,8 +30,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.List;
@@ -116,7 +116,7 @@ public class JavaTestRuleTest {
             .build(resolver);
 
     assertThat(
-        rule.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
+        rule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(
             rule.getCompiledTestsLibrary().getBuildTarget(),
             firstOrderDep.getBuildTarget(),

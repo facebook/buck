@@ -26,7 +26,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -69,12 +69,10 @@ public class GenruleBuilder
   }
 
   private static ToolchainProvider createToolchainProvider() {
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
-
-    return testToolchainProvider;
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
+        .build();
   }
 
   public static GenruleBuilder newGenruleBuilder(BuildTarget target) {

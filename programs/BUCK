@@ -80,13 +80,17 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "path_to_pathlib_py": "//third-party/py/pathlib:pathlib.py",
     "path_to_pex": "//src/com/facebook/buck/python:pex",
     "path_to_pywatchman": "//third-party/py/pywatchman:pywatchman-archive",
-    "path_to_rawmanifest_py": "//src/com/facebook/buck/util/versioncontrol:rawmanifest",
     "path_to_sh_binary_template": "//src/com/facebook/buck/shell:sh_binary_template",
     "path_to_typing": "//third-party/py:typing-archive",
 }
 
 BUCK_MODULES = {
+    "d": "//src/com/facebook/buck/d:d",
     "dotnet": "//src/com/facebook/buck/dotnet:dotnet",
+    "go": "//src/com/facebook/buck/go:go",
+    "haskell": "//src/com/facebook/buck/haskell:haskell",
+    "lua": "//src/com/facebook/buck/lua:lua",
+    "rust": "//src/com/facebook/buck/rust:rust",
     "zipbundler": "//src/com/facebook/buck/zip/bundler:bundler",
     "ziprules": "//src/com/facebook/buck/zip/rules:rules",
 }
@@ -99,7 +103,6 @@ genrule(
     cmd = " ".join([
         "$(exe //py/hash:hash_files)",
         " ".join(["$(location {})".format(resource) for resource in RESOURCES_AFFECTING_BUILD_ARTIFACTS.values()]),
-        " ".join(["$(location {})".format(get_module_binary(buck_module)) for buck_module in BUCK_MODULES.values()]),
         "$(location //py/hash:hash_files.py)",
         " > $OUT",
     ]),

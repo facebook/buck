@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
@@ -41,7 +41,8 @@ public class JsFlavorValidationCommonTest {
   static final Map<Class<?>, Flavored> TEST_DATA =
       ImmutableMap.of(
           JsLibraryDescription.class, new JsLibraryDescription(),
-          JsBundleDescription.class, new JsBundleDescription(new TestToolchainProvider()));
+          JsBundleDescription.class,
+              new JsBundleDescription(new ToolchainProviderBuilder().build()));
 
   @Parameterized.Parameter public Class<?> description;
 

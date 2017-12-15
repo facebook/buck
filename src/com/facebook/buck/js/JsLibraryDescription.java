@@ -43,7 +43,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
@@ -53,7 +52,9 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -243,7 +244,7 @@ public class JsLibraryDescription
           sourceFiles
               .stream()
               .map(BuildRule::getSourcePathToOutput)
-              .collect(MoreCollectors.toImmutableSortedSet()),
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker);
     }
   }
@@ -273,7 +274,7 @@ public class JsLibraryDescription
               // `requireRule()` needed for dependencies to flavored versions
               .map(resolver::requireRule)
               .map(this::verifyIsJsLibraryRule)
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       return this;
     }
 
@@ -291,7 +292,7 @@ public class JsLibraryDescription
           libraryDependencies
               .stream()
               .map(BuildRule::getSourcePathToOutput)
-              .collect(MoreCollectors.toImmutableSortedSet()),
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker);
     }
 

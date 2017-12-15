@@ -17,7 +17,6 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.skylark.io.Globber;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.vfs.Dirent;
@@ -87,7 +86,7 @@ public class SimpleGlobber implements Globber {
         .glob()
         .stream()
         .map(includePath -> includePath.relativeTo(basePath).getPathString())
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**

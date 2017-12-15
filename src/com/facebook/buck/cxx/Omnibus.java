@@ -35,13 +35,13 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
@@ -224,7 +224,7 @@ public class Omnibus {
                 .getNodes()
                 .stream()
                 .filter(n -> !roots.containsKey(n))
-                .collect(MoreCollectors.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
+                .collect(ImmutableMap.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
         .deps(Maps.asMap(deps, Functions.forMap(nativeLinkables)))
         .excluded(Maps.asMap(excluded, Functions.forMap(nativeLinkables)))
         .excludedRoots(
@@ -238,6 +238,7 @@ public class Omnibus {
   private static SourcePath createDummyOmnibus(
       BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
+      CellPathResolver cellPathResolver,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
@@ -258,7 +259,8 @@ public class Omnibus {
                     .resolve(omnibusSoname),
                 ImmutableMap.of(),
                 Optional.of(omnibusSoname),
-                extraLdflags));
+                extraLdflags,
+                cellPathResolver));
     return rule.getSourcePathToOutput();
   }
 
@@ -267,6 +269,7 @@ public class Omnibus {
   private static OmnibusRoot createRoot(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
+      CellPathResolver cellPathResolver,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
@@ -370,7 +373,8 @@ public class Omnibus {
                                       cxxPlatform.getSharedLibraryExtension())))),
                   ImmutableMap.of(),
                   rootSoname,
-                  argsBuilder.build());
+                  argsBuilder.build(),
+                  cellPathResolver);
           break;
         }
 
@@ -379,6 +383,7 @@ public class Omnibus {
         {
           rootLinkRule =
               CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                  cellPathResolver,
                   cxxBuckConfig,
                   cxxPlatform,
                   projectFilesystem,
@@ -411,6 +416,7 @@ public class Omnibus {
   private static OmnibusRoot createRoot(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      CellPathResolver cellPathResolver,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
@@ -422,6 +428,7 @@ public class Omnibus {
     return createRoot(
         buildTarget,
         projectFilesystem,
+        cellPathResolver,
         ruleResolver,
         ruleFinder,
         cxxBuckConfig,
@@ -437,6 +444,7 @@ public class Omnibus {
   private static OmnibusRoot createDummyRoot(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
+      CellPathResolver cellPathResolver,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
@@ -448,6 +456,7 @@ public class Omnibus {
     return createRoot(
         target,
         projectFilesystem,
+        cellPathResolver,
         ruleResolver,
         ruleFinder,
         cxxBuckConfig,
@@ -495,6 +504,7 @@ public class Omnibus {
   private static OmnibusLibrary createOmnibus(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      CellPathResolver cellPathResolver,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
@@ -588,7 +598,8 @@ public class Omnibus {
                     .resolve(omnibusSoname),
                 ImmutableMap.of(),
                 Optional.of(omnibusSoname),
-                argsBuilder.build()));
+                argsBuilder.build(),
+                cellPathResolver));
 
     return OmnibusLibrary.of(omnibusSoname, omnibusRule.getSourcePathToOutput());
   }
@@ -600,6 +611,7 @@ public class Omnibus {
    * This reduces the number of shared libraries considerably and also allows the linker to throw
    * away a lot of unused object files.
    *
+   * @param cellPathResolver
    * @param nativeLinkTargetRoots root nodes which will be included in the omnibus link.
    * @param nativeLinkableRoots root nodes which are to be excluded from the omnibus link.
    * @return a map of shared library names to their containing {@link SourcePath}s.
@@ -608,11 +620,12 @@ public class Omnibus {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      CellPathResolver cellPathResolver,
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      ImmutableList<? extends Arg> extraLdflags,
+      ImmutableList<? extends Arg> extraOmnibusLdflags,
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots) {
 
@@ -627,11 +640,12 @@ public class Omnibus {
         createDummyOmnibus(
             buildTarget,
             projectFilesystem,
+            cellPathResolver,
             ruleResolver,
             ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
-            extraLdflags);
+            extraOmnibusLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
     for (NativeLinkTarget target : spec.getRoots().values()) {
@@ -643,11 +657,12 @@ public class Omnibus {
         createDummyRoot(
             buildTarget,
             projectFilesystem,
+            cellPathResolver,
             ruleResolver,
             ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
-            extraLdflags,
+            ImmutableList.of(),
             spec,
             dummyOmnibus,
             target);
@@ -656,11 +671,12 @@ public class Omnibus {
             createRoot(
                 buildTarget,
                 projectFilesystem,
+                cellPathResolver,
                 ruleResolver,
                 ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
-                extraLdflags,
+                ImmutableList.of(),
                 spec,
                 dummyOmnibus,
                 target);
@@ -675,12 +691,13 @@ public class Omnibus {
           createOmnibus(
               buildTarget,
               projectFilesystem,
+              cellPathResolver,
               params,
               ruleResolver,
               ruleFinder,
               cxxBuckConfig,
               cxxPlatform,
-              extraLdflags,
+              extraOmnibusLdflags,
               spec);
       libs.addLibraries(omnibus);
       realOmnibus = Optional.of(omnibus.getPath());
@@ -694,11 +711,12 @@ public class Omnibus {
             createRoot(
                 buildTarget,
                 projectFilesystem,
+                cellPathResolver,
                 ruleResolver,
                 ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
-                extraLdflags,
+                ImmutableList.of(),
                 spec,
                 realOmnibus.orElse(dummyOmnibus),
                 target);

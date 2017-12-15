@@ -17,11 +17,12 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -33,9 +34,12 @@ public class AndroidPrebuiltAarBuilder
   private AndroidPrebuiltAarBuilder(BuildTarget target) {
     super(
         new AndroidPrebuiltAarDescription(
-            new TestToolchainProvider(),
-            JavaCompilationConstants.DEFAULT_JAVA_CONFIG,
-            JavaCompilationConstants.ANDROID_JAVAC_OPTIONS),
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(JavaCompilationConstants.ANDROID_JAVAC_OPTIONS))
+                .build(),
+            JavaCompilationConstants.DEFAULT_JAVA_CONFIG),
         target);
   }
 

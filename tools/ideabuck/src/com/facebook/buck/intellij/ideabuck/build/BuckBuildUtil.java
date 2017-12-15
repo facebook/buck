@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.build;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckRuleBody;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
@@ -26,6 +27,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
+import org.jetbrains.annotations.Nullable;
 
 public final class BuckBuildUtil {
 
@@ -48,6 +50,35 @@ public final class BuckBuildUtil {
    */
   public static String extractAbsoluteTarget(String target) {
     return target.substring(2, target.lastIndexOf(":"));
+  }
+
+  /**
+   * @param target The build target in absolute (<code>//apps/myapp:app</code>}) or relative (<code>
+   *     :app</code>) pattern.
+   * @return The name of the target, for example <code>app</code>.
+   */
+  public static String extractTargetName(String target) {
+    return target.substring(target.lastIndexOf(":") + 1);
+  }
+
+  /**
+   * @param loadTarget The <code>load</code> function target argument like <code>//pkg:ext.bzl
+   *     </code>.
+   * @return The file with extension pointed by the provided target argument.
+   */
+  @Nullable
+  public static VirtualFile resolveExtensionFile(BuckLoadTargetArgument loadTarget) {
+    Project project = loadTarget.getProject();
+    String target = loadTarget.getText();
+    target = target.substring(1, target.length() - 1); // strip quotes
+    if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
+      return null;
+    }
+    String packagePath = BuckBuildUtil.extractAbsoluteTarget(target);
+    String fileName = BuckBuildUtil.extractTargetName(target);
+    @Nullable
+    VirtualFile packageDirectory = project.getBaseDir().findFileByRelativePath(packagePath);
+    return packageDirectory != null ? packageDirectory.findChild(fileName) : null;
   }
 
   /**

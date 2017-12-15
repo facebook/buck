@@ -142,11 +142,12 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   @Nullable
   @Override
   public V get(BuildRule rule) {
-    // Maybe put stats here?
+    lookupCount.increment();
     Node<Object, V> node = cache.get(new IdentityWrapper<Object>(rule));
     if (node != null && node.value != null) {
       return Preconditions.checkNotNull(node.value).get();
     }
+    missCount.increment();
     return null;
   }
 
@@ -242,6 +243,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   /** Invalidate everything in the cache. */
   @Override
   public void invalidateAll() {
+    evictionCount.add(cache.size());
     cache.clear();
     inputsIndex.clear();
   }

@@ -20,9 +20,11 @@ import static com.facebook.buck.io.WatchmanFactory.NULL_WATCHMAN;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -76,13 +78,15 @@ public class TestCellBuilder {
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
             : buckConfig;
 
-    return CellProvider.createForLocalBuild(
+    return CellProviderFactory.createForLocalBuild(
             filesystem,
             watchman,
             config,
             cellConfig,
+            BuckPluginManagerFactory.createPluginManager(),
             ImmutableMap.copyOf(environment),
             new DefaultProcessExecutor(new TestConsole()),
+            new ExecutableFinder(),
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }

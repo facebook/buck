@@ -24,7 +24,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -70,7 +69,7 @@ public class CxxPrepareForLinkStep {
                 ? allArgs
                     .stream()
                     .filter(input -> !(input instanceof FileListableLinkerInputArg))
-                    .collect(MoreCollectors.toImmutableList())
+                    .collect(ImmutableList.toImmutableList())
                 : allArgs,
             Optional.of(Javac.ARGFILES_ESCAPER),
             currentCellPath,
@@ -87,7 +86,7 @@ public class CxxPrepareForLinkStep {
             allArgs
                 .stream()
                 .filter(input -> input instanceof FileListableLinkerInputArg)
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             Optional.empty(),
             currentCellPath,
             resolver);

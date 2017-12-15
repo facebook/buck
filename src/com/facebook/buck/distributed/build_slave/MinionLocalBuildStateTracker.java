@@ -17,6 +17,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.BuildResult;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
@@ -39,6 +40,9 @@ public class MinionLocalBuildStateTracker {
   // These are the targets at the end of work unit, when complete the corresponding core is free.
   private final Set<String> workUnitTerminalTargets = new HashSet<>();
 
+  // These are some extra targets which were supposed to be cache hits, but were built locally.
+  private final Set<String> locallyBuiltDirectDeps = new HashSet<>();
+
   // All targets that were actually scheduled at this minion by a coordinator
   private final Set<String> knownTargets = new HashSet<>();
 
@@ -51,8 +55,12 @@ public class MinionLocalBuildStateTracker {
   // Targets for which build hasn't started yet
   private final List<WorkUnit> workUnitsToBuild = new ArrayList<>();
 
-  public MinionLocalBuildStateTracker(int maxWorkUnitBuildCapacity) {
+  private final UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker;
+
+  public MinionLocalBuildStateTracker(
+      int maxWorkUnitBuildCapacity, UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
     availableWorkUnitCapacity = maxWorkUnitBuildCapacity;
+    this.unexpectedCacheMissTracker = unexpectedCacheMissTracker;
   }
 
   /** @return True if this minion has free capacity to build more targets */
@@ -130,16 +138,21 @@ public class MinionLocalBuildStateTracker {
     return targetsToBuild;
   }
 
-  /**
-   * Increases available capacity if the given target was at the end of a work unit.
-   *
-   * @param target
-   */
-  public synchronized void recordFinishedTarget(String target) {
+  /** Update book-keeping to record target as finished. */
+  public synchronized void recordFinishedTarget(BuildResult buildResult) {
+    Preconditions.checkArgument(buildResult.isSuccess());
+
+    String target = buildResult.getRule().getFullyQualifiedName();
     Preconditions.checkArgument(knownTargets.contains(target));
     Preconditions.checkArgument(!finishedTargets.contains(target));
-    finishedTargets.add(target);
 
+    finishedTargets.add(target);
+    increaseCapacityIfTerminalNode(target);
+    detectUnexpectedCacheMisses(buildResult);
+  }
+
+  /** Increases available capacity if the given target was at the end of a work unit. */
+  private synchronized void increaseCapacityIfTerminalNode(String target) {
     // If a target that just finished was the terminal node in a work unit, then that core
     // is now available for further work.
     if (!workUnitTerminalTargets.contains(target)) {
@@ -148,6 +161,29 @@ public class MinionLocalBuildStateTracker {
 
     availableWorkUnitCapacity++;
     workUnitTerminalTargets.remove(target);
+  }
+
+  /** Publishes an event for unexpected cache misses. */
+  private synchronized void detectUnexpectedCacheMisses(BuildResult buildResult) {
+    Preconditions.checkArgument(buildResult.isSuccess());
+    String target = buildResult.getRule().getFullyQualifiedName();
+
+    if (buildResult.getDepsWithCacheMisses().isPresent()) {
+      Set<String> depsWithCacheMisses = new HashSet<>(buildResult.getDepsWithCacheMisses().get());
+      depsWithCacheMisses.removeAll(knownTargets); // These are supposed to be built locally.
+      depsWithCacheMisses.removeAll(locallyBuiltDirectDeps); // These have been recorded previously.
+
+      // Anything left is an unexpected cache miss.
+      if (depsWithCacheMisses.size() > 0) {
+        LOG.warn(
+            "Got [%d] cache misses for direct dependencies of target [%s], built them locally.",
+            depsWithCacheMisses.size(), target);
+        unexpectedCacheMissTracker.onUnexpectedCacheMiss(depsWithCacheMisses.size());
+
+        // Make sure we don't record these targets again.
+        locallyBuiltDirectDeps.addAll(depsWithCacheMisses);
+      }
+    }
   }
 
   /**

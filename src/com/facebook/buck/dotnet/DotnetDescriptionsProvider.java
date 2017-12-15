@@ -17,6 +17,7 @@
 package com.facebook.buck.dotnet;
 
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,7 +26,7 @@ import org.pf4j.Extension;
 @Extension
 public class DotnetDescriptionsProvider implements DescriptionProvider {
   @Override
-  public Collection<Description<?>> getDescriptions() {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     return Arrays.asList(new CsharpLibraryDescription(), new PrebuiltDotnetLibraryDescription());
   }
 }

@@ -53,6 +53,7 @@ struct CacheRateStats {
     3: optional i32 cacheIgnoresCount;
     4: optional i32 cacheErrorsCount;
     5: optional i32 cacheLocalKeyUnchangedHitsCount;
+    6: optional i32 unexpectedCacheMissesCount;
 
     10: optional i32 totalRulesCount;
     11: optional i32 updatedRulesCount;
@@ -78,6 +79,16 @@ struct BuildSlaveStatus {
     30: optional i32 filesMaterializedCount;
 }
 
+struct HealthCheckStats {
+    1: optional i32 slowHeartbeatsReceivedCount;
+    2: optional i32 heartbeatsReceivedCount;
+    3: optional i64 averageHeartbeatIntervalMillis;
+    4: optional i64 slowestHeartbeatIntervalMillis;
+    5: optional string slowestHeartbeatMinionId;
+    6: optional i32 slowDeadMinionChecksCount;
+    7: optional i64 slowestDeadMinionCheckIntervalMillis;
+}
+
 struct FileMaterializationStats {
     1: optional i32 totalFilesMaterializedCount;
     2: optional i32 filesMaterializedFromCASCount;
@@ -95,6 +106,7 @@ struct BuildSlavePerStageTimingStats {
     5: optional i64 actionGraphCreationTimeMillis;
     6: optional i64 totalBuildtimeMillis;
     7: optional i64 distBuildPreparationTimeMillis;
+    8: optional i64 reverseDependencyQueueCreationTimeMillis;
 }
 
 struct BuildSlaveFinishedStats {
@@ -104,4 +116,5 @@ struct BuildSlaveFinishedStats {
     4: optional BuildSlavePerStageTimingStats buildSlavePerStageTimingStats;
     5: optional string hostname;
     6: optional string distBuildMode;
+    7: optional HealthCheckStats healthCheckStats;
 }

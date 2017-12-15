@@ -50,7 +50,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -115,6 +114,18 @@ public class CxxCompilationDatabaseTest {
     BuildRuleParams compileBuildRuleParams =
         TestBuildRuleParams.create()
             .withDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
+    class FrameworkPathAppendableFunction
+        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+      @Override
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        // Do nothing.
+      }
+
+      @Override
+      public Path apply(FrameworkPath input) {
+        throw new UnsupportedOperationException("should not be called");
+      }
+    }
     rules.add(
         testBuildRuleResolver.addToIndex(
             CxxPreprocessAndCompile.preprocessAndCompile(
@@ -130,17 +141,7 @@ public class CxxCompilationDatabaseTest {
                         new HashedFileTool(
                             PathSourcePath.of(filesystem, Paths.get("preprocessor")))),
                     preprocessorFlags,
-                    new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-                      @Override
-                      public void appendToRuleKey(RuleKeyObjectSink sink) {
-                        // Do nothing.
-                      }
-
-                      @Override
-                      public Path apply(FrameworkPath input) {
-                        throw new UnsupportedOperationException("should not be called");
-                      }
-                    },
+                    new FrameworkPathAppendableFunction(),
                     Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
@@ -162,7 +163,7 @@ public class CxxCompilationDatabaseTest {
     testBuildRuleResolver.addToIndex(compilationDatabase);
 
     assertThat(
-        compilationDatabase.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
+        compilationDatabase.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         Matchers.contains(
             exportedSymlinkTree.getBuildTarget(), privateSymlinkTree.getBuildTarget()));
 

@@ -24,10 +24,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -57,6 +57,11 @@ abstract class AbstractCompilerParameters {
   @Value.Default
   public AbiGenerationMode getAbiGenerationMode() {
     return AbiGenerationMode.CLASS;
+  }
+
+  @Value.Default
+  public AbiGenerationMode getAbiCompatibilityMode() {
+    return getAbiGenerationMode();
   }
 
   @Value.Default
@@ -113,7 +118,7 @@ abstract class AbstractCompilerParameters {
       ImmutableSortedSet<Path> javaSrcs =
           srcs.stream()
               .map(src -> projectFilesystem.relativize(resolver.getAbsolutePath(src)))
-              .collect(MoreCollectors.toImmutableSortedSet());
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       return ((CompilerParameters.Builder) this).setSourceFilePaths(javaSrcs);
     }
 
@@ -124,7 +129,7 @@ abstract class AbstractCompilerParameters {
           compileTimeClasspathSourcePaths
               .stream()
               .map(resolver::getAbsolutePath)
-              .collect(MoreCollectors.toImmutableSortedSet());
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       return ((CompilerParameters.Builder) this).setClasspathEntries(compileTimeClasspathPaths);
     }
   }

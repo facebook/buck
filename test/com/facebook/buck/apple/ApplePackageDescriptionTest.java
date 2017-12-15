@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -42,7 +41,7 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
@@ -150,14 +149,13 @@ public class ApplePackageDescriptionTest {
   }
 
   private ApplePackageDescription descriptionWithCommand(String command) {
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        AppleCxxPlatformsProvider.DEFAULT_NAME,
-        AppleCxxPlatformsProvider.of(
-            FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN));
-
     return new ApplePackageDescription(
-        testToolchainProvider,
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AppleCxxPlatformsProvider.DEFAULT_NAME,
+                AppleCxxPlatformsProvider.of(
+                    FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN))
+            .build(),
         new NoSandboxExecutionStrategy(),
         FakeBuckConfig.builder()
             .setSections(
@@ -165,7 +163,6 @@ public class ApplePackageDescriptionTest {
                 "macosx_package_command = " + command.replace("$", "\\$"),
                 "macosx_package_extension = api")
             .build()
-            .getView(AppleConfig.class),
-        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
+            .getView(AppleConfig.class));
   }
 }

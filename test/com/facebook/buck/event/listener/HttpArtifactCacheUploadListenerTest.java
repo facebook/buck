@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
@@ -94,7 +95,7 @@ public class HttpArtifactCacheUploadListenerTest {
   private BuildEvent.Finished createBuildFinishedEvent(int timeMillis) {
     BuildEvent.Started startedEvent = BuildEvent.started(new ArrayList<>());
     startedEvent.configure(timeMillis, 0, 0, 0, buildId);
-    BuildEvent.Finished finishedEvent = BuildEvent.finished(startedEvent, 0);
+    BuildEvent.Finished finishedEvent = BuildEvent.finished(startedEvent, ExitCode.SUCCESS);
     finishedEvent.configure(timeMillis, 0, 0, 0, buildId);
     return finishedEvent;
   }

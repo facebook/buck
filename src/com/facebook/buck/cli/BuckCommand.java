@@ -16,11 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Optional;
-import java.util.OptionalInt;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -70,16 +69,11 @@ public class BuckCommand extends AbstractContainerCommand {
   private boolean version;
 
   @Override
-  public OptionalInt runHelp(PrintStream stream) {
+  public Optional<ExitCode> runHelp(PrintStream stream) {
     if (subcommand != null && subcommand instanceof HelpCommand) {
-      return OptionalInt.of(((HelpCommand) subcommand).run(stream));
+      return Optional.of(((HelpCommand) subcommand).run(stream));
     }
     return super.runHelp(stream);
-  }
-
-  @Override
-  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    return super.run(params);
   }
 
   @Override

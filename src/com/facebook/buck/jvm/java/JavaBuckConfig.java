@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /** A java-specific "view" of BuckConfig. */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
@@ -45,6 +47,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       JavaOptions.of(new CommandTool.Builder().addArg("java").build());
 
   private final BuckConfig delegate;
+  private final Supplier<JavacSpec> javacSpecSupplier;
 
   // Interface for reflection-based ConfigView to instantiate this class.
   public static JavaBuckConfig of(BuckConfig delegate) {
@@ -53,6 +56,21 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   private JavaBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
+    this.javacSpecSupplier =
+        MoreSuppliers.memoize(
+            () ->
+                JavacSpec.builder()
+                    .setJavacPath(
+                        getJavacPath().isPresent()
+                            ? Optional.of(Either.ofLeft(getJavacPath().get()))
+                            : Optional.empty())
+                    .setJavacJarPath(delegate.getSourcePath("tools", "javac_jar"))
+                    .setJavacLocation(
+                        delegate
+                            .getEnum(SECTION, "location", Javac.Location.class)
+                            .orElse(Javac.Location.IN_PROCESS))
+                    .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
+                    .build());
   }
 
   @Override
@@ -140,18 +158,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public JavacSpec getJavacSpec() {
-    return JavacSpec.builder()
-        .setJavacPath(
-            getJavacPath().isPresent()
-                ? Optional.of(Either.ofLeft(getJavacPath().get()))
-                : Optional.empty())
-        .setJavacJarPath(delegate.getSourcePath("tools", "javac_jar"))
-        .setJavacLocation(
-            delegate
-                .getEnum(SECTION, "location", Javac.Location.class)
-                .orElse(Javac.Location.IN_PROCESS))
-        .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
-        .build();
+    return javacSpecSupplier.get();
   }
 
   @VisibleForTesting

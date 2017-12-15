@@ -26,8 +26,9 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
@@ -80,7 +81,7 @@ public class GenerateStringResourcesIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace.ProcessResult foundAapt2 =
         workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+    Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
     String buildTarget =
         String.format(
             "%s#%s",
@@ -100,7 +101,7 @@ public class GenerateStringResourcesIntegrationTest {
             .getFilesUnderPath(filesystem.relativize(output))
             .stream()
             .map(path -> MorePaths.relativize(filesystem.relativize(output), path).toString())
-            .collect(MoreCollectors.toImmutableSortedSet()),
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         is(expectedFilePaths));
   }
 }

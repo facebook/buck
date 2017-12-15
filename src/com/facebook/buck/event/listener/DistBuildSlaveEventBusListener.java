@@ -24,6 +24,8 @@ import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
+import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -33,6 +35,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -63,9 +66,13 @@ import javax.annotation.concurrent.GuardedBy;
  * BuildSlaveStatus with the latest updates.
  */
 public class DistBuildSlaveEventBusListener
-    implements BuildRuleFinishedPublisher, BuckEventListener, Closeable {
+    implements BuildRuleFinishedPublisher,
+        UnexpectedSlaveCacheMissTracker,
+        BuckEventListener,
+        Closeable {
 
-  private static final Logger LOG = Logger.get(DistBuildSlaveEventBusListener.class);
+  private static final TimedLogger LOG =
+      new TimedLogger(Logger.get(DistBuildSlaveEventBusListener.class));
 
   private static final int DEFAULT_SERVER_UPDATE_PERIOD_MILLIS = 500;
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
@@ -95,6 +102,7 @@ public class DistBuildSlaveEventBusListener
   private final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
+  private final HealthCheckStatsTracker healthCheckStatsTracker;
   private final BuildSlaveTimingStatsTracker slaveStatsTracker;
   private final DistBuildMode distBuildMode;
 
@@ -109,6 +117,7 @@ public class DistBuildSlaveEventBusListener
       Clock clock,
       BuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       ScheduledExecutorService networkScheduler) {
     this(
         stampedeId,
@@ -117,6 +126,7 @@ public class DistBuildSlaveEventBusListener
         clock,
         slaveStatsTracker,
         fileMaterializationStatsTracker,
+        healthCheckStatsTracker,
         networkScheduler,
         DEFAULT_SERVER_UPDATE_PERIOD_MILLIS);
   }
@@ -128,6 +138,7 @@ public class DistBuildSlaveEventBusListener
       Clock clock,
       BuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       ScheduledExecutorService networkScheduler,
       long serverUpdatePeriodMillis) {
     this.stampedeId = stampedeId;
@@ -135,6 +146,7 @@ public class DistBuildSlaveEventBusListener
     this.clock = clock;
     this.slaveStatsTracker = slaveStatsTracker;
     this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
+    this.healthCheckStatsTracker = healthCheckStatsTracker;
     this.networkScheduler = networkScheduler;
     this.distBuildMode = distBuildMode;
 
@@ -215,6 +227,7 @@ public class DistBuildSlaveEventBusListener
             .setBuildSlaveStatus(createBuildSlaveStatus())
             .setFileMaterializationStats(
                 fileMaterializationStatsTracker.getFileMaterializationStats())
+            .setHealthCheckStats(healthCheckStatsTracker.getHealthCheckStats())
             .setBuildSlavePerStageTimingStats(slaveStatsTracker.generateStats());
     Preconditions.checkState(
         exitCode.isPresent(),
@@ -326,6 +339,12 @@ public class DistBuildSlaveEventBusListener
     eventBus.post(new BuildSlaveFinishedStatusEvent(finishedStats, remoteBuckConfig));
     networkScheduler.schedule(
         () -> sendFinishedStatsToFrontend(finishedStats), 0, TimeUnit.SECONDS);
+  }
+
+  /** Record unexpected cache misses in build slaves. */
+  @Override
+  public void onUnexpectedCacheMiss(int numUnexpectedMisses) {
+    cacheRateStatsKeeper.recordUnexpectedCacheMisses(numUnexpectedMisses);
   }
 
   @Subscribe

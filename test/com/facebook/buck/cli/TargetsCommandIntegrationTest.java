@@ -36,6 +36,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.PropertySaver;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
@@ -312,7 +313,8 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand("targets", "--show-target-hash", "--show-rulekey", "//:test");
-    result.assertFailure();
+    result.assertSpecialExitCode(
+        "--show-target-hash and --show-rulekey should be incompatible", ExitCode.COMMANDLINE_ERROR);
     String stderr = result.getStderr();
     assertTrue(
         stderr,
@@ -329,7 +331,9 @@ public class TargetsCommandIntegrationTest {
         workspace.runBuckCommand(
             "targets", "--show-target-hash", "--show-rulekey", "--show-output", "//:test");
 
-    result.assertFailure();
+    result.assertSpecialExitCode(
+        "--show-target-hash and --show-rulekey and --show-output should be incompatible",
+        ExitCode.COMMANDLINE_ERROR);
     String stderr = result.getStderr();
     assertTrue(
         stderr,

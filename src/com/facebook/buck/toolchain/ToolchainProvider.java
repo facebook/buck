@@ -30,6 +30,8 @@ public interface ToolchainProvider {
 
   boolean isToolchainPresent(String toolchainName);
 
+  boolean isToolchainCreated(String toolchainName);
+
   /**
    * Provides access to all known toolchains that support the provided capability.
    *

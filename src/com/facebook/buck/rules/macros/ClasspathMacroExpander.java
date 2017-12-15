@@ -23,8 +23,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Objects;
@@ -56,17 +56,6 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
               rule.getBuildTarget()));
     }
     return (HasClasspathEntries) rule;
-  }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ClasspathMacro input)
-      throws MacroException {
-    return ImmutableList.copyOf(
-        getHasClasspathEntries(resolve(resolver, input)).getTransitiveClasspathDeps());
   }
 
   @Override
@@ -110,6 +99,6 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
         .stream()
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 }

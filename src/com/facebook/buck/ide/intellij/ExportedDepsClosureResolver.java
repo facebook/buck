@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class ExportedDepsClosureResolver {
                 })
             .flatMap(
                 target -> Stream.concat(Stream.of(target), getExportedDepsClosure(target).stream()))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     index.put(buildTarget, exportedDepsClosure);
     return exportedDepsClosure;

@@ -27,13 +27,16 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PexToolProvider;
+import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
@@ -60,9 +63,8 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
@@ -71,7 +73,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.base.Preconditions;
@@ -202,15 +204,9 @@ public class PythonBinaryDescriptionTest {
                 .setSections(
                     ImmutableMap.of(
                         "python", ImmutableMap.of("pex_extension", ".different_extension")))
-                .build(),
-            new AlwaysFoundExecutableFinder());
+                .build());
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
-            target,
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(target, config, PythonTestUtils.PYTHON_PLATFORMS);
     PythonBinary binary = builder.setMainModule("main").build(resolver);
     assertThat(
         pathResolver
@@ -338,19 +334,14 @@ public class PythonBinaryDescriptionTest {
     final Path executor = Paths.get("/root/executor");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
             return Optional.of(new HashedFileTool(PathSourcePath.of(filesystem, executor)));
           }
         };
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
-            target,
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(target, config, PythonTestUtils.PYTHON_PLATFORMS);
     PythonPackagedBinary binary =
         (PythonPackagedBinary) builder.setMainModule("main").build(resolver);
     assertThat(
@@ -388,28 +379,19 @@ public class PythonBinaryDescriptionTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:pex_tool"))
             .setOut("pex-tool")
             .build(resolver);
-    PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
-          @Override
-          public PackageStyle getPackageStyle() {
-            return PackageStyle.STANDALONE;
-          }
-
-          @Override
-          public Tool getPexTool(
-              BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-            return new CommandTool.Builder()
+    PythonBuckConfig config = new PythonBuckConfig(FakeBuckConfig.builder().build());
+    PexToolProvider pexToolProvider =
+        (__) ->
+            new CommandTool.Builder()
                 .addArg(SourcePathArg.of(pexTool.getSourcePathToOutput()))
                 .build();
-          }
-        };
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
+        PythonBinaryBuilder.create(
             target,
             config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+            new ToolchainProviderBuilder()
+                .withToolchain(PexToolProvider.DEFAULT_NAME, pexToolProvider),
+            PythonTestUtils.PYTHON_PLATFORMS);
     PythonPackagedBinary binary =
         (PythonPackagedBinary) builder.setMainModule("main").build(resolver);
     assertThat(binary.getBuildDeps(), Matchers.hasItem(pexTool));
@@ -431,19 +413,15 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
@@ -480,19 +458,15 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.SEPARATE;
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
@@ -531,19 +505,15 @@ public class PythonBinaryDescriptionTest {
     extensionBuilder.setBaseModule("hello");
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            pythonPlatforms,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, pythonPlatforms);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
 
@@ -583,19 +553,15 @@ public class PythonBinaryDescriptionTest {
                     ImmutableSortedSet.of(FakeSourcePath.of("prebuilt.so"))))
             .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
           }
         };
     PythonBinaryBuilder pythonBinaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     pythonBinaryBuilder.setMainModule("main");
     pythonBinaryBuilder.setDeps(ImmutableSortedSet.of(pythonLibraryBuilder.getTarget()));
     TargetGraph targetGraph =
@@ -646,20 +612,15 @@ public class PythonBinaryDescriptionTest {
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
       PythonBuckConfig config =
-          new PythonBuckConfig(
-              FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          new PythonBuckConfig(FakeBuckConfig.builder().build()) {
             @Override
             public NativeLinkStrategy getNativeLinkStrategy() {
               return strategy;
             }
           };
       PythonBinaryBuilder binaryBuilder =
-          new PythonBinaryBuilder(
-              BuildTargetFactory.newInstance("//:bin"),
-              config,
-              PythonTestUtils.PYTHON_PLATFORMS,
-              CxxPlatformUtils.DEFAULT_PLATFORM,
-              CxxPlatformUtils.DEFAULT_PLATFORMS);
+          PythonBinaryBuilder.create(
+              BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
       binaryBuilder.setMainModule("main");
       binaryBuilder.setPreloadDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
       BuildRuleResolver resolver =
@@ -682,7 +643,7 @@ public class PythonBinaryDescriptionTest {
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
     PythonBinaryBuilder builder =
-        new PythonBinaryBuilder(
+        PythonBinaryBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
             new PythonBuckConfig(
                 FakeBuckConfig.builder()
@@ -691,11 +652,8 @@ public class PythonBinaryDescriptionTest {
                             "python",
                             ImmutableMap.of(
                                 "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
-                    .build(),
-                new AlwaysFoundExecutableFinder()),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+                    .build()),
+            PythonTestUtils.PYTHON_PLATFORMS);
     builder.setMainModule("main").setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(pexExecutorBuilder.getTarget()));
   }
@@ -711,19 +669,15 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setLinkerFlags(ImmutableList.of("-flag"));
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
@@ -738,13 +692,13 @@ public class PythonBinaryDescriptionTest {
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
     PythonBinary binary = binaryBuilder.build(resolver);
-    for (SourcePath path : binary.getComponents().getNativeLibraries().values()) {
-      CxxLink link =
-          resolver
-              .getRuleOptionalWithType(((BuildTargetSourcePath) path).getTarget(), CxxLink.class)
-              .get();
-      assertThat(Arg.stringify(link.getArgs(), pathResolver), Matchers.hasItem("-flag"));
-    }
+    SourcePath mergedLib =
+        binary.getComponents().getNativeLibraries().get(Paths.get("libomnibus.so"));
+    CxxLink link =
+        resolver
+            .getRuleOptionalWithType(((BuildTargetSourcePath) mergedLib).getTarget(), CxxLink.class)
+            .get();
+    assertThat(Arg.stringify(link.getArgs(), pathResolver), Matchers.hasItem("-flag"));
   }
 
   @Test
@@ -760,20 +714,15 @@ public class PythonBinaryDescriptionTest {
               .setStaticLib(FakeSourcePath.of("libdep2.a"))
               .setForceStatic(true);
       PythonBuckConfig config =
-          new PythonBuckConfig(
-              FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          new PythonBuckConfig(FakeBuckConfig.builder().build()) {
             @Override
             public NativeLinkStrategy getNativeLinkStrategy() {
               return strategy;
             }
           };
       PythonBinaryBuilder binaryBuilder =
-          new PythonBinaryBuilder(
-              BuildTargetFactory.newInstance("//:bin"),
-              config,
-              PythonTestUtils.PYTHON_PLATFORMS,
-              CxxPlatformUtils.DEFAULT_PLATFORM,
-              CxxPlatformUtils.DEFAULT_PLATFORMS);
+          PythonBinaryBuilder.create(
+              BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
       binaryBuilder.setMainModule("main");
       binaryBuilder.setDeps(
           ImmutableSortedSet.of(
@@ -815,19 +764,15 @@ public class PythonBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;
           }
         };
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
-            BuildTargetFactory.newInstance("//:bin"),
-            config,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
     binaryBuilder.setPreloadDeps(ImmutableSet.of(preloadCxxBuilder.getTarget()));
@@ -856,7 +801,7 @@ public class PythonBinaryDescriptionTest {
   public void pexBuilderAddedToParseTimeDeps() {
     final BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<BuildTarget> getPexExecutorTarget() {
             return Optional.of(pexBuilder);
@@ -864,22 +809,14 @@ public class PythonBinaryDescriptionTest {
         };
 
     PythonBinaryBuilder inplaceBinary =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
     assertThat(inplaceBinary.findImplicitDeps(), Matchers.not(Matchers.hasItem(pexBuilder)));
 
     PythonBinaryBuilder standaloneBinary =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
   }
@@ -896,7 +833,7 @@ public class PythonBinaryDescriptionTest {
             .build(resolver);
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
             return Optional.of(pyTool.getExecutableCommand());
@@ -904,19 +841,15 @@ public class PythonBinaryDescriptionTest {
         };
 
     PythonBinary standaloneBinary =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin"),
-                config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS)
             .setMainModule("hello")
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
             .build(resolver);
     assertThat(
         standaloneBinary
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(pyTool.getBuildTarget()));
   }
 
@@ -1016,7 +949,7 @@ public class PythonBinaryDescriptionTest {
                 cxxPlatforms)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonBinaryBuilder binaryBuilder =
-        new PythonBinaryBuilder(
+        PythonBinaryBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),
                 PythonTestUtils.PYTHON_CONFIG,
                 PythonTestUtils.PYTHON_PLATFORMS,

@@ -32,7 +32,7 @@ import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -61,7 +61,8 @@ import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -610,11 +611,14 @@ public class GenruleTest {
     EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create(android));
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidLegacyToolchain.DEFAULT_NAME,
+                TestAndroidLegacyToolchainFactory.create(android))
+            .build();
     Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(target, testToolchainProvider)
+        GenruleBuilder.newGenruleBuilder(target, toolchainProvider)
             .setBash("echo something > $OUT")
             .setOut("file")
             .build(resolver);

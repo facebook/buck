@@ -21,6 +21,7 @@ import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.immutables.BuckStyleStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -58,7 +59,7 @@ abstract class AbstractRmStep implements Step {
       // Delete a single file
       Files.deleteIfExists(absolutePath);
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

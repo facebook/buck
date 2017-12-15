@@ -29,7 +29,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -89,11 +89,12 @@ public class NdkLibraryBuilder
   }
 
   private static ToolchainProvider createToolchainProvider() {
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    toolchainProvider.addToolchain(
-        NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS));
-    toolchainProvider.addToolchain(
-        AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12b", Paths.get("/android/ndk")));
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS))
+            .withToolchain(AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12b", Paths.get("/android/ndk")))
+            .build();
     return toolchainProvider;
   }
 

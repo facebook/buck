@@ -237,8 +237,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanInterruptedThenOverflowEventGenerated()
-      throws IOException, InterruptedException {
+  public void whenWatchmanInterruptedThenOverflowEventGenerated() throws IOException {
     String message = "Boo!";
     WatchmanWatcher watcher =
         createWatcher(
@@ -252,10 +251,10 @@ public class WatchmanWatcherTest {
       watcher.postEvents(
           BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
           WatchmanWatcher.FreshInstanceAction.NONE);
+      fail("Should have thrown InterruptedException");
     } catch (InterruptedException e) {
       assertEquals("Should be test interruption.", e.getMessage(), message);
     }
-    assertTrue(Thread.currentThread().isInterrupted());
     assertThat(eventBuffer.getOnlyEvent(), instanceOf(WatchmanOverflowEvent.class));
   }
 
@@ -617,23 +616,26 @@ public class WatchmanWatcherTest {
         ImmutableMap.of(
             "files", ImmutableList.of(ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
 
+    WatchmanClient client =
+        new FakeWatchmanClient(
+            0,
+            ImmutableMap.of(
+                FAKE_CLOCK_QUERY,
+                watchmanRootOutput,
+                FAKE_SECONDARY_QUERY.toList("c:0:0"),
+                watchmanSecondaryOutput));
     WatchmanWatcher watcher =
         new WatchmanWatcher(
             eventBus,
-            new FakeWatchmanClient(
-                0,
-                ImmutableMap.of(
-                    FAKE_CLOCK_QUERY,
-                    watchmanRootOutput,
-                    FAKE_SECONDARY_QUERY.toList("c:0:0"),
-                    watchmanSecondaryOutput)),
+            () -> client,
             10000,
             ImmutableMap.of(
                 FAKE_ROOT, FAKE_QUERY,
                 FAKE_SECONDARY_ROOT, FAKE_SECONDARY_QUERY),
             ImmutableMap.of(
                 FAKE_ROOT, new WatchmanCursor("c:0:0"),
-                FAKE_SECONDARY_ROOT, new WatchmanCursor("c:0:0")));
+                FAKE_SECONDARY_ROOT, new WatchmanCursor("c:0:0")),
+            /* numThreads */ 1);
     final Set<BuckEvent> events = new HashSet<>();
     BuckEventBus bus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     bus.register(
@@ -675,10 +677,11 @@ public class WatchmanWatcherTest {
       String sinceCursor) {
     return new WatchmanWatcher(
         eventBus,
-        watchmanClient,
+        () -> watchmanClient,
         timeoutMillis,
         ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
-        ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)));
+        ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)),
+        /* numThreads */ 1);
   }
 
   private static class EventBuffer {

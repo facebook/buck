@@ -23,7 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class JsBundleGenruleBuilder
     extends AbstractNodeBuilder<
@@ -33,12 +33,10 @@ public class JsBundleGenruleBuilder
       new JsBundleGenruleDescription(createToolchainProvider(), new NoSandboxExecutionStrategy());
 
   private static ToolchainProvider createToolchainProvider() {
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
-
-    return testToolchainProvider;
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
+        .build();
   }
 
   JsBundleGenruleBuilder(

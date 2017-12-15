@@ -33,9 +33,11 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -169,6 +171,7 @@ public class PythonUtil {
   }
 
   static PythonPackageComponents getAllComponents(
+      CellPathResolver cellPathResolver,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -248,6 +251,7 @@ public class PythonUtil {
               buildTarget,
               projectFilesystem,
               params,
+              cellPathResolver,
               ruleResolver,
               ruleFinder,
               cxxBuckConfig,

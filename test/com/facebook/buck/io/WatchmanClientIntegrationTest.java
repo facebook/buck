@@ -114,8 +114,8 @@ public class WatchmanClientIntegrationTest {
     while (System.currentTimeMillis() < deadline) {
       try {
         Optional<WatchmanClient> optClient =
-            WatchmanFactory.localWatchmanConnector(new TestConsole(), new DefaultClock())
-                .apply(watchmanSockFile);
+            WatchmanFactory.tryCreateWatchmanClient(
+                watchmanSockFile, new TestConsole(), new DefaultClock());
         try {
           if (optClient.isPresent()) {
             optClient.get().queryWithTimeout(timeoutMillis, "get-pid");
@@ -152,8 +152,8 @@ public class WatchmanClientIntegrationTest {
   @Test
   public void testWatchmanGlob() throws InterruptedException, IOException {
     Optional<WatchmanClient> clientOpt =
-        WatchmanFactory.localWatchmanConnector(new TestConsole(), new DefaultClock())
-            .apply(watchmanSockFile);
+        WatchmanFactory.tryCreateWatchmanClient(
+            watchmanSockFile, new TestConsole(), new DefaultClock());
     Assert.assertTrue(clientOpt.isPresent());
 
     WatchmanClient client = clientOpt.get();

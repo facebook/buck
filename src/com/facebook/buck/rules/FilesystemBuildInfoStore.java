@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -44,7 +43,7 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
         .stream()
         .map(path -> path.getFileName().toString())
         .collect(
-            MoreCollectors.toImmutableMap(key -> key, key -> readMetadata(buildTarget, key).get()));
+            ImmutableMap.toImmutableMap(key -> key, key -> readMetadata(buildTarget, key).get()));
   }
 
   @Override

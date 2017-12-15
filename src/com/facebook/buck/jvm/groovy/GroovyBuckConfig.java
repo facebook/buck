@@ -33,6 +33,10 @@ public class GroovyBuckConfig {
     this.delegate = delegate;
   }
 
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
+
   Supplier<Tool> getGroovyCompiler() {
     Optional<Path> path = delegate.getPath("groovy", "groovy_home");
     final Path groovyHomePath;

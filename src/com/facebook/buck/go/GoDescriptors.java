@@ -16,6 +16,8 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
@@ -58,7 +60,7 @@ abstract class GoDescriptors {
 
   private static final Logger LOG = Logger.get(GoDescriptors.class);
 
-  private static final String TEST_MAIN_GEN_PATH = "com/facebook/buck/go/testmaingen.go";
+  private static final String TEST_MAIN_GEN_PATH = "testmaingen.go.in";
   public static final Flavor TRANSITIVE_LINKABLES_FLAVOR =
       InternalFlavor.of("transitive-linkables");
 
@@ -96,12 +98,14 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
+      GoToolchain goToolchain,
       Path packageName,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
       List<String> assemblerFlags,
       GoPlatform platform,
-      Iterable<BuildTarget> deps) {
+      Iterable<BuildTarget> deps,
+      ImmutableSortedSet<BuildTarget> cgoDeps) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -113,11 +117,29 @@ abstract class GoDescriptors {
     for (GoLinkable linkable : linkables) {
       linkableDepsBuilder.addAll(linkable.getDeps(ruleFinder));
     }
-    ImmutableList<BuildRule> linkableDeps = linkableDepsBuilder.build();
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
     SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, pathResolver, linkables);
     resolver.addToIndex(symlinkTree);
+
+    ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
+    ImmutableSet.Builder<SourcePath> compileSrcBuilder = ImmutableSet.builder();
+    compileSrcBuilder.addAll(srcs);
+
+    for (BuildTarget dep : cgoDeps) {
+      BuildRule rule = resolver.requireRule(dep);
+      if (!(rule instanceof CGoLibrary)) {
+        throw new HumanReadableException(
+            "%s is not an instance of cgo_library", dep.getFullyQualifiedName());
+      }
+
+      CGoLibrary lib = (CGoLibrary) rule;
+      compileSrcBuilder.addAll(lib.getGeneratedGoSource());
+      extraAsmOutputsBuilder.add(lib.getOutput());
+      linkableDepsBuilder
+          .addAll(ruleFinder.filterBuildRuleInputs(lib.getOutput()))
+          .addAll(ruleFinder.filterBuildRuleInputs(lib.getGeneratedGoSource()));
+    }
 
     LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
 
@@ -125,23 +147,26 @@ abstract class GoDescriptors {
         buildTarget,
         projectFilesystem,
         params
-            .copyAppendingExtraDeps(linkableDeps)
+            .copyAppendingExtraDeps(linkableDepsBuilder.build())
             .copyAppendingExtraDeps(ImmutableList.of(symlinkTree)),
         symlinkTree,
         packageName,
         getPackageImportMap(
             goBuckConfig.getVendorPaths(),
             buildTarget.getBasePath(),
-            FluentIterable.from(linkables)
-                .transformAndConcat(input -> input.getGoLinkInput().keySet())),
-        ImmutableSet.copyOf(srcs),
+            linkables
+                .stream()
+                .flatMap(input -> input.getGoLinkInput().keySet().stream())
+                .collect(ImmutableList.toImmutableList())),
+        compileSrcBuilder.build(),
         ImmutableList.copyOf(compilerFlags),
-        goBuckConfig.getCompiler(),
+        goToolchain.getCompiler(),
         ImmutableList.copyOf(assemblerFlags),
-        goBuckConfig.getAssemblerIncludeDirs(),
-        goBuckConfig.getAssembler(),
-        goBuckConfig.getPacker(),
-        platform);
+        goToolchain.getAssemblerIncludeDirs(),
+        goToolchain.getAssembler(),
+        goToolchain.getPacker(),
+        platform,
+        extraAsmOutputsBuilder.build());
   }
 
   @VisibleForTesting
@@ -177,11 +202,14 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
+      GoToolchain goToolchain,
+      CxxPlatform cxxPlatform,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
-      GoPlatform platform) {
+      GoPlatform platform,
+      ImmutableSortedSet<BuildTarget> cgoDeps) {
     BuildTarget libraryTarget =
         buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
     GoCompile library =
@@ -191,13 +219,19 @@ abstract class GoDescriptors {
             params,
             resolver,
             goBuckConfig,
+            goToolchain,
             Paths.get("main"),
             srcs,
             compilerFlags,
             assemblerFlags,
             platform,
-            FluentIterable.from(params.getDeclaredDeps().get())
-                .transform(BuildRule::getBuildTarget));
+            params
+                .getDeclaredDeps()
+                .get()
+                .stream()
+                .map(BuildRule::getBuildTarget)
+                .collect(ImmutableList.toImmutableList()),
+            cgoDeps);
     resolver.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -212,13 +246,18 @@ abstract class GoDescriptors {
                 buildTarget,
                 resolver,
                 platform,
-                FluentIterable.from(params.getDeclaredDeps().get())
-                    .transform(BuildRule::getBuildTarget),
+                params
+                    .getDeclaredDeps()
+                    .get()
+                    .stream()
+                    .map(BuildRule::getBuildTarget)
+                    .collect(ImmutableList.toImmutableList()),
                 /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 
     LOG.verbose("Symlink tree for linking of %s: %s", buildTarget, symlinkTree);
 
+    Optional<Linker> cxxLinker = Optional.of(cxxPlatform.getLd().resolve(resolver));
     return new GoBinary(
         buildTarget,
         projectFilesystem,
@@ -230,20 +269,23 @@ abstract class GoDescriptors {
                     .add(library)
                     .build())
             .withoutExtraDeps(),
-        platform.getCxxPlatform().map(input -> input.getLd().resolve(resolver)),
+        cxxLinker,
         symlinkTree,
         library,
-        goBuckConfig.getLinker(),
+        goToolchain.getLinker(),
         ImmutableList.copyOf(linkerFlags),
         platform);
   }
 
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
+      GoToolchain goToolchain,
+      CxxPlatform cxxPlatform,
       BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams sourceParams,
-      BuildRuleResolver resolver) {
+      BuildRuleResolver resolver,
+      ImmutableSortedSet<BuildTarget> cgoDeps) {
 
     Optional<Tool> configTool = goBuckConfig.getGoTestMainGenerator(resolver);
     if (configTool.isPresent()) {
@@ -278,11 +320,14 @@ abstract class GoDescriptors {
                       .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   resolver,
                   goBuckConfig,
+                  goToolchain,
+                  cxxPlatform,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),
-                  goBuckConfig.getDefaultPlatform());
+                  goToolchain.getDefaultPlatform(),
+                  cgoDeps);
             });
 
     return ((BinaryBuildRule) generator).getExecutableCommand();
@@ -290,7 +335,8 @@ abstract class GoDescriptors {
 
   private static String extractTestMainGenerator() {
     try {
-      return Resources.toString(Resources.getResource(TEST_MAIN_GEN_PATH), Charsets.UTF_8);
+      return Resources.toString(
+          Resources.getResource(GoDescriptors.class, TEST_MAIN_GEN_PATH), Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

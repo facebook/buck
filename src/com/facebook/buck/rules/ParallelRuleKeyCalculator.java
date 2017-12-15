@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
@@ -106,5 +107,9 @@ public class ParallelRuleKeyCalculator<T> {
     // Record the rule key future.
     ruleKeys.put(rule.getBuildTarget(), calculated);
     return calculated;
+  }
+
+  public synchronized Set<BuildTarget> getAllKnownTargets() {
+    return ruleKeys.keySet();
   }
 }

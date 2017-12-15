@@ -23,7 +23,6 @@ import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -40,7 +39,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -85,7 +83,7 @@ public class RustCompileTest {
   }
 
   private static Tool fakeTool() {
-    return new AbstractTool() {
+    return new Tool() {
       @Override
       public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
         return ImmutableList.of();
@@ -205,7 +203,7 @@ public class RustCompileTest {
           fakeLinker(),
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")
               .map(StringArg::of)
-              .collect(MoreCollectors.toImmutableList()),
+              .collect(ImmutableList.toImmutableList()),
           /* depArgs */ ImmutableList.of(),
           /* linkerFlags */
           ImmutableList.of(),

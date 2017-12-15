@@ -83,6 +83,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final JavacExecutionContext context;
   private final BuildTarget invokingRule;
   private final BuildTarget libraryTarget;
+  private final AbiGenerationMode abiCompatibilityMode;
   private final BuildTarget abiTarget;
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
@@ -108,6 +109,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
@@ -116,6 +118,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         HasJavaAbi.isLibraryTarget(invokingRule)
             ? invokingRule
             : HasJavaAbi.getLibraryTarget(invokingRule);
+    this.abiCompatibilityMode = abiCompatibilityMode;
     this.abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
     this.options = options;
     this.pluginFields = pluginFields;
@@ -235,9 +238,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   new StubGenerator(
                       getTargetVersion(options),
                       javacTask.getElements(),
+                      javacTask.getTypes(),
                       javacTask.getMessager(),
                       jarBuilder,
                       context.getEventSink(),
+                      abiCompatibilityMode,
                       options.contains("-parameters"));
               stubGenerator.generate(topLevelTypes);
               jarBuilder.createJarFile(

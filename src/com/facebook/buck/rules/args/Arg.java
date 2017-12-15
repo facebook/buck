@@ -18,13 +18,8 @@ package com.facebook.buck.rules.args;
 
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -41,16 +36,6 @@ public interface Arg extends AddsToRuleKey {
       Optional<Arg> arg, SourcePathResolver pathResolver) {
     return arg.map((input1) -> stringifyList(input1, pathResolver))
         .map(input -> Joiner.on(' ').join(input));
-  }
-
-  /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
-  default ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return BuildableSupport.deriveDeps(this, ruleFinder).collect(MoreCollectors.toImmutableList());
-  }
-
-  /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
-  default ImmutableCollection<SourcePath> getInputs() {
-    return BuildableSupport.deriveInputs(this).collect(MoreCollectors.toImmutableList());
   }
 
   /**

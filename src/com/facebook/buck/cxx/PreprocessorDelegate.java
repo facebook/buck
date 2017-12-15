@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.HeaderPathNormalizer.HeaderCollector;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -24,7 +23,9 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -34,18 +35,14 @@ import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
 final class PreprocessorDelegate implements AddsToRuleKey {
@@ -75,7 +72,32 @@ final class PreprocessorDelegate implements AddsToRuleKey {
 
   private final PathShortener minLengthPathRepresentation;
 
-  private final Supplier<HeaderPathNormalizer> headerPathNormalizer;
+  private final Supplier<HeaderPathNormalizer> headerPathNormalizer =
+      MoreSuppliers.weakMemoize(
+          new Supplier<HeaderPathNormalizer>() {
+            @Override
+            public HeaderPathNormalizer get() {
+              HeaderPathNormalizer.Builder builder = new HeaderPathNormalizer.Builder(resolver);
+              for (CxxHeaders include : preprocessorFlags.getIncludes()) {
+                include.addToHeaderPathNormalizer(builder);
+              }
+              for (FrameworkPath frameworkPath : preprocessorFlags.getFrameworkPaths()) {
+                frameworkPath.getSourcePath().ifPresent(builder::addHeaderDir);
+              }
+              if (preprocessorFlags.getPrefixHeader().isPresent()) {
+                SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
+                builder.addPrefixHeader(headerPath);
+              }
+              if (sandbox.isPresent()) {
+                ExplicitBuildTargetSourcePath root =
+                    ExplicitBuildTargetSourcePath.of(
+                        sandbox.get().getBuildTarget(),
+                        sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
+                builder.addSymlinkTree(root, sandbox.get().getLinks());
+              }
+              return builder.build();
+            }
+          });
 
   public PreprocessorDelegate(
       SourcePathResolver resolver,
@@ -97,13 +119,6 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.sandbox = sandbox;
     this.leadingIncludePaths = leadingIncludePaths;
-    this.headerPathNormalizer =
-        MoreSuppliers.weakMemoize(
-            () -> {
-              HeaderPathNormalizer.Builder builder = new HeaderPathNormalizer.Builder(resolver);
-              collectHeaders(builder);
-              return builder.build();
-            });
   }
 
   public PreprocessorDelegate withLeadingIncludePaths(CxxIncludePaths leadingIncludePaths) {
@@ -117,26 +132,6 @@ final class PreprocessorDelegate implements AddsToRuleKey {
         this.frameworkPathSearchPathFunction,
         this.sandbox,
         Optional.of(leadingIncludePaths));
-  }
-
-  public void collectHeaders(HeaderCollector headerCollector) {
-    for (CxxHeaders include : preprocessorFlags.getIncludes()) {
-      include.addToHeaderCollector(headerCollector);
-    }
-    for (FrameworkPath frameworkPath : preprocessorFlags.getFrameworkPaths()) {
-      frameworkPath.getSourcePath().ifPresent(headerCollector::addHeaderDir);
-    }
-    if (preprocessorFlags.getPrefixHeader().isPresent()) {
-      SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
-      headerCollector.addPrefixHeader(headerPath);
-    }
-    if (sandbox.isPresent()) {
-      ExplicitBuildTargetSourcePath root =
-          ExplicitBuildTargetSourcePath.of(
-              sandbox.get().getBuildTarget(),
-              sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
-      headerCollector.addSymlinkTree(root, sandbox.get().getLinks());
-    }
   }
 
   public Preprocessor getPreprocessor() {
@@ -223,7 +218,20 @@ final class PreprocessorDelegate implements AddsToRuleKey {
 
   /** @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey */
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<Path> dependencies) {
-    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
+    Stream.Builder<SourcePath> inputsBuilder = Stream.builder();
+
+    // Add inputs that we always use.
+    BuildableSupport.deriveInputs(preprocessor).forEach(inputsBuilder);
+
+    // Prefix header is not represented in the dep file, so should be added manually.
+    if (preprocessorFlags.getPrefixHeader().isPresent()) {
+      inputsBuilder.add(preprocessorFlags.getPrefixHeader().get());
+    }
+
+    // Args can contain things like location macros, so extract any inputs we find.
+    for (Arg arg : preprocessorFlags.getOtherFlags().getAllFlags()) {
+      BuildableSupport.deriveInputs(arg).forEach(inputsBuilder);
+    }
 
     // Add any header/include inputs that our dependency file said we used.
     //
@@ -236,32 +244,22 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     HeaderPathNormalizer headerPathNormalizer = getHeaderPathNormalizer();
     for (Path absolutePath : dependencies) {
       Preconditions.checkState(absolutePath.isAbsolute());
-      inputs.add(headerPathNormalizer.getSourcePathForAbsolutePath(absolutePath));
+      inputsBuilder.add(headerPathNormalizer.getSourcePathForAbsolutePath(absolutePath));
     }
 
-    return inputs.build();
+    return inputsBuilder
+        .build()
+        .filter(getCoveredByDepFilePredicate())
+        .collect(ImmutableList.toImmutableList());
   }
 
-  public Predicate<SourcePath> getCoveredByDepfilePredicate() {
-    // So that this doesn't need to compute the entire HeaderPathNormalizer, it just collects the
-    // headers directly.
-    ImmutableSet.Builder<SourcePath> headersBuilder = ImmutableSet.builder();
-    collectHeaders(
-        new HeaderCollector() {
-          @Override
-          public HeaderCollector addSymlinkTree(
-              SourcePath root, ImmutableMap<Path, SourcePath> headerMap) {
-            headersBuilder.addAll(headerMap.values());
-            return this;
-          }
-
-          @Override
-          public HeaderCollector addHeader(SourcePath sourcePath, Path... unnormalizedPaths) {
-            headersBuilder.add(sourcePath);
-            return this;
-          }
-        });
-    return headersBuilder.build()::contains;
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    // TODO(jkeljo): I didn't know how to implement this, and didn't have time to figure it out.
+    // TODO(cjhopman): This should only include paths from the headers, not all the tools and other
+    // random things added to the rulekeys.
+    return (SourcePath path) ->
+        !(path instanceof PathSourcePath)
+            || !((PathSourcePath) path).getRelativePath().isAbsolute();
   }
 
   public HeaderVerification getHeaderVerification() {
@@ -272,49 +270,13 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     return preprocessorFlags.getPrefixHeader();
   }
 
-  /**
-   * Generate a digest of the compiler flags.
-   *
-   * <p>Generated PCH files can only be used when compiling with similar compiler flags. This
-   * guarantees the uniqueness of the generated file.
-   *
-   * <p>Note: when building the hash for identifying the PCH itself, just pass {@code
-   * Optional.empty()}.
-   */
-  public String hashCommand(CxxToolFlags flags, Optional<CxxPrecompiledHeader> pch) {
-    return hashCommand(getCommand(flags, pch));
-  }
-
-  public String hashCommand(ImmutableList<Arg> flags) {
-    Hasher hasher = Hashing.murmur3_128().newHasher();
-    String workingDirString = workingDir.toString();
-    // Skips the executable argument (the first one) as that is not sanitized.
-    //
-    // TODO(#14644005): This currently won't support macros in the input flags.  I think we probably
-    // need to change the hasher here to use `RuleKeyObjectSink` so that it can handle `Arg`s
-    // directly and hash it appropriately.
-    for (Arg flag : flags) {
-      Preconditions.checkArgument(
-          flag.getInputs().isEmpty(), "precompiled header hashing does not support source paths");
-    }
-    for (String part : sanitizer.sanitizeFlags(Iterables.skip(Arg.stringify(flags, resolver), 1))) {
-      // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
-      if (part.startsWith(workingDirString)) {
-        part = "<WORKINGDIR>" + part.substring(workingDirString.length());
-      }
-      hasher.putString(part, Charsets.UTF_8);
-      hasher.putBoolean(false); // separator
-    }
-    return hasher.hash().toString();
-  }
-
   public PreprocessorFlags getPreprocessorFlags() {
     return preprocessorFlags;
   }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableList.<BuildRule>builder()
-        .addAll(getPreprocessor().getDeps(ruleFinder))
+        .addAll(BuildableSupport.getDepsCollection(getPreprocessor(), ruleFinder))
         .addAll(getPreprocessorFlags().getDeps(ruleFinder))
         .build();
   }

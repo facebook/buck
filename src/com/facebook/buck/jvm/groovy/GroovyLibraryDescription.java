@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -38,18 +40,17 @@ import org.immutables.value.Value;
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  // For cross compilation
-  private final JavacOptions defaultJavacOptions;
 
   public GroovyLibraryDescription(
+      ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions defaultJavacOptions) {
+      JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.groovyBuckConfig = groovyBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.defaultJavacOptions = defaultJavacOptions;
   }
 
   @Override
@@ -68,7 +69,13 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
       GroovyLibraryDescriptionArg args) {
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
-            defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         new DefaultJavaLibraryRules.Builder(
                 buildTarget,

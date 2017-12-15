@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -211,7 +212,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   public Tool getExecutableCommand() {
     return new CommandTool.Builder(python)
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
-        .addDep(linkTree)
+        .addNonHashableInput(linkTree.getRootSourcePath())
         .addInputs(getComponents().getModules().values())
         .addInputs(getComponents().getResources().values())
         .addInputs(getComponents().getNativeLibraries().values())

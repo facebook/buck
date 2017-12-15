@@ -45,7 +45,6 @@ EXPORTED_RESOURCES = [
     Resource("testrunner_classes"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
-    Resource("path_to_rawmanifest_py", basename='rawmanifest.py'),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
     Resource("path_to_pex"),
     Resource("path_to_pywatchman"),
@@ -100,8 +99,29 @@ class ExecuteTarget(Exception):
 
     def execve(self):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
-        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        if os.name != 'nt':
+            signal.signal(signal.SIGPIPE, signal.SIG_DFL)
         os.execvpe(self._path, self._argv, self._envp)
+
+
+class BuckStatusReporter(object):
+    """ Add custom logic to log Buck completion statuses or errors including
+    critical ones like JVM crashes and OOMs. This object is fully mutable with
+    all fields optional which get populated on the go. Only safe operations
+    are allowed in the reporter except for report() function which can throw
+    """
+    def __init__(self, argv):
+        self.argv = argv
+        self.build_id = None
+        self.buck_version = None
+        self.is_buckd = False
+        self.status_message = None
+        self.repository = None
+        self.start_time = time.time()
+
+    def report(self, exit_code):
+        """ Add custom code here to track Buck invocations """
+        pass
 
 
 class JvmCrashLogger(object):
@@ -142,7 +162,8 @@ class JvmCrashLogger(object):
 
 
 class BuckTool(object):
-    def __init__(self, buck_project):
+    def __init__(self, buck_project, buck_reporter):
+        self._reporter = buck_reporter
         self._package_info = self._get_package_info()
         self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
@@ -155,6 +176,7 @@ class BuckTool(object):
         self._pathsep = os.pathsep
         if sys.platform == 'cygwin':
             self._pathsep = ';'
+
 
     def _get_package_info(self):
         raise NotImplementedError()
@@ -340,11 +362,22 @@ class BuckTool(object):
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                self._reporter.build_id = build_id
+
+                try:
+                    repository = self._get_repository()
+                    self._reporter.repository = repository
+                except Exception as e:
+                    # _get_repository() is only for reporting,
+                    # so skip on error
+                    logging.warning('Failed to get repo name: ' + str(e))
+
                 if self._command_line.command == "clean" and \
                         not self._command_line.is_help():
                     self.kill_buckd()
 
                 buck_version_uid = self._get_buck_version_uid()
+                self._reporter.buck_version = buck_version_uid
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
@@ -370,11 +403,21 @@ class BuckTool(object):
                 env['BUCK_BUILD_ID'] = build_id
 
                 use_nailgun = use_buckd and self._is_buckd_running()
+                self._reporter.is_buckd = use_nailgun
                 run_fn = self._run_with_nailgun if use_nailgun else self._run_without_nailgun
 
                 self._unpack_modules()
 
-                return self._execute_command_and_maybe_run_target(run_fn, env)
+                exit_code = self._execute_command_and_maybe_run_target(
+                    run_fn, env)
+
+                # Most shells return process termination with signal as
+                # 128 + N, where N is the signal. However Python's subprocess
+                # call returns them as negative numbers. Buck binary protocol
+                # uses shell's convention, so convert
+                if (exit_code < 0):
+                    exit_code = 128 + (-1 * exit_code)
+                return exit_code
 
 
     def _generate_log_entry(self, message, logs_array):
@@ -505,6 +548,13 @@ class BuckTool(object):
 
             return returncode
 
+    def _get_repository(self):
+        arcconfig = os.path.join(self._buck_project.root, '.arcconfig')
+        if os.path.isfile(arcconfig):
+            with open(arcconfig, 'r') as fp:
+                return json.load(fp).get('project_id', None)
+        return None
+
 
     def kill_buckd(self):
         with Tracing('BuckTool.kill_buckd'):
@@ -599,6 +649,8 @@ class BuckTool(object):
             if extra_java_args:
                 java_args.extend(shlex.split(extra_java_args))
             return java_args
+
+
 
 
 def install_signal_handlers():

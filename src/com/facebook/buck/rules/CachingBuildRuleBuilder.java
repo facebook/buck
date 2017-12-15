@@ -52,7 +52,6 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
@@ -132,6 +131,7 @@ class CachingBuildRuleBuilder {
   private final ArtifactCache artifactCache;
   private final BuildId buildId;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
+  private final Set<String> depsWithCacheMiss = Collections.synchronizedSet(new HashSet<>());
 
   private final BuildRuleScopeManager buildRuleScopeManager;
 
@@ -234,6 +234,7 @@ class CachingBuildRuleBuilder {
     if (manifestStoreResult != null) {
       builder.setManifestStoreResult(manifestStoreResult);
     }
+    builder.setDepsWithCacheMisses(depsWithCacheMiss);
     return builder;
   }
 
@@ -593,7 +594,7 @@ class CachingBuildRuleBuilder {
               .stream()
               .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
               .map(ObjectMappers.toJsonFunction())
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       getBuildInfoRecorder().addMetadata(BuildInfo.MetadataKey.DEP_FILE, inputStrings);
 
       // Re-calculate and store the depfile rule key for next time.
@@ -641,7 +642,7 @@ class CachingBuildRuleBuilder {
                 .getRecordedPaths()
                 .stream()
                 .map(Object::toString)
-                .collect(MoreCollectors.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
       try {
         boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
@@ -1016,6 +1017,14 @@ class CachingBuildRuleBuilder {
           && !depResult.isSuccess()) {
         return Futures.immediateFuture(Optional.of(canceled(depResult.getFailure())));
       }
+
+      if (depResult
+          .getCacheResult()
+          .orElse(CacheResult.skipped())
+          .getType()
+          .equals(CacheResultType.MISS)) {
+        depsWithCacheMiss.add(depResult.getRule().getFullyQualifiedName());
+      }
     }
     depsAreAvailable = true;
     return Futures.immediateFuture(Optional.empty());
@@ -1336,7 +1345,7 @@ class CachingBuildRuleBuilder {
             .get()
             .stream()
             .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     try (Scope ignored =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.DEP_FILE)) {
@@ -1492,8 +1501,10 @@ class CachingBuildRuleBuilder {
 
     // Deserialize the manifest.
     Manifest manifest;
-    try (InputStream input =
-        new GZIPInputStream(rule.getProjectFilesystem().newFileInputStream(path))) {
+    // Keep the file input stream in a separate variable so that it gets closed if the
+    // GZIPInputStream constructor throws.
+    try (InputStream manifestFile = rule.getProjectFilesystem().newFileInputStream(path);
+        InputStream input = new GZIPInputStream(manifestFile)) {
       manifest = new Manifest(input);
     } catch (Exception e) {
       LOG.warn(

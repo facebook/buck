@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -44,6 +45,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
@@ -169,7 +171,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compiler.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder))
                     .addAll(ppFlags.getDeps(ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(includes))
                     .addAll(sources.getDeps(ruleFinder))
@@ -470,7 +472,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                     return super.postVisitDirectory(dir, exc);
                   }
                 });
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }

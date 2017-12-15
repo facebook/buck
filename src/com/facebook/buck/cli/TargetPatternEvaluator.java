@@ -20,25 +20,25 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -135,7 +135,7 @@ public class TargetPatternEvaluator {
         .stream()
         .map(path -> PathSourcePath.of(rootCell.getFilesystem(), path))
         .map(QueryFileTarget::of)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(

@@ -20,12 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -39,11 +39,12 @@ import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -58,7 +59,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,8 +90,8 @@ public class CleanCommandTest extends EasyMockSupport {
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
 
     // Simulate `buck clean`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
@@ -111,8 +111,8 @@ public class CleanCommandTest extends EasyMockSupport {
     assertTrue(projectFilesystem.exists(additionalPath));
 
     // Simulate `buck clean --project`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(additionalPath));
   }
@@ -136,44 +136,43 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell)
       throws InterruptedException, IOException {
-    Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-        AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ProcessExecutor processExecutor = new FakeProcessExecutor();
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
-    return CommandRunnerParams.builder()
-        .setConsole(new TestConsole())
-        .setBuildInfoStoreManager(new BuildInfoStoreManager())
-        .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
-        .setCell(cell)
-        .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
-        .setBuckEventBus(BuckEventBusForTests.newInstance())
-        .setTypeCoercerFactory(createMock(TypeCoercerFactory.class))
-        .setParser(createMock(Parser.class))
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setClock(new DefaultClock())
-        .setProcessManager(Optional.empty())
-        .setWebServer(Optional.empty())
-        .setBuckConfig(buckConfig)
-        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
-        .setExecutors(ImmutableMap.of())
-        .setScheduledExecutor(new FakeExecutor())
-        .setBuildEnvironmentDescription(CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)
-        .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
-        .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
-        .setActionGraphCache(new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()))
-        .setKnownBuildRuleTypesProvider(
-            KnownBuildRuleTypesProvider.of(
-                DefaultKnownBuildRuleTypesFactory.of(
-                    processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())))
-        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setRuleKeyConfiguration(TestRuleKeyConfigurationFactory.create())
-        .setProcessExecutor(processExecutor)
-        .build();
+    return CommandRunnerParams.of(
+        new TestConsole(),
+        new ByteArrayInputStream("".getBytes("UTF-8")),
+        cell,
+        new VersionedTargetGraphCache(),
+        new SingletonArtifactCacheFactory(new NoopArtifactCache()),
+        createMock(TypeCoercerFactory.class),
+        createMock(Parser.class),
+        BuckEventBusForTests.newInstance(),
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder(),
+        new DefaultClock(),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        buckConfig,
+        new StackedFileHashCache(ImmutableList.of()),
+        ImmutableMap.of(),
+        new FakeExecutor(),
+        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())),
+        new BuildInfoStoreManager(),
+        Optional.empty(),
+        Optional.empty(),
+        new DefaultProjectFilesystemFactory(),
+        TestRuleKeyConfigurationFactory.create(),
+        processExecutor,
+        new ExecutableFinder(),
+        pluginManager);
   }
 }

@@ -17,7 +17,12 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
+import com.facebook.buck.jvm.java.lang.model.BridgeMethod;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -28,14 +33,16 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementScanner8;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -48,7 +55,8 @@ class ClassVisitorDriverFromElement {
   private final Messager messager;
   private final SignatureFactory signatureFactory;
   private final SourceVersion targetVersion;
-  private final Elements elements;
+  private final ElementsExtended elements;
+  private final Types types;
   private final AccessFlags accessFlagsUtils;
   private final boolean includeParameterMetadata;
 
@@ -56,17 +64,20 @@ class ClassVisitorDriverFromElement {
    * @param targetVersion the class file version to target, expressed as the corresponding Java
    *     source version
    * @param messager
+   * @param types
    * @param includeParameterMetadata
    */
   ClassVisitorDriverFromElement(
       SourceVersion targetVersion,
-      Elements elements,
+      ElementsExtended elements,
       Messager messager,
+      Types types,
       boolean includeParameterMetadata) {
     this.targetVersion = targetVersion;
     this.elements = elements;
     descriptorFactory = new DescriptorFactory(elements);
     this.messager = messager;
+    this.types = types;
     this.includeParameterMetadata = includeParameterMetadata;
     signatureFactory = new SignatureFactory(descriptorFactory);
     accessFlagsUtils = new AccessFlags(elements);
@@ -145,8 +156,9 @@ class ClassVisitorDriverFromElement {
             Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
       }
 
+      int classFileVersion = sourceVersionToClassFileVersion(targetVersion);
       visitor.visit(
-          sourceVersionToClassFileVersion(targetVersion),
+          classFileVersion,
           accessFlagsUtils.getAccessFlagsForClassNode(e),
           descriptorFactory.getInternalName(e),
           signatureFactory.getSignature(e),
@@ -163,9 +175,96 @@ class ClassVisitorDriverFromElement {
 
       InnerClassesTable innerClassesTable =
           new InnerClassesTable(descriptorFactory, accessFlagsUtils, e);
+      if (e.getKind().isClass() || classFileVersion >= Opcodes.V1_8) {
+        try {
+          generateBridges(e, visitor, innerClassesTable);
+        } catch (UnsupportedOperationException | CannotInferException ex) { // NOPMD
+          // Can't generate bridges in source-only mode
+        }
+      }
+
       innerClassesTable.reportInnerClassReferences(visitor);
 
       return null;
+    }
+
+    private void generateBridges(
+        TypeElement subclass, ClassVisitor visitor, InnerClassesTable innerClassesTable) {
+      new BridgeBuilder(subclass, visitor, innerClassesTable).generateBridges();
+    }
+
+    /** Creates bridge methods in a given subclass as needed. */
+    private class BridgeBuilder {
+      private final TypeElement subclass;
+      private final ClassVisitor visitor;
+      private final InnerClassesTable innerClassesTable;
+      private final Multimap<Name, String> bridgedDescriptors = HashMultimap.create();
+
+      private BridgeBuilder(
+          TypeElement subclass, ClassVisitor visitor, InnerClassesTable innerClassesTable) {
+        this.subclass = subclass;
+        this.visitor = visitor;
+        this.innerClassesTable = innerClassesTable;
+      }
+
+      public void generateBridges() {
+        for (BridgeMethod bridgeMethod : elements.getAllBridgeMethods(subclass)) {
+          generateBridge(bridgeMethod.from, bridgeMethod.to);
+        }
+      }
+
+      private void generateBridge(ExecutableElement fromMethod, ExecutableElement toMethod) {
+        ExecutableType toErasure = (ExecutableType) types.erasure(toMethod.asType());
+        String bridgeDescriptor = descriptorFactory.getDescriptor(toErasure);
+        if (bridgedDescriptors.get(toMethod.getSimpleName()).contains(bridgeDescriptor)) {
+          return;
+        }
+
+        innerClassesTable.addTypeReferences(toErasure);
+
+        String[] exceptions =
+            toErasure
+                .getThrownTypes()
+                .stream()
+                .map(descriptorFactory::getInternalName)
+                .toArray(String[]::new);
+
+        MethodVisitor methodVisitor =
+            visitor.visitMethod(
+                getBridgeAccessFlags(fromMethod),
+                toMethod.getSimpleName().toString(),
+                bridgeDescriptor,
+                signatureFactory.getSignature(toErasure),
+                exceptions);
+        if (methodVisitor != null) {
+          List<? extends VariableElement> fromMethodParameters = fromMethod.getParameters();
+          for (int i = 0; i < fromMethodParameters.size(); i++) {
+            VariableElement fromMethodParameter = fromMethodParameters.get(i);
+            List<? extends AnnotationMirror> annotations =
+                fromMethodParameter.getAnnotationMirrors();
+            innerClassesTable.addTypeReferences(annotations);
+            visitParameter(
+                i,
+                fromMethodParameter.getSimpleName(),
+                accessFlagsUtils.getAccessFlags(fromMethodParameter) | Opcodes.ACC_SYNTHETIC,
+                annotations,
+                false,
+                methodVisitor);
+          }
+          innerClassesTable.addTypeReferences(fromMethod.getAnnotationMirrors());
+          visitAnnotations(fromMethod, methodVisitor::visitAnnotation);
+          methodVisitor.visitEnd();
+
+          bridgedDescriptors.put(toMethod.getSimpleName(), bridgeDescriptor);
+        }
+      }
+
+      private int getBridgeAccessFlags(ExecutableElement method) {
+        return accessFlagsUtils.getAccessFlags(method)
+                & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED | Opcodes.ACC_PRIVATE)
+            | Opcodes.ACC_SYNTHETIC
+            | Opcodes.ACC_BRIDGE;
+      }
     }
 
     @Override
@@ -173,9 +272,6 @@ class ClassVisitorDriverFromElement {
       if (e.getModifiers().contains(Modifier.PRIVATE)) {
         return null;
       }
-
-      // TODO(jkeljo): Bridge methods: Look at superclasses, then interfaces, checking whether
-      // method types change in the new class
 
       String[] exceptions =
           e.getThrownTypes()
@@ -209,22 +305,37 @@ class ClassVisitorDriverFromElement {
       }
       for (int i = 0; i < parameters.size(); i++) {
         VariableElement parameter = parameters.get(i);
-        if (includeParameterMetadata) {
-          methodVisitor.visitParameter(
-              parameter.getSimpleName().toString(), accessFlagsUtils.getAccessFlags(parameter));
-        }
+        visitParameter(
+            i,
+            parameter.getSimpleName(),
+            accessFlagsUtils.getAccessFlags(parameter),
+            parameter.getAnnotationMirrors(),
+            isInnerClassConstructor,
+            methodVisitor);
+      }
+    }
 
-        for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
-          if (MoreElements.isSourceRetention(annotationMirror)) {
-            continue;
-          }
-          visitAnnotationValues(
-              annotationMirror,
-              methodVisitor.visitParameterAnnotation(
-                  isInnerClassConstructor ? i + 1 : i,
-                  descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
-                  MoreElements.isRuntimeRetention(annotationMirror)));
+    private void visitParameter(
+        int index,
+        Name name,
+        int access,
+        List<? extends AnnotationMirror> annotationMirrors,
+        boolean isInnerClassConstructor,
+        MethodVisitor methodVisitor) {
+      if (includeParameterMetadata) {
+        methodVisitor.visitParameter(name.toString(), access);
+      }
+
+      for (AnnotationMirror annotationMirror : annotationMirrors) {
+        if (MoreElements.isSourceRetention(annotationMirror)) {
+          continue;
         }
+        visitAnnotationValues(
+            annotationMirror,
+            methodVisitor.visitParameterAnnotation(
+                isInnerClassConstructor ? index + 1 : index,
+                descriptorFactory.getDescriptor(annotationMirror.getAnnotationType()),
+                MoreElements.isRuntimeRetention(annotationMirror)));
       }
     }
 

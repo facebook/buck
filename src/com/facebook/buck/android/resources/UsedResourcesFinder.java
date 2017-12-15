@@ -16,10 +16,10 @@
 
 package com.facebook.buck.android.resources;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,7 +50,7 @@ public class UsedResourcesFinder {
             .processedFiles
             .stream()
             .filter(apkContentProvider::hasFile)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         state.processedIds);
   }
 

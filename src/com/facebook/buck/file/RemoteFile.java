@@ -16,6 +16,7 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

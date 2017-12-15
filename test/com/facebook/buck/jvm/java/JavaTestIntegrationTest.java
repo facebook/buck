@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -138,7 +139,7 @@ public class JavaTestIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:simple");
 
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test exited before generating results file"));
   }
@@ -151,7 +152,7 @@ public class JavaTestIntegrationTest {
     workspace.writeContentsToPath("[test]\n  rule_timeout = 250", ".buckconfig");
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
     assertThat(stderr, Matchers.containsString("FAIL"));
@@ -165,7 +166,7 @@ public class JavaTestIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
     assertThat(stderr, Matchers.containsString("FAIL"));

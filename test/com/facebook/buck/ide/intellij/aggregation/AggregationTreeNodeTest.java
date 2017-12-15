@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.ide.intellij.model.IjModuleType;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -151,7 +150,7 @@ public class AggregationTreeNodeTest {
         node.collectNodes(2)
             .stream()
             .map(AggregationTreeNode::getModuleBasePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test

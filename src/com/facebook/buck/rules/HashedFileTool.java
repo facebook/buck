@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** A tool with a single file input. */
-public class HashedFileTool implements AbstractTool {
+public class HashedFileTool implements Tool {
   @AddToRuleKey private final Supplier<? extends SourcePath> path;
 
   public HashedFileTool(Supplier<? extends SourcePath> path) {

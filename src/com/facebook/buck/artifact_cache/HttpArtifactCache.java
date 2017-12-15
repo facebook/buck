@@ -20,6 +20,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -124,6 +125,12 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             .build();
       }
     }
+  }
+
+  @Override
+  protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
+      throws IOException {
+    throw new UnsupportedOperationException("multiContains is not supported");
   }
 
   @Override

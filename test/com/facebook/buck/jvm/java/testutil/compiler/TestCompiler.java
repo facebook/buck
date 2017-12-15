@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
 import com.facebook.buck.jvm.java.abi.source.api.ErrorSuppressingDiagnosticListener;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TreesMessager;
@@ -52,7 +53,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -258,7 +258,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     return classes;
   }
 
-  public Elements getElements() {
+  public ElementsExtended getElements() {
     return getJavacTask().getElements();
   }
 

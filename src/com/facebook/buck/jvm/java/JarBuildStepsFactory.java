@@ -35,16 +35,17 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class JarBuildStepsFactory
@@ -74,7 +75,8 @@ public class JarBuildStepsFactory
   @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
   @AddToRuleKey private final AbiGenerationMode abiGenerationMode;
-  @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
+  @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
+  @Nullable private final Supplier<SourceOnlyAbiRuleInfo> ruleInfoSupplier;
 
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
@@ -91,7 +93,8 @@ public class JarBuildStepsFactory
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
       AbiGenerationMode abiGenerationMode,
-      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
+      AbiGenerationMode abiCompatibilityMode,
+      @Nullable Supplier<SourceOnlyAbiRuleInfo> ruleInfoSupplier) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
     this.libraryTarget = libraryTarget;
@@ -106,7 +109,8 @@ public class JarBuildStepsFactory
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
     this.abiGenerationMode = abiGenerationMode;
-    this.ruleInfo = ruleInfo;
+    this.abiCompatibilityMode = abiCompatibilityMode;
+    this.ruleInfoSupplier = ruleInfoSupplier;
   }
 
   public boolean producesJar() {
@@ -139,7 +143,7 @@ public class JarBuildStepsFactory
 
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     // a hash set is intentionally used to achieve constant time look-up
-    return abiClasspath.getArchiveMembers(pathResolver).collect(MoreCollectors.toImmutableSet())
+    return abiClasspath.getArchiveMembers(pathResolver).collect(ImmutableSet.toImmutableSet())
         ::contains;
   }
 
@@ -268,7 +272,8 @@ public class JarBuildStepsFactory
         .setScratchPaths(buildTarget, projectFilesystem)
         .setShouldTrackClassUsage(trackClassUsage)
         .setAbiGenerationMode(abiGenerationMode)
-        .setSourceOnlyAbiRuleInfo(ruleInfo)
+        .setAbiCompatibilityMode(abiCompatibilityMode)
+        .setSourceOnlyAbiRuleInfo(ruleInfoSupplier != null ? ruleInfoSupplier.get() : null)
         .build();
   }
 

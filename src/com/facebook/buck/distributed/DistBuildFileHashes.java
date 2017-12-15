@@ -28,9 +28,8 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -43,6 +42,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -140,7 +140,7 @@ public class DistBuildFileHashes {
       final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories,
       ListeningExecutorService executorService) {
     List<ListenableFuture<Map.Entry<BuildRule, RuleKey>>> ruleKeyEntries = new ArrayList<>();
-    for (final BuildRule rule : actionGraph.getNodes()) {
+    for (final BuildRule rule : Sets.newLinkedHashSet(actionGraph.getNodes())) {
       ruleKeyEntries.add(
           executorService.submit(
               () ->
@@ -171,7 +171,7 @@ public class DistBuildFileHashes {
               .stream()
               .map(recordedHash -> recordedHash.getRemoteFileHashes())
               .filter(x -> x.getEntriesSize() > 0)
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       checkNoDuplicates(hashes);
       return hashes;
     } catch (ExecutionException e) {

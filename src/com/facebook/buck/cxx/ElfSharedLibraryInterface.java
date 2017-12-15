@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -82,7 +83,7 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
         new BuildRuleParams(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(objcopy.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(objcopy, ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(input))
                     .build(),
             ImmutableSortedSet::of,

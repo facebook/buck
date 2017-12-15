@@ -140,6 +140,7 @@ public class JavacPipelineState implements RulePipelineState {
                   abiJarParameters,
                   libraryJarParameters,
                   compilerParameters.getAbiGenerationMode(),
+                  compilerParameters.getAbiCompatibilityMode(),
                   compilerParameters.getSourceOnlyAbiRuleInfo());
 
       closeables.add(invocation);

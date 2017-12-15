@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -53,9 +54,9 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ApkGenruleDescriptionArg args,
-      Optional<com.facebook.buck.rules.args.Arg> cmd,
-      Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe) {
 
     final BuildRule apk = resolver.getRule(args.getApk());
     if (!(apk instanceof HasInstallableApk)) {

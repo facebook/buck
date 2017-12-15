@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -144,7 +145,10 @@ public class PythonBinaryIntegrationTest {
         link, workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
     ProcessExecutor.Result result =
         workspace.runCommand(
-            getPythonBuckConfig().getPythonInterpreter().toString(), link.toString());
+            new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
+                .getPythonInterpreterPath()
+                .toString(),
+            link.toString());
     assertThat(
         result.getStdout().orElse("") + result.getStderr().orElse(""),
         result.getExitCode(),
@@ -347,6 +351,6 @@ public class PythonBinaryIntegrationTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
-    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    return new PythonBuckConfig(buckConfig);
   }
 }

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -103,7 +104,7 @@ public class JavacStepTest {
     StepExecutionResult result = step.execute(executionContext);
 
     // Note that we don't include stderr in the step result on success.
-    assertThat(result, equalTo(StepExecutionResult.SUCCESS));
+    assertThat(result, equalTo(StepExecutionResults.SUCCESS));
     assertThat(listener.getLogMessages(), empty());
   }
 
@@ -209,7 +210,7 @@ public class JavacStepTest {
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
-    assertThat(result, equalTo(StepExecutionResult.SUCCESS));
+    assertThat(result, equalTo(StepExecutionResults.SUCCESS));
     assertThat(listener.getLogMessages(), empty());
   }
 

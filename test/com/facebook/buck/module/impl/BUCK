@@ -1,0 +1,29 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_library(
+    name = "test_extension",
+    srcs = [
+        "TestExtension.java",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/module/impl/...",
+    ],
+    deps = [
+        "//third-party/java/pf4j:pf4j",
+    ],
+)
+
+export_file(
+    name = "run.sh",
+    visibility = [
+        "//test/com/facebook/buck/module/impl/...",
+    ],
+)
+
+standard_java_test(
+    name = "impl",
+    deps = [
+        "//src/com/facebook/buck/module/impl:impl",
+        "//third-party/java/junit:junit",
+    ],
+)

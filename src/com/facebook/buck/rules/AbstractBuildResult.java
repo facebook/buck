@@ -22,6 +22,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /**
@@ -49,6 +50,8 @@ abstract class AbstractBuildResult {
   abstract Optional<ManifestFetchResult> getManifestFetchResult();
 
   abstract Optional<ManifestStoreResult> getManifestStoreResult();
+
+  abstract Optional<Set<String>> getDepsWithCacheMisses();
 
   @Value.Check
   void check() {

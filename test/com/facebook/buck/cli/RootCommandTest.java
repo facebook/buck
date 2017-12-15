@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import org.junit.Test;
 
@@ -33,7 +34,7 @@ public class RootCommandTest {
         CommandRunnerParamsForTesting.builder().setConsole(console).build();
 
     RootCommand runCommand = new RootCommand();
-    int exitCode = runCommand.run(commandRunnerParams);
+    ExitCode exitCode = runCommand.run(commandRunnerParams);
     String testRoot =
         commandRunnerParams
             .getCell()
@@ -44,6 +45,6 @@ public class RootCommandTest {
             .toString();
 
     assertThat(console.getTextWrittenToStdOut(), containsString(testRoot));
-    assertThat(exitCode, equalTo(0));
+    assertThat(exitCode, equalTo(ExitCode.SUCCESS));
   }
 }

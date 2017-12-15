@@ -19,12 +19,12 @@ package com.facebook.buck.cxx.toolchain.linker;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,7 +34,7 @@ import java.nio.file.Path;
  * An object wrapping a linker, providing its source path and an interface to decorate arguments
  * with specific flags.
  */
-public interface Linker extends AbstractTool {
+public interface Linker extends Tool {
 
   /**
    * @param cellRootMap Replacement map for cell roots found in paths, to some suitably normalized

@@ -20,9 +20,12 @@ import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.RuleKeyScopedHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -47,6 +50,12 @@ public final class BuildableSupport {
     return builder.build();
   }
 
+  /** Derives dependencies based on everything added to its rulekey. */
+  public static ImmutableCollection<BuildRule> getDepsCollection(
+      AddsToRuleKey tool, SourcePathRuleFinder ruleFinder) {
+    return deriveDeps(tool, ruleFinder).collect(ImmutableList.toImmutableList());
+  }
+
   /** Derives inputs based on everything added to the rulekey. */
   public static Stream<SourcePath> deriveInputs(AddsToRuleKey object) {
     InputsBuilder builder = new InputsBuilder();
@@ -61,7 +70,9 @@ public final class BuildableSupport {
   public static Supplier<SortedSet<BuildRule>> buildDepsSupplier(
       BuildRule rule, SourcePathRuleFinder ruleFinder) {
     return MoreSuppliers.memoize(
-        () -> deriveDeps(rule, ruleFinder).collect(MoreCollectors.toImmutableSortedSet()));
+        () ->
+            deriveDeps(rule, ruleFinder)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   private static class DepsBuilder extends AbstractRuleKeyBuilder<Stream<BuildRule>> {
@@ -116,7 +127,11 @@ public final class BuildableSupport {
 
     @Override
     protected AbstractRuleKeyBuilder<Stream<BuildRule>> setAddsToRuleKey(AddsToRuleKey appendable) {
-      AlterRuleKeys.amendKey(this, appendable);
+      if (appendable instanceof HasCustomDepsLogic) {
+        ((HasCustomDepsLogic) appendable).getDeps(ruleFinder).forEach(streamBuilder);
+      } else {
+        AlterRuleKeys.amendKey(this, appendable);
+      }
       return this;
     }
 

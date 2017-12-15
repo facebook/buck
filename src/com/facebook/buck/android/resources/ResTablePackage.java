@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.resources;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -78,7 +77,7 @@ public class ResTablePackage extends ResChunk {
                 spec ->
                     ResTableTypeSpec.slice(
                         spec, countsToSlice.getOrDefault(spec.getResourceType(), 0)))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     StringPool keys = resPackage.keys;
 

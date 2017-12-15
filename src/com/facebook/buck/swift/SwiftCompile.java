@@ -46,8 +46,8 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -189,7 +189,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 .filter(SwiftCompile.class::isInstance)
                 .map(BuildRule::getSourcePathToOutput)
                 .map(input -> resolver.getAbsolutePath(input).toString())
-                .collect(MoreCollectors.toImmutableSet())));
+                .collect(ImmutableSet.toImmutableSet())));
 
     boolean hasMainEntry =
         srcs.stream()
@@ -269,7 +269,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList<String> relativePaths =
         srcs.stream()
             .map(sourcePath -> resolver.getRelativePath(sourcePath).toString())
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     return new Step() {
       @Override
@@ -279,7 +279,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           Files.createDirectories(swiftFileListPath.getParent());
         }
         MoreFiles.writeLinesToFile(relativePaths, swiftFileListPath);
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
 
       @Override
@@ -353,7 +353,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 objectPath ->
                     SourcePathArg.of(
                         ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath)))
-            .collect(MoreCollectors.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
   }
 
   /** @return The name of the Swift module. */
@@ -367,7 +367,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return objectPaths
         .stream()
         .map(objectPath -> ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath))
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   /** @return File name of the Objective-C Generated Interface Header. */

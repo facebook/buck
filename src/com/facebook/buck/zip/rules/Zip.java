@@ -31,7 +31,6 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.facebook.buck.zip.bundler.CopyingFileBundler;
@@ -39,6 +38,7 @@ import com.facebook.buck.zip.bundler.FileBundler;
 import com.facebook.buck.zip.bundler.SrcZipAwareFileBundler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
@@ -60,7 +60,10 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
 
     this.name = outputName;
     this.sources =
-        sources.stream().map(InputPath::new).collect(MoreCollectors.toImmutableSortedSet());
+        sources
+            .stream()
+            .map(InputPath::new)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     this.output = new OutputPath(name);
     this.flatten = flatten;
     this.mergeSourceZips = mergeSourceZips;
@@ -82,7 +85,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
         sources
             .stream()
             .map(InputPath::getLimitedSourcePath)
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     Path scratchDir = outputPathResolver.getTempPath();
 

@@ -56,18 +56,18 @@ public class WatchmanWatcherIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-
     // Create an empty watchman config file.
     Files.write(tmp.getRoot().resolve(".watchmanconfig"), new byte[0]);
 
+    WatchmanFactory watchmanFactory = new WatchmanFactory();
     watchman =
-        WatchmanFactory.build(
+        watchmanFactory.build(
             ImmutableSet.of(tmp.getRoot()),
             ImmutableMap.copyOf(System.getenv()),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
             Optional.empty());
-    assumeTrue(watchman.getWatchmanClient().isPresent());
+    assumeTrue(watchman.getTransportPath().isPresent());
 
     eventBus = new EventBus();
     watchmanEventCollector = new WatchmanEventCollector();
@@ -118,15 +118,14 @@ public class WatchmanWatcherIntegrationTest {
 
     WatchmanWatcher watcher =
         new WatchmanWatcher(
-            ImmutableMap.of(
-                tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
+            watchman,
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
-            watchman,
             ImmutableMap.of(
                 tmp.getRoot(),
                 new WatchmanCursor(
-                    new StringBuilder("n:buckd").append(UUID.randomUUID()).toString())));
+                    new StringBuilder("n:buckd").append(UUID.randomUUID()).toString())),
+            /* numThreads */ 1);
 
     // Clear out the initial overflow event.
     watcher.postEvents(

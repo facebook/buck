@@ -20,12 +20,14 @@ import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
+import com.facebook.buck.distributed.thrift.CoordinatorService.Iface;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -110,7 +112,7 @@ public class ThriftCoordinatorServer implements Closeable {
   public static final int DEAD_MINION_FOUND_EXIT_CODE = 46;
   public static final int BUILD_TERMINATED_REMOTELY_EXIT_CODE = 47;
 
-  private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
+  private static final TimedLogger LOG = new TimedLogger(Logger.get(ThriftCoordinatorServer.class));
 
   private static final long MAX_TEAR_DOWN_MILLIS = TimeUnit.SECONDS.toMillis(2);
   private static final long MAX_DIST_BUILD_DURATION_MILLIS = TimeUnit.HOURS.toMillis(2);
@@ -152,7 +154,7 @@ public class ThriftCoordinatorServer implements Closeable {
     this.handler = new IdleCoordinatorService();
     CoordinatorServiceHandler handlerWrapper = new CoordinatorServiceHandler();
     this.processor = new CoordinatorService.Processor<>(handlerWrapper);
-    queue.addListener(() -> switchToActiveMode(queue), MoreExecutors.directExecutor());
+    queue.addListener(() -> switchToActiveModeOrFail(queue), MoreExecutors.directExecutor());
   }
 
   public ThriftCoordinatorServer start() throws IOException {
@@ -257,7 +259,7 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
-  private void switchToActiveMode(Future<BuildTargetsQueue> queue) {
+  private void switchToActiveModeOrFail(Future<BuildTargetsQueue> queue) {
     Preconditions.checkState(queue.isDone());
     try {
       MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
@@ -271,7 +273,20 @@ public class ThriftCoordinatorServer implements Closeable {
     } catch (InterruptedException | ExecutionException e) {
       String msg = "Failed to create the BuildTargetsQueue.";
       LOG.error(msg);
-      throw new RuntimeException(msg, e);
+      this.handler =
+          new Iface() {
+            @Override
+            public GetWorkResponse getWork(GetWorkRequest request) throws TException {
+              throw new RuntimeException(msg, e);
+            }
+
+            @Override
+            public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
+                throws TException {
+              return new ReportMinionAliveResponse();
+            }
+          };
+      // Any exception we throw here is going to be swallowed by the async executor.
     }
   }
 
@@ -286,7 +301,7 @@ public class ThriftCoordinatorServer implements Closeable {
         return handler.reportMinionAlive(request);
       } catch (Throwable e) {
         LOG.error(
-            "reportIAmAlive() failed: internal state may be corrupted, so exiting coordinator.", e);
+            e, "reportIAmAlive() failed: internal state may be corrupted, so exiting coordinator.");
         String msg =
             String.format(
                 "Failed to handle ReportMinionAliveRequest for minion [%s].",
@@ -301,7 +316,7 @@ public class ThriftCoordinatorServer implements Closeable {
       try {
         return getWorkUnsafe(request);
       } catch (Throwable e) {
-        LOG.error("getWork() failed: internal state may be corrupted, so exiting coordinator.", e);
+        LOG.error(e, "getWork() failed: internal state may be corrupted, so exiting coordinator.");
         String msg =
             String.format(
                 "Failed to handle GetWorkRequest for minion [%s].", request.getMinionId());

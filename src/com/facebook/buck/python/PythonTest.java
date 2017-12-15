@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
@@ -44,7 +45,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -197,7 +197,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   getBuildTarget().getFullyQualifiedName(),
                   ImmutableList.copyOf(testResultSummaries))),
           contacts,
-          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 
@@ -216,9 +216,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget))
         .concat(binary.getRuntimeDeps(ruleFinder))
         .concat(
-            binary
-                .getExecutableCommand()
-                .getDeps(ruleFinder)
+            BuildableSupport.getDepsCollection(binary.getExecutableCommand(), ruleFinder)
                 .stream()
                 .map(BuildRule::getBuildTarget));
   }

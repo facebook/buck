@@ -20,6 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.ExitCode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
@@ -49,7 +50,7 @@ public abstract class ExternalTestRunEvent extends AbstractBuckEvent implements 
         targets);
   }
 
-  public static Finished finished(Set<String> targets, int exitCode) {
+  public static Finished finished(Set<String> targets, ExitCode exitCode) {
     return new Finished(targets.hashCode(), exitCode);
   }
 
@@ -101,9 +102,9 @@ public abstract class ExternalTestRunEvent extends AbstractBuckEvent implements 
 
   public static class Finished extends ExternalTestRunEvent {
 
-    private final int exitCode;
+    private final ExitCode exitCode;
 
-    public Finished(int secret, int exitCode) {
+    public Finished(int secret, ExitCode exitCode) {
       super(secret);
       this.exitCode = exitCode;
     }
@@ -115,10 +116,10 @@ public abstract class ExternalTestRunEvent extends AbstractBuckEvent implements 
 
     @Override
     protected String getValueString() {
-      return String.valueOf(exitCode);
+      return String.valueOf(exitCode.getCode());
     }
 
-    public int getExitCode() {
+    public ExitCode getExitCode() {
       return exitCode;
     }
   }

@@ -25,8 +25,8 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -230,7 +230,7 @@ public class PreDexedFilesSorter {
           primaryDexContents
               .stream()
               .map(DexWithClasses::getPathToDexFile)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
 
       return new Result(
           apkModule,
@@ -283,7 +283,7 @@ public class PreDexedFilesSorter {
                 filesystem.createParentDirs(classFile);
                 filesystem.copyToPath(inputStream, classFile);
               }
-              return StepExecutionResult.SUCCESS;
+              return StepExecutionResults.SUCCESS;
             }
           });
 

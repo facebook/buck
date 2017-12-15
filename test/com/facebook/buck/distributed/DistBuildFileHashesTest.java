@@ -32,7 +32,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
@@ -51,9 +51,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -539,6 +538,6 @@ public class DistBuildFileHashesTest {
             recordedHashes
                 .stream()
                 .map(ThriftUtil::thriftToDebugJson)
-                .collect(MoreCollectors.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
   }
 }

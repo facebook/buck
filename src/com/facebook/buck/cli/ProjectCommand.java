@@ -31,10 +31,11 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Ascii;
@@ -170,7 +171,7 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--exclude-artifacts",
     usage =
-        "Don't include references to the artifacts created by compiling a target in"
+        "Don't include references to the artifacts created by compiling a target in "
             + "the module representing that target."
   )
   private boolean excludeArtifacts = false;
@@ -255,21 +256,18 @@ public class ProjectCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     final Ide projectIde =
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
     if (projectIde == null) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("\nCannot build a project: project IDE is not specified.");
-      return 1;
+      throw new CommandLineException("project IDE is not specified in Buck config or --ide");
     }
 
     int rc = runPreprocessScriptIfNeeded(params, projectIde);
     if (rc != 0) {
-      return rc;
+      return ExitCode.map(rc);
     }
 
     try (CommandThreadManager pool =
@@ -278,7 +276,7 @@ public class ProjectCommand extends BuildCommand {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
-      int result;
+      ExitCode result;
       try {
         switch (projectIde) {
           case INTELLIJ:
@@ -341,7 +339,7 @@ public class ProjectCommand extends BuildCommand {
                         .getFlavors()
                         .stream()
                         .map(Flavor::toString)
-                        .collect(MoreCollectors.toImmutableSet()),
+                        .collect(ImmutableSet.toImmutableSet()),
                     getEnableParserProfiling(),
                     withTests,
                     withoutTests,
@@ -382,18 +380,18 @@ public class ProjectCommand extends BuildCommand {
     return false;
   }
 
-  private int runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
+  private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
       throws IOException, InterruptedException {
     BuildCommand buildCommand = new BuildCommand(arguments);
     return buildCommand.run(params);
   }
 
-  private int runBuild(
+  private ExitCode runBuild(
       CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching)
       throws IOException, InterruptedException {
     BuildCommand buildCommand =
         new BuildCommand(
-            targets.stream().map(Object::toString).collect(MoreCollectors.toImmutableList()));
+            targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     buildCommand.setKeepGoing(true);
     return buildCommand.run(
         disableCaching ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory()) : params);

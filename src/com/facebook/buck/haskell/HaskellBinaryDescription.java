@@ -53,7 +53,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -79,16 +79,12 @@ public class HaskellBinaryDescription
   private static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Haskell Binary Type", Type.class);
 
-  private final HaskellPlatform defaultPlatform;
-  private final FlavorDomain<HaskellPlatform> platforms;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
 
   public HaskellBinaryDescription(
-      HaskellPlatform defaultPlatform,
-      FlavorDomain<HaskellPlatform> platforms,
-      CxxBuckConfig cxxBuckConfig) {
-    this.defaultPlatform = defaultPlatform;
-    this.platforms = platforms;
+      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
   }
 
@@ -110,6 +106,8 @@ public class HaskellBinaryDescription
 
   // Return the C/C++ platform to build against.
   private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellBinaryDescriptionArg arg) {
+    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
     if (flavorPlatform.isPresent()) {
@@ -120,7 +118,7 @@ public class HaskellBinaryDescription
       return platforms.getValue(arg.getPlatform().get());
     }
 
-    return defaultPlatform;
+    return haskellPlatformsProvider.getDefaultHaskellPlatform();
   }
 
   @Override
@@ -142,6 +140,7 @@ public class HaskellBinaryDescription
           buildTarget,
           projectFilesystem,
           params,
+          cellRoots,
           resolver,
           platform,
           cxxBuckConfig,
@@ -185,7 +184,7 @@ public class HaskellBinaryDescription
                         .map(resolver::getRule)
                         .filter(NativeLinkable.class::isInstance))
             .orElse(Stream.of())
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     depsBuilder.addAll(depQueryDeps);
     ImmutableSet<BuildRule> deps = depsBuilder.build();
 
@@ -232,7 +231,7 @@ public class HaskellBinaryDescription
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
-      executableBuilder.addDep(sharedLibraries);
+      executableBuilder.addNonHashableInput(sharedLibraries.getRootSourcePath());
       executableBuilder.addInputs(sharedLibraries.getLinks().values());
     }
 
@@ -328,7 +327,7 @@ public class HaskellBinaryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (platforms.containsAnyOf(flavors)) {
+    if (getHaskellPlatformsProvider().getHaskellPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -339,6 +338,11 @@ public class HaskellBinaryDescription
     }
 
     return false;
+  }
+
+  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+    return toolchainProvider.getByName(
+        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
   }
 
   protected enum Type implements FlavorConvertible {

@@ -37,6 +37,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
 /**
@@ -132,10 +133,12 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   private void initUtils() {
     Elements javacElements = javacTask.getElements();
     Trees javacTrees = super.getTrees();
-    elements = new TreeBackedElements(javacElements);
-    types = new TreeBackedTypes(javacTask.getTypes());
+    Types javacTypes = javacTask.getTypes();
+    elements = new TreeBackedElements(javacElements, javacTypes, javacTrees);
+    this.types = new TreeBackedTypes(javacTypes);
     trees =
-        new TreeBackedTrees(javacTrees, new PostEnterCanonicalizer(elements, types, javacTrees));
+        new TreeBackedTrees(
+            javacTrees, new PostEnterCanonicalizer(elements, this.types, javacTrees));
   }
 
   @Override

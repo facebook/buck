@@ -23,8 +23,6 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleSdkDiscovery;
-import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
@@ -33,13 +31,16 @@ import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -70,22 +71,24 @@ public class AppleCxxPlatformsProviderFactoryTest {
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
 
     ToolchainCreationContext toolchainCreationContext =
-        ToolchainCreationContext.builder()
-            .setBuckConfig(buckConfig)
-            .setFilesystem(projectFilesystem)
-            .setProcessExecutor(processExecutor)
-            .build();
+        ToolchainCreationContext.of(
+            ImmutableMap.of(),
+            buckConfig,
+            projectFilesystem,
+            processExecutor,
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create());
 
     Optional<Path> appleDeveloperDir =
         new AppleDeveloperDirectoryProviderFactory()
-            .createToolchain(toolchainProvider, toolchainCreationContext)
+            .createToolchain(toolchainProviderBuilder.build(), toolchainCreationContext)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
     ImmutableMap<String, AppleToolchain> appleToolchains =
@@ -102,10 +105,12 @@ public class AppleCxxPlatformsProviderFactoryTest {
 
     assumeThat(appleSdkPaths, is(not(anEmptyMap())));
 
-    toolchainProvider.addToolchain(
-        AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.of(appleSdkPaths));
-    toolchainProvider.addToolchain(
-        AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(appleToolchains));
+    ToolchainProvider toolchainProvider =
+        toolchainProviderBuilder
+            .withToolchain(AppleSdkLocation.DEFAULT_NAME, AppleSdkLocation.of(appleSdkPaths))
+            .withToolchain(
+                AppleToolchainProvider.DEFAULT_NAME, AppleToolchainProvider.of(appleToolchains))
+            .build();
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(

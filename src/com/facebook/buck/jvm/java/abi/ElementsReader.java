@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import java.io.File;
@@ -34,25 +35,28 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.objectweb.asm.ClassVisitor;
 
 /** A {@link LibraryReader} that reads from a list of {@link Element}s and their inner types. */
 class ElementsReader implements LibraryReader {
   private final SourceVersion targetVersion;
-  private final Elements elements;
+  private final ElementsExtended elements;
+  private final Types types;
   private final Messager messager;
   private final Supplier<Map<Path, Element>> allElements;
   private final boolean includeParameterMetadata;
 
   ElementsReader(
       SourceVersion targetVersion,
-      Elements elements,
+      ElementsExtended elements,
+      Types types,
       Messager messager,
       Iterable<Element> topLevelElements,
       boolean includeParameterMetadata) {
     this.targetVersion = targetVersion;
     this.elements = elements;
+    this.types = types;
     this.messager = messager;
     this.allElements =
         MoreSuppliers.memoize(
@@ -77,7 +81,8 @@ class ElementsReader implements LibraryReader {
   @Override
   public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
     Element element = Preconditions.checkNotNull(allElements.get().get(relativePath));
-    new ClassVisitorDriverFromElement(targetVersion, elements, messager, includeParameterMetadata)
+    new ClassVisitorDriverFromElement(
+            targetVersion, elements, messager, types, includeParameterMetadata)
         .driveVisitor(element, cv);
   }
 

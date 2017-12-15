@@ -29,6 +29,7 @@ import com.facebook.buck.android.TestDevice;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.testutil.TestConsole;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
@@ -194,5 +195,25 @@ public class RealAndroidDeviceTest {
         };
     assertNull(createAndroidDevice(device).deviceStartActivity("com.foo/.Activity", false));
     assertFalse(runDeviceCommand.get().contains(" -D"));
+  }
+
+  @Test
+  public void testDeviceBroadcast() throws Exception {
+    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+    TestDevice device =
+        new TestDevice() {
+          @Override
+          public void executeShellCommand(String command, IShellOutputReceiver receiver) {
+            runDeviceCommand.set(command);
+            receiver.addOutput(":0".getBytes(), 0, 2);
+          }
+        };
+    createAndroidDevice(device)
+        .sendBroadcast("com.foo.ACTION", ImmutableMap.of("extra1", "value1"));
+    final String command = runDeviceCommand.get();
+    assertTrue(command.contains("am broadcast"));
+    assertTrue(command.contains("com.foo.ACTION"));
+    assertTrue(command.contains("--es extra1"));
+    assertTrue(command.contains("value1"));
   }
 }

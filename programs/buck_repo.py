@@ -21,7 +21,6 @@ RESOURCES = {
     "libjcocoa.dylib": "third-party/java/ObjCBridge/libjcocoa.dylib",
     "logging_config_file": "config/logging.properties.st",
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
-    "path_to_rawmanifest_py": "src/com/facebook/buck/util/versioncontrol/rawmanifest.py",
     "path_to_pex": "src/com/facebook/buck/python/make_pex.py",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "report_generator_jar": "build/report-generator.jar",
@@ -40,10 +39,10 @@ BUCK_INFO_LOCATION = os.path.join("build", "buck-info.json")
 
 class BuckRepo(BuckTool):
 
-    def __init__(self, buck_bin_dir, buck_project):
+    def __init__(self, buck_bin_dir, buck_project, buck_reporter):
         self.buck_dir = platform_path(os.path.dirname(buck_bin_dir))
 
-        super(BuckRepo, self).__init__(buck_project)
+        super(BuckRepo, self).__init__(buck_project, buck_reporter)
 
         dot_git = os.path.join(self.buck_dir, '.git')
         self.is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \

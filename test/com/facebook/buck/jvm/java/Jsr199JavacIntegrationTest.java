@@ -151,6 +151,7 @@ public class Jsr199JavacIntegrationTest {
                 null,
                 null,
                 AbiGenerationMode.CLASS,
+                AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -207,6 +208,7 @@ public class Jsr199JavacIntegrationTest {
                 false,
                 null,
                 null,
+                AbiGenerationMode.CLASS,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -313,6 +315,7 @@ public class Jsr199JavacIntegrationTest {
               false,
               null,
               null,
+              AbiGenerationMode.CLASS,
               AbiGenerationMode.CLASS,
               null)
           .buildClasses();

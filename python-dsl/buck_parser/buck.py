@@ -7,12 +7,12 @@ import __builtin__
 import __future__
 
 import contextlib
+import collections
 from pathlib import Path, PurePath
 from pywatchman import WatchmanError
 from .deterministic_set import DeterministicSet
 from .json_encoder import BuckJSONEncoder
 from .glob_internal import glob_internal
-from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
 from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
 from .module_whitelist import ImportWhitelistManager
@@ -115,7 +115,7 @@ class BuildFileContext(AbstractContext):
     def __init__(self, project_root, base_path, dirname, cell_name, allow_empty_globs,
                  ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_glob_stat_results,
-                 watchman_use_glob_generator, use_mercurial_glob):
+                 watchman_use_glob_generator):
         self.globals = {}
         self._includes = set()
         self._used_configs = {}
@@ -135,7 +135,6 @@ class BuildFileContext(AbstractContext):
         self.sync_cookie_state = sync_cookie_state
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
-        self.use_mercurial_glob = use_mercurial_glob
 
     @property
     def includes(self):
@@ -301,15 +300,10 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
 
     if search_base is None:
         search_base = Path(build_env.dirname)
-    mercurial_repo_info = load_mercurial_repo_info(build_env, search_base, allow_safe_import)
 
     results = None
     if not includes:
         results = []
-    elif mercurial_repo_info is not None:
-        results = glob_mercurial_manifest(
-            includes, excludes, build_env.ignore_paths, include_dotfiles, search_base,
-            build_env.project_root, mercurial_repo_info)
     elif build_env.watchman_client:
         results = glob_watchman(
             includes,
@@ -428,6 +422,44 @@ def get_base_path(build_env=None):
 
 
 @provide_for_build
+def package_name(build_env=None):
+    """The name of the package being evaluated.
+
+    For example, in the BUCK file "some/package/BUCK", its value will be
+    "some/package".
+    If the BUCK file calls a function defined in a *.bzl file, package_name()
+    will return the package of the calling BUCK file. For example, if there is
+    a BUCK file at "some/package/BUCK" and "some/other/package/ext.bzl"
+    extension file, when BUCK file calls a function inside of ext.bzl file
+    it will still return "some/package" and not "some/other/package".
+
+    This function is intended to be used from within a build defs file that
+    likely contains macros that could be called from any build file.
+    Such macros may need to know the base path of the file in which they
+    are defining new build rules.
+
+    :return: a string, such as "java/com/facebook". Note there is no
+             trailing slash. The return value will be "" if called from
+             the build file in the root of the project.
+    :rtype: str
+    """
+    return get_base_path(build_env=build_env)
+
+
+@provide_for_build
+def fail(message, attr=None, build_env=None):
+    """Raises a parse error.
+
+    :param message: Error message to display for the user.
+        The object is converted to a string.
+    :param attr: Optional name of the attribute that caused the error.
+    """
+    attribute_prefix = ("attribute " + attr + ": " if attr is not None else "")
+    msg = attribute_prefix + str(message)
+    raise AssertionError(msg)
+
+
+@provide_for_build
 def get_cell_name(build_env=None):
     """Get the cell name of the build file that was initially evaluated.
 
@@ -500,7 +532,7 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, cell_roots, cell_name, build_file_name, allow_empty_globs,
                  watchman_client, watchman_glob_stat_results,
-                 watchman_use_glob_generator, use_mercurial_glob,
+                 watchman_use_glob_generator,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
                  ignore_paths=None, freeze_globals=False):
@@ -529,7 +561,6 @@ class BuildFileProcessor(object):
         self._watchman_client = watchman_client
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._watchman_use_glob_generator = watchman_use_glob_generator
-        self._use_mercurial_glob = use_mercurial_glob
         self._configs = configs
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
@@ -868,6 +899,33 @@ class BuildFileProcessor(object):
         build_env.includes.add(path)
         build_env.merge(inner_env)
 
+    def _struct(self, **kwargs):
+        """Creates an immutable container using the keyword arguments as attributes.
+
+        It can be used to group multiple values and/or functions together. Example:
+            def _my_function():
+              return 3
+            s = struct(x = 2, foo = _my_function)
+            return s.x + s.foo()  # returns 5
+        """
+        keys = [key for key in kwargs]
+        new_type = collections.namedtuple('struct', keys)
+        return new_type(**kwargs)
+
+    def _provider(self):
+        """Creates a declared provider factory.
+
+        The return value of this function can be used to create "struct-like"
+        values. Example:
+            SomeInfo = provider()
+            def foo():
+              return 3
+            info = SomeInfo(x = 2, foo = foo)
+            print(info.x + info.foo())  # prints 5
+        """
+        return self._struct
+
+
     def _add_build_file_dep(self, name):
         # type: (str) -> None
         """
@@ -1012,6 +1070,8 @@ class BuildFileProcessor(object):
                 'glob': self._glob,
                 'subdir_glob': self._subdir_glob,
                 'load': functools.partial(self._load, is_implicit_include),
+                'struct': self._struct,
+                'provider': self._provider,
             }
 
             # Don't include implicit includes if the current file being
@@ -1089,8 +1149,7 @@ class BuildFileProcessor(object):
             project_prefix,
             self._sync_cookie_state,
             self._watchman_glob_stat_results,
-            self._watchman_use_glob_generator,
-            self._use_mercurial_glob)
+            self._watchman_use_glob_generator)
 
         return self._process(build_env, path, is_implicit_include=False)
 
@@ -1353,11 +1412,6 @@ def main():
         dest='watchman_query_timeout_ms',
         help='Maximum time in milliseconds to wait for watchman query to respond.')
     parser.add_option(
-        '--use_mercurial_glob',
-        action='store_true',
-        dest='use_mercurial_glob',
-        help='Use the mercurial manifest to get lists of files instead of globbing from disk.')
-    parser.add_option(
         '--include',
         action='append',
         dest='include')
@@ -1399,7 +1453,6 @@ def main():
                       for (k, v) in options.cell_roots.iteritems())
 
     watchman_client = None
-    use_mercurial_glob = False
     if options.use_watchman_glob:
         client_args = {'sendEncoding': 'json', 'recvEncoding': 'json'}
         if options.watchman_query_timeout_ms is not None:
@@ -1412,20 +1465,6 @@ def main():
             client_args['sockpath'] = options.watchman_socket_path
             client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
-    elif options.use_mercurial_glob:
-        # exit early if the mercurial libraries can't be loaded
-        try:
-            from mercurial import ui, hg
-            use_mercurial_glob = True
-        except ImportError:
-            d = Diagnostic(
-                message='Mercurial not available for glob_handler = mercurial, aborting.',
-                level='fatal',
-                source='mercurial',
-                exception=None,
-            )
-            java_process_send_result(to_parent, [], [d], None)
-            raise
 
     configs = {}
     if options.config is not None:
@@ -1448,7 +1487,6 @@ def main():
         watchman_client,
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,
-        use_mercurial_glob,
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,

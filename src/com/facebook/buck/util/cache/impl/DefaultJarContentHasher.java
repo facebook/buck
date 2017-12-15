@@ -16,12 +16,14 @@
 package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarContentHasher;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,22 +34,22 @@ import java.util.jar.Manifest;
 class DefaultJarContentHasher implements JarContentHasher {
 
   private final ProjectFilesystem filesystem;
-  private final Path jarRelativePath;
+  private final PathFragment jarRelativePath;
 
-  public DefaultJarContentHasher(ProjectFilesystem filesystem, Path jarRelativePath) {
+  public DefaultJarContentHasher(ProjectFilesystem filesystem, PathFragment jarRelativePath) {
     Preconditions.checkState(!jarRelativePath.isAbsolute());
     this.filesystem = filesystem;
     this.jarRelativePath = jarRelativePath;
   }
 
   @Override
-  public Path getJarRelativePath() {
+  public PathFragment getJarRelativePath() {
     return jarRelativePath;
   }
 
   @Override
   public ImmutableMap<Path, HashCodeAndFileType> getContentHashes() throws IOException {
-    Manifest manifest = filesystem.getJarManifest(jarRelativePath);
+    Manifest manifest = filesystem.getJarManifest(PathFragments.fragmentToPath(jarRelativePath));
     if (manifest == null) {
       throw new UnsupportedOperationException(
           "Cache does not know how to return hash codes for archive members except "

@@ -24,11 +24,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBinaryBuildRuleBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
@@ -43,14 +40,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -295,47 +290,6 @@ public class CommandAliasDescriptionTest {
   }
 
   @Test
-  public void exposesDepsOfTheUsedTool() {
-    BiConsumer<Platform, String[]> test =
-        (platform, deps) -> {
-          CommandAliasBuilder.BuildResult result = multiPlatformScenario(platform);
-          assertEquals(
-              Stream.of(deps)
-                  .map(BuildTargetFactory::newInstance)
-                  .map(result.resolver()::getRule)
-                  .collect(Collectors.toSet()),
-              result.commandAlias().getExecutableCommand().getDeps(result.ruleFinder()));
-        };
-
-    test.accept(Platform.FREEBSD, new String[] {"//a:dep1", "//b:dep1"});
-    test.accept(Platform.UNKNOWN, new String[] {"//a:dep0", "//b:dep0"});
-  }
-
-  @Test
-  public void exposesInputsOfTheUsedTool() {
-    BiConsumer<Platform, Set<SourcePath>> test =
-        (platform, inputs) -> {
-          assertEquals(
-              inputs,
-              multiPlatformScenario(platform).commandAlias().getExecutableCommand().getInputs());
-        };
-
-    SourcePath aDep2 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//a:dep2"));
-    SourcePath bDep2 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//b:dep2"));
-    SourcePath a2 = FakeSourcePath.of("a2");
-    SourcePath b2 = FakeSourcePath.of("b2");
-
-    test.accept(Platform.LINUX, ImmutableSet.of(aDep2, bDep2, a2, b2));
-
-    SourcePath aDep0 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//a:dep0"));
-    SourcePath bDep0 = DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//b:dep0"));
-    SourcePath a0 = FakeSourcePath.of("a0");
-    SourcePath b0 = FakeSourcePath.of("b0");
-
-    test.accept(Platform.UNKNOWN, ImmutableSet.of(aDep0, bDep0, a0, b0));
-  }
-
-  @Test
   public void platformSpecificExecutablesAffectRuleKey() {
     BuildTarget forOtherPlatforms = BuildTargetFactory.newInstance("//for/other:platforms");
     CommandAliasBuilder.BuildResult platformSpecific =
@@ -355,20 +309,23 @@ public class CommandAliasDescriptionTest {
     CommandAliasBuilder.BuildResult one =
         builder()
             .setPlatformExe(
-                ImmutableSortedMap.of(Platform.FREEBSD, delegate, Platform.MACOS, delegate))
+                ImmutableSortedMap.of(Platform.FREEBSD, delegate, Platform.UNKNOWN, delegate))
             .buildResult();
 
     BuildTarget secondExe = BuildTargetFactory.newInstance("//other:target");
     CommandAliasBuilder.BuildResult two =
         builder()
             .setPlatformExe(
-                ImmutableSortedMap.of(Platform.FREEBSD, secondExe, Platform.MACOS, secondExe))
+                ImmutableSortedMap.of(Platform.FREEBSD, secondExe, Platform.UNKNOWN, secondExe))
             .buildResult();
 
     assertNotEquals(ruleKey(one), ruleKey(two));
   }
 
   @Test
+  @Ignore
+  // TODO(cjhopman, davidaurelio): Figure out how to make a command_alias that can correctly be used
+  // in such a way that it doesn't change rulekeys on different platforms.
   public void runtimePlatformIsIrrelevantForRuleKey() {
     BuildTarget windowsTarget = BuildTargetFactory.newInstance("//target/for:windows");
     BuildTarget macosTarget = BuildTargetFactory.newInstance("//target/for:macos");
@@ -406,29 +363,5 @@ public class CommandAliasDescriptionTest {
             new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder))
         .setReflectively("key", result.commandAlias())
         .build(RuleKey::new);
-  }
-
-  private static CommandAliasBuilder.BuildResult multiPlatformScenario(Platform platform) {
-    CommandAliasBuilder builder = builder(platform);
-    TargetNode<?, ?>[] exes = new TargetNode<?, ?>[3];
-    for (int i = 0; i < exes.length; i++) {
-      String index = String.valueOf(i);
-      exes[i] =
-          new FakeBinaryBuildRuleBuilder(BuildTargetFactory.newInstance("//sh:bin" + index))
-              .setDeps(
-                  ImmutableSortedSet.of(
-                      builder.addBuildRule(BuildTargetFactory.newInstance("//a:dep" + index)),
-                      builder.addBuildRule(BuildTargetFactory.newInstance("//b:dep" + index))))
-              .setInputs(
-                  ImmutableSortedSet.of(
-                      FakeSourcePath.of("a" + index), FakeSourcePath.of("b" + index)))
-              .build();
-    }
-
-    return builder
-        .setExe(exes[0])
-        .setPlatformExe(Platform.FREEBSD, exes[1])
-        .setPlatformExe(Platform.LINUX, exes[2])
-        .buildResult();
   }
 }

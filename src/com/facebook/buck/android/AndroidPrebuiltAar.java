@@ -84,6 +84,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
                 prebuiltJar.getSourcePathToOutput()),
             RemoveClassesPatternsMatcher.EMPTY,
             AbiGenerationMode.CLASS,
+            AbiGenerationMode.CLASS,
             /* sourceOnlyAbiRuleInfo */ null),
         Optional.of(proguardConfig),
         /* firstOrderPackageableDeps */ androidLibraryParams.getDeclaredDeps().get(),

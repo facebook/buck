@@ -29,7 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -57,8 +57,8 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -132,13 +132,14 @@ public class ApkGenruleTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
-    TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-
-    testToolchainProvider.addToolchain(
-        AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create());
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
+            .build();
 
     ApkGenruleDescription description =
-        new ApkGenruleDescription(testToolchainProvider, new NoSandboxExecutionStrategy());
+        new ApkGenruleDescription(toolchainProvider, new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())
@@ -182,7 +183,7 @@ public class ApkGenruleTest {
             .getBuildDeps()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(projectFilesystem.getRootPath());

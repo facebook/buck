@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
@@ -152,7 +151,7 @@ public class PackageStringAssets extends AbstractBuildRule {
         new ZipStep(
             getProjectFilesystem(),
             pathToStringAssetsZip,
-            locales.stream().map(assetPathBuilder).collect(MoreCollectors.toImmutableSet()),
+            locales.stream().map(assetPathBuilder).collect(ImmutableSet.toImmutableSet()),
             false,
             ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));

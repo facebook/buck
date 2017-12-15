@@ -24,7 +24,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -61,10 +60,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
     ImmutableSet<BuildTarget> moduleBuildTargets =
-        targetNodes
-            .stream()
-            .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet());
+        targetNodes.stream().map(TargetNode::getBuildTarget).collect(ImmutableSet.toImmutableSet());
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 

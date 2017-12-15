@@ -33,7 +33,6 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -418,7 +417,7 @@ public class AdbHelperTest {
                 id ->
                     (AndroidDevice)
                         new RealAndroidDevice(testContext.getBuckEventBus(), id, testConsole))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
       }
     };
   }

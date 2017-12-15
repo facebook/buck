@@ -52,7 +52,7 @@ abstract class AbstractCxxRawHeaders extends CxxHeaders {
   }
 
   @Override
-  public void addToHeaderCollector(HeaderPathNormalizer.HeaderCollector builder) {
+  public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
     for (SourcePath sourcePath : getHeaders()) {
       builder.addHeader(sourcePath);
     }

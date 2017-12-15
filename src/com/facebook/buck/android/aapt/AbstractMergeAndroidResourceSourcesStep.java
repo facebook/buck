@@ -28,6 +28,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -90,9 +91,9 @@ abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
       merger.mergeData(writer, /* cleanUp */ false);
     } catch (MergingException e) {
       LOG.error(e, "Failed merging resources.");
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -49,7 +50,7 @@ public class ShTestIntegrationTest {
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spin");
     String stderr = result.getStderr();
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertTrue(stderr, stderr.contains("Timed out running test: //:test-spin"));
   }
 

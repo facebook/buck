@@ -35,11 +35,11 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
@@ -252,7 +252,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .pathsToThirdPartyJars
             .stream()
             .map(resolver::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     steps.add(
         new ApkBuilderStep(
@@ -398,7 +398,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           filesystem.move(libPath, tempPath);
           outputAssetLibrariesBuilder.add(tempPath);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -443,7 +443,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         if (!metadata.isEmpty()) {
           filesystem.writeLinesToPath(metadata, metadataOutput);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }

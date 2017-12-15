@@ -23,6 +23,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -36,7 +37,15 @@ public class HaskellBinaryBuilder
       HaskellPlatform defaultPlatform,
       FlavorDomain<HaskellPlatform> platforms,
       CxxBuckConfig cxxBuckConfig) {
-    super(new HaskellBinaryDescription(defaultPlatform, platforms, cxxBuckConfig), target);
+    super(
+        new HaskellBinaryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    HaskellPlatformsProvider.DEFAULT_NAME,
+                    HaskellPlatformsProvider.of(defaultPlatform, platforms))
+                .build(),
+            cxxBuckConfig),
+        target);
   }
 
   public HaskellBinaryBuilder(BuildTarget target) {

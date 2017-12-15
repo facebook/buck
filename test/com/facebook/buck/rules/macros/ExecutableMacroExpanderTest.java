@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.CommandTool.Builder;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -177,27 +178,29 @@ public class ExecutableMacroExpanderTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = TestBuildRuleParams.create();
+    CommandTool tool =
+        new Builder()
+            .addArg(SourcePathArg.of(dep1.getSourcePathToOutput()))
+            .addArg(SourcePathArg.of(dep2.getSourcePathToOutput()))
+            .build();
     ruleResolver.addToIndex(
         new NoopBinaryBuildRule(target, new FakeProjectFilesystem(), params) {
           @Override
           public Tool getExecutableCommand() {
-            return new CommandTool.Builder()
-                .addArg(SourcePathArg.of(dep1.getSourcePathToOutput()))
-                .addArg(SourcePathArg.of(dep2.getSourcePathToOutput()))
-                .build();
+            return tool;
           }
         });
 
     // Verify that the correct cmd was created.
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
     CellPathResolver cellRoots = createCellRoots(filesystem);
-    assertThat(
-        expander.extractBuildTimeDepsFrom(
+    assertEquals(
+        tool,
+        expander.extractRuleKeyAppendablesFrom(
             target,
             cellRoots,
             ruleResolver,
-            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))),
-        Matchers.containsInAnyOrder(dep1, dep2));
+            expander.parse(target, cellRoots, ImmutableList.of("//:rule"))));
     assertThat(
         expander.expandFrom(
             target,

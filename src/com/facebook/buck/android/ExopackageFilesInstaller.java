@@ -32,12 +32,13 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -84,7 +85,9 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
   }
 
   private static ImmutableSortedSet<SourcePath> getExopackageSourcePaths(ExopackageInfo exoInfo) {
-    return exoInfo.getRequiredPaths().collect(MoreCollectors.toImmutableSortedSet());
+    return exoInfo
+        .getRequiredPaths()
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -127,7 +130,7 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
                       return true;
                     },
                     true);
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
   }

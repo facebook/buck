@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.Lists;
 import java.io.BufferedOutputStream;
@@ -85,7 +86,8 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     Optional<StampedeId> stampedeId = getStampedeIdOptional();
     if (stampedeId.isPresent()) {
       runUsingStampedeId(params, stampedeId.get());
@@ -93,7 +95,7 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
       runLocally(params);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   /**

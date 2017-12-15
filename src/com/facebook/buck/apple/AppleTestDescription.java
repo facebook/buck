@@ -18,6 +18,9 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
+import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -25,6 +28,8 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -68,6 +73,7 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -76,11 +82,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AppleTestDescription
@@ -113,32 +120,14 @@ public class AppleTestDescription
   private final ToolchainProvider toolchainProvider;
   private final AppleConfig appleConfig;
   private final AppleLibraryDescription appleLibraryDescription;
-  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final Flavor defaultCxxFlavor;
-  private final CodeSignIdentityStore codeSignIdentityStore;
-  private final ProvisioningProfileStore provisioningProfileStore;
-  private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public AppleTestDescription(
       ToolchainProvider toolchainProvider,
       AppleConfig appleConfig,
-      AppleLibraryDescription appleLibraryDescription,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
-      CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore,
-      Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      AppleLibraryDescription appleLibraryDescription) {
     this.toolchainProvider = toolchainProvider;
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
-    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.defaultCxxFlavor = defaultCxxFlavor;
-    this.codeSignIdentityStore = codeSignIdentityStore;
-    this.provisioningProfileStore = provisioningProfileStore;
-    this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -189,6 +178,10 @@ public class AppleTestDescription
     if (buildTarget.getFlavors().contains(debugFormat.getFlavor())) {
       buildTarget = buildTarget.withoutFlavors(debugFormat.getFlavor());
     }
+
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
 
     boolean createBundle =
         Sets.intersection(buildTarget.getFlavors(), AUXILIARY_LIBRARY_FLAVORS).isEmpty();
@@ -295,8 +288,10 @@ public class AppleTestDescription
                     .addAll(params.getDeclaredDeps().get())
                     .build()),
             resolver,
-            codeSignIdentityStore,
-            provisioningProfileStore,
+            toolchainProvider.getByName(
+                CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
+            toolchainProvider.getByName(
+                ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
             library.getBuildTarget(),
             args.getExtension(),
             Optional.empty(),
@@ -307,6 +302,7 @@ public class AppleTestDescription
             debugFormat,
             appleConfig.useDryRunCodeSigning(),
             appleConfig.cacheBundlesAndPackages(),
+            appleConfig.shouldVerifyBundleResources(),
             appleConfig.assetCatalogValidation(),
             args.getCodesignFlags(),
             args.getCodesignIdentity(),
@@ -332,11 +328,15 @@ public class AppleTestDescription
         args.getContacts(),
         args.getLabels(),
         args.getRunTestSeparately(),
-        xcodeDeveloperDirectorySupplier,
+        toolchainProvider.getByName(
+            AppleDeveloperDirectoryForTestsProvider.DEFAULT_NAME,
+            AppleDeveloperDirectoryForTestsProvider.class),
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
         appleConfig.getTestLogLevelEnvironmentVariable(),
         appleConfig.getTestLogLevel(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(appleConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
         args.getSnapshotReferenceImagesPath());
   }
@@ -348,8 +348,25 @@ public class AppleTestDescription
     // can use that directly.
     if (appleConfig.getXctoolZipTarget().isPresent()) {
       final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
+
+      // Since the content is unzipped in a directory that might differ for each cell the tests are
+      // from, we append a flavor that depends on the root path of the projectFilesystem
+      // in order to get a different rule for each cell the tests are from.
+      final String relativeRootPathString =
+          xctoolZipBuildRule
+              .getBuildTarget()
+              .getCellPath()
+              .relativize(projectFilesystem.getRootPath())
+              .toString();
+      Hasher hasher = Hashing.sha1().newHasher();
+      hasher.putBytes(relativeRootPathString.getBytes(Charsets.UTF_8));
+      String sha1Hash = hasher.hash().toString();
+
       BuildTarget unzipXctoolTarget =
-          xctoolZipBuildRule.getBuildTarget().withAppendedFlavors(UNZIP_XCTOOL_FLAVOR);
+          xctoolZipBuildRule
+              .getBuildTarget()
+              .withAppendedFlavors(UNZIP_XCTOOL_FLAVOR)
+              .withAppendedFlavors(InternalFlavor.of(sha1Hash));
       final Path outputDirectory =
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       resolver.computeIfAbsent(
@@ -456,8 +473,8 @@ public class AppleTestDescription
       extraDepsBuilder.add(xctoolZipTarget.get());
     }
     extraDepsBuilder.addAll(appleConfig.getCodesignProvider().getParseTimeDeps());
-    appleLibraryDescription.findDepsForTargetFromConstructorArgs(
-        buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   private AppleBundle getBuildRuleForTestHostAppTarget(
@@ -568,7 +585,12 @@ public class AppleTestDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     return appleLibraryDescription.createMetadataForLibrary(
-        buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
+        buildTarget, resolver, cellRoots, args, metadataClass);
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @Value.Immutable

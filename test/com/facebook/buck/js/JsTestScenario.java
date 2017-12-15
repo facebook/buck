@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -34,7 +34,6 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.LinkedHashSet;
@@ -166,7 +165,7 @@ public class JsTestScenario {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setBasePath(basePath)
-              .setSrcs(sources.collect(MoreCollectors.toImmutableSet()))
+              .setSrcs(sources.collect(ImmutableSet.toImmutableSet()))
               .setWorker(workerTarget)
               .build());
     }

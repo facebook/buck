@@ -89,6 +89,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
                 androidBuildConfig.getSourcePathToOutput()),
             /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,
             AbiGenerationMode.CLASS,
+            AbiGenerationMode.CLASS,
             /* sourceOnlyAbiRuleInfo */ null),
         /* proguardConfig */ Optional.empty(),
         /* firstOrderPackageableDeps */ params.getDeclaredDeps().get(),

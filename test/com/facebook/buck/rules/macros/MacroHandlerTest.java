@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

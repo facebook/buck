@@ -16,18 +16,27 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.CHAIN_TOP_TARGET;
+import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.LEAF_TARGET;
+import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.LEFT_TARGET;
+import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.RIGHT_TARGET;
+import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.ROOT_TARGET;
+
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildEngineResult;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import java.io.Closeable;
 import java.io.IOException;
@@ -36,6 +45,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import org.easymock.Capture;
+import org.easymock.CaptureType;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -47,6 +58,7 @@ public class MinionModeRunnerIntegrationTest {
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 9;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -59,12 +71,14 @@ public class MinionModeRunnerIntegrationTest {
         new MinionModeRunner(
             "localhost",
             OptionalInt.of(4242),
-            localBuilder,
+            Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl1"),
             MAX_PARALLEL_WORK_UNITS,
             checker,
-            POLL_LOOP_INTERVAL_MILLIS);
+            POLL_LOOP_INTERVAL_MILLIS,
+            new NoOpUnexpectedSlaveCacheMissTracker(),
+            CONNECTION_TIMEOUT_MILLIS);
 
     minion.runAndReturnExitCode(createFakeHeartbeatService());
     Assert.fail("The previous line should've thrown an exception.");
@@ -93,12 +107,14 @@ public class MinionModeRunnerIntegrationTest {
         new MinionModeRunner(
             "localhost",
             OptionalInt.of(4242),
-            localBuilder,
+            Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
             new BuildSlaveRunId().setId("sl2"),
             MAX_PARALLEL_WORK_UNITS,
             checker,
-            POLL_LOOP_INTERVAL_MILLIS);
+            POLL_LOOP_INTERVAL_MILLIS,
+            new NoOpUnexpectedSlaveCacheMissTracker(),
+            CONNECTION_TIMEOUT_MILLIS);
 
     int exitCode = minion.runAndReturnExitCode(createFakeHeartbeatService());
     // Server does not exit because the build has already been marked as finished.
@@ -108,7 +124,7 @@ public class MinionModeRunnerIntegrationTest {
   @Test
   public void testDiamondGraphRun()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    runDiamondGraphRunWithService(createFakeHeartbeatService());
+    runDiamondGraphWithChain(createFakeHeartbeatService());
   }
 
   @Test
@@ -122,35 +138,137 @@ public class MinionModeRunnerIntegrationTest {
         .andReturn(closeable)
         .once();
     EasyMock.replay(service, closeable);
-    runDiamondGraphRunWithService(service);
+    runDiamondGraphWithChain(service);
     EasyMock.verify(service, closeable);
   }
 
-  private void runDiamondGraphRunWithService(HeartbeatService service)
+  private BuildResult.Builder successfulBuildResult(String target) {
+    return BuildResult.builder()
+        .setRule(new FakeBuildRule(target))
+        .setStatus(BuildRuleStatus.SUCCESS)
+        .setSuccessOptional(BuildRuleSuccessType.BUILT_LOCALLY)
+        .setCacheResult(CacheResult.miss());
+  }
+
+  @Test
+  public void testUnexpectedCacheMissesAreRecorded()
+      throws NoSuchBuildTargetException, InterruptedException, IOException {
+    // Graph structure:
+    //                      +-- (miss target 2)
+    //                      | /     |
+    //         +--- right <-+--+    |
+    //         |           /   |    v
+    // root <--+          /    +-- chain top <-- leaf <-- (miss target 1)
+    //         |         v     |
+    //         +---- left <----+
+    //         |
+    //         +-- (miss target 3)
+
+    final String MISS_TARGET_1 = ROOT_TARGET + "_miss1";
+    final String MISS_TARGET_2 = ROOT_TARGET + "_miss2";
+    final String MISS_TARGET_3 = ROOT_TARGET + "_miss3";
+
+    UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker =
+        EasyMock.createMock(UnexpectedSlaveCacheMissTracker.class);
+    BuildExecutor buildExecutor = EasyMock.createMock(BuildExecutor.class);
+
+    EasyMock.expect(
+            buildExecutor.waitForBuildToFinish(
+                EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject()))
+        .andReturn(0)
+        .anyTimes();
+
+    EasyMock.expect(buildExecutor.initializeBuild(EasyMock.anyObject()))
+        .andAnswer(
+            () -> {
+              Iterable<String> targets = (Iterable<String>) EasyMock.getCurrentArguments()[0];
+
+              ArrayList<BuildEngineResult> results = new ArrayList<>();
+              for (String target : targets) {
+                BuildResult.Builder buildResult = successfulBuildResult(target);
+                switch (target) {
+                  case ROOT_TARGET:
+                    buildResult.setDepsWithCacheMisses(
+                        ImmutableSet.of(RIGHT_TARGET, LEFT_TARGET, MISS_TARGET_3));
+                    break;
+                  case RIGHT_TARGET:
+                    buildResult.setDepsWithCacheMisses(
+                        ImmutableSet.of(CHAIN_TOP_TARGET, MISS_TARGET_2));
+                    break;
+                  case LEFT_TARGET:
+                    buildResult.setDepsWithCacheMisses(
+                        ImmutableSet.of(CHAIN_TOP_TARGET, MISS_TARGET_2));
+                    break;
+                  case CHAIN_TOP_TARGET:
+                    buildResult.setDepsWithCacheMisses(ImmutableSet.of(LEAF_TARGET, MISS_TARGET_2));
+                    break;
+                  case LEAF_TARGET:
+                    buildResult.setDepsWithCacheMisses(ImmutableSet.of(MISS_TARGET_1));
+                    break;
+                }
+                results.add(
+                    BuildEngineResult.builder()
+                        .setResult(Futures.immediateFuture(buildResult.build()))
+                        .build());
+              }
+              return results;
+            })
+        .times(3);
+
+    buildExecutor.shutdown();
+    EasyMock.expectLastCall().once();
+
+    Capture<Integer> cacheMissCounts = EasyMock.newCapture(CaptureType.ALL);
+    unexpectedCacheMissTracker.onUnexpectedCacheMiss(EasyMock.captureInt(cacheMissCounts));
+    EasyMock.expectLastCall().atLeastOnce();
+
+    EasyMock.replay(buildExecutor);
+    EasyMock.replay(unexpectedCacheMissTracker);
+
+    runDiamondGraphWithChain(
+        createFakeHeartbeatService(), buildExecutor, unexpectedCacheMissTracker);
+
+    EasyMock.verify(buildExecutor);
+    EasyMock.verify(unexpectedCacheMissTracker);
+
+    Assert.assertEquals(3, cacheMissCounts.getValues().stream().mapToInt(Integer::intValue).sum());
+  }
+
+  private void runDiamondGraphWithChain(
+      HeartbeatService service,
+      BuildExecutor buildExecutor,
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker)
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
     try (ThriftCoordinatorServer server = createServer()) {
       server.start();
-      FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
       MinionModeRunner minion =
           new MinionModeRunner(
               "localhost",
               OptionalInt.of(server.getPort()),
-              localBuilder,
+              Futures.immediateFuture(buildExecutor),
               STAMPEDE_ID,
               new BuildSlaveRunId().setId("sl3"),
               MAX_PARALLEL_WORK_UNITS,
               checker,
-              POLL_LOOP_INTERVAL_MILLIS);
+              POLL_LOOP_INTERVAL_MILLIS,
+              unexpectedCacheMissTracker,
+              CONNECTION_TIMEOUT_MILLIS);
       int exitCode = minion.runAndReturnExitCode(service);
       Assert.assertEquals(0, exitCode);
-      Assert.assertEquals(4, localBuilder.getBuildTargets().size());
-      Assert.assertEquals(BuildTargetsQueueTest.TARGET_NAME, localBuilder.getBuildTargets().get(3));
     }
   }
 
+  private void runDiamondGraphWithChain(HeartbeatService service)
+      throws IOException, NoSuchBuildTargetException, InterruptedException {
+    FakeBuildExecutorImpl buildExecutor = new FakeBuildExecutorImpl();
+    runDiamondGraphWithChain(service, buildExecutor, new NoOpUnexpectedSlaveCacheMissTracker());
+    Assert.assertEquals(5, buildExecutor.getBuildTargets().size());
+    Assert.assertEquals(ROOT_TARGET, buildExecutor.getBuildTargets().get(4));
+  }
+
   private ThriftCoordinatorServer createServer() throws NoSuchBuildTargetException, IOException {
-    BuildTargetsQueue queue = BuildTargetsQueueTest.createDiamondDependencyQueue();
+    BuildTargetsQueue queue = BuildTargetsQueueTest.createDiamondDependencyQueueWithChainFromLeaf();
     return ThriftCoordinatorServerIntegrationTest.createServerOnRandomPort(queue);
   }
 
@@ -205,6 +323,11 @@ public class MinionModeRunnerIntegrationTest {
         List<BuildEngineResult> resultFutures,
         Optional<Path> pathToBuildReport) {
       return 0;
+    }
+
+    @Override
+    public CachingBuildEngine getCachingBuildEngine() {
+      throw new UnsupportedOperationException();
     }
 
     @Override

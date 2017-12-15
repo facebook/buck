@@ -18,7 +18,6 @@ package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -53,7 +52,7 @@ public class ResourcesExoHelper {
       ProjectFilesystem projectFilesystem,
       Stream<ExopackagePathAndHash> resourcesPaths) {
     return resourcesPaths.collect(
-        MoreCollectors.toImmutableMap(
+        ImmutableMap.toImmutableMap(
             pathAndHash ->
                 projectFilesystem
                     .readFileIfItExists(pathResolver.getAbsolutePath(pathAndHash.getHashPath()))

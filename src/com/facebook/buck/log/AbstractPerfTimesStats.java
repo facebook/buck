@@ -53,13 +53,6 @@ abstract class AbstractPerfTimesStats {
     return 0L;
   }
 
-  /** @return time spent refreshing the working copy via autosparse, in milliseconds. */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  @Value.Default
-  public Long getSparseRefreshTimeMs() {
-    return 0L;
-  }
-
   /** @return time it takes to generate the action graph, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default

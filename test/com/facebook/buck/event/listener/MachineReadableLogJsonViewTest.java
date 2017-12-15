@@ -37,10 +37,8 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
-import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableMap;
@@ -107,31 +105,6 @@ public class MachineReadableLogJsonViewTest {
   }
 
   @Test
-  public void testAutosparseEvents() throws Exception {
-    AutoSparseStateEvents.SparseRefreshStarted startEvent =
-        new AutoSparseStateEvents.SparseRefreshStarted();
-    AutoSparseStateEvents finishedEvent =
-        new AutoSparseStateEvents.SparseRefreshFinished(
-            startEvent, SparseSummary.of(0, 5, 0, 10, 0, 0));
-    String expectedSummary =
-        "{"
-            + "\"profiles_added\":0,\"include_rules_added\":5,\"exclude_rules_added\":0,"
-            + "\"files_added\":10,\"files_dropped\":0,\"files_conflicting\":0}";
-    AutoSparseStateEvents failedEvent =
-        new AutoSparseStateEvents.SparseRefreshFailed(startEvent, "output string\n");
-
-    startEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
-    finishedEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
-    failedEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
-
-    assertJsonEquals("{%s}", WRITER.writeValueAsString(startEvent));
-    assertJsonEquals(
-        "{%s,\"summary\":" + expectedSummary + "}", WRITER.writeValueAsString(finishedEvent));
-    assertJsonEquals(
-        "{%s,\"output\":\"output string\\n\"}", WRITER.writeValueAsString(failedEvent));
-  }
-
-  @Test
   public void testBuildRuleEvent() throws IOException, InterruptedException {
     BuildRule rule = new FakeBuildRule("//fake:rule");
     long durationMillis = 5;
@@ -190,7 +163,6 @@ public class MachineReadableLogJsonViewTest {
             PerfTimesStats.builder()
                 .setPythonTimeMs(4L)
                 .setInitTimeMs(8L)
-                .setSparseRefreshTimeMs(11L)
                 .setProcessingTimeMs(15L)
                 .setActionGraphTimeMs(16L)
                 .setBuildTimeMs(23L)
@@ -205,7 +177,6 @@ public class MachineReadableLogJsonViewTest {
             + "\"pythonTimeMs\":4,"
             + "\"initTimeMs\":8,"
             + "\"parseTimeMs\":0,"
-            + "\"sparseRefreshTimeMs\":11,"
             + "\"processingTimeMs\":15,"
             + "\"actionGraphTimeMs\":16,"
             + "\"rulekeyTimeMs\":0,"

@@ -40,7 +40,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -104,7 +103,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
-    return getFwdDepsStream(targets).collect(MoreCollectors.toImmutableSet());
+    return getFwdDepsStream(targets).collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -124,7 +123,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .stream()
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -226,7 +225,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         return declaredDeps
             .stream()
             .map(QueryBuildTarget::of)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
       }
       try {
         BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(target, context, cellNames);

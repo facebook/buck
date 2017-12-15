@@ -16,11 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 
 public class KillCommand extends AbstractCommand {
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     throw new IllegalStateException(
         "buck kill should be handled by python wrapper;"
             + " kill subcommand exists here only for buck help");

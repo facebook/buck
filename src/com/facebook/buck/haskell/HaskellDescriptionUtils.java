@@ -47,6 +47,8 @@ import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,7 +59,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -364,11 +365,14 @@ public class HaskellDescriptionUtils {
             baseParams
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(linker.getDeps(ruleFinder))
+                        .addAll(BuildableSupport.getDepsCollection(linker, ruleFinder))
                         .addAll(
                             Stream.of(args, linkerArgs)
                                 .flatMap(Collection::stream)
-                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                                .flatMap(
+                                    arg ->
+                                        BuildableSupport.getDepsCollection(arg, ruleFinder)
+                                            .stream())
                                 .iterator())
                         .build())
                 .withoutExtraDeps(),
@@ -403,6 +407,7 @@ public class HaskellDescriptionUtils {
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      CellPathResolver cellPathResolver,
       final BuildRuleResolver resolver,
       HaskellPlatform platform,
       CxxBuckConfig cxxBuckConfig,
@@ -485,11 +490,12 @@ public class HaskellDescriptionUtils {
             // the omnibus library so that they can be `LD_PRELOAD`ed early.
             RichStream.from(preloadDeps)
                 .filter(NativeLinkable.class)
-                .collect(MoreCollectors.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
+                .collect(ImmutableMap.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
 
     // Construct the omnibus shared library.
     BuildRule omnibusSharedObject =
         HaskellGhciDescription.requireOmnibusSharedObject(
+            cellPathResolver,
             buildTarget,
             projectFilesystem,
             resolver,

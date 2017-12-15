@@ -19,7 +19,6 @@ package com.facebook.buck.testrunner;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.HashSet;
@@ -90,7 +89,7 @@ public class TimeoutTest {
             .getFailures()
             .stream()
             .map(Failure::getMessage)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     assertEquals(
         "Should contain explicit call to fail() from failingTestsAreReported() and "
             + "the timeout message from testsMayTimeOut().",

@@ -20,11 +20,13 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -43,8 +45,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -130,11 +131,17 @@ public class AndroidInstrumentationApkTest {
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
-                    new TestToolchainProvider(),
+                    new ToolchainProviderBuilder()
+                        .withDefaultNdkCxxPlatforms()
+                        .withToolchain(
+                            DxToolchain.DEFAULT_NAME,
+                            DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+                        .withToolchain(
+                            JavacOptionsProvider.DEFAULT_NAME,
+                            JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+                        .build(),
                     DEFAULT_JAVA_CONFIG,
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
-                    DEFAULT_JAVAC_OPTIONS,
-                    MoreExecutors.newDirectExecutorService(),
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
@@ -160,7 +167,7 @@ public class AndroidInstrumentationApkTest {
             .getClasspathEntriesToDex()
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
         ImmutableSet.of(
@@ -171,6 +178,6 @@ public class AndroidInstrumentationApkTest {
             .getClasspathEntriesToDex()
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 }

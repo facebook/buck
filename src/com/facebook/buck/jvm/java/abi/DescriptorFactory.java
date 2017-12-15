@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.google.common.base.Preconditions;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -27,6 +28,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
@@ -106,6 +108,17 @@ class DescriptorFactory {
               }
 
               @Override
+              public Type visitExecutable(ExecutableType e, Void aVoid) {
+                Stream<? extends TypeMirror> parameterTypeStream = e.getParameterTypes().stream();
+
+                return Type.getMethodType(
+                    getType(e.getReturnType()),
+                    parameterTypeStream
+                        .map(DescriptorFactory.this::getType)
+                        .toArray(size -> new Type[size]));
+              }
+
+              @Override
               public Type visitPrimitive(PrimitiveType type, Void aVoid) {
                 switch (type.getKind()) {
                   case BOOLEAN:
@@ -148,7 +161,8 @@ class DescriptorFactory {
 
               @Override
               public Type visitDeclared(DeclaredType t, Void aVoid) {
-                // The erasure of a parameterized type is just the unparameterized version (JLS8 4.6)
+                // The erasure of a parameterized type is just the unparameterized version (JLS8
+                // 4.6)
                 TypeElement typeElement = (TypeElement) t.asElement();
 
                 if (typeElement.getQualifiedName().contentEquals("")) {
@@ -173,7 +187,8 @@ class DescriptorFactory {
               @Override
               public Type visitTypeVariable(TypeVariable t, Void aVoid) {
                 // The erasure of a type variable is the erasure of its leftmost bound (JLS8 4.6)
-                // If there's only one bound, getUpperBound returns it directly; if there's more than
+                // If there's only one bound, getUpperBound returns it directly; if there's more
+                // than
                 // one it returns an IntersectionType
                 return getType(t.getUpperBound());
               }

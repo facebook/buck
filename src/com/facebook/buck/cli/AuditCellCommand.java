@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -45,7 +46,8 @@ public class AuditCellCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     Stream<String> cellList;
     if (getArguments().isEmpty()) {
       cellList = getCells(params.getBuckConfig());
@@ -64,7 +66,7 @@ public class AuditCellCommand extends AbstractCommand {
     }
 
     cellList.forEachOrdered(params.getConsole().getStdOut()::println);
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

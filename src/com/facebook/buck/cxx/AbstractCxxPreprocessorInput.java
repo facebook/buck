@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -67,7 +68,7 @@ abstract class AbstractCxxPreprocessorInput {
     }
 
     for (Arg arg : getPreprocessorFlags().values()) {
-      builder.addAll(arg.getDeps(ruleFinder));
+      builder.addAll(BuildableSupport.getDepsCollection(arg, ruleFinder));
     }
 
     return builder.build();

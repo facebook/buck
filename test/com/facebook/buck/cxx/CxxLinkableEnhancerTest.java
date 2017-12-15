@@ -51,6 +51,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -160,11 +161,12 @@ public class CxxLinkableEnhancerTest {
 
     // Build the archive using a normal input the outputs of the genrules above.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
             CXX_PLATFORM,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             resolver,
             DefaultSourcePathResolver.from(ruleFinder),
             ruleFinder,
@@ -187,7 +189,8 @@ public class CxxLinkableEnhancerTest {
                         genrule1.getSourcePathToOutput(),
                         genrule2.getSourcePathToOutput()))
                 .build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(projectFilesystem));
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
@@ -222,11 +225,12 @@ public class CxxLinkableEnhancerTest {
         createNativeLinkable("//:dep", nativeLinkableInput, nativeLinkableInput);
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
             CXX_PLATFORM,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             resolver,
             pathResolver,
             ruleFinder,
@@ -243,7 +247,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(projectFilesystem));
 
     // Verify that the fake build rule made it in as a dep.
     assertTrue(cxxLink.getBuildDeps().contains(fakeBuildRule));
@@ -285,7 +290,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
     assertFalse(executable.getArgs().contains(StringArg.of("-shared")));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
@@ -311,7 +317,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
     assertTrue(Arg.stringify(shared.getArgs(), pathResolver).contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
@@ -337,7 +344,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
     ImmutableList<String> args = Arg.stringify(sharedWithSoname.getArgs(), pathResolver);
     assertTrue(args.contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(args, sonameArgs), -1);
@@ -390,7 +398,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
     ImmutableList<String> args = Arg.stringify(staticLink.getArgs(), pathResolver);
     assertTrue(args.contains(staticArg) || args.contains("-Wl," + staticArg));
     assertFalse(args.contains(sharedArg));
@@ -418,7 +427,8 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
     args = Arg.stringify(sharedLink.getArgs(), pathResolver);
     assertFalse(args.contains(staticArg));
     assertFalse(args.contains("-Wl," + staticArg));
@@ -444,11 +454,12 @@ public class CxxLinkableEnhancerTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     for (Map.Entry<Linker.LinkableDepType, String> ent : runtimes.entrySet()) {
+      FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
       CxxLink lib =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               CxxPlatformUtils.DEFAULT_CONFIG,
               cxxPlatform,
-              new FakeProjectFilesystem(),
+              filesystem,
               ruleResolver,
               pathResolver,
               ruleFinder,
@@ -465,7 +476,8 @@ public class CxxLinkableEnhancerTest {
               ImmutableSet.of(),
               ImmutableSet.of(),
               NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
-              Optional.empty());
+              Optional.empty(),
+              TestCellPathResolver.get(filesystem));
       assertThat(Arg.stringify(lib.getArgs(), pathResolver), hasItem(ent.getValue()));
     }
   }
@@ -542,7 +554,8 @@ public class CxxLinkableEnhancerTest {
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(FakeSourcePath.of("simple.o")))
                 .build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
     assertThat(Arg.stringify(cxxLink.getArgs(), pathResolver), hasItem("-bundle"));
     assertThat(
         Arg.stringify(cxxLink.getArgs(), pathResolver),
@@ -582,7 +595,8 @@ public class CxxLinkableEnhancerTest {
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(FakeSourcePath.of("simple.o")))
                 .build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
     resolver.addToIndex(bundleLoaderRule);
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
@@ -609,7 +623,8 @@ public class CxxLinkableEnhancerTest {
             NativeLinkableInput.builder()
                 .setArgs(SourcePathArg.from(FakeSourcePath.of("another.o")))
                 .build(),
-            Optional.empty());
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
 
     // Ensure the bundle depends on the bundle loader rule.
     assertThat(bundleRule.getBuildDeps(), hasItem(bundleLoaderRule));

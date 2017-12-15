@@ -17,10 +17,11 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 
 public interface BuckBuildRunner {
-  int runBuild(ImmutableSet<BuildTarget> targets, boolean disableCaching)
+  ExitCode runBuild(ImmutableSet<BuildTarget> targets, boolean disableCaching)
       throws IOException, InterruptedException;
 }

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Joiner;
@@ -185,7 +186,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     showTopSlowBuildRules(lines);
 
-    lines.add(finished.getExitCode() == 0 ? "BUILD SUCCEEDED" : "BUILD FAILED");
+    lines.add(finished.getExitCode() == ExitCode.SUCCESS ? "BUILD SUCCEEDED" : "BUILD FAILED");
 
     printLines(lines);
   }

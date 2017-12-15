@@ -29,7 +29,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
@@ -38,6 +37,7 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildState.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
@@ -60,8 +60,8 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.PatternsMatcher;
@@ -265,64 +265,6 @@ public class TargetsCommand extends AbstractCommand {
     return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
   }
 
-  /** @return {@code true} if {@code --detect-test-changes} was specified. */
-  public boolean isDetectTestChanges() {
-    return isDetectTestChanges;
-  }
-
-  public boolean getPrintJson() {
-    return json;
-  }
-
-  public boolean isPrint0() {
-    return print0;
-  }
-
-  /** @return {@code true} if {@code --resolve-alias} was specified. */
-  public boolean isResolveAlias() {
-    return isResolveAlias;
-  }
-
-  /** @return {@code true} if {@code --show-cell-path} was specified. */
-  public boolean isShowCellPath() {
-    return isShowCellPath;
-  }
-
-  /** @return {@code true} if {@code --show-output} was specified. */
-  public boolean isShowOutput() {
-    return isShowOutput;
-  }
-
-  /** @return {@code true} if {@code --show-output} was specified. */
-  public boolean isShowFullOutput() {
-    return isShowFullOutput;
-  }
-
-  /** @return {@code true} if {@code --show-rulekey} was specified. */
-  public boolean isShowRuleKey() {
-    return isShowRuleKey;
-  }
-
-  /** @return {@code true} if {@code --show-transitive-rulekeys} was specified. */
-  public boolean isShowTransitiveRuleKeys() {
-    return isShowTransitiveRuleKeys;
-  }
-
-  /** @return {@code true} if {@code --show-targethash} was specified. */
-  public boolean isShowTargetHash() {
-    return isShowTargetHash;
-  }
-
-  /** @return mode passed to {@code --target-hash-file-mode}. */
-  public TargetHashFileMode getTargetHashFileMode() {
-    return targetHashFileMode;
-  }
-
-  /** @return attributes pass in {@code --output-attributes}. */
-  public ImmutableSet<String> getOutputAttributes() {
-    return outputAttributes.get();
-  }
-
   /**
    * Determines if the results should be in JSON format. This is true either when explicitly
    * required by the {@code --json} argument or when there is at least one item in the {@code
@@ -333,7 +275,7 @@ public class TargetsCommand extends AbstractCommand {
    * consistent with the query command.
    */
   public boolean shouldUseJsonFormat() {
-    return getPrintJson() || !getOutputAttributes().isEmpty();
+    return json || !outputAttributes.get().isEmpty();
   }
 
   /**
@@ -341,7 +283,7 @@ public class TargetsCommand extends AbstractCommand {
    * specified along with {@code --show-rulekey} and {@code --show-transitive-rulekeys}
    */
   private boolean shouldUseDotFormat() {
-    return dot && isShowRuleKey() && isShowTransitiveRuleKeys();
+    return dot && isShowRuleKey && isShowTransitiveRuleKeys;
   }
 
   /**
@@ -353,56 +295,60 @@ public class TargetsCommand extends AbstractCommand {
         .get()
         .stream()
         .map(Paths::get)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     try (CommandThreadManager pool =
         new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()))) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
       // Exit early if --resolve-alias is passed in: no need to parse any build files.
-      if (isResolveAlias()) {
-        return ResolveAliasHelper.resolveAlias(
+      if (isResolveAlias) {
+        ResolveAliasHelper.resolveAlias(
             params, executor, getEnableParserProfiling(), getArguments());
+        return ExitCode.SUCCESS;
       }
 
       return runWithExecutor(params, executor);
-    } catch (BuildTargetException | BuildFileParseException | CycleException | VersionException e) {
+    } catch (BuildFileParseException | CycleException | VersionException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
     }
   }
 
-  private int runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
+  private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException, VersionException {
     Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
-      return 1;
+      return ExitCode.FATAL_GENERIC;
     }
 
     // shortcut to old plain simple format
-    if (!(isShowCellPath()
-        || isShowOutput()
-        || isShowFullOutput()
-        || isShowRuleKey()
-        || isShowTargetHash())) {
-      return printResults(
+    if (!(isShowCellPath
+        || isShowOutput
+        || isShowFullOutput
+        || isShowRuleKey
+        || isShowTargetHash)) {
+      printResults(
           params,
           executor,
           getMatchingNodes(
               params, buildTargetGraphAndTargets(params, executor), descriptionClasses));
+      return ExitCode.SUCCESS;
     }
 
     // shortcut to DOT format, it only works along with rule keys and transitive rule keys
     // because we want to construct action graph
     if (shouldUseDotFormat()) {
-      return printDotFormat(params, executor);
+      printDotFormat(params, executor);
+      return ExitCode.SUCCESS;
     }
 
     // plain or json output
@@ -410,7 +356,7 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
         buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
     boolean useVersioning =
-        isShowRuleKey() || isShowOutput() || isShowFullOutput()
+        isShowRuleKey || isShowOutput || isShowFullOutput
             ? params.getBuckConfig().getBuildVersions()
             : params.getBuckConfig().getTargetsVersions();
     targetGraphAndBuildTargetsForShowRules =
@@ -432,19 +378,19 @@ public class TargetsCommand extends AbstractCommand {
       keysBuilder.addAll(showRulesResult.keySet());
       Iterable<TargetNode<?, ?>> matchingNodes =
           targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(keysBuilder.build());
-      printJsonForTargets(params, executor, matchingNodes, showRulesResult, getOutputAttributes());
+      printJsonForTargets(params, executor, matchingNodes, showRulesResult, outputAttributes.get());
     } else {
       printShowRules(showRulesResult, params);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   /**
    * Output rules along with dependencies as a graph in DOT format As a part of invocation,
    * constructs both target and action graphs
    */
-  private int printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
+  private void printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           VersionException {
     TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
@@ -488,8 +434,6 @@ public class TargetsCommand extends AbstractCommand {
         .setNodeToTypeName(node -> node.getType())
         .build()
         .writeOutput(params.getConsole().getStdOut());
-
-    return 0;
   }
 
   private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
@@ -535,22 +479,21 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   /** Print out matching targets in alphabetical order. */
-  private int printResults(
+  private void printResults(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       SortedMap<String, TargetNode<?, ?>> matchingNodes)
       throws BuildFileParseException {
     if (shouldUseJsonFormat()) {
       printJsonForTargets(
-          params, executor, matchingNodes.values(), ImmutableMap.of(), getOutputAttributes());
-    } else if (isPrint0()) {
+          params, executor, matchingNodes.values(), ImmutableMap.of(), outputAttributes.get());
+    } else if (print0) {
       printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
     } else {
       for (String target : matchingNodes.keySet()) {
         params.getConsole().getStdOut().println(target);
       }
     }
-    return 0;
   }
 
   private SortedMap<String, TargetNode<?, ?>> getMatchingNodes(
@@ -577,7 +520,7 @@ public class TargetsCommand extends AbstractCommand {
                   : Optional.of(referencedFiles.relativePathsUnderProjectRoot),
               matchingBuildTargets.isEmpty() ? Optional.empty() : Optional.of(matchingBuildTargets),
               descriptionClasses.get().isEmpty() ? Optional.empty() : descriptionClasses,
-              isDetectTestChanges(),
+              isDetectTestChanges,
               parserConfig.getBuildFileName());
     }
     return matchingNodes;
@@ -592,7 +535,7 @@ public class TargetsCommand extends AbstractCommand {
     // their dependencies. If we're detecting test changes we need the whole graph as tests are not
     // dependencies.
     TargetGraphAndBuildTargets targetGraphAndBuildTargets;
-    if (getArguments().isEmpty() || isDetectTestChanges()) {
+    if (getArguments().isEmpty() || isDetectTestChanges) {
       targetGraphAndBuildTargets =
           TargetGraphAndBuildTargets.builder()
               .setBuildTargets(ImmutableSet.of())
@@ -657,7 +600,7 @@ public class TargetsCommand extends AbstractCommand {
       builder.add(entry.getKey().getFullyQualifiedName());
       TargetResult targetResult = entry.getValue();
       targetResult.getRuleKey().ifPresent(builder::add);
-      if (isShowCellPath()) {
+      if (isShowCellPath) {
         builder.add(entry.getKey().getCellPath().toString());
       }
       targetResult.getOutputPath().ifPresent(builder::add);
@@ -699,13 +642,13 @@ public class TargetsCommand extends AbstractCommand {
                   .getNodes()
                   .stream()
                   .map(TargetNode::getBuildTarget)
-                  .collect(MoreCollectors.toImmutableSet()));
+                  .collect(ImmutableSet.toImmutableSet()));
       directOwners =
           graph
               .getNodes()
               .stream()
               .filter(new DirectOwnerPredicate(buildFileTree, referencedFiles.get(), buildFileName))
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
     } else {
       directOwners = graph.getNodes();
     }
@@ -835,7 +778,7 @@ public class TargetsCommand extends AbstractCommand {
         }
         rawTargetNode.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
-        if (isShowCellPath()) {
+        if (isShowCellPath) {
           rawTargetNode.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
         }
 
@@ -894,7 +837,7 @@ public class TargetsCommand extends AbstractCommand {
           CycleException {
 
     TargetResultBuilders targetResultBuilders = new TargetResultBuilders();
-    if (isShowTargetHash()) {
+    if (isShowTargetHash) {
       computeShowTargetHash(params, executor, targetGraphAndTargetNodes, targetResultBuilders);
     }
 
@@ -905,7 +848,7 @@ public class TargetsCommand extends AbstractCommand {
     Optional<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculator = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
-      if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
+      if (isShowRuleKey || isShowOutput || isShowFullOutput) {
         ActionGraphAndResolver result =
             params
                 .getActionGraphCache()
@@ -916,7 +859,7 @@ public class TargetsCommand extends AbstractCommand {
                     params.getRuleKeyConfiguration());
         actionGraph = Optional.of(result.getActionGraph());
         buildRuleResolver = Optional.of(result.getResolver());
-        if (isShowRuleKey()) {
+        if (isShowRuleKey) {
           SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
           // Setup a parallel rule key calculator to use when building rule keys.
           ruleKeyCalculator =
@@ -939,7 +882,7 @@ public class TargetsCommand extends AbstractCommand {
 
       // Start rule calculations in parallel.
       for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-        if (actionGraph.isPresent() && isShowRuleKey()) {
+        if (actionGraph.isPresent() && isShowRuleKey) {
           BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
           ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule);
         }
@@ -949,13 +892,13 @@ public class TargetsCommand extends AbstractCommand {
         TargetResult.Builder builder =
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
         Preconditions.checkNotNull(builder);
-        if (actionGraph.isPresent() && isShowRuleKey()) {
+        if (actionGraph.isPresent() && isShowRuleKey) {
           BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
           builder.setRuleKey(
               Futures.getUnchecked(
                       ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule))
                   .toString());
-          if (isShowTransitiveRuleKeys()) {
+          if (isShowTransitiveRuleKeys) {
             ParallelRuleKeyCalculator<RuleKey> calculator = ruleKeyCalculator.get();
             AbstractBreadthFirstTraversal.traverse(
                 rule,
@@ -979,7 +922,7 @@ public class TargetsCommand extends AbstractCommand {
         if (buildRuleResolver.isPresent()) {
           BuildRule rule = buildRuleResolver.get().requireRule(target);
           builder.setRuleType(rule.getType());
-          if (isShowOutput() || isShowFullOutput()) {
+          if (isShowOutput || isShowFullOutput) {
             getUserFacingOutputPath(
                     DefaultSourcePathResolver.from(
                         new SourcePathRuleFinder(buildRuleResolver.get())),
@@ -987,9 +930,7 @@ public class TargetsCommand extends AbstractCommand {
                     params.getBuckConfig().getBuckOutCompatLink())
                 .map(
                     path ->
-                        isShowFullOutput()
-                            ? path
-                            : params.getCell().getFilesystem().relativize(path))
+                        isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path))
                 .ifPresent(path -> builder.setOutputPath(path.toString()));
             // If the output dir is requested, also calculate the generated src dir
             if (rule instanceof JavaLibrary) {
@@ -999,8 +940,7 @@ public class TargetsCommand extends AbstractCommand {
                       path -> {
                         final Path rootPath = params.getCell().getFilesystem().getRootPath();
                         Path sameFsPath = rootPath.resolve(path.toString());
-                        Path returnPath =
-                            isShowFullOutput() ? path : rootPath.relativize(sameFsPath);
+                        Path returnPath = isShowFullOutput ? path : rootPath.relativize(sameFsPath);
                         return returnPath.toString();
                       })
                   .ifPresent(builder::setGeneratedSourcePath);
@@ -1051,7 +991,7 @@ public class TargetsCommand extends AbstractCommand {
       Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
 
-    if (isDetectTestChanges()) {
+    if (isDetectTestChanges) {
       ImmutableSet<BuildTarget> explicitTestTargets =
           TargetGraphAndTargets.getExplicitTestTargets(
               targetGraphAndTargetNodes
@@ -1095,7 +1035,6 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private FileHashLoader createOrGetFileHashLoader(CommandRunnerParams params) throws IOException {
-    TargetHashFileMode targetHashFileMode = getTargetHashFileMode();
     switch (targetHashFileMode) {
       case PATHS_AND_CONTENTS:
         return params.getFileHashCache();
@@ -1154,7 +1093,7 @@ public class TargetsCommand extends AbstractCommand {
       ImmutableMap<BuildTarget, HashCode> buildTargetHashes)
       throws CycleException {
 
-    if (!isDetectTestChanges()) {
+    if (!isDetectTestChanges) {
       return buildTargetHashes;
     }
 
@@ -1187,7 +1126,7 @@ public class TargetsCommand extends AbstractCommand {
       hasher.putBytes(dependencyHash.asBytes());
     }
 
-    if (isDetectTestChanges()) {
+    if (isDetectTestChanges) {
       for (BuildTarget targetToHash :
           Preconditions.checkNotNull(TargetNodes.getTestTargetsForNode(node))) {
         HashCode testNodeHashCode = getHashCodeOrThrow(buildTargetHashes, targetToHash);

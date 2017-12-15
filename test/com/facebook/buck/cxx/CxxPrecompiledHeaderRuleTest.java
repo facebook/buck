@@ -63,6 +63,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
@@ -96,7 +97,7 @@ public class CxxPrecompiledHeaderRuleTest {
   private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
       new CxxBuckConfig(FakeBuckConfig.builder().setSections("[cxx]", "pch_enabled=true").build());
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectFilesystem filesystem;
   private ProjectWorkspace workspace;
 
@@ -469,7 +470,8 @@ public class CxxPrecompiledHeaderRuleTest {
             ImmutableSet.of(), // blacklist,
             ImmutableSet.of(libTarget), // linkWholeDeps,
             NativeLinkableInput.builder().addAllArgs(SourcePathArg.from(binObjects)).build(),
-            Optional.<LinkOutputPostprocessor>empty());
+            Optional.<LinkOutputPostprocessor>empty(),
+            TestCellPathResolver.get(filesystem));
 
     CxxWriteArgsToFileStep argsToFile = null;
     for (Step step :
@@ -710,7 +712,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogA.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashA = buildLogA.getLogEntry(target).getRuleKey();
-        System.err.println("A: " + pchHashA);
+        System.err.println("A: " + target.toString() + " " + pchHashA);
       }
     }
     assertNotNull(pchHashA);
@@ -721,7 +723,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogB.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashB = buildLogB.getLogEntry(target).getRuleKey();
-        System.err.println("B: " + pchHashB);
+        System.err.println("B: " + target.toString() + " " + pchHashB);
       }
     }
     assertNotNull(pchHashB);
@@ -733,7 +735,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogC.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashC = buildLogC.getLogEntry(target).getRuleKey();
-        System.err.println("C: " + pchHashC);
+        System.err.println("C: " + target.toString() + " " + pchHashC);
       }
     }
     assertNotNull(pchHashC);

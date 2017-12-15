@@ -121,8 +121,8 @@ public class BuckArgsMethods {
       throw new HumanReadableException(
           "The file "
               + unresolvedArgsPath
-              + " can't be found. Please make sure the path exists relatively to the "
-              + "current folder.");
+              + " can't be found. Please make sure the path exists relative to the "
+              + "project root.");
     }
     Optional<String> flavors = parts.length == 2 ? Optional.of(parts[1]) : Optional.empty();
     try {

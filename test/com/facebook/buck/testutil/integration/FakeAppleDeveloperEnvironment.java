@@ -16,11 +16,13 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.apple.CodeSignIdentityStore;
-import com.facebook.buck.apple.ProvisioningProfileMetadata;
-import com.facebook.buck.apple.ProvisioningProfileStore;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
+import com.facebook.buck.apple.toolchain.impl.CodeSignIdentityStoreFactory;
+import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -38,10 +40,10 @@ public class FakeAppleDeveloperEnvironment {
   private FakeAppleDeveloperEnvironment() {}
 
   private static final int numCodeSigningIdentities =
-      CodeSignIdentityStore.fromSystem(
-              new DefaultProcessExecutor(new TestConsole()),
-              CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND)
-          .getIdentities()
+      CodeSignIdentityStoreFactory.fromSystem(
+              new DefaultProcessExecutor(new TestConsole()), AppleConfig.DEFAULT_IDENTITIES_COMMAND)
+          .getIdentitiesSupplier()
+          .get()
           .size();
 
   private static final boolean hasWildcardProvisioningProfile =
@@ -57,8 +59,8 @@ public class FakeAppleDeveloperEnvironment {
                   return false;
                 }
                 ProvisioningProfileStore store =
-                    ProvisioningProfileStore.fromSearchPath(
-                        executor, ProvisioningProfileStore.DEFAULT_READ_COMMAND, searchPath);
+                    ProvisioningProfileStoreFactory.fromSearchPath(
+                        executor, AppleConfig.DEFAULT_READ_COMMAND, searchPath);
                 Optional<ProvisioningProfileMetadata> profile =
                     store.getBestProvisioningProfile(
                         "*",

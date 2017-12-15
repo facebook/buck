@@ -47,7 +47,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,7 +93,7 @@ public class GenAidlTest {
             pathToAidl,
             importPath);
 
-    GenAidlDescription description = new GenAidlDescription(new TestToolchainProvider());
+    GenAidlDescription description = new GenAidlDescription(new ToolchainProviderBuilder().build());
     assertEquals(
         Description.getBuildRuleType(GenAidlDescription.class),
         Description.getBuildRuleType(description));

@@ -76,6 +76,10 @@ public class DBuckConfig {
     }
   }
 
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
+
   /**
    * @return a list of paths to be searched for libraries, in addition to paths that may be
    *     introduced by rules.

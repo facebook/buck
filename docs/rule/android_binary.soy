@@ -135,6 +135,22 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'duplicate_resource_behavior' /}
+  {param default : 'allow_by_default' /}
+  {param desc}
+    If set to <code>"ban_by_default"</code>, duplicate resource definitions
+    with the same type and name will cause the build to fail,
+    unless they are excluded by <code>allowed_duplicate_resource_types</code>
+    or <code>duplicate_resource_whitelist</code>.
+
+    If set to <code>"allow_by_default"</code> (the default),
+    no duplicate resource checks will be performed.
+    They can still be enabled on individual types
+    by using <code>banned_duplicate_resource_types</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'banned_duplicate_resource_types' /}
   {param default : '[]' /}
   {param desc}
@@ -143,6 +159,28 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   Resource names are name-spaced by resource type, this does not enforce unique names between multiple resource types.
 
   AAPT does not enforce this, but you can prevent easy-to-introduce resource bugs by enabling this.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'allowed_duplicate_resource_types' /}
+  {param default : '[]' /}
+  {param desc}
+  Similar to <code>banned_duplicate_resource_types</code>, but lists the types
+  that are allowed to have duplicates.
+
+  This should only be used if <code>duplicate_resource_behavior</code> is <code>"ban_by_default"</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'duplicate_resource_whitelist' /}
+  {param default : 'None' /}
+  {param desc}
+  Either a {call buck.build_target /} or a path to a file
+  containing a whitelist of resources that should be excluded from duplicate resource detection.
+  Format is one resource per line with the type followed by the name, separated by a space.
+  For example, <code>string app_name</code>.
   {/param}
 {/call}
 

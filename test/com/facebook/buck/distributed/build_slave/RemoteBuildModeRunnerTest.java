@@ -20,6 +20,7 @@ import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -50,7 +51,11 @@ public class RemoteBuildModeRunnerTest {
 
     RemoteBuildModeRunner runner =
         new RemoteBuildModeRunner(
-            buildExecutor, Lists.newArrayList(), setter, MOCK_SERVICE, STAMPEDE_ID);
+            Futures.immediateFuture(buildExecutor),
+            Lists.newArrayList(),
+            setter,
+            MOCK_SERVICE,
+            STAMPEDE_ID);
     int actualExitCode = runner.runAndReturnExitCode(HEARTBEAT_SERVICE);
     Assert.assertEquals(expectedExitCode, actualExitCode);
 

@@ -18,17 +18,14 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.RichStream;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class HaskellBuckConfig {
 
@@ -36,11 +33,9 @@ public class HaskellBuckConfig {
   private static final String SECTION_PREFIX = "haskell";
 
   private final BuckConfig delegate;
-  private final ExecutableFinder finder;
 
-  public HaskellBuckConfig(BuckConfig delegate, ExecutableFinder finder) {
+  public HaskellBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.finder = finder;
   }
 
   private Optional<ImmutableList<String>> getFlags(String section, String field) {
@@ -55,65 +50,119 @@ public class HaskellBuckConfig {
     return Optional.of(split.build());
   }
 
-  private ToolProvider getTool(String section, String configName, String systemName) {
-    return delegate
-        .getView(ToolConfig.class)
-        .getToolProvider(section, configName)
-        .orElseGet(
-            () ->
-                SystemToolProvider.builder()
-                    .setExecutableFinder(finder)
-                    .setSourcePathConverter(delegate::getPathSourcePath)
-                    .setName(Paths.get(systemName))
-                    .setEnvironment(delegate.getEnvironment())
-                    .setSource(String.format(".buckconfig (%s.%s)", section, configName))
-                    .build());
+  private Optional<ToolProvider> getToolProvider(String section, String configName) {
+    return delegate.getView(ToolConfig.class).getToolProvider(section, configName);
   }
 
-  private HaskellPlatform getPlatform(String section, CxxPlatform cxxPlatform) {
-    return HaskellPlatform.builder()
-        .setHaskellVersion(
-            HaskellVersion.of(
-                delegate
-                    .getInteger(section, "compiler_major_version")
-                    .orElse(DEFAULT_MAJOR_VERSION)))
-        .setCompiler(getTool(section, "compiler", "ghc"))
-        .setCompilerFlags(getFlags(section, "compiler_flags").orElse(ImmutableList.of()))
-        .setLinker(getTool(section, "linker", "ghc"))
-        .setLinkerFlags(getFlags(section, "linker_flags").orElse(ImmutableList.of()))
-        .setPackager(getTool(section, "packager", "ghc-pkg"))
-        .setHaddock(getTool(section, "haddock", "haddock"))
-        .setShouldCacheLinks(delegate.getBooleanValue(section, "cache_links", true))
-        .setShouldUsedOldBinaryOutputLocation(
-            delegate.getBoolean(section, "old_binary_output_location"))
-        .setPackageNamePrefix(delegate.getValue(section, "package_name_prefix"))
-        .setGhciScriptTemplate(() -> delegate.getRequiredPath(section, "ghci_script_template"))
-        .setGhciIservScriptTemplate(
-            () -> delegate.getRequiredPath(section, "ghci_iserv_script_template"))
-        .setGhciBinutils(() -> delegate.getRequiredPath(section, "ghci_binutils_path"))
-        .setGhciGhc(() -> delegate.getRequiredPath(section, "ghci_ghc_path"))
-        .setGhciIServ(() -> delegate.getRequiredPath(section, "ghci_iserv_path"))
-        .setGhciIServProf(() -> delegate.getRequiredPath(section, "ghci_iserv_prof_path"))
-        .setGhciLib(() -> delegate.getRequiredPath(section, "ghci_lib_path"))
-        .setGhciCxx(() -> delegate.getRequiredPath(section, "ghci_cxx_path"))
-        .setGhciCc(() -> delegate.getRequiredPath(section, "ghci_cc_path"))
-        .setGhciCpp(() -> delegate.getRequiredPath(section, "ghci_cpp_path"))
-        .setLinkStyleForStubHeader(
-            delegate.getEnum(section, "link_style_for_stub_header", Linker.LinkableDepType.class))
-        .setCxxPlatform(cxxPlatform)
-        .build();
+  private String getToolSource(String section, String configName) {
+    return String.format(".buckconfig (%s.%s)", section, configName);
   }
 
-  public ImmutableList<HaskellPlatform> getPlatforms(Iterable<CxxPlatform> cxxPlatforms) {
-    return RichStream.from(cxxPlatforms)
-        .map(
-            cxxPlatform ->
-                // We special case the "default" C/C++ platform to just use the "haskell" section.
-                cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
-                    ? getPlatform(SECTION_PREFIX, cxxPlatform)
-                    : getPlatform(
-                        String.format("%s#%s", SECTION_PREFIX, cxxPlatform.getFlavor()),
-                        cxxPlatform))
-        .toImmutableList();
+  public String getDefaultSection() {
+    return SECTION_PREFIX;
+  }
+
+  public String getSectionForPlatform(CxxPlatform cxxPlatform) {
+    return String.format("%s#%s", SECTION_PREFIX, cxxPlatform.getFlavor());
+  }
+
+  public Integer getCompilerMajorVersion(String section) {
+    return delegate.getInteger(section, "compiler_major_version").orElse(DEFAULT_MAJOR_VERSION);
+  }
+
+  public Optional<ToolProvider> getCompiler(String section) {
+    return getToolProvider(section, "compiler");
+  }
+
+  public String getCompilerSource(String section) {
+    return getToolSource(section, "compiler");
+  }
+
+  public Optional<ToolProvider> getLinker(String section) {
+    return getToolProvider(section, "linker");
+  }
+
+  public String getLinkerSource(String section) {
+    return getToolSource(section, "linker");
+  }
+
+  public Optional<ToolProvider> getPackager(String section) {
+    return getToolProvider(section, "packager");
+  }
+
+  public String getPackagerSource(String section) {
+    return getToolSource(section, "packager");
+  }
+
+  public Optional<ToolProvider> getHaddock(String section) {
+    return getToolProvider(section, "haddock");
+  }
+
+  public String getHaddockSource(String section) {
+    return getToolSource(section, "haddock");
+  }
+
+  public Optional<ImmutableList<String>> getCompilerFlags(String section) {
+    return getFlags(section, "compiler_flags");
+  }
+
+  public Optional<ImmutableList<String>> getLinkerFlags(String section) {
+    return getFlags(section, "linker_flags");
+  }
+
+  public boolean getShouldCacheLinks(String section) {
+    return delegate.getBooleanValue(section, "cache_links", true);
+  }
+
+  public Optional<Boolean> getShouldUsedOldBinaryOutputLocation(String section) {
+    return delegate.getBoolean(section, "old_binary_output_location");
+  }
+
+  public Optional<String> getPackageNamePrefix(String section) {
+    return delegate.getValue(section, "package_name_prefix");
+  }
+
+  public Supplier<Path> getGhciScriptTemplate(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_script_template");
+  }
+
+  public Supplier<Path> getGhciIservScriptTemplate(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_iserv_script_template");
+  }
+
+  public Supplier<Path> getGhciBinutils(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_binutils_path");
+  }
+
+  public Supplier<Path> getGhciGhc(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_ghc_path");
+  }
+
+  public Supplier<Path> getGhciIServ(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_iserv_path");
+  }
+
+  public Supplier<Path> getGhciIServProf(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_iserv_prof_path");
+  }
+
+  public Supplier<Path> getGhciLib(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_lib_path");
+  }
+
+  public Supplier<Path> getGhciCxx(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_cxx_path");
+  }
+
+  public Supplier<Path> getGhciCc(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_cc_path");
+  }
+
+  public Supplier<Path> getGhciCpp(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_cpp_path");
+  }
+
+  public Optional<? extends Linker.LinkableDepType> getLinkStyleForStubHeader(String section) {
+    return delegate.getEnum(section, "link_style_for_stub_header", Linker.LinkableDepType.class);
   }
 }

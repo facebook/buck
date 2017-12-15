@@ -49,7 +49,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -129,7 +128,7 @@ public class AndroidBinaryTest {
                 .getClasspathEntriesToDex()
                 .stream()
                 .map(pathResolver::getRelativePath)
-                .collect(MoreCollectors.toImmutableSet()),
+                .collect(ImmutableSet.toImmutableSet()),
             pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
             false,
             commands,

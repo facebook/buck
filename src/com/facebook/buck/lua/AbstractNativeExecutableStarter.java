@@ -43,6 +43,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -71,8 +72,7 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTarget {
 
-  private static final String NATIVE_STARTER_CXX_SOURCE =
-      "com/facebook/buck/lua/native-starter.cpp.in";
+  private static final String NATIVE_STARTER_CXX_SOURCE = "native-starter.cpp.in";
 
   abstract ProjectFilesystem getProjectFilesystem();
 
@@ -85,6 +85,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   abstract SourcePathResolver getPathResolver();
 
   abstract SourcePathRuleFinder getRuleFinder();
+
+  abstract CellPathResolver getCellPathResolver();
 
   abstract LuaPlatform getLuaPlatform();
 
@@ -106,7 +108,9 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   private String getNativeStarterCxxSourceTemplate() {
     try {
-      return Resources.toString(Resources.getResource(NATIVE_STARTER_CXX_SOURCE), Charsets.UTF_8);
+      return Resources.toString(
+          Resources.getResource(AbstractNativeExecutableStarter.class, NATIVE_STARTER_CXX_SOURCE),
+          Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -267,7 +271,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                     ImmutableSet.of(),
                     ImmutableSet.of(),
                     getNativeLinkableInput(),
-                    Optional.empty()));
+                    Optional.empty(),
+                    getCellPathResolver()));
     return linkRule.getSourcePathToOutput();
   }
 

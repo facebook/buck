@@ -1,10 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_immutables_library(
+buck_module(
     name = "haskell",
     srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
@@ -33,6 +32,7 @@ java_immutables_library(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
@@ -41,4 +41,5 @@ java_immutables_library(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
+    visibility = ["PUBLIC"],
 )

@@ -42,10 +42,10 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -133,7 +133,7 @@ public class DummyRDotJava extends AbstractBuildRule
         androidResourceDeps
             .stream()
             .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     this.useOldStyleableFormat = useOldStyleableFormat;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.compileStepFactory = compileStepFactory;
@@ -303,7 +303,7 @@ public class DummyRDotJava extends AbstractBuildRule
         for (ZipEntry zipEntry : Collections.list(jar.entries())) {
           if (zipEntry.getName().endsWith(".class")) {
             // We found a class, so the jar is probably fine.
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         }
       }

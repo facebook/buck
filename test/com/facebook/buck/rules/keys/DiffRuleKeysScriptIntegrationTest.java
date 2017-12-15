@@ -155,8 +155,8 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
-            ",default->preprocessDelegate->preprocessorFlags->includes->customRuleKeyLogic]",
-            "(include(cxx/a.h)):",
+            ",default->preprocessDelegate->preprocessorFlags->includes]",
+            "(cxx/a.h):",
             "-[path(cxx/a.h:", /*hash*/
             ")]",
             "+[path(cxx/a.h:", /*hash*/
@@ -226,8 +226,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             Matchers.containsString(
                 "Change details for [//:java_lib_all]\n"
                     + "  (jarBuildStepsFactory):\n"
-                    + "    -[ruleKey(sha1=27b19cb6ffdc1340b089037472cad7d4bb24d973)]\n"
-                    + "    +[ruleKey(sha1=1ee6ea972f7b49fceca3963901da9ed82ec77b7b)]\n"),
+                    + "    -[ruleKey(sha1=9241a8c0f9dd6ded71e133ba67b49e8f2cdb34f3)]\n"
+                    + "    +[ruleKey(sha1=e822b1bf6f2416bfa285d6e8e11874f9807390ce)]\n"),
             Matchers.containsString(
                 "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
                     + "  (srcs):\n"

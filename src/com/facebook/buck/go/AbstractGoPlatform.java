@@ -16,14 +16,12 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -35,8 +33,6 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
 
   @AddToRuleKey
   abstract String getGoArch();
-
-  abstract Optional<CxxPlatform> getCxxPlatform();
 
   @Override
   public Flavor getFlavor() {

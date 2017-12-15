@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.CommandEvent;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -40,11 +41,12 @@ public class CommandEventTest {
     CommandEvent.Started startedDifferentName =
         configureTestEvent(
             CommandEvent.started("test", ImmutableList.of("sample-app"), false, 11L));
-    CommandEvent finishedDaemon = configureTestEvent(CommandEvent.finished(startedDaemon, 0));
+    CommandEvent finishedDaemon =
+        configureTestEvent(CommandEvent.finished(startedDaemon, ExitCode.SUCCESS));
     CommandEvent finishedDaemonFailed =
-        configureTestEvent(CommandEvent.finished(startedDaemonTwo, 1));
+        configureTestEvent(CommandEvent.finished(startedDaemonTwo, ExitCode.BUILD_ERROR));
     CommandEvent finishedDifferentName =
-        configureTestEvent(CommandEvent.finished(startedDifferentName, 0));
+        configureTestEvent(CommandEvent.finished(startedDifferentName, ExitCode.SUCCESS));
 
     assertNotEquals(startedDaemon, startedDaemonTwo);
     assertNotEquals(startedDaemon, startedNoDaemon);

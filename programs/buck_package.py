@@ -47,8 +47,8 @@ def closable_named_temporary_file(*args, **kwargs):
 
 class BuckPackage(BuckTool):
 
-    def __init__(self, buck_project):
-        super(BuckPackage, self).__init__(buck_project)
+    def __init__(self, buck_project, buck_reporter):
+        super(BuckPackage, self).__init__(buck_project, buck_reporter)
         self._resource_subdir = None
         self._lock_file = None
 

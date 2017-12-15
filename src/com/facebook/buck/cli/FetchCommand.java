@@ -18,12 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.StackedDownloader;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.StackedDownloader;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -41,6 +40,8 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
@@ -50,13 +51,11 @@ import java.io.IOException;
 public class FetchCommand extends BuildCommand {
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
 
     if (getArguments().isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Must specify at least one build target to fetch."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
@@ -68,7 +67,7 @@ public class FetchCommand extends BuildCommand {
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
-    int exitCode;
+    int exitCodeInt;
     try (CommandThreadManager pool =
         new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()))) {
       ActionGraphAndResolver actionGraphAndResolver;
@@ -97,11 +96,11 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckConfig().getActionGraphParallelizationMode(),
                     params.getBuckConfig().getShouldInstrumentActionGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
-      } catch (BuildTargetException | BuildFileParseException | VersionException e) {
+      } catch (BuildFileParseException | VersionException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+        return ExitCode.PARSE_ERROR;
       }
 
       MetadataChecker.checkAndCleanIfNeeded(params.getCell());
@@ -149,7 +148,7 @@ public class FetchCommand extends BuildCommand {
                   params.getClock(),
                   getExecutionContext(),
                   isKeepGoing())) {
-        exitCode =
+        exitCodeInt =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,
                 params.getBuckEventBus(),
@@ -157,6 +156,8 @@ public class FetchCommand extends BuildCommand {
                 getPathToBuildReport(params.getBuckConfig()));
       }
     }
+
+    ExitCode exitCode = ExitCode.map(exitCodeInt);
 
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 

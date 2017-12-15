@@ -40,7 +40,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -78,7 +78,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -1417,7 +1416,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertEquals(
         RichStream.from(jsrJavac.getCompilerClassPath())
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         ImmutableSet.of(pathResolver.getRelativePath(javac.getSourcePathToOutput())));
   }
 
@@ -1618,6 +1617,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   private static ImmutableSet<Path> resolve(
       ImmutableSet<SourcePath> paths, SourcePathResolver resolver) {
-    return paths.stream().map(resolver::getAbsolutePath).collect(MoreCollectors.toImmutableSet());
+    return paths.stream().map(resolver::getAbsolutePath).collect(ImmutableSet.toImmutableSet());
   }
 }

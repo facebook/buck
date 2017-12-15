@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -44,7 +45,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -66,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -118,7 +117,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *
    * <p>Should not be added to rule key.
    */
-  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
+  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
 
   private static class AppleTestXctoolStdoutReader
       implements XctoolRunTestsStep.StdoutReadingCallback {
@@ -183,7 +182,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       ImmutableSet<String> labels,
       boolean runTestSeparately,
-      Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
+      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
       String testLogDirectoryEnvironmentVariable,
       String testLogLevelEnvironmentVariable,
       String testLogLevel,
@@ -209,7 +208,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.empty();
     this.xctestOutputReader = Optional.empty();
-    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
+    this.appleDeveloperDirectoryForTestsProvider = appleDeveloperDirectoryForTestsProvider;
     this.testLogDirectoryEnvironmentVariable = testLogDirectoryEnvironmentVariable;
     this.testLogLevelEnvironmentVariable = testLogLevelEnvironmentVariable;
     this.testLogLevel = testLogLevel;
@@ -335,7 +334,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build(),
               resolvedTestOutputPath,
               xctoolStdoutReader,
-              xcodeDeveloperDirSupplier,
+              appleDeveloperDirectoryForTestsProvider,
               options.getTestSelectorList(),
               context.isDebugEnabled(),
               Optional.of(testLogDirectoryEnvironmentVariable),
@@ -373,7 +372,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               resolvedTestBundleDirectory,
               resolvedTestOutputPath,
               xctestOutputReader,
-              xcodeDeveloperDirSupplier);
+              appleDeveloperDirectoryForTestsProvider);
       steps.add(xctestStep);
       externalSpec.setType("xctest");
       externalSpec.setCommand(xctestStep.getCommand());
@@ -452,7 +451,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               .setTestCases(testCaseSummaries)
               .setContacts(contacts)
               .setLabels(
-                  labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+                  labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
       if (getProjectFilesystem().isDirectory(testLogsPath)) {
         for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
           testResultsBuilder.addTestLogPaths(testLogPath);

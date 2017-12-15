@@ -36,7 +36,7 @@ import org.immutables.value.Value;
  * type, variable name, and value.
  */
 @Value.Enclosing
-@Value.Immutable
+@Value.Immutable(copy = false, singleton = true)
 @BuckStyleImmutable
 abstract class AbstractBuildConfigFields implements Iterable<Field> {
 
@@ -92,18 +92,11 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
         }
       };
 
-  private static final BuildConfigFields EMPTY = BuildConfigFields.of(ImmutableMap.of());
-
   @Value.Parameter
   protected abstract Map<String, Field> getNameToField();
 
   public static BuildConfigFields fromFieldDeclarations(Iterable<String> declarations) {
     return fromFields(FluentIterable.from(declarations).transform(TRANSFORM::apply));
-  }
-
-  /** @return a {@link BuildConfigFields} with no fields */
-  public static BuildConfigFields empty() {
-    return EMPTY;
   }
 
   /** @return a {@link BuildConfigFields} that contains the specified fields in iteration order. */

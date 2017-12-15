@@ -89,11 +89,24 @@ class SignatureFactory {
         public Void visitTypeParameter(TypeParameterElement element, SignatureVisitor visitor) {
           visitor.visitFormalTypeParameter(element.getSimpleName().toString());
           for (TypeMirror boundType : element.getBounds()) {
-            // We can't know whether an inferred type is a class or interface, but it turns out
-            // the compiler does not distinguish between them when reading signatures, so we can
-            // write inferred types as interface bounds. We go ahead and write all bounds as
-            // interface bounds to make the SourceAbiCompatibleSignatureVisitor possible.
-            boundType.accept(typeVisitorAdapter, visitor.visitInterfaceBound());
+            boolean isClass;
+            try {
+              if (boundType.getKind() == TypeKind.DECLARED) {
+                isClass = ((DeclaredType) boundType).asElement().getKind().isClass();
+              } else {
+                isClass = boundType.getKind() == TypeKind.TYPEVAR;
+              }
+            } catch (CannotInferException e) {
+              // We can't know whether an inferred type is a class or interface, but it turns out
+              // the compiler does not distinguish between them when reading signatures, so we can
+              // write inferred types as interface bounds. We go ahead and write all bounds as
+              // interface bounds to make the SourceAbiCompatibleSignatureVisitor possible.
+              isClass = false;
+            }
+
+            boundType.accept(
+                typeVisitorAdapter,
+                isClass ? visitor.visitClassBound() : visitor.visitInterfaceBound());
           }
 
           return null;

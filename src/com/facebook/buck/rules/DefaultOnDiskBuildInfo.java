@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -31,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -161,7 +161,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     return RichStream.from(getValues(BuildInfo.MetadataKey.RECORDED_PATHS).get())
         .map(Paths::get)
         .concat(RichStream.of(metadataDirectory))
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override

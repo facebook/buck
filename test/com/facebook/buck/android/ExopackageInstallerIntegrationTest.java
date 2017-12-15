@@ -36,7 +36,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -45,6 +44,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
@@ -635,10 +635,9 @@ public class ExopackageInstallerIntegrationTest {
             ExopackageInfo.DexInfo.of(
                 FakeSourcePath.of(filesystem, moduleManifest),
                 FakeSourcePath.of(filesystem, moduleDirectory)));
-        topLevelMetadata.add(dexJarName + " ");
+        topLevelMetadata.add(dexJarName + " " + moduleName + "\n");
       }
-      builder.addExoFile(
-          "modular-dex/metadata.txt", Joiner.on('\n').join(topLevelMetadata.build()));
+      builder.addExoFile("modular-dex/metadata.txt", Joiner.on("").join(topLevelMetadata.build()));
       moduleInfo = Optional.of(moduleInfoBuilder.build());
     }
 
@@ -691,7 +690,7 @@ public class ExopackageInstallerIntegrationTest {
             .entrySet()
             .stream()
             .collect(
-                MoreCollectors.toImmutableMap(
+                ImmutableMap.toImmutableMap(
                     entry -> entry.getKey().toString(),
                     entry -> {
                       try {

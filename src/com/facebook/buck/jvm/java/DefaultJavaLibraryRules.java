@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -375,13 +376,14 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  SourceOnlyAbiRuleInfo getSourceOnlyAbiRuleInfo() {
-    return new DefaultSourceOnlyAbiRuleInfo(
-        getSourcePathRuleFinder(),
-        getLibraryTarget(),
-        getRequiredForSourceOnlyAbi(),
-        getClasspaths(),
-        getClasspathsForSourceOnlyAbi());
+  Supplier<SourceOnlyAbiRuleInfo> getSourceOnlyAbiRuleInfoSupplier() {
+    return () ->
+        new DefaultSourceOnlyAbiRuleInfo(
+            getSourcePathRuleFinder(),
+            getLibraryTarget(),
+            getRequiredForSourceOnlyAbi(),
+            getClasspaths(),
+            getClasspathsForSourceOnlyAbi());
   }
 
   @Nullable
@@ -423,11 +425,18 @@ public abstract class DefaultJavaLibraryRules {
                 getProjectFilesystem(),
                 getInitialParams(),
                 libraryRule.getSourcePathToOutput(),
-                getJavaBuckConfig() == null
-                        || getJavaBuckConfig().getSourceAbiVerificationMode()
-                            == SourceAbiVerificationMode.OFF
-                    ? AbiGenerationMode.CLASS
-                    : getAbiGenerationMode()));
+                getAbiCompatibilityMode()));
+  }
+
+  @Value.Lazy
+  AbiGenerationMode getAbiCompatibilityMode() {
+    return getJavaBuckConfig() == null
+            || getJavaBuckConfig().getSourceAbiVerificationMode() == SourceAbiVerificationMode.OFF
+        ? AbiGenerationMode.CLASS
+        // Use the BuckConfig version (rather than the inferred one) because if any
+        // targets are using source_only it can affect the output of other targets
+        // in ways that are hard to simulate
+        : getJavaBuckConfig().getAbiGenerationMode();
   }
 
   @Value.Lazy
@@ -544,7 +553,8 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getCompileTimeClasspathSourcePaths(),
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
-        getSourceOnlyAbiRuleInfo());
+        getAbiCompatibilityMode(),
+        getSourceOnlyAbiRuleInfoSupplier());
   }
 
   @Value.Lazy
@@ -565,7 +575,8 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getCompileTimeClasspathSourcePaths(),
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
-        getSourceOnlyAbiRuleInfo());
+        getAbiCompatibilityMode(),
+        getSourceOnlyAbiRuleInfoSupplier());
   }
 
   @org.immutables.builder.Builder.AccessibleFields

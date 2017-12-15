@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -102,7 +103,7 @@ final class CxxCollectAndLogInferDependenciesStep implements Step {
       throw new IllegalStateException("Expected non-empty analysis or capture rules in input");
     }
     projectFilesystem.writeLinesToPath(output, outputFile);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

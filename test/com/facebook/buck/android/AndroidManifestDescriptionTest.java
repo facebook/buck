@@ -64,7 +64,7 @@ public class AndroidManifestDescriptionTest {
     BuildRuleParams params =
         TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
     BuildRule androidManifest =
-        new AndroidManifestDescription()
+        new AndroidManifestDescription(new AndroidManifestFactory())
             .createBuildRule(
                 TargetGraph.EMPTY,
                 buildTarget,

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -36,7 +37,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Runs {@code xctest} on logic or application tests paired with a host.
@@ -58,7 +58,7 @@ class XctestRunTestsStep implements Step {
   private final Path logicTestBundlePath;
   private final Path outputPath;
   private final Optional<? extends OutputReadingCallback> outputReadingCallback;
-  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
+  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
 
   public XctestRunTestsStep(
       ProjectFilesystem filesystem,
@@ -67,14 +67,14 @@ class XctestRunTestsStep implements Step {
       Path logicTestBundlePath,
       Path outputPath,
       Optional<? extends OutputReadingCallback> outputReadingCallback,
-      Supplier<Optional<Path>> xcodeDeveloperDirSupplier) {
+      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider) {
     this.filesystem = filesystem;
     this.environment = environment;
     this.xctest = xctest;
     this.logicTestBundlePath = logicTestBundlePath;
     this.outputPath = outputPath;
     this.outputReadingCallback = outputReadingCallback;
-    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
+    this.appleDeveloperDirectoryForTestsProvider = appleDeveloperDirectoryForTestsProvider;
   }
 
   @Override
@@ -94,12 +94,9 @@ class XctestRunTestsStep implements Step {
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
     Map<String, String> environment = new HashMap<>();
     environment.putAll(context.getEnvironment());
-    Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
-    if (xcodeDeveloperDir.isPresent()) {
-      environment.put("DEVELOPER_DIR", xcodeDeveloperDir.get().toString());
-    } else {
-      throw new RuntimeException("Cannot determine xcode developer dir");
-    }
+    Path xcodeDeveloperDir =
+        appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests();
+    environment.put("DEVELOPER_DIR", xcodeDeveloperDir.toString());
     environment.putAll(this.environment);
     // if (appTestHostAppPath.isPresent()) {
     //   TODO(grp): Pass XCBundleInjection environment.

@@ -40,7 +40,7 @@ public class ModularDexChangedReceiver extends BroadcastReceiver {
   }
 
   /** @return a filter for the broadcast sent by buck when the installation completes */
-  static IntentFilter getIntentFilter() {
-    return new IntentFilter("com.facebook.buck.exopackage.EXO_DIR_UPDATED");
+  static IntentFilter getIntentFilter(String packageName) {
+    return new IntentFilter(packageName + "._EXOPACKAGE_DIR_UPDATED");
   }
 }

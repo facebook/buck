@@ -58,7 +58,6 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.VisibleForTesting;
@@ -109,8 +108,6 @@ import org.w3c.dom.Element;
 
 /** Utility class for running tests from {@link TestRule}s which have been built. */
 public class TestRunning {
-
-  public static final int TEST_FAILURES_EXIT_CODE = 42;
 
   private static final Logger LOG = Logger.get(TestRunning.class);
 
@@ -440,7 +437,8 @@ public class TestRunning {
               return !results1.isSuccess();
             });
 
-    return failures ? TEST_FAILURES_EXIT_CODE : 0;
+    // TODO(buck_team): convert to ExitCode
+    return failures ? 32 : 0;
   }
 
   private static ListenableFuture<TestResults> transformTestResults(
@@ -517,7 +515,7 @@ public class TestRunning {
                         .getLabels()
                         .stream()
                         .map(Object::toString)
-                        .collect(MoreCollectors.toImmutableSet()));
+                        .collect(ImmutableSet.toImmutableSet()));
             TestResults newTestResults = postTestResults(testResults);
             transformedTestResults.set(newTestResults);
           }

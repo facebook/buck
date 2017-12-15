@@ -20,21 +20,24 @@ import com.facebook.buck.artifact_cache.thrift.BuckCacheDeleteRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheDeleteResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchResponse;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiContainsRequest;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiContainsResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheStoreRequest;
+import com.facebook.buck.artifact_cache.thrift.ContainsResult;
 import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -42,14 +45,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -70,6 +77,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
   private final String hybridThriftEndpoint;
   private final boolean distributedBuildModeEnabled;
+  private final BuildId buildId;
   private final int multiFetchLimit;
   private final int concurrencyLevel;
 
@@ -77,9 +85,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       NetworkCacheArgs args,
       String hybridThriftEndpoint,
       boolean distributedBuildModeEnabled,
+      BuildId buildId,
       int multiFetchLimit,
       int concurrencyLevel) {
     super(args);
+    this.buildId = buildId;
     this.multiFetchLimit = multiFetchLimit;
     this.concurrencyLevel = concurrencyLevel;
     this.hybridThriftEndpoint = hybridThriftEndpoint;
@@ -99,7 +109,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     fetchRequest.setScheduleType(scheduleType);
     fetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
-    BuckCacheRequest cacheRequest = new BuckCacheRequest();
+    BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.FETCH);
     cacheRequest.setFetchRequest(fetchRequest);
 
@@ -234,6 +244,131 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     }
   }
 
+  private BuckCacheRequest newCacheRequest() {
+    BuckCacheRequest buckCacheRequest = new BuckCacheRequest();
+    buckCacheRequest.setBuckBuildId(buildId.toString());
+    return buckCacheRequest;
+  }
+
+  private void processContainsResult(
+      RuleKey ruleKey, ContainsResult containsResult, MultiContainsResult.Builder resultBuilder) {
+    switch (containsResult.resultType) {
+      case CONTAINS:
+        resultBuilder.putCacheResults(ruleKey, CacheResult.contains(getName(), getMode()));
+        break;
+      case DOES_NOT_CONTAIN:
+        resultBuilder.putCacheResults(ruleKey, CacheResult.miss());
+        break;
+      case UNKNOWN_DUE_TO_TRANSIENT_ERRORS:
+        resultBuilder.putCacheResults(
+            ruleKey,
+            CacheResult.error(
+                getName(),
+                getMode(),
+                String.format(
+                    "Multi-contains request reported transient errors in some backing stores for "
+                        + "rule key [%s]. Artifact may still be present.",
+                    ruleKey.toString())));
+        break;
+    }
+  }
+
+  private MultiContainsResult processMultiContainsHttpResponse(
+      HttpResponse httpResponse, List<RuleKey> ruleKeys) throws IOException {
+    MultiContainsResult.Builder resultBuilder = MultiContainsResult.builder();
+
+    if (httpResponse.statusCode() != 200) {
+      LOG.error(
+          String.format(
+              "Failed to multi-contains request for [%d] cache artifacts "
+                  + "with HTTP status code [%d:%s] to url [%s].",
+              ruleKeys.size(),
+              httpResponse.statusCode(),
+              httpResponse.statusMessage(),
+              httpResponse.requestUrl()));
+
+      Function<RuleKey, CacheResult> genErrorResult =
+          ruleKey ->
+              CacheResult.error(
+                  getName(),
+                  getMode(),
+                  String.format(
+                      "Failed to check cache artifact (via multi-contains request) "
+                          + "with HTTP status code [%d:%s] to url [%s] for rule key [%s].",
+                      httpResponse.statusCode(),
+                      httpResponse.statusMessage(),
+                      httpResponse.requestUrl(),
+                      ruleKey.toString()));
+
+      return resultBuilder.setCacheResults(Maps.toMap(ruleKeys, genErrorResult::apply)).build();
+    }
+
+    try (ThriftArtifactCacheProtocol.Response response =
+        ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
+      resultBuilder.setResponseSizeBytes(httpResponse.contentLength());
+
+      BuckCacheResponse cacheResponse = response.getThriftData();
+      if (!cacheResponse.isWasSuccessful()) {
+        LOG.warn("Request was unsuccessful: %s", cacheResponse.getErrorMessage());
+        Function<RuleKey, CacheResult> genErrorResult =
+            k -> CacheResult.error(getName(), getMode(), cacheResponse.getErrorMessage());
+        return resultBuilder.setCacheResults(Maps.toMap(ruleKeys, genErrorResult::apply)).build();
+      }
+
+      BuckCacheMultiContainsResponse containsResponse = cacheResponse.getMultiContainsResponse();
+
+      Preconditions.checkState(
+          containsResponse.results.size() == ruleKeys.size(),
+          "Bad response from server. MultiContains Response does not have the "
+              + "same number of results as the MultiContains Request.");
+
+      for (int i = 0; i < containsResponse.results.size(); ++i) {
+        processContainsResult(ruleKeys.get(i), containsResponse.results.get(i), resultBuilder);
+      }
+      return resultBuilder.build();
+    }
+  }
+
+  @Override
+  protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> uniqueRuleKeys)
+      throws IOException {
+    List<RuleKey> ruleKeys = Lists.newArrayList(uniqueRuleKeys);
+
+    BuckCacheMultiContainsRequest containsRequest = new BuckCacheMultiContainsRequest();
+    containsRequest.setRuleKeys(new ArrayList<>(ruleKeys.size()));
+
+    for (RuleKey ruleKey : ruleKeys) {
+      com.facebook.buck.artifact_cache.thrift.RuleKey thriftRuleKey =
+          new com.facebook.buck.artifact_cache.thrift.RuleKey();
+      thriftRuleKey.setHashString(ruleKey.getHashCode().toString());
+      containsRequest.addToRuleKeys(thriftRuleKey);
+    }
+
+    LOG.verbose(
+        "Will check (multi-contains) for keys [%s]",
+        Joiner.on(",").join(containsRequest.getRuleKeys()));
+
+    containsRequest.setRepository(getRepository());
+    containsRequest.setScheduleType(scheduleType);
+    containsRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
+
+    BuckCacheRequest cacheRequest = newCacheRequest();
+    cacheRequest.setType(BuckCacheRequestType.CONTAINS);
+    cacheRequest.setMultiContainsRequest(containsRequest);
+
+    final ThriftArtifactCacheProtocol.Request request =
+        ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
+    Request.Builder builder = toOkHttpRequest(request);
+    try (HttpResponse httpResponse = fetchClient.makeRequest(hybridThriftEndpoint, builder)) {
+      MultiContainsResult result = processMultiContainsHttpResponse(httpResponse, ruleKeys);
+      LOG.verbose(
+          "(%d out of %d) artifacts exist in cache.",
+          result.getCacheResults().values().stream().filter(r -> r.getType().isSuccess()).count(),
+          ruleKeys.size());
+      return result;
+    }
+  }
+
   @Override
   protected int getMultiFetchBatchSize(int pendingRequestsSize) {
     if (concurrencyLevel > 0)
@@ -246,11 +381,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     ImmutableList<RuleKey> keys =
         RichStream.from(requests)
             .map(FetchRequest::getRuleKey)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     ImmutableList<LazyPath> outputs =
         RichStream.from(requests)
             .map(FetchRequest::getOutput)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     Preconditions.checkState(keys.size() == outputs.size());
     String joinedKeys = Joiner.on(", ").join(keys);
     LOG.verbose("Will fetch keys <%s>", joinedKeys);
@@ -279,7 +414,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     multiFetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
     keys.forEach(k -> multiFetchRequest.addToRuleKeys(toThriftRuleKey(k)));
 
-    BuckCacheRequest cacheRequest = new BuckCacheRequest();
+    BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.MULTI_FETCH);
     cacheRequest.setMultiFetchRequest(multiFetchRequest);
     return cacheRequest;
@@ -327,7 +462,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       throws IOException {
     long responseSizeBytes = httpResponse.contentLength();
     ImmutableList<FetchResult.Builder> resultsBuilders =
-        keys.stream().map(k -> FetchResult.builder()).collect(MoreCollectors.toImmutableList());
+        keys.stream().map(k -> FetchResult.builder()).collect(ImmutableList.toImmutableList());
 
     BuckCacheResponse cacheResponse = response.getThriftData();
     resultsBuilders.forEach(b -> b.setResponseSizeBytes(responseSizeBytes));
@@ -519,7 +654,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     PayloadInfo payloadInfo = new PayloadInfo();
     long artifactSizeBytes = artifact.size();
     payloadInfo.setSizeBytes(artifactSizeBytes);
-    BuckCacheRequest cacheRequest = new BuckCacheRequest();
+    BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.addToPayloads(payloadInfo);
     cacheRequest.setType(BuckCacheRequestType.STORE);
     cacheRequest.setStoreRequest(storeRequest);
@@ -654,7 +789,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     deleteRequest.setRepository(getRepository());
     deleteRequest.setRuleKeys(ruleKeysThrift);
     deleteRequest.setScheduleType(scheduleType);
-    BuckCacheRequest cacheRequest = new BuckCacheRequest();
+    BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.DELETE_REQUEST);
     cacheRequest.setDeleteRequest(deleteRequest);
 

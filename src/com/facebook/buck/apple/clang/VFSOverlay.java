@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.clang;
 
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -66,8 +65,8 @@ public class VFSOverlay {
                     e.getValue()
                         .stream()
                         .map(x -> new VirtualFile(x.getFirst(), x.getSecond()))
-                        .collect(MoreCollectors.toImmutableList())))
-        .collect(MoreCollectors.toImmutableList());
+                        .collect(ImmutableList.toImmutableList())))
+        .collect(ImmutableList.toImmutableList());
   }
 
   private final ImmutableSortedMap<Path, Path> overlays;

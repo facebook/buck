@@ -28,6 +28,9 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
+import com.facebook.buck.distributed.build_slave.NoOpUnexpectedSlaveCacheMissTracker;
+import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -39,6 +42,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -98,8 +102,13 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private BuildRuleFinishedPublisher buildRuleFinishedPublisher =
       new NoOpBuildRuleFinishedPublisher();
 
+  private UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker =
+      new NoOpUnexpectedSlaveCacheMissTracker();
+
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
+
+  private final HealthCheckStatsTracker healthCheckStatsTracker = new HealthCheckStatsTracker();
 
   private final BuildSlaveTimingStatsTracker timeStatsTracker = new BuildSlaveTimingStatsTracker();
 
@@ -114,7 +123,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     Optional<StampedeId> stampedeId = getStampedeIdOptional();
     if (stampedeId.isPresent()) {
       params.getBuckEventBus().post(new DistBuildRunEvent(stampedeId.get(), getBuildSlaveRunId()));
@@ -154,6 +164,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 params.getCell(),
                 params.getEnvironment(),
                 params.getProcessExecutor(),
+                params.getExecutableFinder(),
+                params.getPluginManager(),
                 params.getProjectFilesystemFactory());
         timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
 
@@ -162,8 +174,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
         try (CommandThreadManager pool =
             new CommandThreadManager(getClass().getName(), concurrencyLimit)) {
-          DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
-
           // Note that we cannot use the same pool of build threads for file materialization
           // because usually all build threads are waiting for files to be materialized, and
           // there is no thread left for the FileContentsProvider(s) to use.
@@ -189,10 +199,13 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   stampedeId,
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
-                  distBuildConfig,
+                  healthCheckStatsTracker,
                   timeStatsTracker,
-                  getBuildRuleFinishedPublisher());
-          timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
+                  getBuildRuleFinishedPublisher(),
+                  getUnexpectedSlaveCacheMissTracker());
+
+          distBuildExecutor.onBuildSlavePreparationCompleted(
+              () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
 
           // All preparation work is done, so start building.
           int returnCode = distBuildExecutor.buildAndReturnExitCode();
@@ -214,7 +227,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 "Failed distributed build [%s] in [%d millis].",
                 buildName, timeStatsTracker.getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
           }
-          return returnCode;
+          return ExitCode.map(returnCode);
         }
       } catch (HumanReadableException e) {
         logBuildFailureEvent(e.getHumanReadableErrorMessage(), slaveEventListener);
@@ -307,14 +320,20 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               new DefaultClock(),
               timeStatsTracker,
               fileMaterializationStatsTracker,
+              healthCheckStatsTracker,
               scheduledExecutorService);
 
       buildRuleFinishedPublisher = slaveEventListener;
+      unexpectedSlaveCacheMissTracker = slaveEventListener;
     }
   }
 
   private BuildRuleFinishedPublisher getBuildRuleFinishedPublisher() {
     return Preconditions.checkNotNull(buildRuleFinishedPublisher);
+  }
+
+  private UnexpectedSlaveCacheMissTracker getUnexpectedSlaveCacheMissTracker() {
+    return Preconditions.checkNotNull(unexpectedSlaveCacheMissTracker);
   }
 
   @Override

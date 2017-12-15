@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
@@ -40,7 +41,7 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -403,7 +404,8 @@ public class ParsePipelineTest {
               input -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
-                        input.createBuildFileParser(
+                        ProjectBuildFileParserFactory.createBuildFileParser(
+                            input,
                             coercerFactory,
                             console,
                             eventBus,

@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -55,12 +56,14 @@ public class CxxBinaryTest {
 
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     Path bin = Paths.get("path/to/exectuable");
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CxxLink cxxLink =
         ruleResolver.addToIndex(
             new CxxLink(
                 linkTarget,
-                new FakeProjectFilesystem(),
+                projectFilesystem,
                 ImmutableSortedSet::of,
+                TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 bin,
                 ImmutableMap.of(),
@@ -75,7 +78,7 @@ public class CxxBinaryTest {
         ruleResolver.addToIndex(
             new CxxBinary(
                 target,
-                new FakeProjectFilesystem(),
+                projectFilesystem,
                 params.copyAppendingExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
                 ruleResolver,
                 CxxPlatformUtils.DEFAULT_PLATFORM,

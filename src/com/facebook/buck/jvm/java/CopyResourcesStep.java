@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -72,7 +73,7 @@ public class CopyResourcesStep implements Step {
         return result;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @VisibleForTesting

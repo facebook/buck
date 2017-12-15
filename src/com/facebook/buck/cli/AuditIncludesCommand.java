@@ -17,10 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
@@ -57,16 +57,16 @@ public class AuditIncludesCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
-        params
-            .getCell()
-            .createBuildFileParser(
-                new DefaultTypeCoercerFactory(),
-                params.getConsole(),
-                params.getBuckEventBus(),
-                params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
+        ProjectBuildFileParserFactory.createBuildFileParser(
+            params.getCell(),
+            new DefaultTypeCoercerFactory(),
+            params.getConsole(),
+            params.getBuckEventBus(),
+            params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {
@@ -95,11 +95,9 @@ public class AuditIncludesCommand extends AbstractCommand {
         printIncludesToStdout(
             params, Preconditions.checkNotNull(includes, "__includes metadata entry is missing"));
       }
-    } catch (BuildFileParseException e) {
-      throw new HumanReadableException(e, "Unable to parse build file.");
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

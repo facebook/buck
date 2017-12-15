@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.android.tools.r8.CompilationException;
+import com.android.tools.r8.CompilationFailedException;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.D8Output;
@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -261,14 +260,13 @@ public class DxStep extends ShellStep {
         Path output = outputToDex ? Files.createTempDirectory("buck-d8") : outputDexFile;
 
         D8Command.Builder builder =
-            D8Command.builder()
+            D8Command.builder(diagnosticsHandler)
                 .addProgramFiles(inputs)
                 .setIntermediate(intermediate)
                 .setMode(
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
-                .setDiagnosticsHandler(diagnosticsHandler)
                 .setOutputPath(output);
 
         D8Output d8Output = com.android.tools.r8.D8.run(builder.build());
@@ -282,7 +280,7 @@ public class DxStep extends ShellStep {
 
         resourcesReferencedInCode = d8Output.getReferencedResources();
         return 0;
-      } catch (CompilationException | IOException e) {
+      } catch (CompilationFailedException | IOException e) {
         context.postEvent(
             ConsoleEvent.severe(
                 String.join(
@@ -291,7 +289,7 @@ public class DxStep extends ShellStep {
                         .diagnostics
                         .stream()
                         .map(Diagnostic::getDiagnosticMessage)
-                        .collect(MoreCollectors.toImmutableList()))));
+                        .collect(ImmutableList.toImmutableList()))));
         e.printStackTrace(context.getStdErr());
         return 1;
       }

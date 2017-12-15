@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -40,7 +41,6 @@ import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
@@ -141,13 +141,18 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
             MoreSuppliers.memoize(
                 () ->
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(compiler.getDeps(ruleFinder))
-                        .addAll(linker.getDeps(ruleFinder))
+                        .addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder))
+                        .addAll(BuildableSupport.getDepsCollection(linker, ruleFinder))
                         .addAll(
                             Stream.of(args, depArgs, linkerArgs)
                                 .flatMap(
                                     a ->
-                                        a.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()))
+                                        a.stream()
+                                            .flatMap(
+                                                arg ->
+                                                    BuildableSupport.getDepsCollection(
+                                                            arg, ruleFinder)
+                                                        .stream()))
                                 .iterator())
                         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
                         .addAll(ruleFinder.filterBuildRuleInputs(sources))
@@ -208,7 +213,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem().getRootPath(),
                 srcs.stream()
                     .map(resolver::getRelativePath)
-                    .collect(MoreCollectors.toImmutableList()),
+                    .collect(ImmutableList.toImmutableList()),
                 scratchDir))
         .addAll(
             MakeCleanDirectoryStep.of(

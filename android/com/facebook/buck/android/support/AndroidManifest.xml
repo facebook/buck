@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- package and versionCode must match the values in AgentUtil. -->
+<manifest
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.facebook.buck.android.agent">
+
+  <uses-sdk
+    android:minSdkVersion="19"
+    android:targetSdkVersion="25"/>
+
+  <application>
+  </application>
+
+</manifest>

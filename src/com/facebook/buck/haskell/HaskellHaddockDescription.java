@@ -32,6 +32,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -48,13 +49,10 @@ public class HaskellHaddockDescription
 
   private static final Logger LOG = Logger.get(HaskellHaddockDescription.class);
 
-  private final HaskellPlatform defaultPlatform;
-  private final FlavorDomain<HaskellPlatform> platforms;
+  private final ToolchainProvider toolchainProvider;
 
-  public HaskellHaddockDescription(
-      HaskellPlatform defaultPlatform, FlavorDomain<HaskellPlatform> platforms) {
-    this.defaultPlatform = defaultPlatform;
-    this.platforms = platforms;
+  public HaskellHaddockDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -109,6 +107,10 @@ public class HaskellHaddockDescription
   // Return the C/C++ platform to build against.
   private HaskellPlatform getPlatform(
       BuildTarget target, AbstractHaskellHaddockDescriptionArg arg) {
+    HaskellPlatformsProvider haskellPlatformsProvider =
+        toolchainProvider.getByName(
+            HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
     if (flavorPlatform.isPresent()) {
@@ -119,7 +121,7 @@ public class HaskellHaddockDescription
       return platforms.getValue(arg.getPlatform().get());
     }
 
-    return defaultPlatform;
+    return haskellPlatformsProvider.getDefaultHaskellPlatform();
   }
 
   @Override

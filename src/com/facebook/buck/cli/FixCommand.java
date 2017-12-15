@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
@@ -32,7 +33,8 @@ import java.lang.ProcessBuilder.Redirect;
 public class FixCommand extends AbstractCommand {
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     String scriptPath = System.getProperty("buck.fix_script");
 
     ProcessExecutor processExecutor =
@@ -47,7 +49,8 @@ public class FixCommand extends AbstractCommand {
             .setRedirectInput(Redirect.INHERIT)
             .build();
 
-    return processExecutor.launchAndExecute(processParams).getExitCode();
+    int code = processExecutor.launchAndExecute(processParams).getExitCode();
+    return ExitCode.map(code);
   }
 
   @Override

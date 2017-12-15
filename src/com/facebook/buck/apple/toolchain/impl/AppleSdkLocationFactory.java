@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.toolchain.impl;
 
 import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.toolchain.AbstractAppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;

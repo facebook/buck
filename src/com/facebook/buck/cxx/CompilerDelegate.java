@@ -22,6 +22,9 @@ import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
@@ -30,6 +33,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /** Helper class for generating compiler invocations for a cxx compilation rule. */
 class CompilerDelegate implements AddsToRuleKey {
@@ -84,6 +88,26 @@ class CompilerDelegate implements AddsToRuleKey {
     return compiler.getEnvironment(resolver);
   }
 
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
+    Stream.Builder<SourcePath> inputs = Stream.builder();
+
+    // Add inputs from the compiler object.
+    BuildableSupport.deriveInputs(compiler).sorted().forEach(inputs);
+
+    // Args can contain things like location macros, so extract any inputs we find.
+    for (Arg arg : compilerFlags.getAllFlags()) {
+      BuildableSupport.deriveInputs(arg).forEach(inputs);
+    }
+
+    return inputs
+        .build()
+        .filter(
+            (SourcePath path) ->
+                !(path instanceof PathSourcePath)
+                    || !((PathSourcePath) path).getRelativePath().isAbsolute())
+        .collect(ImmutableList.toImmutableList());
+  }
+
   public boolean isArgFileSupported() {
     return compiler.isArgFileSupported();
   }
@@ -98,9 +122,9 @@ class CompilerDelegate implements AddsToRuleKey {
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(getCompiler().getDeps(ruleFinder));
+    deps.addAll(BuildableSupport.getDepsCollection(getCompiler(), ruleFinder));
     RichStream.from(getCompilerFlags().getAllFlags())
-        .flatMap(a -> a.getDeps(ruleFinder).stream())
+        .flatMap(a -> BuildableSupport.getDepsCollection(a, ruleFinder).stream())
         .forEach(deps::add);
     return deps.build();
   }

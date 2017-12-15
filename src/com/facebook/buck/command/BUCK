@@ -40,6 +40,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/rules/keys/config:config",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",

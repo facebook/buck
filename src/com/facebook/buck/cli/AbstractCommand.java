@@ -38,6 +38,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
@@ -54,7 +55,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
@@ -205,20 +205,19 @@ public abstract class AbstractCommand implements Command {
   }
 
   @Override
-  public OptionalInt runHelp(PrintStream stream) {
+  public Optional<ExitCode> runHelp(PrintStream stream) {
     if (help) {
       printUsage(stream);
-      return OptionalInt.of(1);
-    } else {
-      return OptionalInt.empty();
+      return Optional.of(ExitCode.SUCCESS);
     }
+    return Optional.empty();
   }
 
   @Override
-  public final int run(CommandRunnerParams params) throws IOException, InterruptedException {
+  public final ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException {
     if (help) {
       printUsage(params.getConsole().getStdErr());
-      return 1;
+      return ExitCode.SUCCESS;
     }
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
       ImmutableList<String> motd = params.getBuckConfig().getMessageOfTheDay();
@@ -242,7 +241,7 @@ public abstract class AbstractCommand implements Command {
     };
   }
 
-  public abstract int runWithoutHelp(CommandRunnerParams params)
+  public abstract ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException;
 
   protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer(

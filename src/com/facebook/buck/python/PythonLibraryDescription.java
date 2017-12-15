@@ -17,12 +17,15 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -38,6 +41,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
@@ -55,16 +59,13 @@ public class PythonLibraryDescription
         VersionPropagator<PythonLibraryDescriptionArg>,
         MetadataProvidingDescription<PythonLibraryDescriptionArg> {
 
-  private final FlavorDomain<PythonPlatform> pythonPlatforms;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final ToolchainProvider toolchainProvider;
 
   private static final FlavorDomain<MetadataType> METADATA_TYPE =
       FlavorDomain.from("Python Metadata Type", MetadataType.class);
 
-  public PythonLibraryDescription(
-      FlavorDomain<PythonPlatform> pythonPlatforms, FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.pythonPlatforms = pythonPlatforms;
-    this.cxxPlatforms = cxxPlatforms;
+  public PythonLibraryDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -99,6 +100,11 @@ public class PythonLibraryDescription
       return Optional.empty();
     }
 
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        toolchainProvider
+            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+            .getCxxPlatforms();
+
     Map.Entry<Flavor, MetadataType> type = optionalType.get();
 
     BuildTarget baseTarget = buildTarget.withoutFlavors(type.getKey());
@@ -106,7 +112,7 @@ public class PythonLibraryDescription
       case PACKAGE_COMPONENTS:
         {
           Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-              pythonPlatforms
+              getPythonPlatforms()
                   .getFlavorAndValue(baseTarget)
                   .orElseThrow(IllegalArgumentException::new);
           Map.Entry<Flavor, CxxPlatform> cxxPlatform =
@@ -154,7 +160,7 @@ public class PythonLibraryDescription
       case PACKAGE_DEPS:
         {
           Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-              pythonPlatforms
+              getPythonPlatforms()
                   .getFlavorAndValue(baseTarget)
                   .orElseThrow(IllegalArgumentException::new);
           Map.Entry<Flavor, CxxPlatform> cxxPlatform =
@@ -171,6 +177,12 @@ public class PythonLibraryDescription
     }
 
     throw new IllegalStateException();
+  }
+
+  private FlavorDomain<PythonPlatform> getPythonPlatforms() {
+    return toolchainProvider
+        .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+        .getPythonPlatforms();
   }
 
   enum MetadataType implements FlavorConvertible {

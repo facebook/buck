@@ -54,4 +54,12 @@ public interface JsBundleOutputs extends BuildRule {
   default SourcePath getSourcePathToResources() {
     return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "res");
   }
+
+  /**
+   * @return the {@link SourcePath} to a directory containing various metadata that can be used by
+   *     dependent rules but are not meant to be shipped with the application.
+   */
+  default SourcePath getSourcePathToMisc() {
+    return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "misc");
+  }
 }

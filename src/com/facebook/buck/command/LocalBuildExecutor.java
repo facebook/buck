@@ -38,8 +38,8 @@ import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -155,6 +155,11 @@ public class LocalBuildExecutor implements BuildExecutor {
         args.getBuckEventBus(),
         args.getConsole(),
         pathToBuildReport);
+  }
+
+  @Override
+  public CachingBuildEngine getCachingBuildEngine() {
+    return cachingBuildEngine;
   }
 
   @Override

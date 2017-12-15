@@ -24,7 +24,6 @@ java_library(
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:packaged_resource",
         "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

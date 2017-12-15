@@ -47,10 +47,10 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -84,11 +84,13 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -117,7 +119,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .getNativeLibDirectories()
             .stream()
             .map(sourcePathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         Matchers.contains(ndkLibrary.getLibraryPath()));
   }
 
@@ -160,11 +162,13 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
             nativePlatforms,
             ImmutableSet.of(TargetCpuType.ARMV7),
@@ -205,7 +209,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
                 .getStrippedObjectDescriptions()
                 .stream()
                 .map(StrippedObjectDescription::getSourcePath)
-                .collect(MoreCollectors.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     assertThat(
         stripRules,
         Matchers.contains(
@@ -230,11 +234,13 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -273,11 +279,13 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -354,11 +362,13 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
             nativePlatforms,
             ImmutableSet.of(TargetCpuType.ARMV7),

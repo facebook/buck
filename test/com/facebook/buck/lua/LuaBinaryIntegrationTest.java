@@ -46,6 +46,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -190,7 +191,7 @@ public class LuaBinaryIntegrationTest {
     workspace.writeContentsToPath("require 'os'\nos.exit(5)", "simple.lua");
     workspace.runBuckBuild("//:simple").assertSuccess();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//:simple");
-    assertThat(result.getExitCode(), Matchers.equalTo(5));
+    assertEquals(result.getExitCode(), ExitCode.BUILD_ERROR);
   }
 
   @Test

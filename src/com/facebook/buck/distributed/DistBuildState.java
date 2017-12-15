@@ -22,11 +22,13 @@ import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
+import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DistBuildCellParams;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
@@ -49,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import org.pf4j.PluginManager;
 
 /** Saves and restores the state of a build to/from a thrift data structure. */
 public class DistBuildState {
@@ -100,6 +103,8 @@ public class DistBuildState {
       Cell rootCell,
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
+      ExecutableFinder executableFinder,
+      PluginManager pluginManager,
       ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
@@ -135,11 +140,17 @@ public class DistBuildState {
       cellParams.put(
           cellRoot,
           DistBuildCellParams.of(
-              buckConfig, projectFilesystem, cellName, environment, processExecutor));
+              buckConfig,
+              projectFilesystem,
+              cellName,
+              environment,
+              processExecutor,
+              executableFinder,
+              pluginManager));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 
-    CellProvider cellProvider = CellProvider.createForDistributedBuild(cellParams.build());
+    CellProvider cellProvider = CellProviderFactory.createForDistributedBuild(cellParams.build());
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));

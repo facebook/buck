@@ -40,6 +40,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -126,8 +127,8 @@ public class QueryOutputsMacroExpanderTest {
             ruleResolver,
             ImmutableList.of("'set(//exciting:dep)'"));
     assertEquals(
-        ImmutableList.of(dep),
-        expander.extractBuildTimeDeps(
+        ImmutableSortedSet.of(dep.getSourcePathToOutput()),
+        expander.extractRuleKeyAppendables(
             dep.getBuildTarget(),
             cellNames,
             ruleResolver,
@@ -140,8 +141,8 @@ public class QueryOutputsMacroExpanderTest {
             ruleResolver,
             ImmutableList.of("'classpath(//exciting:target)'"));
     assertEquals(
-        ImmutableList.of(dep, rule),
-        expander.extractBuildTimeDeps(
+        ImmutableSortedSet.of(dep.getSourcePathToOutput(), rule.getSourcePathToOutput()),
+        expander.extractRuleKeyAppendables(
             dep.getBuildTarget(),
             cellNames,
             ruleResolver,

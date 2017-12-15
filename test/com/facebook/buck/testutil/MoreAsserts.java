@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -210,7 +209,7 @@ public final class MoreAsserts {
         observedSteps
             .stream()
             .map(step -> step.getDescription(executionContext))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     assertListEquals(userMessage, expectedStepDescriptions, commands);
   }
 
@@ -224,7 +223,7 @@ public final class MoreAsserts {
         observedSteps
             .stream()
             .map(step -> step.getShortName())
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     assertListEquals(userMessage, expectedStepDescriptions, commands);
   }
 

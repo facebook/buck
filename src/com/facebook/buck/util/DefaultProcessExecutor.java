@@ -315,6 +315,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       // to the process. This means either the user killed the process or a step failed
       // causing us to kill all other running steps. Neither of these is an exceptional
       // situation.
+      LOG.warn(e, "Process threw exception when being executed.");
       return new Result(1);
     } finally {
       process.destroy();

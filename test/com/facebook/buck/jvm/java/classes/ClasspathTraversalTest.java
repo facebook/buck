@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -46,7 +46,7 @@ public class ClasspathTraversalTest {
   private Map<FileLike, String> traverse(Collection<File> files)
       throws InterruptedException, IOException {
     Collection<Path> paths =
-        files.stream().map(File::toPath).collect(MoreCollectors.toImmutableList());
+        files.stream().map(File::toPath).collect(ImmutableList.toImmutableList());
     final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
     ProjectFilesystem filesystem =

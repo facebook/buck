@@ -1,0 +1,21 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/python:rules",
+        "//src/com/facebook/buck/python/toolchain:toolchain",
+        "//src/com/facebook/buck/util:process_executor",
+    ],
+    tests = [
+        "//test/com/facebook/buck/python/toolchain/impl:impl",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/rules:command_tool",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/util:exceptions",
+    ],
+)

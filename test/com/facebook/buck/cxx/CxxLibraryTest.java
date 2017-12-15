@@ -47,6 +47,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -101,8 +102,10 @@ public class CxxLibraryTest {
                 CxxSymlinkTreeHeaders.builder()
                     .setBuildTarget(publicHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                    .putNameToPathMap(
-                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget))
+                    .setNameToPathMap(
+                        ImmutableSortedMap.of(
+                            Paths.get("header.h"),
+                            DefaultBuildTargetSourcePath.of(publicHeaderTarget)))
                     .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
                     .setIncludeRoot(
                         Either.ofRight(
@@ -122,8 +125,10 @@ public class CxxLibraryTest {
                     .setIncludeRoot(
                         Either.ofRight(
                             DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
-                    .putNameToPathMap(
-                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget))
+                    .setNameToPathMap(
+                        ImmutableSortedMap.of(
+                            Paths.get("header.h"),
+                            DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
                     .build())
             .build();
     assertEquals(
@@ -185,8 +190,8 @@ public class CxxLibraryTest {
             projectFilesystem,
             params,
             ruleResolver,
-            CxxDeps.EMPTY,
-            CxxDeps.EMPTY,
+            CxxDeps.of(),
+            CxxDeps.of(),
             /* headerOnly */ x -> true,
             Functions.constant(StringArg.from("-ldl")),
             /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),
