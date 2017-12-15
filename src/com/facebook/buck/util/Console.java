@@ -125,4 +125,10 @@ public class Console {
   private void printBuildFailureInternal(String failureMessage) {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
+
+  /** Prints error message to console in red, also sends a warning to log */
+  public void printFailure(Throwable t, String failureMessage) {
+    LOG.warn(t, failureMessage);
+    ansi.printlnHighlightedFailureText(stdErr, failureMessage);
+  }
 }

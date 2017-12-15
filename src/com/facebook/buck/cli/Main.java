@@ -422,7 +422,7 @@ public final class Main {
       console.printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (CommandLineException e) {
       exitCode = ExitCode.COMMANDLINE_ERROR;
-      console.printBuildFailure(e.getHumanReadableErrorMessage());
+      console.printFailure(e, "BAD ARGUMENTS: " + e.getHumanReadableErrorMessage());
     } catch (HumanReadableException e) {
       exitCode = ExitCode.BUILD_ERROR;
       console.printBuildFailure(e.getHumanReadableErrorMessage());
@@ -541,18 +541,12 @@ public final class Main {
 
     // Parse command line arguments
     BuckCommand command = new BuckCommand();
+    // Parse the command line args.
+    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
     try {
-      // Parse the command line args.
-      AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
       cmdLineParser.parseArgument(args);
     } catch (CmdLineException e) {
-      // Can't go through the console for prettification since that needs the BuckConfig, and that
-      // needs to be created with the overrides, which are parsed from the command line here, which
-      // required the console to print the message that parsing has failed. So just write to stderr
-      // and be done with it.
-      stdErr.println(e.getLocalizedMessage());
-      stdErr.println("For help see 'buck --help'.");
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException(e, e.getLocalizedMessage() + "\nFor help see 'buck --help'.");
     }
 
     // Return help strings fast if the command is a help request.
