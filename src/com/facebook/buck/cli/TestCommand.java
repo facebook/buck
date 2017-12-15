@@ -25,7 +25,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -537,7 +536,7 @@ public class TestCommand extends BuildCommand {
           targetGraphAndBuildTargets = toVersionedTargetGraph(params, targetGraphAndBuildTargets);
         }
 
-      } catch (BuildTargetException | BuildFileParseException | VersionException e) {
+      } catch (BuildFileParseException | VersionException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

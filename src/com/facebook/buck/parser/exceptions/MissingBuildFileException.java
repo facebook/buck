@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,15 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.parser.exceptions;
 
-import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
+import java.nio.file.Path;
 
+/** Thrown when build file is missing for the provided target */
 @SuppressWarnings("serial")
-public abstract class BuildTargetException extends Exception
-    implements ExceptionWithHumanReadableMessage {
+public class MissingBuildFileException extends BuildTargetException {
 
-  public BuildTargetException(String message) {
-    super(message);
+  public MissingBuildFileException(String spec, Path buildFile) {
+    super(String.format("No build file at %s when resolving target %s.", buildFile, spec));
+  }
+
+  @Override
+  public String getHumanReadableErrorMessage() {
+    return getMessage();
   }
 }

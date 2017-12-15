@@ -29,7 +29,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
@@ -38,6 +37,7 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildState.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
@@ -313,7 +313,7 @@ public class TargetsCommand extends AbstractCommand {
       }
 
       return runWithExecutor(params, executor);
-    } catch (BuildTargetException | BuildFileParseException | CycleException | VersionException e) {
+    } catch (BuildFileParseException | CycleException | VersionException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

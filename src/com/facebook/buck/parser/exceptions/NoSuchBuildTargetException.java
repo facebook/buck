@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.parser.exceptions;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import java.nio.file.Path;
 
+/** Thrown when build target definition is missing in corresponding build file */
 @SuppressWarnings("serial")
 public class NoSuchBuildTargetException extends BuildTargetException {
 
@@ -32,7 +32,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
   }
 
   /** @param buildTarget the failing {@link com.facebook.buck.model.BuildTarget} */
-  static NoSuchBuildTargetException createForMissingBuildRule(
+  public static NoSuchBuildTargetException createForMissingBuildRule(
       BuildTarget buildTarget, Path buckFilePath) {
     String message =
         String.format(

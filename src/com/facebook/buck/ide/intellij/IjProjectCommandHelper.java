@@ -31,7 +31,6 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -39,6 +38,7 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -148,7 +148,7 @@ public class IjProjectCommandHelper {
                       PerBuildState.SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
       projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
     } catch (HumanReadableException e) {
@@ -172,10 +172,7 @@ public class IjProjectCommandHelper {
     try {
       targetGraphAndTargets =
           createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty(), executor);
-    } catch (BuildFileParseException
-        | TargetGraph.NoSuchNodeException
-        | BuildTargetException
-        | VersionException e) {
+    } catch (BuildFileParseException | TargetGraph.NoSuchNodeException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
     } catch (HumanReadableException e) {

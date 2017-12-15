@@ -23,7 +23,6 @@ import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.StackedDownloader;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -97,7 +96,7 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckConfig().getActionGraphParallelizationMode(),
                     params.getBuckConfig().getShouldInstrumentActionGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
-      } catch (BuildTargetException | BuildFileParseException | VersionException e) {
+      } catch (BuildFileParseException | VersionException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

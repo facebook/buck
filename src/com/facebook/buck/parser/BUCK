@@ -101,7 +101,6 @@ java_library(
         "BuildTargetParseException.java",
         "BuildTargetParser.java",
         "BuildTargetPatternParser.java",
-        "NoSuchBuildTargetException.java",
     ],
     exported_deps = [
         "//src/com/facebook/buck/model:model",

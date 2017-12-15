@@ -21,7 +21,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -108,7 +107,7 @@ public class AuditInputCommand extends AbstractCommand {
                   getEnableParserProfiling(),
                   pool.getListeningExecutorService(),
                   targets);
-    } catch (BuildFileParseException | BuildTargetException e) {
+    } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

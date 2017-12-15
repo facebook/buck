@@ -24,7 +24,6 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -119,7 +118,7 @@ public class UninstallCommand extends AbstractCommand {
                   params.getBuckConfig(),
                   params.getRuleKeyConfiguration())
               .getResolver();
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

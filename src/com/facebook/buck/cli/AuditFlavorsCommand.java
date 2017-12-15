@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UserFlavor;
@@ -105,7 +104,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
                     target);
         builder.add(targetNode);
       }
-    } catch (BuildFileParseException | BuildTargetException e) {
+    } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

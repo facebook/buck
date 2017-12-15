@@ -29,11 +29,11 @@ import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
-import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
@@ -286,7 +286,7 @@ public class Parser {
           TargetNode<?, ?> node;
           try {
             node = state.getTargetNode(target);
-          } catch (BuildFileParseException | BuildTargetException e) {
+          } catch (BuildFileParseException e) {
             throw new RuntimeException(e);
           }
 
@@ -299,8 +299,6 @@ public class Parser {
             try {
               state.getTargetNode(dep);
             } catch (BuildFileParseException e) {
-              throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
-            } catch (BuildTargetException e) {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             } catch (HumanReadableException e) {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);

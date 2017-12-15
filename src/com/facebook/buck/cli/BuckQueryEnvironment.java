@@ -27,11 +27,11 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
@@ -163,7 +163,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     } catch (IOException e) {
       throw new QueryException(
           e, "Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error in preloading targets. %s", e.getMessage());
     }
   }
@@ -196,7 +196,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     }
     try {
       return parserState.getTargetNode(((QueryBuildTarget) target).getBuildTarget());
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
     }
   }
@@ -318,7 +318,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       }
       propagateCauseIfInstanceOf(e, ExecutionException.class);
       propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-    } catch (BuildFileParseException | BuildTargetException | InterruptedException e) {
+    } catch (BuildFileParseException | InterruptedException e) {
       throw new QueryException(
           e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
@@ -504,10 +504,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         return ImmutableSet.copyOf(
             Iterables.concat(
                 evaluator.resolveTargetPatterns(ImmutableList.of(target), executor).values()));
-      } catch (BuildTargetException
-          | BuildFileParseException
-          | InterruptedException
-          | IOException e) {
+      } catch (BuildFileParseException | InterruptedException | IOException e) {
         throw new QueryException(e, "Error in resolving targets matching %s", target);
       }
     }

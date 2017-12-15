@@ -27,7 +27,7 @@ import java.nio.file.Path;
 @SuppressWarnings("serial")
 public class BuildFileParseException extends HumanReadableException {
 
-  private BuildFileParseException(String message) {
+  protected BuildFileParseException(String message) {
     super(message);
   }
 
