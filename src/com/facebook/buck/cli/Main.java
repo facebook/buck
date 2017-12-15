@@ -77,6 +77,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
@@ -398,6 +399,9 @@ public final class Main {
     } catch (OutOfMemoryError e) {
       exitCode = ExitCode.FATAL_OOM;
       LOG.error(e, "Out of memory");
+    } catch (BuildFileParseException e) {
+      exitCode = ExitCode.PARSE_ERROR;
+      makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (HumanReadableException e) {
       exitCode = ExitCode.BUILD_ERROR;
       makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());

@@ -637,18 +637,14 @@ public class BuildCommand extends AbstractCommand {
         new DistBuildTargetGraphCodec(
             parserTargetNodeFactory,
             input -> {
-              try {
-                return params
-                    .getParser()
-                    .getRawTargetNode(
-                        params.getBuckEventBus(),
-                        params.getCell().getCell(input.getBuildTarget()),
-                        false /* enableProfiling */,
-                        executorService,
-                        input);
-              } catch (BuildFileParseException e) {
-                throw new RuntimeException(e);
-              }
+              return params
+                  .getParser()
+                  .getRawTargetNode(
+                      params.getBuckEventBus(),
+                      params.getCell().getCell(input.getBuildTarget()),
+                      false /* enableProfiling */,
+                      executorService,
+                      input);
             },
             targetGraphAndBuildTargets
                 .getBuildTargets()

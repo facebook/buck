@@ -498,7 +498,7 @@ public class XCodeProjectCommandHelper {
               .stream()
               .flatMap(Collection::stream)
               .collect(ImmutableSet.toImmutableSet());
-    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
+    } catch (BuildTargetException | HumanReadableException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return FocusedModuleTargetMatcher.noFocus();
     }
