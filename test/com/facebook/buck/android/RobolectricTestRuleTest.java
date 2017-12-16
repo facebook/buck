@@ -108,7 +108,7 @@ public class RobolectricTestRuleTest {
     for (int i = 0; i < 10; i++) {
       String path = "java/src/com/facebook/base/" + i + "/res";
       filesystem.mkdirs(Paths.get(path).resolve("values"));
-      resDepsBuilder.add(new ResourceRule(FakeSourcePath.of(path)));
+      resDepsBuilder.add(new ResourceRule(FakeSourcePath.of(filesystem, path)));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
