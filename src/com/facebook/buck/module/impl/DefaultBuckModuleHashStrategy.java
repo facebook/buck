@@ -17,22 +17,23 @@
 package com.facebook.buck.module.impl;
 
 import com.facebook.buck.module.BuckModuleHashStrategy;
+import com.facebook.buck.module.BuckModuleManager;
 
 public class DefaultBuckModuleHashStrategy implements BuckModuleHashStrategy {
 
-  private final BuckModuleHashProvider hashProvider;
+  private final BuckModuleManager buckModuleManager;
 
-  public DefaultBuckModuleHashStrategy(BuckModuleHashProvider hashProvider) {
-    this.hashProvider = hashProvider;
+  public DefaultBuckModuleHashStrategy(BuckModuleManager buckModuleManager) {
+    this.buckModuleManager = buckModuleManager;
   }
 
   @Override
   public boolean needToAddModuleHashToRuleKey(Class<?> cls) {
-    return hashProvider.canProvideModuleHash(cls);
+    return buckModuleManager.isClassInModule(cls);
   }
 
   @Override
   public String getModuleHash(Class<?> cls) {
-    return hashProvider.getModuleHash(cls);
+    return buckModuleManager.getModuleHash(cls);
   }
 }

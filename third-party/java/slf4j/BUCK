@@ -25,6 +25,7 @@ prebuilt_jar(
     source_jar = "slf4j-jdk14-1.7.5-sources.jar",
     visibility = [
         "//src-gen:thrift",
+        "//test/...",
     ],
     deps = [
         ":slf4j-api",

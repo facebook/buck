@@ -13,7 +13,7 @@ java_library(
 
 java_binary(
     name = "moduleclass-jar",
-    main_class = "com.facebook.buck.module.impl.moduleclass.ModuleClassTest",
+    main_class = "com.facebook.buck.module.impl.modulewithdeps.ModuleWithDependenciesTest",
     deps = [
         ":moduleclass",
         "//third-party/java/slf4j:slf4j",
@@ -30,7 +30,18 @@ genrule(
     out = "test_module.jar",
     cmd = " ".join([
         "$(exe //py/buck/zip:append_with_copy)",
-        "$(location {}) $OUT".format("//test/com/facebook/buck/module/impl/moduleclass/test_module:test_module-module"),
+        "$(location {}) $OUT".format("//test/com/facebook/buck/module/impl/modulewithdeps/test_module:test_module-module"),
+        "META-INF/module-binary-hash.txt $(location :{})".format("known-hash.txt"),
+    ]),
+)
+
+# Replace real hash in the module jar with a known value
+genrule(
+    name = "dependent_module-jar-with-known-hash",
+    out = "dependent_module.jar",
+    cmd = " ".join([
+        "$(exe //py/buck/zip:append_with_copy)",
+        "$(location {}) $OUT".format("//test/com/facebook/buck/module/impl/modulewithdeps/dependent_module:dependent_module-module"),
         "META-INF/module-binary-hash.txt $(location :{})".format("known-hash.txt"),
     ]),
 )
@@ -39,8 +50,8 @@ genrule(
 genrule(
     name = "copy-modules",
     out = "modules",
-    cmd = "mkdir -p $OUT; cp $(location :test_module-jar-with-known-hash) $OUT",
-    cmd_exe = "mkdir $OUT && copy $(location :test_module-jar-with-known-hash) $OUT",
+    cmd = "mkdir -p $OUT; cp $(location :test_module-jar-with-known-hash) $(location :dependent_module-jar-with-known-hash) $OUT",
+    cmd_exe = "mkdir $OUT && copy $(location :test_module-jar-with-known-hash) $OUT && copy $(location :dependent_module-jar-with-known-hash) $OUT",
 )
 
 # Running tests as a shell script to reconstruct the layout of modules and how they are loaded

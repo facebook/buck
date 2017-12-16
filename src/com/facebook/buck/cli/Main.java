@@ -610,7 +610,7 @@ public final class Main {
     }
 
     RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(buckConfig);
+        ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
 
     String previousBuckCoreKey;
     try (Closer closeables = Closer.create()) {

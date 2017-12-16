@@ -20,8 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.module.impl.BuckModuleHashProvider;
+import com.facebook.buck.module.BuckModuleManager;
+import com.facebook.buck.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.module.impl.DefaultBuckModuleManager;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import java.io.IOException;
+import org.pf4j.PluginManager;
 
 public class NonModuleClassTest {
 
@@ -30,18 +34,21 @@ public class NonModuleClassTest {
   }
 
   private static void testBuckModuleHashProvider() {
-    BuckModuleHashProvider hashProvider = new BuckModuleHashProvider();
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    BuckModuleJarHashProvider hashProvider = new BuckModuleJarHashProvider();
+    BuckModuleManager moduleManager = new DefaultBuckModuleManager(pluginManager, hashProvider);
 
     try {
-      hashProvider.getModuleHash(NonModuleClassTest.class);
+      moduleManager.getModuleHash(NonModuleClassTest.class);
       fail("Should throw IllegalStateException");
     } catch (IllegalStateException e) {
       assertEquals(
-          "Could not load module binary hash for class class "
-              + "com.facebook.buck.module.impl.nonmoduleclass.NonModuleClassTest",
+          "Requested module hash for class "
+              + "com.facebook.buck.module.impl.nonmoduleclass.NonModuleClassTest but "
+              + "its class loader is not PluginClassCloader",
           e.getMessage());
     }
 
-    assertFalse(hashProvider.canProvideModuleHash(NonModuleClassTest.class));
+    assertFalse(moduleManager.isClassInModule(NonModuleClassTest.class));
   }
 }

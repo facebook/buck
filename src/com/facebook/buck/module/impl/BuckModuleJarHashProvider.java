@@ -20,33 +20,30 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import org.pf4j.PluginClassLoader;
+import org.pf4j.PluginWrapper;
 
-public class BuckModuleHashProvider {
+public class BuckModuleJarHashProvider {
 
   private static final String MODULE_BINARY_HASH_LOCATION = "META-INF/module-binary-hash.txt";
 
-  public boolean canProvideModuleHash(Class<?> cls) {
-    return cls.getClassLoader() instanceof PluginClassLoader;
-  }
-
-  public String getModuleHash(Class<?> cls) {
-    return getModuleJarBinaryHash(cls);
-  }
-
-  private String getModuleJarBinaryHash(Class<?> cls) {
-    ClassLoader classLoader = cls.getClassLoader();
-
-    URL binaryHashLocation = classLoader.getResource(MODULE_BINARY_HASH_LOCATION);
+  /** @return the hash of a jar that contains a Buck module. */
+  public String getModuleHash(PluginWrapper modulePluginWrapper) {
+    URL binaryHashLocation =
+        modulePluginWrapper.getPluginClassLoader().getResource(MODULE_BINARY_HASH_LOCATION);
 
     if (binaryHashLocation == null) {
-      throw new IllegalStateException("Could not load module binary hash for class " + cls);
+      throw new IllegalStateException(createFailureMessage(modulePluginWrapper));
     }
 
     try {
       return Resources.toString(binaryHashLocation, Charset.defaultCharset());
     } catch (IOException e) {
-      throw new RuntimeException(String.format("Can't load module hash for class %s", cls), e);
+      throw new RuntimeException(createFailureMessage(modulePluginWrapper), e);
     }
+  }
+
+  private String createFailureMessage(PluginWrapper modulePluginWrapper) {
+    return String.format(
+        "Could not load module binary hash for module loaded in plugin %s", modulePluginWrapper);
   }
 }

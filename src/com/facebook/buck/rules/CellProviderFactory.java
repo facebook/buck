@@ -141,7 +141,7 @@ public class CellProviderFactory {
                         cellPathResolver);
 
                 RuleKeyConfiguration ruleKeyConfiguration =
-                    ConfigRuleKeyConfigurationFactory.create(buckConfig);
+                    ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
 
                 ToolchainProvider toolchainProvider =
                     new DefaultToolchainProvider(
@@ -173,7 +173,7 @@ public class CellProviderFactory {
                   .isPresent(),
               "Root cell should be nameless");
           RuleKeyConfiguration ruleKeyConfiguration =
-              ConfigRuleKeyConfigurationFactory.create(rootConfig);
+              ConfigRuleKeyConfigurationFactory.create(rootConfig, pluginManager);
           ToolchainProvider toolchainProvider =
               new DefaultToolchainProvider(
                   pluginManager,
@@ -204,7 +204,8 @@ public class CellProviderFactory {
                   DistBuildCellParams cellParam =
                       Preconditions.checkNotNull(cellParams.get(cellPath));
                   RuleKeyConfiguration ruleKeyConfiguration =
-                      ConfigRuleKeyConfigurationFactory.create(cellParam.getConfig());
+                      ConfigRuleKeyConfigurationFactory.create(
+                          cellParam.getConfig(), cellParam.getPluginManager());
 
                   ToolchainProvider toolchainProvider =
                       new DefaultToolchainProvider(

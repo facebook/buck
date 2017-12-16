@@ -20,9 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.module.impl.BuckModuleHashProvider;
+import com.facebook.buck.module.BuckModuleManager;
+import com.facebook.buck.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.module.impl.TestExtension;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.util.List;
 import org.pf4j.PluginManager;
@@ -43,11 +47,14 @@ public class ModuleClassTest {
   }
 
   private static void testBuckModuleHashProvider(TestExtension testExtension) {
-    BuckModuleHashProvider hashProvider = new BuckModuleHashProvider();
-    assertEquals(
-        "some content that never changes", hashProvider.getModuleHash(testExtension.getClass()));
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    BuckModuleJarHashProvider hashProvider = new BuckModuleJarHashProvider();
+    BuckModuleManager moduleManager = new DefaultBuckModuleManager(pluginManager, hashProvider);
+    Hasher hasher = Hashing.murmur3_128().newHasher();
+    hasher.putUnencodedChars("some content that never changes");
+    assertEquals(hasher.hash().toString(), moduleManager.getModuleHash(testExtension.getClass()));
 
-    assertTrue(hashProvider.canProvideModuleHash(testExtension.getClass()));
-    assertFalse(hashProvider.canProvideModuleHash(ModuleClassTest.class));
+    assertTrue(moduleManager.isClassInModule(testExtension.getClass()));
+    assertFalse(moduleManager.isClassInModule(ModuleClassTest.class));
   }
 }

@@ -3,6 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/module/impl:impl",
+        "//src/com/facebook/buck/plugin/impl:impl",
         "//third-party/java/junit:junit",
     ],
 )
@@ -12,6 +13,7 @@ java_binary(
     main_class = "com.facebook.buck.module.impl.nonmoduleclass.NonModuleClassTest",
     deps = [
         ":nonmoduleclass",
+        "//third-party/java/slf4j:slf4j",
     ],
 )
 

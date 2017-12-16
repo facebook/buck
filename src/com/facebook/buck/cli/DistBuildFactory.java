@@ -133,7 +133,8 @@ public abstract class DistBuildFactory {
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
                 .setRuleKeyConfiguration(
-                    ConfigRuleKeyConfigurationFactory.create(state.getRemoteRootCellConfig()))
+                    ConfigRuleKeyConfigurationFactory.create(
+                        state.getRemoteRootCellConfig(), params.getPluginManager()))
                 .setConsole(params.getConsole())
                 .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)
