@@ -53,7 +53,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
@@ -327,7 +326,17 @@ public class BuildCommand extends AbstractCommand {
 
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
-  public static BuildJobState getDistBuildState(
+  /**
+   * Create the serializable {@link BuildJobState} for distributed builds.
+   *
+   * @param buildTargets - Top level targets.
+   * @param params - Client side parameters.
+   * @param executor - Executor for async ops.
+   * @return - New instance of serializable {@link BuildJobState}.
+   * @throws InterruptedException
+   * @throws IOException
+   */
+  public static ListenableFuture<BuildJobState> getAsyncDistBuildState(
       List<String> buildTargets,
       CommandRunnerParams params,
       WeightedListeningExecutorService executor)
@@ -342,7 +351,7 @@ public class BuildCommand extends AbstractCommand {
       throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
 
-    return buildCommand.computeDistBuildState(params, graphs, executor).getFirst();
+    return buildCommand.computeDistBuildState(params, graphs, executor).asyncJobState;
   }
 
   @Override
@@ -460,7 +469,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params, CommandThreadManager commandThreadManager)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ExitCode exitCode = ExitCode.SUCCESS;
-    ActionAndTargetGraphs graphs = null;
+    final ActionAndTargetGraphs graphs;
     if (useDistributedBuild) {
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       ClientStatsTracker distBuildClientStatsTracker =
@@ -468,17 +477,10 @@ public class BuildCommand extends AbstractCommand {
 
       distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
-
       graphs =
           createGraphs(
               params, commandThreadManager.getListeningExecutorService(), Optional.empty());
-
       distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
-
-      Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
-          computeDistBuildState(params, graphs, commandThreadManager.getListeningExecutorService());
-      BuildJobState jobState = stateAndCells.getFirst();
-      DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
 
       try {
         exitCode =
@@ -489,8 +491,6 @@ public class BuildCommand extends AbstractCommand {
                 commandThreadManager.getWeightedListeningExecutorService(),
                 params.getCell().getFilesystem(),
                 params.getFileHashCache(),
-                jobState,
-                distBuildCellIndexer,
                 distBuildClientStatsTracker);
       } catch (Throwable ex) {
         distBuildClientStatsTracker.setBuckClientError(true);
@@ -609,7 +609,7 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private Pair<BuildJobState, DistBuildCellIndexer> computeDistBuildState(
+  private AsyncJobStateAndCells computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
       final ListeningExecutorService executorService)
@@ -661,13 +661,19 @@ public class BuildCommand extends AbstractCommand {
             params.getRuleKeyConfiguration(),
             params.getCell());
 
-    return new Pair<>(
-        DistBuildState.dump(
-            cellIndexer,
-            distributedBuildFileHashes,
-            targetGraphCodec,
-            targetGraphAndBuildTargets.getTargetGraph(),
-            buildTargets),
+    return new AsyncJobStateAndCells(
+        executorService.submit(
+            () -> {
+              BuildJobState state =
+                  DistBuildState.dump(
+                      cellIndexer,
+                      distributedBuildFileHashes,
+                      targetGraphCodec,
+                      targetGraphAndBuildTargets.getTargetGraph(),
+                      buildTargets);
+              LOG.info("Finished computing serializable distributed build state.");
+              return state;
+            }),
         cellIndexer);
   }
 
@@ -678,14 +684,28 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executorService,
       ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
-      BuildJobState jobState,
-      DistBuildCellIndexer distBuildCellIndexer,
       ClientStatsTracker distBuildClientStats)
       throws IOException, InterruptedException {
     Preconditions.checkNotNull(distBuildClientEventListener);
 
+    BuildEvent.DistBuildStarted started = null;
+    if (distributedBuildStateFile == null) {
+      started = BuildEvent.distBuildStarted();
+      params.getBuckEventBus().post(started);
+    }
+
+    LOG.info("Starting async file hash computation and job state serialization.");
+    AsyncJobStateAndCells stateAndCells = computeDistBuildState(params, graphs, executorService);
+    ListenableFuture<BuildJobState> asyncJobState = stateAndCells.asyncJobState;
+    DistBuildCellIndexer distBuildCellIndexer = stateAndCells.distBuildCellIndexer;
+
     if (distributedBuildStateFile != null) {
-      Path stateDumpPath = Paths.get(distributedBuildStateFile);
+      BuildJobState jobState;
+      try {
+        jobState = asyncJobState.get();
+      } catch (ExecutionException e) {
+        throw new RuntimeException("Failed to compute DistBuildState.", e);
+      }
 
       // Read all files inline if we're dumping state to a file.
       for (BuildJobStateFileHashes cell : jobState.getFileHashes()) {
@@ -699,12 +719,10 @@ public class BuildCommand extends AbstractCommand {
         }
       }
 
+      Path stateDumpPath = Paths.get(distributedBuildStateFile);
       BuildJobStateSerializer.serialize(jobState, filesystem.newFileOutputStream(stateDumpPath));
       return ExitCode.SUCCESS;
     }
-
-    BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
-    params.getBuckEventBus().post(started);
 
     int distBuildExitCode = DIST_BUILD_REMOTE_STEP_FAILED_EXIT_CODE;
     BuildController.ExecutionResult distBuildResult;
@@ -726,7 +744,7 @@ public class BuildCommand extends AbstractCommand {
 
         BuildController build =
             new BuildController(
-                jobState,
+                asyncJobState,
                 distBuildCellIndexer,
                 service,
                 distBuildLogStateTracker,
@@ -784,7 +802,8 @@ public class BuildCommand extends AbstractCommand {
         distBuildExitCode = distBuildResult.exitCode;
       } finally {
         BuildEvent.DistBuildFinished finished =
-            BuildEvent.distBuildFinished(started, ExitCode.map(distBuildExitCode));
+            BuildEvent.distBuildFinished(
+                Preconditions.checkNotNull(started), ExitCode.map(distBuildExitCode));
         params.getBuckEventBus().post(finished);
       }
 
@@ -1122,6 +1141,17 @@ public class BuildCommand extends AbstractCommand {
       listeners.add(distBuildClientEventListener);
     }
     return listeners.build();
+  }
+
+  private static class AsyncJobStateAndCells {
+    final ListenableFuture<BuildJobState> asyncJobState;
+    final DistBuildCellIndexer distBuildCellIndexer;
+
+    AsyncJobStateAndCells(
+        ListenableFuture<BuildJobState> asyncJobState, DistBuildCellIndexer cellIndexer) {
+      this.asyncJobState = asyncJobState;
+      this.distBuildCellIndexer = cellIndexer;
+    }
   }
 
   public static class ActionGraphCreationException extends Exception {

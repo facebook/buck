@@ -32,15 +32,16 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /** Phase before the build. */
 public class PreBuildPhase {
@@ -48,25 +49,25 @@ public class PreBuildPhase {
 
   private final DistBuildService distBuildService;
   private final ClientStatsTracker distBuildClientStats;
-  private final BuildJobState buildJobState;
+  private final ListenableFuture<BuildJobState> asyncJobState;
   private final DistBuildCellIndexer distBuildCellIndexer;
   private final BuckVersion buckVersion;
 
   public PreBuildPhase(
       DistBuildService distBuildService,
       ClientStatsTracker distBuildClientStats,
-      BuildJobState buildJobState,
+      ListenableFuture<BuildJobState> asyncJobState,
       DistBuildCellIndexer distBuildCellIndexer,
       BuckVersion buckVersion) {
     this.distBuildService = distBuildService;
     this.distBuildClientStats = distBuildClientStats;
-    this.buildJobState = buildJobState;
+    this.asyncJobState = asyncJobState;
     this.distBuildCellIndexer = distBuildCellIndexer;
     this.buckVersion = buckVersion;
   }
 
   /** Run all steps required before the build. */
-  public StampedeId runPreDistBuildLocalSteps(
+  public Pair<StampedeId, ListenableFuture<Void>> runPreDistBuildLocalStepsAsync(
       ListeningExecutorService networkExecutorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
@@ -89,28 +90,37 @@ public class PreBuildPhase {
 
     distBuildClientStats.setStampedeId(stampedeId.getId());
     LOG.info("Created job. Build id = " + stampedeId.getId());
-    eventSender.postDistBuildStatusEvent(job, ImmutableList.of(), "UPLOADING DATA");
+
+    eventSender.postDistBuildStatusEvent(job, ImmutableList.of(), "SERIALIZING AND UPLOADING DATA");
 
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
 
-    LOG.info("Uploading local changes.");
     asyncJobs.add(
-        distBuildService.uploadMissingFilesAsync(
-            distBuildCellIndexer.getLocalFilesystemsByCellIndex(),
-            buildJobState.fileHashes,
-            distBuildClientStats,
+        Futures.transform(
+            asyncJobState,
+            jobState -> {
+              LOG.info("Uploading local changes.");
+              return distBuildService.uploadMissingFilesAsync(
+                  distBuildCellIndexer.getLocalFilesystemsByCellIndex(),
+                  jobState.fileHashes,
+                  distBuildClientStats,
+                  networkExecutorService);
+            },
             networkExecutorService));
 
-    LOG.info("Uploading target graph.");
     asyncJobs.add(
-        networkExecutorService.submit(
-            () -> {
+        Futures.transform(
+            asyncJobState,
+            jobState -> {
+              LOG.info("Uploading target graph.");
               try {
-                distBuildService.uploadTargetGraph(buildJobState, stampedeId, distBuildClientStats);
+                distBuildService.uploadTargetGraph(jobState, stampedeId, distBuildClientStats);
               } catch (IOException e) {
                 throw new RuntimeException("Failed to upload target graph with exception.", e);
               }
-            }));
+              return null;
+            },
+            networkExecutorService));
 
     LOG.info("Uploading buck dot-files.");
     asyncJobs.add(
@@ -121,20 +131,31 @@ public class PreBuildPhase {
             distBuildClientStats,
             networkExecutorService));
 
-    try {
-      Futures.allAsList(asyncJobs).get();
-    } catch (ExecutionException e) {
-      LOG.error("Upload failed.");
-      throw new RuntimeException(e);
-    }
-    eventSender.postDistBuildStatusEvent(job, ImmutableList.of(), "STARTING REMOTE BUILD");
+    asyncJobs.add(
+        networkExecutorService.submit(
+            () -> {
+              LOG.info("Setting buck version.");
+              try {
+                distBuildService.setBuckVersion(stampedeId, buckVersion, distBuildClientStats);
+              } catch (IOException e) {
+                throw new RuntimeException("Failed to set buck-version with exception.", e);
+              }
+            }));
 
-    distBuildService.setBuckVersion(stampedeId, buckVersion, distBuildClientStats);
-    LOG.info("Set Buck Version. Build status: " + job.getStatus().toString());
+    ListenableFuture<Void> asyncPrep =
+        Futures.transform(
+            Futures.allAsList(asyncJobs),
+            results -> {
+              LOG.info("Finished async preparation of stampede job.");
+              eventSender.postDistBuildStatusEvent(
+                  job, ImmutableList.of(), "STARTING REMOTE BUILD");
 
-    // Everything is now setup remotely to run the distributed build. No more local prep.
-    this.distBuildClientStats.stopTimer(LOCAL_PREPARATION);
+              // Everything is now setup remotely to run the distributed build. No more local prep.
+              this.distBuildClientStats.stopTimer(LOCAL_PREPARATION);
+              return null;
+            },
+            MoreExecutors.directExecutor());
 
-    return stampedeId;
+    return new Pair<StampedeId, ListenableFuture<Void>>(stampedeId, asyncPrep);
   }
 }

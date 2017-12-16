@@ -25,15 +25,20 @@ import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 
 /** High level controls the distributed build. */
 public class BuildController {
+  private static final Logger LOG = Logger.get(BuildController.class);
   private static final int DEFAULT_STATUS_POLL_INTERVAL_MILLIS = 1000;
 
   private final PreBuildPhase preBuildPhase;
@@ -52,7 +57,7 @@ public class BuildController {
   }
 
   public BuildController(
-      BuildJobState buildJobState,
+      ListenableFuture<BuildJobState> asyncJobState,
       DistBuildCellIndexer distBuildCellIndexer,
       DistBuildService distBuildService,
       LogStateTracker distBuildLogStateTracker,
@@ -67,7 +72,7 @@ public class BuildController {
         new PreBuildPhase(
             distBuildService,
             distBuildClientStats,
-            buildJobState,
+            asyncJobState,
             distBuildCellIndexer,
             buckVersion);
     this.buildPhase =
@@ -88,7 +93,7 @@ public class BuildController {
   }
 
   public BuildController(
-      BuildJobState buildJobState,
+      ListenableFuture<BuildJobState> asyncJobState,
       DistBuildCellIndexer distBuildCellIndexer,
       DistBuildService distBuildService,
       LogStateTracker distBuildLogStateTracker,
@@ -99,7 +104,7 @@ public class BuildController {
       boolean logMaterializationEnabled,
       RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
     this(
-        buildJobState,
+        asyncJobState,
         distBuildCellIndexer,
         distBuildService,
         distBuildLogStateTracker,
@@ -124,9 +129,8 @@ public class BuildController {
       String repository,
       String tenantId)
       throws IOException, InterruptedException {
-    EventSender eventSender = new EventSender(eventBus);
-    StampedeId stampedeId =
-        preBuildPhase.runPreDistBuildLocalSteps(
+    Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture =
+        preBuildPhase.runPreDistBuildLocalStepsAsync(
             networkExecutorService,
             projectFilesystem,
             fileHashCache,
@@ -136,6 +140,17 @@ public class BuildController {
             numberOfMinions,
             repository,
             tenantId);
+
+    ListenableFuture<Void> pendingPrepFuture = stampedeIdAndPendingPrepFuture.getSecond();
+    try {
+      LOG.info("Waiting for pre-build preparation to finish.");
+      pendingPrepFuture.get();
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Stampede preparation failed.", e);
+    }
+
+    EventSender eventSender = new EventSender(eventBus);
+    StampedeId stampedeId = stampedeIdAndPendingPrepFuture.getFirst();
 
     BuildPhase.BuildResult buildResult =
         buildPhase.runDistBuildAndUpdateConsoleStatus(

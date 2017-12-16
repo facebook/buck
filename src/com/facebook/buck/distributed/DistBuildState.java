@@ -55,7 +55,6 @@ import org.pf4j.PluginManager;
 
 /** Saves and restores the state of a build to/from a thrift data structure. */
 public class DistBuildState {
-
   private final BuildJobState remoteState;
   private final ImmutableBiMap<Integer, Cell> cells;
   private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
@@ -94,6 +93,7 @@ public class DistBuildState {
     for (BuildTarget target : topLevelTargets) {
       jobState.addToTopLevelTargets(target.getFullyQualifiedName());
     }
+
     return jobState;
   }
 
