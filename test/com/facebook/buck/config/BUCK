@@ -6,6 +6,7 @@ standard_java_test(
     deps = [
         ":FakeBuckConfig",
         ":testutil",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",

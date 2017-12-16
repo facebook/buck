@@ -16,10 +16,6 @@
 
 package com.facebook.buck.toolchain.impl;
 
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
-import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
-import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;
@@ -70,12 +66,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   ImmutableList<ToolchainDescriptor<?>> DEFAULT_TOOLCHAIN_DESCRIPTORS =
       ImmutableList.of(
-          ToolchainDescriptor.of(
-              AndroidNdk.DEFAULT_NAME, AndroidNdk.class, AndroidNdkFactory.class),
-          ToolchainDescriptor.of(
-              NdkCxxPlatformsProvider.DEFAULT_NAME,
-              NdkCxxPlatformsProvider.class,
-              NdkCxxPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               SwiftPlatformsProvider.DEFAULT_NAME,
               SwiftPlatformsProvider.class,
