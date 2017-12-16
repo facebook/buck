@@ -14,16 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.plugin;
+package com.facebook.buck.plugin.impl;
 
-import org.pf4j.CompoundPluginDescriptorFinder;
-import org.pf4j.DefaultPluginManager;
-import org.pf4j.ExtensionFinder;
-import org.pf4j.JarPluginLoader;
-import org.pf4j.ManifestPluginDescriptorFinder;
-import org.pf4j.PluginLoader;
 import org.pf4j.PluginManager;
-import org.pf4j.VersionManager;
 
 /**
  * Creates instances of {@link PluginManager} that are able to find extensions in Buck.
@@ -32,32 +25,9 @@ import org.pf4j.VersionManager;
  */
 public class BuckPluginManagerFactory {
 
-  private static class BuckPluginManager extends DefaultPluginManager {
-    @Override
-    protected ExtensionFinder createExtensionFinder() {
-      return new BuckExtensionFinder(this);
-    }
-
-    @Override
-    protected CompoundPluginDescriptorFinder createPluginDescriptorFinder() {
-      return new CompoundPluginDescriptorFinder().add(new ManifestPluginDescriptorFinder());
-    }
-
-    @Override
-    protected PluginLoader createPluginLoader() {
-      return new JarPluginLoader(this);
-    }
-
-    @Override
-    protected VersionManager createVersionManager() {
-      // Buck modules do not support versions
-      return (__, ___) -> true;
-    }
-  }
-
   /** Creates a {@link PluginManager} and loads plugins. */
   public static PluginManager createPluginManager() {
-    PluginManager pluginManager = new BuckPluginManager();
+    PluginManager pluginManager = new DefaultBuckPluginManager();
     pluginManager.loadPlugins();
     pluginManager.startPlugins();
 

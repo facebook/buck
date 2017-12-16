@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.module.impl.BuckModuleHashProvider;
 import com.facebook.buck.module.impl.TestExtension;
-import com.facebook.buck.plugin.BuckPluginManagerFactory;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import java.io.IOException;
 import java.util.List;
 import org.pf4j.PluginManager;
