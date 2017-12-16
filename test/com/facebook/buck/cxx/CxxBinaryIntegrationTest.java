@@ -1504,7 +1504,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("clean").assertSuccess();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetWasFetchedFromCache(target.toString());
+    buildLog.assertTargetBuiltLocally(target.toString());
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
   }
 

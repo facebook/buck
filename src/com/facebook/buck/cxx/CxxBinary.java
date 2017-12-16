@@ -155,6 +155,11 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
   }
 
+  @Override
+  public boolean isCacheable() {
+    return false; // CxxBinary is a wrapper rule, and takes < 1ms to complete.
+  }
+
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
