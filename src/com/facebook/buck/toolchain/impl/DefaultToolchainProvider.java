@@ -16,10 +16,10 @@
 
 package com.facebook.buck.toolchain.impl;
 
-import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
-import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkFactory;
+import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;

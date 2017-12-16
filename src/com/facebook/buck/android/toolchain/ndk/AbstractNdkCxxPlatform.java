@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.android.toolchain;
+package com.facebook.buck.android.toolchain.ndk;
 
-import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

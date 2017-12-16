@@ -16,7 +16,7 @@
 package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.AndroidLinkableMetadata;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;

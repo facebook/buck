@@ -11,6 +11,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/util/environment:platform",
     ],

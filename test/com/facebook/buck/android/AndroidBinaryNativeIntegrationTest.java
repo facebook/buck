@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.AndroidNdkHelper.SymbolsAndDtNeeded;
 import com.facebook.buck.android.relinker.Symbols;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;

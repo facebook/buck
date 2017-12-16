@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.android.toolchain.impl;
+package com.facebook.buck.android.toolchain.ndk.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.NdkCxxPlatforms;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
