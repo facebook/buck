@@ -185,7 +185,8 @@ public class JavaTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getUseCxxLibraries().orElse(false)) {
-      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
+      targetGraphOnlyDepsBuilder.addAll(
+          CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
     }
     for (String envValue : constructorArg.getEnv().values()) {
       try {

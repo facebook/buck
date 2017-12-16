@@ -107,7 +107,7 @@ public class GoBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
     CxxPlatform cxxPlatform = getCxxPlatform(!constructorArg.getCgoDeps().isEmpty());
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
   }
 
   private CxxPlatform getCxxPlatform(boolean withCgo) {

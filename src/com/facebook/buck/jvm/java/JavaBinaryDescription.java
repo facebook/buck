@@ -170,7 +170,8 @@ public class JavaBinaryDescription
       AbstractJavaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
+    targetGraphOnlyDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
   }
 
   @BuckStyleImmutable

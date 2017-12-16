@@ -334,7 +334,7 @@ public class CxxTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     // Get any parse time deps from the C/C++ platforms.
-    extraDepsBuilder.addAll(
+    targetGraphOnlyDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(getCxxPlatform(buildTarget, constructorArg)));
 
     // Extract parse time deps from flags, args, and environment parameters.

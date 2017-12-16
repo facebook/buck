@@ -123,7 +123,7 @@ public class CgoLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
     CxxPlatform cxxPlatform = getCxxPlatform();
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
   }
 
   private CxxPlatform getCxxPlatform() {

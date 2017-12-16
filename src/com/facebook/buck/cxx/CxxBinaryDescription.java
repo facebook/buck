@@ -132,7 +132,7 @@ public class CxxBinaryDescription
         .ifPresent(
             depsQuery ->
                 QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
-                    .forEach(extraDepsBuilder::add));
+                    .forEach(targetGraphOnlyDepsBuilder::add));
   }
 
   @Override

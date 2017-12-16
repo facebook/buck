@@ -980,7 +980,8 @@ public class HaskellLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     HaskellDescriptionUtils.getParseTimeDeps(
-        getHaskellPlatformsProvider().getHaskellPlatforms().getValues(), extraDepsBuilder);
+        getHaskellPlatformsProvider().getHaskellPlatforms().getValues(),
+        targetGraphOnlyDepsBuilder);
   }
 
   private HaskellPlatformsProvider getHaskellPlatformsProvider() {

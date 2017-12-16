@@ -108,7 +108,7 @@ public class OcamlBinaryDescription
       AbstractOcamlBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(
+    targetGraphOnlyDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
             toolchainProvider
                 .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)

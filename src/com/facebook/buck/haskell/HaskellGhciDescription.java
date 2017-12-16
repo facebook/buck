@@ -358,14 +358,14 @@ public class HaskellGhciDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     HaskellDescriptionUtils.getParseTimeDeps(
-        ImmutableList.of(getPlatform(buildTarget, constructorArg)), extraDepsBuilder);
+        ImmutableList.of(getPlatform(buildTarget, constructorArg)), targetGraphOnlyDepsBuilder);
 
     constructorArg
         .getDepsQuery()
         .ifPresent(
             depsQuery ->
                 QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
-                    .forEach(extraDepsBuilder::add));
+                    .forEach(targetGraphOnlyDepsBuilder::add));
   }
 
   private HaskellPlatformsProvider getHaskellPlatformsProvider() {

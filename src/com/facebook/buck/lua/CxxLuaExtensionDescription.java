@@ -365,7 +365,8 @@ public class CxxLuaExtensionDescription
       Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
 
       // Get any parse time deps from the C/C++ platforms.
-      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
+      targetGraphOnlyDepsBuilder.addAll(
+          CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
     }
   }
 
