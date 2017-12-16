@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_FILE_HASH_COMPUTATION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_LOCAL_BUILD;
@@ -351,7 +352,8 @@ public class BuildCommand extends AbstractCommand {
       throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
 
-    return buildCommand.computeDistBuildState(params, graphs, executor).asyncJobState;
+    return buildCommand.computeDistBuildState(params, graphs, executor, Optional.empty())
+        .asyncJobState;
   }
 
   @Override
@@ -612,8 +614,36 @@ public class BuildCommand extends AbstractCommand {
   private AsyncJobStateAndCells computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
-      final ListeningExecutorService executorService)
+      final ListeningExecutorService executorService,
+      Optional<ClientStatsTracker> clientStatsTracker)
       throws IOException, InterruptedException {
+    DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
+
+    // Compute the file hashes.
+    ActionGraphAndResolver actionGraphAndResolver = graphs.actionGraph;
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_FILE_HASH_COMPUTATION));
+    DistBuildFileHashes distributedBuildFileHashes =
+        new DistBuildFileHashes(
+            actionGraphAndResolver.getActionGraph(),
+            pathResolver,
+            ruleFinder,
+            params.getFileHashCache(),
+            cellIndexer,
+            executorService,
+            params.getRuleKeyConfiguration(),
+            params.getCell());
+    distributedBuildFileHashes
+        .getFileHashesComputationFuture()
+        .addListener(
+            () ->
+                clientStatsTracker.ifPresent(
+                    tracker -> tracker.stopTimer(LOCAL_FILE_HASH_COMPUTATION)),
+            executorService);
+
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
     TargetGraphAndBuildTargets targetGraphAndBuildTargets = graphs.unversionedTargetGraph;
@@ -644,23 +674,6 @@ public class BuildCommand extends AbstractCommand {
                 .map(t -> t.getFullyQualifiedName())
                 .collect(Collectors.toSet()));
 
-    ActionGraphAndResolver actionGraphAndResolver = graphs.actionGraph;
-    DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-
-    DistBuildFileHashes distributedBuildFileHashes =
-        new DistBuildFileHashes(
-            actionGraphAndResolver.getActionGraph(),
-            pathResolver,
-            ruleFinder,
-            params.getFileHashCache(),
-            cellIndexer,
-            executorService,
-            params.getRuleKeyConfiguration(),
-            params.getCell());
-
     return new AsyncJobStateAndCells(
         executorService.submit(
             () -> {
@@ -670,7 +683,8 @@ public class BuildCommand extends AbstractCommand {
                       distributedBuildFileHashes,
                       targetGraphCodec,
                       targetGraphAndBuildTargets.getTargetGraph(),
-                      buildTargets);
+                      buildTargets,
+                      clientStatsTracker);
               LOG.info("Finished computing serializable distributed build state.");
               return state;
             }),
@@ -695,7 +709,8 @@ public class BuildCommand extends AbstractCommand {
     }
 
     LOG.info("Starting async file hash computation and job state serialization.");
-    AsyncJobStateAndCells stateAndCells = computeDistBuildState(params, graphs, executorService);
+    AsyncJobStateAndCells stateAndCells =
+        computeDistBuildState(params, graphs, executorService, Optional.of(distBuildClientStats));
     ListenableFuture<BuildJobState> asyncJobState = stateAndCells.asyncJobState;
     DistBuildCellIndexer distBuildCellIndexer = stateAndCells.distBuildCellIndexer;
 

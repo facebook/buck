@@ -106,7 +106,7 @@ public class DistBuildFileHashes {
             executorService);
   }
 
-  public RecordedFileHashes getRemoteFileHashes(Integer cellIndex) {
+  private RecordedFileHashes getRemoteFileHashes(Integer cellIndex) {
     if (!remoteFileHashes.containsKey(cellIndex)) {
       RecordedFileHashes fileHashes = new RecordedFileHashes(cellIndex);
       remoteFileHashes.put(cellIndex, fileHashes);
@@ -164,7 +164,6 @@ public class DistBuildFileHashes {
 
   public List<BuildJobStateFileHashes> getFileHashes() throws IOException, InterruptedException {
     try {
-
       ImmutableList<BuildJobStateFileHashes> hashes =
           fileHashes
               .get()
@@ -179,6 +178,10 @@ public class DistBuildFileHashes {
       Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
       throw new RuntimeException(e.getCause());
     }
+  }
+
+  public ListenableFuture<?> getFileHashesComputationFuture() {
+    return fileHashes;
   }
 
   private void checkNoDuplicates(ImmutableList<BuildJobStateFileHashes> hashes) {

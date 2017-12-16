@@ -31,6 +31,8 @@ public class ClientStatsTracker {
   public enum DistBuildClientStat {
     LOCAL_PREPARATION, // Measures everything that happens before starting distributed build
     LOCAL_GRAPH_CONSTRUCTION,
+    LOCAL_FILE_HASH_COMPUTATION,
+    LOCAL_TARGET_GRAPH_SERIALIZATION,
     PERFORM_DISTRIBUTED_BUILD,
     PERFORM_LOCAL_BUILD,
     POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
@@ -47,6 +49,8 @@ public class ClientStatsTracker {
   private static final DistBuildClientStat[] REQUIRED_STATS = {
     LOCAL_PREPARATION,
     LOCAL_GRAPH_CONSTRUCTION,
+    LOCAL_FILE_HASH_COMPUTATION,
+    LOCAL_TARGET_GRAPH_SERIALIZATION,
     PERFORM_DISTRIBUTED_BUILD,
     POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
     CREATE_DISTRIBUTED_BUILD,
@@ -151,6 +155,9 @@ public class ClientStatsTracker {
 
     builder.setLocalPreparationDurationMs(getDurationOrEmpty(LOCAL_PREPARATION));
     builder.setLocalGraphConstructionDurationMs(getDurationOrEmpty(LOCAL_GRAPH_CONSTRUCTION));
+    builder.setLocalFileHashComputationDurationMs(getDurationOrEmpty(LOCAL_FILE_HASH_COMPUTATION));
+    builder.setLocalTargetGraphSerializationDurationMs(
+        getDurationOrEmpty(LOCAL_TARGET_GRAPH_SERIALIZATION));
     builder.setPostDistBuildLocalStepsDurationMs(
         getDurationOrEmpty(POST_DISTRIBUTED_BUILD_LOCAL_STEPS));
     builder.setPerformDistributedBuildDurationMs(getDurationOrEmpty(PERFORM_DISTRIBUTED_BUILD));
