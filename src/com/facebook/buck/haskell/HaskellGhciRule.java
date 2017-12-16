@@ -314,7 +314,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path dir = getOutputDir();
     Path so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
     Path packagesDir = dir.resolve(name + ".packages");
-    Path symlinkDir = dir.resolve(name + ".so-symlinks");
+    Path symlinkDir = dir.resolve(HaskellGhciDescription.getSoLibsRelDir(getBuildTarget()));
     Path symlinkPreloadDir = dir.resolve(name + ".preload-symlinks");
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -527,7 +527,6 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     try {
       templateArgs.put("name", name);
       templateArgs.put("start_ghci", dir.relativize(startGhci).toString());
-      templateArgs.put("ld_library_path", dir.relativize(symlinkDir).toString());
       templateArgs.put("exposed_packages", exposed);
       templateArgs.put("package_dbs", pkgdbs);
       templateArgs.put("compiler_flags", Joiner.on(' ').join(compilerFlags));

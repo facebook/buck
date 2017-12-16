@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -492,6 +493,18 @@ public class HaskellDescriptionUtils {
                 .filter(NativeLinkable.class)
                 .collect(ImmutableMap.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
 
+    // Add an -rpath to the omnibus for shared library dependencies
+    Path symlinkRelDir = HaskellGhciDescription.getSoLibsRelDir(buildTarget);
+    ImmutableList.Builder<Arg> extraLinkFlags = ImmutableList.builder();
+    extraLinkFlags.addAll(
+        StringArg.from(
+            Linkers.iXlinker(
+                "-rpath",
+                String.format(
+                    "%s/%s",
+                    platform.getCxxPlatform().getLd().resolve(resolver).origin(),
+                    symlinkRelDir.toString()))));
+
     // Construct the omnibus shared library.
     BuildRule omnibusSharedObject =
         HaskellGhciDescription.requireOmnibusSharedObject(
@@ -502,7 +515,8 @@ public class HaskellDescriptionUtils {
             platform.getCxxPlatform(),
             cxxBuckConfig,
             omnibusSpec.getBody().values(),
-            omnibusSpec.getDeps().values());
+            omnibusSpec.getDeps().values(),
+            extraLinkFlags.build());
 
     // Build up a map of all transitive shared libraries the the monolithic omnibus library depends
     // on (basically, stuff we couldn't statically link in).  At this point, this should *not* be
