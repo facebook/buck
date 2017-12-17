@@ -8,6 +8,7 @@ standard_java_test(
         ":testutil",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules:relative_cell_name",

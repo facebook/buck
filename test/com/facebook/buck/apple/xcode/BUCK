@@ -23,6 +23,7 @@ java_test(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/doctor/config:config",
         "//src/com/facebook/buck/event:event",

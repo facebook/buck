@@ -17,8 +17,6 @@
 package com.facebook.buck.toolchain.impl;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProviderFactory;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.DownloaderFactory;
 import com.facebook.buck.io.ExecutableFinder;
@@ -64,10 +62,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   ImmutableList<ToolchainDescriptor<?>> DEFAULT_TOOLCHAIN_DESCRIPTORS =
       ImmutableList.of(
-          ToolchainDescriptor.of(
-              CxxPlatformsProvider.DEFAULT_NAME,
-              CxxPlatformsProvider.class,
-              CxxPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               Downloader.DEFAULT_NAME, Downloader.class, DownloaderFactory.class),
           ToolchainDescriptor.of(
