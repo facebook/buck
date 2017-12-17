@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/redex:options",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/apple/project_generator:project_generator",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
