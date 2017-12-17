@@ -38,8 +38,6 @@ import com.facebook.buck.python.toolchain.impl.PexToolProviderFactory;
 import com.facebook.buck.python.toolchain.impl.PythonInterpreterFactory;
 import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
-import com.facebook.buck.swift.toolchain.impl.SwiftPlatformsProviderFactory;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
@@ -66,10 +64,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   ImmutableList<ToolchainDescriptor<?>> DEFAULT_TOOLCHAIN_DESCRIPTORS =
       ImmutableList.of(
-          ToolchainDescriptor.of(
-              SwiftPlatformsProvider.DEFAULT_NAME,
-              SwiftPlatformsProvider.class,
-              SwiftPlatformsProviderFactory.class),
           ToolchainDescriptor.of(
               CxxPlatformsProvider.DEFAULT_NAME,
               CxxPlatformsProvider.class,

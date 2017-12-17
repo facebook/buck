@@ -15,7 +15,6 @@ java_library(
         "//src/com/facebook/buck/jvm/java/toolchain/impl:impl",
         "//src/com/facebook/buck/ocaml:ocaml",
         "//src/com/facebook/buck/python/toolchain/impl:impl",
-        "//src/com/facebook/buck/swift/toolchain/impl:impl",
         "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/pf4j:pf4j",
     ],
