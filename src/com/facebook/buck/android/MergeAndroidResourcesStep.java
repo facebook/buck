@@ -387,6 +387,21 @@ public class MergeAndroidResourcesStep implements Step {
 
     HashMap<RDotTxtEntry, RDotTxtEntry> resourceToIdValuesMap = new HashMap<>();
 
+    // Expand the package overrides into per-package self-maps.
+    // The self-maps are basically sets, but we need to be able to look up
+    // the actual RDotTxtEntry objects to get their ids (which are not included in .equals()).
+    Map<String, Map<RDotTxtEntry, RDotTxtEntry>> expandedPackageOverrides = ImmutableMap.of();
+    if (overrides.isPresent()) {
+      expandedPackageOverrides = new HashMap<>();
+      final Map<String, Map<RDotTxtEntry, RDotTxtEntry>> ovr = expandedPackageOverrides;
+      overrides
+          .get()
+          .asMap()
+          .forEach(
+              (pkg, entries) ->
+                  ovr.put(pkg, entries.stream().collect(Collectors.toMap(k -> k, v -> v))));
+    }
+
     for (Map.Entry<Path, String> entry : symbolsFileToRDotJavaPackage.entrySet()) {
       Path symbolsFile = entry.getKey();
       // Read the symbols file and parse each line as a Resource.
@@ -404,19 +419,18 @@ public class MergeAndroidResourcesStep implements Step {
       }
 
       String packageName = entry.getValue();
-      Set<RDotTxtEntry> packageOverrides =
-          overrides.isPresent() && overrides.get().containsKey(packageName)
-              ? overrides.get().get(packageName)
-              : Collections.emptySet();
+      Map<RDotTxtEntry, RDotTxtEntry> packageOverrides =
+          expandedPackageOverrides.getOrDefault(packageName, ImmutableMap.of());
 
       if (!packageOverrides.isEmpty()) {
-        // RDotTxtEntry computes hash codes and checks equality only based on type and name. Thus,
-        // removeAll(overrides) will remove any entries that have the same type and name but perhaps
-        // differ in e.g. ID and/or customType. The subsequent addAll will add the new values.
-        linesInSymbolsFile.removeAll(packageOverrides);
-        linesInSymbolsFile.addAll(packageOverrides);
-        // R.txt files are sorted by default, but the operations above will break that. Fix it.
-        Collections.sort(linesInSymbolsFile);
+        // RDotTxtEntry computes hash codes and checks equality only based on type and name,
+        // so we can use simple map lookup to find the overridden resource entry.
+        for (int i = 0; i < linesInSymbolsFile.size(); i++) {
+          RDotTxtEntry mappedEntry = packageOverrides.get(linesInSymbolsFile.get(i));
+          if (mappedEntry != null) {
+            linesInSymbolsFile.set(i, mappedEntry);
+          }
+        }
       }
 
       for (int index = 0; index < linesInSymbolsFile.size(); index++) {
@@ -470,6 +484,23 @@ public class MergeAndroidResourcesStep implements Step {
         rDotJavaPackageToSymbolsFiles.put(packageName, resource);
       }
     }
+
+    // Find any "overridden" resources that were actually new resources and add them.
+    Map<RDotTxtEntry, String> finalFinalIds = finalIds;
+    overrides.ifPresent(
+        ovr ->
+            ovr.forEach(
+                (pkg, resource) -> {
+                  Preconditions.checkNotNull(finalFinalIds);
+                  if (!rDotJavaPackageToSymbolsFiles.containsEntry(pkg, resource)) {
+                    String realId = finalFinalIds.get(resource);
+                    Preconditions.checkState(
+                        realId != null,
+                        "ID for resource created by filtering is not present in R.txt: %s",
+                        resource);
+                    rDotJavaPackageToSymbolsFiles.put(pkg, resource.copyWithNewIdValue(realId));
+                  }
+                }));
 
     StringBuilder duplicateResourcesMessage = new StringBuilder();
     for (Map.Entry<RDotTxtEntry, Collection<Path>> resourceAndSymbolsFiles :
