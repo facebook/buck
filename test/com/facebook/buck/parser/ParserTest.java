@@ -1713,7 +1713,7 @@ public class ParserTest {
   }
 
   @Test
-  public void daemonicParserStateSerialisesAndDeserialisesCorrectly() throws Exception {
+  public void daemonicParserStateSerializesAndDeserializesCorrectly() throws Exception {
     tempDir.newFolder("foo");
 
     Path testFooBuckFile = tempDir.newFile("foo/BUCK");
@@ -1734,7 +1734,7 @@ public class ParserTest {
     TargetGraph oldGraph =
         parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
 
-    // Serialise target graph information.
+    // Serialize target graph information.
     RemoteDaemonicParserState remote = parser.storeParserState();
 
     assertTrue(remote.isSetCachedIncludes());

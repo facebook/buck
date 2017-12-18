@@ -590,7 +590,7 @@ public class Parser {
   }
 
   public RemoteDaemonicParserState storeParserState() throws IOException {
-    return getPermState().serialiseDaemonicParserState();
+    return getPermState().serializeDaemonicParserState();
   }
 
   public void restoreParserState(RemoteDaemonicParserState state, Cell rootCell) {

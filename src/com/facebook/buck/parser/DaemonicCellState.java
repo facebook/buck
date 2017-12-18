@@ -251,7 +251,7 @@ class DaemonicCellState {
     return Optional.empty();
   }
 
-  private Map<String, String> getAllRawNodesForSerialisation() throws IOException {
+  private Map<String, String> getAllRawNodesForSerialization() throws IOException {
     Map<String, String> result = new HashMap<>();
     Path root = getCellRoot();
     ObjectMapper objectMapper = new ObjectMapper();
@@ -264,7 +264,7 @@ class DaemonicCellState {
     return result;
   }
 
-  private Map<String, List<String>> getBuildFileDependentsForSerialisation() {
+  private Map<String, List<String>> getBuildFileDependentsForSerialization() {
     Map<String, List<String>> result = new HashMap<>();
     Path root = getCellRoot();
     Map<Path, Collection<Path>> view = buildFileDependents.asMap();
@@ -283,7 +283,7 @@ class DaemonicCellState {
     return result;
   }
 
-  private Map<String, Map<String, BuildFileEnvProperty>> getBuildFileEnvForSerialisation() {
+  private Map<String, Map<String, BuildFileEnvProperty>> getBuildFileEnvForSerialization() {
     Map<String, Map<String, BuildFileEnvProperty>> result = new HashMap<>();
     for (Path path : buildFileEnv.keySet()) {
       ImmutableMap.Builder<String, BuildFileEnvProperty> buildFileEnvValuesMapBuilder =
@@ -303,17 +303,17 @@ class DaemonicCellState {
     return result;
   }
 
-  RemoteDaemonicCellState serialise() throws IOException {
+  RemoteDaemonicCellState serialize() throws IOException {
     RemoteDaemonicCellState result = new RemoteDaemonicCellState();
     try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
-      result.allRawNodesJsons = getAllRawNodesForSerialisation();
-      result.buildFileDependents = getBuildFileDependentsForSerialisation();
-      result.buildFileEnv = getBuildFileEnvForSerialisation();
+      result.allRawNodesJsons = getAllRawNodesForSerialization();
+      result.buildFileDependents = getBuildFileDependentsForSerialization();
+      result.buildFileEnv = getBuildFileEnvForSerialization();
     }
     return result;
   }
 
-  static DaemonicCellState deserialise(
+  static DaemonicCellState deserialize(
       RemoteDaemonicCellState remote, Cell cell, int parsingThreads) throws IOException {
     DaemonicCellState daemonicCellState = new DaemonicCellState(cell, parsingThreads);
     Path root = cell.getRoot();
@@ -345,11 +345,11 @@ class DaemonicCellState {
 
     for (String pathString : remote.allRawNodesJsons.keySet()) {
       String json = remote.allRawNodesJsons.get(pathString);
-      ImmutableSet<Map<String, Object>> deserialisedRawNodes =
+      ImmutableSet<Map<String, Object>> deserializedRawNodes =
           ObjectMappers.readValue(json, new TypeReference<ImmutableSet<Map<String, Object>>>() {});
       Path key = root.resolve(pathString);
-      daemonicCellState.allRawNodes.putIfAbsentAndGet(key, deserialisedRawNodes);
-      deserialisedRawNodes.forEach(
+      daemonicCellState.allRawNodes.putIfAbsentAndGet(key, deserializedRawNodes);
+      deserializedRawNodes.forEach(
           rawNode -> {
             daemonicCellState.allRawNodeTargets.add(
                 UnflavoredBuildTarget.of(
