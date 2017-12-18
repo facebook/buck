@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
@@ -46,8 +47,8 @@ public class MinionWorkloadAllocatorTest {
 
   @Before
   public void setUp() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = BuildTargetsQueueTest.createDiamondDependencyResolver();
-    target = BuildTargetFactory.newInstance(BuildTargetsQueueTest.ROOT_TARGET);
+    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createDiamondDependencyResolver();
+    target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET);
     queue =
         new BuildTargetsQueueFactory(
                 resolver,
@@ -78,21 +79,27 @@ public class MinionWorkloadAllocatorTest {
 
     List<WorkUnit> secondTargets =
         allocator.dequeueZeroDependencyNodes(
-            MINION_ONE, ImmutableList.of(BuildTargetsQueueTest.LEAF_TARGET), MAX_WORK_UNITS);
+            MINION_ONE,
+            ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
+            MAX_WORK_UNITS);
     Assert.assertEquals(2, secondTargets.size());
     Assert.assertFalse(allocator.isBuildFinished());
 
     List<WorkUnit> thirdTargets =
         allocator.dequeueZeroDependencyNodes(
             MINION_ONE,
-            ImmutableList.of(BuildTargetsQueueTest.LEFT_TARGET, BuildTargetsQueueTest.RIGHT_TARGET),
+            ImmutableList.of(
+                CustomBuildRuleResolverFactory.LEFT_TARGET,
+                CustomBuildRuleResolverFactory.RIGHT_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(1, thirdTargets.size());
     Assert.assertFalse(allocator.isBuildFinished());
 
     List<WorkUnit> fourthTargets =
         allocator.dequeueZeroDependencyNodes(
-            MINION_ONE, ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET), MAX_WORK_UNITS);
+            MINION_ONE,
+            ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
+            MAX_WORK_UNITS);
     Assert.assertEquals(0, fourthTargets.size());
     Assert.assertTrue(allocator.isBuildFinished());
   }

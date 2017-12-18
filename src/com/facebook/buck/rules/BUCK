@@ -361,6 +361,7 @@ java_library(
 java_immutables_library(
     name = "rules",
     srcs = [
+        "AbstractActionAndTargetGraphs.java",
         "AbstractActionGraphAndResolver.java",
         "AbstractBuildEngineBuildContext.java",
         "AbstractBuildResult.java",

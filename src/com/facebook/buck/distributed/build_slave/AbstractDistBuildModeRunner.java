@@ -17,16 +17,20 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 
-public interface DistBuildModeRunner {
+/** Default implementation of some methods in {@link DistBuildModeRunner}. */
+public abstract class AbstractDistBuildModeRunner implements DistBuildModeRunner {
 
-  ListenableFuture<?> getAsyncPrepFuture();
-
-  int runAndReturnExitCode(HeartbeatService heartbeatService)
-      throws IOException, InterruptedException;
-
-  int runWithHeartbeatServiceAndReturnExitCode(DistBuildConfig config)
-      throws IOException, InterruptedException;
+  /**
+   * Create a {@link HeartbeatService} and run this {@link DistBuildModeRunner} instance using the
+   * temporary service.
+   */
+  @Override
+  public int runWithHeartbeatServiceAndReturnExitCode(DistBuildConfig config)
+      throws InterruptedException, IOException {
+    try (HeartbeatService service = new HeartbeatService(config.getHearbeatServiceRateMillis())) {
+      return runAndReturnExitCode(service);
+    }
+  }
 }

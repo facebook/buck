@@ -71,8 +71,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       ArtifactCache remoteCache,
       RuleKeyConfiguration rkConfigForCache,
       ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> asyncRuleKeyCalculatorOptional,
-      BuildSlaveTimingStatsTracker timingStatsTracker,
-      HealthCheckStatsTracker healthCheckStatsTracker) {
+      HealthCheckStatsTracker healthCheckStatsTracker,
+      Optional<BuildSlaveTimingStatsTracker> timingStatsTracker) {
 
     ListenableFuture<BuildTargetsQueue> queueFuture =
         Futures.transformAsync(
@@ -81,7 +81,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                 Futures.transform(
                     delegateAndGraphsFuture,
                     graphs -> {
-                      timingStatsTracker.startTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME);
+                      timingStatsTracker.ifPresent(
+                          tracker -> tracker.startTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME));
                       BuildTargetsQueue queue =
                           new BuildTargetsQueueFactory(
                                   graphs.getActionGraphAndResolver().getResolver(),
@@ -93,7 +94,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                                   rkConfigForCache,
                                   ruleKeyCalculatorOptional)
                               .newQueue(topLevelTargetsToBuild);
-                      timingStatsTracker.stopTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME);
+                      timingStatsTracker.ifPresent(
+                          tracker -> tracker.stopTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME));
                       return queue;
                     },
                     executorService),
@@ -234,8 +236,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                 buildExecutor ->
                     Optional.of(buildExecutor.getCachingBuildEngine().getRuleKeyCalculator()),
                 executorService),
-            timingStatsTracker,
-            healthCheckStatsTracker),
+            healthCheckStatsTracker,
+            Optional.of(timingStatsTracker)),
         createMinion(
             localBuildExecutor,
             distBuildService,

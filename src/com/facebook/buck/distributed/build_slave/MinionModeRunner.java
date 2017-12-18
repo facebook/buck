@@ -48,7 +48,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
-public class MinionModeRunner implements DistBuildModeRunner {
+/** {@link DistBuildModeRunner} implementation for running a distributed build as minion only. */
+public class MinionModeRunner extends AbstractDistBuildModeRunner {
 
   private static final Logger LOG = Logger.get(MinionModeRunner.class);
 

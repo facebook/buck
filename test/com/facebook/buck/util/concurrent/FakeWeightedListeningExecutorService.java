@@ -14,19 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed.build_slave;
+package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.distributed.DistBuildConfig;
-import com.google.common.util.concurrent.ListenableFuture;
-import java.io.IOException;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
-public interface DistBuildModeRunner {
+public class FakeWeightedListeningExecutorService extends WeightedListeningExecutorService {
 
-  ListenableFuture<?> getAsyncPrepFuture();
-
-  int runAndReturnExitCode(HeartbeatService heartbeatService)
-      throws IOException, InterruptedException;
-
-  int runWithHeartbeatServiceAndReturnExitCode(DistBuildConfig config)
-      throws IOException, InterruptedException;
+  public FakeWeightedListeningExecutorService(ListeningExecutorService delegate) {
+    super(
+        new ListeningMultiSemaphore(
+            ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0), ResourceAllocationFairness.FAIR),
+        /* defaultPermits */ ResourceAmounts.of(1, 0, 0, 0),
+        delegate);
+  }
 }

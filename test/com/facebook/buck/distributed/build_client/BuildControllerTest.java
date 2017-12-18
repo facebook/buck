@@ -45,15 +45,18 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.FakeInvocationInfoFactory;
+import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.HashMap;
@@ -75,13 +78,13 @@ public class BuildControllerTest {
   private ScheduledExecutorService scheduler;
   private BuckVersion buckVersion;
   private DistBuildCellIndexer distBuildCellIndexer;
-  private ListeningExecutorService directExecutor;
+  private WeightedListeningExecutorService directExecutor;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private FakeFileHashCache fakeFileHashCache;
   private BuckEventBus mockEventBus;
   private StampedeId stampedeId;
   private ClientStatsTracker distBuildClientStatsTracker;
-  private BuildId buildId;
+  private InvocationInfo invocationInfo;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -92,17 +95,22 @@ public class BuildControllerTest {
     buckVersion.setGitHash("thishashisamazing");
     distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
     distBuildCellIndexer = new DistBuildCellIndexer(new TestCellBuilder().build());
-    directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
+    directExecutor =
+        new FakeWeightedListeningExecutorService(MoreExecutors.newDirectExecutorService());
     fakeProjectFilesystem = new FakeProjectFilesystem();
     fakeFileHashCache = FakeFileHashCache.createFromStrings(new HashMap<>());
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
     stampedeId = new StampedeId();
     stampedeId.setId("uber-cool-stampede-id");
-    buildId = new BuildId();
+    invocationInfo = FakeInvocationInfoFactory.create();
   }
 
   private BuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState) {
     return new BuildController(
+        null,
+        ImmutableSet.of(),
+        null,
+        Optional.empty(),
         asyncBuildJobState,
         distBuildCellIndexer,
         mockDistBuildService,
@@ -126,7 +134,7 @@ public class BuildControllerTest {
         fakeProjectFilesystem,
         fakeFileHashCache,
         mockEventBus,
-        buildId,
+        invocationInfo,
         BuildMode.REMOTE_BUILD,
         1,
         REPOSITORY,
@@ -192,7 +200,7 @@ public class BuildControllerTest {
 
     expect(
             mockDistBuildService.createBuild(
-                buildId, BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+                invocationInfo.getBuildId(), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
         .andReturn(job);
     expect(
             mockDistBuildService.uploadMissingFilesAsync(
@@ -226,7 +234,7 @@ public class BuildControllerTest {
     job = job.deepCopy(); // new copy
     job.setBuckVersion(buckVersion);
     job.setStatus(BuildStatus.QUEUED);
-    expect(mockDistBuildService.startBuild(stampedeId)).andReturn(job);
+    expect(mockDistBuildService.startBuild(stampedeId, true)).andReturn(job);
     mockEventBus.post(isA(DistBuildCreatedEvent.class));
     expectLastCall().times(1);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job).times(2);

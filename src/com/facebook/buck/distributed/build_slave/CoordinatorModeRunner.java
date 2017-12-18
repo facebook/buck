@@ -34,7 +34,10 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-public class CoordinatorModeRunner implements DistBuildModeRunner {
+/**
+ * {@link DistBuildModeRunner} implementation for running a distributed build as coordinator only.
+ */
+public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
 
   private static final Logger LOG = Logger.get(CoordinatorModeRunner.class);
 

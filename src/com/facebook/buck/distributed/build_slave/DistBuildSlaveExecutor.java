@@ -95,9 +95,9 @@ public class DistBuildSlaveExecutor {
               args.getArtifactCacheFactory().newInstance(true, true),
               args.getRuleKeyConfiguration(),
               /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()),
-              args.getTimingStatsTracker(),
-              args.getHealthCheckStatsTracker());
-      return setPreparationCallbackAndRunWithHeartbeatService(runner);
+              args.getHealthCheckStatsTracker(),
+              Optional.of(args.getTimingStatsTracker()));
+      return setPreparationCallbackAndRun(runner);
     }
 
     BuildExecutorArgs builderArgs = args.createBuilderArgs();
@@ -162,7 +162,7 @@ public class DistBuildSlaveExecutor {
           return -1;
       }
 
-      return setPreparationCallbackAndRunWithHeartbeatService(runner);
+      return setPreparationCallbackAndRun(runner);
     }
   }
 
@@ -183,7 +183,7 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  private int setPreparationCallbackAndRunWithHeartbeatService(DistBuildModeRunner runner)
+  private int setPreparationCallbackAndRun(DistBuildModeRunner runner)
       throws IOException, InterruptedException {
     runner
         .getAsyncPrepFuture()
@@ -198,10 +198,7 @@ public class DistBuildSlaveExecutor {
             },
             args.getExecutorService());
 
-    try (HeartbeatService service =
-        new HeartbeatService(args.getDistBuildConfig().getHearbeatServiceRateMillis())) {
-      return runner.runAndReturnExitCode(service);
-    }
+    return runner.runWithHeartbeatServiceAndReturnExitCode(args.getDistBuildConfig());
   }
 
   private FinalBuildStatusSetter createRemoteBuildFinalBuildStatusSetter() {

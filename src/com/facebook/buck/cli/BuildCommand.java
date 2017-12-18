@@ -45,6 +45,7 @@ import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
+import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -61,6 +62,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
@@ -90,6 +92,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
@@ -445,11 +448,16 @@ public class BuildCommand extends AbstractCommand {
     }
 
     TargetGraphAndBuildTargets targetGraphForLocalBuild =
-        getTargetGraphForLocalBuild(unversionedTargetGraph, versionedTargetGraph);
+        ActionAndTargetGraphs.getTargetGraphForLocalBuild(
+            unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndResolver actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
-    return new ActionAndTargetGraphs(unversionedTargetGraph, versionedTargetGraph, actionGraph);
+    return ActionAndTargetGraphs.builder()
+        .setUnversionedTargetGraph(unversionedTargetGraph)
+        .setVersionedTargetGraph(versionedTargetGraph)
+        .setActionGraphAndResolver(actionGraph)
+        .build();
   }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
@@ -517,7 +525,7 @@ public class BuildCommand extends AbstractCommand {
         exitCode =
             executeLocalBuild(
                 params,
-                graphs.actionGraph,
+                graphs.getActionGraphAndResolver(),
                 commandThreadManager.getWeightedListeningExecutorService(),
                 optionalRuleKeyLogger,
                 new NoOpRemoteBuildRuleCompletionWaiter(),
@@ -545,15 +553,15 @@ public class BuildCommand extends AbstractCommand {
   private ExitCode processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
       throws IOException {
     if (params.getBuckConfig().createBuildOutputSymLinksEnabled()) {
-      symLinkBuildResults(params, graphs.actionGraph);
+      symLinkBuildResults(params, graphs.getActionGraphAndResolver());
     }
     if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
-      showOutputs(params, graphs.actionGraph);
+      showOutputs(params, graphs.getActionGraphAndResolver());
     }
     if (outputPathForSingleBuildTarget != null) {
       BuildTarget loneTarget =
           Iterables.getOnlyElement(graphs.getTargetGraphForLocalBuild().getBuildTargets());
-      BuildRule rule = graphs.actionGraph.getResolver().getRule(loneTarget);
+      BuildRule rule = graphs.getActionGraphAndResolver().getResolver().getRule(loneTarget);
       if (!rule.outputFileCanBeCopied()) {
         params
             .getConsole()
@@ -573,7 +581,7 @@ public class BuildCommand extends AbstractCommand {
         ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
         SourcePathResolver pathResolver =
             DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(graphs.actionGraph.getResolver()));
+                new SourcePathRuleFinder(graphs.getActionGraphAndResolver().getResolver()));
         projectFilesystem.copyFile(
             pathResolver.getAbsolutePath(output), outputPathForSingleBuildTarget);
       }
@@ -620,7 +628,7 @@ public class BuildCommand extends AbstractCommand {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
 
     // Compute the file hashes.
-    ActionGraphAndResolver actionGraphAndResolver = graphs.actionGraph;
+    ActionGraphAndResolver actionGraphAndResolver = graphs.getActionGraphAndResolver();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -646,7 +654,8 @@ public class BuildCommand extends AbstractCommand {
 
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets = graphs.unversionedTargetGraph;
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+        graphs.getTargetGraphForDistributedBuild();
 
     TypeCoercerFactory typeCoercerFactory =
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
@@ -704,6 +713,12 @@ public class BuildCommand extends AbstractCommand {
 
     BuildEvent.DistBuildStarted started = null;
     if (distributedBuildStateFile == null) {
+      if (distBuildConfig.getBuildMode().equals(BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR)
+          && !distBuildConfig.getMinionQueue().isPresent()) {
+        throw new HumanReadableException(
+            "Stampede Minion Queue name must be specified to use Local Coordinator Mode.");
+      }
+
       started = BuildEvent.distBuildStarted();
       params.getBuckEventBus().post(started);
     }
@@ -756,9 +771,12 @@ public class BuildCommand extends AbstractCommand {
         // Stampede has marked them as available.
         final RemoteBuildRuleSynchronizer remoteBuildSynchronizer =
             new RemoteBuildRuleSynchronizer();
-
         BuildController build =
             new BuildController(
+                params.createBuilderArgs(),
+                buildTargets,
+                graphs,
+                Optional.of(new LocalCachingBuildEngineDelegate(params.getFileHashCache())),
                 asyncJobState,
                 distBuildCellIndexer,
                 service,
@@ -777,12 +795,11 @@ public class BuildCommand extends AbstractCommand {
                 .submit(
                     () -> {
                       distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
-
                       try {
                         localBuildExitCode.set(
                             executeLocalBuild(
                                     params,
-                                    graphs.actionGraph,
+                                    graphs.getActionGraphAndResolver(),
                                     executorService,
                                     Optional.empty(),
                                     remoteBuildSynchronizer,
@@ -809,7 +826,7 @@ public class BuildCommand extends AbstractCommand {
                 filesystem,
                 fileHashCache,
                 params.getBuckEventBus(),
-                params.getInvocationInfo().get().getBuildId(),
+                params.getInvocationInfo().get(),
                 distBuildConfig.getBuildMode(),
                 distBuildConfig.getNumberOfMinions(),
                 distBuildConfig.getRepository(),
@@ -1138,14 +1155,6 @@ public class BuildCommand extends AbstractCommand {
     return "builds the specified target";
   }
 
-  protected static TargetGraphAndBuildTargets getTargetGraphForLocalBuild(
-      TargetGraphAndBuildTargets unversionedTargetGraph,
-      Optional<TargetGraphAndBuildTargets> versionedTargetGraph) {
-    // If a versioned target graph was produced then we always use this for the local build,
-    // otherwise the unversioned graph is used.
-    return versionedTargetGraph.isPresent() ? versionedTargetGraph.get() : unversionedTargetGraph;
-  }
-
   @Override
   public Iterable<BuckEventListener> getEventListeners(
       Map<ExecutorPool, ListeningExecutorService> executorPool,
@@ -1172,27 +1181,6 @@ public class BuildCommand extends AbstractCommand {
   public static class ActionGraphCreationException extends Exception {
     public ActionGraphCreationException(String message) {
       super(message);
-    }
-  }
-
-  protected static class ActionAndTargetGraphs {
-    final TargetGraphAndBuildTargets unversionedTargetGraph;
-    final Optional<TargetGraphAndBuildTargets> versionedTargetGraph;
-    final ActionGraphAndResolver actionGraph;
-
-    protected ActionAndTargetGraphs(
-        TargetGraphAndBuildTargets unversionedTargetGraph,
-        Optional<TargetGraphAndBuildTargets> versionedTargetGraph,
-        ActionGraphAndResolver actionGraph) {
-      this.unversionedTargetGraph = unversionedTargetGraph;
-      this.versionedTargetGraph = versionedTargetGraph;
-      this.actionGraph = actionGraph;
-    }
-
-    protected TargetGraphAndBuildTargets getTargetGraphForLocalBuild() {
-      // If a versioned target graph was produced then we always use this for the local build,
-      // otherwise the unversioned graph is used.
-      return BuildCommand.getTargetGraphForLocalBuild(unversionedTargetGraph, versionedTargetGraph);
     }
   }
 }

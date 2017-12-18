@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildService;
@@ -25,14 +26,19 @@ import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.ActionAndTargetGraphs;
+import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -57,6 +63,10 @@ public class BuildController {
   }
 
   public BuildController(
+      BuildExecutorArgs builderExecutorArgs,
+      ImmutableSet<BuildTarget> topLevelTargets,
+      ActionAndTargetGraphs buildGraphs,
+      Optional<CachingBuildEngineDelegate> cachingBuildEngineDelegate,
       ListenableFuture<BuildJobState> asyncJobState,
       DistBuildCellIndexer distBuildCellIndexer,
       DistBuildService distBuildService,
@@ -77,6 +87,10 @@ public class BuildController {
             buckVersion);
     this.buildPhase =
         new BuildPhase(
+            builderExecutorArgs,
+            topLevelTargets,
+            buildGraphs,
+            cachingBuildEngineDelegate,
             distBuildService,
             distBuildClientStats,
             distBuildLogStateTracker,
@@ -93,6 +107,10 @@ public class BuildController {
   }
 
   public BuildController(
+      BuildExecutorArgs buildExecutorArgs,
+      ImmutableSet<BuildTarget> topLevelTargets,
+      ActionAndTargetGraphs buildGraphs,
+      Optional<CachingBuildEngineDelegate> cachingBuildEngineDelegate,
       ListenableFuture<BuildJobState> asyncJobState,
       DistBuildCellIndexer distBuildCellIndexer,
       DistBuildService distBuildService,
@@ -104,6 +122,10 @@ public class BuildController {
       boolean logMaterializationEnabled,
       RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
     this(
+        buildExecutorArgs,
+        topLevelTargets,
+        buildGraphs,
+        cachingBuildEngineDelegate,
         asyncJobState,
         distBuildCellIndexer,
         distBuildService,
@@ -119,11 +141,11 @@ public class BuildController {
 
   /** Executes the tbuild and prints failures to the event bus. */
   public ExecutionResult executeAndPrintFailuresToEventBus(
-      ListeningExecutorService networkExecutorService,
+      WeightedListeningExecutorService executorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
       BuckEventBus eventBus,
-      BuildId buildId,
+      InvocationInfo invocationInfo,
       BuildMode buildMode,
       int numberOfMinions,
       String repository,
@@ -131,11 +153,11 @@ public class BuildController {
       throws IOException, InterruptedException {
     Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture =
         preBuildPhase.runPreDistBuildLocalStepsAsync(
-            networkExecutorService,
+            executorService,
             projectFilesystem,
             fileHashCache,
             eventBus,
-            buildId,
+            invocationInfo.getBuildId(),
             buildMode,
             numberOfMinions,
             repository,
@@ -154,10 +176,10 @@ public class BuildController {
 
     BuildPhase.BuildResult buildResult =
         buildPhase.runDistBuildAndUpdateConsoleStatus(
-            networkExecutorService, eventSender, stampedeId);
+            executorService, eventSender, stampedeId, buildMode, invocationInfo);
 
     return postBuildPhase.runPostDistBuildLocalSteps(
-        networkExecutorService,
+        executorService,
         buildResult.getBuildSlaveStatusList(),
         buildResult.getFinalBuildJob(),
         eventSender);
