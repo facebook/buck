@@ -55,6 +55,7 @@ import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.NoopRuleKeyScopedHasher;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
@@ -77,6 +78,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -882,8 +884,8 @@ abstract class AbstractCxxSourceRuleFactory {
   private class PreprocessorDelegateCacheValue {
     private final Function<AddsToRuleKey, String> commandHashCache = memoize(this::computeHash);
     private final PreprocessorDelegate preprocessorDelegate;
-    private final String preprocessorHash;
-    private final String preprocessorFullHash;
+    private final Supplier<String> preprocessorHash;
+    private final Supplier<String> preprocessorFullHash;
 
     private String computeHash(AddsToRuleKey object) {
       HashBuilder builder = new HashBuilder(commandHashCache);
@@ -894,15 +896,19 @@ abstract class AbstractCxxSourceRuleFactory {
     PreprocessorDelegateCacheValue(PreprocessorDelegate preprocessorDelegate) {
       this.preprocessorDelegate = preprocessorDelegate;
       this.preprocessorHash =
-          computeHash(
-              new AddsToRuleKey() {
-                @AddToRuleKey Preprocessor preprocessor = preprocessorDelegate.getPreprocessor();
+          MoreSuppliers.memoize(
+              () ->
+                  computeHash(
+                      new AddsToRuleKey() {
+                        @AddToRuleKey
+                        Preprocessor preprocessor = preprocessorDelegate.getPreprocessor();
 
-                @AddToRuleKey
-                CxxToolFlags nonIncludePathFlags =
-                    preprocessorDelegate.getNonIncludePathFlags(Optional.empty());
-              });
-      this.preprocessorFullHash = computeHash(preprocessorDelegate.getIncludePathFlags());
+                        @AddToRuleKey
+                        CxxToolFlags nonIncludePathFlags =
+                            preprocessorDelegate.getNonIncludePathFlags(Optional.empty());
+                      }));
+      this.preprocessorFullHash =
+          MoreSuppliers.memoize(() -> computeHash(preprocessorDelegate.getIncludePathFlags()));
     }
 
     PreprocessorDelegate getPreprocessorDelegate() {
@@ -915,15 +921,15 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     public String getHash(CxxToolFlags compilerFlags) {
-      return preprocessorHash
+      return preprocessorHash.get()
           + "-"
-          + preprocessorFullHash
+          + preprocessorFullHash.get()
           + "-"
           + commandHashCache.apply(compilerFlags);
     }
 
     public String getBaseHash(CxxToolFlags compilerFlags) {
-      return preprocessorHash + "-" + commandHashCache.apply(compilerFlags);
+      return preprocessorHash.get() + "-" + commandHashCache.apply(compilerFlags);
     }
   }
 
