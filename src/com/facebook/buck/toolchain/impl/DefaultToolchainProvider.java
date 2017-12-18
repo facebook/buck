@@ -19,12 +19,6 @@ package com.facebook.buck.toolchain.impl;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.python.toolchain.PexToolProvider;
-import com.facebook.buck.python.toolchain.PythonInterpreter;
-import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
-import com.facebook.buck.python.toolchain.impl.PexToolProviderFactory;
-import com.facebook.buck.python.toolchain.impl.PythonInterpreterFactory;
-import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
@@ -49,19 +43,6 @@ import java.util.stream.Stream;
 import org.pf4j.PluginManager;
 
 public class DefaultToolchainProvider extends BaseToolchainProvider {
-
-  ImmutableList<ToolchainDescriptor<?>> DEFAULT_TOOLCHAIN_DESCRIPTORS =
-      ImmutableList.of(
-          ToolchainDescriptor.of(
-              PexToolProvider.DEFAULT_NAME, PexToolProvider.class, PexToolProviderFactory.class),
-          ToolchainDescriptor.of(
-              PythonInterpreter.DEFAULT_NAME,
-              PythonInterpreter.class,
-              PythonInterpreterFactory.class),
-          ToolchainDescriptor.of(
-              PythonPlatformsProvider.DEFAULT_NAME,
-              PythonPlatformsProvider.class,
-              PythonPlatformsProviderFactory.class));
 
   private final ToolchainCreationContext toolchainCreationContext;
   private final ImmutableList<ToolchainDescriptor<?>> toolchainDescriptors;
@@ -98,7 +79,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
             executableFinder,
             ruleKeyConfiguration);
 
-    toolchainDescriptors = loadToolchainDescriptors(pluginManager);
+    toolchainDescriptors =
+        loadToolchainDescriptorsFromPlugins(pluginManager).collect(ImmutableList.toImmutableList());
 
     ImmutableMap.Builder<String, Class<? extends ToolchainFactory<?>>> toolchainFactoriesBuilder =
         ImmutableMap.builder();
@@ -107,15 +89,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
           toolchainDescriptor.getName(), toolchainDescriptor.getToolchainFactoryClass());
     }
     toolchainFactories = toolchainFactoriesBuilder.build();
-  }
-
-  private ImmutableList<ToolchainDescriptor<?>> loadToolchainDescriptors(
-      PluginManager pluginManager) {
-    ImmutableList.Builder<ToolchainDescriptor<?>> toolchainDescriptorBuilder =
-        ImmutableList.builder();
-    toolchainDescriptorBuilder.addAll(DEFAULT_TOOLCHAIN_DESCRIPTORS);
-    loadToolchainDescriptorsFromPlugins(pluginManager).forEach(toolchainDescriptorBuilder::add);
-    return toolchainDescriptorBuilder.build();
   }
 
   private Stream<ToolchainDescriptor<?>> loadToolchainDescriptorsFromPlugins(
