@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -105,7 +106,7 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
   /** Expands all macros to strings and append them to the given builder. */
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-    consumer.accept(getStringWithMacros().format(this::expand));
+    consumer.accept(expand());
   }
 
   /** Add the macros to the rule key. */
@@ -123,5 +124,22 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
                   }
                 },
                 this::extractRuleKeyAppendables));
+  }
+
+  /**
+   * @return {@link String} expansion of the the wrapped {@link
+   *     com.facebook.buck.rules.macros.StringWithMacros}, applying a transformation to expanded
+   *     values of macros.
+   */
+  public String expand(UnaryOperator<String> transformExpandedMacro) {
+    return getStringWithMacros().format(transformExpandedMacro.compose(this::expand));
+  }
+
+  /**
+   * @return {@link String} expansion of the the wrapped {@link
+   *     com.facebook.buck.rules.macros.StringWithMacros}.
+   */
+  public String expand() {
+    return getStringWithMacros().format(this::expand);
   }
 }
