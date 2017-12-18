@@ -22,13 +22,18 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.stream.Stream;
 
 public class CustomBuildRuleResolverFactory {
 
@@ -46,6 +51,8 @@ public class CustomBuildRuleResolverFactory {
   public static final String RIGHT_TARGET = ROOT_TARGET + "_right";
   public static final String LEAF_TARGET = ROOT_TARGET + "_leaf";
   public static final String UNCACHABLE_ROOT = "//some:target";
+  public static final String TRANSITIVE_DEP_RULE = "//:transitive_dep";
+  public static final String HAS_RUNTIME_DEP_RULE = "//:runtime_dep";
 
   public static BuildRuleResolver createSimpleResolver() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
@@ -182,7 +189,68 @@ public class CustomBuildRuleResolverFactory {
     return rule;
   }
 
-  private static class FakeUncacheableBuildRule extends FakeBuildRule {
+  public static BuildRuleResolver createSimpleRuntimeDepsResolver() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    // Create a regular build rule
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(TRANSITIVE_DEP_RULE);
+    BuildRuleParams ruleParams = TestBuildRuleParams.create();
+    FakeBuildRule transitiveRuntimeDep = new FakeBuildRule(buildTarget, filesystem, ruleParams);
+    resolver.addToIndex(transitiveRuntimeDep);
+
+    // Create a build rule with runtime deps
+    FakeBuildRule runtimeDepRule =
+        new FakeHasRuntimeDepsRule(
+            BuildTargetFactory.newInstance(HAS_RUNTIME_DEP_RULE), filesystem, transitiveRuntimeDep);
+    resolver.addToIndex(runtimeDepRule);
+
+    return resolver;
+  }
+
+  // Graph structure:
+  //                   (runtime)-- uncacheable a
+  //                  /
+  //       +- right -
+  //       |          \
+  // root -+           leaf
+  //       |          /
+  //       +- left  -
+  //                  \
+  //                   (runtime)-- {uncacheable b, cacheable c}
+  public static BuildRuleResolver createResolverWithUncacheableRuntimeDeps() {
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
+    BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
+    BuildTarget right = BuildTargetFactory.newInstance(RIGHT_TARGET);
+    BuildTarget leaf = BuildTargetFactory.newInstance(LEAF_TARGET);
+
+    BuildRule uncachableRuleA = newUncacheableRule(resolver, UNCACHABLE_A);
+    BuildRule rightRule =
+        new FakeHasRuntimeDepsRule(right, new FakeProjectFilesystem(), uncachableRuleA);
+    resolver.addToIndex(rightRule);
+
+    BuildRule uncachableRuleB = newUncacheableRule(resolver, UNCACHABLE_B);
+    BuildRule cachableRuleC = newCacheableRule(resolver, CACHABLE_C);
+    BuildRule leftRule =
+        new FakeHasRuntimeDepsRule(
+            left, new FakeProjectFilesystem(), uncachableRuleB, cachableRuleC);
+    resolver.addToIndex(leftRule);
+
+    ImmutableSortedSet<BuildRule> buildRules =
+        ImmutableSortedSet.of(
+            JavaLibraryBuilder.createBuilder(leaf).build(resolver),
+            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
+    buildRules.forEach(resolver::addToIndex);
+    return resolver;
+  }
+
+  public static class FakeUncacheableBuildRule extends FakeBuildRule {
     public FakeUncacheableBuildRule(
         BuildTarget target, ProjectFilesystem filesystem, BuildRule... deps) {
       super(target, filesystem, deps);
@@ -191,6 +259,21 @@ public class CustomBuildRuleResolverFactory {
     @Override
     public boolean isCacheable() {
       return false;
+    }
+  }
+
+  private static class FakeHasRuntimeDepsRule extends FakeBuildRule implements HasRuntimeDeps {
+    private final ImmutableSortedSet<BuildRule> runtimeDeps;
+
+    public FakeHasRuntimeDepsRule(
+        BuildTarget target, ProjectFilesystem filesystem, BuildRule... runtimeDeps) {
+      super(target, filesystem);
+      this.runtimeDeps = ImmutableSortedSet.copyOf(runtimeDeps);
+    }
+
+    @Override
+    public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+      return runtimeDeps.stream().map(BuildRule::getBuildTarget);
     }
   }
 }

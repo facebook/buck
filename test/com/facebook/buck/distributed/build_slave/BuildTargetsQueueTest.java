@@ -16,11 +16,15 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_A;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_B;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_C;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEAF_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.UNCACHABLE_ROOT;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.createBuildGraphWithInterleavedUncacheables;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.createBuildGraphWithUncachableLeaf;
 
@@ -31,26 +35,18 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -60,12 +56,10 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -74,27 +68,10 @@ import org.junit.Test;
 public class BuildTargetsQueueTest {
 
   private final int MAX_UNITS_OF_WORK = 10;
-  public static final String TRANSITIVE_DEP_RULE = "//:transitive_dep";
-  public static final String HAS_RUNTIME_DEP_RULE = "//:runtime_dep";
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   public static final RuleKey CACHE_HIT_RULE_KEY = new RuleKey("cafebabe");
   public static final RuleKey CACHE_MISS_RULE_KEY = new RuleKey("deadbeef");
-
-  private static class FakeHasRuntimeDepsRule extends FakeBuildRule implements HasRuntimeDeps {
-    private final ImmutableSortedSet<BuildRule> runtimeDeps;
-
-    public FakeHasRuntimeDepsRule(
-        BuildTarget target, ProjectFilesystem filesystem, BuildRule... runtimeDeps) {
-      super(target, filesystem);
-      this.runtimeDeps = ImmutableSortedSet.copyOf(runtimeDeps);
-    }
-
-    @Override
-    public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-      return runtimeDeps.stream().map(BuildRule::getBuildTarget);
-    }
-  }
 
   private static BuildTargetsQueue createQueueWithoutRemoteCache(
       BuildRuleResolver resolver, Iterable<BuildTarget> topLevelTargets) {
@@ -202,24 +179,94 @@ public class BuildTargetsQueueTest {
   @Test
   public void testResolverWithTargetThatHasRuntimeDep()
       throws NoSuchBuildTargetException, InterruptedException {
-    BuildRuleResolver resolver = createRuntimeDepsResolver();
-    BuildTarget target = BuildTargetFactory.newInstance(HAS_RUNTIME_DEP_RULE);
+    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleRuntimeDepsResolver();
+    BuildTarget target =
+        BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(2, zeroDepTargets.get(0).getBuildTargets().size());
 
     // has_runtime_dep -> transitive_dep both form a chain, so should be returned as a work unit.
-    Assert.assertEquals(TRANSITIVE_DEP_RULE, zeroDepTargets.get(0).getBuildTargets().get(0));
-    Assert.assertEquals(HAS_RUNTIME_DEP_RULE, zeroDepTargets.get(0).getBuildTargets().get(1));
+    Assert.assertEquals(
+        CustomBuildRuleResolverFactory.TRANSITIVE_DEP_RULE,
+        zeroDepTargets.get(0).getBuildTargets().get(0));
+    Assert.assertEquals(
+        CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE,
+        zeroDepTargets.get(0).getBuildTargets().get(1));
 
     List<WorkUnit> newZeroDepNodes =
-        queue.dequeueZeroDependencyNodes(ImmutableList.of(TRANSITIVE_DEP_RULE), MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(
+            ImmutableList.of(CustomBuildRuleResolverFactory.TRANSITIVE_DEP_RULE),
+            MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodes.size());
 
     List<WorkUnit> newZeroDepNodesTwo =
-        queue.dequeueZeroDependencyNodes(ImmutableList.of(HAS_RUNTIME_DEP_RULE), MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(
+            ImmutableList.of(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE),
+            MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodesTwo.size());
+  }
+
+  @Test
+  public void testGraphWithCacheableAndUncachableRuntimeDeps()
+      throws NoSuchBuildTargetException, InterruptedException {
+    // Graph structure:
+    //                       (runtime)-- uncacheable_a
+    //                      /
+    //       +- right (hit)-
+    //       |              \
+    // root -+               leaf (hit)
+    //       |              /
+    //       +- left (hit) -
+    //                      \
+    //                       (runtime)-- {uncacheable_b, cacheable_c}
+    BuildRuleResolver resolver =
+        CustomBuildRuleResolverFactory.createResolverWithUncacheableRuntimeDeps();
+    BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
+    ImmutableList<BuildTarget> hitTargets =
+        ImmutableList.of(
+            BuildTargetFactory.newInstance(LEFT_TARGET),
+            BuildTargetFactory.newInstance(RIGHT_TARGET),
+            BuildTargetFactory.newInstance(LEAF_TARGET));
+    BuildTargetsQueue queue =
+        createQueueWithRemoteCacheHits(resolver, ImmutableList.of(rootTarget), hitTargets);
+
+    List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
+    Assert.assertEquals(1, zeroDepTargets.size());
+    Assert.assertEquals(3, zeroDepTargets.get(0).getBuildTargets().size());
+
+    // We should get a single chain of root <- left <- cacheable_c.
+    Assert.assertEquals(CACHABLE_C, zeroDepTargets.get(0).getBuildTargets().get(0));
+    Assert.assertEquals(LEFT_TARGET, zeroDepTargets.get(0).getBuildTargets().get(1));
+    Assert.assertEquals(ROOT_TARGET, zeroDepTargets.get(0).getBuildTargets().get(2));
+
+    List<WorkUnit> newZeroDepNodes =
+        queue.dequeueZeroDependencyNodes(
+            ImmutableList.of(CACHABLE_C, LEFT_TARGET, ROOT_TARGET), MAX_UNITS_OF_WORK);
+    Assert.assertEquals(0, newZeroDepNodes.size());
+  }
+
+  @Test
+  public void testTopLevelTargetWithCacheableRuntimeDepsIsNotSkipped()
+      throws NoSuchBuildTargetException, InterruptedException {
+    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleRuntimeDepsResolver();
+    BuildTarget target =
+        BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);
+    BuildTargetsQueue queue =
+        createQueueWithRemoteCacheHits(
+            resolver, ImmutableList.of(target), ImmutableList.of(target));
+    List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
+    Assert.assertEquals(1, zeroDepTargets.size());
+    Assert.assertEquals(2, zeroDepTargets.get(0).getBuildTargets().size());
+
+    // has_runtime_dep -> transitive_dep both form a chain, so should be returned as a work unit.
+    Assert.assertEquals(
+        CustomBuildRuleResolverFactory.TRANSITIVE_DEP_RULE,
+        zeroDepTargets.get(0).getBuildTargets().get(0));
+    Assert.assertEquals(
+        CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE,
+        zeroDepTargets.get(0).getBuildTargets().get(1));
   }
 
   @Test
@@ -269,7 +316,7 @@ public class BuildTargetsQueueTest {
     // - uncacheable_b can be skipped, and go straight to building cacheable_a
 
     BuildRuleResolver resolver = createBuildGraphWithUncachableLeaf();
-    BuildTarget target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.CACHABLE_A);
+    BuildTarget target = BuildTargetFactory.newInstance(CACHABLE_A);
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
 
     List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
@@ -277,12 +324,11 @@ public class BuildTargetsQueueTest {
     WorkUnit workUnit = zeroDepWorkUnits.get(0);
     List<String> workUnitTargets = workUnit.getBuildTargets();
     Assert.assertEquals(1, workUnitTargets.size());
-    Assert.assertEquals(CustomBuildRuleResolverFactory.CACHABLE_A, workUnitTargets.get(0));
+    Assert.assertEquals(CACHABLE_A, workUnitTargets.get(0));
 
     // Mark CACHABLE_A as completed. There should be nothing else to do
     zeroDepWorkUnits =
-        queue.dequeueZeroDependencyNodes(
-            ImmutableList.of(CustomBuildRuleResolverFactory.CACHABLE_A), MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_A), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
   }
 
@@ -305,8 +351,7 @@ public class BuildTargetsQueueTest {
     // - the other uncacheables never need to be built remotely => quicker remote step
 
     BuildRuleResolver resolver = createBuildGraphWithInterleavedUncacheables();
-    BuildTarget target =
-        BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.UNCACHABLE_ROOT);
+    BuildTarget target = BuildTargetFactory.newInstance(UNCACHABLE_ROOT);
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
 
     List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
@@ -314,33 +359,30 @@ public class BuildTargetsQueueTest {
     WorkUnit workUnit = zeroDepWorkUnits.get(0);
     List<String> workUnitTargets = workUnit.getBuildTargets();
     Assert.assertEquals(2, workUnitTargets.size());
-    Assert.assertEquals(CustomBuildRuleResolverFactory.CACHABLE_C, workUnitTargets.get(0));
-    Assert.assertEquals(CustomBuildRuleResolverFactory.CACHABLE_B, workUnitTargets.get(1));
+    Assert.assertEquals(CACHABLE_C, workUnitTargets.get(0));
+    Assert.assertEquals(CACHABLE_B, workUnitTargets.get(1));
 
     // Mark CACHABLE_C as completed. Nothing else should become available yet.
     zeroDepWorkUnits =
-        queue.dequeueZeroDependencyNodes(
-            ImmutableList.of(CustomBuildRuleResolverFactory.CACHABLE_C), MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_C), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
 
     // Mark CACHABLE_B as completed. UNCACHEABLE_D should auto complete,
     // and CACHAEABLE_A should become ready.
     zeroDepWorkUnits =
-        queue.dequeueZeroDependencyNodes(
-            ImmutableList.of(CustomBuildRuleResolverFactory.CACHABLE_B), MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_B), MAX_UNITS_OF_WORK);
     Assert.assertEquals(1, zeroDepWorkUnits.size());
 
     workUnit = zeroDepWorkUnits.get(0);
     workUnitTargets = workUnit.getBuildTargets();
     Assert.assertEquals(1, workUnitTargets.size());
-    Assert.assertEquals(CustomBuildRuleResolverFactory.CACHABLE_A, workUnitTargets.get(0));
+    Assert.assertEquals(CACHABLE_A, workUnitTargets.get(0));
 
     // Mark CACHABLE_A as completed. UNCACHEABLE_C should auto complete,
     // and then UNCACHABLE_ROOT should auto complete. There should be no more work
     // and CACHAEABLE_A should become ready.
     zeroDepWorkUnits =
-        queue.dequeueZeroDependencyNodes(
-            ImmutableList.of(CustomBuildRuleResolverFactory.CACHABLE_A), MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_A), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
   }
 
@@ -470,28 +512,6 @@ public class BuildTargetsQueueTest {
 
     EasyMock.verify(artifactCache);
     EasyMock.verify(rkCalculator);
-  }
-
-  private BuildRuleResolver createRuntimeDepsResolver()
-      throws NoSuchBuildTargetException, InterruptedException {
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
-    // Create a regular build rule
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(TRANSITIVE_DEP_RULE);
-    BuildRuleParams ruleParams = TestBuildRuleParams.create();
-    FakeBuildRule transitiveRuntimeDep = new FakeBuildRule(buildTarget, filesystem, ruleParams);
-    resolver.addToIndex(transitiveRuntimeDep);
-
-    // Create a build rule with runtime deps
-    FakeBuildRule runtimeDepRule =
-        new FakeHasRuntimeDepsRule(
-            BuildTargetFactory.newInstance(HAS_RUNTIME_DEP_RULE), filesystem, transitiveRuntimeDep);
-    resolver.addToIndex(runtimeDepRule);
-
-    return resolver;
   }
 
   public static BuildTargetsQueue createDiamondDependencyQueue() throws NoSuchBuildTargetException {

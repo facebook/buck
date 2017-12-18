@@ -192,6 +192,27 @@ public class BuildTargetsQueueFactory {
     return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>());
   }
 
+  private boolean doesRuleNeedToBeBuilt(BuildRule rule) {
+    boolean canBeSkipped = isBuildRuleInRemoteCache(rule);
+    if (canBeSkipped && hasMissingCachableRuntimeDeps(rule)) {
+      canBeSkipped = false;
+      LOG.verbose(
+          "Target [%s] is present in the remote cache, but still needs to be scheduled, "
+              + "because some of its cachable runtime dependencies are missing from the "
+              + "cache.",
+          ruleToTarget(rule));
+      // TODO (alisdair, shivanker): Ideally we should not be scheduling `rule`, but only the
+      // missing cachable runtime deps themselves, as direct dependencies of the parent rule.
+      // Because otherwise, we might have a scenario where the some uncachable runtime deps get
+      // built twice on different minions because of scheduling `rule` on its own.
+    } else if (canBeSkipped) {
+      LOG.verbose(
+          "Target [%s] can be skipped because it is already present in the remote cache.",
+          ruleToTarget(rule));
+    }
+    return !canBeSkipped;
+  }
+
   private Queue<BuildRule> processTopLevelTargets(
       Iterable<BuildTarget> targetsToBuild, Set<String> visitedTargets) {
     makeCacheMultiContainsQueryIfNecessary(
@@ -201,18 +222,30 @@ public class BuildTargetsQueueFactory {
         .map(resolver::getRule)
         .filter(
             rule -> {
-              boolean needToBuild = !isBuildRuleInRemoteCache(rule);
-              if (needToBuild) {
+              if (doesRuleNeedToBeBuilt(rule)) {
                 visitedTargets.add(ruleToTarget(rule));
-              } else {
-                LOG.debug(
-                    "Skipping top-level target [%s] because it is already present in the cache."
-                        + " Will create an empty BuildTargetsQueue.",
-                    ruleToTarget(rule));
+                return true;
               }
-              return needToBuild;
+              return false;
             })
         .collect(Collectors.toCollection(LinkedList::new));
+  }
+
+  private Stream<BuildRule> getRuntimeDeps(BuildRule rule) {
+    if (!(rule instanceof HasRuntimeDeps)) {
+      return Stream.<BuildRule>builder().build();
+    }
+
+    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
+    return resolver.getAllRulesStream(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
+  }
+
+  private boolean hasMissingCachableRuntimeDeps(BuildRule rule) {
+    Stream<BuildRule> missingCachableRuntimeDeps =
+        getRuntimeDeps(rule)
+            .filter(
+                dependency -> dependency.isCacheable() && !isBuildRuleInRemoteCache(dependency));
+    return missingCachableRuntimeDeps.count() > 0;
   }
 
   private void traverseActionGraph(
@@ -238,27 +271,19 @@ public class BuildTargetsQueueFactory {
 
       // Optionally add in any run-time deps
       if (rule instanceof HasRuntimeDeps) {
-        LOG.debug(String.format("[%s] has runtime deps", ruleToTarget(rule)));
-
-        Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
-        ImmutableSet<BuildRule> runtimeDeps =
-            resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
-
-        allDependencies.addAll(runtimeDeps);
+        LOG.verbose(String.format("[%s] has runtime deps", ruleToTarget(rule)));
+        allDependencies.addAll(getRuntimeDeps(rule).collect(Collectors.toList()));
       }
 
       ImmutableSet<BuildRule> allDeps = allDependencies.build();
       for (BuildRule dependencyRule : allDeps) {
         String dependencyTarget = ruleToTarget(dependencyRule);
-        if (isBuildRuleInRemoteCache(dependencyRule)) {
+        if (!doesRuleNeedToBeBuilt(dependencyRule)) {
           // TODO(shivanker): Re-distribute new found sub-tree of work if contains returned true,
           // but actual fetch failed. Since multi-contains is only best-effort, it might turn out
           // that when we finally need to fetch this target, it's missing. Then the slave who is
           // supposed to build it will end up building the whole sub-tree locally. Ideally, we
           // should be able to re-distribute this new-found chunk of work.
-          LOG.verbose(
-              "Skipping target [%s] because it is already present in the remote cache.",
-              dependencyTarget);
           continue;
         }
 
