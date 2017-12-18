@@ -189,7 +189,7 @@ public class BuildTargetsQueueFactory {
   }
 
   public static BuildTargetsQueue newEmptyQueue() {
-    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>());
+    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>());
   }
 
   private Queue<BuildRule> processTopLevelTargets(
@@ -219,11 +219,16 @@ public class BuildTargetsQueueFactory {
       Queue<BuildRule> buildRulesToProcess,
       Map<String, Set<String>> allReverseDeps,
       Map<String, Set<String>> allForwardDeps,
-      Set<String> visitedTargets) {
+      Set<String> visitedTargets,
+      Set<String> uncachableTargets) {
     while (!buildRulesToProcess.isEmpty()) {
       BuildRule rule = buildRulesToProcess.remove();
-
       String target = ruleToTarget(rule);
+
+      if (!rule.isCacheable()) {
+        uncachableTargets.add(target);
+      }
+
       allForwardDeps.put(target, new HashSet<>());
 
       ImmutableSortedSet.Builder<BuildRule> allDependencies = ImmutableSortedSet.naturalOrder();
@@ -282,6 +287,8 @@ public class BuildTargetsQueueFactory {
     Map<String, Set<String>> allReverseDeps = new HashMap<>();
     Map<String, Set<String>> allForwardDeps = new HashMap<>();
     Set<String> visitedTargets = new HashSet<>();
+    Set<String> uncachableTargets = new HashSet<>();
+    Set<EnqueuedTarget> unachableZeroDependencyTargets = new HashSet<>();
 
     Queue<BuildRule> buildRulesToProcess = processTopLevelTargets(targetsToBuild, visitedTargets);
 
@@ -297,7 +304,8 @@ public class BuildTargetsQueueFactory {
               .collect(Collectors.toSet()));
     }
 
-    traverseActionGraph(buildRulesToProcess, allReverseDeps, allForwardDeps, visitedTargets);
+    traverseActionGraph(
+        buildRulesToProcess, allReverseDeps, allForwardDeps, visitedTargets, uncachableTargets);
     logCacheContainsStats();
 
     // Do the reference counting and create the EnqueuedTargets.
@@ -316,15 +324,20 @@ public class BuildTargetsQueueFactory {
               target,
               ImmutableList.copyOf(currentRevDeps),
               Preconditions.checkNotNull(allForwardDeps.get(target)).size(),
-              ImmutableSet.copyOf(allForwardDeps.get(target)));
+              ImmutableSet.copyOf(allForwardDeps.get(target)),
+              uncachableTargets.contains(target));
       allEnqueuedTargets.put(target, enqueuedTarget);
 
       if (enqueuedTarget.areAllDependenciesResolved()) {
         zeroDependencyTargets.add(enqueuedTarget);
+        if (enqueuedTarget.isUncachable()) {
+          unachableZeroDependencyTargets.add(enqueuedTarget);
+        }
       }
     }
 
-    return new BuildTargetsQueue(zeroDependencyTargets, allEnqueuedTargets);
+    return new BuildTargetsQueue(
+        zeroDependencyTargets, allEnqueuedTargets, unachableZeroDependencyTargets);
   }
 
   private void logCacheContainsStats() {

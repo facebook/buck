@@ -47,6 +47,7 @@ import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.testutil.DummyFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.timing.FakeClock;
@@ -78,6 +79,16 @@ public class BuildTargetsQueueTest {
   public static final RuleKey CACHE_HIT_RULE_KEY = new RuleKey("cafebabe");
   public static final RuleKey CACHE_MISS_RULE_KEY = new RuleKey("deadbeef");
 
+  private static final String UNCACHABLE_ROOT = "//some:target";
+  private static final String UNCACHABLE_A = ROOT_TARGET + "uncacheable_a";
+  private static final String UNCACHABLE_B = ROOT_TARGET + "uncacheable_b";
+  private static final String UNCACHABLE_C = ROOT_TARGET + "uncacheable_c";
+  private static final String UNCACHABLE_D = ROOT_TARGET + "uncacheable_d";
+  private static final String UNCACHABLE_E = ROOT_TARGET + "uncacheable_e";
+  private static final String CACHABLE_A = ROOT_TARGET + "cacheable_a";
+  private static final String CACHABLE_B = ROOT_TARGET + "cacheable_b";
+  private static final String CACHABLE_C = ROOT_TARGET + "cacheable_c";
+
   private static class FakeHasRuntimeDepsRule extends FakeBuildRule implements HasRuntimeDeps {
     private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
@@ -90,6 +101,18 @@ public class BuildTargetsQueueTest {
     @Override
     public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
       return runtimeDeps.stream().map(BuildRule::getBuildTarget);
+    }
+  }
+
+  private static class FakeUncacheableBuildRule extends FakeBuildRule {
+    public FakeUncacheableBuildRule(
+        BuildTarget target, ProjectFilesystem filesystem, BuildRule... deps) {
+      super(target, filesystem, deps);
+    }
+
+    @Override
+    public boolean isCacheable() {
+      return false;
     }
   }
 
@@ -259,6 +282,84 @@ public class BuildTargetsQueueTest {
   }
 
   @Test
+  public void testGraphWithUncachableLeaf() throws NoSuchBuildTargetException {
+    // Graph structure
+    //  cacheable_a -> uncacheable_b
+    // Analysis:
+    // - uncacheable_b can be skipped, and go straight to building cacheable_a
+
+    BuildRuleResolver resolver = createBuildGraphWithUncachableLeaf();
+    BuildTarget target = BuildTargetFactory.newInstance(CACHABLE_A);
+    BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
+
+    List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
+    Assert.assertEquals(1, zeroDepWorkUnits.size());
+    WorkUnit workUnit = zeroDepWorkUnits.get(0);
+    List<String> workUnitTargets = workUnit.getBuildTargets();
+    Assert.assertEquals(1, workUnitTargets.size());
+    Assert.assertEquals(CACHABLE_A, workUnitTargets.get(0));
+
+    // Mark CACHABLE_A as completed. There should be nothing else to do
+    zeroDepWorkUnits =
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_A), MAX_UNITS_OF_WORK);
+    Assert.assertEquals(0, zeroDepWorkUnits.size());
+  }
+
+  @Test
+  public void testGraphWithInterleavedUncachables() throws NoSuchBuildTargetException {
+    // Graph structure
+    //                 / uncacheable_a -> uncacheable b \
+    // uncacheable_root                                uncacheable_d -> cacheable_b -> uncacheable_e
+    // -> cacheable_c
+    //                 \ uncacheable_c -> cacheable_a   /
+    //
+    // Analysis:
+    // - first build chain cacheable_b -> cachable_c.
+    // -- where uncacheable_e dependency of cacheable_b is implicit
+    // - next build cacheable_a
+    // Notes:
+    // - we never explicitly schedule uncachables.
+    // - uncacheable_e will be build implicitly when building cacheable_b
+    // - uncacheable_d will be built implicitly when building cacheable_a
+    // - the other uncacheables never need to be built remotely => quicker remote step
+
+    BuildRuleResolver resolver = createBuildGraphWithInterleavedUncacheables();
+    BuildTarget target = BuildTargetFactory.newInstance(UNCACHABLE_ROOT);
+    BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
+
+    List<WorkUnit> zeroDepWorkUnits = dequeueNoFinishedTargets(queue);
+    Assert.assertEquals(1, zeroDepWorkUnits.size());
+    WorkUnit workUnit = zeroDepWorkUnits.get(0);
+    List<String> workUnitTargets = workUnit.getBuildTargets();
+    Assert.assertEquals(2, workUnitTargets.size());
+    Assert.assertEquals(CACHABLE_C, workUnitTargets.get(0));
+    Assert.assertEquals(CACHABLE_B, workUnitTargets.get(1));
+
+    // Mark CACHABLE_C as completed. Nothing else should become available yet.
+    zeroDepWorkUnits =
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_C), MAX_UNITS_OF_WORK);
+    Assert.assertEquals(0, zeroDepWorkUnits.size());
+
+    // Mark CACHABLE_B as completed. UNCACHEABLE_D should auto complete,
+    // and CACHAEABLE_A should become ready.
+    zeroDepWorkUnits =
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_B), MAX_UNITS_OF_WORK);
+    Assert.assertEquals(1, zeroDepWorkUnits.size());
+
+    workUnit = zeroDepWorkUnits.get(0);
+    workUnitTargets = workUnit.getBuildTargets();
+    Assert.assertEquals(1, workUnitTargets.size());
+    Assert.assertEquals(CACHABLE_A, workUnitTargets.get(0));
+
+    // Mark CACHABLE_A as completed. UNCACHEABLE_C should auto complete,
+    // and then UNCACHABLE_ROOT should auto complete. There should be no more work
+    // and CACHAEABLE_A should become ready.
+    zeroDepWorkUnits =
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_A), MAX_UNITS_OF_WORK);
+    Assert.assertEquals(0, zeroDepWorkUnits.size());
+  }
+
+  @Test
   public void testDiamondDependencyResolverWithChainFromLeaf() throws NoSuchBuildTargetException {
     // Graph structure:
     //        / right \
@@ -417,6 +518,66 @@ public class BuildTargetsQueueTest {
     resolver.addToIndex(runtimeDepRule);
 
     return resolver;
+  }
+
+  // Graph structure
+  //  cacheable_a -> uncacheable_b
+  public BuildRuleResolver createBuildGraphWithUncachableLeaf() {
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule uncacheableB = newUncacheableRule(resolver, UNCACHABLE_B);
+    newCacheableRule(resolver, CACHABLE_A, uncacheableB);
+
+    return resolver;
+  }
+
+  // Graph structure
+  //                 / uncacheable_a -> uncacheable b \
+  // uncacheable_root                                  uc_d -> c_b -> uc_e -> c_c
+  //                 \ uncacheable_c -> cacheable_a   /
+  public BuildRuleResolver createBuildGraphWithInterleavedUncacheables() {
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    // uncacheable_d -> cacheable_b -> uncacheable_e
+    BuildRule cacheableC = newCacheableRule(resolver, CACHABLE_C);
+    BuildRule uncacheableE = newUncacheableRule(resolver, UNCACHABLE_E, cacheableC);
+    BuildRule cacheableB = newCacheableRule(resolver, CACHABLE_B, uncacheableE);
+    BuildRule uncacheableD = newUncacheableRule(resolver, UNCACHABLE_D, cacheableB);
+
+    // uncacheable_a -> uncacheable b \
+    BuildRule uncacheableB = newUncacheableRule(resolver, UNCACHABLE_B, uncacheableD);
+    BuildRule uncacheableA = newUncacheableRule(resolver, UNCACHABLE_A, uncacheableB);
+
+    // uncacheable_c -> cacheable a /
+    BuildRule cacheableA = newCacheableRule(resolver, CACHABLE_A, uncacheableD);
+    BuildRule uncacheableC = newUncacheableRule(resolver, UNCACHABLE_C, cacheableA);
+
+    // uncacheable_root
+    newUncacheableRule(resolver, UNCACHABLE_ROOT, uncacheableA, uncacheableC);
+
+    return resolver;
+  }
+
+  private static BuildRule newUncacheableRule(
+      BuildRuleResolver resolver, String targetString, BuildRule... deps) {
+    FakeUncacheableBuildRule uncachableRule =
+        new FakeUncacheableBuildRule(
+            BuildTargetFactory.newInstance(targetString), new FakeProjectFilesystem(), deps);
+    resolver.addToIndex(uncachableRule);
+    return uncachableRule;
+  }
+
+  private static BuildRule newCacheableRule(
+      BuildRuleResolver resolver, String targetString, BuildRule... deps) {
+    FakeBuildRule rule =
+        new FakeBuildRule(
+            BuildTargetFactory.newInstance(targetString), new FakeProjectFilesystem(), deps);
+    resolver.addToIndex(rule);
+    return rule;
   }
 
   // Graph structure:
