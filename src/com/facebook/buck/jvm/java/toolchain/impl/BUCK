@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
     exported_deps = [
