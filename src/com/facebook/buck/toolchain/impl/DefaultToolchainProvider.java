@@ -19,8 +19,6 @@ package com.facebook.buck.toolchain.impl;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.ocaml.OcamlToolchain;
-import com.facebook.buck.ocaml.OcamlToolchainFactory;
 import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
@@ -54,8 +52,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   ImmutableList<ToolchainDescriptor<?>> DEFAULT_TOOLCHAIN_DESCRIPTORS =
       ImmutableList.of(
-          ToolchainDescriptor.of(
-              OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class, OcamlToolchainFactory.class),
           ToolchainDescriptor.of(
               PexToolProvider.DEFAULT_NAME, PexToolProvider.class, PexToolProviderFactory.class),
           ToolchainDescriptor.of(
