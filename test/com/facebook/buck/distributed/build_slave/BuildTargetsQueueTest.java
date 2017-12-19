@@ -80,7 +80,7 @@ public class BuildTargetsQueueTest {
             MoreExecutors.newDirectExecutorService(),
             false,
             new NoopArtifactCache(),
-            new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
             new DummyFileHashCache(),
             RuleKeyConfiguration.builder()
                 .setCoreKey("dummy")
@@ -123,7 +123,7 @@ public class BuildTargetsQueueTest {
             MoreExecutors.newDirectExecutorService(),
             false,
             remoteCache,
-            new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
             new DummyFileHashCache(),
             RuleKeyConfiguration.builder()
                 .setCoreKey("dummy")
@@ -495,7 +495,7 @@ public class BuildTargetsQueueTest {
             MoreExecutors.newDirectExecutorService(),
             true,
             artifactCache,
-            new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
             new DummyFileHashCache(),
             RuleKeyConfiguration.builder()
                 .setCoreKey("dummy")

@@ -55,7 +55,7 @@ public class MinionWorkloadAllocatorTest {
                 MoreExecutors.newDirectExecutorService(),
                 false,
                 new NoopArtifactCache(),
-                new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+                new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
                 new DummyFileHashCache(),
                 RuleKeyConfiguration.builder()
                     .setCoreKey("dummy")

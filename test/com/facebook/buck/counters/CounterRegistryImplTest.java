@@ -128,7 +128,7 @@ public class CounterRegistryImplTest {
   @Test
   public void noEventsFlushedIfNoCountersRegistered() throws IOException {
     BuckEventBus fakeEventBus =
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, false, new BuildId("12345"), 1000);
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();
@@ -146,7 +146,7 @@ public class CounterRegistryImplTest {
   @Test
   public void noEventsFlushedIfCounterRegisteredButHasNoData() throws IOException {
     BuckEventBus fakeEventBus =
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, false, new BuildId("12345"), 1000);
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();
@@ -168,7 +168,7 @@ public class CounterRegistryImplTest {
   @Test
   public void eventIsFlushedIfCounterRegisteredWithData() throws IOException {
     BuckEventBus fakeEventBus =
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, false, new BuildId("12345"), 1000);
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();
@@ -196,7 +196,7 @@ public class CounterRegistryImplTest {
   @Test
   public void closingRegistryBeforeTimerFiresFlushesCounters() throws IOException {
     BuckEventBus fakeEventBus =
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, false, new BuildId("12345"), 1000);
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();

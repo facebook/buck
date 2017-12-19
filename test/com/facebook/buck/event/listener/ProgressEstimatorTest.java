@@ -43,7 +43,7 @@ public class ProgressEstimatorTest {
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 
   public BuckEventBus getBuckEventBus() {
-    return new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId(""));
+    return new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId(""));
   }
 
   @Test

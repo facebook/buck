@@ -25,11 +25,12 @@ import org.immutables.value.Value;
 @Value.Style(typeImmutable = "*")
 public abstract class AbstractFakeClock implements Clock {
   /** FakeClock instance for tests that don't require specific timestamp values. */
-  public static final FakeClock DO_NOT_CARE =
-      FakeClock.builder()
-          .currentTimeMillis(1337)
-          .nanoTime(TimeUnit.MILLISECONDS.toNanos(4242))
-          .build();
+  public static FakeClock doNotCare() {
+    return FakeClock.builder()
+        .currentTimeMillis(1337)
+        .nanoTime(TimeUnit.MILLISECONDS.toNanos(4242))
+        .build();
+  }
 
   @Override
   public abstract long currentTimeMillis();

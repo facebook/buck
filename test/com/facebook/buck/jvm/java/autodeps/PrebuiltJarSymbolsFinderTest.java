@@ -198,7 +198,7 @@ public class PrebuiltJarSymbolsFinderTest {
 
   private PrebuiltJarSymbolsFinder createFinderForFileWithEntries(
       String jarFileName, Iterable<String> entries) throws InterruptedException, IOException {
-    Clock clock = FakeClock.DO_NOT_CARE;
+    Clock clock = FakeClock.doNotCare();
     Path jarFile = tmp.newFile(jarFileName);
     try (OutputStream stream =
             new BufferedOutputStream(java.nio.file.Files.newOutputStream(jarFile));

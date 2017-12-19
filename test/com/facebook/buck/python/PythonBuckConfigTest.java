@@ -57,7 +57,7 @@ public class PythonBuckConfigTest {
     Path projectDir = Files.createTempDirectory("project");
     Path pexExecuter = Paths.get("pex-executer");
     ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(FakeClock.DO_NOT_CARE, projectDir, ImmutableSet.of(pexExecuter));
+        new FakeProjectFilesystem(FakeClock.doNotCare(), projectDir, ImmutableSet.of(pexExecuter));
     Files.createFile(projectFilesystem.resolve(pexExecuter));
     assertTrue(
         "Should be able to set file executable",

@@ -63,7 +63,7 @@ public class UnskippedRulesTrackerTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     RuleDepsCache depsCache = new RuleDepsCache(resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver);
-    eventBus = new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId());
+    eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
     eventBus.register(
         new Object() {
           @Subscribe

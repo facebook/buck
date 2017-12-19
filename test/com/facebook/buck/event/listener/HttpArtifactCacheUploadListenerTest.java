@@ -44,7 +44,7 @@ public class HttpArtifactCacheUploadListenerTest {
   @Before
   public void setUp() {
     buildId = new BuildId();
-    clock = FakeClock.DO_NOT_CARE;
+    clock = FakeClock.doNotCare();
     events = new ArrayList<>();
     eventBus = new DefaultBuckEventBus(clock, /* async */ false, buildId, 1000);
     eventBus.register(this);
