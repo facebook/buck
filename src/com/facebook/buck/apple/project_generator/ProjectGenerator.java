@@ -2979,11 +2979,11 @@ public class ProjectGenerator {
     targetSpecificSwiftFlags.add("-import-underlying-module");
     Path vfsOverlay =
         getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(
-            getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PUBLIC));
+            getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
     targetSpecificSwiftFlags.add("-Xcc");
     targetSpecificSwiftFlags.add("-ivfsoverlay");
     targetSpecificSwiftFlags.add("-Xcc");
-    targetSpecificSwiftFlags.add(vfsOverlay.toString());
+    targetSpecificSwiftFlags.add("$REPO_ROOT/" + vfsOverlay.toString());
     return targetSpecificSwiftFlags.build();
   }
 
