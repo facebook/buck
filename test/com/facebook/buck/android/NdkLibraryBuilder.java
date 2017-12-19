@@ -21,6 +21,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -93,7 +94,9 @@ public class NdkLibraryBuilder
         new ToolchainProviderBuilder()
             .withToolchain(
                 NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS))
-            .withToolchain(AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12b", Paths.get("/android/ndk")))
+            .withToolchain(
+                AndroidNdk.DEFAULT_NAME,
+                AndroidNdk.of("12b", Paths.get("/android/ndk"), new ExecutableFinder()))
             .build();
     return toolchainProvider;
   }

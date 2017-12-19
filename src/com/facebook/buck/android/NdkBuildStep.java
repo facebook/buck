@@ -16,26 +16,24 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Function;
 
 public class NdkBuildStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidNdk androidNdk;
   private final Path root;
   private final Path makefile;
   private final Path buildArtifactsDirectory;
@@ -46,7 +44,7 @@ public class NdkBuildStep extends ShellStep {
   public NdkBuildStep(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidNdk androidNdk,
       Path root,
       Path makefile,
       Path buildArtifactsDirectory,
@@ -56,7 +54,7 @@ public class NdkBuildStep extends ShellStep {
     super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidNdk = androidNdk;
     this.root = root;
     this.makefile = makefile;
     this.buildArtifactsDirectory = buildArtifactsDirectory;
@@ -77,20 +75,11 @@ public class NdkBuildStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    Optional<Path> ndkBuild =
-        new ExecutableFinder()
-            .getOptionalExecutable(
-                Paths.get("ndk-build"),
-                androidLegacyToolchain.getAndroidPlatformTarget().checkNdkDirectory());
-    if (!ndkBuild.isPresent()) {
-      throw new HumanReadableException("Unable to find ndk-build");
-    }
-
     ConcurrencyLimit concurrencyLimit = context.getConcurrencyLimit();
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(
-        ndkBuild.get().toAbsolutePath().toString(),
+        androidNdk.getNdkBuildExecutable().toAbsolutePath().toString(),
         "-j",
         // TODO(dancol): using -j here is wrong.  It lets make run too many work when we do
         // other work in parallel.  Instead, implement the GNU Make job server so make and Buck can

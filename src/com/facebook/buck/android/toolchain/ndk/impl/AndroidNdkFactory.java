@@ -48,7 +48,8 @@ public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
     return Optional.of(
         AndroidNdk.of(
             detectNdkVersion(androidBuckConfig, androidDirectoryResolver),
-            androidDirectoryResolver.getNdkOrThrow()));
+            androidDirectoryResolver.getNdkOrThrow(),
+            context.getExecutableFinder()));
   }
 
   private String detectNdkVersion(

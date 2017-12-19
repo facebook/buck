@@ -347,13 +347,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
       sources = findSources(projectFilesystem, buildTarget.getBasePath());
     }
     AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
     return new NdkLibrary(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
+        toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
         params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
         getGeneratedMakefilePath(buildTarget, projectFilesystem),

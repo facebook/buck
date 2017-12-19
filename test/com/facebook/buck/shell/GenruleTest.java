@@ -27,6 +27,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
@@ -616,7 +617,8 @@ public class GenruleTest {
             .withToolchain(
                 AndroidLegacyToolchain.DEFAULT_NAME,
                 TestAndroidLegacyToolchainFactory.create(android))
-            .withToolchain(AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir))
+            .withToolchain(
+                AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir, new ExecutableFinder()))
             .build();
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target, toolchainProvider)
