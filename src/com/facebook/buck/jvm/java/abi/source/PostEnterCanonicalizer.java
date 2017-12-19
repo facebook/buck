@@ -209,6 +209,7 @@ class PostEnterCanonicalizer {
       case OTHER:
       case UNION:
       case INTERSECTION:
+      case MODULE:
       default:
         throw new UnsupportedOperationException();
     }

@@ -73,6 +73,7 @@ abstract class StandaloneTypeMirror implements TypeMirror {
       case DOUBLE:
         return v.visitPrimitive((PrimitiveType) this, p);
       case PACKAGE:
+      case MODULE:
       case VOID:
       case NONE:
         return v.visitNoType((NoType) this, p);

@@ -109,6 +109,8 @@ class ClassVisitorDriverFromElement {
         return Opcodes.V1_7;
       case RELEASE_8:
         return Opcodes.V1_8;
+      case RELEASE_9:
+        return Opcodes.V9;
       default:
         throw new IllegalArgumentException(String.format("Unexpected source version: %s", version));
     }
