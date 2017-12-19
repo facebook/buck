@@ -232,7 +232,7 @@ public class BuildPhase {
             finishedRulePublisher,
             buildExecutorArgs.getBuckEventBus(),
             executorService,
-            buildExecutorArgs.getArtifactCacheFactory().newInstance(true, true),
+            buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
             buildExecutorArgs.getRuleKeyConfiguration(),
             // TODO(shivanker): Share RuleKeyCalculator with local CachingBuildEngine.
             Futures.immediateFuture(Optional.empty()),

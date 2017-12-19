@@ -245,8 +245,27 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 Optional.empty())
-            .newInstance(true, false);
+            .remoteOnlyInstance(false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
+  }
+
+  @Test
+  public void testCreateLocalCacheOnly() throws Exception {
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir, http");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .localOnlyInstance(false);
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 
   private static ArtifactCache stripDecorators(ArtifactCache artifactCache) {
