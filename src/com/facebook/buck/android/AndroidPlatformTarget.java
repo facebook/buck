@@ -60,7 +60,6 @@ public class AndroidPlatformTarget {
   private final Path proguardJar;
   private final Path proguardConfig;
   private final Path optimizedProguardConfig;
-  private final AndroidDirectoryResolver androidDirectoryResolver;
 
   private AndroidPlatformTarget(
       String name,
@@ -75,8 +74,7 @@ public class AndroidPlatformTarget {
       Path androidFrameworkIdlFile,
       Path proguardJar,
       Path proguardConfig,
-      Path optimizedProguardConfig,
-      AndroidDirectoryResolver androidDirectoryResolver) {
+      Path optimizedProguardConfig) {
     this.name = name;
     this.androidJar = androidJar;
     this.bootclasspathEntries = ImmutableList.copyOf(bootclasspathEntries);
@@ -90,7 +88,6 @@ public class AndroidPlatformTarget {
     this.proguardJar = proguardJar;
     this.proguardConfig = proguardConfig;
     this.optimizedProguardConfig = optimizedProguardConfig;
-    this.androidDirectoryResolver = androidDirectoryResolver;
   }
 
   /** This is likely something like {@code "Google Inc.:Google APIs:21"}. */
@@ -150,10 +147,6 @@ public class AndroidPlatformTarget {
 
   public Path getOptimizedProguardConfig() {
     return optimizedProguardConfig;
-  }
-
-  public Optional<Path> getSdkDirectory() {
-    return androidDirectoryResolver.getSdkOrAbsent();
   }
 
   /** @param platformId for the platform, such as "Google Inc.:Google APIs:16" */
@@ -288,8 +281,7 @@ public class AndroidPlatformTarget {
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
-        optimizedProguardConfig,
-        androidDirectoryResolver);
+        optimizedProguardConfig);
   }
 
   /** Factory to build an AndroidPlatformTarget that corresponds to a given Google API level. */

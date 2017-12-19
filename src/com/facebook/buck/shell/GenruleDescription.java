@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -64,6 +65,9 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
             AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
     Optional<AndroidNdk> androidNdk =
         toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+    Optional<AndroidSdkLocation> androidSdkLocation =
+        toolchainProvider.getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
 
     if (!args.getExecutable().orElse(false)) {
       SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
@@ -84,7 +88,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          androidNdk);
+          androidNdk,
+          androidSdkLocation);
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -101,7 +106,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOut(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          androidNdk);
+          androidNdk,
+          androidSdkLocation);
     }
   }
 
