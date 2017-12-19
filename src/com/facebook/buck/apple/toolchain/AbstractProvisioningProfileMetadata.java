@@ -19,8 +19,8 @@ package com.facebook.buck.apple.toolchain;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +37,7 @@ import org.immutables.value.Value;
 /** Metadata contained in a provisioning profile (.mobileprovision). */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable {
+abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
   private static final Pattern BUNDLE_ID_PATTERN = Pattern.compile("^([A-Z0-9]{10,10})\\.(.+)$");
 
   /**
@@ -49,6 +49,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
 
   public abstract Date getExpirationDate();
 
+  @AddToRuleKey
   public abstract String getUUID();
 
   public abstract Path getProfilePath();
@@ -97,11 +98,6 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
     } catch (RuntimeException e) {
       return Optional.empty();
     }
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("provisioning-profile-uuid", getUUID());
   }
 
   public ImmutableMap<String, NSObject> getMergeableEntitlements() {
