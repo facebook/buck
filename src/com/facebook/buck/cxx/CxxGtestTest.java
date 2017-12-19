@@ -131,6 +131,15 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   protected ImmutableList<TestResultSummary> parseResults(Path exitCode, Path output, Path results)
       throws IOException, SAXException {
 
+    // Make sure we didn't die abnormally
+    Optional<String> abnormalExitError = validateExitCode(getProjectFilesystem().resolve(exitCode));
+    if (abnormalExitError.isPresent()) {
+      return ImmutableList.of(
+          getProgramFailureSummary(
+              abnormalExitError.get(),
+              getProjectFilesystem().readFileIfItExists(output).orElse("")));
+    }
+
     // Try to parse the results file first, which should be written if the test suite exited
     // normally (even in the event of a failing test).  If this fails, just construct a test
     // summary with the output we have.
