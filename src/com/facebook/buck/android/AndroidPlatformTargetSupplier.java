@@ -16,10 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -75,19 +72,5 @@ public class AndroidPlatformTargetSupplier implements Supplier<AndroidPlatformTa
       exception = e;
       throw e;
     }
-  }
-
-  /**
-   * Create default {@link AndroidPlatformTargetSupplier} using the raw {@link ProjectFilesystem}
-   * instead of {@link AndroidDirectoryResolver}.
-   */
-  public static AndroidPlatformTargetSupplier create(
-      ProjectFilesystem filesystem, BuckConfig buckConfig, Platform platform) {
-    AndroidBuckConfig androidConfig = new AndroidBuckConfig(buckConfig, platform);
-
-    AndroidDirectoryResolver dirResolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(), buckConfig.getEnvironment(), androidConfig);
-    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig);
   }
 }
