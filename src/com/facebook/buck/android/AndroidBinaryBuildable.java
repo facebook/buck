@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -108,11 +109,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
+  private final AndroidSdkLocation androidSdkLocation;
   private final AndroidLegacyToolchain androidLegacyToolchain;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
+      AndroidSdkLocation androidSdkLocation,
       AndroidLegacyToolchain androidLegacyToolchain,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
@@ -131,6 +134,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSortedSet<APKModule> apkModules) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
+    this.androidSdkLocation = androidSdkLocation;
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
@@ -489,7 +493,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         ReDexStep.createSteps(
             buildTarget,
             getProjectFilesystem(),
-            androidLegacyToolchain,
+            androidSdkLocation,
             resolver,
             redexOptions.get(),
             apkToRedexAndAlign,

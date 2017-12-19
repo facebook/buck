@@ -27,6 +27,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
@@ -371,6 +372,8 @@ public class AndroidBinaryDescription
           new AndroidBinary(
               buildTarget,
               projectFilesystem,
+              toolchainProvider.getByName(
+                  AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
               androidLegacyToolchain,
               params,
               ruleFinder,

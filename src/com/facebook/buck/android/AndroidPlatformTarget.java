@@ -156,10 +156,6 @@ public class AndroidPlatformTarget {
     return androidDirectoryResolver.getSdkOrAbsent();
   }
 
-  public Path checkSdkDirectory() {
-    return androidDirectoryResolver.getSdkOrThrow();
-  }
-
   /** @param platformId for the platform, such as "Google Inc.:Google APIs:16" */
   public static AndroidPlatformTarget getTargetForId(
       String platformId,

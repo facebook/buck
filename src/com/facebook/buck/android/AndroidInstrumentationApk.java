@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -48,6 +49,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   AndroidInstrumentationApk(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidSdkLocation androidSdkLocation,
       AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -61,6 +63,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
     super(
         buildTarget,
         projectFilesystem,
+        androidSdkLocation,
         androidLegacyToolchain,
         buildRuleParams,
         ruleFinder,
