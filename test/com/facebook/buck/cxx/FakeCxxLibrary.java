@@ -37,6 +37,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -95,8 +96,9 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         .addIncludes(
             CxxSymlinkTreeHeaders.builder()
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .putNameToPathMap(
-                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget))
+                .setNameToPathMap(
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)))
                 .setBuildTarget(publicHeaderSymlinkTreeTarget)
                 .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
                 .setIncludeRoot(
@@ -115,8 +117,10 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                 .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
                 .setIncludeRoot(
                     Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
-                .putNameToPathMap(
-                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget))
+                .setNameToPathMap(
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"),
+                        DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
                 .build())
         .build();
   }

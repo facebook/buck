@@ -33,6 +33,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 
@@ -67,7 +68,7 @@ public class WriteFileHashCode extends ModernBuildRule<WriteFileHashCode> implem
             filesystem.writeContentsToPath(
                 filesystem.computeSha1(inputPathResolver.resolvePath(inputPath)).getHash(),
                 outputPathResolver.resolvePath(outputPath));
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
   }

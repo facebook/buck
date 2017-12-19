@@ -228,5 +228,6 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckBuild("//:bar", "-c", "build.prehook_script=prehook.sh").assertSuccess();
     assertThat(result.getStderr(), Matchers.containsString("The prehook script ran."));
+    assertThat(result.getStderr(), Matchers.containsString("\"prehook_script\" : \"prehook.sh\""));
   }
 }

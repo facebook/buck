@@ -20,6 +20,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.python.toolchain.PythonVersion;
@@ -37,10 +38,11 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
   @Override
   public Optional<PythonPlatformsProvider> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(context.getBuckConfig());
+    PythonInterpreter pythonInterpreter =
+        toolchainProvider.getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class);
     ImmutableList<PythonPlatform> pythonPlatformsList =
-        getPythonPlatforms(pythonBuckConfig, context.getProcessExecutor());
+        getPythonPlatforms(pythonInterpreter, pythonBuckConfig, context.getProcessExecutor());
     FlavorDomain<PythonPlatform> pythonPlatforms =
         FlavorDomain.from("Python Platform", pythonPlatformsList);
     return Optional.of(PythonPlatformsProvider.of(pythonPlatforms));
@@ -51,11 +53,13 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
    * section names of the form python#{flavor name}.
    */
   public ImmutableList<PythonPlatform> getPythonPlatforms(
-      PythonBuckConfig pythonBuckConfig, ProcessExecutor processExecutor) {
+      PythonInterpreter pythonInterpreter,
+      PythonBuckConfig pythonBuckConfig,
+      ProcessExecutor processExecutor) {
     ImmutableList.Builder<PythonPlatform> builder = ImmutableList.builder();
 
     // Add the python platform described in the top-level section first.
-    builder.add(getDefaultPythonPlatform(pythonBuckConfig, processExecutor));
+    builder.add(getDefaultPythonPlatform(pythonInterpreter, pythonBuckConfig, processExecutor));
 
     pythonBuckConfig
         .getPythonPlatformSections()
@@ -63,6 +67,7 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
             section ->
                 builder.add(
                     getPythonPlatform(
+                        pythonInterpreter,
                         pythonBuckConfig,
                         processExecutor,
                         section,
@@ -72,20 +77,24 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
   }
 
   private PythonPlatform getPythonPlatform(
+      PythonInterpreter pythonInterpreter,
       PythonBuckConfig pythonBuckConfig,
       ProcessExecutor processExecutor,
       String section,
       Flavor flavor) {
     return PythonPlatform.of(
         flavor,
-        getPythonEnvironment(pythonBuckConfig, processExecutor, section),
+        getPythonEnvironment(pythonInterpreter, pythonBuckConfig, processExecutor, section),
         pythonBuckConfig.getCxxLibrary(section));
   }
 
   @VisibleForTesting
   protected PythonEnvironment getPythonEnvironment(
-      PythonBuckConfig pythonBuckConfig, ProcessExecutor processExecutor, String section) {
-    Path pythonPath = pythonBuckConfig.getPythonInterpreter(section);
+      PythonInterpreter pythonInterpreter,
+      PythonBuckConfig pythonBuckConfig,
+      ProcessExecutor processExecutor,
+      String section) {
+    Path pythonPath = pythonInterpreter.getPythonInterpreterPath(section);
     PythonVersion pythonVersion =
         getVersion(pythonBuckConfig, processExecutor, section, pythonPath);
     return new PythonEnvironment(pythonPath, pythonVersion);
@@ -93,8 +102,11 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
 
   @VisibleForTesting
   protected PythonPlatform getDefaultPythonPlatform(
-      PythonBuckConfig pythonBuckConfig, ProcessExecutor executor) {
+      PythonInterpreter pythonInterpreter,
+      PythonBuckConfig pythonBuckConfig,
+      ProcessExecutor executor) {
     return getPythonPlatform(
+        pythonInterpreter,
         pythonBuckConfig,
         executor,
         pythonBuckConfig.getDefaultPythonPlatformSection(),

@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.rules.keys.impl.BuckBinaryHashProvider;
+import com.facebook.buck.rules.keys.config.impl.BuckBinaryHashProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;

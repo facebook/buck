@@ -36,6 +36,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +50,8 @@ import org.immutables.value.Value;
 public class GoLibraryDescription
     implements Description<GoLibraryDescriptionArg>,
         Flavored,
-        MetadataProvidingDescription<GoLibraryDescriptionArg> {
+        MetadataProvidingDescription<GoLibraryDescriptionArg>,
+        VersionPropagator<GoLibraryDescriptionArg> {
 
   private final GoBuckConfig goBuckConfig;
   private final ToolchainProvider toolchainProvider;

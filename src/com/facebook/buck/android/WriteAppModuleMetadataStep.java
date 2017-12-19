@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -109,10 +110,10 @@ public class WriteAppModuleMetadataStep implements Step {
       writeModuleToModulesMap(moduleToDepsMap, metadataLines);
       filesystem.writeLinesToPath(metadataLines, metadataOutput);
 
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     } catch (IOException e) {
       context.logError(e, "There was an error running WriteAppModuleMetadataStep.");
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
   }
 

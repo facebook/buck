@@ -19,16 +19,21 @@ package com.facebook.buck.python;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.python.toolchain.PexToolProvider;
+import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.python.toolchain.impl.DefaultPexToolProvider;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -40,37 +45,99 @@ public class PythonBinaryBuilder
         PythonBinaryDescriptionArg.Builder, PythonBinaryDescriptionArg, PythonBinaryDescription,
         PythonBinary> {
 
-  public PythonBinaryBuilder(
+  private PythonBinaryBuilder(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig,
+      ToolchainProviderBuilder toolchainProviderBuilder) {
+    super(
+        new PythonBinaryDescription(
+            toolchainProviderBuilder.build(), pythonBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG),
+        target);
+  }
+
+  private PythonBinaryBuilder(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig,
+      ExecutableFinder executableFinder,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this(
+        target,
+        pythonBuckConfig,
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.of(pythonPlatforms))
+            .withToolchain(
+                PexToolProvider.DEFAULT_NAME,
+                new DefaultPexToolProvider(
+                    new ToolchainProviderBuilder()
+                        .withToolchain(
+                            PythonInterpreter.DEFAULT_NAME,
+                            new PythonInterpreterFromConfig(pythonBuckConfig, executableFinder))
+                        .build(),
+                    pythonBuckConfig,
+                    TestRuleKeyConfigurationFactory.create()))
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms)));
+  }
+
+  public static PythonBinaryBuilder create(
+      BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
+    return new PythonBinaryBuilder(
+        target,
+        pythonBuckConfig,
+        new ExecutableFinder(),
+        pythonPlatforms,
+        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonBinaryBuilder create(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(
-        new PythonBinaryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    PythonPlatformsProvider.DEFAULT_NAME,
-                    PythonPlatformsProvider.of(pythonPlatforms))
-                .build(),
-            TestRuleKeyConfigurationFactory.create(),
-            pythonBuckConfig,
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            defaultCxxPlatform,
-            cxxPlatforms),
-        target);
-  }
-
-  public static PythonBinaryBuilder create(
-      BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,
+        new ExecutableFinder(),
+        pythonPlatforms,
+        defaultCxxPlatform,
+        cxxPlatforms);
+  }
+
+  public static PythonBinaryBuilder create(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
+    return new PythonBinaryBuilder(
+        target,
+        pythonBuckConfig,
+        new ExecutableFinder(),
         pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonBinaryBuilder create(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig,
+      ToolchainProviderBuilder toolchainProviderBuilder,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
+    return new PythonBinaryBuilder(
+        target,
+        pythonBuckConfig,
+        toolchainProviderBuilder
+            .withToolchain(
+                PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.of(pythonPlatforms))
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(
+                    CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS)));
   }
 
   public static PythonBinaryBuilder create(BuildTarget target) {

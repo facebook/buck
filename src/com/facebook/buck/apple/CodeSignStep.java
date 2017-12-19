@@ -19,11 +19,13 @@ package com.facebook.buck.apple;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
@@ -37,6 +39,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 class CodeSignStep implements Step {
+
+  private static final Logger LOG = Logger.get(CodeSignStep.class);
+
   private final SourcePathResolver resolver;
   private final Path pathToSign;
   private final Optional<Path> pathToSigningEntitlements;
@@ -79,7 +84,7 @@ class CodeSignStep implements Step {
       dryRunResult.put("use-entitlements", pathToSigningEntitlements.isPresent());
       dryRunResult.put("identity", getIdentityArg(codeSignIdentitySupplier.get()));
       filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
@@ -104,6 +109,9 @@ class CodeSignStep implements Step {
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("codesign command: %s", Joiner.on(" ").join(processExecutorParams.getCommand()));
+    }
     ProcessExecutor.Result result =
         processExecutor.launchAndExecute(
             processExecutorParams,
@@ -120,7 +128,7 @@ class CodeSignStep implements Step {
     if (result.getExitCode() != 0) {
       return StepExecutionResult.of(result);
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

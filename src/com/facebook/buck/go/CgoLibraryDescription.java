@@ -39,6 +39,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +50,7 @@ import org.immutables.value.Value;
 public class CgoLibraryDescription
     implements Description<CgoLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<CgoLibraryDescriptionArg>,
+        VersionPropagator<CgoLibraryDescriptionArg>,
         Flavored {
 
   private final GoBuckConfig goBuckConfig;
@@ -121,7 +123,7 @@ public class CgoLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
     CxxPlatform cxxPlatform = getCxxPlatform();
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
   }
 
   private CxxPlatform getCxxPlatform() {

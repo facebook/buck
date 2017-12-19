@@ -24,11 +24,14 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class AlterRuleKeys {
   private static final Logger LOG = Logger.get(AlterRuleKeys.class);
   private static final LoadingCache<Class<?>, ImmutableCollection<AlterRuleKey>> cache =
       CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
+  private static final ConcurrentHashMap<Class<?>, String> pseudoNameCache =
+      new ConcurrentHashMap<>();
 
   public static void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
     amendKey(sink, (Object) rule);
@@ -50,11 +53,7 @@ public final class AlterRuleKeys {
     Class<?> clazz = appendable.getClass();
     String className = clazz.getName();
     if (clazz.isAnonymousClass() || clazz.isSynthetic()) {
-      // TODO(cjhopman): Make this an error.
-      String pseudoName = getPseudoClassName(clazz);
-      LOG.warn(
-          "Trying to add anonymous class %s to rulekeys. Using %s instead", className, pseudoName);
-      className = pseudoName;
+      className = pseudoNameCache.computeIfAbsent(clazz, AlterRuleKeys::getPseudoClassName);
     }
     sink.setReflectively(".class", className);
     for (AlterRuleKey alterRuleKey : cache.getUnchecked(clazz)) {
@@ -72,6 +71,10 @@ public final class AlterRuleKeys {
     if (declaring.isAnonymousClass() || declaring.isSynthetic()) {
       prefix = prefix.replaceAll("\\$.*", "");
     }
-    return prefix + "$?????";
+    String pseudoName = prefix + "$?????";
+    LOG.warn(
+        "Trying to add anonymous class %s to rulekeys. Using %s instead",
+        clazz.getName(), pseudoName);
+    return pseudoName;
   }
 }

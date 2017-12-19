@@ -34,6 +34,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.testutil.FakeDistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
@@ -42,6 +43,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.distributed.thrift.FileMaterializationStats;
+import com.facebook.buck.distributed.thrift.HealthCheckStats;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -88,6 +90,7 @@ public class DistBuildSlaveEventBusListenerTest {
   private BuckEventBus eventBus;
   private SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
   private FileMaterializationStatsTracker fileMaterializationStatsTracker;
+  private HealthCheckStatsTracker healthCheckStatsTracker;
   private FakeDistBuildSlaveTimingStatsTracker slaveStatsTracker;
 
   @Before
@@ -100,6 +103,7 @@ public class DistBuildSlaveEventBusListenerTest {
     makeThreadSafe(distBuildServiceMock, true);
     eventBus = BuckEventBusForTests.newInstance();
     fileMaterializationStatsTracker = new FileMaterializationStatsTracker();
+    healthCheckStatsTracker = new HealthCheckStatsTracker();
     slaveStatsTracker = new FakeDistBuildSlaveTimingStatsTracker();
   }
 
@@ -112,6 +116,7 @@ public class DistBuildSlaveEventBusListenerTest {
             clock,
             slaveStatsTracker,
             fileMaterializationStatsTracker,
+            healthCheckStatsTracker,
             Executors.newScheduledThreadPool(1),
             1);
     eventBus.register(listener);
@@ -551,6 +556,16 @@ public class DistBuildSlaveEventBusListenerTest {
     expectedFinishedStats.setBuildSlavePerStageTimingStats(timingStats);
     expectedFinishedStats.setDistBuildMode("REMOTE_BUILD");
     expectedFinishedStats.setExitCode(EXIT_CODE);
+
+    HealthCheckStats healthCheckStats = new HealthCheckStats();
+    healthCheckStats.setSlowHeartbeatsReceivedCount(0);
+    healthCheckStats.setSlowestHeartbeatIntervalMillis(0);
+    healthCheckStats.setHeartbeatsReceivedCount(0);
+    healthCheckStats.setAverageHeartbeatIntervalMillis(0);
+    healthCheckStats.setSlowestHeartbeatMinionId("");
+    healthCheckStats.setSlowDeadMinionChecksCount(0);
+    healthCheckStats.setSlowestDeadMinionCheckIntervalMillis(0);
+    expectedFinishedStats.setHealthCheckStats(healthCheckStats);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
         eq(stampedeId), eq(buildSlaveRunId), anyObject());

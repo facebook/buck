@@ -29,7 +29,6 @@ import java.io.IOException;
 
 /** Listener to events from the Coordinator. */
 public class CoordinatorEventListener implements ThriftCoordinatorServer.EventListener {
-
   private final DistBuildService service;
   private final StampedeId stampedeId;
   private final String minionQueue;

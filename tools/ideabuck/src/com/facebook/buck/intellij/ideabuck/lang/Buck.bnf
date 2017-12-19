@@ -46,6 +46,8 @@
     GLOB_EXCLUDES_KEYWORD = 'excludes'
     GLOB_EXCLUDE_KEYWORD = 'exclude'
 
+    LOAD_KEYWORD = 'load'
+
     MACROS = "regexp:[A-Z_]([A-Z0-9_])+"
 
     DOUBLE_QUOTED_STRING="regexp:\"([^\\\"\r\n]|\\[^\r\n])*\"?"
@@ -65,7 +67,7 @@
 
 buckFile ::= item_*
 
-private item_ ::= (rule_call | rule_block | property | LINE_COMMENT)
+private item_ ::= (rule_call | rule_block | property | LINE_COMMENT | load_call)
 
 property_lvalue ::= IDENTIFIER | MACROS
 property ::= property_lvalue '=' expression
@@ -98,6 +100,10 @@ glob_arguments ::= value | glob_keyword_argument
 glob_keyword_argument ::= (GLOB_INCLUDES_KEYWORD | GLOB_EXCLUDES_KEYWORD | GLOB_EXCLUDE_KEYWORD | GLOB_INCLUDE_DOTFILES_KEYWORD) '=' expression
 
 rule_call ::= rule_name '(' list_elements ')'
+
+load_target_argument ::= string
+load_argument ::= string | property
+load_call ::= LOAD_KEYWORD '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
 
 function_call ::= IDENTIFIER '(' ((string [',']) | (dictionary [',']))* ')'
 dictionary ::= L_CURLY value COLUMN value [','] R_CURLY

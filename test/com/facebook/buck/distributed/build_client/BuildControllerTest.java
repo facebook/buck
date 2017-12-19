@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed.build_client;
 
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -27,6 +26,7 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
+import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -45,14 +45,18 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.FakeInvocationInfoFactory;
+import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.HashMap;
@@ -73,15 +77,14 @@ public class BuildControllerTest {
   private LogStateTracker mockLogStateTracker;
   private ScheduledExecutorService scheduler;
   private BuckVersion buckVersion;
-  private BuildJobState buildJobState;
   private DistBuildCellIndexer distBuildCellIndexer;
-  private BuildController distBuildClientExecutor;
-  private ListeningExecutorService directExecutor;
+  private WeightedListeningExecutorService directExecutor;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private FakeFileHashCache fakeFileHashCache;
   private BuckEventBus mockEventBus;
   private StampedeId stampedeId;
   private ClientStatsTracker distBuildClientStatsTracker;
+  private InvocationInfo invocationInfo;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -90,29 +93,52 @@ public class BuildControllerTest {
     scheduler = Executors.newSingleThreadScheduledExecutor();
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
-    buildJobState = createMinimalFakeBuildJobState();
     distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
     distBuildCellIndexer = new DistBuildCellIndexer(new TestCellBuilder().build());
-    distBuildClientExecutor =
-        new BuildController(
-            buildJobState,
-            distBuildCellIndexer,
-            mockDistBuildService,
-            mockLogStateTracker,
-            buckVersion,
-            distBuildClientStatsTracker,
-            scheduler,
-            0,
-            1,
-            true,
-            new RemoteBuildRuleSynchronizer());
-
-    directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
+    directExecutor =
+        new FakeWeightedListeningExecutorService(MoreExecutors.newDirectExecutorService());
     fakeProjectFilesystem = new FakeProjectFilesystem();
     fakeFileHashCache = FakeFileHashCache.createFromStrings(new HashMap<>());
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
     stampedeId = new StampedeId();
     stampedeId.setId("uber-cool-stampede-id");
+    invocationInfo = FakeInvocationInfoFactory.create();
+  }
+
+  private BuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState) {
+    return new BuildController(
+        null,
+        ImmutableSet.of(),
+        null,
+        Optional.empty(),
+        asyncBuildJobState,
+        distBuildCellIndexer,
+        mockDistBuildService,
+        mockLogStateTracker,
+        buckVersion,
+        distBuildClientStatsTracker,
+        scheduler,
+        0,
+        1,
+        true,
+        new RemoteBuildRuleSynchronizer());
+  }
+
+  private void runBuildWithController(BuildController buildController)
+      throws IOException, InterruptedException {
+    // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
+    // otherwise when we stop the timer it will fail with an exception about not being started.
+    distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
+    buildController.executeAndPrintFailuresToEventBus(
+        directExecutor,
+        fakeProjectFilesystem,
+        fakeFileHashCache,
+        mockEventBus,
+        invocationInfo,
+        BuildMode.REMOTE_BUILD,
+        1,
+        REPOSITORY,
+        TENANT_ID);
   }
 
   @After
@@ -165,16 +191,16 @@ public class BuildControllerTest {
    */
   @Test
   public void testOrderlyExecution() throws IOException, InterruptedException {
-    BuildId buildId = new BuildId("44-55");
-
     final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
     buildSlaveRunId.setId("my-fav-runid");
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
+    final BuildJobState buildJobState = createMinimalFakeBuildJobState();
+
     expect(
             mockDistBuildService.createBuild(
-                buildId, BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+                invocationInfo.getBuildId(), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
         .andReturn(job);
     expect(
             mockDistBuildService.uploadMissingFilesAsync(
@@ -208,7 +234,9 @@ public class BuildControllerTest {
     job = job.deepCopy(); // new copy
     job.setBuckVersion(buckVersion);
     job.setStatus(BuildStatus.QUEUED);
-    expect(mockDistBuildService.startBuild(stampedeId)).andReturn(job);
+    expect(mockDistBuildService.startBuild(stampedeId, true)).andReturn(job);
+    mockEventBus.post(isA(DistBuildCreatedEvent.class));
+    expectLastCall().times(1);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job).times(2);
 
     ////////////////////////////////////////////////////
@@ -280,26 +308,14 @@ public class BuildControllerTest {
     job.putToSlaveInfoByRunId(buildSlaveRunId.getId(), slaveInfo1);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
-    mockEventBus.post(anyObject(ClientSideBuildSlaveFinishedStatsEvent.class));
+    mockEventBus.post(isA(ClientSideBuildSlaveFinishedStatsEvent.class));
     expectLastCall().times(1);
 
     replay(mockDistBuildService);
     replay(mockEventBus);
     replay(mockLogStateTracker);
 
-    // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
-    // otherwise when we stop the timer it will fail with an exception about not being started.
-    distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
-    distBuildClientExecutor.executeAndPrintFailuresToEventBus(
-        directExecutor,
-        fakeProjectFilesystem,
-        fakeFileHashCache,
-        mockEventBus,
-        buildId,
-        BuildMode.REMOTE_BUILD,
-        1,
-        REPOSITORY,
-        TENANT_ID);
+    runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
     verify(mockDistBuildService);
     verify(mockLogStateTracker);

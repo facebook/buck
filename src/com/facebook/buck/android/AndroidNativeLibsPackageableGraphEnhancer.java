@@ -21,7 +21,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.relinker.NativeRelinker;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -88,7 +89,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
    */
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
+  private final CellPathResolver cellPathResolver;
+
   public AndroidNativeLibsPackageableGraphEnhancer(
+      CellPathResolver cellPathResolver,
       BuildRuleResolver ruleResolver,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -102,6 +106,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       RelinkerMode relinkerMode,
       ImmutableList<Pattern> relinkerWhitelist,
       APKModuleGraph apkModuleGraph) {
+    this.cellPathResolver = cellPathResolver;
     this.projectFilesystem = projectFilesystem;
     this.originalBuildTarget = originalBuildTarget;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
@@ -191,6 +196,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     if (nativeLibraryMergeMap.isPresent() && !nativeLibraryMergeMap.get().isEmpty()) {
       NativeLibraryMergeEnhancementResult enhancement =
           NativeLibraryMergeEnhancer.enhance(
+              cellPathResolver,
               cxxBuckConfig,
               ruleResolver,
               pathResolver,
@@ -268,6 +274,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                       .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
                       .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
                       .build()),
+              cellPathResolver,
               pathResolver,
               ruleFinder,
               cxxBuckConfig,

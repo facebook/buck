@@ -16,16 +16,16 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
 /** Interface for a c/c++ preprocessor. */
-public interface Preprocessor extends AbstractTool {
+public interface Preprocessor extends Tool {
 
   boolean supportsHeaderMaps();
 

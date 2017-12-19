@@ -17,11 +17,11 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.io.file.FileScrubber;
-import com.facebook.buck.rules.AbstractTool;
+import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 
 /** Interface for a c/c++ archiver. */
-public interface Archiver extends AbstractTool {
+public interface Archiver extends Tool {
 
   ImmutableList<FileScrubber> getScrubbers();
 

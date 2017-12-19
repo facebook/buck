@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -63,7 +64,7 @@ class HeaderMapStep implements Step {
     }
     HeaderMap headerMap = builder.build();
     filesystem.writeBytesToPath(headerMap.getBytes(), output);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

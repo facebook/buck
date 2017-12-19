@@ -16,9 +16,11 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.module.BuckModuleHashStrategy;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 
@@ -41,6 +43,12 @@ public class RuleKeyFieldLoader {
     builder.setReflectively(
         ".input_rule_key_file_size_limit",
         ruleKeyConfiguration.getBuildInputRuleKeyFileSizeLimit());
+
+    BuckModuleHashStrategy hashStrategy = ruleKeyConfiguration.getBuckModuleHashStrategy();
+    Class<?> buildRuleClass = buildRule.getClass();
+    if (hashStrategy.needToAddModuleHashToRuleKey(buildRuleClass)) {
+      builder.setReflectively(".buck_module_hash", hashStrategy.getModuleHash(buildRuleClass));
+    }
 
     // We currently cache items using their full buck-out path, so make sure this is reflected in
     // the rule key.

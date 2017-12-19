@@ -24,6 +24,7 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
@@ -207,10 +208,10 @@ public class SmartDexingStep implements Step {
       }
     } catch (StepFailedException e) {
       context.logError(e, "There was an error in smart dexing step.");
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)

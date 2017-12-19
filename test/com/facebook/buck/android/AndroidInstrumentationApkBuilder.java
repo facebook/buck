@@ -19,8 +19,10 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
+import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -35,11 +37,17 @@ public class AndroidInstrumentationApkBuilder
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(
         new AndroidInstrumentationApkDescription(
-            new ToolchainProviderBuilder().withDefaultNdkCxxPlatforms().build(),
+            new ToolchainProviderBuilder()
+                .withDefaultNdkCxxPlatforms()
+                .withToolchain(
+                    DxToolchain.DEFAULT_NAME,
+                    DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+                .build(),
             DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
-            ANDROID_JAVAC_OPTIONS,
-            MoreExecutors.newDirectExecutorService(),
             new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
             new DxConfig(FakeBuckConfig.builder().build())),
         target);

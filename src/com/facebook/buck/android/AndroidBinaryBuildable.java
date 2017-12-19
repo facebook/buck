@@ -35,6 +35,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -397,7 +398,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           filesystem.move(libPath, tempPath);
           outputAssetLibrariesBuilder.add(tempPath);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -442,7 +443,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         if (!metadata.isEmpty()) {
           filesystem.writeLinesToPath(metadata, metadataOutput);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }

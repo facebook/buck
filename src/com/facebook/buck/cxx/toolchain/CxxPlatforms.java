@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
@@ -300,6 +301,42 @@ public class CxxPlatforms {
     for (CxxPlatform cxxPlatform : cxxPlatforms) {
       deps.addAll(getParseTimeDeps(cxxPlatform));
     }
+    return deps.build();
+  }
+
+  public static CxxPlatform getCxxPlatform(
+      CxxPlatformsProvider cxxPlatformsProvider,
+      BuildTarget target,
+      Optional<Flavor> defaultCxxPlatformFlavor) {
+
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
+    // First check if the build target is setting a particular target.
+    Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
+    if (targetPlatform.isPresent()) {
+      return targetPlatform.get();
+    }
+
+    // Next, check for a constructor arg level default platform.
+    if (defaultCxxPlatformFlavor.isPresent()) {
+      return cxxPlatforms.getValue(defaultCxxPlatformFlavor.get());
+    }
+
+    // Otherwise, fallback to the description-level default platform.
+    return cxxPlatforms.getValue(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
+  }
+
+  public static Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      CxxPlatformsProvider cxxPlatformsProvider,
+      BuildTarget buildTarget,
+      Optional<Flavor> defaultCxxPlatformFlavor) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+
+    // Get any parse time deps from the C/C++ platforms.
+    deps.addAll(
+        getParseTimeDeps(
+            getCxxPlatform(cxxPlatformsProvider, buildTarget, defaultCxxPlatformFlavor)));
+
     return deps.build();
   }
 }

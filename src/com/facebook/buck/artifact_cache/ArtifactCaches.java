@@ -240,6 +240,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
                       args,
                       buckConfig.getHybridThriftEndpoint().get(),
                       distributedBuildModeEnabled,
+                      buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig, buckEventBus),
                       buckConfig.getHttpFetchConcurrency()),
               mode);

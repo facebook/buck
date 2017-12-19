@@ -35,13 +35,9 @@ import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -274,50 +270,13 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     return preprocessorFlags.getPrefixHeader();
   }
 
-  /**
-   * Generate a digest of the compiler flags.
-   *
-   * <p>Generated PCH files can only be used when compiling with similar compiler flags. This
-   * guarantees the uniqueness of the generated file.
-   *
-   * <p>Note: when building the hash for identifying the PCH itself, just pass {@code
-   * Optional.empty()}.
-   */
-  public String hashCommand(CxxToolFlags flags, Optional<CxxPrecompiledHeader> pch) {
-    return hashCommand(getCommand(flags, pch));
-  }
-
-  public String hashCommand(ImmutableList<Arg> flags) {
-    Hasher hasher = Hashing.murmur3_128().newHasher();
-    String workingDirString = workingDir.toString();
-    // Skips the executable argument (the first one) as that is not sanitized.
-    //
-    // TODO(#14644005): This currently won't support macros in the input flags.  I think we probably
-    // need to change the hasher here to use `RuleKeyObjectSink` so that it can handle `Arg`s
-    // directly and hash it appropriately.
-    for (Arg flag : flags) {
-      Preconditions.checkArgument(
-          BuildableSupport.deriveInputs(flag).collect(ImmutableList.toImmutableList()).isEmpty(),
-          "precompiled header hashing does not support source paths");
-    }
-    for (String part : sanitizer.sanitizeFlags(Iterables.skip(Arg.stringify(flags, resolver), 1))) {
-      // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
-      if (part.startsWith(workingDirString)) {
-        part = "<WORKINGDIR>" + part.substring(workingDirString.length());
-      }
-      hasher.putString(part, Charsets.UTF_8);
-      hasher.putBoolean(false); // separator
-    }
-    return hasher.hash().toString();
-  }
-
   public PreprocessorFlags getPreprocessorFlags() {
     return preprocessorFlags;
   }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableList.<BuildRule>builder()
-        .addAll(getPreprocessor().getDeps(ruleFinder))
+        .addAll(BuildableSupport.getDepsCollection(getPreprocessor(), ruleFinder))
         .addAll(getPreprocessorFlags().getDeps(ruleFinder))
         .build();
   }

@@ -27,6 +27,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheDeleteResult;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -39,7 +40,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 public class CacheDeleteCommandTest extends EasyMockSupport {
-  @Test
+  @Test(expected = CommandLineException.class)
   public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
     CommandRunnerParams commandRunnerParams =

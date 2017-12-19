@@ -45,7 +45,6 @@ EXPORTED_RESOURCES = [
     Resource("testrunner_classes"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
-    Resource("path_to_rawmanifest_py", basename='rawmanifest.py'),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
     Resource("path_to_pex"),
     Resource("path_to_pywatchman"),
@@ -363,6 +362,8 @@ class BuckTool(object):
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                self._reporter.build_id = build_id
+
                 try:
                     repository = self._get_repository()
                     self._reporter.repository = repository
@@ -407,7 +408,16 @@ class BuckTool(object):
 
                 self._unpack_modules()
 
-                return self._execute_command_and_maybe_run_target(run_fn, env)
+                exit_code = self._execute_command_and_maybe_run_target(
+                    run_fn, env)
+
+                # Most shells return process termination with signal as
+                # 128 + N, where N is the signal. However Python's subprocess
+                # call returns them as negative numbers. Buck binary protocol
+                # uses shell's convention, so convert
+                if (exit_code < 0):
+                    exit_code = 128 + (-1 * exit_code)
+                return exit_code
 
 
     def _generate_log_entry(self, message, logs_array):

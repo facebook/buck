@@ -744,6 +744,37 @@ public class AppleTestIntegrationTest {
     testSwiftScenario("apple_test_objc_uses_apple_library_with_swift_sources_private_path");
   }
 
+  @Test
+  public void successXctoolZipWithCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fbxctest_zip", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//:foo", "cell//:bar");
+    result.assertSuccess();
+    System.err.println(result.getStderr());
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   BarXCTest"));
+  }
+
+  @Test
+  public void successXctoolZipWithCellAndEmbeddedBuckout() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fbxctest_zip", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "//:foo",
+            "cell//:bar");
+    result.assertSuccess();
+    System.err.println(result.getStderr());
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   BarXCTest"));
+  }
+
   private void testSwiftScenario(String scenarionName) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenarionName, tmp);

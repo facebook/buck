@@ -94,13 +94,17 @@ public class JsBundleGenrule extends Genrule
     environmentVariablesBuilder
         .put("JS_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToOutput()).toString())
         .put("JS_BUNDLE_NAME", jsBundle.getBundleName())
+        .put("MISC_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToMisc()).toString())
         .put(
             "PLATFORM",
             JsFlavors.PLATFORM_DOMAIN
                 .getFlavor(getBuildTarget().getFlavors())
                 .map(flavor -> flavor.getName())
                 .orElse(""))
-        .put("RELEASE", getBuildTarget().getFlavors().contains(JsFlavors.RELEASE) ? "1" : "");
+        .put("RELEASE", getBuildTarget().getFlavors().contains(JsFlavors.RELEASE) ? "1" : "")
+        .put(
+            "RES_DIR",
+            pathResolver.getAbsolutePath(jsBundle.getSourcePathToResources()).toString());
 
     if (rewriteSourcemap) {
       environmentVariablesBuilder.put(

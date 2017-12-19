@@ -20,7 +20,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -31,13 +30,15 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -137,7 +138,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
         }
       }
 
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override
@@ -169,7 +170,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
         }
       }
 
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override
@@ -193,16 +194,14 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      String executableCommand;
-      try {
-        executableCommand =
-            new ExecutableMacroExpander()
-                .expand(pathResolver, GenerateCodeForMergedLibraryMap.this.codeGenerator);
-      } catch (MacroException e) {
-        // Should not be possible, as check was performed in constructor.
-        throw new RuntimeException(e);
-      }
-
+      Preconditions.checkState(
+          GenerateCodeForMergedLibraryMap.this.codeGenerator instanceof BinaryBuildRule);
+      String executableCommand =
+          Joiner.on(" ")
+              .join(
+                  ((BinaryBuildRule) GenerateCodeForMergedLibraryMap.this.codeGenerator)
+                      .getExecutableCommand()
+                      .getCommandPrefix(pathResolver));
       return ImmutableList.<String>builder()
           .addAll(Splitter.on(' ').split(executableCommand))
           .add(getMappingPath().toString())

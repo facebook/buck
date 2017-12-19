@@ -43,7 +43,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -197,24 +196,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             ? PREFIX_PERFTIMES_COMPLETE
             : PREFIX_PERFTIMES_UPDATE,
         event);
-  }
-
-  @Subscribe
-  public synchronized void autosparseSparseRefreshStarted(
-      AutoSparseStateEvents.SparseRefreshStarted event) {
-    writeToLog("Autosparse.SparseRefreshStarted", event);
-  }
-
-  @Subscribe
-  public synchronized void autosparseSparseRefreshFinished(
-      AutoSparseStateEvents.SparseRefreshFinished event) {
-    writeToLog("Autosparse.SparseRefreshFinished", event);
-  }
-
-  @Subscribe
-  public synchronized void autosparseSparseRefreshFailed(
-      AutoSparseStateEvents.SparseRefreshFailed event) {
-    writeToLog("Autosparse.SparseRefreshFailed", event);
   }
 
   @Subscribe

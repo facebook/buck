@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.WindowsLinker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -27,6 +28,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -43,9 +45,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
+import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
@@ -77,23 +78,14 @@ public class PythonBinaryDescription
   private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   public PythonBinaryDescription(
       ToolchainProvider toolchainProvider,
-      RuleKeyConfiguration ruleKeyConfiguration,
       PythonBuckConfig pythonBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxBuckConfig cxxBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.pythonBuckConfig = pythonBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
@@ -247,7 +239,9 @@ public class PythonBinaryDescription
             params,
             ruleFinder,
             pythonPlatform,
-            pythonBuckConfig.getPexTool(resolver, ruleKeyConfiguration),
+            toolchainProvider
+                .getByName(PexToolProvider.DEFAULT_NAME, PexToolProvider.class)
+                .getPexTool(resolver),
             buildArgs,
             pythonBuckConfig.getPexExecutor(resolver).orElse(pythonPlatform.getEnvironment()),
             extension.orElse(pythonBuckConfig.getPexExtension()),
@@ -264,9 +258,15 @@ public class PythonBinaryDescription
   }
 
   private CxxPlatform getCxxPlatform(BuildTarget target, AbstractPythonBinaryDescriptionArg args) {
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
     return cxxPlatforms
         .getValue(target)
-        .orElse(args.getCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform));
+        .orElse(
+            args.getCxxPlatform()
+                .map(cxxPlatforms::getValue)
+                .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
   @Override
@@ -328,6 +328,7 @@ public class PythonBinaryDescription
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             params,

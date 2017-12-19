@@ -27,11 +27,11 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
@@ -117,7 +117,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
                             cell.getFilesystem(), cell.getBuildFileName())));
     this.executor = executor;
     this.targetPatternEvaluator = targetPatternEvaluator;
-    this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator);
+    this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator, executor);
   }
 
   public static BuckQueryEnvironment from(
@@ -131,7 +131,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   public static BuckQueryEnvironment from(
-      CommandRunnerParams params, PerBuildState parserState, ListeningExecutorService executor) {
+      CommandRunnerParams params,
+      PerBuildState parserState,
+      ListeningExecutorService executor,
+      boolean enableProfiling) {
     return from(
         params.getCell(),
         OwnersReport.builder(params.getCell(), params.getParser(), params.getBuckEventBus()),
@@ -141,8 +144,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             params.getCell(),
             params.getBuckConfig(),
             params.getParser(),
-            parserState,
-            params.getBuckEventBus()));
+            params.getBuckEventBus(),
+            enableProfiling));
   }
 
   public DirectedAcyclicGraph<TargetNode<?, ?>> getTargetGraph() {
@@ -156,11 +159,11 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public void preloadTargetPatterns(Iterable<String> patterns)
       throws QueryException, InterruptedException {
     try {
-      targetPatternEvaluator.preloadTargetPatterns(patterns);
+      targetPatternEvaluator.preloadTargetPatterns(patterns, executor);
     } catch (IOException e) {
       throw new QueryException(
           e, "Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error in preloading targets. %s", e.getMessage());
     }
   }
@@ -193,7 +196,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     }
     try {
       return parserState.getTargetNode(((QueryBuildTarget) target).getBuildTarget());
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
     }
   }
@@ -315,7 +318,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       }
       propagateCauseIfInstanceOf(e, ExecutionException.class);
       propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-    } catch (BuildFileParseException | BuildTargetException | InterruptedException e) {
+    } catch (BuildFileParseException | InterruptedException e) {
       throw new QueryException(
           e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
@@ -488,20 +491,20 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
     private final TargetPatternEvaluator evaluator;
+    private final ListeningExecutorService executor;
 
-    private TargetEvaluator(TargetPatternEvaluator evaluator) {
+    private TargetEvaluator(TargetPatternEvaluator evaluator, ListeningExecutorService executor) {
       this.evaluator = evaluator;
+      this.executor = executor;
     }
 
     @Override
     public ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException {
       try {
         return ImmutableSet.copyOf(
-            Iterables.concat(evaluator.resolveTargetPatterns(ImmutableList.of(target)).values()));
-      } catch (BuildTargetException
-          | BuildFileParseException
-          | InterruptedException
-          | IOException e) {
+            Iterables.concat(
+                evaluator.resolveTargetPatterns(ImmutableList.of(target), executor).values()));
+      } catch (BuildFileParseException | InterruptedException | IOException e) {
         throw new QueryException(e, "Error in resolving targets matching %s", target);
       }
     }

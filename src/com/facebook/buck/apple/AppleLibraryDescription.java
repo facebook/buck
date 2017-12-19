@@ -22,6 +22,7 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -29,6 +30,10 @@ import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLibraryDescriptionDelegate;
+import com.facebook.buck.cxx.CxxLibraryFactory;
+import com.facebook.buck.cxx.CxxLibraryFlavored;
+import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
+import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
@@ -37,6 +42,8 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -175,30 +182,30 @@ public class AppleLibraryDescription
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final ToolchainProvider toolchainProvider;
-  private final CxxLibraryDescription delegate;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
-  private final Flavor defaultCxxFlavor;
-  private final CodeSignIdentityStore codeSignIdentityStore;
-  private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
+  private final CxxLibraryFlavored cxxLibraryFlavored;
+  private final CxxLibraryFactory cxxLibraryFactory;
+  private final CxxLibraryMetadataFactory cxxLibraryMetadataFactory;
 
   public AppleLibraryDescription(
       ToolchainProvider toolchainProvider,
-      CxxLibraryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
-      Flavor defaultCxxFlavor,
-      CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig,
-      SwiftBuckConfig swiftBuckConfig) {
+      SwiftBuckConfig swiftBuckConfig,
+      CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
+      CxxLibraryFlavored cxxLibraryFlavored,
+      CxxLibraryFactory cxxLibraryFactory,
+      CxxLibraryMetadataFactory cxxLibraryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
-    this.delegate = delegate;
+    this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
+    this.cxxLibraryFlavored = cxxLibraryFlavored;
+    this.cxxLibraryFactory = cxxLibraryFactory;
+    this.cxxLibraryMetadataFactory = cxxLibraryMetadataFactory;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
-    this.defaultCxxFlavor = defaultCxxFlavor;
-    this.codeSignIdentityStore = codeSignIdentityStore;
-    this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
   }
@@ -215,7 +222,7 @@ public class AppleLibraryDescription
     ImmutableSet<FlavorDomain<?>> localDomains = ImmutableSet.of(AppleDebugFormat.FLAVOR_DOMAIN);
 
     builder.addAll(localDomains);
-    delegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    cxxLibraryFlavored.flavorDomains().ifPresent(domains -> builder.addAll(domains));
     swiftDelegate.flatMap(s -> s.flavorDomains()).ifPresent(domains -> builder.addAll(domains));
 
     ImmutableSet<FlavorDomain<?>> result = builder.build();
@@ -233,7 +240,7 @@ public class AppleLibraryDescription
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return FluentIterable.from(flavors).allMatch(SUPPORTED_FLAVORS::contains)
-        || delegate.hasFlavors(flavors)
+        || cxxLibraryFlavored.hasFlavors(flavors)
         || swiftDelegate.map(swift -> swift.hasFlavors(flavors)).orElse(false);
   }
 
@@ -248,12 +255,10 @@ public class AppleLibraryDescription
     Optional<Map.Entry<Flavor, Type>> maybeType = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     return maybeType.flatMap(
         type -> {
+          FlavorDomain<CxxPlatform> cxxPlatforms = getCxxPlatformsProvider().getCxxPlatforms();
           if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
-                delegate
-                    .getCxxPlatforms()
-                    .getValue(buildTarget)
-                    .orElseThrow(IllegalArgumentException::new);
+                cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
@@ -264,10 +269,7 @@ public class AppleLibraryDescription
                     HeaderVisibility.PUBLIC));
           } else if (type.getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
-                delegate
-                    .getCxxPlatforms()
-                    .getValue(buildTarget)
-                    .orElseThrow(IllegalArgumentException::new);
+                cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
@@ -278,10 +280,7 @@ public class AppleLibraryDescription
                     HeaderVisibility.PRIVATE));
           } else if (type.getValue().equals(Type.SWIFT_COMPILE)) {
             CxxPlatform cxxPlatform =
-                delegate
-                    .getCxxPlatforms()
-                    .getValue(buildTarget)
-                    .orElseThrow(IllegalArgumentException::new);
+                cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
             // TODO(mgd): Must handle 'default' platform
             AppleCxxPlatform applePlatform =
@@ -383,17 +382,21 @@ public class AppleLibraryDescription
       return resolver.requireRule(buildTarget.withAppendedFlavors(debugFormat.getFlavor()));
     }
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     return AppleDescriptions.createAppleBundle(
-        delegate.getCxxPlatforms(),
-        defaultCxxFlavor,
+        cxxPlatformsProvider.getCxxPlatforms(),
+        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
         getAppleCxxPlatformDomain(),
         targetGraph,
         buildTarget,
         projectFilesystem,
         params,
         resolver,
-        codeSignIdentityStore,
-        provisioningProfileStore,
+        toolchainProvider.getByName(
+            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
+        toolchainProvider.getByName(
+            ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         buildTarget,
         Either.ofLeft(AppleBundleExtension.FRAMEWORK),
         Optional.empty(),
@@ -404,6 +407,7 @@ public class AppleLibraryDescription
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
+        appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
         ImmutableList.of(),
         Optional.empty(),
@@ -458,18 +462,18 @@ public class AppleLibraryDescription
       return unstrippedBinaryRule;
     }
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+
     // If we built a multiarch binary, we can just use the strip tool from any platform.
     // We pick the platform in this odd way due to FlavorDomain's restriction of allowing only one
     // matching flavor in the build target.
     CxxPlatform representativePlatform =
-        delegate
-            .getCxxPlatforms()
-            .getValue(
-                Iterables.getFirst(
-                    Sets.intersection(
-                        delegate.getCxxPlatforms().getFlavors(),
-                        unstrippedBuildTarget.getFlavors()),
-                    defaultCxxFlavor));
+        cxxPlatforms.getValue(
+            Iterables.getFirst(
+                Sets.intersection(cxxPlatforms.getFlavors(), unstrippedBuildTarget.getFlavors()),
+                defaultCxxFlavor));
 
     BuildTarget strippedBuildTarget =
         CxxStrip.restoreStripStyleFlavorInTarget(unstrippedBuildTarget, flavoredStripStyle);
@@ -492,8 +496,8 @@ public class AppleLibraryDescription
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
-        delegate.getCxxPlatforms(),
-        delegate.getDefaultCxxFlavor(),
+        cxxPlatforms,
+        defaultCxxFlavor,
         getAppleCxxPlatformDomain());
   }
 
@@ -615,7 +619,7 @@ public class AppleLibraryDescription
         unstrippedTarget1 -> {
           Optional<CxxLibraryDescriptionDelegate> cxxDelegate =
               swiftDelegate.isPresent() ? Optional.empty() : Optional.of(this);
-          return delegate.createBuildRule(
+          return cxxLibraryFactory.createBuildRule(
               unstrippedTarget1,
               projectFilesystem,
               newParams,
@@ -647,7 +651,6 @@ public class AppleLibraryDescription
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
@@ -659,13 +662,14 @@ public class AppleLibraryDescription
       CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           pathResolver, delegateArg, args, buildTarget);
-      return delegate.createMetadata(
-          buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
+      return cxxLibraryMetadataFactory.createMetadata(
+          buildTarget, resolver, cellRoots, delegateArg.build(), metadataClass);
     }
 
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
         && buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
-      Optional<Flavor> cxxPlatformFlavor = delegate.getCxxPlatforms().getFlavor(buildTarget);
+      Optional<Flavor> cxxPlatformFlavor =
+          getCxxPlatformsProvider().getCxxPlatforms().getFlavor(buildTarget);
       Preconditions.checkState(
           cxxPlatformFlavor.isPresent(),
           "Could not find cxx platform in:\n%s",
@@ -789,15 +793,14 @@ public class AppleLibraryDescription
       AppleLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    return createMetadataForLibrary(
-        buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
+    return createMetadataForLibrary(buildTarget, resolver, cellRoots, args, metadataClass);
   }
 
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
     // Use defaults.apple_library if present, but fall back to defaults.cxx_library otherwise.
-    return delegate.addImplicitFlavorsForRuleTypes(
+    return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
         Description.getBuildRuleType(this),
         Description.getBuildRuleType(CxxLibraryDescription.class));
@@ -810,22 +813,8 @@ public class AppleLibraryDescription
       final AbstractAppleLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    findDepsForTargetFromConstructorArgs(
-        buildTarget,
-        cellRoots,
-        (AppleNativeTargetDescriptionArg) constructorArg,
-        extraDepsBuilder,
-        targetGraphOnlyDepsBuilder);
-  }
-
-  public void findDepsForTargetFromConstructorArgs(
-      final BuildTarget buildTarget,
-      final CellPathResolver cellRoots,
-      final AppleNativeTargetDescriptionArg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    delegate.findDepsForTargetFromConstructorArgs(
-        buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(
@@ -992,5 +981,10 @@ public class AppleLibraryDescription
             AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
 
     return appleCxxPlatformsProvider.getAppleCxxPlatforms();
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 }

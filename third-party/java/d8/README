@@ -1,3 +1,3 @@
-d8.jar was built by checking out d8 to rev 71995dd9382ba3e9aea8c2e38c6baac418cb2e63,
+d8.jar was built by checking out d8 to rev bd22c3b1379815b39b591c69d1e0f5f82854d8cc,
 applying the changes in changes.patch (can use git am), and building with
 tools/gradle.py -Pexclude_deps d8

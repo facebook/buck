@@ -17,9 +17,6 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_DESERT;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_ROLODEX;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.createParsingMessage;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -75,12 +72,10 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -109,10 +104,8 @@ public class SuperConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String TARGET_THREE = "TARGET_THREE";
-  private static final String DOWNLOAD_STRING =
-      "Downloading... 0.00 bytes/sec, 0 artifacts, 0.00 bytes";
-  private static final String FINISHED_DOWNLOAD_STRING =
-      "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes";
+  private static final String DOWNLOAD_STRING = "Downloading... 0 artifacts, 0.00 bytes";
+  private static final String FINISHED_DOWNLOAD_STRING = "Downloaded 0 artifacts, 0.00 bytes";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
   private static final TestResultSummaryVerbosity noisySummaryVerbosity =
@@ -2118,64 +2111,6 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
-  public void testAutoSparseUpdates() {
-    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
-    SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
-
-    AutoSparseStateEvents.SparseRefreshStarted sparseRefreshStarted =
-        new AutoSparseStateEvents.SparseRefreshStarted();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            sparseRefreshStarted, 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    validateConsole(listener, 0L, ImmutableList.of("Refreshing sparse checkout... 0.0 sec"));
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new AutoSparseStateEvents.SparseRefreshFinished(
-                sparseRefreshStarted, SparseSummary.of()),
-            500L,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    validateConsole(
-        listener,
-        500L,
-        ImmutableList.of(
-            "Refreshing sparse checkout: finished in 0.5 sec "
-                + createParsingMessage(EMOJI_DESERT, "Working copy size unchanged").get()));
-
-    // starting a new refresh adds on to running time
-    sparseRefreshStarted = new AutoSparseStateEvents.SparseRefreshStarted();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            sparseRefreshStarted, 1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    validateConsole(
-        listener,
-        1000L,
-        ImmutableList.of(
-            "Refreshing sparse checkout... 0.5 sec "
-                + createParsingMessage(EMOJI_DESERT, "Working copy size unchanged").get()));
-
-    // ending a new refresh shows the total running time for both events
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new AutoSparseStateEvents.SparseRefreshFinished(
-                sparseRefreshStarted, SparseSummary.of(0, 10, 0, 42, 0, 0)),
-            1500L,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    validateConsole(
-        listener,
-        1500L,
-        ImmutableList.of(
-            "Refreshing sparse checkout: finished in 1.0 sec "
-                + createParsingMessage(
-                        EMOJI_ROLODEX,
-                        "10 new sparse rules imported, 42 files added to the working copy")
-                    .get()));
-  }
-
-  @Test
   public void testProjectGeneration() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
@@ -2318,7 +2253,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project... 0.9 sec (20%)",
-            "Downloading... 0.00 bytes/sec, 0 artifacts, 0.00 bytes",
+            "Downloading... 0 artifacts, 0.00 bytes",
             "Building... 0.1 sec"));
 
     eventBus.postWithoutConfiguring(
@@ -2335,7 +2270,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project... 1.0 sec (20%)",
-            "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes",
+            "Downloaded 0 artifacts, 0.00 bytes",
             "Building: finished in 0.2 sec"));
 
     eventBus.postWithoutConfiguring(
@@ -2349,7 +2284,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project: finished in 1.2 sec (100%)",
-            "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes",
+            "Downloaded 0 artifacts, 0.00 bytes",
             "Building: finished in 0.2 sec",
             "  Total time: 1.2 sec"));
   }

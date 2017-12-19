@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
@@ -105,7 +106,7 @@ class SwiftStdlibStep implements Step {
 
     // Copy from temp to destinationDirectory if we wrote files.
     if (Files.notExists(temp)) {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(temp)) {
       if (dirStream.iterator().hasNext()) {
@@ -113,7 +114,7 @@ class SwiftStdlibStep implements Step {
         MoreFiles.copyRecursively(temp, destinationDirectory);
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

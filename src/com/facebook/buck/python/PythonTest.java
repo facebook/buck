@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
@@ -215,9 +216,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget))
         .concat(binary.getRuntimeDeps(ruleFinder))
         .concat(
-            binary
-                .getExecutableCommand()
-                .getDeps(ruleFinder)
+            BuildableSupport.getDepsCollection(binary.getExecutableCommand(), ruleFinder)
                 .stream()
                 .map(BuildRule::getBuildTarget));
   }

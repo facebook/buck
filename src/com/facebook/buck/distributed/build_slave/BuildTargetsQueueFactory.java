@@ -30,8 +30,8 @@ import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
@@ -189,7 +189,28 @@ public class BuildTargetsQueueFactory {
   }
 
   public static BuildTargetsQueue newEmptyQueue() {
-    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>());
+    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>());
+  }
+
+  private boolean doesRuleNeedToBeBuilt(BuildRule rule) {
+    boolean canBeSkipped = isBuildRuleInRemoteCache(rule);
+    if (canBeSkipped && hasMissingCachableRuntimeDeps(rule)) {
+      canBeSkipped = false;
+      LOG.verbose(
+          "Target [%s] is present in the remote cache, but still needs to be scheduled, "
+              + "because some of its cachable runtime dependencies are missing from the "
+              + "cache.",
+          ruleToTarget(rule));
+      // TODO (alisdair, shivanker): Ideally we should not be scheduling `rule`, but only the
+      // missing cachable runtime deps themselves, as direct dependencies of the parent rule.
+      // Because otherwise, we might have a scenario where the some uncachable runtime deps get
+      // built twice on different minions because of scheduling `rule` on its own.
+    } else if (canBeSkipped) {
+      LOG.verbose(
+          "Target [%s] can be skipped because it is already present in the remote cache.",
+          ruleToTarget(rule));
+    }
+    return !canBeSkipped;
   }
 
   private Queue<BuildRule> processTopLevelTargets(
@@ -201,29 +222,46 @@ public class BuildTargetsQueueFactory {
         .map(resolver::getRule)
         .filter(
             rule -> {
-              boolean needToBuild = !isBuildRuleInRemoteCache(rule);
-              if (needToBuild) {
+              if (doesRuleNeedToBeBuilt(rule)) {
                 visitedTargets.add(ruleToTarget(rule));
-              } else {
-                LOG.debug(
-                    "Skipping top-level target [%s] because it is already present in the cache."
-                        + " Will create an empty BuildTargetsQueue.",
-                    ruleToTarget(rule));
+                return true;
               }
-              return needToBuild;
+              return false;
             })
         .collect(Collectors.toCollection(LinkedList::new));
+  }
+
+  private Stream<BuildRule> getRuntimeDeps(BuildRule rule) {
+    if (!(rule instanceof HasRuntimeDeps)) {
+      return Stream.<BuildRule>builder().build();
+    }
+
+    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
+    return resolver.getAllRulesStream(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
+  }
+
+  private boolean hasMissingCachableRuntimeDeps(BuildRule rule) {
+    Stream<BuildRule> missingCachableRuntimeDeps =
+        getRuntimeDeps(rule)
+            .filter(
+                dependency -> dependency.isCacheable() && !isBuildRuleInRemoteCache(dependency));
+    return missingCachableRuntimeDeps.count() > 0;
   }
 
   private void traverseActionGraph(
       Queue<BuildRule> buildRulesToProcess,
       Map<String, Set<String>> allReverseDeps,
       Map<String, Set<String>> allForwardDeps,
-      Set<String> visitedTargets) {
+      Set<String> visitedTargets,
+      Set<String> uncachableTargets) {
     while (!buildRulesToProcess.isEmpty()) {
       BuildRule rule = buildRulesToProcess.remove();
-
       String target = ruleToTarget(rule);
+
+      if (!rule.isCacheable()) {
+        uncachableTargets.add(target);
+      }
+
       allForwardDeps.put(target, new HashSet<>());
 
       ImmutableSortedSet.Builder<BuildRule> allDependencies = ImmutableSortedSet.naturalOrder();
@@ -233,27 +271,19 @@ public class BuildTargetsQueueFactory {
 
       // Optionally add in any run-time deps
       if (rule instanceof HasRuntimeDeps) {
-        LOG.debug(String.format("[%s] has runtime deps", ruleToTarget(rule)));
-
-        Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
-        ImmutableSet<BuildRule> runtimeDeps =
-            resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
-
-        allDependencies.addAll(runtimeDeps);
+        LOG.verbose(String.format("[%s] has runtime deps", ruleToTarget(rule)));
+        allDependencies.addAll(getRuntimeDeps(rule).collect(Collectors.toList()));
       }
 
       ImmutableSet<BuildRule> allDeps = allDependencies.build();
       for (BuildRule dependencyRule : allDeps) {
         String dependencyTarget = ruleToTarget(dependencyRule);
-        if (isBuildRuleInRemoteCache(dependencyRule)) {
+        if (!doesRuleNeedToBeBuilt(dependencyRule)) {
           // TODO(shivanker): Re-distribute new found sub-tree of work if contains returned true,
           // but actual fetch failed. Since multi-contains is only best-effort, it might turn out
           // that when we finally need to fetch this target, it's missing. Then the slave who is
           // supposed to build it will end up building the whole sub-tree locally. Ideally, we
           // should be able to re-distribute this new-found chunk of work.
-          LOG.verbose(
-              "Skipping target [%s] because it is already present in the remote cache.",
-              dependencyTarget);
           continue;
         }
 
@@ -282,6 +312,8 @@ public class BuildTargetsQueueFactory {
     Map<String, Set<String>> allReverseDeps = new HashMap<>();
     Map<String, Set<String>> allForwardDeps = new HashMap<>();
     Set<String> visitedTargets = new HashSet<>();
+    Set<String> uncachableTargets = new HashSet<>();
+    Set<EnqueuedTarget> unachableZeroDependencyTargets = new HashSet<>();
 
     Queue<BuildRule> buildRulesToProcess = processTopLevelTargets(targetsToBuild, visitedTargets);
 
@@ -297,7 +329,8 @@ public class BuildTargetsQueueFactory {
               .collect(Collectors.toSet()));
     }
 
-    traverseActionGraph(buildRulesToProcess, allReverseDeps, allForwardDeps, visitedTargets);
+    traverseActionGraph(
+        buildRulesToProcess, allReverseDeps, allForwardDeps, visitedTargets, uncachableTargets);
     logCacheContainsStats();
 
     // Do the reference counting and create the EnqueuedTargets.
@@ -316,15 +349,20 @@ public class BuildTargetsQueueFactory {
               target,
               ImmutableList.copyOf(currentRevDeps),
               Preconditions.checkNotNull(allForwardDeps.get(target)).size(),
-              ImmutableSet.copyOf(allForwardDeps.get(target)));
+              ImmutableSet.copyOf(allForwardDeps.get(target)),
+              uncachableTargets.contains(target));
       allEnqueuedTargets.put(target, enqueuedTarget);
 
       if (enqueuedTarget.areAllDependenciesResolved()) {
         zeroDependencyTargets.add(enqueuedTarget);
+        if (enqueuedTarget.isUncachable()) {
+          unachableZeroDependencyTargets.add(enqueuedTarget);
+        }
       }
     }
 
-    return new BuildTargetsQueue(zeroDependencyTargets, allEnqueuedTargets);
+    return new BuildTargetsQueue(
+        zeroDependencyTargets, allEnqueuedTargets, unachableZeroDependencyTargets);
   }
 
   private void logCacheContainsStats() {

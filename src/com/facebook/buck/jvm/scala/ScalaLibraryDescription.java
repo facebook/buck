@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -42,15 +44,17 @@ public class ScalaLibraryDescription
         ImplicitDepsInferringDescription<
             ScalaLibraryDescription.AbstractScalaLibraryDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig scalaBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions defaultOptions;
 
   public ScalaLibraryDescription(
-      ScalaBuckConfig scalaBuckConfig, JavaBuckConfig javaBuckConfig, JavacOptions defaultOptions) {
+      ToolchainProvider toolchainProvider,
+      ScalaBuckConfig scalaBuckConfig,
+      JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.scalaBuckConfig = scalaBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.defaultOptions = defaultOptions;
   }
 
   @Override
@@ -68,7 +72,14 @@ public class ScalaLibraryDescription
       CellPathResolver cellRoots,
       ScalaLibraryDescriptionArg args) {
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
+        JavacOptionsFactory.create(
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
 
     DefaultJavaLibraryRules scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(

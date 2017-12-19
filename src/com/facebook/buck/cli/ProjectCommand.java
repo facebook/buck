@@ -31,6 +31,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
@@ -228,7 +229,10 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--view",
     usage =
-        "Option that builds a Project View which is a directory containing symlinks to a single"
+        "Deprecated: this feature will be removed in future versions, see "
+            + "https://github.com/facebook/buck/issues/1567."
+            + "\n"
+            + "Option that builds a Project View which is a directory containing symlinks to a single"
             + " project's code and resources. This directory looks a lot like a standard IntelliJ "
             + "project with all resources under /res, but what's really important is that it "
             + "generates a single IntelliJ module, so that editing is much faster than when you "
@@ -261,11 +265,7 @@ public class ProjectCommand extends BuildCommand {
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
     if (projectIde == null) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("\nCannot build a project: project IDE is not specified.");
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("project IDE is not specified in Buck config or --ide");
     }
 
     int rc = runPreprocessScriptIfNeeded(params, projectIde);

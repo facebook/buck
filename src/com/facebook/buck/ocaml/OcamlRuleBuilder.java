@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -40,6 +42,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OcamlSource;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -100,6 +103,7 @@ public class OcamlRuleBuilder {
   }
 
   public static BuildRule createBuildRule(
+      ToolchainProvider toolchainProvider,
       OcamlBuckConfig ocamlBuckConfig,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
@@ -126,6 +130,7 @@ public class OcamlRuleBuilder {
             .isEmpty();
     if (noYaccOrLexSources && noGeneratedSources) {
       return createFineGrainedBuildRule(
+          toolchainProvider,
           ocamlBuckConfig,
           buildTarget,
           projectFilesystem,
@@ -139,6 +144,7 @@ public class OcamlRuleBuilder {
           buildNativePlugin);
     } else {
       return createBulkBuildRule(
+          toolchainProvider,
           ocamlBuckConfig,
           buildTarget,
           projectFilesystem,
@@ -192,6 +198,7 @@ public class OcamlRuleBuilder {
   }
 
   public static BuildRule createBulkBuildRule(
+      ToolchainProvider toolchainProvider,
       OcamlBuckConfig ocamlBuckConfig,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
@@ -202,12 +209,18 @@ public class OcamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags) {
+    CxxPlatform defaultCxxPlatform =
+        toolchainProvider
+            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+            .getDefaultCxxPlatform();
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                ocamlBuckConfig.getCxxPlatform(),
+                defaultCxxPlatform,
                 FluentIterable.from(params.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)));
+    OcamlToolchain ocamlToolchain =
+        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -225,7 +238,7 @@ public class OcamlRuleBuilder {
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(params.getBuildDeps());
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(params.getBuildDeps());
     NativeLinkableInput cLinkableInput =
-        getCLinkableInput(ocamlBuckConfig.getCxxPlatform(), params.getBuildDeps());
+        getCLinkableInput(defaultCxxPlatform, params.getBuildDeps());
 
     ImmutableList<OcamlLibrary> ocamlInput =
         OcamlUtil.getTransitiveOcamlInput(params.getBuildDeps());
@@ -235,16 +248,23 @@ public class OcamlRuleBuilder {
     allDepsBuilder.addAll(
         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
             .flatMap(input -> input.getArgs().stream())
-            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+            .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
             .iterator());
     for (OcamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
     }
-    allDepsBuilder.addAll(ocamlBuckConfig.getCCompiler().resolve(resolver).getDeps(ruleFinder));
-    allDepsBuilder.addAll(ocamlBuckConfig.getCxxCompiler().resolve(resolver).getDeps(ruleFinder));
     allDepsBuilder.addAll(
-        argFlags.stream().flatMap(arg -> arg.getDeps(ruleFinder).stream()).iterator());
+        BuildableSupport.getDepsCollection(
+            ocamlToolchain.getCCompiler().resolve(resolver), ruleFinder));
+    allDepsBuilder.addAll(
+        BuildableSupport.getDepsCollection(
+            ocamlToolchain.getCxxCompiler().resolve(resolver), ruleFinder));
+    allDepsBuilder.addAll(
+        argFlags
+            .stream()
+            .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+            .iterator());
 
     // The bulk rule will do preprocessing on sources, and so needs deps from the preprocessor
     // input object.
@@ -272,7 +292,7 @@ public class OcamlRuleBuilder {
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlBuckConfig)
+        OcamlBuildContext.builder(ocamlToolchain, ocamlBuckConfig)
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
@@ -289,7 +309,7 @@ public class OcamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
-            .setCPreprocessor(ocamlBuckConfig.getCPreprocessor().resolve(resolver))
+            .setCPreprocessor(ocamlToolchain.getCPreprocessor().resolve(resolver))
             .build();
 
     final OcamlBuild ocamlLibraryBuild =
@@ -298,8 +318,8 @@ public class OcamlRuleBuilder {
             projectFilesystem,
             params.withDeclaredDeps(allDeps).withoutExtraDeps(),
             ocamlContext,
-            ocamlBuckConfig.getCCompiler().resolve(resolver),
-            ocamlBuckConfig.getCxxCompiler().resolve(resolver),
+            ocamlToolchain.getCCompiler().resolve(resolver),
+            ocamlToolchain.getCxxCompiler().resolve(resolver),
             bytecodeOnly);
     resolver.addToIndex(ocamlLibraryBuild);
 
@@ -342,6 +362,7 @@ public class OcamlRuleBuilder {
   }
 
   public static BuildRule createFineGrainedBuildRule(
+      ToolchainProvider toolchainProvider,
       OcamlBuckConfig ocamlBuckConfig,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
@@ -353,10 +374,17 @@ public class OcamlRuleBuilder {
       ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags,
       boolean buildNativePlugin) {
+    CxxPlatform defaultCxxPlatform =
+        toolchainProvider
+            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+            .getDefaultCxxPlatform();
+    OcamlToolchain ocamlToolchain =
+        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                ocamlBuckConfig.getCxxPlatform(),
+                defaultCxxPlatform,
                 FluentIterable.from(params.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)));
 
@@ -376,7 +404,7 @@ public class OcamlRuleBuilder {
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(params.getBuildDeps());
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(params.getBuildDeps());
     NativeLinkableInput cLinkableInput =
-        getCLinkableInput(ocamlBuckConfig.getCxxPlatform(), params.getBuildDeps());
+        getCLinkableInput(defaultCxxPlatform, params.getBuildDeps());
 
     ImmutableList<OcamlLibrary> ocamlInput =
         OcamlUtil.getTransitiveOcamlInput(params.getBuildDeps());
@@ -394,15 +422,21 @@ public class OcamlRuleBuilder {
                     .addAll(
                         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
                             .flatMap(input -> input.getArgs().stream())
-                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .flatMap(
+                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
                             .iterator())
                     .addAll(
                         argFlags
                             .stream()
-                            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                            .flatMap(
+                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
                             .iterator())
-                    .addAll(ocamlBuckConfig.getCCompiler().resolve(resolver).getDeps(ruleFinder))
-                    .addAll(ocamlBuckConfig.getCxxCompiler().resolve(resolver).getDeps(ruleFinder))
+                    .addAll(
+                        BuildableSupport.getDepsCollection(
+                            ocamlToolchain.getCCompiler().resolve(resolver), ruleFinder))
+                    .addAll(
+                        BuildableSupport.getDepsCollection(
+                            ocamlToolchain.getCxxCompiler().resolve(resolver), ruleFinder))
                     .build())
             .withoutExtraDeps();
 
@@ -421,7 +455,7 @@ public class OcamlRuleBuilder {
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlBuckConfig)
+        OcamlBuildContext.builder(ocamlToolchain, ocamlBuckConfig)
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
@@ -438,7 +472,7 @@ public class OcamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
-            .setCPreprocessor(ocamlBuckConfig.getCPreprocessor().resolve(resolver))
+            .setCPreprocessor(ocamlToolchain.getCPreprocessor().resolve(resolver))
             .build();
 
     Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
@@ -458,8 +492,8 @@ public class OcamlRuleBuilder {
             ocamlContext,
             mlInput,
             cInput,
-            ocamlBuckConfig.getCCompiler().resolve(resolver),
-            ocamlBuckConfig.getCxxCompiler().resolve(resolver),
+            ocamlToolchain.getCCompiler().resolve(resolver),
+            ocamlToolchain.getCxxCompiler().resolve(resolver),
             bytecodeOnly,
             buildNativePlugin);
 

@@ -323,7 +323,8 @@ public class DistBuildService implements Closeable {
       throws IOException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
-            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR,
+            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
+            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
         "BuildMode [%s=%d] is currently not supported.",
         buildMode.toString(),
         buildMode.ordinal());
@@ -737,9 +738,21 @@ public class DistBuildService implements Closeable {
     return Optional.of(status);
   }
 
-  public List<RuleKeyLogEntry> fetchRuleKeyLogs(Collection<String> ruleKeys) throws IOException {
+  /**
+   * Fetch rule key logs as name says. RKL are filtered by repository, schedule type and distributed
+   * flag.
+   */
+  public List<RuleKeyLogEntry> fetchRuleKeyLogs(
+      Collection<String> ruleKeys,
+      String repository,
+      String scheduleType,
+      boolean distributedBuildModeEnabled)
+      throws IOException {
     FetchRuleKeyLogsRequest request = new FetchRuleKeyLogsRequest();
     request.setRuleKeys(Lists.newArrayList(ruleKeys));
+    request.setRepository(repository);
+    request.setScheduleType(scheduleType);
+    request.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_RULE_KEY_LOGS);

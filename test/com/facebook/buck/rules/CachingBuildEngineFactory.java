@@ -18,12 +18,10 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.testutil.DummyFileHashCache;
-import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
-import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
-import com.facebook.buck.util.concurrent.ResourceAmounts;
+import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -154,10 +152,6 @@ public class CachingBuildEngineFactory {
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {
-    return new WeightedListeningExecutorService(
-        new ListeningMultiSemaphore(
-            ResourceAmounts.of(Integer.MAX_VALUE, 0, 0, 0), ResourceAllocationFairness.FAIR),
-        /* defaultPermits */ ResourceAmounts.of(1, 0, 0, 0),
-        service);
+    return new FakeWeightedListeningExecutorService(service);
   }
 }

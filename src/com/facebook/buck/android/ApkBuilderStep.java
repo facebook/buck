@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -152,14 +153,14 @@ public class ApkBuilderStep implements Step {
         | SealedApkException
         | UnrecoverableKeyException e) {
       context.logError(e, "Error when creating APK at: %s.", pathToOutputApkFile);
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     } catch (DuplicateFileException e) {
       throw new HumanReadableException(
           String.format(
               "Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
               e.getArchivePath(), e.getFile1(), e.getFile2()));
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private PrivateKeyAndCertificate createKeystoreProperties()

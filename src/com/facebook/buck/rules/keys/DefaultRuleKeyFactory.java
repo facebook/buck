@@ -156,8 +156,6 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
       HasDeclaredAndExtraDeps hasDeclaredAndExtraDeps = (HasDeclaredAndExtraDeps) buildRule;
       sink.setReflectively("buck.extraDeps", hasDeclaredAndExtraDeps.deprecatedGetExtraDeps());
       sink.setReflectively("buck.declaredDeps", hasDeclaredAndExtraDeps.getDeclaredDeps());
-      sink.setReflectively(
-          "buck.targetGraphOnlyDeps", hasDeclaredAndExtraDeps.getTargetGraphOnlyDeps());
     } else {
       sink.setReflectively("buck.deps", buildRule.getBuildDeps());
     }

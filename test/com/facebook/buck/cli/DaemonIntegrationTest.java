@@ -205,12 +205,12 @@ public class DaemonIntegrationTest {
             new Main(
                 new CapturingPrintStream(),
                 new CapturingPrintStream(),
-                new ByteArrayInputStream("".getBytes("UTF-8")));
+                new ByteArrayInputStream("".getBytes("UTF-8")),
+                Optional.of(new TestContext()));
         ExitCode exitCode =
             main.runMainWithExitCode(
                 new BuildId(),
                 tmp.getRoot(),
-                Optional.of(new TestContext()),
                 ImmutableMap.copyOf(System.getenv()),
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,

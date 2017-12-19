@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
     exported_deps = [
@@ -11,6 +13,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/util/environment:platform",
     ],

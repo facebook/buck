@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.DepsBuilder;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -45,6 +46,7 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -109,17 +111,14 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
 
   public SwiftLibraryDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      SwiftBuckConfig swiftBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain) {
+      SwiftBuckConfig swiftBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
-    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
   }
 
   @Override
@@ -133,7 +132,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         ImmutableSet.of(
             // Missing: swift-companion
             // Missing: swift-compile
-            cxxPlatformFlavorDomain));
+            getCxxPlatforms()));
   }
 
   @Override
@@ -143,7 +142,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     if (currentUnsupportedFlavors.isEmpty()) {
       return true;
     }
-    return cxxPlatformFlavorDomain.containsAnyOf(flavors);
+    return getCxxPlatforms().containsAnyOf(flavors);
   }
 
   @Override
@@ -165,7 +164,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, CxxPlatform>> platform =
-        cxxPlatformFlavorDomain.getFlavorAndValue(buildTarget);
+        getCxxPlatforms().getFlavorAndValue(buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
         params
@@ -209,6 +208,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         switch (type.get().getValue()) {
           case SHARED:
             return createSharedLibraryBuildRule(
+                cellRoots,
                 projectFilesystem,
                 params,
                 resolver,
@@ -286,7 +286,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                       .addAll(cxxDeps.getDeps(ruleFinder))
                       // This is only used for generating include args and may not be actually
                       // needed.
-                      .addAll(preprocessor.getDeps(ruleFinder))
+                      .addAll(BuildableSupport.getDepsCollection(preprocessor, ruleFinder))
                       .build()),
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
@@ -324,6 +324,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   private BuildRule createSharedLibraryBuildRule(
+      CellPathResolver cellPathResolver,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -381,7 +382,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
             ImmutableSet.of(),
             ImmutableSet.of(),
             inputBuilder.build(),
-            Optional.empty()));
+            Optional.empty(),
+            cellPathResolver));
   }
 
   public Optional<BuildRule> createCompanionBuildRule(
@@ -473,6 +475,12 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
     return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR)
         || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
+  }
+
+  private FlavorDomain<CxxPlatform> getCxxPlatforms() {
+    return toolchainProvider
+        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getCxxPlatforms();
   }
 
   @BuckStyleImmutable

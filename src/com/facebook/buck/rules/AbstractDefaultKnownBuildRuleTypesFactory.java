@@ -44,7 +44,6 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
         getExecutor(),
         cell.getToolchainProvider(),
         getPluginManager(),
-        cell.getRuleKeyConfiguration(),
         getSandboxExecutionStrategyFactory());
   }
 }

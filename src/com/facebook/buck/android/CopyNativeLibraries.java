@@ -40,6 +40,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -275,7 +276,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
           metadataLines.add(String.format("%s %s", relativePath, filesha1));
         }
         filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -322,13 +323,13 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.
                 if (!filesystem.exists(libSourceDir)) {
-                  return StepExecutionResult.SUCCESS;
+                  return StepExecutionResults.SUCCESS;
                 }
                 if (mkDirStep.execute(context).isSuccess()
                     && copyStep.execute(context).isSuccess()) {
-                  return StepExecutionResult.SUCCESS;
+                  return StepExecutionResults.SUCCESS;
                 }
-                return StepExecutionResult.ERROR;
+                return StepExecutionResults.ERROR;
               }
 
               @Override
@@ -376,7 +377,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                           .replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
               filesystem.move(exePath, fakeSoPath);
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
   }

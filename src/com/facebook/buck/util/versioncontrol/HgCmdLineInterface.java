@@ -18,17 +18,13 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreMaps;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -56,22 +51,10 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           // behavior.
           "HGPLAIN", "1");
 
-  /**
-   * Path to the rawmanifest.py Mercurial extenions used to transfer the manifest to Buck. We can't
-   * use PackagedResource here because we need to get the raw manifest from the AutoSparse
-   * ProjectFileSystemDelegate, which should not have access to the parent ProjectFileSystem.
-   */
-  private static final String PATH_TO_RAWMANIFEST_PY =
-      System.getProperty(
-          "buck.path_to_rawmanifest_py",
-          // Fall back on this value when running Buck from an IDE.
-          new File("src/com/facebook/buck/util/versioncontrol/rawmanifest.py").getAbsolutePath());
-
   private static final Pattern HG_REVISION_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9]+$");
 
   private static final String HG_CMD_TEMPLATE = "{hg}";
   private static final String REVISION_ID_TEMPLATE = "{revision}";
-  private static final String PATH_TEMPLATE = "{path}";
 
   private static final ImmutableList<String> ROOT_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "root");
@@ -83,21 +66,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   // -mardu: Track modified, added, deleted, unknown
   private static final ImmutableList<String> CHANGED_FILES_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "status", "-mardu", "-0", "--rev", REVISION_ID_TEMPLATE);
-
-  private static final ImmutableList<String> SPARSE_IMPORT_COMMAND =
-      ImmutableList.of(
-          HG_CMD_TEMPLATE, "sparse", "-Tjson", "--import-rules", PATH_TEMPLATE, "--traceback");
-
-  private static final ImmutableList<String> RAW_MANIFEST_COMMAND =
-      ImmutableList.of(
-          HG_CMD_TEMPLATE,
-          "--traceback",
-          "--config",
-          "extensions.rawmanifest=" + PATH_TO_RAWMANIFEST_PY,
-          "rawmanifest",
-          "-d",
-          "-o",
-          PATH_TEMPLATE);
 
   private static final ImmutableList<String> FAST_STATS_COMMAND =
       ImmutableList.of(
@@ -219,28 +187,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         Long.valueOf(baseRevisionWords[1]));
   }
 
-  public Path extractRawManifest(Iterable<String> patterns)
-      throws VersionControlCommandFailedException, InterruptedException {
-    try {
-      Path hgmanifestDir = Files.createTempDirectory("hgmanifest");
-      hgmanifestDir.toFile().deleteOnExit();
-      Path hgmanifestOutput = hgmanifestDir.resolve("manifest.raw");
-      executeCommand(
-          Iterables.concat(
-              replaceTemplateValue(
-                  RAW_MANIFEST_COMMAND, PATH_TEMPLATE, hgmanifestOutput.toString()),
-              patterns));
-      return hgmanifestOutput;
-    } catch (IOException e) {
-      throw new VersionControlCommandFailedException("Unable to load hg manifest");
-    }
-  }
-
-  public Path extractRawManifest()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return extractRawManifest(Collections.<String>emptyList());
-  }
-
   @Nullable
   public Path getHgRoot() throws InterruptedException {
     if (hgRoot == null) {
@@ -251,20 +197,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       }
     }
     return hgRoot.orElse(null);
-  }
-
-  public SparseSummary exportHgSparseRules(Path exportFile)
-      throws VersionControlCommandFailedException, InterruptedException {
-    String json =
-        executeCommand(
-            replaceTemplateValue(SPARSE_IMPORT_COMMAND, PATH_TEMPLATE, exportFile.toString()));
-    try (JsonParser parser = ObjectMappers.createParser(json)) {
-      return ObjectMappers.READER
-          .with(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS)
-          .readValue(parser, SparseSummary.class);
-    } catch (IOException e) {
-      throw new VersionControlCommandFailedException("Unable to parse sparse summary output");
-    }
   }
 
   private String executeCommand(Iterable<String> command)

@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
@@ -26,6 +25,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -73,8 +73,11 @@ public class ProjectBuildFileParserFactory {
         parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
     boolean watchmanUseGlobGenerator =
         cell.getWatchman().getCapabilities().contains(WatchmanFactory.Capability.GLOB_GENERATOR);
-    boolean useMercurialGlob = parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
-    String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
+    PythonInterpreter pythonInterpreter =
+        cell.getToolchainProvider()
+            .getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class);
+    String pythonInterpreterPath =
+        new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig).getOrFail();
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
     ProjectBuildFileParserOptions buildFileParserOptions =
@@ -84,7 +87,7 @@ public class ProjectBuildFileParserFactory {
             .setCellRoots(cell.getCellPathResolver().getCellPaths())
             .setCellName(cell.getCanonicalName().orElse(""))
             .setFreezeGlobals(parserConfig.getFreezeGlobals())
-            .setPythonInterpreter(pythonInterpreter)
+            .setPythonInterpreter(pythonInterpreterPath)
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
@@ -96,7 +99,6 @@ public class ProjectBuildFileParserFactory {
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
             .setWatchman(cell.getWatchman())
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
-            .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(cell.getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .build();

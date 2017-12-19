@@ -98,6 +98,19 @@ android_binary(
 )
 
 android_binary(
+    name = "app_post_filter_no_dups",
+    duplicate_resource_behavior = "ban_by_default",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    post_filter_resources_cmd = "$(exe //scripts:postfilter)",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+        "//scripts:postfilter",
+    ],
+)
+
+android_binary(
     name = "app_str",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",

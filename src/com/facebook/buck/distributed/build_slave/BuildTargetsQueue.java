@@ -17,6 +17,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,20 +32,25 @@ import java.util.Set;
 
 // NOTE: Not thread safe. Caller needs to synchronize access if using multiple threads.
 public class BuildTargetsQueue {
-  private static final Logger LOG = Logger.get(BuildTargetsQueue.class);
-
+  private static final TimedLogger LOG = new TimedLogger(Logger.get(BuildTargetsQueue.class));
   private List<EnqueuedTarget> zeroDependencyTargets;
   private final Map<String, EnqueuedTarget> allEnqueuedTargets;
   private final Set<String> seenFinishedNodes = new HashSet<>();
+  private final Set<EnqueuedTarget> uncachableZeroDependencyTargets = new HashSet<>();
   private int totalBuilt = 0;
 
   BuildTargetsQueue(
-      List<EnqueuedTarget> zeroDependencyTargets, Map<String, EnqueuedTarget> allEnqueuedTargets) {
+      List<EnqueuedTarget> zeroDependencyTargets,
+      Map<String, EnqueuedTarget> allEnqueuedTargets,
+      Set<EnqueuedTarget> uncachableZeroDependencyTargets) {
     LOG.verbose(
-        "Constructing queue with [%d] zero dependency targets and [%d] total targets.",
-        zeroDependencyTargets.size(), allEnqueuedTargets.size());
+        String.format(
+            "Constructing queue with [%d] zero dependency targets and [%d] total targets.",
+            zeroDependencyTargets.size(), allEnqueuedTargets.size()));
     this.zeroDependencyTargets = zeroDependencyTargets;
     this.allEnqueuedTargets = allEnqueuedTargets;
+    this.uncachableZeroDependencyTargets.addAll(uncachableZeroDependencyTargets);
+    completeUncachableZeroDependencyNodes();
   }
 
   public boolean hasReadyZeroDependencyNodes() {
@@ -77,47 +83,69 @@ public class BuildTargetsQueue {
     return Lists.newArrayList(newUnitsOfWork);
   }
 
+  private void completeUncachableZeroDependencyNodes() {
+    while (uncachableZeroDependencyTargets.size() > 0) {
+      EnqueuedTarget target = uncachableZeroDependencyTargets.iterator().next();
+      LOG.debug(
+          String.format(
+              "Automatically marking uncachable zero dependency node [%s] as completed.",
+              target.buildTarget));
+      processFinishedNode(target);
+      zeroDependencyTargets.remove(target);
+      uncachableZeroDependencyTargets.remove(target);
+    }
+  }
+
   private void processFinishedNodes(List<String> finishedNodes) {
     totalBuilt += finishedNodes.size();
 
     for (String node : finishedNodes) {
-      if (seenFinishedNodes.contains(node)) {
-        String errorMessage = String.format("[%s] has already finished once", node);
-        LOG.error(errorMessage);
-        throw new RuntimeException(errorMessage);
-      }
-      seenFinishedNodes.add(node);
       EnqueuedTarget target = Preconditions.checkNotNull(allEnqueuedTargets.get(node));
-      ImmutableList<String> dependents = target.getDependentTargets();
-      LOG.info(String.format("Complete node [%s] has [%s] dependents", node, dependents.size()));
-      for (String dependent : dependents) {
-        EnqueuedTarget dep = Preconditions.checkNotNull(allEnqueuedTargets.get(dependent));
-        dep.decrementUnsatisfiedDeps(node);
-
-        LOG.info(
-            String.format(
-                "Dependent [%s] now has [%s] unsatisfied dependencies",
-                dep.getBuildTarget(), dep.unsatisfiedDependencies));
-
-        if (dep.areAllDependenciesResolved() && !dep.partOfBuildingUnitOfWork) {
-          LOG.info(String.format("Dependent [%s] is ready to be built.", dep.getBuildTarget()));
-          zeroDependencyTargets.add(dep);
-        } else if (dep.areAllDependenciesResolved()) {
-          // If a child node made a parent node ready to build, but that parent node is already
-          // part of a work unit, then no need to add it to zero dependency list (it is already
-          // being build by the minion that just completed the child).
-          LOG.info(
-              String.format(
-                  "Dependent [%s] is ready, but already build as part of work unit.",
-                  dep.getBuildTarget()));
-        }
-      }
+      processFinishedNode(target);
     }
+
+    completeUncachableZeroDependencyNodes();
 
     LOG.info(
         String.format(
             "Queue Status: Zero dependency nodes [%s]. Total nodes [%s]. Built [%s]",
             zeroDependencyTargets.size(), allEnqueuedTargets.size(), totalBuilt));
+  }
+
+  private void processFinishedNode(EnqueuedTarget target) {
+    if (seenFinishedNodes.contains(target.buildTarget)) {
+      String errorMessage = String.format("[%s] has already finished once", target.buildTarget);
+      LOG.error(errorMessage);
+      throw new RuntimeException(errorMessage);
+    }
+    seenFinishedNodes.add(target.buildTarget);
+
+    ImmutableList<String> dependents = target.getDependentTargets();
+    LOG.debug(
+        String.format(
+            "Complete node [%s] has [%s] dependents", target.buildTarget, dependents.size()));
+    for (String dependent : dependents) {
+      EnqueuedTarget dep = Preconditions.checkNotNull(allEnqueuedTargets.get(dependent));
+      dep.decrementUnsatisfiedDeps(target.buildTarget);
+
+      if (dep.areAllDependenciesResolved() && !dep.uncachable && !dep.partOfBuildingUnitOfWork) {
+        zeroDependencyTargets.add(dep);
+      } else if (dep.areAllDependenciesResolved() && dep.uncachable) {
+        LOG.debug(
+            String.format(
+                "Uncachable dependent [%s] is ready to auto complete.", dep.getBuildTarget()));
+        zeroDependencyTargets.add(dep);
+        uncachableZeroDependencyTargets.add(dep);
+      } else if (dep.areAllDependenciesResolved()) {
+        // If a child node made a parent node ready to build, but that parent node is already
+        // part of a work unit, then no need to add it to zero dependency list (it is already
+        // being build by the minion that just completed the child).
+        LOG.debug(
+            String.format(
+                "Dependent [%s] is ready, but already build as part of work unit.",
+                dep.getBuildTarget()));
+      }
+    }
   }
 
   private void createWorkUnitsStartingAtNodes(
@@ -142,9 +170,18 @@ public class BuildTargetsQueue {
 
   private void addToWorkUnit(
       EnqueuedTarget node, List<String> unitOfWork, Queue<EnqueuedTarget> nodesToCheck) {
-    node.partOfBuildingUnitOfWork = true;
-    LOG.debug(String.format("Adding [%s] to work unit.", node.getBuildTarget()));
-    unitOfWork.add(node.getBuildTarget()); // Reverse dependency order
+    if (node.isUncachable()) {
+      // Uncachables do not need to be scheduled explicitly. If they are needed for a
+      // cachable in the chain, they will be built anyway.
+      // Note: we still need to check the parent of this uncachable, as it might be cacheable.
+      LOG.debug(
+          String.format("Skipping adding uncachable [%s] to work unit.", node.getBuildTarget()));
+    } else {
+      LOG.debug(String.format("Adding [%s] to work unit.", node.getBuildTarget()));
+      node.partOfBuildingUnitOfWork = true;
+      unitOfWork.add(node.getBuildTarget()); // Reverse dependency order
+    }
+
     nodesToCheck.add(node);
     zeroDependencyTargets.remove(node);
   }
@@ -191,6 +228,7 @@ public class BuildTargetsQueue {
     private final Set<String> allDependencies;
     private final Set<String> dependenciesRemaining;
     private int unsatisfiedDependencies;
+    private boolean uncachable;
 
     private boolean partOfBuildingUnitOfWork = false;
 
@@ -198,12 +236,18 @@ public class BuildTargetsQueue {
         String buildTarget,
         ImmutableList<String> dependentTargets,
         int numberOfDependencies,
-        ImmutableSet<String> dependenciesRemaining) {
+        ImmutableSet<String> dependenciesRemaining,
+        boolean uncachable) {
       this.buildTarget = buildTarget;
       this.dependentTargets = dependentTargets;
       this.unsatisfiedDependencies = numberOfDependencies;
       this.dependenciesRemaining = new HashSet<>(dependenciesRemaining);
       this.allDependencies = new HashSet<>(dependenciesRemaining);
+      this.uncachable = uncachable;
+    }
+
+    public boolean isUncachable() {
+      return uncachable;
     }
 
     public boolean areAllDependenciesResolved() {
@@ -229,9 +273,16 @@ public class BuildTargetsQueue {
         throw new RuntimeException(errorMessage);
       }
 
-      LOG.debug(
-          String.format(
-              "Removing [%s] from remaining dependencies for [%s]", dependency, buildTarget));
+      if (LOG.isVerboseEnabled()) {
+        LOG.verbose(
+            String.format(
+                ("Removing [%s] from remaining dependencies for target [%s],"
+                    + " which now has [%s] unsatisfied dependencies."),
+                dependency,
+                buildTarget,
+                unsatisfiedDependencies));
+      }
+
       dependenciesRemaining.remove(dependency);
       --unsatisfiedDependencies;
       Preconditions.checkArgument(

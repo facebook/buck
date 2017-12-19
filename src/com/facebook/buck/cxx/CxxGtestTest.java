@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
@@ -209,7 +210,9 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
         super.getRuntimeDeps(ruleFinder),
-        getExecutableCommand().getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget));
+        BuildableSupport.getDepsCollection(getExecutableCommand(), ruleFinder)
+            .stream()
+            .map(BuildRule::getBuildTarget));
   }
 
   @Override

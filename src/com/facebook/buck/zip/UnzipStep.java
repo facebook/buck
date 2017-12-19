@@ -21,6 +21,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.zip.Unzip;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -48,7 +49,7 @@ public class UnzipStep implements Step {
 
     Unzip.extractZipFile(
         context.getProjectFilesystemFactory(), zip, out, Unzip.ExistingFileMode.OVERWRITE);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

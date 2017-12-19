@@ -22,13 +22,13 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -78,22 +78,19 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
       InternalFlavor.of("aar_android_resource");
 
   private final ToolchainProvider toolchainProvider;
-  private final AndroidManifestDescription androidManifestDescription;
+  private final AndroidManifestFactory androidManifestFactory;
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions javacOptions;
 
   public AndroidAarDescription(
       ToolchainProvider toolchainProvider,
-      AndroidManifestDescription androidManifestDescription,
+      AndroidManifestFactory androidManifestFactory,
       CxxBuckConfig cxxBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions javacOptions) {
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.androidManifestDescription = androidManifestDescription;
+    this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacOptions = javacOptions;
   }
 
   @Override
@@ -121,22 +118,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     BuildTarget androidManifestTarget =
         buildTarget.withAppendedFlavors(AAR_ANDROID_MANIFEST_FLAVOR);
 
-    AndroidManifestDescriptionArg androidManifestArgs =
-        AndroidManifestDescriptionArg.builder()
-            .setName(androidManifestTarget.getShortName())
-            .setSkeleton(args.getManifestSkeleton())
-            .setDeps(args.getDeps())
-            .build();
-
     AndroidManifest manifest =
-        androidManifestDescription.createBuildRule(
-            targetGraph,
+        androidManifestFactory.createBuildRule(
             androidManifestTarget,
             projectFilesystem,
-            originalBuildRuleParams,
             resolver,
-            cellRoots,
-            androidManifestArgs);
+            args.getDeps(),
+            args.getManifestSkeleton());
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
     final APKModuleGraph apkModuleGraph =
@@ -227,7 +215,9 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               Optional.empty(),
               resolver,
               JavacFactory.create(ruleFinder, javaBuckConfig, args),
-              javacOptions,
+              toolchainProvider
+                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getJavacOptions(),
               packageableCollection);
       buildConfigRules.forEach(resolver::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
@@ -245,6 +235,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     /* native_libraries */
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            cellRoots,
             resolver,
             buildTarget,
             projectFilesystem,
@@ -299,7 +290,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
     @Value.Default
     default BuildConfigFields getBuildConfigValues() {
-      return BuildConfigFields.empty();
+      return BuildConfigFields.of();
     }
 
     @Value.Default

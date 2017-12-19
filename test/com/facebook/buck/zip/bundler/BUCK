@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "bundler",
     deps = [
+        "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/modern:modern",

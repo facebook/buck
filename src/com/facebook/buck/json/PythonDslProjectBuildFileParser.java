@@ -298,10 +298,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           "--watchman_query_timeout_ms", options.getWatchmanQueryTimeoutMs().get().toString());
     }
 
-    if (options.getUseMercurialGlob()) {
-      argBuilder.add("--use_mercurial_glob");
-    }
-
     // Add the --build_file_import_whitelist flags.
     for (String module : options.getBuildFileImportWhitelist()) {
       argBuilder.add("--build_file_import_whitelist");

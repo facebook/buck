@@ -36,6 +36,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
@@ -65,10 +66,9 @@ public class CacheCommandTest extends EasyMockSupport {
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(
         fetchPrefix ? Collections.singletonList("fetch") : Collections.emptyList());
+
     ExitCode exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(ExitCode.COMMANDLINE_ERROR, exitCode);
-    // "No cache keys specified." message is sent to event bus,
-    // it is not available on test console.
 
     if (!CacheCommand.MUTE_FETCH_SUBCOMMAND_WARNING) {
       assertThat(
@@ -77,12 +77,12 @@ public class CacheCommandTest extends EasyMockSupport {
     }
   }
 
-  @Test
+  @Test(expected = CommandLineException.class)
   public void testRunCommandWithNoArguments() throws Exception {
     testRunCommandWithNoArgumentsImpl(false);
   }
 
-  @Test
+  @Test(expected = CommandLineException.class)
   public void testRunCommandFetchWithNoArguments() throws Exception {
     testRunCommandWithNoArgumentsImpl(true);
   }

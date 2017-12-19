@@ -24,7 +24,6 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -35,6 +34,7 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -118,7 +118,7 @@ public class UninstallCommand extends AbstractCommand {
                   params.getBuckConfig(),
                   params.getRuleKeyConfiguration())
               .getResolver();
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -127,10 +127,7 @@ public class UninstallCommand extends AbstractCommand {
 
     // Make sure that only one build target is specified.
     if (buildTargets.size() != 1) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Must specify exactly one android_binary() rule."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("must specify exactly one android_binary() rule");
     }
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
 

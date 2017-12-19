@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -45,6 +46,6 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
 
     String rDotJavaPackageFromAndroidManifest = androidManifestReader.getPackage();
     filesystem.writeContentsToPath(rDotJavaPackageFromAndroidManifest, pathToRDotJavaPackageFile);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 }

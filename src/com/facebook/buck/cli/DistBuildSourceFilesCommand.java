@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -107,9 +108,12 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
         new CommandThreadManager(
             "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig()))) {
       BuildJobState jobState =
-          BuildCommand.getDistBuildState(
-              arguments, params, pool.getWeightedListeningExecutorService());
+          BuildCommand.getAsyncDistBuildState(
+                  arguments, params, pool.getWeightedListeningExecutorService())
+              .get();
       outputResultToTempFile(params, jobState);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Could not create DistBuildState.", e);
     }
   }
 

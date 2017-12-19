@@ -47,7 +47,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     assertThat(
         "`buck build` should display an error message if no targets are provided.",
         result.getStderr(),
-        containsString("BUILD FAILED: Must specify at least one build target.\n"));
+        containsString("Must specify at least one build target.\n"));
   }
 
   @Test
@@ -66,7 +66,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "BUILD FAILED: Must specify at least one build target.",
+                        "Must specify at least one build target.",
                         "Try building one of the following targets:",
                         "myapp")
                 + '\n'));
@@ -95,7 +95,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "BUILD FAILED: Must specify at least one build target.",
+                        "Must specify at least one build target.",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app")
                 + '\n'));
@@ -124,7 +124,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "BUILD FAILED: Must specify at least one build target.",
+                        "Must specify at least one build target.",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4")
                 + '\n'));

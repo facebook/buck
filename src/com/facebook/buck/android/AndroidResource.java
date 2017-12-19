@@ -21,6 +21,8 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -50,6 +52,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -73,6 +76,7 @@ import javax.annotation.Nullable;
 public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
         HasAndroidResourceDeps,
+        HasClasspathDeps,
         InitializableFromDisk<String>,
         SupportsInputBasedRuleKey {
 
@@ -405,5 +409,12 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (manifestFile != null) {
       collector.addManifestPiece(manifestFile);
     }
+  }
+
+  @Override
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return deps.stream()
+        .filter(rule -> rule instanceof HasClasspathEntries)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

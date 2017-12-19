@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -36,7 +37,14 @@ public final class CellPathResolverView implements CellPathResolver {
   public CellPathResolverView(
       CellPathResolver delegate, ImmutableSet<String> declaredCellNames, Path cellPath) {
     this.delegate = delegate;
-    this.declaredCellNames = declaredCellNames;
+    Optional<String> thisName = delegate.getCanonicalCellName(cellPath);
+    if (thisName.isPresent()) {
+      // A cell should be able to view into itself even if it doesn't explicitly specify it.
+      this.declaredCellNames =
+          ImmutableSet.copyOf(Sets.union(declaredCellNames, ImmutableSet.of(thisName.get())));
+    } else {
+      this.declaredCellNames = declaredCellNames;
+    }
     this.cellPath = cellPath;
   }
 
@@ -61,6 +69,7 @@ public final class CellPathResolverView implements CellPathResolver {
 
   @Override
   public Optional<String> getCanonicalCellName(Path cellPath) {
+    // TODO(cjhopman): This should verify that this path is visible in this view.
     return delegate.getCanonicalCellName(cellPath);
   }
 }

@@ -34,6 +34,8 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -93,15 +95,17 @@ abstract class DDescriptionUtils {
   /**
    * Creates a {@link NativeLinkable} using sources compiled by the D compiler.
    *
+   * @param cellPathResolver
    * @param params build parameters for the build target
-   * @param sources source files to compile
-   * @param compilerFlags flags to pass to the compiler
    * @param buildRuleResolver resolver for build rules
    * @param cxxPlatform the C++ platform to compile for
    * @param dBuckConfig the Buck configuration for D
+   * @param compilerFlags flags to pass to the compiler
+   * @param sources source files to compile
    * @return the new build rule
    */
   public static CxxLink createNativeLinkable(
+      CellPathResolver cellPathResolver,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -157,7 +161,8 @@ abstract class DDescriptionUtils {
             .addAllArgs(StringArg.from(linkerFlags))
             .addAllArgs(SourcePathArg.from(sourcePaths))
             .build(),
-        Optional.empty());
+        Optional.empty(),
+        cellPathResolver);
   }
 
   public static BuildTarget getSymlinkTreeTarget(BuildTarget baseTarget) {
@@ -233,7 +238,7 @@ abstract class DDescriptionUtils {
               }
 
               ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-              depsBuilder.addAll(compiler.getDeps(ruleFinder));
+              depsBuilder.addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder));
               depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(src));
               for (DIncludes dIncludes : transitiveIncludes.values()) {
                 depsBuilder.addAll(dIncludes.getDeps(ruleFinder));

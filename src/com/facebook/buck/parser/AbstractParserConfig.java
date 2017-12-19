@@ -17,17 +17,13 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -46,7 +42,6 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public enum GlobHandler {
     PYTHON,
     WATCHMAN,
-    MERCURIAL,
     ;
   }
 
@@ -194,32 +189,9 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate().getListWithoutComments("project", "build_file_import_whitelist");
   }
 
-  /**
-   * Returns the path to python interpreter. If python is specified in the 'python_interpreter' key
-   * of the 'parser' section that is used and an error reported if invalid.
-   *
-   * <p>If none has been specified, consult the PythonBuckConfig for an interpreter.
-   *
-   * @return The found python interpreter.
-   */
   @Value.Lazy
-  public String getPythonInterpreter(Optional<String> configPath, ExecutableFinder exeFinder) {
-    PythonBuckConfig pyconfig = new PythonBuckConfig(getDelegate(), exeFinder);
-    Path path =
-        configPath
-            .map(c -> pyconfig.getPythonInterpreter(Optional.of(c)))
-            // Fall back to the Python section configuration
-            .orElseGet(pyconfig::getPythonInterpreter);
-    if (!(Files.isExecutable(path) && !Files.isDirectory(path))) {
-      throw new HumanReadableException("Not a python executable: " + path);
-    }
-    return path.toString();
-  }
-
-  @Value.Lazy
-  public String getPythonInterpreter(ExecutableFinder exeFinder) {
-    Optional<String> configPath = getDelegate().getValue("parser", "python_interpreter");
-    return getPythonInterpreter(configPath, exeFinder);
+  public Optional<String> getParserPythonInterpreterPath() {
+    return getDelegate().getValue("parser", "python_interpreter");
   }
 
   /**

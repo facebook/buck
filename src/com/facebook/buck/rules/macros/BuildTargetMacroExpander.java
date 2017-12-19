@@ -75,19 +75,6 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
     return expand(pathResolver, input, resolve(resolver, input));
   }
 
-  protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      @SuppressWarnings("unused") BuildRuleResolver resolver, BuildRule rule)
-      throws MacroException {
-    return ImmutableList.of(rule);
-  }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
-      throws MacroException {
-    return extractBuildTimeDeps(resolver, resolve(resolver, input));
-  }
-
   @Override
   public void extractParseTimeDepsFrom(
       BuildTarget target,

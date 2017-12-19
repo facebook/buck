@@ -18,7 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableCollection;
@@ -48,20 +47,6 @@ public interface MacroExpander {
       throws MacroException {
     return expand(target, cellNames, resolver, input, precomputedWork);
   }
-
-  /**
-   * @return {@link BuildRule}s which provide output which is consumed by the expanded form of this
-   *     macro. These are intended to become dependencies of {@code BuildRule}s that use this macro.
-   *     In many cases, this may just be the {@link BuildRule}s resolved from the {@link
-   *     BuildTarget}s returned by {@link #extractParseTimeDeps}.
-   */
-  ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input,
-      Object precomputedWork)
-      throws MacroException;
 
   /**
    * @return names of additional {@link com.facebook.buck.rules.TargetNode}s which must be followed

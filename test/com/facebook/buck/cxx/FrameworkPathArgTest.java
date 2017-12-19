@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -67,6 +68,8 @@ public class FrameworkPathArgTest {
         FrameworkPath.ofSourcePath(genrule.getSourcePathToOutput());
 
     FrameworkPathArg sourcePathFrameworkPathArg = new TestFrameworkPathArg(sourcePathFrameworkPath);
-    assertThat(sourcePathFrameworkPathArg.getDeps(ruleFinder), Matchers.contains(genrule));
+    assertThat(
+        BuildableSupport.getDepsCollection(sourcePathFrameworkPathArg, ruleFinder),
+        Matchers.contains(genrule));
   }
 }

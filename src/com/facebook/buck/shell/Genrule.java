@@ -31,14 +31,15 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.WorkerMacroArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.macros.OutputToFileExpanderUtils;
+import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
@@ -364,7 +365,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<String> collectExistingArgInputs(
       SourcePathResolver sourcePathResolver, Arg arg) {
-    Collection<BuildRule> buildRules = arg.getDeps(new SourcePathRuleFinder(buildRuleResolver));
+    Collection<BuildRule> buildRules =
+        BuildableSupport.getDepsCollection(arg, new SourcePathRuleFinder(buildRuleResolver));
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     for (BuildRule buildRule : buildRules) {
       SourcePath inputPath = buildRule.getSourcePathToOutput();

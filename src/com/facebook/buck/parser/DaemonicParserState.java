@@ -27,9 +27,9 @@ import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
@@ -650,7 +650,7 @@ public class DaemonicParserState {
     }
   }
 
-  public RemoteDaemonicParserState serialiseDaemonicParserState() throws IOException {
+  public RemoteDaemonicParserState serializeDaemonicParserState() throws IOException {
     ImmutableList.Builder<String> cellPathsBuilder = ImmutableList.builder();
     ImmutableMap.Builder<String, RemoteDaemonicCellState> cellPathToDaemonicStateBuilder =
         ImmutableMap.builder();
@@ -659,7 +659,7 @@ public class DaemonicParserState {
         DaemonicCellState daemonicCellState = cellPathToDaemonicState.get(p);
         Path relPath = daemonicCellState.getCellRoot().relativize(p);
         cellPathsBuilder.add(relPath.toString());
-        cellPathToDaemonicStateBuilder.put(relPath.toString(), daemonicCellState.serialise());
+        cellPathToDaemonicStateBuilder.put(relPath.toString(), daemonicCellState.serialize());
       }
     }
     RemoteDaemonicParserState remote = new RemoteDaemonicParserState();
@@ -692,7 +692,7 @@ public class DaemonicParserState {
           if (cell != null) {
             try {
               DaemonicCellState daemonicCellState =
-                  DaemonicCellState.deserialise(remoteDaemonicCellState, cell, parsingThreads);
+                  DaemonicCellState.deserialize(remoteDaemonicCellState, cell, parsingThreads);
               cellPathToDaemonicState.put(cell.getRoot(), daemonicCellState);
             } catch (IOException e) {
               throw new RuntimeException(e);

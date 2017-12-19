@@ -52,6 +52,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -692,7 +693,8 @@ public class CxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
     Arg firstArg = nativeLinkableInput.getArgs().get(0);
     assertThat(firstArg, instanceOf(FileListableLinkerInputArg.class));
-    ImmutableCollection<BuildRule> deps = firstArg.getDeps(new SourcePathRuleFinder(resolver));
+    ImmutableCollection<BuildRule> deps =
+        BuildableSupport.getDepsCollection(firstArg, new SourcePathRuleFinder(resolver));
     assertThat(deps.size(), is(1));
     BuildRule buildRule = deps.asList().get(0);
     assertThat(
@@ -884,7 +886,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
             .toSet(),
         hasItem(loc));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -929,7 +931,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
             .toSet(),
         hasItem(loc));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -976,7 +978,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
             .toSet(),
         not(hasItem(loc)));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);

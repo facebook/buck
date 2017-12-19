@@ -39,7 +39,7 @@ abstract class AbstractResourceAwareSchedulingInfo {
 
   public ResourceAmounts getResourceAmountsForRule(BuildRule rule) {
     if (isRuleResourceFree(rule)) {
-      return ResourceAmounts.ZERO;
+      return ResourceAmounts.zero();
     } else {
       return getResourceAmountsForRuleOrDefaultAmounts(rule);
     }

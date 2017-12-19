@@ -26,6 +26,7 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -110,9 +111,8 @@ public final class RunCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     if (!hasTargetSpecified()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("No target given to run"));
-      params.getBuckEventBus().post(ConsoleEvent.severe("buck run <target> <arg1> <arg2>..."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException(
+          "no target given to run\nuse: buck run <target> <arg1> <arg2>...");
     }
 
     // Make sure the target is built.

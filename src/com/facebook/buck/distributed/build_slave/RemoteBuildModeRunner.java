@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /** Executes stampede in remote build mode. */
-public class RemoteBuildModeRunner implements DistBuildModeRunner {
+public class RemoteBuildModeRunner extends AbstractDistBuildModeRunner {
   private static final Logger LOG = Logger.get(RemoteBuildModeRunner.class);
 
   /** Sets the final BuildStatus of the BuildJob. */

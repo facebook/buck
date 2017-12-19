@@ -29,7 +29,9 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.CodeSignIdentity;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
+import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -41,6 +43,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -52,6 +55,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.concurrent.Future;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,7 +69,7 @@ public class ProvisioningProfileCopyStepTest {
   private Path entitlementsFile;
   private ProjectFilesystem projectFilesystem;
   private ExecutionContext executionContext;
-  private CodeSignIdentityStore codeSignIdentityStore;
+  private Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
 
   private static final ImmutableList<String> FAKE_READ_COMMAND = ImmutableList.of("cat");
 
@@ -93,7 +97,7 @@ public class ProvisioningProfileCopyStepTest {
     xcentFile = Paths.get("test.xcent");
     dryRunResultFile = Paths.get("test_dry_run_results.plist");
     executionContext = TestExecutionContext.newInstance();
-    codeSignIdentityStore = CodeSignIdentityStore.fromIdentities(ImmutableList.of());
+    codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
     entitlementsFile = testdataDir.resolve("Entitlements.plist");
   }
 
@@ -110,11 +114,11 @@ public class ProvisioningProfileCopyStepTest {
             ApplePlatform.IPHONEOS,
             Optional.empty(),
             Optional.of(testdataDir.resolve("Invalid.plist")),
-            ProvisioningProfileStore.fromSearchPath(
+            ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
-            codeSignIdentityStore,
+            codeSignIdentitiesSupplier,
             Optional.empty());
 
     step.execute(executionContext);
@@ -133,11 +137,11 @@ public class ProvisioningProfileCopyStepTest {
             ApplePlatform.IPHONEOS,
             Optional.empty(),
             Optional.empty(),
-            ProvisioningProfileStore.fromSearchPath(
+            ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
-            codeSignIdentityStore,
+            codeSignIdentitiesSupplier,
             Optional.empty());
 
     step.execute(executionContext);
@@ -160,11 +164,11 @@ public class ProvisioningProfileCopyStepTest {
             ApplePlatform.IPHONEOS,
             Optional.empty(),
             Optional.empty(),
-            ProvisioningProfileStore.fromSearchPath(
+            ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
             outputFile,
             xcentFile,
-            codeSignIdentityStore,
+            codeSignIdentitiesSupplier,
             Optional.empty());
 
     step.execute(executionContext);
@@ -183,11 +187,11 @@ public class ProvisioningProfileCopyStepTest {
             ApplePlatform.IPHONEOS,
             Optional.empty(),
             Optional.empty(),
-            ProvisioningProfileStore.fromSearchPath(
+            ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
             outputFile,
             xcentFile,
-            codeSignIdentityStore,
+            codeSignIdentitiesSupplier,
             Optional.of(dryRunResultFile));
 
     Future<Optional<ProvisioningProfileMetadata>> profileFuture =
@@ -215,11 +219,11 @@ public class ProvisioningProfileCopyStepTest {
             ApplePlatform.IPHONEOS,
             Optional.empty(),
             Optional.empty(),
-            ProvisioningProfileStore.fromSearchPath(
+            ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
-            codeSignIdentityStore,
+            codeSignIdentitiesSupplier,
             Optional.empty());
 
     Future<Optional<ProvisioningProfileMetadata>> profileFuture =
@@ -239,11 +243,11 @@ public class ProvisioningProfileCopyStepTest {
             ApplePlatform.IPHONEOS,
             Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.empty(),
-            ProvisioningProfileStore.fromSearchPath(
+            ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
-            codeSignIdentityStore,
+            codeSignIdentitiesSupplier,
             Optional.empty());
     step.execute(executionContext);
 
@@ -276,11 +280,11 @@ public class ProvisioningProfileCopyStepTest {
             ApplePlatform.IPHONEOS,
             Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.of(entitlementsFile),
-            ProvisioningProfileStore.fromSearchPath(
+            ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile,
             xcentFile,
-            codeSignIdentityStore,
+            codeSignIdentitiesSupplier,
             Optional.empty());
     step.execute(executionContext);
 

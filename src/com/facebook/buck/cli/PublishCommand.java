@@ -30,6 +30,7 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -110,16 +111,12 @@ public class PublishCommand extends BuildCommand {
 
     // Input validation
     if (remoteRepo == null && !toMavenCentral) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe(
-                  "Please specify a remote repository to publish to.\n"
-                      + "Use "
-                      + REMOTE_REPO_LONG_ARG
-                      + " <URL> or "
-                      + TO_MAVEN_CENTRAL_LONG_ARG));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException(
+          "please specify a remote repository to publish to.\n"
+              + "Use "
+              + REMOTE_REPO_LONG_ARG
+              + " <URL> or "
+              + TO_MAVEN_CENTRAL_LONG_ARG);
     }
 
     // Build the specified target(s).

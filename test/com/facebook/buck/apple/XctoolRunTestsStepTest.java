@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -33,7 +34,6 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +68,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -120,7 +120,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -177,7 +177,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -234,7 +234,7 @@ public class XctoolRunTestsStepTest {
                 ImmutableMap.of(Paths.get("/path/to/Foo.app"), Paths.get("/path/to/Target.app"))),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -289,7 +289,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -346,7 +346,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -401,7 +401,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -455,7 +455,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.builder().addRawSelectors("#.*Magic.*").build(),
             false,
             Optional.empty(),
@@ -546,7 +546,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.builder().addRawSelectors("#.*Magic.*").build(),
             false,
             Optional.empty(),
@@ -612,7 +612,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.builder().addRawSelectors("Blargh#Xyzzy").build(),
             false,
             Optional.empty(),
@@ -674,7 +674,7 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))),
+            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
             Optional.of("TEST_LOG_PATH"),

@@ -56,16 +56,16 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.MissingBuildFileException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
-import com.facebook.buck.plugin.BuckPluginManagerFactory;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -79,6 +79,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.TestConsole;
@@ -254,7 +255,12 @@ public class ParserTest {
 
     ToolchainCreationContext toolchainCreationContext =
         ToolchainCreationContext.of(
-            ImmutableMap.of(), config, filesystem, processExecutor, new ExecutableFinder());
+            ImmutableMap.of(),
+            config,
+            filesystem,
+            processExecutor,
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create());
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =
@@ -1707,7 +1713,7 @@ public class ParserTest {
   }
 
   @Test
-  public void daemonicParserStateSerialisesAndDeserialisesCorrectly() throws Exception {
+  public void daemonicParserStateSerializesAndDeserializesCorrectly() throws Exception {
     tempDir.newFolder("foo");
 
     Path testFooBuckFile = tempDir.newFile("foo/BUCK");
@@ -1728,7 +1734,7 @@ public class ParserTest {
     TargetGraph oldGraph =
         parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
 
-    // Serialise target graph information.
+    // Serialize target graph information.
     RemoteDaemonicParserState remote = parser.storeParserState();
 
     assertTrue(remote.isSetCachedIncludes());

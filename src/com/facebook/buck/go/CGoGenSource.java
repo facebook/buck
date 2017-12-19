@@ -25,6 +25,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -98,7 +99,7 @@ public class CGoGenSource extends AbstractBuildRule {
 
     this.buildDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(cgo.getDeps(ruleFinder))
+            .addAll(BuildableSupport.getDepsCollection(cgo, ruleFinder))
             .addAll(ruleFinder.filterBuildRuleInputs(cgoSrcs))
             .build();
   }

@@ -656,7 +656,6 @@
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
         <include name="com/facebook/buck/rules/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
-        <include name="com/facebook/buck/util/versioncontrol/rawmanifest.py"/>
       </fileset>
     </copy>
   </target>
@@ -729,6 +728,12 @@
   <target name="missing-test-files-check" depends="default">
     <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
       <arg line="verify-test-files.py" />
+    </exec>
+  </target>
+
+  <target name="verify-core-rules-boundaries" depends="default">
+    <exec dir="${user.dir}/tools/build/core-boundaries" executable="python" failonerror="true">
+      <arg line="verify-core-rules-boundaries.py" />
     </exec>
   </target>
 
@@ -880,7 +885,7 @@
     </sequential>
   </macrodef>
 
-  <target name="lint" depends="pmd, missing-test-files-check" />
+  <target name="lint" depends="pmd, missing-test-files-check, verify-core-rules-boundaries" />
 
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />

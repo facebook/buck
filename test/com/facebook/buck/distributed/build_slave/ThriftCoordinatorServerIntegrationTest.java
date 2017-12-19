@@ -18,10 +18,11 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
+import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
@@ -83,7 +84,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.LEAF_TARGET),
+              ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseTwo.getWorkUnitsSize(), 2);
@@ -94,7 +95,8 @@ public class ThriftCoordinatorServerIntegrationTest {
               MINION_ID,
               0,
               ImmutableList.of(
-                  BuildTargetsQueueTest.LEFT_TARGET, BuildTargetsQueueTest.RIGHT_TARGET),
+                  CustomBuildRuleResolverFactory.LEFT_TARGET,
+                  CustomBuildRuleResolverFactory.RIGHT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseThree.getWorkUnitsSize(), 1);
@@ -104,7 +106,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET),
+              ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFour.getWorkUnitsSize(), 0);
@@ -115,7 +117,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET),
+              ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFive.getWorkUnitsSize(), 0);

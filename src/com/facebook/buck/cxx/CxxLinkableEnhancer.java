@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -33,6 +34,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -70,6 +73,7 @@ public class CxxLinkableEnhancer {
   private CxxLinkableEnhancer() {}
 
   public static CxxLink createCxxLinkableBuildRule(
+      CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
@@ -79,7 +83,7 @@ public class CxxLinkableEnhancer {
       Path output,
       ImmutableMap<String, Path> extraOutputs,
       ImmutableList<Arg> args,
-      Linker.LinkableDepType runtimeDepType,
+      LinkableDepType runtimeDepType,
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor) {
 
@@ -119,8 +123,8 @@ public class CxxLinkableEnhancer {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         () ->
             FluentIterable.from(allArgs)
-                .transformAndConcat(arg -> arg.getDeps(ruleFinder))
-                .append(linker.getDeps(ruleFinder))
+                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
+                .append(BuildableSupport.getDepsCollection(linker, ruleFinder))
                 .toSortedSet(Ordering.natural());
     return new CxxLink(
         target,
@@ -129,6 +133,7 @@ public class CxxLinkableEnhancer {
         // rules that construct our object file inputs and also the deps that build our
         // dependencies.
         declaredDeps,
+        cellPathResolver,
         linker,
         output,
         extraOutputs,
@@ -145,6 +150,7 @@ public class CxxLinkableEnhancer {
    *
    * @param nativeLinkableDeps library dependencies that the linkable links in
    * @param immediateLinkableInput framework and libraries of the linkable itself
+   * @param cellPathResolver
    */
   public static CxxLink createCxxLinkableBuildRule(
       CxxBuckConfig cxxBuckConfig,
@@ -166,7 +172,8 @@ public class CxxLinkableEnhancer {
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
       NativeLinkableInput immediateLinkableInput,
-      Optional<LinkOutputPostprocessor> postprocessor) {
+      Optional<LinkOutputPostprocessor> postprocessor,
+      CellPathResolver cellPathResolver) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -249,6 +256,7 @@ public class CxxLinkableEnhancer {
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 
     return createCxxLinkableBuildRule(
+        cellPathResolver,
         cxxBuckConfig,
         cxxPlatform,
         projectFilesystem,
@@ -367,7 +375,8 @@ public class CxxLinkableEnhancer {
       Path output,
       ImmutableMap<String, Path> extraOutputs,
       Optional<String> soname,
-      ImmutableList<? extends Arg> args) {
+      ImmutableList<? extends Arg> args,
+      CellPathResolver cellPathResolver) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
     linkArgsBuilder.addAll(cxxPlatform.getLd().resolve(ruleResolver).getSharedLibFlag());
     if (soname.isPresent()) {
@@ -377,6 +386,7 @@ public class CxxLinkableEnhancer {
     linkArgsBuilder.addAll(args);
     ImmutableList<Arg> linkArgs = linkArgsBuilder.build();
     return createCxxLinkableBuildRule(
+        cellPathResolver,
         cxxBuckConfig,
         cxxPlatform,
         projectFilesystem,

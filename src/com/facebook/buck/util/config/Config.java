@@ -19,6 +19,7 @@ package com.facebook.buck.util.config;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroReplacer;
+import com.facebook.buck.model.macros.StringMacroCombiner;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
@@ -80,13 +81,13 @@ public class Config {
 
   // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config
   // macro.  So, add special expanders to preserve these until they get fixed.
-  private static MacroReplacer getMacroPreserver(final String name) {
+  private static MacroReplacer<String> getMacroPreserver(final String name) {
     return input -> String.format("$(%s %s)", name, Joiner.on(' ').join(input.getMacroInput()));
   }
 
   /** @return the input after recursively expanding any config references. */
   private String expand(String input, final Stack<String> expandStack) {
-    MacroReplacer macroReplacer =
+    MacroReplacer<String> macroReplacer =
         inputs -> {
           if (inputs.getMacroInput().size() != 1) {
             throw new HumanReadableException(
@@ -108,7 +109,8 @@ public class Config {
               "exe", getMacroPreserver("exe"),
               "location", getMacroPreserver("location")),
           input,
-          true);
+          true,
+          new StringMacroCombiner());
     } catch (MacroException e) {
       throw new HumanReadableException(e, e.getMessage());
     }

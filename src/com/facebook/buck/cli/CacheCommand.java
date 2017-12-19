@@ -30,6 +30,7 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.zip.Unzip;
@@ -61,6 +62,9 @@ public class CacheCommand extends AbstractCommand {
   @Option(name = "--output-dir", usage = "Extract artifacts to this directory.")
   @Nullable
   private String outputDir = null;
+
+  @Option(name = "--distributed", usage = "If the request is for our distributed system.")
+  private boolean isRequestForDistributed = false;
 
   public List<String> getArguments() {
     return arguments;
@@ -112,8 +116,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     if (arguments.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("No cache keys specified."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("no cache keys specified");
     }
 
     if (outputDir != null) {
@@ -129,7 +132,8 @@ public class CacheCommand extends AbstractCommand {
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
-    try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
+    try (ArtifactCache cache =
+            params.getArtifactCacheFactory().newInstance(isRequestForDistributed);
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();

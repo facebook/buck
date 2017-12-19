@@ -21,7 +21,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 
-public class CoordinatorAndMinionModeRunner implements DistBuildModeRunner {
+/**
+ * {@link DistBuildModeRunner} implementation for running a distributed build as coordinator as well
+ * as minion on a remote machine.
+ */
+public class CoordinatorAndMinionModeRunner extends AbstractDistBuildModeRunner {
   private static final Logger LOG = Logger.get(CoordinatorAndMinionModeRunner.class);
 
   private final CoordinatorModeRunner coordinatorModeRunner;

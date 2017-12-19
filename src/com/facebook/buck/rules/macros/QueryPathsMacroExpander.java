@@ -101,25 +101,10 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
       QueryPathsMacro input,
       QueryResults precomputedWork)
       throws MacroException {
-
     return asRules(target, cellNames, resolver, input, precomputedWork)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-  }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      QueryPathsMacro input,
-      QueryResults precomputedWork)
-      throws MacroException {
-
-    return asRules(target, cellNames, resolver, input, precomputedWork)
-        .sorted()
-        .collect(ImmutableList.toImmutableList());
   }
 
   private Stream<BuildRule> asRules(

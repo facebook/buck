@@ -33,7 +33,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
@@ -71,7 +71,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       ArtifactCache remoteCache,
       RuleKeyConfiguration rkConfigForCache,
       ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> asyncRuleKeyCalculatorOptional,
-      BuildSlaveTimingStatsTracker timingStatsTracker) {
+      HealthCheckStatsTracker healthCheckStatsTracker,
+      Optional<BuildSlaveTimingStatsTracker> timingStatsTracker) {
 
     ListenableFuture<BuildTargetsQueue> queueFuture =
         Futures.transformAsync(
@@ -80,7 +81,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                 Futures.transform(
                     delegateAndGraphsFuture,
                     graphs -> {
-                      timingStatsTracker.startTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME);
+                      timingStatsTracker.ifPresent(
+                          tracker -> tracker.startTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME));
                       BuildTargetsQueue queue =
                           new BuildTargetsQueueFactory(
                                   graphs.getActionGraphAndResolver().getResolver(),
@@ -92,7 +94,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                                   rkConfigForCache,
                                   ruleKeyCalculatorOptional)
                               .newQueue(topLevelTargetsToBuild);
-                      timingStatsTracker.stopTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME);
+                      timingStatsTracker.ifPresent(
+                          tracker -> tracker.stopTimer(REVERSE_DEPENDENCY_QUEUE_CREATION_TIME));
                       return queue;
                     },
                     executorService),
@@ -105,7 +108,12 @@ public class MultiSlaveBuildModeRunnerFactory {
         new CoordinatorEventListener(
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
     MinionHealthTracker minionHealthTracker =
-        new MinionHealthTracker(new DefaultClock(), distBuildConfig.getMaxMinionSilenceMillis());
+        new MinionHealthTracker(
+            new DefaultClock(),
+            distBuildConfig.getMaxMinionSilenceMillis(),
+            distBuildConfig.getHearbeatServiceRateMillis(),
+            distBuildConfig.getSlowHeartbeatWarningThresholdMillis(),
+            healthCheckStatsTracker);
 
     ChromeTraceBuckConfig chromeTraceBuckConfig =
         distBuildConfig.getBuckConfig().getView(ChromeTraceBuckConfig.class);
@@ -138,12 +146,33 @@ public class MultiSlaveBuildModeRunnerFactory {
       String coordinatorAddress,
       OptionalInt coordinatorPort,
       DistBuildConfig distBuildConfig,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
+      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      double availableBuildCapacityRatio) {
+    Preconditions.checkArgument(
+        availableBuildCapacityRatio > 0, availableBuildCapacityRatio + " is not > 0");
+    Preconditions.checkArgument(
+        availableBuildCapacityRatio <= 1, availableBuildCapacityRatio + " is not <= 1");
+
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = distBuildService.getCurrentBuildJobState(stampedeId);
           return BuildStatusUtil.isTerminalBuildStatus(job.getStatus());
         };
+
+    int availableBuildCapacity =
+        distBuildConfig
+            .getBuckConfig()
+            .getView(ResourcesConfig.class)
+            .getConcurrencyLimit()
+            .threadLimit;
+
+    // Adjust by ratio. E.g. if ratio is 0.5 and we have 8 cores, minion will use 4 cores.
+    Double availableCapacityDouble =
+        Double.valueOf(availableBuildCapacityRatio * availableBuildCapacity);
+    availableBuildCapacity = availableCapacityDouble.intValue();
+
+    // Ensure value wasn't rounded down to 0. We always need more than 1 core to make progress.
+    availableBuildCapacity = Math.max(1, availableBuildCapacity);
 
     return new MinionModeRunner(
         coordinatorAddress,
@@ -184,7 +213,9 @@ public class MultiSlaveBuildModeRunnerFactory {
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
       RuleKeyConfiguration rkConfigForCache,
-      BuildSlaveTimingStatsTracker timingStatsTracker) {
+      BuildSlaveTimingStatsTracker timingStatsTracker,
+      HealthCheckStatsTracker healthCheckStatsTracker,
+      double coordinatorBuildCapacityRatio) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             delegateAndGraphsFuture,
@@ -205,7 +236,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                 buildExecutor ->
                     Optional.of(buildExecutor.getCachingBuildEngine().getRuleKeyCalculator()),
                 executorService),
-            timingStatsTracker),
+            healthCheckStatsTracker,
+            Optional.of(timingStatsTracker)),
         createMinion(
             localBuildExecutor,
             distBuildService,
@@ -214,6 +246,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),
             distBuildConfig,
-            unexpectedCacheMissTracker));
+            unexpectedCacheMissTracker,
+            coordinatorBuildCapacityRatio));
   }
 }

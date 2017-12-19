@@ -27,7 +27,8 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -36,10 +37,10 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.Keystore;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -61,11 +62,11 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -128,33 +129,24 @@ public class AndroidBinaryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavaOptions javaOptions;
-  private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
   private final BuckConfig buckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
-  private final ListeningExecutorService dxExecutorService;
   private final AndroidInstallConfig androidInstallConfig;
 
   public AndroidBinaryDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
-      JavaOptions javaOptions,
-      JavacOptions javacOptions,
       ProGuardConfig proGuardConfig,
-      ListeningExecutorService dxExecutorService,
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javaOptions = javaOptions;
-    this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
     this.buckConfig = buckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.dxExecutorService = dxExecutorService;
     this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
   }
@@ -258,6 +250,14 @@ public class AndroidBinaryDescription
               .filter(JavaLibrary.class)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
+      ListeningExecutorService dxExecutorService =
+          toolchainProvider
+              .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+              .getDxExecutorService();
+
+      JavaOptionsProvider javaOptionsProvider =
+          toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
+
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
           NonPredexedDexBuildableArgs.builder()
               .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
@@ -274,7 +274,7 @@ public class AndroidBinaryDescription
               .setOptimizationPasses(args.getOptimizationPasses())
               .setProguardJvmArgs(args.getProguardJvmArgs())
               .setSkipProguard(args.isSkipProguard())
-              .setJavaRuntimeLauncher(javaOptions.getJavaRuntimeLauncher())
+              .setJavaRuntimeLauncher(javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher())
               .setProguardConfigPath(args.getProguardConfig())
               .setShouldProguard(shouldProguard)
               .build();
@@ -292,6 +292,7 @@ public class AndroidBinaryDescription
 
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
+              cellRoots,
               buildTarget,
               projectFilesystem,
               androidLegacyToolchain,
@@ -301,6 +302,7 @@ public class AndroidBinaryDescription
               args.getResourceCompression(),
               resourceFilter,
               args.getEffectiveBannedDuplicateResourceTypes(),
+              args.getDuplicateResourceWhitelist(),
               args.getResourceUnionPackage(),
               addFallbackLocales(args.getLocales()),
               args.getManifest(),
@@ -317,7 +319,9 @@ public class AndroidBinaryDescription
               args.isNoAutoVersionResources(),
               javaBuckConfig,
               JavacFactory.create(ruleFinder, javaBuckConfig, null),
-              javacOptions,
+              toolchainProvider
+                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getJavacOptions(),
               exopackageModes,
               args.getBuildConfigValues(),
               args.getBuildConfigValuesFile(),
@@ -389,7 +393,7 @@ public class AndroidBinaryDescription
               args.isPackageAssetLibraries(),
               args.isCompressAssetLibraries(),
               args.getManifestEntries(),
-              javaOptions.getJavaRuntimeLauncher(),
+              javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher(),
               args.getIsCacheable(),
               moduleVerification,
               filesInfo.getDexFilesInfo(),
@@ -662,6 +666,8 @@ public class AndroidBinaryDescription
 
     Set<RType> getBannedDuplicateResourceTypes();
 
+    Optional<SourcePath> getDuplicateResourceWhitelist();
+
     @Value.Default
     default AndroidBinary.AaptMode getAaptMode() {
       return AndroidBinary.AaptMode.AAPT1;
@@ -740,7 +746,7 @@ public class AndroidBinaryDescription
 
     @Value.Default
     default BuildConfigFields getBuildConfigValues() {
-      return BuildConfigFields.empty();
+      return BuildConfigFields.of();
     }
 
     @Value.Default

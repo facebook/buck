@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -36,6 +36,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -210,7 +211,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
           nativeLinkableInput
               .getArgs()
               .stream()
-              .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+              .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
               .iterator());
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the

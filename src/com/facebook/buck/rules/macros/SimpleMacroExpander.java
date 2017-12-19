@@ -18,7 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.collect.ImmutableCollection;
@@ -50,19 +49,6 @@ public abstract class SimpleMacroExpander
 
   public abstract String expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver);
-
-  @Override
-  public final ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, Void input)
-      throws MacroException {
-    return extractBuildTimeDepsFrom(target, cellNames, resolver);
-  }
-
-  @SuppressWarnings("unused")
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-    return ImmutableList.of();
-  }
 
   @Override
   public final Object extractRuleKeyAppendablesFrom(

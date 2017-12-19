@@ -11,7 +11,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/parser/options:options",
-        "//src/com/facebook/buck/plugin:plugin",
+        "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:relative_cell_name",

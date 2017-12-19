@@ -21,9 +21,14 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.model.macros.MacroReplacer;
+import com.facebook.buck.model.macros.StringMacroCombiner;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -88,26 +93,19 @@ public class MacroHandler {
       String blob,
       Map<MacroMatchResult, Object> precomputedWorkCache)
       throws MacroException {
-    ImmutableMap<String, MacroReplacer> replacers =
+    ImmutableMap<String, MacroReplacer<String>> replacers =
         getMacroReplacers(target, cellNames, resolver, precomputedWorkCache);
-    return MacroFinder.replace(replacers, blob, true);
+    return MacroFinder.replace(replacers, blob, true, new StringMacroCombiner());
   }
 
-  public ImmutableMap<String, MacroReplacer> getMacroReplacers(
-      final BuildTarget target,
-      final CellPathResolver cellNames,
-      final BuildRuleResolver resolver) {
-    return getMacroReplacers(target, cellNames, resolver, new HashMap<>());
-  }
-
-  public ImmutableMap<String, MacroReplacer> getMacroReplacers(
+  private ImmutableMap<String, MacroReplacer<String>> getMacroReplacers(
       final BuildTarget target,
       final CellPathResolver cellNames,
       final BuildRuleResolver resolver,
       Map<MacroMatchResult, Object> precomputedWorkCache) {
-    ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
+    ImmutableMap.Builder<String, MacroReplacer<String>> replacers = ImmutableMap.builder();
     for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
-      MacroReplacer replacer;
+      MacroReplacer<String> replacer;
       final boolean shouldOutputToFile = entry.getKey().startsWith("@");
       try {
         final MacroExpander expander = getExpander(entry.getKey());
@@ -148,22 +146,15 @@ public class MacroHandler {
       String blob,
       Map<MacroMatchResult, Object> precomputedWorkCache)
       throws MacroException {
-    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-
-    // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
-    // extract for their respective macros.
-    for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
-      MacroExpander expander = getExpander(matchResult.getMacroType());
-      Object precomputedWork =
-          ensurePrecomputedWork(
-              matchResult, expander, precomputedWorkCache, target, cellNames, resolver);
-      ImmutableList<BuildRule> buildTimeDeps =
-          expander.extractBuildTimeDeps(
-              target, cellNames, resolver, matchResult.getMacroInput(), precomputedWork);
-      deps.addAll(buildTimeDeps);
-    }
-
-    return deps.build();
+    return BuildableSupport.deriveDeps(
+            new AddsToRuleKey() {
+              @AddToRuleKey
+              private final Object object =
+                  extractRuleKeyAppendables(
+                      target, cellNames, resolver, blob, precomputedWorkCache);
+            },
+            new SourcePathRuleFinder(resolver))
+        .collect(ImmutableList.toImmutableList());
   }
 
   public void extractParseTimeDeps(
@@ -185,12 +176,6 @@ public class MacroHandler {
               buildDepsBuilder,
               targetGraphOnlyDepsBuilder);
     }
-  }
-
-  public ImmutableList<Object> extractRuleKeyAppendables(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String blob)
-      throws MacroException {
-    return extractRuleKeyAppendables(target, cellNames, resolver, blob, new HashMap<>());
   }
 
   public ImmutableList<Object> extractRuleKeyAppendables(

@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UserFlavor;
@@ -28,6 +27,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -86,10 +86,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
             .collect(ImmutableSet.toImmutableSet());
 
     if (targets.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Please specify at least one build target."));
-      return ExitCode.COMMANDLINE_ERROR;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     ImmutableList.Builder<TargetNode<?, ?>> builder = ImmutableList.builder();
@@ -107,7 +104,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
                     target);
         builder.add(targetNode);
       }
-    } catch (BuildFileParseException | BuildTargetException e) {
+    } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

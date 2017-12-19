@@ -39,6 +39,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -104,7 +105,7 @@ public class ResolverIntegrationTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
 
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
@@ -117,7 +118,10 @@ public class ResolverIntegrationTest {
         new PythonDslProjectBuildFileParser(
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(filesystem.getRootPath())
-                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter().toString())
+                .setPythonInterpreter(
+                    new PythonInterpreterFromConfig(pythonBuckConfig, new ExecutableFinder())
+                        .getPythonInterpreterPath()
+                        .toString())
                 .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
                 .setIgnorePaths(filesystem.getIgnorePaths())
                 .setBuildFileName(parserConfig.getBuildFileName())

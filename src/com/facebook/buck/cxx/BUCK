@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
-java_immutables_library(
+java_library_with_plugins(
     name = "rules",
     srcs = glob(["*.java"]),
     exported_deps = [
@@ -11,6 +11,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
     ],
@@ -54,7 +55,6 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/sandbox:sandbox",
-        "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",

@@ -44,7 +44,6 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.i18n.NumberFormatter;
 import com.facebook.buck.util.timing.Clock;
@@ -109,8 +108,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   private final int numberOfSlowRulesToShow;
   private final boolean showSlowRulesInConsole;
   private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
-
-  protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
 
   @Nullable protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
   @Nullable protected volatile ProjectBuildFileParseEvents.Finished projectBuildFileParseFinished;
@@ -204,8 +201,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.actionGraphEvents = new ConcurrentHashMap<>();
     this.buckFilesParsingEvents = new ConcurrentHashMap<>();
-
-    this.autoSparseState = new ConcurrentHashMap<>();
 
     this.buildStarted = null;
     this.buildFinished = null;
@@ -533,26 +528,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void autoSparseStateSparseRefreshStarted(
-      AutoSparseStateEvents.SparseRefreshStarted started) {
-    aggregateStartedEvent(autoSparseState, started);
-  }
-
-  @Subscribe
-  public void autoSparseStateSparseRefreshFinished(
-      AutoSparseStateEvents.SparseRefreshFinished finished) {
-    aggregateFinishedEvent(autoSparseState, finished);
-  }
-
-  @Subscribe
-  public void autoSparseStateRefreshFailed(AutoSparseStateEvents.SparseRefreshFailed failed) {
-    String failureDetails = failed.getFailureDetails();
-    if (failureDetails.length() > 0) {
-      printSevereWarningDirectly(failureDetails);
-    }
-  }
-
-  @Subscribe
   public void projectBuildFileParseStarted(ProjectBuildFileParseEvents.Started started) {
     if (projectBuildFileParseStarted == null) {
       projectBuildFileParseStarted = started;
@@ -706,25 +681,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             ? convertToAllCapsIfNeeded("Downloaded")
             : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
-    if (finishedEvent != null) {
-      Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();
-      Pair<Double, SizeUnit> readableSpeed =
-          SizeUnit.getHumanReadableSize(avgDownloadSpeed.getFirst(), avgDownloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale,
-              "%s/" + convertToAllCapsIfNeeded("sec") + " " + convertToAllCapsIfNeeded("avg"),
-              convertToAllCapsIfNeeded(SizeUnit.toHumanReadableString(readableSpeed, locale))));
-    } else {
-      Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
-      Pair<Double, SizeUnit> readableDownloadSpeed =
-          SizeUnit.getHumanReadableSize(downloadSpeed.getFirst(), downloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale,
-              "%s/" + convertToAllCapsIfNeeded("sec"),
-              SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
-    }
     Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
     Pair<Double, SizeUnit> readableBytesDownloaded =
         SizeUnit.getHumanReadableSize(bytesDownloaded.getFirst(), bytesDownloaded.getSecond());
@@ -836,8 +792,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
       httpArtifactUploadsStartedCount.incrementAndGet();
-    } else {
-      networkStatsKeeper.artifactDownloadedStarted(event);
     }
   }
 
@@ -854,7 +808,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         httpArtifactUploadFailedCount.incrementAndGet();
       }
     } else {
-      networkStatsKeeper.artifactDownloadFinished(event);
+      networkStatsKeeper.artifactDownloadFinished();
     }
   }
 
@@ -963,7 +917,5 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void outputTrace(BuildId buildId) {}
 
   @Override
-  public void close() throws IOException {
-    networkStatsKeeper.stopScheduler();
-  }
+  public void close() throws IOException {}
 }

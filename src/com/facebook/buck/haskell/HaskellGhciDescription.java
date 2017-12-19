@@ -46,6 +46,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -60,6 +61,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -249,15 +252,25 @@ public class HaskellGhciDescription
     return NativeLinkableInput.concat(nativeLinkableInputs);
   }
 
+  /**
+   * Give the relative path from the omnibus to its shared library directory. Expose this to enable
+   * setting -rpath.
+   */
+  public static Path getSoLibsRelDir(BuildTarget baseTarget) {
+    return Paths.get(baseTarget.getShortName() + ".so-symlinks");
+  }
+
   /** Give a rule for an omnibus object to be loaded into a ghci session */
   public static synchronized BuildRule requireOmnibusSharedObject(
+      CellPathResolver cellPathResolver,
       BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxBuckConfig cxxBuckConfig,
       Iterable<NativeLinkable> body,
-      Iterable<NativeLinkable> deps) {
+      Iterable<NativeLinkable> deps,
+      ImmutableList<Arg> extraLdFlags) {
     return resolver.computeIfAbsent(
         BuildTarget.of(
             UnflavoredBuildTarget.of(
@@ -266,19 +279,28 @@ public class HaskellGhciDescription
                 baseTarget.getBaseName(),
                 baseTarget.getShortName() + ".omnibus-shared-object"),
             baseTarget.getFlavors()),
-        ruleTarget ->
-            CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
-                cxxBuckConfig,
-                cxxPlatform,
-                projectFilesystem,
-                resolver,
-                new SourcePathRuleFinder(resolver),
-                ruleTarget,
-                BuildTargets.getGenPath(projectFilesystem, ruleTarget, "%s")
-                    .resolve("libghci_dependencies.so"),
-                ImmutableMap.of(),
-                Optional.of("libghci_dependencies.so"),
-                getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, body, deps).getArgs()));
+        ruleTarget -> {
+          ImmutableList.Builder<Arg> linkFlagsBuilder = ImmutableList.builder();
+          linkFlagsBuilder.addAll(extraLdFlags);
+          linkFlagsBuilder.addAll(
+              getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, body, deps).getArgs());
+
+          // ----------------------------------------------------------------
+          // Add to resolver
+          return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+              cxxBuckConfig,
+              cxxPlatform,
+              projectFilesystem,
+              resolver,
+              new SourcePathRuleFinder(resolver),
+              ruleTarget,
+              BuildTargets.getGenPath(projectFilesystem, ruleTarget, "%s")
+                  .resolve("libghci_dependencies.so"),
+              ImmutableMap.of(),
+              Optional.of("libghci_dependencies.so"),
+              linkFlagsBuilder.build(),
+              cellPathResolver);
+        });
   }
 
   // Return the C/C++ platform to build against.
@@ -313,6 +335,7 @@ public class HaskellGhciDescription
         buildTarget,
         projectFilesystem,
         params,
+        cellPathResolver,
         resolver,
         platform,
         cxxBuckConfig,
@@ -335,14 +358,14 @@ public class HaskellGhciDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     HaskellDescriptionUtils.getParseTimeDeps(
-        ImmutableList.of(getPlatform(buildTarget, constructorArg)), extraDepsBuilder);
+        ImmutableList.of(getPlatform(buildTarget, constructorArg)), targetGraphOnlyDepsBuilder);
 
     constructorArg
         .getDepsQuery()
         .ifPresent(
             depsQuery ->
                 QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
-                    .forEach(extraDepsBuilder::add));
+                    .forEach(targetGraphOnlyDepsBuilder::add));
   }
 
   private HaskellPlatformsProvider getHaskellPlatformsProvider() {

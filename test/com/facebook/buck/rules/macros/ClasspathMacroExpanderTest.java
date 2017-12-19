@@ -141,39 +141,6 @@ public class ClasspathMacroExpanderTest {
   }
 
   @Test
-  public void shouldExpandTransitiveDependencies() throws Exception {
-    TargetNode<?, ?> depNode =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
-            .addSrc(Paths.get("Dep.java"))
-            .build();
-    TargetNode<?, ?> ruleNode =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
-            .addSrc(Paths.get("Other.java"))
-            .addDep(depNode.getBuildTarget())
-            .build();
-
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-
-    BuildRule dep = ruleResolver.requireRule(depNode.getBuildTarget());
-    BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
-
-    BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
-    CellPathResolver cellRoots = createCellRoots(filesystem);
-    ImmutableList<BuildRule> deps =
-        expander.extractBuildTimeDepsFrom(
-            forTarget,
-            cellRoots,
-            ruleResolver,
-            expander.parse(
-                forTarget, cellRoots, ImmutableList.of(rule.getBuildTarget().toString())));
-
-    assertThat(deps, Matchers.containsInAnyOrder(rule, dep));
-  }
-
-  @Test
   public void extractRuleKeyAppendables() throws Exception {
     TargetNode<?, ?> depNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))

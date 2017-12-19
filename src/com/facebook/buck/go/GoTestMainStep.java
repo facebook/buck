@@ -28,7 +28,7 @@ import java.util.Optional;
 public class GoTestMainStep extends ShellStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> generatorCommandPrefix;
-  private final String coverageMode;
+  private final GoTestCoverStep.Mode coverageMode;
   private final ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables;
   private final Path packageName;
   private final ImmutableList<Path> testFiles;
@@ -39,7 +39,7 @@ public class GoTestMainStep extends ShellStep {
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> generatorCommandPrefix,
-      String coverageMode,
+      GoTestCoverStep.Mode coverageMode,
       ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables,
       Path packageName,
       ImmutableList<Path> testFiles,
@@ -61,7 +61,7 @@ public class GoTestMainStep extends ShellStep {
             .addAll(generatorCommandPrefix)
             .add("--output", output.toString())
             .add("--import-path", packageName.toString())
-            .add("--cover-mode", coverageMode);
+            .add("--cover-mode", coverageMode.getMode());
 
     for (Map.Entry<Path, ImmutableMap<String, Path>> pkg : coverageVariables.entrySet()) {
       if (pkg.getValue().isEmpty()) {

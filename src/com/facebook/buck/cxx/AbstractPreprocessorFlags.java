@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -81,7 +82,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
       deps.addAll(frameworkPath.getDeps(ruleFinder));
     }
     for (Arg arg : getOtherFlags().getAllFlags()) {
-      deps.addAll(arg.getDeps(ruleFinder));
+      deps.addAll(BuildableSupport.getDepsCollection(arg, ruleFinder));
     }
     return deps.build();
   }

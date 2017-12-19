@@ -24,13 +24,14 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
-import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -62,8 +63,6 @@ public class AndroidInstrumentationApkDescription
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
-  private final JavacOptions javacOptions;
-  private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
 
@@ -71,15 +70,11 @@ public class AndroidInstrumentationApkDescription
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
-      JavacOptions androidJavacOptions,
-      ListeningExecutorService dxExecutorService,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
-    this.javacOptions = androidJavacOptions;
-    this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
   }
@@ -124,6 +119,11 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
+    ListeningExecutorService dxExecutorService =
+        toolchainProvider
+            .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+            .getDxExecutorService();
+
     boolean shouldProguard =
         apkUnderTest.getProguardConfig().isPresent()
             || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
@@ -160,6 +160,7 @@ public class AndroidInstrumentationApkDescription
 
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             androidLegacyToolchain,
@@ -169,6 +170,7 @@ public class AndroidInstrumentationApkDescription
             ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            Optional.empty(),
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
             args.getManifest(),
@@ -188,9 +190,11 @@ public class AndroidInstrumentationApkDescription
             /* noAutoVersionResources */ false,
             javaBuckConfig,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
-            javacOptions,
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
             EnumSet.noneOf(ExopackageMode.class),
-            /* buildConfigValues */ BuildConfigFields.empty(),
+            /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFile */ Optional.empty(),
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,

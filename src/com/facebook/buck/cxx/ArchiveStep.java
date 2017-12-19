@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.CommandSplitter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -137,7 +138,7 @@ class ArchiveStep implements Step {
     ImmutableList<String> allInputs = getAllInputs();
     if (allInputs.isEmpty()) {
       filesystem.writeContentsToPath("!<arch>\n", output);
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     } else {
       ImmutableList<String> outputArgs = archiver.outputArgs(output.toString());
       if (archiver.isArgfileRequired()) {
@@ -163,7 +164,7 @@ class ArchiveStep implements Step {
             return StepExecutionResult.of(result);
           }
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     }
   }
