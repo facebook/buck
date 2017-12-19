@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PicType;
-import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -181,12 +180,9 @@ public class PrecompiledHeaderFeatureTest {
 
             // $CASES-OMITTED$
           default:
-            Preprocessor preprocessor =
-                CxxSourceTypes.getPreprocessor(platform, sourceType).resolve(resolver);
-
             assertEquals(
                 sourceType.getPrecompiledHeaderLanguage().isPresent(),
-                factory.canUsePrecompiledHeaders(config, preprocessor, sourceType));
+                factory.canUsePrecompiledHeaders(sourceType));
         }
       }
     }

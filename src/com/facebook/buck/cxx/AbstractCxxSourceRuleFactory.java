@@ -120,9 +120,11 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @Value.Parameter
   protected abstract ImmutableMultimap<CxxSource.Type, Arg> getCompilerFlags();
+
   /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
   @Value.Parameter
   protected abstract Optional<SourcePath> getPrefixHeader();
+
   /** NOTE: {@code precompiled_header} is incompatible with {@code prefix_header}. */
   @Value.Parameter
   protected abstract Optional<SourcePath> getPrecompiledHeader();
@@ -139,6 +141,17 @@ abstract class AbstractCxxSourceRuleFactory {
       throw new HumanReadableException(
           "Cannot use `prefix_header` and `precompiled_header` in the same rule.");
     }
+  }
+
+  /** Can PCH headers be used with the current configuration and type of compiler? */
+  @VisibleForTesting
+  @Value.Lazy
+  boolean canUsePrecompiledHeaders(CxxSource.Type sourceType) {
+    return getCxxBuckConfig().isPCHEnabled()
+        && sourceType.getPrecompiledHeaderLanguage().isPresent()
+        && CxxSourceTypes.getPreprocessor(getCxxPlatform(), sourceType)
+            .resolve(getResolver())
+            .supportsPrecompiledHeaders();
   }
 
   @Value.Lazy
@@ -543,13 +556,7 @@ abstract class AbstractCxxSourceRuleFactory {
       return Optional.empty();
     }
 
-    PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
-    Preprocessor preprocessor = preprocessorDelegate.getPreprocessor();
-
-    final boolean canPrecompile =
-        canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor, source.getType());
-
-    if (canPrecompile) {
+    if (canUsePrecompiledHeaders(source.getType())) {
       return Optional.of(
           requirePrecompiledHeaderBuildRule(
               preprocessorDelegateValue, source.getType(), source.getFlags()));
@@ -852,15 +859,6 @@ abstract class AbstractCxxSourceRuleFactory {
       source = source.withPath(path);
     }
     return source;
-  }
-
-  /** Can PCH headers be used with the current configuration and type of compiler? */
-  @VisibleForTesting
-  boolean canUsePrecompiledHeaders(
-      CxxBuckConfig cxxBuckConfig, Preprocessor preprocessor, CxxSource.Type sourceType) {
-    return cxxBuckConfig.isPCHEnabled()
-        && preprocessor.supportsPrecompiledHeaders()
-        && sourceType.getPrecompiledHeaderLanguage().isPresent();
   }
 
   private DebugPathSanitizer getSanitizerForSourceType(CxxSource.Type type) {
