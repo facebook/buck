@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -605,7 +606,6 @@ public class GenruleTest {
     Path sdkDir = Paths.get("/opt/users/android_sdk");
     Path ndkDir = Paths.get("/opt/users/android_ndk");
     EasyMock.expect(android.getSdkDirectory()).andStubReturn(Optional.of(sdkDir));
-    EasyMock.expect(android.getNdkDirectory()).andStubReturn(Optional.of(ndkDir));
     EasyMock.expect(android.getDxExecutable()).andStubReturn(Paths.get("."));
     EasyMock.expect(android.getZipalignExecutable()).andStubReturn(Paths.get("zipalign"));
     EasyMock.replay(android);
@@ -616,6 +616,7 @@ public class GenruleTest {
             .withToolchain(
                 AndroidLegacyToolchain.DEFAULT_NAME,
                 TestAndroidLegacyToolchainFactory.create(android))
+            .withToolchain(AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir))
             .build();
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target, toolchainProvider)

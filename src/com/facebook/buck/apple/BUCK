@@ -12,6 +12,7 @@ java_library_with_plugins(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/apple/xcode:xcode",

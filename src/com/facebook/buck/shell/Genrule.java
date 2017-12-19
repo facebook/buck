@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -153,6 +154,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path pathToTmpDirectory;
   private final Path pathToSrcDirectory;
   private final Boolean isWorkerGenrule;
+  private final Optional<AndroidNdk> androidNdk;
 
   protected Genrule(
       BuildTarget buildTarget,
@@ -169,9 +171,11 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String out,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
-      Optional<String> environmentExpansionSeparator) {
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidNdk> androidNdk) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidNdk = androidNdk;
     this.buildRuleResolver = buildRuleResolver;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = ImmutableList.copyOf(srcs);
@@ -250,10 +254,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       if (sdkDirectory.isPresent()) {
         environmentVariablesBuilder.put("ANDROID_HOME", sdkDirectory.get().toString());
       }
-      Optional<Path> ndkDirectory = android.getNdkDirectory();
-      if (ndkDirectory.isPresent()) {
-        environmentVariablesBuilder.put("NDK_HOME", ndkDirectory.get().toString());
-      }
+      androidNdk.ifPresent(
+          ndk -> environmentVariablesBuilder.put("NDK_HOME", ndk.getNdkRootPath().toString()));
 
       environmentVariablesBuilder.put("DX", android.getDxExecutable().toString());
       environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());

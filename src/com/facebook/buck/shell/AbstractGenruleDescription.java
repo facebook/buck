@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
@@ -118,7 +119,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getOut(),
         args.getEnableSandbox().orElse(enableSandbox),
         true,
-        args.getEnvironmentExpansionSeparator());
+        args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class));
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {

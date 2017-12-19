@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -94,7 +95,8 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         args.getType(),
         apk.getSourcePathToOutput(),
         args.getIsCacheable(),
-        args.getEnvironmentExpansionSeparator());
+        args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class));
   }
 
   @BuckStyleImmutable

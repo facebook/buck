@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -120,7 +121,8 @@ public class ApplePackageDescription
           applePackageConfigAndPlatformInfo.get(),
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable(),
-          Optional.empty());
+          Optional.empty(),
+          toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class));
     } else {
       return new BuiltinApplePackage(buildTarget, projectFilesystem, params, bundle);
     }

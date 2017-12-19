@@ -152,10 +152,6 @@ public class AndroidPlatformTarget {
     return optimizedProguardConfig;
   }
 
-  public Optional<Path> getNdkDirectory() {
-    return androidDirectoryResolver.getNdkOrAbsent();
-  }
-
   public Path checkNdkDirectory() {
     return androidDirectoryResolver.getNdkOrThrow();
   }

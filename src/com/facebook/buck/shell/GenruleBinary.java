@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -47,7 +48,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<String> type,
       String out,
       boolean isCacheable,
-      Optional<String> environmentExpansionSeparator) {
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidNdk> androidNdk) {
     super(
         buildTarget,
         projectFilesystem,
@@ -63,7 +65,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
         out,
         false,
         isCacheable,
-        environmentExpansionSeparator);
+        environmentExpansionSeparator,
+        androidNdk);
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -64,7 +65,8 @@ public class JsBundleGenrule extends Genrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       JsBundleOutputs jsBundle,
-      Optional<String> environmentExpansionSeparator) {
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidNdk> androidNdk) {
     super(
         buildTarget,
         projectFilesystem,
@@ -80,7 +82,8 @@ public class JsBundleGenrule extends Genrule
         JsBundleOutputs.JS_DIR_NAME,
         false,
         true,
-        environmentExpansionSeparator);
+        environmentExpansionSeparator,
+        androidNdk);
     this.jsBundle = jsBundle;
     jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();
