@@ -66,18 +66,21 @@ public class AndroidInstrumentationApkDescription
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
+  private final ApkConfig apkConfig;
 
   public AndroidInstrumentationApkDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       CxxBuckConfig cxxBuckConfig,
-      DxConfig dxConfig) {
+      DxConfig dxConfig,
+      ApkConfig apkConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
+    this.apkConfig = apkConfig;
   }
 
   @Override
@@ -234,7 +237,8 @@ public class AndroidInstrumentationApkDescription
         filesInfo.getDexFilesInfo(),
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
-        filesInfo.getExopackageInfo());
+        filesInfo.getExopackageInfo(),
+        apkConfig.getCompressionLevel());
   }
 
   @BuckStyleImmutable

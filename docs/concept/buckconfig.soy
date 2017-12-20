@@ -254,6 +254,18 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apk' /}
+  {param name: 'compression_level' /}
+  {param example_value: '6' /}
+  {param description}
+    This is the compression level used when deflating entries for APK. By default it's set
+    to <code>9</code>, which is best for binary size but makes APK creation slower.
+    If APK size is not a concern, as often is the case with CIs or during development, build time
+    can be improved by using smaller numbers or <code>0</code> to completely disable compression.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'apple' /}
   {param description}

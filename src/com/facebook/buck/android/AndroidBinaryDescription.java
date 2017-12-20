@@ -135,6 +135,7 @@ public class AndroidBinaryDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
+  private final ApkConfig apkConfig;
 
   public AndroidBinaryDescription(
       ToolchainProvider toolchainProvider,
@@ -142,7 +143,8 @@ public class AndroidBinaryDescription
       ProGuardConfig proGuardConfig,
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
-      DxConfig dxConfig) {
+      DxConfig dxConfig,
+      ApkConfig apkConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
@@ -150,6 +152,7 @@ public class AndroidBinaryDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
+    this.apkConfig = apkConfig;
   }
 
   @Override
@@ -403,7 +406,8 @@ public class AndroidBinaryDescription
               filesInfo.getNativeFilesInfo(),
               filesInfo.getResourceFilesInfo(),
               ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
-              filesInfo.getExopackageInfo());
+              filesInfo.getExopackageInfo(),
+              apkConfig.getCompressionLevel());
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(

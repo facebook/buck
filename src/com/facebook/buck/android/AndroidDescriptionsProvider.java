@@ -46,6 +46,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(config, Platform.detect());
+    ApkConfig apkConfig = new ApkConfig(config);
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
         new DefaultAndroidLibraryCompilerFactory(
@@ -59,10 +60,16 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
-            toolchainProvider, javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig),
+            toolchainProvider,
+            javaConfig,
+            proGuardConfig,
+            config,
+            cxxBuckConfig,
+            dxConfig,
+            apkConfig),
         new AndroidBuildConfigDescription(toolchainProvider, javaConfig),
         new AndroidInstrumentationApkDescription(
-            toolchainProvider, javaConfig, proGuardConfig, cxxBuckConfig, dxConfig),
+            toolchainProvider, javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig),
         new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
         new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig),

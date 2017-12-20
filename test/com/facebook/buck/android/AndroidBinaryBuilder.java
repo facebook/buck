@@ -54,7 +54,8 @@ public class AndroidBinaryBuilder
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             FakeBuckConfig.builder().build(),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new DxConfig(FakeBuckConfig.builder().build())),
+            new DxConfig(FakeBuckConfig.builder().build()),
+            new ApkConfig(FakeBuckConfig.builder().build())),
         target);
   }
 
