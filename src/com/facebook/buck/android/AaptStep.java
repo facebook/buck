@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.android.sdklib.build.ApkBuilder;
+import com.android.common.sdklib.build.ApkBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ShellStep;
