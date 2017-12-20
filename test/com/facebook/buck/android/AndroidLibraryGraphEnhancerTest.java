@@ -68,7 +68,7 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipPrebuiltRDotJava */ false);
+            /* skipNonUnionRDotJava */ false);
 
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
@@ -93,7 +93,7 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipPrebuiltRDotJava */ false);
+            /* skipNonUnionRDotJava */ false);
 
     BuildRuleResolver buildRuleResolver =
         new SingleThreadedBuildRuleResolver(
@@ -143,7 +143,7 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipPrebuiltRDotJava */ false);
+            /* skipNonUnionRDotJava */ false);
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
@@ -210,7 +210,7 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipPrebuiltRDotJava */ false);
+            /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             ruleResolver, /* createBuildableIfEmptyDeps */ false);
@@ -251,7 +251,7 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipPrebuiltRDotJava */ false);
+            /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             resolver, /* createdBuildableIfEmptyDeps */ true);

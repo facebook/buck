@@ -95,7 +95,7 @@ public class AndroidLibraryDescription
           buildTarget, projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
     }
 
-    if (args.isSkipPrebuiltRDotJava()) {
+    if (args.isSkipNonUnionRDotJava()) {
       Preconditions.checkArgument(
           args.getResourceUnionPackage().isPresent(),
           "union_package should be specified if skip_prebuilt_r_dot_java is set");
@@ -163,7 +163,7 @@ public class AndroidLibraryDescription
     Optional<String> getResourceUnionPackage();
 
     @Value.Default
-    default boolean isSkipPrebuiltRDotJava() {
+    default boolean isSkipNonUnionRDotJava() {
       return false;
     }
 

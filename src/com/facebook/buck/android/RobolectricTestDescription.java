@@ -137,7 +137,7 @@ public class RobolectricTestDescription
             args.getResourceUnionPackage(),
             /* rName */ Optional.empty(),
             args.isUseOldStyleableFormat(),
-            /* skipPrebuiltRDotJava */ false);
+            /* skipNonUnionRDotJava */ false);
 
     ImmutableList<String> vmArgs = args.getVmArgs();
 
