@@ -121,7 +121,7 @@ public class PrecompiledHeaderFeatureTest {
               toolType,
               headerFilename);
       assertNotEquals(
-          "should use either prefix header flag, or precompiled header flag, but never both:"
+          "should use either prefix header flag OR precompiled header flag; one but not both:"
               + " toolType:"
               + toolType
               + " pchEnabled:"

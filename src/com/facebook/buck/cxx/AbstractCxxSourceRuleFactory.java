@@ -154,17 +154,35 @@ abstract class AbstractCxxSourceRuleFactory {
             .supportsPrecompiledHeaders();
   }
 
+  /**
+   * Get (possibly creating) the {@link PreInclude} instance corresponding to this rule's {@code
+   * prefix_header} or {@code precompiled_header}, whichever is applicable, or empty if neither is
+   * used.
+   *
+   * @see AbstractPreIncludeFactory
+   */
+  @Value.Lazy
+  protected Optional<? extends PreInclude> getPreInclude() {
+    return PreIncludeFactory.of(
+            getProjectFilesystem(),
+            getBaseBuildTarget(),
+            getResolver(),
+            getPathResolver(),
+            getPrefixHeader(),
+            getPrecompiledHeader())
+        .getPreInclude();
+  }
+
   @Value.Lazy
   protected ImmutableSortedSet<BuildRule> getPreprocessDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
       builder.addAll(input.getDeps(getResolver(), getRuleFinder()));
     }
-    if (getPrefixHeader().isPresent()) {
-      builder.addAll(getRuleFinder().filterBuildRuleInputs(getPrefixHeader().get()));
-    }
-    if (getPrecompiledHeader().isPresent()) {
-      builder.addAll(getRuleFinder().filterBuildRuleInputs(getPrecompiledHeader().get()));
+    if (getPreInclude().isPresent()) {
+      builder.addAll(
+          getRuleFinder().filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
+      builder.addAll(getPreInclude().get().getBuildDeps());
     }
     if (getSandboxTree().isPresent()) {
       SymlinkTree tree = getSandboxTree().get();
@@ -220,7 +238,7 @@ abstract class AbstractCxxSourceRuleFactory {
                         getProjectFilesystem().getRootPath(),
                         preprocessor,
                         PreprocessorFlags.of(
-                            getPrefixHeader(),
+                            getPreInclude().map(PreInclude::getHeaderSourcePath),
                             computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
                             getIncludes(),
                             getFrameworks()),
@@ -551,7 +569,7 @@ abstract class AbstractCxxSourceRuleFactory {
   Optional<CxxPrecompiledHeader> getOptionalPrecompiledHeader(
       PreprocessorDelegateCacheValue preprocessorDelegateValue, CxxSource source) {
 
-    if (!(getPrefixHeader().isPresent() || getPrecompiledHeader().isPresent())) {
+    if (!getPreInclude().isPresent()) {
       // Nothing to do.
       return Optional.empty();
     }
@@ -725,7 +743,7 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegate,
         sourceType,
         compilerFlags,
-        pchTemplate.sourcePath,
+        pchTemplate.getHeaderSourcePath(),
         depsBuilder,
         pchTemplateTarget.getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(

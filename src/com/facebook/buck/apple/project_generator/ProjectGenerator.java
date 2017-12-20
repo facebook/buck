@@ -3298,7 +3298,7 @@ public class ProjectGenerator {
     BuildRule rule = ruleFinder.getRule(pchTargetSourcePath);
     Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
     CxxPrecompiledHeaderTemplate pch = (CxxPrecompiledHeaderTemplate) rule;
-    return Optional.of(pch.sourcePath);
+    return Optional.of(pch.getHeaderSourcePath());
   }
 
   private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
