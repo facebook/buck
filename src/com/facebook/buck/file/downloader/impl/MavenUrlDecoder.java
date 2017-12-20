@@ -130,6 +130,12 @@ public class MavenUrlDecoder {
       case "aar":
         return ".aar";
 
+      case "tar.gz":
+        return ".tar.gz";
+
+      case "zip":
+        return ".zip";
+
       case "src":
         return "-sources.jar";
 
