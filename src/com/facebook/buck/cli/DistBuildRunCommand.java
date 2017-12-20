@@ -213,6 +213,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {
+            slaveEventListener.sendFinalServerUpdates();
             slaveEventListener.publishBuildSlaveFinishedEvent(
                 params.getBuckEventBus(), state.getRootCell().getBuckConfig(), returnCode);
           }

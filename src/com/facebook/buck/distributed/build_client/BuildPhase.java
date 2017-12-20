@@ -55,7 +55,6 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -81,8 +80,6 @@ import javax.annotation.concurrent.GuardedBy;
 
 /** The build phase. */
 public class BuildPhase {
-
-  private static final int CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
 
   /** The result from a build. */
   public class BuildResult {
@@ -117,7 +114,9 @@ public class BuildPhase {
 
   private static final Logger LOG = Logger.get(BuildPhase.class);
 
-  private static final int FETCH_FINAL_BUILD_JOB_TIMEOUT_SECONDS = 5;
+  private static final int WAIT_FOR_ALL_WORKER_FINAL_STATUS_TIMEOUT_MILLIS = 6000;
+  private static final int WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS = 5000;
+  private static final int CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
 
   private final BuildExecutorArgs buildExecutorArgs;
   private final ImmutableSet<BuildTarget> topLevelTargets;
@@ -134,6 +133,8 @@ public class BuildPhase {
   private final Clock clock;
 
   private final Object buildRuleFinishedEventsLock = new Object();
+  private volatile boolean allBuildRuleFinishedEventsRecieved = false;
+  private volatile long firstFinishedBuildStatusReceviedTs = -1;
 
   @GuardedBy("buildRuleFinishedEventsLock")
   private final List<TimestampedEvent<BuildRuleFinishedEvent>> pendingBuildRuleFinishedEvent =
@@ -375,13 +376,27 @@ public class BuildPhase {
         long elapsedMillisSinceEvent =
             currentTimestampMillis - timestampedEvent.eventTimestampMillis;
         if (elapsedMillisSinceEvent < CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS) {
-          break; // Events are time ordered, so all remaining events are also too new to be
-          // published
+          if (allBuildRuleFinishedEventsRecieved) {
+            // This is the final time publishPendingBuildRuleFinishedEvents will ever be called.
+            // Wait for all events to be ready and then publish them.
+            try {
+              Thread.sleep(CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS - elapsedMillisSinceEvent);
+            } catch (InterruptedException e) {
+              LOG.error(e);
+              Thread.currentThread().interrupt();
+              return;
+            }
+          } else {
+            // All remaining events are too new too be published yet.
+            // publishPendingBuildRuleFinishedEvents will be called again, so try publishing
+            // events on next iteration.:
+            break;
+          }
         }
 
         // Signal to the local build that build rule has completed remotely.
-        remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(
-            timestampedEvent.event.getBuildTarget());
+        String buildTarget = timestampedEvent.event.getBuildTarget();
+        remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(buildTarget);
 
         // Ensure we don't signal the rule again in the future
         eventsIterator.remove();
@@ -410,7 +425,9 @@ public class BuildPhase {
         networkExecutorService.submit(
             () -> {
               try {
-                return distBuildService.multiGetBuildSlaveEvents(fetchEventQueries);
+                List<Pair<Integer, BuildSlaveEvent>> events =
+                    distBuildService.multiGetBuildSlaveEvents(fetchEventQueries);
+                return events;
               } catch (IOException e) {
                 LOG.error(e, "Fetching build slave events failed. Returning empty list.");
                 return new ArrayList<>();
@@ -457,15 +474,21 @@ public class BuildPhase {
                     eventSender.postConsoleEvent(consoleEvent);
                     break;
                   case BUILD_RULE_FINISHED_EVENT:
+                    BuildRuleFinishedEvent buildRuleFinishedEvent =
+                        slaveEvent.getBuildRuleFinishedEvent();
                     LOG.info(
                         String.format(
                             "Creating new pending event for finished rule [%s]",
-                            slaveEvent.getBuildRuleFinishedEvent().buildTarget));
+                            buildRuleFinishedEvent.buildTarget));
                     synchronized (buildRuleFinishedEventsLock) {
                       pendingBuildRuleFinishedEvent.add(
                           new TimestampedEvent<>(
-                              clock.currentTimeMillis(), slaveEvent.getBuildRuleFinishedEvent()));
+                              clock.currentTimeMillis(), buildRuleFinishedEvent));
                     }
+                    break;
+                  case ALL_BUILD_RULES_FINISHED_EVENT:
+                    LOG.info("Received ALL_BUILD_RULES_FINISHED_EVENT");
+                    allBuildRuleFinishedEventsRecieved = true;
                     break;
                   case UNKNOWN:
                   default:
@@ -512,41 +535,59 @@ public class BuildPhase {
 
   private void checkTerminateScheduledUpdates(
       BuildJob job, Optional<List<BuildSlaveStatus>> slaveStatuses) {
+    long currentTimeMillis = clock.currentTimeMillis();
+
     if (BuildStatusUtil.isTerminalBuildStatus(job.getStatus())) {
+      // Make a record of the first time we received terminal build job status, so that
+      // if we still need to fetch more events, we have a reference point for timeouts.
+      if (firstFinishedBuildStatusReceviedTs == -1) {
+        firstFinishedBuildStatusReceviedTs = currentTimeMillis;
+      }
+
+      long elapseMillisSinceFirstFinishedStatus =
+          currentTimeMillis - firstFinishedBuildStatusReceviedTs;
+
       // Top level build was set to finished status, however individual slaves might not yet
       // have marked themselves finished, so wait for this to happen before returning.
       // (Without this we have no guarantees about BuildSlaveFinishedStats being uploaded yet).
-      BuildJob finalBuildJob = tryGetBuildJobWithAllSlavesInFinishedState(job);
-
-      // Terminate scheduled tasks with a custom exception to indicate success.
-      throw new JobCompletedException(finalBuildJob, slaveStatuses);
-    }
-  }
-
-  private BuildJob tryGetBuildJobWithAllSlavesInFinishedState(BuildJob job) {
-    final StampedeId stampedeId = job.getStampedeId();
-    try {
-      Stopwatch stopwatch = Stopwatch.createStarted();
-      while (!allSlavesFinished(job)) {
-        if (stopwatch.elapsed(TimeUnit.SECONDS) > FETCH_FINAL_BUILD_JOB_TIMEOUT_SECONDS) {
-          LOG.warn("Failed to fetch BuildJob with all slaves in terminal state before timeout");
-          break;
+      if (!allSlavesFinished(job)) {
+        if (elapseMillisSinceFirstFinishedStatus
+            < WAIT_FOR_ALL_WORKER_FINAL_STATUS_TIMEOUT_MILLIS) {
+          LOG.warn(
+              String.format(
+                  "Build has been finished for %s ms, but still missing finished status from some workers.",
+                  elapseMillisSinceFirstFinishedStatus));
+          return; // Events are still missing, and we haven't timed out, so poll again.
+        } else {
+          LOG.error(
+              String.format(
+                  "%d ms elapsed since build job marked as finished, but still missing finished status from some workers.",
+                  elapseMillisSinceFirstFinishedStatus));
         }
-
-        try {
-          Thread.sleep(statusPollIntervalMillis); // Back off a little before fetching again.
-        } catch (InterruptedException e) {
-          LOG.error(e);
-          Thread.interrupted(); // Reset interrupted status.
-          return job; // Return whatever the latest BuildJob we have is.
-        }
-
-        job = distBuildService.getCurrentBuildJobState(stampedeId);
       }
 
-      return job;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+      if (!allBuildRuleFinishedEventsRecieved) {
+        if (elapseMillisSinceFirstFinishedStatus < WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS) {
+          LOG.warn(
+              String.format(
+                  "Build has been finished for %s ms, but still waiting for final build rule finished events.",
+                  elapseMillisSinceFirstFinishedStatus));
+          return; // Events are still missing, and we haven't timed out, so poll again.
+        } else {
+          LOG.error(
+              String.format(
+                  "%d ms elapsed since build job marked as finished, but still missing build rule finished events.",
+                  elapseMillisSinceFirstFinishedStatus));
+        }
+      }
+
+      // Flush remaining build rule finished events
+      if (allBuildRuleFinishedEventsRecieved) {
+        publishPendingBuildRuleFinishedEvents();
+      }
+
+      // Terminate scheduled tasks with a custom exception to indicate success.
+      throw new JobCompletedException(job, slaveStatuses);
     }
   }
 

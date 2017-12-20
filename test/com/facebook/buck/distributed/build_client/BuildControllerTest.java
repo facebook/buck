@@ -38,6 +38,8 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -46,6 +48,7 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -258,6 +261,7 @@ public class BuildControllerTest {
 
     BuildSlaveEventsQuery query = new BuildSlaveEventsQuery();
     query.setBuildSlaveRunId(buildSlaveRunId);
+    query.setFirstEventNumber(0);
 
     BuildSlaveStatus slaveStatus = new BuildSlaveStatus();
     slaveStatus.setStampedeId(stampedeId);
@@ -273,7 +277,8 @@ public class BuildControllerTest {
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
         .andReturn(ImmutableList.of());
     expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunId))
-        .andReturn(Optional.empty());
+        .andReturn(Optional.empty())
+        .times(2);
 
     ////////////////////////////////////////////////////
     //////////////// TOP-LEVEL FINAL STATUS ////////////
@@ -292,8 +297,15 @@ public class BuildControllerTest {
         .andReturn(Optional.of(slaveStatus));
     expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 0))
         .andReturn(query);
+
+    // Signal that all build rules have been published.
+    BuildSlaveEvent buildSlaveEvent = new BuildSlaveEvent();
+    buildSlaveEvent.setStampedeId(stampedeId);
+    buildSlaveEvent.setBuildSlaveRunId(buildSlaveRunId);
+    buildSlaveEvent.setEventType(BuildSlaveEventType.ALL_BUILD_RULES_FINISHED_EVENT);
+
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
-        .andReturn(ImmutableList.of());
+        .andReturn(ImmutableList.of(new Pair<>(1, buildSlaveEvent)));
     expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, buildSlaveRunId))
         .andReturn(Optional.empty());
 
@@ -307,6 +319,15 @@ public class BuildControllerTest {
     slaveInfo1.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
     job.putToSlaveInfoByRunId(buildSlaveRunId.getId(), slaveInfo1);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
+
+    expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
+        .andReturn(ImmutableList.of());
+
+    query.setFirstEventNumber(1);
+    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 2))
+        .andReturn(query);
+    expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
+        .andReturn(ImmutableList.of());
 
     mockEventBus.post(isA(ClientSideBuildSlaveFinishedStatsEvent.class));
     expectLastCall().times(1);

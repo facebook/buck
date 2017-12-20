@@ -45,7 +45,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /** High level controls the distributed build. */
 public class BuildController {
   private static final Logger LOG = Logger.get(BuildController.class);
-  private static final int DEFAULT_STATUS_POLL_INTERVAL_MILLIS = 1000;
+  private static final int DEFAULT_STATUS_POLL_INTERVAL_MILLIS = 500;
 
   private final PreBuildPhase preBuildPhase;
   private final BuildPhase buildPhase;

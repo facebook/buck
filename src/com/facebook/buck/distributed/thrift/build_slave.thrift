@@ -16,6 +16,7 @@ enum BuildSlaveEventType {
     UNKNOWN = 0,
     CONSOLE_EVENT = 1,
     BUILD_RULE_FINISHED_EVENT = 2,
+    ALL_BUILD_RULES_FINISHED_EVENT = 3,
 }
 
 struct BuildSlaveEvent {

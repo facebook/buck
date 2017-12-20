@@ -160,6 +160,9 @@ public class BuildPhaseTest {
   }
 
   @Test
+  public void testCoordinatorWaitsForAllBuildRulesFinishedEventEventIfBuildJobIsFinished() {}
+
+  @Test
   public void testCoordinatorIsRunInLocalCoordinatorMode()
       throws IOException, InterruptedException {
     // Create the full BuildPhase for local coordinator mode.
