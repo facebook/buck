@@ -8,3 +8,14 @@ prebuilt_jar(
         "PUBLIC",
     ],
 )
+
+prebuilt_jar(
+  name = 'jsr305',
+  binary_jar = 'jsr305.jar',
+  licenses = [
+        "LICENSE-305",
+  ],
+  visibility = [
+        'PUBLIC',
+  ],
+)

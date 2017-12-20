@@ -11,7 +11,7 @@ genrule(
     name = "gen_aar-with-jsr",
     out = "jsr.aar",
     cmd = "$(exe :aar_generator) " +
-          "--lib $(location //third-party/jsr:jsr) $TMP $OUT",
+          "--lib $(location buck//third-party/java/jsr:jsr305) $TMP $OUT",
     visibility = [
         "PUBLIC",
     ],
