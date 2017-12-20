@@ -458,6 +458,59 @@ public class DaemonicParserState {
     invalidatePath(fullPath);
   }
 
+  /**
+   * Invalidate the parser cache relative to the changes to file at the given path.
+   *
+   * @param fullPath Path to the file that changed.
+   * @param isCreatedOrDeleted Indicates whether the file was created or deleted as opposed to being
+   *     modified.
+   */
+  public void invalidateBasedOnPath(Path fullPath, boolean isCreatedOrDeleted) {
+    filesChangedCounter.inc();
+
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
+        try {
+          // We only care about creation and deletion because modified should result in a
+          // rule key change.  For parsing, these are the only change we need to care about.
+          if (isCreatedOrDeleted) {
+            Cell cell = state.getCell();
+            BuildFileTree buildFiles = buildFileTrees.get(cell);
+
+            if (fullPath.endsWith(cell.getBuildFileName())) {
+              LOG.debug(
+                  "Build file %s changed, invalidating build file tree for cell %s",
+                  fullPath, cell);
+              // If a build file has been added or removed, reconstruct the build file tree.
+              buildFileTrees.invalidate(cell);
+            }
+
+            // Added or removed files can affect globs, so invalidate the package build file
+            // "containing" {@code path} unless its filename matches a temp file pattern.
+            Path path = cell.getRoot().relativize(fullPath);
+            if (!cell.getFilesystem().isIgnored(path)) {
+              invalidateContainingBuildFile(cell, buildFiles, path);
+            } else {
+              LOG.debug(
+                  "Not invalidating the owning build file of %s because it is a temporary file.",
+                  fullPath);
+            }
+          }
+        } catch (ExecutionException | UncheckedExecutionException e) {
+          try {
+            Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
+            Throwables.throwIfUnchecked(e);
+            throw new RuntimeException(e);
+          } catch (BuildFileParseException bfpe) {
+            LOG.warn("Unable to parse already parsed build file.", bfpe);
+          }
+        }
+      }
+    }
+
+    invalidatePath(fullPath);
+  }
+
   public void invalidatePath(Path path) {
 
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
