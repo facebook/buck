@@ -429,7 +429,7 @@
         <compilerarg value="-Xlint:serial" />
         <compilerarg value="-time" />
         <compilerclasspath>
-          <pathelement location="${eclipse.dir}/ecj-4.6.2.jar" />
+          <pathelement location="${eclipse.dir}/ecj-4.7.1.jar" />
         </compilerclasspath>
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
