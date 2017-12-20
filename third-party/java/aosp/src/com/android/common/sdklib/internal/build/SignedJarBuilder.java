@@ -118,13 +118,15 @@ public class SignedJarBuilder {
    * @param key the {@link PrivateKey} used to sign the archive, or <code>null</code>.
    * @param certificate the {@link X509Certificate} used to sign the archive, or
    * <code>null</code>.
+   * @param compressionLevel the compression level for JAR entries to be deflated.
    * @throws IOException
    * @throws NoSuchAlgorithmException
    */
-  public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate)
+  public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate,
+      int compressionLevel)
       throws IOException, NoSuchAlgorithmException {
     mOutputJar = new JarOutputStream(new BufferedOutputStream(out));
-    mOutputJar.setLevel(9);
+    mOutputJar.setLevel(compressionLevel);
     mKey = key;
     mCertificate = certificate;
 

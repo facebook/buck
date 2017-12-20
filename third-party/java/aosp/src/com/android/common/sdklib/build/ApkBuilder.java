@@ -208,21 +208,22 @@ public final class ApkBuilder implements IArchiveBuilder {
    * @param certificate the certificate used to sign the package. Can be null.
    * @param verboseStream the stream to which verbose output should go. If null, verbose mode
    *                      is not enabled.
+   * @param compressionLevel the compression level for APK entries to be deflated.
    * @throws ApkCreationException
    */
   public ApkBuilder(File apkFile, File resFile, File dexFile, PrivateKey key,
-      X509Certificate certificate, PrintStream verboseStream) throws ApkCreationException {
-    init(apkFile, resFile, dexFile, key, certificate, verboseStream);
+      X509Certificate certificate, PrintStream verboseStream, int compressionLevel) throws ApkCreationException {
+    init(apkFile, resFile, dexFile, key, certificate, verboseStream, compressionLevel);
   }
 
 
   /**
    * Constructor init method.
    *
-   * @see #ApkBuilder(File, File, File, PrivateKey, X509Certificate, PrintStream)
+   * @see #ApkBuilder(File, File, File, PrivateKey, X509Certificate, PrintStream, int)
    */
   private void init(File apkFile, File resFile, File dexFile, PrivateKey key,
-      X509Certificate certificate, PrintStream verboseStream) throws ApkCreationException {
+      X509Certificate certificate, PrintStream verboseStream, int compressionLevel) throws ApkCreationException {
 
     try {
       checkOutputFile(mApkFile = apkFile);
@@ -236,7 +237,7 @@ public final class ApkBuilder implements IArchiveBuilder {
 
       mBuilder = new SignedJarBuilder(
           new FileOutputStream(mApkFile, false /* append */), key,
-          certificate);
+          certificate, compressionLevel);
 
       verbosePrintln("Packaging %s", mApkFile.getName());
 

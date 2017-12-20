@@ -58,6 +58,8 @@ public class ApkBuilderStep implements Step {
    * http://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#KeyStore.
    */
   private static final String JARSIGNER_KEY_STORE_TYPE = "jks";
+  // ApkBuilder is using the most aggressive compression level by default.
+  private static final int DEFAULT_COMPRESSION_LEVEL = 9;
 
   private final ProjectFilesystem filesystem;
   private final Path resourceApk;
@@ -125,7 +127,8 @@ public class ApkBuilderStep implements Step {
               filesystem.getPathForRelativePath(dexFile).toFile(),
               privateKeyAndCertificate.privateKey,
               privateKeyAndCertificate.certificate,
-              output);
+              output,
+              DEFAULT_COMPRESSION_LEVEL);
       builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(
