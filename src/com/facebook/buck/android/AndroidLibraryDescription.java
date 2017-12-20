@@ -98,7 +98,7 @@ public class AndroidLibraryDescription
     if (args.isSkipNonUnionRDotJava()) {
       Preconditions.checkArgument(
           args.getResourceUnionPackage().isPresent(),
-          "union_package should be specified if skip_prebuilt_r_dot_java is set");
+          "union_package should be specified if skip_non_union_r_dot_java is set");
     }
 
     boolean hasDummyRDotJavaFlavor = buildTarget.getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);

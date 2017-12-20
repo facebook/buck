@@ -254,9 +254,9 @@ public class MergeAndroidResourcesStep implements Step {
       if (skipNonUnionRDotJava) {
         Preconditions.checkArgument(
             unionPackage.isPresent(),
-            "union_package should be specified if skip_prebuilt_r_dot_java is set");
+            "union_package should be specified if skip_non_union_r_dot_java is set");
 
-        // If skip_prebuilt_r_dot_java is true remove all packages except union package
+        // If skip_non_union_r_dot_java is true remove all packages except union package
         rDotJavaPackageToResources = TreeMultimap.create();
 
       } else {
