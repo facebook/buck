@@ -237,4 +237,13 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
         .getEnum("parser", "default_build_file_syntax", Syntax.class)
         .orElse(Syntax.PYTHON_DSL);
   }
+
+  /**
+   * Returns a whether we should show the warning for parser cache mutation when using buck
+   * parser-cache --load
+   */
+  @Value.Lazy
+  public boolean isParserCacheMutationWarningEnabled() {
+    return getDelegate().getBooleanValue("parser", "parser_cache_mutation_warning_enabled", true);
+  }
 }

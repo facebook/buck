@@ -589,8 +589,8 @@ public class Parser {
     return target.withFlavors(defaultFlavors);
   }
 
-  public RemoteDaemonicParserState storeParserState() throws IOException {
-    return getPermState().serializeDaemonicParserState();
+  public RemoteDaemonicParserState storeParserState(Cell rootCell) throws IOException {
+    return getPermState().serializeDaemonicParserState(rootCell);
   }
 
   public void restoreParserState(RemoteDaemonicParserState state, Cell rootCell) {

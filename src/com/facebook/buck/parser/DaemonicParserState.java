@@ -650,14 +650,15 @@ public class DaemonicParserState {
     }
   }
 
-  public RemoteDaemonicParserState serializeDaemonicParserState() throws IOException {
+  /** Extract the parser state into serializable data. */
+  public RemoteDaemonicParserState serializeDaemonicParserState(Cell rootCell) throws IOException {
     ImmutableList.Builder<String> cellPathsBuilder = ImmutableList.builder();
     ImmutableMap.Builder<String, RemoteDaemonicCellState> cellPathToDaemonicStateBuilder =
         ImmutableMap.builder();
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       for (Path p : cellPathToDaemonicState.keySet()) {
         DaemonicCellState daemonicCellState = cellPathToDaemonicState.get(p);
-        Path relPath = daemonicCellState.getCellRoot().relativize(p);
+        Path relPath = rootCell.getRoot().relativize(p);
         cellPathsBuilder.add(relPath.toString());
         cellPathToDaemonicStateBuilder.put(relPath.toString(), daemonicCellState.serialize());
       }
@@ -676,6 +677,7 @@ public class DaemonicParserState {
     return remote;
   }
 
+  /** Create a state using serialized data produced with serializeDaemonicParserState(). */
   public DaemonicParserState restoreState(RemoteDaemonicParserState remote, Cell rootCell) {
     Map<String, Cell> pathsToCell =
         remote
@@ -685,7 +687,8 @@ public class DaemonicParserState {
                 Collectors.toMap(
                     Function.identity(),
                     path ->
-                        rootCell.getCellIgnoringVisibilityCheck(rootCell.getRoot().resolve(path))));
+                        rootCell.getCellIgnoringVisibilityCheck(
+                            rootCell.getRoot().resolve(path).normalize())));
     remote.cellPathToDaemonicState.forEach(
         (path, remoteDaemonicCellState) -> {
           Cell cell = pathsToCell.get(path);

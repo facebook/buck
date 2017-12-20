@@ -1735,7 +1735,7 @@ public class ParserTest {
         parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
 
     // Serialize target graph information.
-    RemoteDaemonicParserState remote = parser.storeParserState();
+    RemoteDaemonicParserState remote = parser.storeParserState(cell);
 
     assertTrue(remote.isSetCachedIncludes());
     assertEquals(remote.cachedIncludes.size(), 1);
