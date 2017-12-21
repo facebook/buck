@@ -553,7 +553,7 @@ class BuckTool(object):
         if os.path.isfile(arcconfig):
             with open(arcconfig, 'r') as fp:
                 return json.load(fp).get('project_id', None)
-        return None
+        return os.path.basename(self._buck_project.root)
 
 
     def kill_buckd(self):
