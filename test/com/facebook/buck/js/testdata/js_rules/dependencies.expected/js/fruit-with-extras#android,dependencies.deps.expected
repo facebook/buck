@@ -1,9 +1,9 @@
 dependencies --platform android --lib @/buck-out/gen/js/extras#android.jslib --lib @/buck-out/gen/js/fruit#android.jslib --root @ yoghurt banana apple
 {"command":"library-dependencies","release":false,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/extras#android.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,android.jslib"}
 library-files --platform android --root @
-{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraArgs":"--arbitrary extra --flags"}
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var choclateChips;
-{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraArgs":"--arbitrary extra --flags"}
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var yoghurt;
 {"command":"library-dependencies","release":false,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android.jslib"}
 library-files --platform android --root @

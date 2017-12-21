@@ -1,9 +1,9 @@
 {"assetsDirPath":"@/buck-out/gen/js/fruit-with-extras#ios/res","bundlePath":"@/buck-out/gen/js/fruit-with-extras#ios/js/some-fruit-with-delicious-extras.js","command":"bundle","entryPoints":["yoghurt","banana","apple"],"libraryGroups":[],"libraries":["@/buck-out/gen/js/extras#ios.jslib","@/buck-out/gen/js/fruit#ios.jslib"],"platform":"ios","release":false,"rootPath":"@","sourceMapPath":"@/buck-out/gen/js/fruit-with-extras#ios/map/some-fruit-with-delicious-extras.js.map","miscDirPath":"@/buck-out/gen/js/fruit-with-extras#ios/misc"}
 {"command":"library-dependencies","release":false,"rootPath":"@","platform":"ios","outputPath":"@/buck-out/gen/js/extras#ios.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,ios.jslib"}
 library-files --platform ios --root @
-{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraArgs":"--arbitrary extra --flags"}
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var choclateChips;
-{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraArgs":"--arbitrary extra --flags"}
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var yoghurt;
 {"command":"library-dependencies","release":false,"rootPath":"@","platform":"ios","outputPath":"@/buck-out/gen/js/fruit#ios.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,ios.jslib"}
 library-files --platform ios --root @

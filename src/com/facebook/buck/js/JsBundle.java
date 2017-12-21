@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.macros.StringWithMacrosArg;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -38,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implements JsBundleOutputs {
 
@@ -48,6 +50,8 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
 
   @AddToRuleKey private final ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups;
+
+  @AddToRuleKey private final Optional<StringWithMacrosArg> extraJson;
 
   @AddToRuleKey private final WorkerTool worker;
 
@@ -62,10 +66,12 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
+      Optional<StringWithMacrosArg> extraJson,
       ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups,
       String bundleName,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
+    this.extraJson = extraJson;
     this.bundleName = bundleName;
     this.entryPoints = entryPoints;
     this.libraryPathGroups = libraryPathGroups;
@@ -170,6 +176,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         .addString("rootPath", getProjectFilesystem().getRootPath().toString())
         .addString("sourceMapPath", sourcePathResolver.getAbsolutePath(sourceMapFile).toString())
         .addString("miscDirPath", sourcePathResolver.getAbsolutePath(miscDirPath).toString())
+        .addRaw("extraData", extraJson.map(JsUtil::expandJsonWithMacros))
         .toString();
   }
 

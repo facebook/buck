@@ -202,6 +202,7 @@ public class JsBundleDescription
         paramsWithLibraries,
         libraries,
         entryPoints,
+        JsUtil.getExtraJson(args, buildTarget, resolver, cellRoots),
         libraryPathGroups,
         bundleName,
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
@@ -314,7 +315,8 @@ public class JsBundleDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJsBundleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractJsBundleDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasExtraJson {
 
     Either<ImmutableSet<String>, String> getEntry();
 

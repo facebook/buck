@@ -22,6 +22,8 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,6 +57,11 @@ public class JsBundleBuilder
 
   JsBundleBuilder setBundleNameForFlavor(Iterable<Pair<Flavor, String>> bundleNameForFlavor) {
     getArgForPopulating().setBundleNameForFlavor(bundleNameForFlavor);
+    return this;
+  }
+
+  JsBundleBuilder setExtraJson(String format, Macro... macros) {
+    getArgForPopulating().setExtraJson(StringWithMacrosUtils.format(format, macros));
     return this;
   }
 }
