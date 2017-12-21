@@ -796,7 +796,7 @@ public final class Main {
 
       ExecutorService diskIoExecutorService = MostExecutors.newSingleThreadExecutor("Disk I/O");
       ListeningExecutorService httpWriteExecutorService =
-          getHttpWriteExecutorService(cacheBuckConfig);
+          getHttpWriteExecutorService(cacheBuckConfig, isDistributedBuild);
       ListeningExecutorService httpFetchExecutorService =
           getHttpFetchExecutorService(cacheBuckConfig);
       ScheduledExecutorService counterAggregatorExecutor =
@@ -1366,8 +1366,9 @@ public final class Main {
   }
 
   private static ListeningExecutorService getHttpWriteExecutorService(
-      ArtifactCacheBuckConfig buckConfig) {
-    if (buckConfig.hasAtLeastOneWriteableCache()) {
+      ArtifactCacheBuckConfig buckConfig, boolean isDistributedBuild) {
+    if (isDistributedBuild || buckConfig.hasAtLeastOneWriteableCache()) {
+      // Distributed builds need to upload from the local cache to the remote cache.
       ExecutorService executorService =
           MostExecutors.newMultiThreadExecutor(
               "HTTP Write", buckConfig.getHttpMaxConcurrentWrites());

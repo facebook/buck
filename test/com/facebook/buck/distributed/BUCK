@@ -63,6 +63,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/zip:zip",
         "//test/com/facebook/buck/android:utils",
+        "//test/com/facebook/buck/artifact_cache:testutil",
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/distributed/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",

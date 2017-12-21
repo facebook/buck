@@ -19,10 +19,15 @@ package com.facebook.buck.distributed.build_client;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.CREATE_DISTRIBUTED_BUILD;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
 
+import com.facebook.buck.command.BuildExecutorArgs;
+import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.ClientStatsTracker;
+import com.facebook.buck.distributed.DistBuildArtifactCacheImpl;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
+import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.build_slave.CacheOptimizedBuildTargetsQueueFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -32,9 +37,14 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.ActionAndTargetGraphs;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -42,6 +52,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /** Phase before the build. */
 public class PreBuildPhase {
@@ -52,18 +63,27 @@ public class PreBuildPhase {
   private final ListenableFuture<BuildJobState> asyncJobState;
   private final DistBuildCellIndexer distBuildCellIndexer;
   private final BuckVersion buckVersion;
+  private final BuildExecutorArgs buildExecutorArgs;
+  private final ImmutableSet<BuildTarget> topLevelTargets;
+  private final ActionAndTargetGraphs actionAndTargetGraphs;
 
   public PreBuildPhase(
       DistBuildService distBuildService,
       ClientStatsTracker distBuildClientStats,
       ListenableFuture<BuildJobState> asyncJobState,
       DistBuildCellIndexer distBuildCellIndexer,
-      BuckVersion buckVersion) {
+      BuckVersion buckVersion,
+      BuildExecutorArgs buildExecutorArgs,
+      ImmutableSet<BuildTarget> topLevelTargets,
+      ActionAndTargetGraphs buildGraphs) {
     this.distBuildService = distBuildService;
     this.distBuildClientStats = distBuildClientStats;
     this.asyncJobState = asyncJobState;
     this.distBuildCellIndexer = distBuildCellIndexer;
     this.buckVersion = buckVersion;
+    this.buildExecutorArgs = buildExecutorArgs;
+    this.topLevelTargets = topLevelTargets;
+    this.actionAndTargetGraphs = buildGraphs;
   }
 
   /** Run all steps required before the build. */
@@ -76,7 +96,8 @@ public class PreBuildPhase {
       BuildMode buildMode,
       int numberOfMinions,
       String repository,
-      String tenantId)
+      String tenantId,
+      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculatorFuture)
       throws IOException, InterruptedException {
     EventSender eventSender = new EventSender(eventBus);
 
@@ -141,6 +162,39 @@ public class PreBuildPhase {
                 throw new RuntimeException("Failed to set buck-version with exception.", e);
               }
             }));
+
+    DistBuildConfig distBuildConfig = new DistBuildConfig(buildExecutorArgs.getBuckConfig());
+
+    if (distBuildConfig.isUploadFromLocalCacheEnabled()) {
+      asyncJobs.add(
+          Futures.transformAsync(
+              localRuleKeyCalculatorFuture,
+              localRuleKeyCalculator -> {
+                try (ArtifactCacheByBuildRule artifactCache =
+                    new DistBuildArtifactCacheImpl(
+                        actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
+                        networkExecutorService,
+                        buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
+                        eventBus,
+                        fileHashCache,
+                        buildExecutorArgs.getRuleKeyConfiguration(),
+                        localRuleKeyCalculator,
+                        Optional.of(
+                            buildExecutorArgs.getArtifactCacheFactory().localOnlyInstance(true)))) {
+
+                  return new CacheOptimizedBuildTargetsQueueFactory(
+                          actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
+                          artifactCache,
+                          /* isDeepRemoteBuild */ false)
+                      .uploadCriticalNodesFromLocalCache(topLevelTargets, distBuildClientStats);
+
+                } catch (Exception e) {
+                  LOG.error(e, "Failed to create BuildTargetsQueue.");
+                  throw new RuntimeException(e);
+                }
+              },
+              networkExecutorService));
+    }
 
     ListenableFuture<Void> asyncPrep =
         Futures.transform(

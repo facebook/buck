@@ -48,7 +48,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.timing.Clock;
@@ -196,7 +198,8 @@ public class BuildPhase {
   private void runCoordinatorAsync(
       WeightedListeningExecutorService executorService,
       StampedeId stampedeId,
-      InvocationInfo invocationInfo) {
+      InvocationInfo invocationInfo,
+      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculator) {
     Preconditions.checkState(cachingBuildEngineDelegate.isPresent());
     DistBuildConfig distBuildConfig = new DistBuildConfig(buildExecutorArgs.getBuckConfig());
 
@@ -235,8 +238,7 @@ public class BuildPhase {
             executorService,
             buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
             buildExecutorArgs.getRuleKeyConfiguration(),
-            // TODO(shivanker): Share RuleKeyCalculator with local CachingBuildEngine.
-            Futures.immediateFuture(Optional.empty()),
+            localRuleKeyCalculator,
             // TODO(shivanker): Make health-check stats work.
             new HealthCheckStatsTracker(),
             // TODO(shivanker): Make timing stats work.
@@ -259,7 +261,8 @@ public class BuildPhase {
       EventSender eventSender,
       StampedeId stampedeId,
       BuildMode buildMode,
-      InvocationInfo invocationInfo)
+      InvocationInfo invocationInfo,
+      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculator)
       throws IOException, InterruptedException {
     distBuildClientStats.startTimer(PERFORM_DISTRIBUTED_BUILD);
     final BuildJob job =
@@ -278,7 +281,7 @@ public class BuildPhase {
             TimeUnit.MILLISECONDS);
 
     if (buildMode.equals(DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR)) {
-      runCoordinatorAsync(executorService, stampedeId, invocationInfo);
+      runCoordinatorAsync(executorService, stampedeId, invocationInfo, localRuleKeyCalculator);
     }
 
     BuildJob finalJob;

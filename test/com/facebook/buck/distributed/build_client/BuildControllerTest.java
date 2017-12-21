@@ -24,6 +24,10 @@ import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.command.BuildExecutorArgs;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
@@ -49,13 +53,20 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystemFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -108,9 +119,32 @@ public class BuildControllerTest {
     invocationInfo = FakeInvocationInfoFactory.create();
   }
 
-  private BuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState) {
+  private BuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState)
+      throws IOException, InterruptedException {
+
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuildExecutorArgs executorArgs =
+        BuildExecutorArgs.builder()
+            .setArtifactCacheFactory(new NoopArtifactCache.NoopArtifactCacheFactory())
+            .setBuckEventBus(mockEventBus)
+            .setBuildInfoStoreManager(new BuildInfoStoreManager())
+            .setClock(new DefaultClock())
+            .setConsole(new TestConsole())
+            .setPlatform(Platform.detect())
+            .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
+            .setRuleKeyConfiguration(
+                ConfigRuleKeyConfigurationFactory.create(
+                    FakeBuckConfig.builder().build(),
+                    BuckPluginManagerFactory.createPluginManager()))
+            .setRootCell(
+                new TestCellBuilder()
+                    .setFilesystem(new FakeProjectFilesystem())
+                    .setBuckConfig(buckConfig)
+                    .build())
+            .build();
+
     return new BuildController(
-        null,
+        executorArgs,
         ImmutableSet.of(),
         null,
         Optional.empty(),
@@ -141,7 +175,8 @@ public class BuildControllerTest {
         BuildMode.REMOTE_BUILD,
         1,
         REPOSITORY,
-        TENANT_ID);
+        TENANT_ID,
+        Futures.immediateFuture(Optional.empty()));
   }
 
   @After

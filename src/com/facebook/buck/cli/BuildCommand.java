@@ -71,6 +71,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.RuleKey;
@@ -107,8 +108,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -327,6 +331,8 @@ public class BuildCommand extends AbstractCommand {
   }
 
   @Nullable private volatile Build lastBuild;
+  private final SettableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator =
+      SettableFuture.create();
 
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
@@ -830,7 +836,9 @@ public class BuildCommand extends AbstractCommand {
                 distBuildConfig.getBuildMode(),
                 distBuildConfig.getNumberOfMinions(),
                 distBuildConfig.getRepository(),
-                distBuildConfig.getTenantId());
+                distBuildConfig.getTenantId(),
+                Futures.transform(
+                    localRuleKeyCalculator, Optional::of, MoreExecutors.directExecutor()));
         distBuildExitCode = distBuildResult.exitCode;
       } finally {
         BuildEvent.DistBuildFinished finished =
@@ -1089,6 +1097,7 @@ public class BuildCommand extends AbstractCommand {
               ruleKeyLogger,
               remoteBuildRuleCompletionWaiter);
       lastBuild = builder.getBuild();
+      localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
 
       if (initializeBuildLatch.isPresent()) {
         // Signal to other threads that lastBuild has now been set.

@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +52,10 @@ public class BuildTargetsQueue {
     this.allEnqueuedTargets = allEnqueuedTargets;
     this.uncachableZeroDependencyTargets.addAll(uncachableZeroDependencyTargets);
     completeUncachableZeroDependencyNodes();
+  }
+
+  public static BuildTargetsQueue newEmptyQueue() {
+    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>());
   }
 
   public boolean hasReadyZeroDependencyNodes() {

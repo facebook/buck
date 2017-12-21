@@ -16,23 +16,15 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.testutil.DummyFileHashCache;
-import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
-import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,21 +42,9 @@ public class MinionWorkloadAllocatorTest {
     BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createDiamondDependencyResolver();
     target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET);
     queue =
-        new BuildTargetsQueueFactory(
-                resolver,
-                MoreExecutors.newDirectExecutorService(),
-                false,
-                new NoopArtifactCache(),
-                new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
-                new DummyFileHashCache(),
-                RuleKeyConfiguration.builder()
-                    .setCoreKey("dummy")
-                    .setSeed(0)
-                    .setBuildInputRuleKeyFileSizeLimit(100)
-                    .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
-                    .build(),
-                Optional.empty())
-            .newQueue(ImmutableList.of(target));
+        new CacheOptimizedBuildTargetsQueueFactory(
+                resolver, new NoopArtifactCacheByBuildRule(), false)
+            .createBuildTargetsQueue(ImmutableList.of(target));
   }
 
   @Test

@@ -32,7 +32,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.collect.ImmutableSet;
@@ -84,7 +86,10 @@ public class BuildController {
             distBuildClientStats,
             asyncJobState,
             distBuildCellIndexer,
-            buckVersion);
+            buckVersion,
+            builderExecutorArgs,
+            topLevelTargets,
+            buildGraphs);
     this.buildPhase =
         new BuildPhase(
             builderExecutorArgs,
@@ -149,7 +154,8 @@ public class BuildController {
       BuildMode buildMode,
       int numberOfMinions,
       String repository,
-      String tenantId)
+      String tenantId,
+      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> ruleKeyCalculatorFuture)
       throws IOException, InterruptedException {
     Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture =
         preBuildPhase.runPreDistBuildLocalStepsAsync(
@@ -161,7 +167,8 @@ public class BuildController {
             buildMode,
             numberOfMinions,
             repository,
-            tenantId);
+            tenantId,
+            ruleKeyCalculatorFuture);
 
     ListenableFuture<Void> pendingPrepFuture = stampedeIdAndPendingPrepFuture.getSecond();
     try {
@@ -176,7 +183,12 @@ public class BuildController {
 
     BuildPhase.BuildResult buildResult =
         buildPhase.runDistBuildAndUpdateConsoleStatus(
-            executorService, eventSender, stampedeId, buildMode, invocationInfo);
+            executorService,
+            eventSender,
+            stampedeId,
+            buildMode,
+            invocationInfo,
+            ruleKeyCalculatorFuture);
 
     return postBuildPhase.runPostDistBuildLocalSteps(
         executorService,

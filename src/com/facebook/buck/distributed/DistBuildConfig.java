@@ -107,6 +107,9 @@ public class DistBuildConfig {
   private static final String ENABLE_ASYNC_LOGGING = "enable_async_logging";
   private static final boolean DEFAULT_ENABLE_ASYNC_LOGGING = true;
 
+  private static final String ENABLE_UPLOADS_FROM_LOCAL_CACHE = "enable_uploads_from_local_cache";
+  private static final boolean DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE = false;
+
   // Percentage of available CPU cores to use for the coordinator build.
   // Default this to 75% to ensure coordinator is always responsive to requests from minions
   private static final String COORDINATOR_BUILD_CAPACITY_RATIO = "coordinator_build_capacity_ratio";
@@ -289,6 +292,11 @@ public class DistBuildConfig {
         STAMPEDE_SECTION,
         ENABLE_SLOW_LOCAL_BUILD_FALLBACK,
         ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE);
+  }
+
+  public boolean isUploadFromLocalCacheEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_UPLOADS_FROM_LOCAL_CACHE, DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE);
   }
 
   public OkHttpClient createOkHttpClient() {

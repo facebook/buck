@@ -3,9 +3,11 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 COMMON_FILES = (
     "AbstractDistBuildClientCacheResult.java",
     "AbstractDistBuildClientStats.java",
+    "ArtifactCacheByBuildRule.java",
     "BuildJobStateSerializer.java",
     "BuildStatusUtil.java",
     "ClientStatsTracker.java",
+    "DistBuildArtifactCacheImpl.java",
     "DistBuildCachingEngineDelegate.java",
     "DistBuildCellIndexer.java",
     "DistBuildClientCacheResultEvent.java",
@@ -27,6 +29,7 @@ COMMON_FILES = (
     "RecordedFileHashes.java",
     "RecordingProjectFileHashCache.java",
     "RemoteStateBasedFileHashCache.java",
+    "NoopArtifactCacheByBuildRule.java",
 )
 
 java_immutables_library(

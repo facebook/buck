@@ -54,7 +54,6 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
@@ -73,6 +72,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystemFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
@@ -82,6 +82,7 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.List;
@@ -180,7 +181,7 @@ public class BuildPhaseTest {
             .setClock(new DefaultClock())
             .setConsole(new TestConsole())
             .setPlatform(Platform.detect())
-            .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+            .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
             .setRuleKeyConfiguration(
                 ConfigRuleKeyConfigurationFactory.create(
                     FakeBuckConfig.builder().build(),
@@ -260,7 +261,8 @@ public class BuildPhaseTest {
         new EventSender(mockEventBus),
         stampedeId,
         BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
-        FakeInvocationInfoFactory.create());
+        FakeInvocationInfoFactory.create(),
+        Futures.immediateFuture(Optional.empty()));
 
     verify(mockDistBuildService);
     verify(mockEventBus);

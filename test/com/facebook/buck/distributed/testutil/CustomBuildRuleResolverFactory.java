@@ -211,7 +211,7 @@ public class CustomBuildRuleResolverFactory {
   }
 
   // Graph structure:
-  //                   (runtime)-- uncacheable a
+  //                    uncacheable a (runtime)
   //                  /
   //       +- right -
   //       |          \
@@ -219,7 +219,7 @@ public class CustomBuildRuleResolverFactory {
   //       |          /
   //       +- left  -
   //                  \
-  //                   (runtime)-- {uncacheable b, cacheable c}
+  //                   {uncacheable b (runtime), cacheable c (runtime)}
   public static BuildRuleResolver createResolverWithUncacheableRuntimeDeps() {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
