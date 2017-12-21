@@ -101,21 +101,16 @@ abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
   }
 
   public ImmutableMap<String, NSObject> getMergeableEntitlements() {
-    final ImmutableSet<String> excludedKeys =
-        ImmutableSet.of(
-            "com.apple.developer.restricted-resource-mode",
-            "inter-app-audio",
-            "com.apple.developer.icloud-container-development-container-identifiers",
-            "com.apple.developer.homekit",
-            "com.apple.developer.healthkit",
-            "com.apple.developer.in-app-payments",
-            "com.apple.developer.maps",
-            "com.apple.external-accessory.wireless-configuration");
+    final ImmutableSet<String> includedKeys = ImmutableSet.of(
+        "beta-reports-active",
+        "get-task-allow",
+        "com.apple.developer.aps-environment",
+        "com.apple.developer.team-identifier");
 
     ImmutableMap<String, NSObject> allEntitlements = getEntitlements();
     ImmutableMap.Builder<String, NSObject> filteredEntitlementsBuilder = ImmutableMap.builder();
     for (String key : allEntitlements.keySet()) {
-      if (!excludedKeys.contains(key)) {
+      if (includedKeys.contains(key)) {
         filteredEntitlementsBuilder.put(key, allEntitlements.get(key));
       }
     }
