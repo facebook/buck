@@ -100,6 +100,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final PreprocessorFlags cxxDeps;
 
   @AddToRuleKey private final boolean importUnderlyingModule;
+  @AddToRuleKey private final boolean moduleOnly;
 
   SwiftCompile(
       CxxPlatform cxxPlatform,
@@ -118,7 +119,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
       PreprocessorFlags cxxDeps,
-      boolean importUnderlyingModule) {
+      boolean importUnderlyingModule,
+      boolean moduleOnly) {
     super(buildTarget, projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
@@ -158,6 +160,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
     this.cxxDeps = cxxDeps;
+    this.moduleOnly = moduleOnly;
     performChecks(buildTarget);
   }
 
@@ -211,19 +214,40 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
     compilerCommand.add(
-        "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
         "-serialize-debugging-options",
         "-module-name",
-        moduleName,
-        "-emit-module",
-        "-emit-module-path",
-        modulePath.toString(),
-        "-emit-objc-header-path",
-        headerPath.toString(),
-        "-o",
-        objectFilePath.toString());
+        moduleName);
+
+    if (swiftBuckConfig.shouldSplitSwiftModuleGeneration()) {
+      if (moduleOnly || hasMainEntry) {
+        compilerCommand.add(
+            "-emit-module",
+            "-emit-module-path",
+            modulePath.toString(),
+            "-emit-objc-header",
+            "-emit-objc-header-path",
+            headerPath.toString());
+      }
+
+      if (!moduleOnly) {
+        compilerCommand.add(
+            "-c", "-emit-object",
+            "-o",
+            objectFilePath.toString());
+      }
+    } else {
+      compilerCommand.add(
+          "-c",
+          "-emit-module",
+          "-emit-module-path",
+          modulePath.toString(),
+          "-emit-objc-header-path",
+          headerPath.toString(),
+          "-o",
+          objectFilePath.toString());
+    }
 
     // Do not use swiftBuckConfig's version by definition
     version.ifPresent(

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleLibraryDescription.Type;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -38,6 +39,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
@@ -931,6 +933,44 @@ public class AppleLibraryIntegrationTest {
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
     result.assertSuccess();
+  }
+
+  @Test
+  public void testSplitSwiftModuleGeneration() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_split_swift_module_generation", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    workspace.addBuckConfigLocalOption("swift", "split_swift_module_generation", "true");
+
+    BuildTarget swiftCompileTarget =
+        workspace
+            .newBuildTarget(String.format("//:Bar#macosx-x86_64"))
+            .withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
+    ProcessResult result =
+        workspace.runBuckCommand("build", swiftCompileTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget swiftModuleTarget =
+        workspace
+            .newBuildTarget(String.format("//:Foo#macosx-x86_64"))
+            .withAppendedFlavors(Type.SWIFT_MODULE.getFlavor());
+    String swiftModulePathFormat = "%s/" + String.format("%s.swiftmodule", "Foo");
+    Path binaryOutput =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, swiftModuleTarget, swiftModulePathFormat));
+    assertThat(Files.exists(binaryOutput), is(true));
+
+    // Verify that we build the object files & the swiftmodule for the dependency.
+    BuckBuildLog log = workspace.getBuildLog();
+    log.assertTargetBuiltLocally("//:Bar#apple-swift-compile,macosx-x86_64");
+    log.assertTargetBuiltLocally("//:Foo#apple-swift-module,macosx-x86_64");
   }
 
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
