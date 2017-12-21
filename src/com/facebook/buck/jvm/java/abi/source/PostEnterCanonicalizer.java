@@ -156,14 +156,34 @@ class PostEnterCanonicalizer {
                     .toArray(TypeMirror[]::new);
           }
 
-          // On the other hand, it is not possible to have a DeclaredType with an enclosing
-          // ErrorType -- the only way we get a DeclaredType in the first place is if the compiler
-          // can resolve everything it needs to.
+          // While it is not possible to have a DeclaredType with an enclosing ErrorType (the only
+          // way to get a DeclaredType in the first place is if the compiler can resolve all
+          // enclosing types), it *is* possible to have a DeclaredType with an enclosing
+          // DeclaredType that has ErrorTypes for type arguments. So we need to check if there's an
+          // explicitly specified enclosing type and provide the tree if so.
           TypeMirror enclosingType = declaredType.getEnclosingType();
-          DeclaredType canonicalEnclosingType =
-              enclosingType.getKind() != TypeKind.NONE
-                  ? (DeclaredType) getCanonicalType(enclosingType, null)
-                  : null;
+          DeclaredType canonicalEnclosingType = null;
+          if (enclosingType.getKind() != TypeKind.NONE) {
+            TreePath enclosingTypePath = treePath;
+            if (enclosingTypePath != null
+                && enclosingTypePath.getLeaf().getKind() == Tree.Kind.PARAMETERIZED_TYPE) {
+              enclosingTypePath =
+                  new TreePath(
+                      enclosingTypePath,
+                      ((ParameterizedTypeTree) enclosingTypePath.getLeaf()).getType());
+            }
+            if (enclosingTypePath != null
+                && enclosingTypePath.getLeaf().getKind() == Tree.Kind.MEMBER_SELECT) {
+              enclosingTypePath =
+                  new TreePath(
+                      enclosingTypePath,
+                      ((MemberSelectTree) enclosingTypePath.getLeaf()).getExpression());
+            } else {
+              enclosingTypePath = null;
+            }
+            canonicalEnclosingType =
+                (DeclaredType) getCanonicalType(enclosingType, enclosingTypePath);
+          }
 
           TypeElement canonicalElement =
               (TypeElement) elements.getCanonicalElement(declaredType.asElement());

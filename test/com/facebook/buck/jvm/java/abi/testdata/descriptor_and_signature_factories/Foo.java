@@ -70,7 +70,11 @@ public abstract class Foo {
   // Classes
   class NonGenericClass {}
 
-  class SimpleGenericClass<T> {}
+  class SimpleGenericClass<T> {
+    class InnerClass<U> {
+      InnerClass<U> innerInnerClassWithImplicitEnclosingTypes;
+    }
+  }
 
   interface SimpleGenericInterface<T> {}
 
@@ -92,4 +96,7 @@ public abstract class Foo {
       genericInnerClassInsideNonGenericInsideGenericField;
   Dependency<Integer>.GenericInner<String> genericInnerClassInsideGenericField;
   Dependency<Integer>.NonGenericInner nonGenericInnerClassInsideGenericField;
+
+  SimpleGenericClass<Dependency>.InnerClass<String> enclosingInstanceWithErrorTypeArgs;
+  SimpleGenericClass<String>.InnerClass<Dependency> innerClassWithErrorTypeArgs;
 }
