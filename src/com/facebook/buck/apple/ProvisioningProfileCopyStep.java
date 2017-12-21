@@ -197,7 +197,6 @@ class ProvisioningProfileCopyStep implements Step {
 
     // Merge the entitlements with the profile, and write out.
     if (entitlementsPlist.isPresent()) {
-
       return (new PlistProcessStep(
               filesystem,
               entitlementsPlist.get(),
