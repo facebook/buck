@@ -193,7 +193,6 @@ class ProvisioningProfileCopyStep implements Step {
     // Copy the actual .mobileprovision.
     filesystem.copy(provisioningProfileSource, provisioningProfileDestination, CopySourceMode.FILE);
 
-    // Create the application identifier from the app ID and bundle ID
     String appID = bestProfile.get().getAppID().getFirst() + "." + bundleID;
 
     // Merge the entitlements with the profile, and write out.
