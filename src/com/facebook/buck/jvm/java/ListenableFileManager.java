@@ -20,7 +20,9 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -241,6 +243,18 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
       listeners.forEach(it -> it.onFileRead(fileObject));
       return super.getCharContent(ignoreEncodingErrors);
+    }
+
+    @Override
+    public OutputStream openOutputStream() throws IOException {
+      listeners.forEach(it -> it.onFileWritten(fileObject));
+      return super.openOutputStream();
+    }
+
+    @Override
+    public Writer openWriter() throws IOException {
+      listeners.forEach(it -> it.onFileWritten(fileObject));
+      return super.openWriter();
     }
   }
 }

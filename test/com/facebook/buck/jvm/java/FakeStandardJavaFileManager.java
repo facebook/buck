@@ -272,12 +272,12 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
 
     @Override
     public OutputStream openOutputStream() throws IOException {
-      throw new UnsupportedOperationException();
+      return null;
     }
 
     @Override
     public Writer openWriter() throws IOException {
-      throw new UnsupportedOperationException();
+      return null;
     }
 
     @Override

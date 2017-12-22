@@ -16,8 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
-import javax.tools.JavaFileObject;
+import javax.tools.FileObject;
 
 interface FileManagerListener {
-  void onFileRead(JavaFileObject file);
+  void onFileRead(FileObject file);
+
+  void onFileWritten(FileObject file);
 }

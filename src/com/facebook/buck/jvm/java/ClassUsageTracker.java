@@ -22,6 +22,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
+import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 
@@ -49,7 +50,12 @@ class ClassUsageTracker implements FileManagerListener {
   }
 
   @Override
-  public void onFileRead(JavaFileObject javaFileObject) {
+  public void onFileRead(FileObject fileObject) {
+    if (!(fileObject instanceof JavaFileObject)) {
+      return;
+    }
+    JavaFileObject javaFileObject = (JavaFileObject) fileObject;
+
     URI classFileJarUri = javaFileObject.toUri();
     if (!classFileJarUri.getScheme().equals(JAR_SCHEME)) {
       // Not in a jar; must not have been built with java_library
@@ -82,6 +88,9 @@ class ClassUsageTracker implements FileManagerListener {
     Preconditions.checkState(!classPath.isAbsolute());
     resultBuilder.put(jarFilePath, classPath);
   }
+
+  @Override
+  public void onFileWritten(FileObject file) {}
 
   private boolean isLocalOrAnonymousClass(String className) {
     return LOCAL_OR_ANONYMOUS_CLASS.matcher(className).matches();

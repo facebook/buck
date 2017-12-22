@@ -44,6 +44,7 @@ public class ListenableFileManagerTest {
   private ListenableFileManager fileManager;
   private FakeStandardJavaFileManager fakeFileManager;
   private List<FileObject> filesRead = new ArrayList<>();
+  private List<FileObject> filesWritten = new ArrayList<>();
 
   @Before
   public void setUp() {
@@ -52,8 +53,13 @@ public class ListenableFileManagerTest {
     fileManager.addListener(
         new FileManagerListener() {
           @Override
-          public void onFileRead(JavaFileObject file) {
+          public void onFileRead(FileObject file) {
             filesRead.add(file);
+          }
+
+          @Override
+          public void onFileWritten(FileObject file) {
+            filesWritten.add(file);
           }
         });
 
@@ -69,6 +75,7 @@ public class ListenableFileManagerTest {
         .openInputStream();
 
     assertFilesRead("C");
+    assertNoFilesWritten();
   }
 
   @Test
@@ -78,6 +85,7 @@ public class ListenableFileManagerTest {
         .openReader(true);
 
     assertFilesRead("C");
+    assertNoFilesWritten();
   }
 
   @Test
@@ -87,10 +95,43 @@ public class ListenableFileManagerTest {
         .getCharContent(true);
 
     assertFilesRead("C");
+    assertNoFilesWritten();
+  }
+
+  @Test
+  public void testOpenOutputStreamReportsWrite() throws IOException {
+    fileManager
+        .getJavaFileForOutput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS, null)
+        .openOutputStream();
+
+    assertNoFilesRead();
+    assertFilesWritten("C");
+  }
+
+  @Test
+  public void testOpenWriterReportsWrite() throws IOException {
+    fileManager
+        .getJavaFileForOutput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS, null)
+        .openWriter();
+
+    assertNoFilesRead();
+    assertFilesWritten("C");
   }
 
   private void assertFilesRead(String... fileNames) {
     assertThat(fileNames(filesRead), Matchers.arrayContaining(fileNames));
+  }
+
+  private void assertNoFilesRead() {
+    assertThat(fileNames(filesRead), Matchers.emptyArray());
+  }
+
+  private void assertFilesWritten(String... fileNames) {
+    assertThat(fileNames(filesWritten), Matchers.arrayContaining(fileNames));
+  }
+
+  private void assertNoFilesWritten() {
+    assertThat(fileNames(filesWritten), Matchers.emptyArray());
   }
 
   private String[] fileNames(List<FileObject> files) {
