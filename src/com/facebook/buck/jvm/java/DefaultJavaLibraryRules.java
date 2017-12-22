@@ -445,7 +445,7 @@ public abstract class DefaultJavaLibraryRules {
         .setBuildRuleParams(getInitialParams())
         .setConfiguredCompiler(getConfiguredCompiler())
         .setDeps(Preconditions.checkNotNull(getDeps()))
-        .setShouldCompileAgainstAbis(getConfiguredCompilerFactory().shouldCompileAgainstAbis())
+        .setShouldCompileAgainstAbis(shouldCompileAgainstAbis())
         .build();
   }
 
@@ -528,11 +528,21 @@ public abstract class DefaultJavaLibraryRules {
         // is that the ABI generation for that language isn't fully correct.
         .addAll(classpaths.getCompileTimeClasspathAbiDeps());
 
-    if (!getConfiguredCompilerFactory().shouldCompileAgainstAbis()) {
+    if (!shouldCompileAgainstAbis()) {
       depsBuilder.addAll(classpaths.getCompileTimeClasspathFullDeps());
     }
 
     return depsBuilder.build();
+  }
+
+  @Value.Lazy
+  boolean shouldCompileAgainstAbis() {
+    CoreArg args = getArgs();
+    boolean fromArgs =
+        args == null
+            || args.getCompileAgainst().map(v -> v == CompileAgainstLibraryType.ABI).orElse(true);
+
+    return fromArgs && getConfiguredCompilerFactory().shouldCompileAgainstAbis();
   }
 
   @Value.Lazy

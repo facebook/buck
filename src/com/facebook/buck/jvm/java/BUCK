@@ -300,6 +300,7 @@ java_library_with_plugins(
         "CalculateClassAbi.java",
         "CalculateSourceAbi.java",
         "CompareAbis.java",
+        "CompileAgainstLibraryType.java",
         "ConfiguredCompilerFactory.java",
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryRules.java",
