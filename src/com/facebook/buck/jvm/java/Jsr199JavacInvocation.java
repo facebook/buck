@@ -514,7 +514,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
           StandardJavaFileManager wrappedFileManager = fileManager;
           if (classUsageTracker != null) {
-            wrappedFileManager = classUsageTracker.wrapFileManager(fileManager);
+            wrappedFileManager = new ListenableFileManager(wrappedFileManager, classUsageTracker);
           }
           BuckJavacTaskProxy javacTask;
           if (generatingSourceOnlyAbi) {

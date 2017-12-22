@@ -70,7 +70,8 @@ public class DefaultClassUsageFileWriterTest {
     DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerOne = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = trackerOne.wrapFileManager(fakeFileManager);
+      StandardJavaFileManager wrappedFileManager =
+          new ListenableFileManager(fakeFileManager, trackerOne);
       for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
         javaFileObject.openInputStream();
       }
@@ -80,7 +81,8 @@ public class DefaultClassUsageFileWriterTest {
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerTwo = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = trackerTwo.wrapFileManager(fakeFileManager);
+      StandardJavaFileManager wrappedFileManager =
+          new ListenableFileManager(fakeFileManager, trackerTwo);
       Iterable<JavaFileObject> fileObjects = wrappedFileManager.list(null, null, null, false);
       for (JavaFileObject javaFileObject : FluentIterable.from(fileObjects).toList().reverse()) {
         javaFileObject.openInputStream();
@@ -115,7 +117,8 @@ public class DefaultClassUsageFileWriterTest {
     DefaultClassUsageFileWriter writer = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerOne = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = trackerOne.wrapFileManager(fakeFileManager);
+      StandardJavaFileManager wrappedFileManager =
+          new ListenableFileManager(fakeFileManager, trackerOne);
       for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
         javaFileObject.openInputStream();
       }

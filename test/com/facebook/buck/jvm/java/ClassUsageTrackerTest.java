@@ -62,7 +62,7 @@ public class ClassUsageTrackerTest {
   public void setUp() {
     tracker = new ClassUsageTracker();
     fakeFileManager = new FakeStandardJavaFileManager();
-    fileManager = tracker.wrapFileManager(fakeFileManager);
+    fileManager = new ListenableFileManager(fakeFileManager, tracker);
 
     fakeFileManager.addFile(WINDOWS_JAR_PATH, WINDOWS_FILE_NAME, JavaFileObject.Kind.CLASS);
 
