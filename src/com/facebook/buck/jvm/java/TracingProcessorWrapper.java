@@ -53,52 +53,39 @@ class TracingProcessorWrapper implements Processor {
 
   @Override
   public Set<String> getSupportedOptions() {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS)) {
       return innerProcessor.getSupportedOptions();
     } catch (RuntimeException | Error e) {
       throw wrapAnnotationProcessorCrashException(e);
-    } finally {
-      end(started);
     }
   }
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES);
-    try {
+    try (Scope scope =
+        new Scope(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES)) {
       return innerProcessor.getSupportedAnnotationTypes();
     } catch (RuntimeException | Error e) {
       throw wrapAnnotationProcessorCrashException(e);
-    } finally {
-      end(started);
     }
   }
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION);
-    try {
+    try (Scope scope =
+        new Scope(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION)) {
       return innerProcessor.getSupportedSourceVersion();
     } catch (RuntimeException | Error e) {
       throw wrapAnnotationProcessorCrashException(e);
-    } finally {
-      end(started);
     }
   }
 
   @Override
   public void init(ProcessingEnvironment processingEnv) {
-    AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.INIT);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.INIT)) {
       innerProcessor.init(processingEnv);
     } catch (RuntimeException | Error e) {
       throw wrapAnnotationProcessorCrashException(e);
-    } finally {
-      end(started);
     }
   }
 
@@ -106,13 +93,10 @@ class TracingProcessorWrapper implements Processor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     roundNumber += 1;
     isLastRound = roundEnv.processingOver();
-    AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.PROCESS);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.PROCESS)) {
       return innerProcessor.process(annotations, roundEnv);
     } catch (RuntimeException | Error e) {
       throw wrapAnnotationProcessorCrashException(e);
-    } finally {
-      end(started);
     }
   }
 
@@ -163,30 +147,39 @@ class TracingProcessorWrapper implements Processor {
   @Override
   public Iterable<? extends Completion> getCompletions(
       Element element, AnnotationMirror annotation, ExecutableElement member, String userText) {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_COMPLETIONS);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.GET_COMPLETIONS)) {
       return innerProcessor.getCompletions(element, annotation, member, userText);
-    } finally {
-      end(started);
     }
   }
 
-  private AnnotationProcessingEvent.Started begin(AnnotationProcessingEvent.Operation operation) {
-    AnnotationProcessingEvent.Started started =
-        AnnotationProcessingEvent.started(
-            buildTarget, annotationProcessorName, operation, roundNumber, isLastRound);
-    eventSink.reportAnnotationProcessingEventStarted(
-        buildTarget, annotationProcessorName, operation.toString(), roundNumber, isLastRound);
-    return started;
-  }
+  private class Scope implements AutoCloseable {
+    private final AnnotationProcessingEvent.Started started;
 
-  private void end(AnnotationProcessingEvent.Started started) {
-    eventSink.reportAnnotationProcessingEventFinished(
-        started.getBuildTarget(),
-        started.getAnnotationProcessorName(),
-        started.getOperation().toString(),
-        started.getRound(),
-        started.isLastRound());
+    public Scope(AnnotationProcessingEvent.Operation operation) {
+      started = begin(operation);
+    }
+
+    @Override
+    public void close() {
+      end(started);
+    }
+
+    private AnnotationProcessingEvent.Started begin(AnnotationProcessingEvent.Operation operation) {
+      AnnotationProcessingEvent.Started started =
+          AnnotationProcessingEvent.started(
+              buildTarget, annotationProcessorName, operation, roundNumber, isLastRound);
+      eventSink.reportAnnotationProcessingEventStarted(
+          buildTarget, annotationProcessorName, operation.toString(), roundNumber, isLastRound);
+      return started;
+    }
+
+    private void end(AnnotationProcessingEvent.Started started) {
+      eventSink.reportAnnotationProcessingEventFinished(
+          started.getBuildTarget(),
+          started.getAnnotationProcessorName(),
+          started.getOperation().toString(),
+          started.getRound(),
+          started.isLastRound());
+    }
   }
 }
