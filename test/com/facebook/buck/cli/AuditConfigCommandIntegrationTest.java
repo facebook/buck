@@ -103,6 +103,18 @@ public class AuditConfigCommandIntegrationTest {
   }
 
   @Test
+  public void testConfigBuckConfigWithCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("audit", "config", "secondary//second_section.some_property");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-cell-buckconfig"), result.getStdout());
+  }
+
+  @Test
   public void testErrorOnBothTabAndJson() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
