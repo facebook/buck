@@ -176,6 +176,7 @@ class TreeBackedElements extends ElementsExtendedImpl {
     ArtificialTypeElement result = (ArtificialTypeElement) getTypeElement(fullyQualifiedName);
     if (result == null) {
       result = new InferredTypeElement(simpleName, fullyQualifiedName, enclosingElement);
+      knownTypes.put(fullyQualifiedName, result);
     }
     return result;
   }
