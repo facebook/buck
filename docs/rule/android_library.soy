@@ -157,6 +157,15 @@ compiled class files and resources.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'provided_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  This is the same as in <a href="{ROOT}rule/java_library.html">
+  <code>java_library</code></a>.
+  {/param}
+{/call}
+
 {call buck.deps_query_arg /}
 
 {call buck.provided_deps_query_arg /}
