@@ -512,9 +512,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           PluginClassLoaderFactory loaderFactory =
               PluginLoader.newFactory(context.getClassLoaderCache());
 
-          StandardJavaFileManager wrappedFileManager = fileManager;
+          ListenableFileManager wrappedFileManager = new ListenableFileManager(fileManager);
           if (classUsageTracker != null) {
-            wrappedFileManager = new ListenableFileManager(wrappedFileManager, classUsageTracker);
+            wrappedFileManager.addListener(classUsageTracker);
           }
           BuckJavacTaskProxy javacTask;
           if (generatingSourceOnlyAbi) {

@@ -21,25 +21,36 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.concurrent.NotThreadSafe;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 
+@NotThreadSafe
 class ListenableFileManager extends ForwardingStandardJavaFileManager {
 
   private final FileObjectWrapper fileTracker;
-  private final FileManagerListener listener;
+  private final List<FileManagerListener> listeners = new ArrayList<>();
 
-  public ListenableFileManager(StandardJavaFileManager fileManager, FileManagerListener listener) {
+  public ListenableFileManager(StandardJavaFileManager fileManager) {
     super(fileManager);
     fileTracker = new FileObjectWrapper();
-    this.listener = listener;
+  }
+
+  public void addListener(FileManagerListener listener) {
+    listeners.add(listener);
+  }
+
+  public void removeListener(FileManagerListener listener) {
+    listeners.remove(listener);
   }
 
   @Override
@@ -216,19 +227,19 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
 
     @Override
     public InputStream openInputStream() throws IOException {
-      listener.onFileRead(fileObject);
+      listeners.forEach(it -> it.onFileRead(fileObject));
       return super.openInputStream();
     }
 
     @Override
     public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
-      listener.onFileRead(fileObject);
+      listeners.forEach(it -> it.onFileRead(fileObject));
       return super.openReader(ignoreEncodingErrors);
     }
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-      listener.onFileRead(fileObject);
+      listeners.forEach(it -> it.onFileRead(fileObject));
       return super.getCharContent(ignoreEncodingErrors);
     }
   }

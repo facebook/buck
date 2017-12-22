@@ -48,15 +48,14 @@ public class ListenableFileManagerTest {
   @Before
   public void setUp() {
     fakeFileManager = new FakeStandardJavaFileManager();
-    fileManager =
-        new ListenableFileManager(
-            fakeFileManager,
-            new FileManagerListener() {
-              @Override
-              public void onFileRead(JavaFileObject file) {
-                filesRead.add(file);
-              }
-            });
+    fileManager = new ListenableFileManager(fakeFileManager);
+    fileManager.addListener(
+        new FileManagerListener() {
+          @Override
+          public void onFileRead(JavaFileObject file) {
+            filesRead.add(file);
+          }
+        });
 
     for (String fileName : FILE_NAMES) {
       fakeFileManager.addFile(TEST_JAR_PATH, fileName, JavaFileObject.Kind.CLASS);
