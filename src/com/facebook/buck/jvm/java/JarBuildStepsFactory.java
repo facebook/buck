@@ -187,7 +187,7 @@ public class JarBuildStepsFactory
         compilerParameters,
         resourcesParameters,
         ImmutableList.of(),
-        getAbiJarParameters(context, compilerParameters).orElse(null),
+        getAbiJarParameters(buildTarget, context, compilerParameters).orElse(null),
         getLibraryJarParameters(context, compilerParameters).orElse(null),
         steps,
         buildableContext);
@@ -196,14 +196,15 @@ public class JarBuildStepsFactory
   }
 
   public ImmutableList<Step> getPipelinedBuildStepsForAbiJar(
-      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
+      BuildTarget buildTarget,
+      BuildContext context,
+      BuildableContext buildableContext,
+      JavacPipelineState state) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,
-            abiGenerationMode == AbiGenerationMode.SOURCE_ONLY
-                ? HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)
-                : HasJavaAbi.getSourceAbiJar(libraryTarget),
+            buildTarget,
             state,
             getResourcesParameters(),
             postprocessClassesCommands,
@@ -294,13 +295,13 @@ public class JarBuildStepsFactory
   }
 
   protected Optional<JarParameters> getAbiJarParameters(
-      BuildContext context, CompilerParameters compilerParameters) {
-    return getJarParameters(
-        context,
-        compilerParameters.getAbiGenerationMode() == AbiGenerationMode.SOURCE_ONLY
-            ? HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)
-            : HasJavaAbi.getSourceAbiJar(libraryTarget),
-        compilerParameters);
+      BuildTarget target, BuildContext context, CompilerParameters compilerParameters) {
+    if (HasJavaAbi.isLibraryTarget(target)) {
+      return Optional.empty();
+    }
+    Preconditions.checkState(
+        HasJavaAbi.isSourceAbiTarget(target) || HasJavaAbi.isSourceOnlyAbiTarget(target));
+    return getJarParameters(context, target, compilerParameters);
   }
 
   private Optional<JarParameters> getJarParameters(
@@ -372,7 +373,7 @@ public class JarBuildStepsFactory
     return javacToJarStepFactory.createPipelineState(
         firstRule,
         compilerParameters,
-        getAbiJarParameters(context, compilerParameters).orElse(null),
+        getAbiJarParameters(firstRule, context, compilerParameters).orElse(null),
         getLibraryJarParameters(context, compilerParameters).orElse(null));
   }
 }

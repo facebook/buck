@@ -90,9 +90,10 @@ public class JavacStep implements Step {
     Optional<String> returnedStderr;
     try {
       Javac.Invocation invocation = pipeline.getJavacInvocation(context);
-      if (HasJavaAbi.isSourceAbiTarget(invokingRule)
-          || HasJavaAbi.isSourceOnlyAbiTarget(invokingRule)) {
+      if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
+      } else if (HasJavaAbi.isSourceOnlyAbiTarget(invokingRule)) {
+        declaredDepsBuildResult = invocation.buildSourceOnlyAbiJar();
       } else {
         declaredDepsBuildResult = invocation.buildClasses();
       }

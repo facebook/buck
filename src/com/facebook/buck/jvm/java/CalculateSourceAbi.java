@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -112,7 +113,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public boolean useRulePipelining() {
-    return true;
+    return !HasJavaAbi.isSourceOnlyAbiTarget(getBuildTarget());
   }
 
   @Nullable
@@ -124,7 +125,8 @@ public class CalculateSourceAbi extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
-    return jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(context, buildableContext, state);
+    return jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(
+        getBuildTarget(), context, buildableContext, state);
   }
 
   @Override

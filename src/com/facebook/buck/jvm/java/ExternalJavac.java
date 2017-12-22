@@ -187,6 +187,12 @@ public class ExternalJavac implements Javac {
 
     return new Invocation() {
       @Override
+      public int buildSourceOnlyAbiJar() throws InterruptedException {
+        throw new UnsupportedOperationException(
+            "Cannot build source-only ABI jar with external javac.");
+      }
+
+      @Override
       public int buildSourceAbiJar() throws InterruptedException {
         throw new UnsupportedOperationException("Cannot build source ABI jar with external javac.");
       }
