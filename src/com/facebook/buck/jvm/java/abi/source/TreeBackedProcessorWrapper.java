@@ -16,7 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -74,10 +76,11 @@ class TreeBackedProcessorWrapper implements Processor {
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     return inner.process(
-        annotations
-            .stream()
-            .map(task.getElements()::getCanonicalElement)
-            .collect(Collectors.toSet()),
+        annotations.stream().map(task.getElements()::getCanonicalElement).collect(toSet()),
         new TreeBackedRoundEnvironment(task, roundEnv));
+  }
+
+  private Collector<TypeElement, ?, Set<TypeElement>> toSet() {
+    return Collectors.toCollection(LinkedHashSet::new);
   }
 }

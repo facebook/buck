@@ -17,7 +17,9 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import java.lang.annotation.Annotation;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -49,7 +51,7 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
         .getRootElements()
         .stream()
         .map(task.getElements()::getCanonicalElement)
-        .collect(Collectors.toSet());
+        .collect(toSet());
   }
 
   @Override
@@ -58,7 +60,7 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
         .getElementsAnnotatedWith(task.getElements().getJavacElement(a))
         .stream()
         .map(task.getElements()::getCanonicalElement)
-        .collect(Collectors.toSet());
+        .collect(toSet());
   }
 
   @Override
@@ -67,6 +69,10 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
         .getElementsAnnotatedWith(a)
         .stream()
         .map(task.getElements()::getCanonicalElement)
-        .collect(Collectors.toSet());
+        .collect(toSet());
+  }
+
+  private Collector<Element, ?, Set<Element>> toSet() {
+    return Collectors.toCollection(LinkedHashSet::new);
   }
 }
