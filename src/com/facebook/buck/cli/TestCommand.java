@@ -575,7 +575,7 @@ public class TestCommand extends BuildCommand {
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
-                    new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+                    localCachingBuildEngineDelegate,
                     pool.getWeightedListeningExecutorService(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
