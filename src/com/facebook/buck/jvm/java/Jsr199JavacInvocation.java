@@ -119,7 +119,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             ? invokingRule
             : HasJavaAbi.getLibraryTarget(invokingRule);
     this.abiCompatibilityMode = abiCompatibilityMode;
-    this.abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
+    this.abiTarget =
+        abiGenerationMode == AbiGenerationMode.SOURCE_ONLY
+            ? HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)
+            : HasJavaAbi.getSourceAbiJar(libraryTarget);
     this.options = options;
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
@@ -203,8 +206,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
 
       try {
-        boolean generatingSourceOnlyAbi =
-            HasJavaAbi.isSourceAbiTarget(invokingRule) && !abiGenerationMode.usesDependencies();
+        boolean generatingSourceOnlyAbi = HasJavaAbi.isSourceOnlyAbiTarget(invokingRule);
         javacTask = newJavacTask(generatingSourceOnlyAbi);
       } catch (IOException e) {
         LOG.error(e);

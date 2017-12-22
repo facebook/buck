@@ -228,6 +228,8 @@ public abstract class DefaultJavaLibraryRules {
   BuildTarget getAbiJar() {
     if (willProduceCompareAbis()) {
       return HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
+    } else if (willProduceSourceOnlyAbi()) {
+      return HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
     } else if (willProduceSourceAbi()) {
       return HasJavaAbi.getSourceAbiJar(getLibraryTarget());
     } else if (willProduceClassAbi()) {
@@ -399,7 +401,10 @@ public abstract class DefaultJavaLibraryRules {
             ? getJarBuildStepsFactoryForSourceOnlyAbi()
             : getJarBuildStepsFactory();
 
-    BuildTarget sourceAbiTarget = HasJavaAbi.getSourceAbiJar(getLibraryTarget());
+    BuildTarget sourceAbiTarget =
+        willProduceSourceOnlyAbi()
+            ? HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget())
+            : HasJavaAbi.getSourceAbiJar(getLibraryTarget());
     return getBuildRuleResolver()
         .addToIndex(
             new CalculateSourceAbi(

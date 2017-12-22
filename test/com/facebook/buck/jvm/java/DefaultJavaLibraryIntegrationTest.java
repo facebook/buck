@@ -970,7 +970,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     ProcessResult result =
         workspace.runBuckBuild(
-            "-c", "java.abi_generation_mode=source_only", "//:errors#source-abi");
+            "-c", "java.abi_generation_mode=source_only", "//:errors#source-only-abi");
     assertThat(result.getStderr(), Matchers.stringContainsInOrder("illegal start of expression"));
   }
 

@@ -62,6 +62,7 @@ public class JavaLibraryDescription
           JavaLibrary.MAVEN_JAR,
           HasJavaAbi.CLASS_ABI_FLAVOR,
           HasJavaAbi.SOURCE_ABI_FLAVOR,
+          HasJavaAbi.SOURCE_ONLY_ABI_FLAVOR,
           HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
 
   private final ToolchainProvider toolchainProvider;

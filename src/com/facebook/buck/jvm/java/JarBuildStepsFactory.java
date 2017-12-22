@@ -171,7 +171,9 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
-    Preconditions.checkArgument(buildTarget.equals(HasJavaAbi.getSourceAbiJar(libraryTarget)));
+    Preconditions.checkArgument(
+        buildTarget.equals(HasJavaAbi.getSourceAbiJar(libraryTarget))
+            || buildTarget.equals(HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     CompilerParameters compilerParameters = getCompilerParameters(context, buildTarget);
@@ -199,7 +201,9 @@ public class JarBuildStepsFactory
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,
-            HasJavaAbi.getSourceAbiJar(libraryTarget),
+            abiGenerationMode == AbiGenerationMode.SOURCE_ONLY
+                ? HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)
+                : HasJavaAbi.getSourceAbiJar(libraryTarget),
             state,
             getResourcesParameters(),
             postprocessClassesCommands,
@@ -291,7 +295,12 @@ public class JarBuildStepsFactory
 
   protected Optional<JarParameters> getAbiJarParameters(
       BuildContext context, CompilerParameters compilerParameters) {
-    return getJarParameters(context, HasJavaAbi.getSourceAbiJar(libraryTarget), compilerParameters);
+    return getJarParameters(
+        context,
+        compilerParameters.getAbiGenerationMode() == AbiGenerationMode.SOURCE_ONLY
+            ? HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)
+            : HasJavaAbi.getSourceAbiJar(libraryTarget),
+        compilerParameters);
   }
 
   private Optional<JarParameters> getJarParameters(
@@ -323,7 +332,8 @@ public class JarBuildStepsFactory
       return Optional.empty();
     }
 
-    if (HasJavaAbi.isSourceAbiTarget(buildTarget)) {
+    if (HasJavaAbi.isSourceAbiTarget(buildTarget)
+        || HasJavaAbi.isSourceOnlyAbiTarget(buildTarget)) {
       return Optional.of(CompilerParameters.getAbiJarPath(buildTarget, projectFilesystem));
     } else if (HasJavaAbi.isLibraryTarget(buildTarget)) {
       return Optional.of(DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystem));

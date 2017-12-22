@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
 public interface HasJavaAbi {
   Flavor CLASS_ABI_FLAVOR = InternalFlavor.of("class-abi");
   Flavor SOURCE_ABI_FLAVOR = InternalFlavor.of("source-abi");
+  Flavor SOURCE_ONLY_ABI_FLAVOR = InternalFlavor.of("source-only-abi");
   Flavor VERIFIED_SOURCE_ABI_FLAVOR = InternalFlavor.of("verified-source-abi");
 
   static BuildTarget getClassAbiJar(BuildTarget libraryTarget) {
@@ -50,6 +51,7 @@ public interface HasJavaAbi {
   static boolean isAbiTarget(BuildTarget target) {
     return isClassAbiTarget(target)
         || isSourceAbiTarget(target)
+        || isSourceOnlyAbiTarget(target)
         || isVerifiedSourceAbiTarget(target);
   }
 
@@ -64,6 +66,15 @@ public interface HasJavaAbi {
 
   static boolean isSourceAbiTarget(BuildTarget target) {
     return target.getFlavors().contains(SOURCE_ABI_FLAVOR);
+  }
+
+  static BuildTarget getSourceOnlyAbiJar(BuildTarget libraryTarget) {
+    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
+    return libraryTarget.withAppendedFlavors(SOURCE_ONLY_ABI_FLAVOR);
+  }
+
+  static boolean isSourceOnlyAbiTarget(BuildTarget target) {
+    return target.getFlavors().contains(SOURCE_ONLY_ABI_FLAVOR);
   }
 
   static BuildTarget getVerifiedSourceAbiJar(BuildTarget libraryTarget) {
@@ -83,7 +94,7 @@ public interface HasJavaAbi {
     Preconditions.checkArgument(isAbiTarget(abiTarget));
 
     return abiTarget.withoutFlavors(
-        CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR, VERIFIED_SOURCE_ABI_FLAVOR);
+        CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR, SOURCE_ONLY_ABI_FLAVOR, VERIFIED_SOURCE_ABI_FLAVOR);
   }
 
   BuildTarget getBuildTarget();
