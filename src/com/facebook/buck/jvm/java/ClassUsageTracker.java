@@ -57,7 +57,7 @@ class ClassUsageTracker {
    * JavaCompiler.getTask} anytime file usage tracking is desired.
    */
   public StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner) {
-    return new UsageTrackingFileManager(inner);
+    return new UsageTrackingFileManager(inner, this::addReadFile);
   }
 
   /**
@@ -112,12 +112,18 @@ class ClassUsageTracker {
     return LOCAL_OR_ANONYMOUS_CLASS.matcher(className).matches();
   }
 
-  private class UsageTrackingFileManager extends ForwardingStandardJavaFileManager {
+  private interface FileManagerListener {
+    void onFileRead(JavaFileObject file);
+  }
 
-    private final FileObjectTracker fileTracker = new FileObjectTracker();
+  private static class UsageTrackingFileManager extends ForwardingStandardJavaFileManager {
 
-    public UsageTrackingFileManager(StandardJavaFileManager fileManager) {
+    private final FileObjectTracker fileTracker;
+
+    public UsageTrackingFileManager(
+        StandardJavaFileManager fileManager, FileManagerListener listener) {
       super(fileManager);
+      fileTracker = new FileObjectTracker(listener);
     }
 
     @Override
@@ -266,8 +272,13 @@ class ClassUsageTracker {
     }
   }
 
-  private class FileObjectTracker {
+  private static class FileObjectTracker {
     private final Map<JavaFileObject, JavaFileObject> javaFileObjectCache = new IdentityHashMap<>();
+    private final FileManagerListener listener;
+
+    private FileObjectTracker(FileManagerListener listener) {
+      this.listener = listener;
+    }
 
     public FileObject wrap(FileObject inner) {
       if (inner instanceof JavaFileObject) {
@@ -279,16 +290,19 @@ class ClassUsageTracker {
 
     public JavaFileObject wrap(JavaFileObject inner) {
       if (!javaFileObjectCache.containsKey(inner)) {
-        javaFileObjectCache.put(inner, new TrackingJavaFileObject(inner));
+        javaFileObjectCache.put(inner, new TrackingJavaFileObject(inner, listener));
       }
 
       return Preconditions.checkNotNull(javaFileObjectCache.get(inner));
     }
   }
 
-  private class TrackingJavaFileObject extends ForwardingJavaFileObject<JavaFileObject> {
-    public TrackingJavaFileObject(JavaFileObject fileObject) {
+  private static class TrackingJavaFileObject extends ForwardingJavaFileObject<JavaFileObject> {
+    private final FileManagerListener listener;
+
+    public TrackingJavaFileObject(JavaFileObject fileObject, FileManagerListener listener) {
       super(fileObject);
+      this.listener = listener;
     }
 
     public JavaFileObject getJavaFileObject() {
@@ -297,19 +311,19 @@ class ClassUsageTracker {
 
     @Override
     public InputStream openInputStream() throws IOException {
-      addReadFile(fileObject);
+      listener.onFileRead(fileObject);
       return super.openInputStream();
     }
 
     @Override
     public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
-      addReadFile(fileObject);
+      listener.onFileRead(fileObject);
       return super.openReader(ignoreEncodingErrors);
     }
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-      addReadFile(fileObject);
+      listener.onFileRead(fileObject);
       return super.getCharContent(ignoreEncodingErrors);
     }
   }
