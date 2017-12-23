@@ -332,6 +332,7 @@ public class DefaultFileHashCacheTest {
     DefaultFileHashCache cache =
         DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode);
     assertTrue(cache.willGet(filesystem.getPath("buck-out/file.txt")));
+    assertFalse(cache.willGet(filesystem.getPath("buck-out/cells/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("file.txt")));
   }
 
@@ -347,6 +348,7 @@ public class DefaultFileHashCacheTest {
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     assertFalse(cache.willGet(filesystem.getPath("buck-out/file.txt")));
+    assertFalse(cache.willGet(filesystem.getPath("buck-out/cells/file.txt")));
     assertTrue(cache.willGet(filesystem.getPath("file.txt")));
   }
 }

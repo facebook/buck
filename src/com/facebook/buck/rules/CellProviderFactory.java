@@ -124,7 +124,8 @@ public class CellProviderFactory {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
-                              rootFilesystem.resolve(rootFilesystem.getBuckPaths().getBuckOut()),
+                              rootFilesystem.resolve(
+                                  rootFilesystem.getBuckPaths().getEmbeddedCellsBuckOutBaseDir()),
                               canonicalCellName.get()));
                 }
                 ProjectFilesystem cellFilesystem =

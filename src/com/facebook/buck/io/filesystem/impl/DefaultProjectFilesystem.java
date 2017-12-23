@@ -272,7 +272,10 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public Optional<Path> getPathRelativeToProjectRoot(Path path) {
     path = MorePaths.normalize(path);
     if (path.isAbsolute()) {
-      if (path.startsWith(projectRoot)) {
+      Path configuredBuckOut =
+          MorePaths.normalize(projectRoot.resolve(buckPaths.getConfiguredBuckOut()));
+      // If the path is in the configured buck-out, it's also part of the filesystem.
+      if (path.startsWith(configuredBuckOut) || path.startsWith(projectRoot)) {
         return Optional.of(MorePaths.relativize(projectRoot, path));
       } else {
         return Optional.empty();
