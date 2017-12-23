@@ -38,6 +38,7 @@ public abstract class AbstractAndroidNdk implements ComparableToolchain {
   public abstract Path getNdkRootPath();
 
   @Value.Parameter
+  @Value.Auxiliary
   protected abstract ExecutableFinder getExecutableFinder();
 
   @Value.Lazy
