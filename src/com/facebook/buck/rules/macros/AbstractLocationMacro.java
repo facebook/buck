@@ -32,6 +32,9 @@ abstract class AbstractLocationMacro extends BuildTargetMacro {
   private static final Pattern BUILD_TARGET_WITH_SUPPLEMENTARY_OUTPUT_PATTERN =
       Pattern.compile("^(?<target>.+?)(?:\\[(?<output>[A-Za-z0-9_./-]+)\\])?$");
 
+  @Override
+  public abstract BuildTarget getTarget();
+
   @Value.Parameter(order = 2)
   abstract Optional<String> getSupplementaryOutputIdentifier();
 
