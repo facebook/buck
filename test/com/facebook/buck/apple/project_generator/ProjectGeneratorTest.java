@@ -3362,6 +3362,48 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void assetCatalogsSetBuildSettings() throws IOException {
+    BuildTarget assetCatalogTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "asset_catalog");
+    TargetNode<?, ?> assetCatalogNode =
+        AppleAssetCatalogBuilder.createBuilder(assetCatalogTarget)
+            .setDirs(ImmutableSortedSet.of(FakeSourcePath.of("AssetCatalog.xcassets")))
+            .setAppIcon("AppIcon")
+            .setLaunchImage("LaunchImage")
+            .build();
+
+    BuildTarget bundleLibraryTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "bundlelib");
+    TargetNode<?, ?> bundleLibraryNode =
+        AppleLibraryBuilder.createBuilder(bundleLibraryTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setDeps(ImmutableSortedSet.of(assetCatalogTarget))
+            .build();
+
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    TargetNode<?, ?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(bundleLibraryTarget)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(assetCatalogNode, bundleLibraryNode, bundleNode));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:bundle");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(bundleTarget, target, "Debug");
+    assertThat(
+        buildSettings.get("ASSETCATALOG_COMPILER_APPICON_NAME"), Matchers.equalTo("AppIcon"));
+    assertThat(
+        buildSettings.get("ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME"),
+        Matchers.equalTo("LaunchImage"));
+  }
+
+  @Test
   public void generatedTargetConfigurationHasRepoRootSet() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "rule");
     TargetNode<?, ?> node =
