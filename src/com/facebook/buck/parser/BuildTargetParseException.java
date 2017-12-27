@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.util.HumanReadableException;
 
-@SuppressWarnings("serial")
 public class BuildTargetParseException extends HumanReadableException {
 
   public BuildTargetParseException(String humanReadableErrorMessage) {

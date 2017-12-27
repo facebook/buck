@@ -640,7 +640,6 @@ public class MiniAapt implements Step {
     return getShortName() + " " + resDirectory;
   }
 
-  @SuppressWarnings("serial")
   @VisibleForTesting
   static class ResourceParseException extends Exception {
 

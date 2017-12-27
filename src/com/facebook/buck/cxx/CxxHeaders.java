@@ -155,7 +155,6 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
     }
   }
 
-  @SuppressWarnings("serial")
   public static class ConflictingHeadersException extends Exception {
     public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
       super(

@@ -24,7 +24,6 @@ import java.nio.file.Path;
  * Thrown if we encounter an unexpected, fatal condition while interacting with the build file
  * parser.
  */
-@SuppressWarnings("serial")
 public class BuildFileParseException extends HumanReadableException {
 
   protected BuildFileParseException(String message) {

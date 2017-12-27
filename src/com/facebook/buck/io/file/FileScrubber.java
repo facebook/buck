@@ -17,7 +17,6 @@ package com.facebook.buck.io.file;
 
 public interface FileScrubber {
 
-  @SuppressWarnings("serial")
   class ScrubException extends Exception {
     public ScrubException(String msg) {
       super(msg);

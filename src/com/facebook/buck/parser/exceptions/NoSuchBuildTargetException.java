@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import java.nio.file.Path;
 
 /** Thrown when build target definition is missing in corresponding build file */
-@SuppressWarnings("serial")
 public class NoSuchBuildTargetException extends BuildTargetException {
 
   public NoSuchBuildTargetException(BuildTarget target) {

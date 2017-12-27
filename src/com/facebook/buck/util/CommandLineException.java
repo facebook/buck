@@ -22,7 +22,6 @@ import javax.annotation.Nullable;
  * Exception that is raised when user-supplied command line contains incompatible parameters or in
  * general cannot be executed
  */
-@SuppressWarnings("serial")
 public class CommandLineException extends HumanReadableException
     implements ExceptionWithHumanReadableMessage {
 

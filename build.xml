@@ -283,7 +283,6 @@
            >
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
-      <compilerarg value="-Xlint:serial" />
       <compilerarg value="-Werror" />
     </javac>
   </target>
@@ -426,7 +425,6 @@
         <compilerarg line="-properties '${eclipse.dir}/${eclipse.jdt.core.prefs.file}'" />
         <compilerarg value="-Xlint:rawtypes" />
         <compilerarg value="-Xlint:unchecked" />
-        <compilerarg value="-Xlint:serial" />
         <compilerarg value="-time" />
         <compilerclasspath>
           <pathelement location="${eclipse.dir}/ecj-4.7.1.jar" />

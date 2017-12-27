@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-@SuppressWarnings("serial")
 public class VersionControlCommandFailedException extends Exception {
   public VersionControlCommandFailedException(Throwable cause) {
     super(cause);

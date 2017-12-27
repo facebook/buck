@@ -99,7 +99,6 @@ public class IJProjectCleaner {
     return limit > 0 ? limit : 1;
   }
 
-  @SuppressWarnings("serial")
   public void clean(
       final BuckConfig buckConfig,
       final Path librariesXmlBase,
@@ -148,7 +147,6 @@ public class IJProjectCleaner {
     }
   }
 
-  @SuppressWarnings("serial")
   private class DirectoryCleaner extends RecursiveAction {
     private File directory;
     private FilenameFilter filenameFilter;
@@ -180,7 +178,6 @@ public class IJProjectCleaner {
     }
   }
 
-  @SuppressWarnings("serial")
   private class CandidateFinder extends RecursiveAction {
     private File directory;
     private FilenameFilter filenameFilter;
@@ -217,7 +214,6 @@ public class IJProjectCleaner {
     }
   }
 
-  @SuppressWarnings("serial")
   private class CandidateFinderWithExclusions extends CandidateFinder {
     Set<File> exclusions;
 

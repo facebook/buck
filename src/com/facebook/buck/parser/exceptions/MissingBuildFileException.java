@@ -19,7 +19,6 @@ package com.facebook.buck.parser.exceptions;
 import java.nio.file.Path;
 
 /** Thrown when build file is missing for the provided target */
-@SuppressWarnings("serial")
 public class MissingBuildFileException extends BuildTargetException {
 
   public MissingBuildFileException(String spec, Path buildFile) {

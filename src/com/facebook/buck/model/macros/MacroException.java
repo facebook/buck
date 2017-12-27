@@ -16,7 +16,6 @@
 
 package com.facebook.buck.model.macros;
 
-@SuppressWarnings("serial")
 public class MacroException extends Exception {
 
   public MacroException(String message) {

@@ -170,7 +170,6 @@ public class WebServer {
     }
   }
 
-  @SuppressWarnings("serial")
   public static class WebServerException extends Exception {
 
     public WebServerException(String message, Exception clause) {

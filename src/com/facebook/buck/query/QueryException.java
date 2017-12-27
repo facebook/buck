@@ -18,7 +18,6 @@ package com.facebook.buck.query;
 
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 
-@SuppressWarnings("serial")
 public class QueryException extends Exception implements ExceptionWithHumanReadableMessage {
 
   public QueryException(String message) {

@@ -152,7 +152,6 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
     return getNodes().size();
   }
 
-  @SuppressWarnings("serial")
   public static class NoSuchNodeException extends RuntimeException
       implements ExceptionWithHumanReadableMessage {
 

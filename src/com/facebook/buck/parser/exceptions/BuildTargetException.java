@@ -17,7 +17,6 @@
 package com.facebook.buck.parser.exceptions;
 
 /** Base class for exceptions raised when parser is unable to resolve a dependency */
-@SuppressWarnings("serial")
 public abstract class BuildTargetException extends BuildFileParseException {
   public BuildTargetException(String message) {
     super(message);
