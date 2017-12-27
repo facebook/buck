@@ -622,10 +622,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             // By the end of the build, all the transitive Java library dependencies *must* be
             // available on disk, so signal this requirement via the {@link HasRuntimeDeps}
             // interface.
-            compiledTestsLibrary
-                .getTransitiveClasspathDeps()
-                .stream()
-                .filter(rule -> !this.equals(rule)),
+            compiledTestsLibrary.getTransitiveClasspathDeps().stream(),
             // It's possible that the user added some tool as a dependency, so make sure we promote
             // this rules first-order deps to runtime deps, so that these potential tools are
             // available when this test runs.
