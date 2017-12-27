@@ -462,6 +462,10 @@ public class InstallCommand extends BuildCommand {
       try {
         adbHelper.startActivity(
             pathResolver, hasInstallableApk, getActivityToStart(), waitForDebugger);
+      } catch (HumanReadableException hre) {
+        LOG.warn(hre, "Unable to start activity");
+        params.getConsole().printBuildFailure(hre.getMessage());
+        return ExitCode.RUN_ERROR;
       } catch (Exception e) {
         throw new BuckUncheckedExecutionException("When starting activity.");
       }
