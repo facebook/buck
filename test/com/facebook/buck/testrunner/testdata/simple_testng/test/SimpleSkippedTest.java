@@ -20,6 +20,10 @@ import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 public class SimpleSkippedTest {
+  @Test
+  public void victory() {
+    System.out.println("all i do is win");
+  }
 
   @Test
   public void skip() {

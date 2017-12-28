@@ -58,7 +58,8 @@ public class TestNGIntegrationTest {
   public void testThatSkippedTestNGTestFails() throws IOException {
     ProcessResult skippedTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-skipped-test");
-    skippedTestNGTestResult.assertTestFailure();
+    assertThat(skippedTestNGTestResult.getStderr(), containsString(
+        "TESTS PASSED (with some assumption violations)"));
   }
 
   @Test
