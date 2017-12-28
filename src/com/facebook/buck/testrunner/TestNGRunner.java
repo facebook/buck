@@ -217,7 +217,7 @@ public final class TestNGRunner extends BaseRunner {
 
     @Override
     public void onTestSkipped(ITestResult result) {
-      recordResult(result, ResultType.FAILURE, result.getThrowable());
+      recordResult(result, ResultType.ASSUMPTION_VIOLATION, result.getThrowable());
     }
 
     @Override
