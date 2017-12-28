@@ -23,7 +23,6 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 abstract class AbstractProductType {
 
-  @Value.Parameter
   public abstract String getIdentifier();
 
   @Override
