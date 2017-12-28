@@ -75,7 +75,7 @@ abstract class AbstractPreIncludeFactory {
    * CxxPrecompiledHeaderTemplate} (also a PreInclude) identified by {@link
    * #getPrecompiledHeader()}, a (possibly-empty) build target reference.
    */
-  protected Optional<? extends PreInclude> getPreInclude() {
+  protected Optional<PreInclude> getPreInclude() {
     if (getPrefixHeader().isPresent()) {
       return Optional.of(
           (CxxPrefixHeader)

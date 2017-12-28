@@ -162,7 +162,7 @@ abstract class AbstractCxxSourceRuleFactory {
    * @see AbstractPreIncludeFactory
    */
   @Value.Lazy
-  protected Optional<? extends PreInclude> getPreInclude() {
+  protected Optional<PreInclude> getPreInclude() {
     return PreIncludeFactory.of(
             getProjectFilesystem(),
             getBaseBuildTarget(),
