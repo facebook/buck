@@ -83,7 +83,6 @@ public class CxxPrecompiledHeaderTest {
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(
-                sourcePathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 compiler,
                 CxxToolFlags.of()),

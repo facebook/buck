@@ -396,8 +396,7 @@ abstract class AbstractCxxSourceRuleFactory {
             .build();
 
     CompilerDelegate compilerDelegate =
-        new CompilerDelegate(
-            getPathResolver(), getCxxPlatform().getCompilerDebugPathSanitizer(), compiler, flags);
+        new CompilerDelegate(getCxxPlatform().getCompilerDebugPathSanitizer(), compiler, flags);
     depsBuilder.add(compilerDelegate);
 
     depsBuilder.add(source);
@@ -521,7 +520,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(
-            getPathResolver(),
             getCxxPlatform().getCompilerDebugPathSanitizer(),
             CxxSourceTypes.getCompiler(
                     getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(source.getType()))
@@ -784,7 +782,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
                   CompilerDelegate compilerDelegate =
                       new CompilerDelegate(
-                          getPathResolver(),
                           getCxxPlatform().getCompilerDebugPathSanitizer(),
                           CxxSourceTypes.getCompiler(
                                   getCxxPlatform(),

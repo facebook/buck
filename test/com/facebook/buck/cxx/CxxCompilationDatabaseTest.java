@@ -145,7 +145,6 @@ public class CxxCompilationDatabaseTest {
                     Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
-                    testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     new GccCompiler(
                         new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler")))),
