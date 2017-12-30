@@ -11,6 +11,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/pf4j:pf4j",
     ],

@@ -8,6 +8,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/rules/keys/config:config",
+        "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/guava:guava",
         "//third-party/java/pf4j:pf4j",
     ],

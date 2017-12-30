@@ -19,17 +19,17 @@ package com.facebook.buck.toolchain.impl;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainDescriptor;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainSupplier;
 import com.facebook.buck.toolchain.ToolchainWithCapability;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -38,11 +38,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import org.pf4j.PluginManager;
 
 public class DefaultToolchainProvider extends BaseToolchainProvider {
+
+  private static final Logger LOG = Logger.get(DefaultToolchainProvider.class);
 
   private final ToolchainCreationContext toolchainCreationContext;
   private final ImmutableList<ToolchainDescriptor<?>> toolchainDescriptors;
@@ -61,6 +64,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
                   return createToolchain(toolchainFactories.get(toolchainName));
                 }
               });
+  private final ConcurrentHashMap<String, ToolchainInstantiationException> failedToolchains =
+      new ConcurrentHashMap<>();
 
   public DefaultToolchainProvider(
       PluginManager pluginManager,
@@ -105,7 +110,13 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     if (toolchain.isPresent()) {
       return toolchain.get();
     } else {
-      throw new HumanReadableException("Unknown toolchain: " + toolchainName);
+      ToolchainInstantiationException exception;
+      if (failedToolchains.containsKey(toolchainName)) {
+        exception = failedToolchains.get(toolchainName);
+      } else {
+        exception = new ToolchainInstantiationException("Unknown toolchain: %s", toolchainName);
+      }
+      throw exception;
     }
   }
 
@@ -134,15 +145,25 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   }
 
   private Optional<? extends Toolchain> getOrCreate(String toolchainName) {
+    if (failedToolchains.containsKey(toolchainName)) {
+      return Optional.empty();
+    }
+
     try {
       return toolchains.get(toolchainName);
     } catch (ExecutionException | UncheckedExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), HumanReadableException.class);
-      throw new HumanReadableException(
-          e,
+      if (e.getCause() instanceof ToolchainInstantiationException) {
+        LOG.warn(
+            String.format(
+                "Cannot create a toolchain: %s. Cause: %s",
+                toolchainName, e.getCause().getMessage()));
+        failedToolchains.put(toolchainName, (ToolchainInstantiationException) e.getCause());
+        return Optional.empty();
+      }
+      throw new RuntimeException(
           String.format(
-              "Cannot create a toolchain: %s. Cause: %s",
-              toolchainName, e.getCause().getMessage()));
+              "Cannot create a toolchain: %s. Cause: %s", toolchainName, e.getCause().getMessage()),
+          e);
     }
   }
 

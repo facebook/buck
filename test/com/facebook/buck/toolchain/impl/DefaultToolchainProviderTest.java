@@ -16,7 +16,8 @@
 
 package com.facebook.buck.toolchain.impl;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.config.FakeBuckConfig;
@@ -27,15 +28,17 @@ import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainDescriptor;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.ToolchainSupplier;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.pf4j.DefaultPluginManager;
 
 public class DefaultToolchainProviderTest {
@@ -48,23 +51,40 @@ public class DefaultToolchainProviderTest {
 
   public static class ThrowingToolchainFactory implements ToolchainFactory<NoopToolchain> {
 
+    private final RuntimeException exception;
+
+    public ThrowingToolchainFactory(RuntimeException exception) {
+      this.exception = exception;
+    }
+
     @Override
     public Optional<NoopToolchain> createToolchain(
         ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-      throw new IllegalArgumentException(MESSAGE);
+      throw exception;
     }
   }
 
-  @Test
-  public void testExceptionMessageIsIncludedInThrownMessage() {
+  public static class ToolchainFactoryThrowingToolchainInstantiationException
+      extends ThrowingToolchainFactory {
+    public ToolchainFactoryThrowingToolchainInstantiationException() {
+      super(new ToolchainInstantiationException(MESSAGE));
+    }
+  }
 
+  public static class ToolchainFactoryThrowingIllegalStateException
+      extends ThrowingToolchainFactory {
+    public ToolchainFactoryThrowingIllegalStateException() {
+      super(new IllegalStateException(MESSAGE));
+    }
+  }
+
+  private <T extends ThrowingToolchainFactory> DefaultToolchainProvider createProvider(
+      Class<T> factoryClass) {
     ToolchainSupplier supplier =
         () ->
             Collections.singleton(
                 ToolchainDescriptor.of(
-                    NoopToolchain.DEFAULT_NAME,
-                    NoopToolchain.class,
-                    ThrowingToolchainFactory.class));
+                    NoopToolchain.DEFAULT_NAME, NoopToolchain.class, factoryClass));
 
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
@@ -84,13 +104,71 @@ public class DefaultToolchainProviderTest {
             new ExecutableFinder(),
             TestRuleKeyConfigurationFactory.create());
 
+    return toolchainProvider;
+  }
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Test
+  public void testExceptionMessageIsIncludedInThrownMessage() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    thrown.expect(ToolchainInstantiationException.class);
+    thrown.expectMessage("something unexpected happened");
+
+    toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
+  }
+
+  @Test
+  public void testTheSameExceptionThrown() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    ToolchainInstantiationException exception = null;
     try {
       toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
       fail("Toolchain creation should fail");
-    } catch (HumanReadableException e) {
-      assertEquals(
-          "Cannot create a toolchain: no-op-toolchain. Cause: something unexpected happened",
-          e.getHumanReadableErrorMessage());
+    } catch (ToolchainInstantiationException e) {
+      exception = e;
     }
+
+    try {
+      toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
+      fail("Toolchain creation should fail");
+    } catch (ToolchainInstantiationException e) {
+      assertSame(exception, e);
+    }
+  }
+
+  @Test
+  public void testRuntimeExceptionMessageIsIncludedInThrownMessage() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingIllegalStateException.class);
+
+    thrown.expect(RuntimeException.class);
+    thrown.expectMessage(
+        "Cannot create a toolchain: no-op-toolchain. " + "Cause: something unexpected happened");
+
+    toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
+  }
+
+  @Test
+  public void testExceptionNotThrownWhenAskingForPresence() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    assertFalse(toolchainProvider.isToolchainPresent(NoopToolchain.DEFAULT_NAME));
+  }
+
+  @Test
+  public void testExceptionNotThrownWhenConditionallyRequestingToolchain() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    assertFalse(
+        toolchainProvider
+            .getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class)
+            .isPresent());
   }
 }

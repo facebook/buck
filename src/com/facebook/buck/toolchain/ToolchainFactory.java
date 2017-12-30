@@ -19,6 +19,8 @@ package com.facebook.buck.toolchain;
 import java.util.Optional;
 
 public interface ToolchainFactory<T extends Toolchain> {
+
+  /** @throws ToolchainInstantiationException when a toolchain cannot be created */
   Optional<T> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context);
 }
