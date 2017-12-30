@@ -34,6 +34,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -163,7 +164,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ ImmutableMap.of(),
+            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -321,7 +322,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ ImmutableMap.of(),
+            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -450,7 +451,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ ImmutableMap.of(),
+            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -520,7 +521,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ ImmutableMap.of(),
+            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -619,7 +620,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ ImmutableMap.of(),
+            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),

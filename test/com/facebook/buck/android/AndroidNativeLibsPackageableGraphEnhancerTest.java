@@ -25,6 +25,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxLibrary;
@@ -92,9 +93,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            ImmutableMap.of(),
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
@@ -170,9 +171,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            nativePlatforms,
             ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            NdkCxxPlatformsProvider.of(nativePlatforms),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
@@ -242,9 +243,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            ImmutableMap.of(),
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
@@ -287,9 +288,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            ImmutableMap.of(),
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
@@ -370,9 +371,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            nativePlatforms,
             ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            NdkCxxPlatformsProvider.of(nativePlatforms),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),

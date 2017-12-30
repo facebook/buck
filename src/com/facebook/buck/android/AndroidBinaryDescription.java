@@ -332,7 +332,7 @@ public class AndroidBinaryDescription
               Optional.empty(),
               args.isTrimResourceIds(),
               args.getKeepResourcePattern(),
-              ndkCxxPlatformsProvider.getNdkCxxPlatforms(),
+              ndkCxxPlatformsProvider,
               Optional.of(args.getNativeLibraryMergeMap()),
               args.getNativeLibraryMergeGlue(),
               args.getNativeLibraryMergeCodeGenerator(),

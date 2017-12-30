@@ -203,7 +203,7 @@ public class AndroidInstrumentationApkDescription
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            ndkCxxPlatformsProvider.getNdkCxxPlatforms(),
+            ndkCxxPlatformsProvider,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),

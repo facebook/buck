@@ -27,7 +27,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -164,7 +164,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Integer> xzCompressionLevel,
       boolean trimResourceIds,
       Optional<String> keepResourcePattern,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      NdkCxxPlatformsProvider ndkCxxPlatformsProvider,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
@@ -213,9 +213,9 @@ public class AndroidBinaryGraphEnhancer {
             originalBuildTarget,
             projectFilesystem,
             originalParams,
-            nativePlatforms,
             cpuFilters,
             cxxBuckConfig,
+            ndkCxxPlatformsProvider,
             nativeLibraryMergeMap,
             nativeLibraryMergeGlue,
             nativeLibraryMergeLocalizedSymbols,
