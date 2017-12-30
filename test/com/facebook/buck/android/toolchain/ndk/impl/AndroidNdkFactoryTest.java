@@ -16,23 +16,20 @@
 
 package com.facebook.buck.android.toolchain.ndk.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.DefaultAndroidLegacyToolchain;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -52,32 +49,44 @@ public class AndroidNdkFactoryTest {
 
   @Test
   public void testAndroidNdkNotPresentWhenNdkRootNotPresent() throws Exception {
-    AndroidNdkFactory factory = new AndroidNdkFactory();
 
-    FakeAndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-
-    ToolchainProvider toolchainProvider =
-        new ToolchainProviderBuilder()
-            .withToolchain(
-                AndroidLegacyToolchain.DEFAULT_NAME,
-                new DefaultAndroidLegacyToolchain(
-                    () ->
-                        AndroidPlatformTarget.getDefaultPlatformTarget(
-                            androidDirectoryResolver, Optional.empty(), Optional.empty()),
-                    androidDirectoryResolver))
-            .build();
+    DefaultToolchainProvider defaultToolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            ImmutableMap.of(),
+            FakeBuckConfig.builder().build(),
+            projectFilesystem,
+            new DefaultProcessExecutor(new TestConsole()),
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create());
 
     Optional<AndroidNdk> androidNdk =
-        factory.createToolchain(
-            toolchainProvider,
-            ToolchainCreationContext.of(
-                ImmutableMap.of(),
-                FakeBuckConfig.builder().build(),
-                projectFilesystem,
-                new DefaultProcessExecutor(new TestConsole()),
-                new ExecutableFinder(),
-                TestRuleKeyConfigurationFactory.create()));
+        defaultToolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
 
     assertFalse(androidNdk.isPresent());
+  }
+
+  @Test
+  public void testAndroidNdkFailureMessage() throws Exception {
+
+    DefaultToolchainProvider defaultToolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            ImmutableMap.of(),
+            FakeBuckConfig.builder().build(),
+            projectFilesystem,
+            new DefaultProcessExecutor(new TestConsole()),
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create());
+
+    try {
+      defaultToolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+    } catch (ToolchainInstantiationException e) {
+      assertEquals(
+          "Android NDK could not be found. Make sure to set one of these  environment "
+              + "variables: ANDROID_NDK_REPOSITORY, ANDROID_NDK, or NDK_HOME or ndk.ndk_path or "
+              + "ndk.ndk_repository_path in your .buckconfig",
+          e.getHumanReadableErrorMessage());
+    }
   }
 }

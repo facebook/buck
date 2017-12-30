@@ -22,8 +22,11 @@ import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
@@ -38,8 +41,12 @@ public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
     AndroidDirectoryResolver androidDirectoryResolver =
         androidLegacyToolchain.getAndroidDirectoryResolver();
 
-    if (!androidDirectoryResolver.getNdkOrAbsent().isPresent()) {
-      return Optional.empty();
+    Path ndkRoot;
+
+    try {
+      ndkRoot = androidDirectoryResolver.getNdkOrThrow();
+    } catch (HumanReadableException e) {
+      throw new ToolchainInstantiationException(e, e.getHumanReadableErrorMessage());
     }
 
     AndroidBuckConfig androidBuckConfig =
@@ -48,7 +55,7 @@ public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
     return Optional.of(
         AndroidNdk.of(
             detectNdkVersion(androidBuckConfig, androidDirectoryResolver),
-            androidDirectoryResolver.getNdkOrThrow(),
+            ndkRoot,
             context.getExecutableFinder()));
   }
 
@@ -60,7 +67,7 @@ public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
             .map(Optional::of)
             .orElseGet(androidDirectoryResolver::getNdkVersion);
     if (!ndkVersion.isPresent()) {
-      throw new IllegalStateException("Cannot detect NDK version");
+      throw new ToolchainInstantiationException("Cannot detect NDK version");
     }
     return ndkVersion.get();
   }
