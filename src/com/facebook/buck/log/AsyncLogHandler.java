@@ -141,7 +141,9 @@ public class AsyncLogHandler extends Handler {
     logViaDelegate(
         Level.INFO,
         String.format(
-            "Finishing shutting down AsyncLogHandler. Reverting to synchronous log Handler for all future requests.",
+            "Finishing shutting down AsyncLogHandler. "
+                + "Reverting to synchronous log Handler for all future requests. "
+                + "Remaining elements: %d.",
             remainingElements.size()));
   }
 
