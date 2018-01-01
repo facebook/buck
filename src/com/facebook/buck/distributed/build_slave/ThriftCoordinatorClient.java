@@ -106,7 +106,7 @@ public class ThriftCoordinatorClient implements Closeable {
 
     try {
       GetWorkResponse work = checkedClient.getWork(request);
-      LOG.info(String.format("Finished sending GetWorkRequest.", minionId));
+      LOG.info(String.format("Finished sending GetWorkRequest. MinionId: %s.", minionId));
       return work;
     } catch (TException ex) {
       throw handleTException(ex, "GetWorkRequest");
