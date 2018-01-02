@@ -28,7 +28,6 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
@@ -594,7 +593,7 @@ public class DistBuildSlaveEventBusListenerTest {
     slaveStatsTracker.setElapsedTimeMillis(
         SlaveEvents.ACTION_GRAPH_CREATION_TIME, ACTION_GRAPH_CREATION_TIME_MS);
 
-    listener.publishBuildSlaveFinishedEvent(eventBus, FakeBuckConfig.builder().build(), EXIT_CODE);
+    listener.publishBuildSlaveFinishedEvent(EXIT_CODE);
     listener.close();
     verify(distBuildServiceMock);
     Assert.assertEquals(expectedFinishedStats, capturedStats.getValue());

@@ -16,13 +16,11 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
-import com.facebook.buck.distributed.build_slave.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
@@ -31,7 +29,6 @@ import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
@@ -356,11 +353,9 @@ public class DistBuildSlaveEventBusListener
     }
   }
 
-  public void publishBuildSlaveFinishedEvent(
-      BuckEventBus eventBus, BuckConfig remoteBuckConfig, int exitCode) {
+  public void publishBuildSlaveFinishedEvent(int exitCode) {
     this.exitCode = Optional.of(exitCode);
     BuildSlaveFinishedStats finishedStats = createBuildSlaveFinishedStats();
-    eventBus.post(new BuildSlaveFinishedStatusEvent(finishedStats, remoteBuckConfig));
     networkScheduler.schedule(
         () -> sendFinishedStatsToFrontend(finishedStats), 0, TimeUnit.SECONDS);
   }

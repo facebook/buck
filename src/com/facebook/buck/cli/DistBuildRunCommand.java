@@ -214,8 +214,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
           if (slaveEventListener != null) {
             slaveEventListener.sendFinalServerUpdates();
-            slaveEventListener.publishBuildSlaveFinishedEvent(
-                params.getBuckEventBus(), state.getRootCell().getBuckConfig(), returnCode);
+            slaveEventListener.publishBuildSlaveFinishedEvent(returnCode);
           }
 
           if (returnCode == 0) {
