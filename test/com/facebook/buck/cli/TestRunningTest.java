@@ -371,9 +371,12 @@ public class TestRunningTest {
     NodeList testList = testsEl.getElementsByTagName("test");
     assertEquals(testList.getLength(), 1);
 
+    // Check the target has been set
+    Element testEl = (Element) testList.item(0);
+    assertEquals(testEl.getAttribute("target"), "//foo/bar:baz");
+
     // Check for exactly three <testresult> tags.
     // There should be two failures and one success.
-    Element testEl = (Element) testList.item(0);
     NodeList resultsList = testEl.getElementsByTagName("testresult");
     assertEquals(resultsList.getLength(), 3);
 
