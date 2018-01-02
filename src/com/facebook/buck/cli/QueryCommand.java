@@ -16,6 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import static java.util.stream.Collectors.toList;
+
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.PerBuildState;
@@ -35,19 +39,27 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.args4j.Argument;
@@ -77,6 +89,25 @@ public class QueryCommand extends AbstractCommand {
   @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
+  /** Output format. */
+  public enum OutputFormat {
+    LABEL,
+    /** Rank by the length of the shortest path from a root node. */
+    MINRANK,
+    /** Rank by the length of the longest path from a root node. */
+    MAXRANK,
+  }
+
+  @Option(
+    name = "--output",
+    usage =
+        "Output format (default: label). "
+            + "minrank/maxrank: Sort the output in rank order and output the ranks "
+            + "according to the length of the shortest or longest path from a root node, "
+            + "respectively. This does not apply to --dot or --json."
+  )
+  private OutputFormat outputFormat = OutputFormat.LABEL;
+
   @Option(
     name = "--output-attributes",
     usage =
@@ -98,6 +129,10 @@ public class QueryCommand extends AbstractCommand {
 
   public boolean shouldGenerateBFSOutput() {
     return generateBFSOutput;
+  }
+
+  public OutputFormat getOutputFormat() {
+    return outputFormat;
   }
 
   public boolean shouldOutputAttributes() {
@@ -252,6 +287,9 @@ public class QueryCommand extends AbstractCommand {
       printDotOutput(params, env, queryResult);
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
+    } else if (getOutputFormat() == OutputFormat.MINRANK
+        || getOutputFormat() == OutputFormat.MAXRANK) {
+      printRankOutput(params, env, queryResult, getOutputFormat());
     } else {
       CommandHelper.printToConsole(params, queryResult);
     }
@@ -269,6 +307,77 @@ public class QueryCommand extends AbstractCommand {
         .setBfsSorted(shouldGenerateBFSOutput())
         .build()
         .writeOutput(params.getConsole().getStdOut());
+  }
+
+  private void printRankOutput(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      OutputFormat outputFormat)
+      throws QueryException {
+    Map<TargetNode<?, ?>, Integer> ranks =
+        computeRanks(
+            env.getTargetGraph(),
+            env.getNodesFromQueryTargets(queryResult)::contains,
+            outputFormat);
+
+    // Also sort by name to ensure output is deterministic
+    List<Map.Entry<TargetNode<?, ?>, Integer>> entries =
+        ranks
+            .entrySet()
+            .stream()
+            .sorted(
+                Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getValue)
+                    .thenComparing(
+                        Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getKey)))
+            .collect(toList());
+
+    PrintStream stdOut = params.getConsole().getStdOut();
+    for (Map.Entry<TargetNode<?, ?>, Integer> entry : entries) {
+      int rank = entry.getValue();
+      String name =
+          entry.getKey().getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
+      stdOut.println(rank + " " + name);
+    }
+  }
+
+  private Map<TargetNode<?, ?>, Integer> computeRanks(
+      DirectedAcyclicGraph<TargetNode<?, ?>> graph,
+      Predicate<TargetNode<?, ?>> shouldContainNode,
+      OutputFormat outputFormat) {
+    Map<TargetNode<?, ?>, Integer> ranks = new HashMap<>();
+    for (TargetNode<?, ?> root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
+      ranks.put(root, 0);
+      new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(root) {
+
+        @Override
+        public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+          if (!shouldContainNode.test(node)) {
+            return ImmutableSet.<TargetNode<?, ?>>of();
+          }
+
+          int nodeRank = Preconditions.checkNotNull(ranks.get(node));
+          ImmutableSortedSet<TargetNode<?, ?>> sinks =
+              ImmutableSortedSet.copyOf(
+                  Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
+          for (TargetNode<?, ?> sink : sinks) {
+            if (!ranks.containsKey(sink)) {
+              ranks.put(sink, nodeRank + 1);
+            } else {
+              // min rank is the length of the shortest path from a root node
+              // max rank is the length of the longest path from a root node
+              ranks.put(
+                  sink,
+                  outputFormat == OutputFormat.MINRANK
+                      ? Math.min(ranks.get(sink), nodeRank + 1)
+                      : Math.max(ranks.get(sink), nodeRank + 1));
+            }
+          }
+          return sinks;
+        }
+      }.start();
+    }
+    return ranks;
   }
 
   private void collectAndPrintAttributes(

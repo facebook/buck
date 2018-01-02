@@ -9,6 +9,7 @@ digraph result_graph {
   "//example:six" [style=filled,color="#D6D3F5"];
   "//example:three" -> "//example:five";
   "//example:three" -> "//example:four";
+  "//example:three" -> "//example:six";
   "//example:three" [style=filled,color="#D6D3F5"];
   "//example:two" -> "//example:four";
   "//example:two" [style=filled,color="#D6D3F5"];

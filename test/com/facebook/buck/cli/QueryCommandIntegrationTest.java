@@ -624,6 +624,26 @@ public class QueryCommandIntegrationTest {
         is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-bfs-deps-one.dot"))));
   }
 
+  @Test
+  public void testRankOutputForDeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("query", "--output", "minrank", "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-minrank-deps-one"))));
+
+    result = workspace.runBuckCommand("query", "--output", "maxrank", "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-maxrank-deps-one"))));
+  }
+
   class ParserProfileFinder extends SimpleFileVisitor<Path> {
     private Path profilerPath = null;
 

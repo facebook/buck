@@ -8,7 +8,8 @@
   "//example:three" : {
     "deps" : [
       ":five",
-      ":four"
+      ":four",
+      ":six"
     ]
   },
   "//example:two" : {
