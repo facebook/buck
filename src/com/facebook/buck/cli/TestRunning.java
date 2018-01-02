@@ -598,6 +598,7 @@ public class TestRunning {
           testEl.setAttribute("name", testCase.getTestCaseName());
           testEl.setAttribute("status", testCase.isSuccess() ? "PASS" : "FAIL");
           testEl.setAttribute("time", Long.toString(testCase.getTotalTime()));
+          testEl.setAttribute("target", results.getBuildTarget().getFullyQualifiedName());
           testsEl.appendChild(testEl);
 
           // Loop through the test case and add XML data (name, message, and
