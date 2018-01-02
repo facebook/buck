@@ -21,7 +21,9 @@ import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.HumanReadableException;
 import java.util.Optional;
 
 public class AndroidSdkLocationFactory implements ToolchainFactory<AndroidSdkLocation> {
@@ -36,6 +38,10 @@ public class AndroidSdkLocationFactory implements ToolchainFactory<AndroidSdkLoc
     AndroidDirectoryResolver androidDirectoryResolver =
         androidLegacyToolchain.getAndroidDirectoryResolver();
 
-    return androidDirectoryResolver.getSdkOrAbsent().map(AndroidSdkLocation::of);
+    try {
+      return Optional.of(AndroidSdkLocation.of(androidDirectoryResolver.getSdkOrThrow()));
+    } catch (HumanReadableException e) {
+      throw ToolchainInstantiationException.wrap(e);
+    }
   }
 }
