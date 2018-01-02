@@ -76,6 +76,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -863,37 +864,26 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected void showTopSlowBuildRules(ImmutableList.Builder<String> lines) {
+  void showTopSlowBuildRules(ImmutableList.Builder<String> lines) {
     if (numberOfSlowRulesToShow == 0 || buildFinished == null) {
       return;
     }
 
     Comparator<UnflavoredBuildTarget> comparator =
-        new Comparator<UnflavoredBuildTarget>() {
-          @Override
-          public int compare(UnflavoredBuildTarget target1, UnflavoredBuildTarget target2) {
-            Long elapsedTime1 =
-                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target1));
-            Long elapsedTime2 =
-                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target2));
-            long delta = elapsedTime2 - elapsedTime1;
-            if (delta < 0L) {
-              return -1;
-            } else if (delta > 0L) {
-              return 1;
-            } else {
-              return 0;
-            }
-          }
+        (target1, target2) -> {
+          Long elapsedTime1 = Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target1));
+          Long elapsedTime2 = Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target2));
+          long delta = elapsedTime2 - elapsedTime1;
+          return Long.compare(delta, 0L);
         };
 
     ImmutableList.Builder<String> slowRulesLogsBuilder = ImmutableList.builder();
-    slowRulesLogsBuilder.add(String.format(""));
+    slowRulesLogsBuilder.add("");
     synchronized (timeSpentMillisecondsInRules) {
-      if (timeSpentMillisecondsInRules.size() == 0) {
-        slowRulesLogsBuilder.add(String.format("Top slow rules: Buck didn't spend time in rules."));
+      if (timeSpentMillisecondsInRules.isEmpty()) {
+        slowRulesLogsBuilder.add("Top slow rules: Buck didn't spend time in rules.");
       } else {
-        slowRulesLogsBuilder.add(String.format("Top slow rules"));
+        slowRulesLogsBuilder.add("Top slow rules");
         Stream<UnflavoredBuildTarget> keys =
             timeSpentMillisecondsInRules.keySet().stream().sorted(comparator);
         keys.limit(numberOfSlowRulesToShow)
@@ -907,7 +897,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       }
     }
     ImmutableList<String> slowRulesLogs = slowRulesLogsBuilder.build();
-    LOG.info(String.join("\n", slowRulesLogs));
+    LOG.info(slowRulesLogs.stream().collect(Collectors.joining("\n")));
     if (showSlowRulesInConsole) {
       lines.addAll(slowRulesLogs);
     }
