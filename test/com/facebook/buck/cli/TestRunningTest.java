@@ -385,7 +385,6 @@ public class TestRunningTest {
     assertEquals(passResultEl.getAttribute("name"), "passTest");
     assertEquals(passResultEl.getAttribute("time"), "5000");
     assertEquals(passResultEl.getAttribute("status"), "PASS");
-
     checkXmlTextContents(passResultEl, "message", "");
     checkXmlTextContents(passResultEl, "stacktrace", "");
 
