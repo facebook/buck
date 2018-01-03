@@ -40,7 +40,7 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
@@ -89,7 +89,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract String getRemoteCoordinatorAddress();
 
-  public abstract VersionedTargetGraphCache getVersionedTargetGraphCache();
+  public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();
 

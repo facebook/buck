@@ -47,11 +47,13 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -144,7 +146,8 @@ public class CleanCommandTest extends EasyMockSupport {
         new TestConsole(),
         new ByteArrayInputStream("".getBytes("UTF-8")),
         cell,
-        new VersionedTargetGraphCache(),
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker()),
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
         createMock(TypeCoercerFactory.class),
         createMock(Parser.class),

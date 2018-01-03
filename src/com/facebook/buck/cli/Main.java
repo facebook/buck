@@ -30,6 +30,7 @@ import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
+import com.facebook.buck.event.CacheStatsEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
@@ -119,6 +120,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -145,6 +147,7 @@ import com.facebook.buck.util.timing.NanosAdjustedClock;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.annotations.VisibleForTesting;
@@ -1077,6 +1080,10 @@ public final class Main {
           buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
           throw e;
         }
+        buildEventBus.post(
+            new CacheStatsEvent(
+                "versioned_target_graph_cache",
+                parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
 
         // Wait for HTTP writes to complete.
         closeHttpExecutorService(
@@ -1140,7 +1147,7 @@ public final class Main {
 
     public abstract TypeCoercerFactory getTypeCoercerFactory();
 
-    public abstract VersionedTargetGraphCache getVersionedTargetGraphCache();
+    public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
     public abstract ActionGraphCache getActionGraphCache();
 
@@ -1199,7 +1206,8 @@ public final class Main {
           ParserAndCaches.of(
               daemon.getParser(),
               daemon.getTypeCoercerFactory(),
-              daemon.getVersionedTargetGraphCache(),
+              new InstrumentedVersionedTargetGraphCache(
+                  daemon.getVersionedTargetGraphCache(), new CacheStatsTracker()),
               daemon.getActionGraphCache(),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
@@ -1213,7 +1221,8 @@ public final class Main {
                   new ConstructorArgMarshaller(typeCoercerFactory),
                   knownBuildRuleTypesProvider),
               typeCoercerFactory,
-              new VersionedTargetGraphCache(),
+              new InstrumentedVersionedTargetGraphCache(
+                  new VersionedTargetGraphCache(), new CacheStatsTracker()),
               new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }

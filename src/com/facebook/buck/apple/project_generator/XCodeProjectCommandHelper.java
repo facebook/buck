@@ -62,8 +62,8 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -99,7 +99,7 @@ public class XCodeProjectCommandHelper {
   private final BuckEventBus buckEventBus;
   private final Parser parser;
   private final BuckConfig buckConfig;
-  private final VersionedTargetGraphCache versionedTargetGraphCache;
+  private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
   private final ImmutableSet<String> appleCxxFlavors;
@@ -126,7 +126,7 @@ public class XCodeProjectCommandHelper {
       BuckEventBus buckEventBus,
       Parser parser,
       BuckConfig buckConfig,
-      VersionedTargetGraphCache versionedTargetGraphCache,
+      InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       Cell cell,
       RuleKeyConfiguration ruleKeyConfiguration,

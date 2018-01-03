@@ -43,7 +43,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -68,7 +68,7 @@ public abstract class AbstractCommandRunnerParams {
   public abstract Cell getCell();
 
   @Value.Parameter
-  public abstract VersionedTargetGraphCache getVersionedTargetGraphCache();
+  public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
   @Value.Parameter
   public abstract ArtifactCacheFactory getArtifactCacheFactory();

@@ -53,8 +53,8 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -74,7 +74,7 @@ public class IjProjectCommandHelper {
   private final Parser parser;
   private final BuckConfig buckConfig;
   private final ActionGraphCache actionGraphCache;
-  private final VersionedTargetGraphCache versionedTargetGraphCache;
+  private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
   private final RuleKeyConfiguration ruleKeyConfiguration;
@@ -91,7 +91,7 @@ public class IjProjectCommandHelper {
       ListeningExecutorService executor,
       BuckConfig buckConfig,
       ActionGraphCache actionGraphCache,
-      VersionedTargetGraphCache versionedTargetGraphCache,
+      InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       Cell cell,
       RuleKeyConfiguration ruleKeyConfiguration,

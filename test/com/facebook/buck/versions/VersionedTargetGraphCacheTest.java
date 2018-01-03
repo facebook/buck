@@ -16,7 +16,9 @@
 
 package com.facebook.buck.versions;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -34,10 +36,13 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.cache.CacheStats;
+import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -54,17 +59,26 @@ public class VersionedTargetGraphCacheTest {
 
   @Test
   public void testEmpty() throws Exception {
-    VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
+    InstrumentedVersionedTargetGraphCache cache =
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult result =
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
     assertEmpty(result);
+    CacheStats stats = cache.getCacheStats();
+    assertEquals(Optional.of(0L), stats.getHitCount());
+    assertEquals(Optional.of(1L), stats.getMissCount());
+    // verify that the timings are set
+    assertTimingsNotEmpty(stats);
   }
 
   @Test
   public void testHit() throws Exception {
-    VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
+    InstrumentedVersionedTargetGraphCache cache =
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
@@ -74,11 +88,18 @@ public class VersionedTargetGraphCacheTest {
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
     assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
+    CacheStats stats = cache.getCacheStats();
+    assertEquals(Optional.of(1L), stats.getHitCount());
+    assertEquals(Optional.of(1L), stats.getMissCount());
+    // verify that the timings are set
+    assertTimingsNotEmpty(stats);
   }
 
   @Test
   public void testPoolChangeCausesHit() throws Exception {
-    VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
+    InstrumentedVersionedTargetGraphCache cache =
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
@@ -88,11 +109,17 @@ public class VersionedTargetGraphCacheTest {
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), new ForkJoinPool(2));
     assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
+    CacheStats stats = cache.getCacheStats();
+    assertEquals(Optional.of(1L), stats.getHitCount());
+    assertEquals(Optional.of(1L), stats.getMissCount());
+    assertTimingsNotEmpty(stats);
   }
 
   @Test
   public void testGraphChangeCausesMiss() throws Exception {
-    VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
+    InstrumentedVersionedTargetGraphCache cache =
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker());
     TargetGraphAndBuildTargets firstGraph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
@@ -103,11 +130,19 @@ public class VersionedTargetGraphCacheTest {
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), secondGraph, ImmutableMap.of(), POOL);
     assertMismatch(secondResult, firstResult.getTargetGraphAndBuildTargets());
+    CacheStats stats = cache.getCacheStats();
+    assertEquals(Optional.of(0L), stats.getHitCount());
+    assertEquals(Optional.of(1L), stats.getMissCount());
+    assertEquals(Optional.of(1L), stats.getMissMatchCount());
+    // verify that the timings are set
+    assertTimingsNotEmpty(stats);
   }
 
   @Test
   public void testVersionUniverseChangeCausesMiss() throws Exception {
-    VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
+    InstrumentedVersionedTargetGraphCache cache =
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     ImmutableMap<String, VersionUniverse> firstVersionUniverses = ImmutableMap.of();
     VersionedTargetGraphCacheResult firstResult =
@@ -120,6 +155,41 @@ public class VersionedTargetGraphCacheTest {
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, secondVersionUniverses, POOL);
     assertMismatch(secondResult, firstResult.getTargetGraphAndBuildTargets());
+    CacheStats stats = cache.getCacheStats();
+    assertEquals(Optional.of(0L), stats.getHitCount());
+    assertEquals(Optional.of(1L), stats.getMissCount());
+    assertEquals(Optional.of(1L), stats.getMissMatchCount());
+    // verify that the timings are set
+    assertTimingsNotEmpty(stats);
+  }
+
+  @Test
+  public void testDifferentInstrumentedCacheDoesNotInterfere() throws Exception {
+    VersionedTargetGraphCache baseCache = new VersionedTargetGraphCache();
+    InstrumentedVersionedTargetGraphCache cache1 =
+        new InstrumentedVersionedTargetGraphCache(baseCache, new CacheStatsTracker());
+    TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
+    VersionedTargetGraphCacheResult firstResult =
+        cache1.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
+
+    CacheStats stats = cache1.getCacheStats();
+    assertEquals(Optional.of(0L), stats.getHitCount());
+    assertEquals(Optional.of(1L), stats.getMissCount());
+    // verify that the timings are set
+    assertTimingsNotEmpty(stats);
+
+    InstrumentedVersionedTargetGraphCache cache2 =
+        new InstrumentedVersionedTargetGraphCache(baseCache, new CacheStatsTracker());
+    VersionedTargetGraphCacheResult secondResult =
+        cache2.getVersionedTargetGraph(
+            BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
+    assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
+    stats = cache2.getCacheStats();
+    assertEquals(Optional.of(1L), stats.getHitCount());
+    assertEquals(Optional.of(0L), stats.getMissCount());
+    // verify that the timings are set
+    assertTimingsNotEmpty(stats);
   }
 
   private TargetGraphAndBuildTargets createSimpleGraph(String basePath) {
@@ -166,5 +236,12 @@ public class VersionedTargetGraphCacheTest {
       VersionedTargetGraphCacheResult result, TargetGraphAndBuildTargets previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.MISMATCH));
     assertThat(result.getTargetGraphAndBuildTargets(), Matchers.not(Matchers.is(previousGraph)));
+  }
+
+  private void assertTimingsNotEmpty(CacheStats stats) {
+    // verify that the timings are set
+    assertTrue(stats.getTotalLoadTime().isPresent());
+    assertTrue(stats.getRetrievalTime().isPresent());
+    assertTrue(stats.getTotalMissTime().isPresent());
   }
 }
