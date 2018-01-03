@@ -315,7 +315,6 @@ public class AppleDescriptions {
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ApplePlatform applePlatform,
@@ -392,16 +391,11 @@ public class AppleDescriptions {
       applePlatform = ApplePlatform.WATCHOS;
       targetSDKVersion = "1.0";
     }
-    BuildRuleParams assetParams =
-        params
-            .withoutExtraDeps()
-            .withDeclaredDeps(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(assetCatalogDirs)));
     return Optional.of(
         new AppleAssetCatalog(
             assetCatalogBuildTarget,
             projectFilesystem,
-            assetParams,
+            ruleFinder,
             applePlatform.getName(),
             targetSDKVersion,
             actool,
@@ -649,7 +643,6 @@ public class AppleDescriptions {
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            params,
             sourcePathResolver,
             ruleFinder,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
