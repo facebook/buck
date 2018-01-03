@@ -115,7 +115,7 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
    * "//third_party/java/guava:guava-latest".
    */
   @Value.Auxiliary
-  @Value.Derived
+  @Value.Lazy
   public String getFullyQualifiedName() {
     return getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
   }
