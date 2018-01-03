@@ -101,6 +101,10 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         preprocessorFlags);
   }
 
+  /**
+   * Returns transitive preprocessor inputs excluding those from the swift delegate of the given
+   * CxxLibrary.
+   */
   public static ImmutableSet<CxxPreprocessorInput> getPreprocessorInputsForAppleLibrary(
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
     CxxLibrary lib = (CxxLibrary) resolver.requireRule(target.withFlavors());
@@ -109,7 +113,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
     builder.addAll(transitiveMap.values());
-    builder.add(lib.getPublicCxxPreprocessorInput(platform));
+    builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform));
 
     return builder.build();
   }
