@@ -1,5 +1,5 @@
 {"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/external/replace-file-prefix.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/external/replace-file-prefix#_files_.jslib"}
-library-files --root @
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/external/replace-file-prefix#_files_.jslib","sourceFilePaths":["@/buck-out/gen/external/replace-file-prefix#file-mango.js-3dcb03e658.jsfile","@/buck-out/gen/external/replace-file-prefix#file-papaya.js-e28b64c76c.jsfile"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/external/replace-file-prefix#file-mango.js-3dcb03e658.jsfile","sourceJsFilePath":"@/external/tropical-fruit/mango.js","sourceJsFileName":"js/node_modules/tropical-fruit/mango.js"}
 var mango;
 {"command":"transform","outputFilePath":"@/buck-out/gen/external/replace-file-prefix#file-papaya.js-e28b64c76c.jsfile","sourceJsFilePath":"@/external/tropical-fruit/papaya.js","sourceJsFileName":"js/node_modules/tropical-fruit/papaya.js"}

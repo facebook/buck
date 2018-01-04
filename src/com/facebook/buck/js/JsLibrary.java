@@ -134,14 +134,26 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           getSourcePathToOutput(),
           getProjectFilesystem(),
           worker,
-          (resolver, outputPath) ->
-              String.format(
-                  "library-files %s %s --root %s --out %s %s",
-                  JsFlavors.OPTIMIZATION_DOMAIN.getValue(getBuildTarget().getFlavors()).orElse(""),
-                  JsFlavors.PLATFORM_DOMAIN.getValue(getBuildTarget().getFlavors()).orElse(""),
-                  getProjectFilesystem().getRootPath(),
-                  outputPath,
-                  JsUtil.resolveMapJoin(sources, resolver, Path::toString)));
+          this::getJobArgs);
+    }
+
+    private String getJobArgs(SourcePathResolver resolver, Path outputPath) {
+      ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
+
+      return JsonBuilder.object()
+          .addString("command", "library-files")
+          .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
+          .addString("rootPath", getProjectFilesystem().getRootPath().toString())
+          .addString("platform", JsUtil.getPlatformString(flavors))
+          .addString("outputFilePath", outputPath.toString())
+          .addArray(
+              "sourceFilePaths",
+              sources
+                  .stream()
+                  .map(resolver::getAbsolutePath)
+                  .map(Path::toString)
+                  .collect(JsonBuilder.toArrayOfStrings()))
+          .toString();
     }
 
     @Override

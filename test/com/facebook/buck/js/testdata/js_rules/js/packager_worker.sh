@@ -103,6 +103,11 @@ run_command() {
       outfile=$(echo "$2" | sed -n 's/.*"outputPath":"\([^"]*\)".*/\1/p')
     fi
 
+    if [[ "$command" == "library-files" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"sourceFilePaths":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
+      outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
+    fi
+
     if [[ "$command" == "transform" ]]; then
       infiles=$(echo "$2" | sed -n 's/.*"sourceJsFilePath":"\([^"]*\)".*/\1/p')
       outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')

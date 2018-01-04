@@ -1,4 +1,4 @@
 {"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/replace-build-target-prefix.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/replace-build-target-prefix#_files_.jslib"}
-library-files --root @
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/replace-build-target-prefix#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/replace-build-target-prefix#file-exported.js-77574553c3.jsfile"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/replace-build-target-prefix#file-exported.js-77574553c3.jsfile","sourceJsFilePath":"@/buck-out/gen/external/exported.js/exported.js","sourceJsFileName":"js/node_modules/exported.js"}
 var exported;

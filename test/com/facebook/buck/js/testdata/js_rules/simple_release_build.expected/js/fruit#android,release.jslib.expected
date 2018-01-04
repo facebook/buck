@@ -1,5 +1,5 @@
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib"}
-library-files --release --platform android --root @
+{"command":"library-files","release":true,"rootPath":"@","platform":"android","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit#_files_,android,file-apple.js-9635e8d52e,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-banana.js-b5d5d641eb,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-pear.js-b84041fd03,release.jsfile"]}
 optimize --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js"}
 var apple;

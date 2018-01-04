@@ -1,6 +1,6 @@
 {"assetsDirPath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#_js_,android,release/res","bundlePath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#_js_,android,release/js/fruit-salad-in-a-bundle.js","command":"bundle","entryPoints":["fruit-salad"],"libraryGroups":[],"libraries":["@/buck-out/gen/js/extras#android,release.jslib","@/buck-out/gen/js/fruit#android,release.jslib","@/buck-out/gen/js/fruit-salad#android,release.jslib"],"platform":"android","release":true,"rootPath":"@","sourceMapPath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#_js_,android,release/map/fruit-salad-in-a-bundle.js.map","miscDirPath":"@/buck-out/gen/js/fruit-salad-in-a-bundle#_js_,android,release/misc"}
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/extras#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,android,release.jslib"}
-library-files --release --platform android --root @
+{"command":"library-files","release":true,"rootPath":"@","platform":"android","outputFilePath":"@/buck-out/gen/js/extras#_files_,android,release.jslib","sourceFilePaths":["@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-51c2bd5932,release.jsfile","@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-c8b0447e06,release.jsfile"]}
 optimize --arbitrary extra --flags --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var choclateChips;
@@ -8,7 +8,7 @@ optimize --arbitrary extra --flags --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var yoghurt;
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib"}
-library-files --release --platform android --root @
+{"command":"library-files","release":true,"rootPath":"@","platform":"android","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit#_files_,android,file-apple.js-9635e8d52e,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-banana.js-b5d5d641eb,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-pear.js-b84041fd03,release.jsfile"]}
 optimize --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js"}
 var apple;
@@ -20,7 +20,7 @@ optimize --platform android
 var pear;
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit-salad#android,release.jslib","dependencyLibraryFilePaths":["@/buck-out/gen/js/extras#android,release.jslib","@/buck-out/gen/js/fruit#android,release.jslib"],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit-salad#_files_,android,release.jslib"}
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/extras#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_,android,release.jslib"}
-library-files --release --platform android --root @
+{"command":"library-files","release":true,"rootPath":"@","platform":"android","outputFilePath":"@/buck-out/gen/js/extras#_files_,android,release.jslib","sourceFilePaths":["@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-51c2bd5932,release.jsfile","@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-c8b0447e06,release.jsfile"]}
 optimize --arbitrary extra --flags --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var choclateChips;
@@ -28,7 +28,7 @@ optimize --arbitrary extra --flags --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags"}
 var yoghurt;
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib"}
-library-files --release --platform android --root @
+{"command":"library-files","release":true,"rootPath":"@","platform":"android","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit#_files_,android,file-apple.js-9635e8d52e,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-banana.js-b5d5d641eb,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-pear.js-b84041fd03,release.jsfile"]}
 optimize --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js"}
 var apple;
@@ -38,7 +38,7 @@ var banana;
 optimize --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","sourceJsFilePath":"@/js/pear.js","sourceJsFileName":"js/pear.js"}
 var pear;
-library-files --release --platform android --root @
+{"command":"library-files","release":true,"rootPath":"@","platform":"android","outputFilePath":"@/buck-out/gen/js/fruit-salad#_files_,android,release.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit-salad#_files_,android,file-fruit-salad.js-a73876fda0,release.jsfile"]}
 optimize --platform android
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-a73876fda0.jsfile","sourceJsFilePath":"@/js/fruit-salad.js","sourceJsFileName":"js/fruit-salad.js"}
 var fruitSalad;

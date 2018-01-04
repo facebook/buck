@@ -1,14 +1,14 @@
 {"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/lib-with-deps-query.jslib","dependencyLibraryFilePaths":["@/buck-out/gen/js/build-target-output.jslib","@/buck-out/gen/js/native-js/photo-album-js.jslib","@/buck-out/gen/js/native-js/text-widget-js.jslib"],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/lib-with-deps-query#_files_.jslib"}
 {"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/build-target-output.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/build-target-output#_files_.jslib"}
-library-files --root @
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/build-target-output#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/build-target-output#file-exported.js-77574553c3.jsfile"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/build-target-output#file-exported.js-77574553c3.jsfile","sourceJsFilePath":"@/buck-out/gen/external/exported.js/exported.js","sourceJsFileName":"buck-out/gen/external/exported.js/exported.js"}
 var exported;
 {"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/native-js/photo-album-js.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/native-js/photo-album-js#_files_.jslib"}
-library-files --root @
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/native-js/photo-album-js#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/native-js/photo-album-js#file-photo-album.js-0828d15d2c.jsfile"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/native-js/photo-album-js#file-photo-album.js-0828d15d2c.jsfile","sourceJsFilePath":"@/js/native-js/photo-album.js","sourceJsFileName":"js/native-js/photo-album.js"}
 var photoAlbum;
 {"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/native-js/text-widget-js.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/native-js/text-widget-js#_files_.jslib"}
-library-files --root @
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/native-js/text-widget-js#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/native-js/text-widget-js#file-text-widget.js-03b927d553.jsfile"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/native-js/text-widget-js#file-text-widget.js-03b927d553.jsfile","sourceJsFilePath":"@/js/native-js/text-widget.js","sourceJsFileName":"js/native-js/text-widget.js"}
 var textWidget;
-library-files --root @
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/lib-with-deps-query#_files_.jslib","sourceFilePaths":[]}
