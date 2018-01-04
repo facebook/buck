@@ -16,7 +16,7 @@
   the filename of the header file. If a dictionary is specified, each header can be imported
   with <code>#import "$HEADER_NAME"</code>, where <code>$HEADER_NAME</code> is the key
   corresponding to this file. In this case, the <code>header_path_prefix</code> attribute is
-  ignored.  In either case, quotes in the import statements can be replaced with angle brackets.
+  ignored. In either case, quotes in the import statements can be replaced with angle brackets.
   {/param}
 {/call}
 {/template}
@@ -50,9 +50,22 @@
   {param name : 'header_path_prefix' /}
   {param default : 'name' /}
   {param desc}
-  A path prefix when including headers of this target. Defaults to the short name of the target. Can
-  contain forward slashes (<code>/</code>), but cannot start with one. See <code>headers</code> for
-  more information.
+  A path prefix when including headers of this target. For example, headers from a library defined
+  using
+  {literal}<pre class="prettyprint lang-py">
+apple_library(
+    name = "Library",
+    headers = glob(["**/*.h"]),
+    header_path_prefix = "Lib",
+)
+</pre>{/literal}
+  can be imported using following mapping
+  {literal}<pre>
+Library/SubDir/Header1.h -> Lib/Header1.h
+Library/Header2.h -> Lib/Header2.h
+  </pre>{/literal}
+  Defaults to the short name of the target. Can contain forward slashes (<code>/</code>), but
+  cannot start with one. See <code>headers</code> for more information.
   {/param}
 {/call}
 {/template}
