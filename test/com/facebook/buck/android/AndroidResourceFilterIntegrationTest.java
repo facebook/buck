@@ -244,6 +244,11 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
+  public void testPostFilterResourcesAndBanDuplicates() throws IOException {
+    workspace.runBuckBuild("//apps/sample:app_post_filter_no_dups").assertSuccess();
+  }
+
+  @Test
   public void testApkWithStringsAsAssets() throws IOException {
     String target = "//apps/sample:app_comp_str";
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);

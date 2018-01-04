@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.io;
 
-@SuppressWarnings("serial")
 public class WatchmanWatcherException extends RuntimeException {
   public WatchmanWatcherException(String message) {
     super(message);

@@ -18,10 +18,11 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
+import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
@@ -36,12 +37,14 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   private static final String MINION_ID = "super cool minion";
   private static final int MAX_WORK_UNITS_TO_FETCH = 10;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
 
   @Test
   public void testMakingSimpleRequest() throws IOException {
     try (ThriftCoordinatorServer server =
-            createServerOnRandomPort(BuildTargetsQueueFactory.newEmptyQueue());
-        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
+            createServerOnRandomPort(BuildTargetsQueue.newEmptyQueue());
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
       GetWorkResponse response =
@@ -66,7 +69,8 @@ public class ThriftCoordinatorServerIntegrationTest {
 
     try (ThriftCoordinatorServer server =
             createCoordinatorServer(OptionalInt.empty(), diamondQueue, eventListener);
-        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
 
@@ -80,7 +84,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.LEAF_TARGET),
+              ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseTwo.getWorkUnitsSize(), 2);
@@ -91,7 +95,8 @@ public class ThriftCoordinatorServerIntegrationTest {
               MINION_ID,
               0,
               ImmutableList.of(
-                  BuildTargetsQueueTest.LEFT_TARGET, BuildTargetsQueueTest.RIGHT_TARGET),
+                  CustomBuildRuleResolverFactory.LEFT_TARGET,
+                  CustomBuildRuleResolverFactory.RIGHT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseThree.getWorkUnitsSize(), 1);
@@ -101,7 +106,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET),
+              ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFour.getWorkUnitsSize(), 0);
@@ -112,7 +117,7 @@ public class ThriftCoordinatorServerIntegrationTest {
           client.getWork(
               MINION_ID,
               0,
-              ImmutableList.of(BuildTargetsQueueTest.ROOT_TARGET),
+              ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFive.getWorkUnitsSize(), 0);
@@ -158,9 +163,9 @@ public class ThriftCoordinatorServerIntegrationTest {
     StampedeId wrongStampedeId = new StampedeId().setId("not-" + STAMPEDE_ID.id);
 
     try (ThriftCoordinatorServer server =
-            createCoordinatorServer(OptionalInt.empty(), BuildTargetsQueueFactory.newEmptyQueue());
+            createCoordinatorServer(OptionalInt.empty(), BuildTargetsQueue.newEmptyQueue());
         ThriftCoordinatorClient client =
-            new ThriftCoordinatorClient("localhost", wrongStampedeId)) {
+            new ThriftCoordinatorClient("localhost", wrongStampedeId, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
       try {
@@ -191,7 +196,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 new NoOpBuildRuleFinishedPublisher(),
                 EasyMock.createNiceMock(MinionHealthTracker.class),
                 EasyMock.createNiceMock(DistBuildService.class));
-        ThriftCoordinatorClient client = new ThriftCoordinatorClient("localhost", STAMPEDE_ID)) {
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
       client.start(server.getPort());
       queueFuture.setException(new RuntimeException());

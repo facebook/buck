@@ -18,11 +18,12 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest.FakeBuildExecutorImpl;
+import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -40,6 +41,7 @@ import org.junit.rules.TemporaryFolder;
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 8;
   private static final DistBuildService MOCK_SERVICE =
@@ -87,13 +89,15 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             MAX_PARALLEL_WORK_UNITS,
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
             POLL_LOOP_INTERVAL_MILLIS,
-            new NoOpUnexpectedSlaveCacheMissTracker());
+            new NoOpUnexpectedSlaveCacheMissTracker(),
+            CONNECTION_TIMEOUT_MILLIS);
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
     int exitCode = jointRunner.runAndReturnExitCode(heartbeatService);
     Assert.assertEquals(0, exitCode);
     Assert.assertEquals(4, localBuilder.getBuildTargets().size());
-    Assert.assertEquals(BuildTargetsQueueTest.ROOT_TARGET, localBuilder.getBuildTargets().get(3));
+    Assert.assertEquals(
+        CustomBuildRuleResolverFactory.ROOT_TARGET, localBuilder.getBuildTargets().get(3));
 
     Path buildTracePath = logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME);
     Assert.assertTrue(buildTracePath.toFile().exists());

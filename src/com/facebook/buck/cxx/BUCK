@@ -1,14 +1,17 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
-java_immutables_library(
+java_library_with_plugins(
     name = "rules",
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/android/packageable:packageable",
+        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
+        "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
     ],
@@ -22,8 +25,6 @@ java_immutables_library(
         "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/elf:elf",
-        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
-        "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/cxx/toolchain/objectfile:objectfile",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -54,7 +55,6 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/sandbox:sandbox",
-        "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",

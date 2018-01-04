@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -101,6 +102,7 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ImmutableSortedSet::of,
+                    TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
                     ImmutableMap.of(),
@@ -119,6 +121,7 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ImmutableSortedSet::of,
+                    TestCellPathResolver.get(projectFilesystem),
                     new GnuLinker(
                         new HashedFileTool(
                             PathSourcePath.of(projectFilesystem, Paths.get("different")))),
@@ -140,6 +143,7 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ImmutableSortedSet::of,
+                    TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     Paths.get("different"),
                     ImmutableMap.of(),
@@ -159,6 +163,7 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ImmutableSortedSet::of,
+                    TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
                     ImmutableMap.of(),
@@ -217,6 +222,7 @@ public class CxxLinkTest {
                 target,
                 projectFilesystem,
                 ImmutableSortedSet::of,
+                TestCellPathResolver.get(projectFilesystem),
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 ImmutableMap.of(),
@@ -238,6 +244,7 @@ public class CxxLinkTest {
                 target,
                 projectFilesystem,
                 ImmutableSortedSet::of,
+                TestCellPathResolver.get(projectFilesystem),
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
                 ImmutableMap.of(),

@@ -18,12 +18,12 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
@@ -34,16 +34,15 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -109,7 +108,8 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
     return new CommandAlias(
         buildTarget,
         projectFilesystem,
-        params.withExtraDeps(ImmutableSortedSet.copyOf(commandTool.getDeps(ruleFinder))),
+        params.withExtraDeps(
+            ImmutableSortedSet.copyOf(BuildableSupport.getDepsCollection(commandTool, ruleFinder))),
         commandTool);
   }
 
@@ -137,7 +137,7 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
         : Optional.empty();
   }
 
-  private static class PlatformSpecificTool implements AbstractTool {
+  private static class PlatformSpecificTool implements Tool {
     @AddToRuleKey private final Supplier<Tool> tool;
     @AddToRuleKey private final Optional<BuildTarget> genericExe;
     @AddToRuleKey private final ImmutableSortedMap<Platform, BuildTarget> platformExe;
@@ -149,17 +149,6 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       this.tool = toolSupplier;
       this.genericExe = genericExe;
       this.platformExe = platformExe;
-    }
-
-    @Override
-    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-      Tool tool;
-      try {
-        tool = this.tool.get();
-      } catch (UnsupportedPlatformException e) {
-        return ImmutableList.of();
-      }
-      return tool.getDeps(ruleFinder);
     }
 
     @Override
@@ -190,9 +179,19 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       return new PlatformSpecificTool(
           tool.map(t -> MoreSuppliers.memoize(() -> asTool(t, resolver)))
               .orElse(
-                  () -> {
-                    throw new UnsupportedPlatformException(buildTarget, targetPlatform);
-                  }),
+                  () ->
+                      new Tool() {
+                        @Override
+                        public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+                          throw new UnsupportedPlatformException(buildTarget, targetPlatform);
+                        }
+
+                        @Override
+                        public ImmutableMap<String, String> getEnvironment(
+                            SourcePathResolver resolver) {
+                          throw new UnsupportedPlatformException(buildTarget, targetPlatform);
+                        }
+                      }),
           genericExe,
           platformExe);
     }

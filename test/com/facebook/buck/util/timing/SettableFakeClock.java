@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /** Fake implementation of {@link Clock} which returns the last time to which it was set. */
 public class SettableFakeClock implements Clock {
-  public static final SettableFakeClock DO_NOT_CARE = new SettableFakeClock(FakeClock.DO_NOT_CARE);
+  public static final SettableFakeClock DO_NOT_CARE = new SettableFakeClock(FakeClock.doNotCare());
 
   // We use FakeClock as the implementation because it enforces reasonably realistic behavior.
   private final AtomicReference<FakeClock> currentClock;

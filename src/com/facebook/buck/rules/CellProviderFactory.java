@@ -23,7 +23,8 @@ import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.rules.keys.impl.ConfigRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -123,7 +124,8 @@ public class CellProviderFactory {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
-                              rootFilesystem.resolve(rootFilesystem.getBuckPaths().getBuckOut()),
+                              rootFilesystem.resolve(
+                                  rootFilesystem.getBuckPaths().getEmbeddedCellsBuckOutBaseDir()),
                               canonicalCellName.get()));
                 }
                 ProjectFilesystem cellFilesystem =
@@ -139,6 +141,9 @@ public class CellProviderFactory {
                         rootConfig.getEnvironment(),
                         cellPathResolver);
 
+                RuleKeyConfiguration ruleKeyConfiguration =
+                    ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
+
                 ToolchainProvider toolchainProvider =
                     new DefaultToolchainProvider(
                         pluginManager,
@@ -146,7 +151,8 @@ public class CellProviderFactory {
                         buckConfig,
                         cellFilesystem,
                         processExecutor,
-                        executableFinder);
+                        executableFinder,
+                        ruleKeyConfiguration);
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
@@ -158,7 +164,7 @@ public class CellProviderFactory {
                     buckConfig,
                     cellProvider,
                     toolchainProvider,
-                    ConfigRuleKeyConfigurationFactory.create(buckConfig));
+                    ruleKeyConfiguration);
               }
             },
         cellProvider -> {
@@ -167,6 +173,8 @@ public class CellProviderFactory {
                   .getCanonicalCellName(rootFilesystem.getRootPath())
                   .isPresent(),
               "Root cell should be nameless");
+          RuleKeyConfiguration ruleKeyConfiguration =
+              ConfigRuleKeyConfigurationFactory.create(rootConfig, pluginManager);
           ToolchainProvider toolchainProvider =
               new DefaultToolchainProvider(
                   pluginManager,
@@ -174,7 +182,8 @@ public class CellProviderFactory {
                   rootConfig,
                   rootFilesystem,
                   processExecutor,
-                  executableFinder);
+                  executableFinder,
+                  ruleKeyConfiguration);
           return Cell.of(
               getKnownRoots(rootCellCellPathResolver),
               Optional.empty(),
@@ -183,7 +192,7 @@ public class CellProviderFactory {
               rootConfig,
               cellProvider,
               toolchainProvider,
-              ConfigRuleKeyConfigurationFactory.create(rootConfig));
+              ruleKeyConfiguration);
         });
   }
 
@@ -195,6 +204,9 @@ public class CellProviderFactory {
                 cellPath -> {
                   DistBuildCellParams cellParam =
                       Preconditions.checkNotNull(cellParams.get(cellPath));
+                  RuleKeyConfiguration ruleKeyConfiguration =
+                      ConfigRuleKeyConfigurationFactory.create(
+                          cellParam.getConfig(), cellParam.getPluginManager());
 
                   ToolchainProvider toolchainProvider =
                       new DefaultToolchainProvider(
@@ -203,7 +215,8 @@ public class CellProviderFactory {
                           cellParam.getConfig(),
                           cellParam.getFilesystem(),
                           cellParam.getProcessExecutor(),
-                          cellParam.getExecutableFinder());
+                          cellParam.getExecutableFinder(),
+                          ruleKeyConfiguration);
 
                   return Cell.of(
                       cellParams.keySet(),
@@ -215,7 +228,7 @@ public class CellProviderFactory {
                       cellParam.getConfig(),
                       cellProvider,
                       toolchainProvider,
-                      ConfigRuleKeyConfigurationFactory.create(cellParam.getConfig()));
+                      ruleKeyConfiguration);
                 }),
         null);
   }

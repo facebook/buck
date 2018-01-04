@@ -63,6 +63,23 @@ import javax.annotation.Nullable;
  *
  * Not shown: transitions back from "IN_ESCAPE_SEQUENCE" and "IN_ESCAPE_ARG_SEQUENCE", as they
  * return to the previous state
+ *
+ * <p>The EBNF grammar for a macro definition is as follows:
+ *
+ * <pre>
+ *   macro = "$(", macro_name, whitespace, [arg_list], ")";
+ *   macro_name = {all_ascii_chars - whitespace - parens};
+ *   whitespace = "\t" | "\n" | " " | "\r";
+ *   parens = "(" | ")";
+ *   arg_list = arg | arg, whitespace, arg_list;
+ *   arg = {all_ascii_chars - whitespace - parens}
+ *         | "(", arg, ")"
+ *         | "\"", [{-"\""}], "\""
+ *         | "'", [{-"'"}], "'";
+ *
+ * </pre>
+ *
+ * This documentation and grammar are published in the string_parameters_macro.soy documentation.
  */
 public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult> {
 

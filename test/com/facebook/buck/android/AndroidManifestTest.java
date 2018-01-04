@@ -111,7 +111,8 @@ public class AndroidManifestTest {
     // First, create the AndroidManifest object.
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
-    AndroidManifestDescription description = new AndroidManifestDescription();
+    AndroidManifestDescription description =
+        new AndroidManifestDescription(new AndroidManifestFactory());
     AndroidManifestDescriptionArg arg =
         AndroidManifestDescriptionArg.builder()
             .setName("some_manifest")

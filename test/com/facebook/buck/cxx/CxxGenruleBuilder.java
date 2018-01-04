@@ -20,6 +20,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -36,9 +37,12 @@ public class CxxGenruleBuilder
     super(
         new CxxGenruleDescription(
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            new ToolchainProviderBuilder().build(),
-            new NoSandboxExecutionStrategy(),
-            cxxPlatforms),
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM, cxxPlatforms))
+                .build(),
+            new NoSandboxExecutionStrategy()),
         target);
   }
 

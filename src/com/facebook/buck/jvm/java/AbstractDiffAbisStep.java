@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.immutables.BuckStyleStep;
 import com.google.common.base.Joiner;
 import java.io.IOException;
@@ -49,19 +50,19 @@ abstract class AbstractDiffAbisStep implements Step {
 
     List<String> diff = JarDiffer.diffJars(classAbiPath, sourceAbiPath);
     if (diff.isEmpty()) {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     String message = String.format("Files differ:\n%s", Joiner.on('\n').join(diff));
     JavaBuckConfig.SourceAbiVerificationMode verificationMode = getVerificationMode();
     switch (verificationMode) {
       case OFF:
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       case LOG:
         LOG.warn(message);
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       case FAIL:
-        return StepExecutionResult.ERROR.withStderr(message);
+        return StepExecutionResults.ERROR.withStderr(message);
       default:
         throw new AssertionError(String.format("Unknown verification mode: %s", verificationMode));
     }

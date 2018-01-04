@@ -22,14 +22,18 @@ public enum ArtifactCacheMode {
   sqlite(CacheType.local),
   thrift_over_http(CacheType.remote);
 
-  private final CacheType mode;
+  private final CacheType type;
 
-  ArtifactCacheMode(CacheType mode) {
-    this.mode = mode;
+  ArtifactCacheMode(CacheType type) {
+    this.type = type;
   }
 
-  public String getCacheType() {
-    return mode.name();
+  public String getCacheTypeName() {
+    return type.name();
+  }
+
+  public CacheType getCacheType() {
+    return type;
   }
 
   public enum CacheType {

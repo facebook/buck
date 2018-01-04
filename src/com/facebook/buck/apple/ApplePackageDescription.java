@@ -17,8 +17,11 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -28,6 +31,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
@@ -35,7 +39,8 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -62,17 +67,14 @@ public class ApplePackageDescription
 
   private final ToolchainProvider toolchainProvider;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
-  private final Flavor defaultCxxFlavor;
   private final AppleConfig config;
 
   public ApplePackageDescription(
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
-      AppleConfig config,
-      Flavor defaultCxxFlavor) {
+      AppleConfig config) {
     this.toolchainProvider = toolchainProvider;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
-    this.defaultCxxFlavor = defaultCxxFlavor;
     this.config = config;
   }
 
@@ -114,15 +116,16 @@ public class ApplePackageDescription
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .add(bundle)
                       .addAll(
-                          applePackageConfigAndPlatformInfo
-                              .get()
-                              .getExpandedArg()
-                              .getDeps(ruleFinder))
+                          BuildableSupport.getDepsCollection(
+                              applePackageConfigAndPlatformInfo.get().getExpandedArg(), ruleFinder))
                       .build()),
           applePackageConfigAndPlatformInfo.get(),
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable(),
-          Optional.empty());
+          Optional.empty(),
+          toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
+          toolchainProvider.getByNameIfPresent(
+              AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
     } else {
       return new BuiltinApplePackage(buildTarget, projectFilesystem, params, bundle);
     }
@@ -175,7 +178,7 @@ public class ApplePackageDescription
    * @throws HumanReadableException if there are multiple possible package configs.
    */
   private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(
-      BuildTarget target, Function<String, com.facebook.buck.rules.args.Arg> macroExpander) {
+      BuildTarget target, Function<String, Arg> macroExpander) {
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain = getAppleCxxPlatformFlavorDomain();
     Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target, appleCxxPlatformFlavorDomain);
 
@@ -250,7 +253,11 @@ public class ApplePackageDescription
     Sets.SetView<Flavor> intersection =
         Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
     if (intersection.isEmpty()) {
-      return ImmutableSet.of(defaultCxxFlavor);
+      return ImmutableSet.of(
+          toolchainProvider
+              .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+              .getDefaultCxxPlatform()
+              .getFlavor());
     } else {
       return intersection.immutableCopy();
     }

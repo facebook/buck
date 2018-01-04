@@ -30,6 +30,8 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,6 +63,9 @@ public class CacheCommand extends AbstractCommand {
   @Nullable
   private String outputDir = null;
 
+  @Option(name = "--distributed", usage = "If the request is for our distributed system.")
+  private boolean isRequestForDistributed = false;
+
   public List<String> getArguments() {
     return arguments;
   }
@@ -85,13 +90,14 @@ public class CacheCommand extends AbstractCommand {
   @VisibleForTesting static final boolean MUTE_FETCH_SUBCOMMAND_WARNING = true;
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
 
     params.getBuckEventBus().post(ConsoleEvent.fine("cache command start"));
 
     if (isNoCache()) {
       params.getBuckEventBus().post(ConsoleEvent.severe("Caching is disabled."));
-      return 1;
+      return ExitCode.NOTHING_TO_DO;
     }
 
     List<String> arguments = getArguments();
@@ -110,8 +116,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     if (arguments.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("No cache keys specified."));
-      return 1;
+      throw new CommandLineException("no cache keys specified");
     }
 
     if (outputDir != null) {
@@ -127,7 +132,8 @@ public class CacheCommand extends AbstractCommand {
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
-    try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
+    try (ArtifactCache cache =
+            params.getArtifactCacheFactory().newInstance(isRequestForDistributed);
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();
@@ -227,7 +233,7 @@ public class CacheCommand extends AbstractCommand {
                     .setSuccessUploadCount(new AtomicInteger(0))
                     .build()));
 
-    int exitCode = (totalRuns == goodRuns) ? 0 : 1;
+    ExitCode exitCode = (totalRuns == goodRuns) ? ExitCode.SUCCESS : ExitCode.BUILD_ERROR;
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 
     if (outputPath.isPresent()) {

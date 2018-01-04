@@ -27,6 +27,7 @@ js_library(
     name = "extras",
     srcs = glob(["extras/*.js"]),
     extra_args = "--arbitrary extra --flags",
+    extra_json = "{\"arbitrary\":\"extra\",\"json\":1}",
     worker = ":packager_worker",
 )
 
@@ -88,6 +89,14 @@ js_bundle(
         ":extras",
         ":fruit",
     ],
+)
+
+js_bundle(
+    name = "bundle_with_extra_json",
+    entry = "pear",
+    extra_json = """{"a":[1,2,3],"b":true,"s":"hello $(location :empty)!"}""",
+    worker = ":packager_worker",
+    deps = [":fruit"],
 )
 
 genrule(
@@ -190,4 +199,10 @@ genrule(
     name = "genrule-using-only-sourcemap-of-bundle-genrule",
     out = "out",
     bash = "cp $(location :sourcemap-genrule#source_map) $OUT",
+)
+
+export_file(
+    name = "empty",
+    mode = "reference",
+    visibility = ["PUBLIC"],
 )

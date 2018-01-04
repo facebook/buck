@@ -23,20 +23,19 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /** BuildRule for worker_tools. */
@@ -52,7 +51,7 @@ public class DefaultWorkerTool extends WriteFile
   private final int maxWorkers;
   private final boolean isPersistent;
   private final BuildOutputInitializer<UUID> buildOutputInitializer;
-  private final SourcePathRuleFinder ruleFinder;
+  private final Supplier<SortedSet<BuildRule>> depsSupplier;
 
   protected DefaultWorkerTool(
       BuildTarget buildTarget,
@@ -72,24 +71,16 @@ public class DefaultWorkerTool extends WriteFile
         new DelegatingTool(tool) {
           // This is added to the tool so that users get a dependency on this rule.
           @AddToRuleKey SourcePath placeholder = getSourcePathToOutput();
-
-          @Override
-          public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-            return ImmutableList.<BuildRule>builder()
-                .addAll(super.getDeps(ruleFinder))
-                .add(DefaultWorkerTool.this)
-                .build();
-          }
         };
     this.maxWorkers = maxWorkers;
     this.isPersistent = isPersistent;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
-    this.ruleFinder = ruleFinder;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return ImmutableSortedSet.copyOf(actualTool.getDeps(ruleFinder));
+    return depsSupplier.get();
   }
 
   @Override

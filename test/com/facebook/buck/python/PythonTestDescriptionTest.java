@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -50,7 +51,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -323,20 +324,17 @@ public class PythonTestDescriptionTest {
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
     PythonTestBuilder builder =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
-            new PythonBuckConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "python",
                         ImmutableMap.of(
-                            "python",
-                            ImmutableMap.of(
-                                "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
-                    .build(),
-                new AlwaysFoundExecutableFinder()),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+                            "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
+                .build(),
+            new AlwaysFoundExecutableFinder(),
+            PythonTestUtils.PYTHON_PLATFORMS);
     builder.setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pexExecutorBuilder.build(), builder.build());
@@ -358,20 +356,17 @@ public class PythonTestDescriptionTest {
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
     PythonTestBuilder builder =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
-            new PythonBuckConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
+            FakeBuckConfig.builder()
+                .setSections(
+                    ImmutableMap.of(
+                        "python",
                         ImmutableMap.of(
-                            "python",
-                            ImmutableMap.of(
-                                "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
-                    .build(),
-                new AlwaysFoundExecutableFinder()),
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS);
+                            "path_to_pex_executer", pexExecutorBuilder.getTarget().toString())))
+                .build(),
+            new AlwaysFoundExecutableFinder(),
+            PythonTestUtils.PYTHON_PLATFORMS);
     builder.setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(pexExecutorBuilder.getTarget()));
   }
@@ -380,7 +375,7 @@ public class PythonTestDescriptionTest {
   public void pexBuilderAddedToParseTimeDeps() {
     final BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
           public Optional<BuildTarget> getPexExecutorTarget() {
             return Optional.of(pexBuilder);
@@ -388,22 +383,20 @@ public class PythonTestDescriptionTest {
         };
 
     PythonTestBuilder inplaceBinary =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),
                 config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+                new AlwaysFoundExecutableFinder(),
+                PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE);
     assertThat(inplaceBinary.findImplicitDeps(), Matchers.not(Matchers.hasItem(pexBuilder)));
 
     PythonTestBuilder standaloneBinary =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),
                 config,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+                new AlwaysFoundExecutableFinder(),
+                PythonTestUtils.PYTHON_PLATFORMS)
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
   }
@@ -564,9 +557,10 @@ public class PythonTestDescriptionTest {
                 cxxPlatforms)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonTestBuilder binaryBuilder =
-        new PythonTestBuilder(
+        PythonTestBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),
                 PythonTestUtils.PYTHON_CONFIG,
+                new ExecutableFinder(),
                 PythonTestUtils.PYTHON_PLATFORMS,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 cxxPlatforms)

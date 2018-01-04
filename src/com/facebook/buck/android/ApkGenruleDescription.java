@@ -16,12 +16,15 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -53,9 +56,9 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ApkGenruleDescriptionArg args,
-      Optional<com.facebook.buck.rules.args.Arg> cmd,
-      Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe) {
 
     final BuildRule apk = resolver.getRule(args.getApk());
     if (!(apk instanceof HasInstallableApk)) {
@@ -93,7 +96,10 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         args.getType(),
         apk.getSourcePathToOutput(),
         args.getIsCacheable(),
-        args.getEnvironmentExpansionSeparator());
+        args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
+        toolchainProvider.getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
   }
 
   @BuckStyleImmutable

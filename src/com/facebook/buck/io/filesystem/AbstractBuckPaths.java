@@ -116,4 +116,9 @@ abstract class AbstractBuckPaths {
   public Path getLastOutputDir() {
     return getConfiguredBuckOut().resolve("last");
   }
+
+  @Value.Derived
+  public Path getEmbeddedCellsBuckOutBaseDir() {
+    return getBuckOut().resolve("cells");
+  }
 }

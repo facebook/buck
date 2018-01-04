@@ -53,8 +53,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final ImmutableSet<SourcePath> srcs;
   @AddToRuleKey private final ImmutableList<String> compilerFlags;
   @AddToRuleKey private final ImmutableList<String> assemblerFlags;
+  @AddToRuleKey private final ImmutableList<SourcePath> extraAsmOutputs;
   @AddToRuleKey private final GoPlatform platform;
-  @AddToRuleKey private final Optional<CGoCompileRules> cgoCompile;
 
   // TODO(mikekap): Make these part of the rule key.
   private final ImmutableList<Path> assemblerIncludeDirs;
@@ -78,7 +78,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Tool assembler,
       Tool packer,
       GoPlatform platform,
-      Optional<CGoCompileRules> cgoCompile) {
+      ImmutableList<SourcePath> extraAsmOutputs) {
     super(buildTarget, projectFilesystem, params);
     this.importPathMap = importPathMap;
     this.srcs = srcs;
@@ -96,7 +96,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             getBuildTarget(),
             "%s/" + getBuildTarget().getShortName() + ".a");
-    this.cgoCompile = cgoCompile;
+    this.extraAsmOutputs = extraAsmOutputs;
   }
 
   @Override
@@ -105,7 +105,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     buildableContext.recordArtifact(output);
 
-    ImmutableList.Builder<Path> extraLibsListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> headerSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
@@ -121,21 +120,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       }
     }
 
-    // cgo output needs to be linked to final binary
-    if (cgoCompile.isPresent()) {
-      compileSrcListBuilder.addAll(
-          cgoCompile
-              .get()
-              .getGeneratedGoSource()
-              .stream()
-              .map(input -> context.getSourcePathResolver().getAbsolutePath(input))
-              .collect(ImmutableList.toImmutableList()));
-      Path srcPath =
-          context.getSourcePathResolver().getAbsolutePath(cgoCompile.get().getOutputBinary());
-      extraLibsListBuilder.add(srcPath);
-    }
-
-    ImmutableList<Path> extraLibs = extraLibsListBuilder.build();
     ImmutableList<Path> compileSrcs = compileSrcListBuilder.build();
     ImmutableList<Path> headerSrcs = headerSrcListBuilder.build();
     ImmutableList<Path> asmSrcs = asmSrcListBuilder.build();
@@ -167,7 +151,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       asmHeaderPath = Optional.empty();
     }
 
-    boolean allowExternalReferences = !asmSrcs.isEmpty() || !extraLibs.isEmpty();
+    boolean allowExternalReferences = !asmSrcs.isEmpty() || !extraAsmOutputs.isEmpty();
 
     if (compileSrcs.isEmpty()) {
       steps.add(new TouchStep(getProjectFilesystem(), output));
@@ -250,7 +234,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       }
     }
 
-    if (!asmSrcs.isEmpty() || !extraLibs.isEmpty()) {
+    if (!asmSrcs.isEmpty() || !extraAsmOutputs.isEmpty()) {
       steps.add(
           new GoPackStep(
               getBuildTarget(),
@@ -258,9 +242,13 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               packer.getEnvironment(context.getSourcePathResolver()),
               packer.getCommandPrefix(context.getSourcePathResolver()),
               GoPackStep.Operation.APPEND,
-              Stream.of(extraLibs, asmOutputs.build())
-                  .flatMap(ImmutableList::stream)
-                  .collect(ImmutableList.toImmutableList()),
+              asmOutputs
+                  .addAll(
+                      extraAsmOutputs
+                          .stream()
+                          .map(x -> context.getSourcePathResolver().getAbsolutePath(x))
+                          .iterator())
+                  .build(),
               output));
     }
 

@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,13 +51,14 @@ public class AndroidBuildConfigDescription
     implements Description<AndroidBuildConfigDescriptionArg> {
 
   private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
+
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions androidJavacOptions;
 
   public AndroidBuildConfigDescription(
-      JavaBuckConfig javaBuckConfig, JavacOptions androidJavacOptions) {
+      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.androidJavacOptions = androidJavacOptions;
   }
 
   @Override
@@ -93,7 +96,9 @@ public class AndroidBuildConfigDescription
         args.getValuesFile(),
         /* useConstantExpressions */ false,
         JavacFactory.create(ruleFinder, javaBuckConfig, null),
-        androidJavacOptions,
+        toolchainProvider
+            .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+            .getJavacOptions(),
         resolver);
   }
 
@@ -187,7 +192,7 @@ public class AndroidBuildConfigDescription
 
     @Value.Default
     default BuildConfigFields getValues() {
-      return BuildConfigFields.empty();
+      return BuildConfigFields.of();
     }
 
     /** If present, contents of file can override those of {@link #getValues}. */

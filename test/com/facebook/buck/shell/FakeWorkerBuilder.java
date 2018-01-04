@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -83,7 +82,7 @@ public class FakeWorkerBuilder
     }
   }
 
-  private static class FakeTool implements AbstractTool {
+  private static class FakeTool implements Tool {
     @Override
     public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
       return ImmutableList.of();

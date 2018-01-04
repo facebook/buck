@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParseException;
@@ -183,9 +183,8 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
               Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
               return resolver.get().requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
             })
-        .filter(rule -> rule instanceof JavaLibrary)
-        .map(rule -> (JavaLibrary) rule)
-        .flatMap(library -> library.getDepsForTransitiveClasspathEntries().stream())
+        .filter(rule -> rule instanceof HasClasspathDeps)
+        .flatMap(rule -> ((HasClasspathDeps) rule).getDepsForTransitiveClasspathEntries().stream())
         .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()));
   }
 

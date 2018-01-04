@@ -1,0 +1,27 @@
+java_library(
+    name = "nonmoduleclass",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/module/impl:impl",
+        "//src/com/facebook/buck/plugin/impl:impl",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_binary(
+    name = "nonmoduleclass-jar",
+    main_class = "com.facebook.buck.module.impl.nonmoduleclass.NonModuleClassTest",
+    deps = [
+        ":nonmoduleclass",
+        "//third-party/java/slf4j:slf4j",
+    ],
+)
+
+# Running tests as a shell script to reconstruct the layout of modules and how they are loaded
+sh_test(
+    name = "nonmoduleclass-test",
+    args = [
+        "$(exe :nonmoduleclass-jar)",
+    ],
+    test = "//test/com/facebook/buck/module/impl:run.sh",
+)

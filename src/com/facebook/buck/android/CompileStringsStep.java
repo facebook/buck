@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -155,7 +156,7 @@ public class CompileStringsStep implements Step {
         resourcesByLocale.put(locale, compileStringFiles(filesystem, filesByLocale.get(locale)));
       } catch (IOException | SAXException e) {
         context.logError(e, "Error parsing string file for locale: %s", locale);
-        return StepExecutionResult.ERROR;
+        return StepExecutionResults.ERROR;
       }
     }
 
@@ -187,11 +188,11 @@ public class CompileStringsStep implements Step {
             pathBuilder.apply(locale));
       } catch (IOException e) {
         context.logError(e, "Error creating binary file for locale: %s", locale);
-        return StepExecutionResult.ERROR;
+        return StepExecutionResults.ERROR;
       }
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   /**

@@ -16,17 +16,17 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.CHAIN_TOP_TARGET;
-import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.LEAF_TARGET;
-import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.LEFT_TARGET;
-import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.RIGHT_TARGET;
-import static com.facebook.buck.distributed.build_slave.BuildTargetsQueueTest.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEAF_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildEngineResult;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
@@ -58,6 +58,7 @@ public class MinionModeRunnerIntegrationTest {
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 9;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -76,7 +77,8 @@ public class MinionModeRunnerIntegrationTest {
             MAX_PARALLEL_WORK_UNITS,
             checker,
             POLL_LOOP_INTERVAL_MILLIS,
-            new NoOpUnexpectedSlaveCacheMissTracker());
+            new NoOpUnexpectedSlaveCacheMissTracker(),
+            CONNECTION_TIMEOUT_MILLIS);
 
     minion.runAndReturnExitCode(createFakeHeartbeatService());
     Assert.fail("The previous line should've thrown an exception.");
@@ -111,7 +113,8 @@ public class MinionModeRunnerIntegrationTest {
             MAX_PARALLEL_WORK_UNITS,
             checker,
             POLL_LOOP_INTERVAL_MILLIS,
-            new NoOpUnexpectedSlaveCacheMissTracker());
+            new NoOpUnexpectedSlaveCacheMissTracker(),
+            CONNECTION_TIMEOUT_MILLIS);
 
     int exitCode = minion.runAndReturnExitCode(createFakeHeartbeatService());
     // Server does not exit because the build has already been marked as finished.
@@ -249,7 +252,8 @@ public class MinionModeRunnerIntegrationTest {
               MAX_PARALLEL_WORK_UNITS,
               checker,
               POLL_LOOP_INTERVAL_MILLIS,
-              unexpectedCacheMissTracker);
+              unexpectedCacheMissTracker,
+              CONNECTION_TIMEOUT_MILLIS);
       int exitCode = minion.runAndReturnExitCode(service);
       Assert.assertEquals(0, exitCode);
     }

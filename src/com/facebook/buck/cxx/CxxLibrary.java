@@ -163,7 +163,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
-    CxxPreprocessorInput publicHeaders = getPublicCxxPreprocessorInput(cxxPlatform);
+    CxxPreprocessorInput publicHeaders =
+        getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform);
     Optional<CxxPreprocessorInput> pluginHeaders =
         delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
 
@@ -174,7 +175,11 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     return publicHeaders;
   }
 
-  public CxxPreprocessorInput getPublicCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  /**
+   * Returns public headers excluding contribution from any {@link CxxLibraryDescriptionDelegate}.
+   */
+  public CxxPreprocessorInput getPublicCxxPreprocessorInputExcludingDelegate(
+      CxxPlatform cxxPlatform) {
     return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
   }
 

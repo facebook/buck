@@ -27,6 +27,8 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheDeleteResult;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
@@ -38,14 +40,14 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 public class CacheDeleteCommandTest extends EasyMockSupport {
-  @Test
+  @Test(expected = CommandLineException.class)
   public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).build();
     CacheDeleteCommand cacheDeleteCommand = new CacheDeleteCommand();
-    int exitCode = cacheDeleteCommand.run(commandRunnerParams);
-    assertEquals(1, exitCode);
+    ExitCode exitCode = cacheDeleteCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.COMMANDLINE_ERROR, exitCode);
   }
 
   @Test
@@ -74,8 +76,8 @@ public class CacheDeleteCommandTest extends EasyMockSupport {
 
     CacheDeleteCommand cacheDeleteCommand = new CacheDeleteCommand();
     cacheDeleteCommand.setArguments(ImmutableList.copyOf(ruleKeyHashes));
-    int exitCode = cacheDeleteCommand.run(commandRunnerParams);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cacheDeleteCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.SUCCESS, exitCode);
     assertThat(console.getTextWrittenToStdErr(), startsWith("Successfully deleted 2 artifacts"));
   }
 
@@ -99,8 +101,8 @@ public class CacheDeleteCommandTest extends EasyMockSupport {
 
     CacheDeleteCommand cacheDeleteCommand = new CacheDeleteCommand();
     cacheDeleteCommand.setArguments(ImmutableList.of(ruleKeyHash));
-    int exitCode = cacheDeleteCommand.run(commandRunnerParams);
-    assertEquals(1, exitCode);
+    ExitCode exitCode = cacheDeleteCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.FATAL_GENERIC, exitCode);
     assertThat(console.getTextWrittenToStdErr(), startsWith("Failed to delete artifacts."));
   }
 }

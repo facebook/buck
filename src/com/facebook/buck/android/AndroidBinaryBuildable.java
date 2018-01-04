@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -35,6 +36,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -104,14 +106,18 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Post-process resource compression
   @AddToRuleKey private final boolean isCompressResources;
 
+  @AddToRuleKey private final int apkCompressionLevel;
+
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
+  private final AndroidSdkLocation androidSdkLocation;
   private final AndroidLegacyToolchain androidLegacyToolchain;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
+      AndroidSdkLocation androidSdkLocation,
       AndroidLegacyToolchain androidLegacyToolchain,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
@@ -127,9 +133,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
-      ImmutableSortedSet<APKModule> apkModules) {
+      ImmutableSortedSet<APKModule> apkModules,
+      int apkCompressionLevel) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
+    this.androidSdkLocation = androidSdkLocation;
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
@@ -146,6 +154,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
     this.resourceFilesInfo = resourceFilesInfo;
+    this.apkCompressionLevel = apkCompressionLevel;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -266,7 +275,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             pathToKeystore,
             keystoreProperties,
             false,
-            javaRuntimeLauncher.getCommandPrefix(pathResolver)));
+            javaRuntimeLauncher.getCommandPrefix(pathResolver),
+            apkCompressionLevel));
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
     // the output non-deterministic.  So use an additional scrubbing step to zero these out.
@@ -397,7 +407,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           filesystem.move(libPath, tempPath);
           outputAssetLibrariesBuilder.add(tempPath);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -442,7 +452,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         if (!metadata.isEmpty()) {
           filesystem.writeLinesToPath(metadata, metadataOutput);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -488,7 +498,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         ReDexStep.createSteps(
             buildTarget,
             getProjectFilesystem(),
-            androidLegacyToolchain,
+            androidSdkLocation,
             resolver,
             redexOptions.get(),
             apkToRedexAndAlign,

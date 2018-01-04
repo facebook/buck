@@ -18,30 +18,19 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.VersionedTool;
-import com.facebook.buck.rules.keys.RuleKeyConfiguration;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -52,14 +41,6 @@ public class PythonBuckConfig {
 
   private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
-
-  // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
-  private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
-      ImmutableList.of("python2", "python");
-
-  private static final Path DEFAULT_PATH_TO_PEX =
-      Paths.get(System.getProperty("buck.path_to_pex", "src/com/facebook/buck/python/make_pex.py"))
-          .toAbsolutePath();
 
   private static final LoadingCache<ProjectFilesystem, PathSourcePath> PATH_TO_TEST_MAIN =
       CacheBuilder.newBuilder()
@@ -75,50 +56,17 @@ public class PythonBuckConfig {
               });
 
   private final BuckConfig delegate;
-  private final ExecutableFinder exeFinder;
 
-  public PythonBuckConfig(BuckConfig config, ExecutableFinder exeFinder) {
+  public PythonBuckConfig(BuckConfig config) {
     this.delegate = config;
-    this.exeFinder = exeFinder;
   }
 
-  private Path findInterpreter(ImmutableList<String> interpreterNames) {
-    Preconditions.checkArgument(!interpreterNames.isEmpty());
-    for (String interpreterName : interpreterNames) {
-      Optional<Path> python =
-          exeFinder.getOptionalExecutable(Paths.get(interpreterName), delegate.getEnvironment());
-      if (python.isPresent()) {
-        return python.get().toAbsolutePath();
-      }
-    }
-    throw new HumanReadableException(
-        "No python interpreter found (searched %s).", Joiner.on(", ").join(interpreterNames));
+  public BuckConfig getDelegate() {
+    return delegate;
   }
 
-  /**
-   * Returns the path to python interpreter. If python is specified in 'interpreter' key of the
-   * 'python' section that is used and an error reported if invalid.
-   *
-   * @return The found python interpreter.
-   */
-  public Path getPythonInterpreter(Optional<String> config) {
-    if (!config.isPresent()) {
-      return findInterpreter(PYTHON_INTERPRETER_NAMES);
-    }
-    Path configPath = Paths.get(config.get());
-    if (!configPath.isAbsolute()) {
-      return findInterpreter(ImmutableList.of(config.get()));
-    }
-    return configPath;
-  }
-
-  public Path getPythonInterpreter(String section) {
-    return getPythonInterpreter(delegate.getValue(section, "interpreter"));
-  }
-
-  /** @return the {@link Path} to the default python interpreter. */
-  public Path getPythonInterpreter() {
-    return getPythonInterpreter(SECTION);
+  public Optional<String> getInterpreter(String section) {
+    return delegate.getValue(section, "interpreter");
   }
 
   public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {
@@ -129,32 +77,12 @@ public class PythonBuckConfig {
     return delegate.getMaybeBuildTarget(SECTION, "path_to_pex");
   }
 
-  public Tool getPexTool(BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-    CommandTool.Builder builder =
-        new CommandTool.Builder(getRawPexTool(resolver, ruleKeyConfiguration));
-    for (String flag :
-        Splitter.on(' ')
-            .omitEmptyStrings()
-            .split(delegate.getValue(SECTION, "pex_flags").orElse(""))) {
-      builder.addArg(flag);
-    }
-
-    return builder.build();
+  public String getPexFlags() {
+    return delegate.getValue(SECTION, "pex_flags").orElse("");
   }
 
-  private Tool getRawPexTool(
-      BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-    Optional<Tool> executable =
-        delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
-    if (executable.isPresent()) {
-      return executable.get();
-    }
-    return VersionedTool.builder()
-        .setName("pex")
-        .setVersion(ruleKeyConfiguration.getCoreKey())
-        .setPath(getPythonInterpreter(SECTION))
-        .addExtraArgs(DEFAULT_PATH_TO_PEX.toString())
-        .build();
+  public Optional<Tool> getRawPexTool(BuildRuleResolver resolver) {
+    return delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
   }
 
   public Optional<BuildTarget> getPexExecutorTarget() {
@@ -214,6 +142,10 @@ public class PythonBuckConfig {
 
   public Optional<BuildTarget> getCxxLibrary(String section) {
     return delegate.getBuildTarget(section, "library");
+  }
+
+  public String getDefaultSection() {
+    return SECTION;
   }
 
   public enum PackageStyle {

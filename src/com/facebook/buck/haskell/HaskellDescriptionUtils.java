@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -47,6 +48,8 @@ import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -363,11 +366,14 @@ public class HaskellDescriptionUtils {
             baseParams
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(linker.getDeps(ruleFinder))
+                        .addAll(BuildableSupport.getDepsCollection(linker, ruleFinder))
                         .addAll(
                             Stream.of(args, linkerArgs)
                                 .flatMap(Collection::stream)
-                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+                                .flatMap(
+                                    arg ->
+                                        BuildableSupport.getDepsCollection(arg, ruleFinder)
+                                            .stream())
                                 .iterator())
                         .build())
                 .withoutExtraDeps(),
@@ -402,6 +408,7 @@ public class HaskellDescriptionUtils {
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      CellPathResolver cellPathResolver,
       final BuildRuleResolver resolver,
       HaskellPlatform platform,
       CxxBuckConfig cxxBuckConfig,
@@ -486,16 +493,30 @@ public class HaskellDescriptionUtils {
                 .filter(NativeLinkable.class)
                 .collect(ImmutableMap.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
 
+    // Add an -rpath to the omnibus for shared library dependencies
+    Path symlinkRelDir = HaskellGhciDescription.getSoLibsRelDir(buildTarget);
+    ImmutableList.Builder<Arg> extraLinkFlags = ImmutableList.builder();
+    extraLinkFlags.addAll(
+        StringArg.from(
+            Linkers.iXlinker(
+                "-rpath",
+                String.format(
+                    "%s/%s",
+                    platform.getCxxPlatform().getLd().resolve(resolver).origin(),
+                    symlinkRelDir.toString()))));
+
     // Construct the omnibus shared library.
     BuildRule omnibusSharedObject =
         HaskellGhciDescription.requireOmnibusSharedObject(
+            cellPathResolver,
             buildTarget,
             projectFilesystem,
             resolver,
             platform.getCxxPlatform(),
             cxxBuckConfig,
             omnibusSpec.getBody().values(),
-            omnibusSpec.getDeps().values());
+            omnibusSpec.getDeps().values(),
+            extraLinkFlags.build());
 
     // Build up a map of all transitive shared libraries the the monolithic omnibus library depends
     // on (basically, stuff we couldn't statically link in).  At this point, this should *not* be

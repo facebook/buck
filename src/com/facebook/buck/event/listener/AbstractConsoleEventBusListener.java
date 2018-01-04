@@ -44,7 +44,6 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.i18n.NumberFormatter;
 import com.facebook.buck.util.timing.Clock;
@@ -77,6 +76,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -109,8 +109,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   private final int numberOfSlowRulesToShow;
   private final boolean showSlowRulesInConsole;
   private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
-
-  protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
 
   @Nullable protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
   @Nullable protected volatile ProjectBuildFileParseEvents.Finished projectBuildFileParseFinished;
@@ -204,8 +202,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.actionGraphEvents = new ConcurrentHashMap<>();
     this.buckFilesParsingEvents = new ConcurrentHashMap<>();
-
-    this.autoSparseState = new ConcurrentHashMap<>();
 
     this.buildStarted = null;
     this.buildFinished = null;
@@ -533,26 +529,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void autoSparseStateSparseRefreshStarted(
-      AutoSparseStateEvents.SparseRefreshStarted started) {
-    aggregateStartedEvent(autoSparseState, started);
-  }
-
-  @Subscribe
-  public void autoSparseStateSparseRefreshFinished(
-      AutoSparseStateEvents.SparseRefreshFinished finished) {
-    aggregateFinishedEvent(autoSparseState, finished);
-  }
-
-  @Subscribe
-  public void autoSparseStateRefreshFailed(AutoSparseStateEvents.SparseRefreshFailed failed) {
-    String failureDetails = failed.getFailureDetails();
-    if (failureDetails.length() > 0) {
-      printSevereWarningDirectly(failureDetails);
-    }
-  }
-
-  @Subscribe
   public void projectBuildFileParseStarted(ProjectBuildFileParseEvents.Started started) {
     if (projectBuildFileParseStarted == null) {
       projectBuildFileParseStarted = started;
@@ -706,25 +682,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             ? convertToAllCapsIfNeeded("Downloaded")
             : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
-    if (finishedEvent != null) {
-      Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();
-      Pair<Double, SizeUnit> readableSpeed =
-          SizeUnit.getHumanReadableSize(avgDownloadSpeed.getFirst(), avgDownloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale,
-              "%s/" + convertToAllCapsIfNeeded("sec") + " " + convertToAllCapsIfNeeded("avg"),
-              convertToAllCapsIfNeeded(SizeUnit.toHumanReadableString(readableSpeed, locale))));
-    } else {
-      Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
-      Pair<Double, SizeUnit> readableDownloadSpeed =
-          SizeUnit.getHumanReadableSize(downloadSpeed.getFirst(), downloadSpeed.getSecond());
-      columns.add(
-          String.format(
-              locale,
-              "%s/" + convertToAllCapsIfNeeded("sec"),
-              SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
-    }
     Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
     Pair<Double, SizeUnit> readableBytesDownloaded =
         SizeUnit.getHumanReadableSize(bytesDownloaded.getFirst(), bytesDownloaded.getSecond());
@@ -836,8 +793,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
       httpArtifactUploadsStartedCount.incrementAndGet();
-    } else {
-      networkStatsKeeper.artifactDownloadedStarted(event);
     }
   }
 
@@ -854,7 +809,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         httpArtifactUploadFailedCount.incrementAndGet();
       }
     } else {
-      networkStatsKeeper.artifactDownloadFinished(event);
+      networkStatsKeeper.artifactDownloadFinished();
     }
   }
 
@@ -909,37 +864,26 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected void showTopSlowBuildRules(ImmutableList.Builder<String> lines) {
+  void showTopSlowBuildRules(ImmutableList.Builder<String> lines) {
     if (numberOfSlowRulesToShow == 0 || buildFinished == null) {
       return;
     }
 
     Comparator<UnflavoredBuildTarget> comparator =
-        new Comparator<UnflavoredBuildTarget>() {
-          @Override
-          public int compare(UnflavoredBuildTarget target1, UnflavoredBuildTarget target2) {
-            Long elapsedTime1 =
-                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target1));
-            Long elapsedTime2 =
-                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target2));
-            long delta = elapsedTime2 - elapsedTime1;
-            if (delta < 0L) {
-              return -1;
-            } else if (delta > 0L) {
-              return 1;
-            } else {
-              return 0;
-            }
-          }
+        (target1, target2) -> {
+          Long elapsedTime1 = Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target1));
+          Long elapsedTime2 = Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target2));
+          long delta = elapsedTime2 - elapsedTime1;
+          return Long.compare(delta, 0L);
         };
 
     ImmutableList.Builder<String> slowRulesLogsBuilder = ImmutableList.builder();
-    slowRulesLogsBuilder.add(String.format(""));
+    slowRulesLogsBuilder.add("");
     synchronized (timeSpentMillisecondsInRules) {
-      if (timeSpentMillisecondsInRules.size() == 0) {
-        slowRulesLogsBuilder.add(String.format("Top slow rules: Buck didn't spend time in rules."));
+      if (timeSpentMillisecondsInRules.isEmpty()) {
+        slowRulesLogsBuilder.add("Top slow rules: Buck didn't spend time in rules.");
       } else {
-        slowRulesLogsBuilder.add(String.format("Top slow rules"));
+        slowRulesLogsBuilder.add("Top slow rules");
         Stream<UnflavoredBuildTarget> keys =
             timeSpentMillisecondsInRules.keySet().stream().sorted(comparator);
         keys.limit(numberOfSlowRulesToShow)
@@ -953,7 +897,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       }
     }
     ImmutableList<String> slowRulesLogs = slowRulesLogsBuilder.build();
-    LOG.info(String.join("\n", slowRulesLogs));
+    LOG.info(slowRulesLogs.stream().collect(Collectors.joining("\n")));
     if (showSlowRulesInConsole) {
       lines.addAll(slowRulesLogs);
     }
@@ -963,7 +907,5 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void outputTrace(BuildId buildId) {}
 
   @Override
-  public void close() throws IOException {
-    networkStatsKeeper.stopScheduler();
-  }
+  public void close() throws IOException {}
 }

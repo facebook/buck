@@ -24,11 +24,15 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroMatchResult;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -121,12 +125,19 @@ public class QueryTargetsMacroExpanderTest {
     // No build time deps for targets macro
     assertEquals(
         ImmutableList.of(),
-        expander.extractBuildTimeDeps(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"),
-            precomputed));
+        BuildableSupport.deriveDeps(
+                new AddsToRuleKey() {
+                  @AddToRuleKey
+                  Object object =
+                      expander.extractRuleKeyAppendables(
+                          dep.getBuildTarget(),
+                          cellNames,
+                          ruleResolver,
+                          ImmutableList.of("'set(//exciting:dep)'"),
+                          precomputed);
+                },
+                new SourcePathRuleFinder(ruleResolver))
+            .collect(ImmutableList.toImmutableList()));
     Object precomputed2 =
         expander.precomputeWork(
             dep.getBuildTarget(),
@@ -135,12 +146,19 @@ public class QueryTargetsMacroExpanderTest {
             ImmutableList.of("'classpath(//exciting:target)'"));
     assertEquals(
         ImmutableList.of(),
-        expander.extractBuildTimeDeps(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"),
-            precomputed2));
+        BuildableSupport.deriveDeps(
+                new AddsToRuleKey() {
+                  @AddToRuleKey
+                  Object object =
+                      expander.extractRuleKeyAppendables(
+                          dep.getBuildTarget(),
+                          cellNames,
+                          ruleResolver,
+                          ImmutableList.of("'classpath(//exciting:target)'"),
+                          precomputed2);
+                },
+                new SourcePathRuleFinder(ruleResolver))
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @Test

@@ -18,6 +18,7 @@ package com.facebook.buck.android.support.exopackage;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Application;
 import android.app.Fragment;
 import android.app.Fragment.SavedState;
 import android.app.FragmentManager;
@@ -227,6 +228,18 @@ public class ExoHelper {
     long deadline = System.currentTimeMillis() + 500L;
     am.setExact(AlarmManager.RTC_WAKEUP, deadline, pendingIntent);
     Process.killProcess(Process.myPid());
+  }
+
+  /**
+   * Enable hotswapping on an application instance. This call is not necessary if using {@link
+   * ExopackageApplication}. If enabling manually, make sure the app is set up to support the
+   * "modules" exopackage mode, and the initial call to {@link
+   * ExopackageDexLoader#loadExopackageJars(Context, boolean)} passed true as the second arg
+   */
+  public static void setupHotswap(Application application) {
+    application.registerReceiver(
+        new ModularDexChangedReceiver(),
+        ModularDexChangedReceiver.getIntentFilter(application.getPackageName()));
   }
 
   /**

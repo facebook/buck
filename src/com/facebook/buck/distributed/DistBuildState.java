@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed;
 
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_TARGET_GRAPH_SERIALIZATION;
+
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
@@ -55,7 +57,6 @@ import org.pf4j.PluginManager;
 
 /** Saves and restores the state of a build to/from a thrift data structure. */
 public class DistBuildState {
-
   private final BuildJobState remoteState;
   private final ImmutableBiMap<Integer, Cell> cells;
   private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
@@ -77,6 +78,7 @@ public class DistBuildState {
             });
   }
 
+  /** Creates a serializable {@link BuildJobState} object from the given parameters. */
   public static BuildJobState dump(
       DistBuildCellIndexer distributedBuildCellIndexer,
       DistBuildFileHashes fileHashes,
@@ -84,16 +86,41 @@ public class DistBuildState {
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> topLevelTargets)
       throws IOException, InterruptedException {
+    return dump(
+        distributedBuildCellIndexer,
+        fileHashes,
+        targetGraphCodec,
+        targetGraph,
+        topLevelTargets,
+        Optional.empty());
+  }
+
+  /**
+   * Creates a serializable {@link BuildJobState} object from the given parameters. Also records
+   * relevant statistics in the {@link ClientStatsTracker} if one is provided.
+   */
+  public static BuildJobState dump(
+      DistBuildCellIndexer distributedBuildCellIndexer,
+      DistBuildFileHashes fileHashes,
+      DistBuildTargetGraphCodec targetGraphCodec,
+      TargetGraph targetGraph,
+      ImmutableSet<BuildTarget> topLevelTargets,
+      Optional<ClientStatsTracker> clientStatsTracker)
+      throws IOException, InterruptedException {
     Preconditions.checkArgument(topLevelTargets.size() > 0);
     BuildJobState jobState = new BuildJobState();
     jobState.setFileHashes(fileHashes.getFileHashes());
+    jobState.setCells(distributedBuildCellIndexer.getState());
+
+    clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_TARGET_GRAPH_SERIALIZATION));
     jobState.setTargetGraph(
         targetGraphCodec.dump(targetGraph.getNodes(), distributedBuildCellIndexer));
-    jobState.setCells(distributedBuildCellIndexer.getState());
+    clientStatsTracker.ifPresent(tracker -> tracker.stopTimer(LOCAL_TARGET_GRAPH_SERIALIZATION));
 
     for (BuildTarget target : topLevelTargets) {
       jobState.addToTopLevelTargets(target.getFullyQualifiedName());
     }
+
     return jobState;
   }
 

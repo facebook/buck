@@ -42,11 +42,11 @@ import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
@@ -153,6 +153,7 @@ public class LuaBinaryDescription
   }
 
   private Starter getStarter(
+      CellPathResolver cellPathResolver,
       ProjectFilesystem projectFilesystem,
       BuildTarget baseTarget,
       BuildRuleParams baseParams,
@@ -195,6 +196,7 @@ public class LuaBinaryDescription
             ruleResolver,
             pathResolver,
             ruleFinder,
+            cellPathResolver,
             luaPlatform,
             cxxBuckConfig,
             target,
@@ -217,6 +219,7 @@ public class LuaBinaryDescription
 
   /** @return the {@link Starter} used to build the Lua binary entry point. */
   private Starter createStarter(
+      CellPathResolver cellPathResolver,
       ProjectFilesystem projectFilesystem,
       BuildTarget baseTarget,
       BuildRuleParams baseParams,
@@ -262,6 +265,7 @@ public class LuaBinaryDescription
 
     // Build the starter.
     return getStarter(
+        cellPathResolver,
         projectFilesystem,
         baseTarget,
         baseParams,
@@ -296,7 +300,8 @@ public class LuaBinaryDescription
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
       LuaPlatform.PackageStyle packageStyle,
-      Iterable<BuildRule> deps) {
+      Iterable<BuildRule> deps,
+      CellPathResolver cellPathResolver) {
 
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
 
@@ -367,6 +372,7 @@ public class LuaBinaryDescription
     // Build the starter.
     Starter starter =
         createStarter(
+            cellPathResolver,
             projectFilesystem,
             buildTarget,
             baseParams,
@@ -395,6 +401,7 @@ public class LuaBinaryDescription
               buildTarget,
               projectFilesystem,
               baseParams,
+              cellPathResolver,
               ruleResolver,
               ruleFinder,
               cxxBuckConfig,
@@ -612,7 +619,7 @@ public class LuaBinaryDescription
       nativeLibsLinktree.add(symlinkTree);
     }
 
-    return new AbstractTool() {
+    return new Tool() {
       @AddToRuleKey private final LuaPackageComponents toolComponents = components;
       @AddToRuleKey private final SourcePath toolStarter = starter;
 
@@ -673,8 +680,8 @@ public class LuaBinaryDescription
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(ruleFinder.filterBuildRuleInputs(starter))
                             .addAll(components.getDeps(ruleFinder))
-                            .addAll(lua.getDeps(ruleFinder))
-                            .addAll(packager.getDeps(ruleFinder))
+                            .addAll(BuildableSupport.getDepsCollection(lua, ruleFinder))
+                            .addAll(BuildableSupport.getDepsCollection(packager, ruleFinder))
                             .build())
                     .withoutExtraDeps(),
                 packager,
@@ -787,7 +794,8 @@ public class LuaBinaryDescription
             args.getPackageStyle().orElse(luaPlatform.getPackageStyle()),
             resolver.getAllRules(
                 LuaUtil.getDeps(
-                    luaPlatform.getCxxPlatform(), args.getDeps(), args.getPlatformDeps())));
+                    luaPlatform.getCxxPlatform(), args.getDeps(), args.getPlatformDeps())),
+            cellRoots);
     LuaPlatform.PackageStyle packageStyle =
         args.getPackageStyle().orElse(luaPlatform.getPackageStyle());
     Tool binary =
@@ -805,7 +813,7 @@ public class LuaBinaryDescription
     return new LuaBinary(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(binary.getDeps(ruleFinder)),
+        params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(binary, ruleFinder)),
         getOutputPath(buildTarget, projectFilesystem, luaPlatform),
         binary,
         args.getMainModule(),

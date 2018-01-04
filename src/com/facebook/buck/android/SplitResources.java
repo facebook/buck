@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -155,7 +156,7 @@ public class SplitResources extends AbstractBuildRule {
           getProjectFilesystem().getPathForRelativePath(primaryResourcesOutputPath),
           getProjectFilesystem().getPathForRelativePath(getUnalignedExoPath()),
           getProjectFilesystem().getPathForRelativePath(rDotTxtOutputPath));
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.annotator;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildUtil;
 import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValue;
@@ -26,10 +27,10 @@ import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.jetbrains.annotations.Nullable;
 
 /** Annotator for Buck, it helps highlight and annotate any issue in Buck files. */
 public class BuckAnnotator implements Annotator {
@@ -46,6 +47,10 @@ public class BuckAnnotator implements Annotator {
   }
 
   private void annotateErrors(PsiElement psiElement, AnnotationHolder annotationHolder) {
+    if (psiElement instanceof BuckLoadTargetArgument) {
+      annotateLoadTargetErrors((BuckLoadTargetArgument) psiElement, annotationHolder);
+      return;
+    }
     BuckValue value = PsiTreeUtil.getParentOfType(psiElement, BuckValue.class);
     if (value == null) {
       return;
@@ -64,15 +69,38 @@ public class BuckAnnotator implements Annotator {
     if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
       return;
     }
-    VirtualFile buckDir =
-        project.getBaseDir().findFileByRelativePath(BuckBuildUtil.extractAbsoluteTarget(target));
-    VirtualFile targetBuckFile = buckDir != null ? buckDir.findChild("BUCK") : null;
+    @Nullable
+    VirtualFile targetBuckFile = BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target);
 
     if (targetBuckFile == null) {
-      TextRange range =
-          new TextRange(
-              psiElement.getTextRange().getStartOffset(), psiElement.getTextRange().getEndOffset());
-      annotationHolder.createErrorAnnotation(range, ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET);
+      annotationHolder.createErrorAnnotation(
+          psiElement.getTextRange(), ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET);
+      project
+          .getMessageBus()
+          .syncPublisher(IntellijBuckAction.EVENT)
+          .consume(this.getClass().toString());
+    }
+  }
+
+  private void annotateLoadTargetErrors(
+      BuckLoadTargetArgument loadTargetArgument, AnnotationHolder annotationHolder) {
+    Project project = loadTargetArgument.getProject();
+    String target = loadTargetArgument.getText();
+    target = target.substring(1, target.length() - 1); // strip quotes
+    if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
+      // TODO(ttsugrii): warn about usage of invalid pattern
+      return;
+    }
+    String packagePath = BuckBuildUtil.extractAbsoluteTarget(target);
+    String fileName = BuckBuildUtil.extractTargetName(target);
+    @Nullable
+    VirtualFile packageDirectory = project.getBaseDir().findFileByRelativePath(packagePath);
+    @Nullable
+    VirtualFile loadTargetFile =
+        packageDirectory != null ? packageDirectory.findChild(fileName) : null;
+    if (loadTargetFile == null) {
+      annotationHolder.createErrorAnnotation(
+          loadTargetArgument.getTextRange(), "Cannot locate extension file " + fileName);
       project
           .getMessageBus()
           .syncPublisher(IntellijBuckAction.EVENT)

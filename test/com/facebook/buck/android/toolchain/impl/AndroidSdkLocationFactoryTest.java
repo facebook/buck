@@ -17,7 +17,6 @@
 package com.facebook.buck.android.toolchain.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidPlatformTarget;
@@ -28,12 +27,15 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,9 +43,11 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AndroidSdkLocationFactoryTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ProjectFilesystem projectFilesystem;
 
@@ -56,7 +60,15 @@ public class AndroidSdkLocationFactoryTest {
   public void testAndroidSdkLocationNotPresentWhenSdkRootNotPresent() throws Exception {
     AndroidSdkLocationFactory factory = new AndroidSdkLocationFactory();
 
-    FakeAndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
+    String androidSdkNotPresentMessage = "Android SDK is not present";
+
+    FakeAndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver() {
+          @Override
+          public Path getSdkOrThrow() {
+            throw new HumanReadableException(androidSdkNotPresentMessage);
+          }
+        };
 
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
@@ -69,17 +81,18 @@ public class AndroidSdkLocationFactoryTest {
                     androidDirectoryResolver))
             .build();
 
-    Optional<AndroidSdkLocation> toolchain =
-        factory.createToolchain(
-            toolchainProvider,
-            ToolchainCreationContext.of(
-                ImmutableMap.of(),
-                FakeBuckConfig.builder().build(),
-                projectFilesystem,
-                new DefaultProcessExecutor(new TestConsole()),
-                new ExecutableFinder()));
+    thrown.expectMessage(androidSdkNotPresentMessage);
+    thrown.expect(ToolchainInstantiationException.class);
 
-    assertFalse(toolchain.isPresent());
+    factory.createToolchain(
+        toolchainProvider,
+        ToolchainCreationContext.of(
+            ImmutableMap.of(),
+            FakeBuckConfig.builder().build(),
+            projectFilesystem,
+            new DefaultProcessExecutor(new TestConsole()),
+            new ExecutableFinder(),
+            TestRuleKeyConfigurationFactory.create()));
   }
 
   @Test
@@ -111,7 +124,8 @@ public class AndroidSdkLocationFactoryTest {
                 FakeBuckConfig.builder().build(),
                 projectFilesystem,
                 new DefaultProcessExecutor(new TestConsole()),
-                new ExecutableFinder()));
+                new ExecutableFinder(),
+                TestRuleKeyConfigurationFactory.create()));
 
     assertEquals(sdkLocation, toolchain.get().getSdkRootPath());
   }

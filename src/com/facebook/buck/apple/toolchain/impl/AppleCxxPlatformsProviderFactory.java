@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.toolchain.impl;
 
-import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
@@ -31,6 +30,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
@@ -67,7 +67,9 @@ public class AppleCxxPlatformsProviderFactory
                   appleSdkPaths,
                   appleToolchains)));
     } catch (IOException e) {
-      throw new HumanReadableException(e, "Cannot detect Apple cxx platforms");
+      throw new ToolchainInstantiationException(e, "Cannot detect Apple cxx platforms");
+    } catch (HumanReadableException e) {
+      throw ToolchainInstantiationException.wrap(e);
     }
   }
 

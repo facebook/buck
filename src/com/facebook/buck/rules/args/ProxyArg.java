@@ -17,10 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.google.common.collect.ImmutableCollection;
 import java.util.function.Consumer;
 
 /**
@@ -32,11 +29,6 @@ public class ProxyArg implements Arg {
 
   public ProxyArg(Arg arg) {
     this.arg = arg;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return arg.getDeps(ruleFinder);
   }
 
   @Override

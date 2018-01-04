@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
 import org.junit.Test;
 
 public class DefaultClassUsageFileWriterTest {
@@ -70,7 +69,8 @@ public class DefaultClassUsageFileWriterTest {
     DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerOne = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = trackerOne.wrapFileManager(fakeFileManager);
+      ListenableFileManager wrappedFileManager = new ListenableFileManager(fakeFileManager);
+      wrappedFileManager.addListener(trackerOne);
       for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
         javaFileObject.openInputStream();
       }
@@ -80,7 +80,8 @@ public class DefaultClassUsageFileWriterTest {
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerTwo = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = trackerTwo.wrapFileManager(fakeFileManager);
+      ListenableFileManager wrappedFileManager = new ListenableFileManager(fakeFileManager);
+      wrappedFileManager.addListener(trackerTwo);
       Iterable<JavaFileObject> fileObjects = wrappedFileManager.list(null, null, null, false);
       for (JavaFileObject javaFileObject : FluentIterable.from(fileObjects).toList().reverse()) {
         javaFileObject.openInputStream();
@@ -115,7 +116,8 @@ public class DefaultClassUsageFileWriterTest {
     DefaultClassUsageFileWriter writer = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerOne = new ClassUsageTracker();
     {
-      StandardJavaFileManager wrappedFileManager = trackerOne.wrapFileManager(fakeFileManager);
+      ListenableFileManager wrappedFileManager = new ListenableFileManager(fakeFileManager);
+      wrappedFileManager.addListener(trackerOne);
       for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
         javaFileObject.openInputStream();
       }

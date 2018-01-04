@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
     new DefaultClasspathTraverser().traverse(traversal);
 
     this.weightEstimate = totalWeightEstimate.get();
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

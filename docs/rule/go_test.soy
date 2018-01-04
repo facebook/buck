@@ -57,11 +57,15 @@
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name : 'coverage_mode' /}
+  {param default : 'None' /}
+  {param desc}
+  Test coverage functionality will be included in the executable. Modes: set, count, atomic
+  {/param}
+{/call}
+
 {call go_common.deps_arg /}
-
-{call go_common.cgo_srcs_arg /}
-
-{call go_common.cgo_headers_arg /}
 
 {call go_common.cgo_deps_arg /}
 

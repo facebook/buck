@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 
 public class CleanCommand extends AbstractCommand {
@@ -55,11 +56,11 @@ public class CleanCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws IOException {
     for (Cell cell : params.getCell().getLoadedCells().values()) {
       cleanCell(cell);
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

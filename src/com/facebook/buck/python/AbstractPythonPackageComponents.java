@@ -39,17 +39,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false)
+@Value.Immutable(builder = false, singleton = true)
 @BuckStyleImmutable
 abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
-
-  private static final PythonPackageComponents EMPTY =
-      PythonPackageComponents.of(
-          /* modules */ ImmutableMap.of(),
-          /* resources */ ImmutableMap.of(),
-          /* nativeLibraries */ ImmutableMap.of(),
-          /* prebuiltLibraries */ ImmutableSet.of(),
-          /* zipSafe */ Optional.empty());
 
   // Python modules as map of their module name to location of the source.
   @Value.Parameter
@@ -98,10 +90,6 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
       }
     }
     return false;
-  }
-
-  public static PythonPackageComponents of() {
-    return EMPTY;
   }
 
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {

@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.toolchain.Toolchain;
-import java.util.function.Supplier;
 
 /**
  * Toolchain that provides access to existing Android classes.
@@ -35,8 +34,6 @@ import java.util.function.Supplier;
 public interface AndroidLegacyToolchain extends Toolchain {
 
   String DEFAULT_NAME = "legacy-android";
-
-  Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier();
 
   AndroidDirectoryResolver getAndroidDirectoryResolver();
 

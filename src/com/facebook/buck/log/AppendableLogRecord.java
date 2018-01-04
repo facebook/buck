@@ -24,7 +24,6 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-@SuppressWarnings("serial")
 public class AppendableLogRecord extends LogRecord {
   private final String displayLevel;
 

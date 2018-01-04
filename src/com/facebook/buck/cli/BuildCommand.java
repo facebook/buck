@@ -16,12 +16,14 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_FILE_HASH_COMPUTATION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_LOCAL_BUILD;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_BUILD_ANALYSIS;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
@@ -43,6 +45,7 @@ import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
+import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -52,14 +55,14 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
@@ -68,6 +71,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.RuleKey;
@@ -87,6 +91,8 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
@@ -102,8 +108,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -322,37 +331,44 @@ public class BuildCommand extends AbstractCommand {
   }
 
   @Nullable private volatile Build lastBuild;
+  private final SettableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator =
+      SettableFuture.create();
 
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
-  public static BuildJobState getDistBuildState(
+  /**
+   * Create the serializable {@link BuildJobState} for distributed builds.
+   *
+   * @param buildTargets - Top level targets.
+   * @param params - Client side parameters.
+   * @param executor - Executor for async ops.
+   * @return - New instance of serializable {@link BuildJobState}.
+   * @throws InterruptedException
+   * @throws IOException
+   */
+  public static ListenableFuture<BuildJobState> getAsyncDistBuildState(
       List<String> buildTargets,
       CommandRunnerParams params,
       WeightedListeningExecutorService executor)
       throws InterruptedException, IOException {
     BuildCommand buildCommand = new BuildCommand(buildTargets);
-    int exitCode = buildCommand.checkArguments(params);
-    if (exitCode != 0) {
-      throw new HumanReadableException("The build targets are invalid.");
-    }
+    buildCommand.assertArguments(params);
 
     ActionAndTargetGraphs graphs = null;
     try {
       graphs = buildCommand.createGraphs(params, executor, Optional.empty());
     } catch (ActionGraphCreationException e) {
-      params.getConsole().printBuildFailure(e.getMessage());
-      throw new RuntimeException(e);
+      throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
 
-    return buildCommand.computeDistBuildState(params, graphs, executor).getFirst();
+    return buildCommand.computeDistBuildState(params, graphs, executor, Optional.empty())
+        .asyncJobState;
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    int exitCode = checkArguments(params);
-    if (exitCode != 0) {
-      return exitCode;
-    }
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
+    assertArguments(params);
 
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     try (CommandThreadManager pool =
@@ -369,9 +385,10 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  protected int checkArguments(CommandRunnerParams params) {
+  /** @throw CommandLineException if arguments provided are incorrect */
+  protected void assertArguments(CommandRunnerParams params) {
     if (!getArguments().isEmpty()) {
-      return 0;
+      return;
     }
     String message = "Must specify at least one build target.";
     ImmutableSet<String> aliases = params.getBuckConfig().getAliases().keySet();
@@ -383,11 +400,10 @@ public class BuildCommand extends AbstractCommand {
               "%nTry building one of the following targets:%n%s",
               Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)));
     }
-    params.getConsole().printBuildFailure(message);
-    return 1;
+    throw new CommandLineException(message);
   }
 
-  protected int run(
+  protected ExitCode run(
       CommandRunnerParams params,
       CommandThreadManager commandThreadManager,
       ImmutableSet<String> additionalTargets)
@@ -396,12 +412,12 @@ public class BuildCommand extends AbstractCommand {
       this.arguments.addAll(additionalTargets);
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
-    int exitCode = 0;
+    ExitCode exitCode = ExitCode.SUCCESS;
     try {
       exitCode = executeBuildAndProcessResult(params, commandThreadManager);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
-      exitCode = 1;
+      exitCode = ExitCode.PARSE_ERROR;
     } finally {
       params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
     }
@@ -438,11 +454,16 @@ public class BuildCommand extends AbstractCommand {
     }
 
     TargetGraphAndBuildTargets targetGraphForLocalBuild =
-        getTargetGraphForLocalBuild(unversionedTargetGraph, versionedTargetGraph);
+        ActionAndTargetGraphs.getTargetGraphForLocalBuild(
+            unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndResolver actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
-    return new ActionAndTargetGraphs(unversionedTargetGraph, versionedTargetGraph, actionGraph);
+    return ActionAndTargetGraphs.builder()
+        .setUnversionedTargetGraph(unversionedTargetGraph)
+        .setVersionedTargetGraph(versionedTargetGraph)
+        .setActionGraphAndResolver(actionGraph)
+        .build();
   }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
@@ -453,18 +474,18 @@ public class BuildCommand extends AbstractCommand {
     // As such, we have to get the result of createTargetGraph() before we can do this check.
     if (outputPathForSingleBuildTarget != null
         && targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
-      throw new ActionGraphCreationException(
+      throw new CommandLineException(
           String.format(
               "When using %s you must specify exactly one build target, but you specified %s",
               OUT_LONG_ARG, targetGraphAndBuildTargets.getBuildTargets()));
     }
   }
 
-  private int executeBuildAndProcessResult(
+  private ExitCode executeBuildAndProcessResult(
       CommandRunnerParams params, CommandThreadManager commandThreadManager)
       throws IOException, InterruptedException, ActionGraphCreationException {
-    int exitCode;
-    ActionAndTargetGraphs graphs = null;
+    ExitCode exitCode = ExitCode.SUCCESS;
+    final ActionAndTargetGraphs graphs;
     if (useDistributedBuild) {
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       ClientStatsTracker distBuildClientStatsTracker =
@@ -472,17 +493,10 @@ public class BuildCommand extends AbstractCommand {
 
       distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
-
       graphs =
           createGraphs(
               params, commandThreadManager.getListeningExecutorService(), Optional.empty());
-
       distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
-
-      Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
-          computeDistBuildState(params, graphs, commandThreadManager.getListeningExecutorService());
-      BuildJobState jobState = stateAndCells.getFirst();
-      DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
 
       try {
         exitCode =
@@ -493,8 +507,6 @@ public class BuildCommand extends AbstractCommand {
                 commandThreadManager.getWeightedListeningExecutorService(),
                 params.getCell().getFilesystem(),
                 params.getFileHashCache(),
-                jobState,
-                distBuildCellIndexer,
                 distBuildClientStatsTracker);
       } catch (Throwable ex) {
         distBuildClientStatsTracker.setBuckClientError(true);
@@ -519,14 +531,14 @@ public class BuildCommand extends AbstractCommand {
         exitCode =
             executeLocalBuild(
                 params,
-                graphs.actionGraph,
+                graphs.getActionGraphAndResolver(),
                 commandThreadManager.getWeightedListeningExecutorService(),
                 optionalRuleKeyLogger,
                 new NoOpRemoteBuildRuleCompletionWaiter(),
                 Optional.empty());
       }
     }
-    if (exitCode == 0) {
+    if (exitCode == ExitCode.SUCCESS) {
       exitCode = processSuccessfulBuild(params, graphs);
     }
     return exitCode;
@@ -544,18 +556,18 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private int processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
+  private ExitCode processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
       throws IOException {
     if (params.getBuckConfig().createBuildOutputSymLinksEnabled()) {
-      symLinkBuildResults(params, graphs.actionGraph);
+      symLinkBuildResults(params, graphs.getActionGraphAndResolver());
     }
     if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
-      showOutputs(params, graphs.actionGraph);
+      showOutputs(params, graphs.getActionGraphAndResolver());
     }
     if (outputPathForSingleBuildTarget != null) {
       BuildTarget loneTarget =
           Iterables.getOnlyElement(graphs.getTargetGraphForLocalBuild().getBuildTargets());
-      BuildRule rule = graphs.actionGraph.getResolver().getRule(loneTarget);
+      BuildRule rule = graphs.getActionGraphAndResolver().getResolver().getRule(loneTarget);
       if (!rule.outputFileCanBeCopied()) {
         params
             .getConsole()
@@ -563,7 +575,7 @@ public class BuildCommand extends AbstractCommand {
                 String.format(
                     "%s does not have an output that is compatible with `buck build --out`",
                     loneTarget));
-        return 1;
+        return ExitCode.BUILD_ERROR;
       } else {
         SourcePath output =
             Preconditions.checkNotNull(
@@ -575,12 +587,12 @@ public class BuildCommand extends AbstractCommand {
         ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
         SourcePathResolver pathResolver =
             DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(graphs.actionGraph.getResolver()));
+                new SourcePathRuleFinder(graphs.getActionGraphAndResolver().getResolver()));
         projectFilesystem.copyFile(
             pathResolver.getAbsolutePath(output), outputPathForSingleBuildTarget);
       }
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private void symLinkBuildResults(
@@ -613,14 +625,43 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private Pair<BuildJobState, DistBuildCellIndexer> computeDistBuildState(
+  private AsyncJobStateAndCells computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
-      final ListeningExecutorService executorService)
+      final ListeningExecutorService executorService,
+      Optional<ClientStatsTracker> clientStatsTracker)
       throws IOException, InterruptedException {
+    DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
+
+    // Compute the file hashes.
+    ActionGraphAndResolver actionGraphAndResolver = graphs.getActionGraphAndResolver();
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_FILE_HASH_COMPUTATION));
+    DistBuildFileHashes distributedBuildFileHashes =
+        new DistBuildFileHashes(
+            actionGraphAndResolver.getActionGraph(),
+            pathResolver,
+            ruleFinder,
+            params.getFileHashCache(),
+            cellIndexer,
+            executorService,
+            params.getRuleKeyConfiguration(),
+            params.getCell());
+    distributedBuildFileHashes
+        .getFileHashesComputationFuture()
+        .addListener(
+            () ->
+                clientStatsTracker.ifPresent(
+                    tracker -> tracker.stopTimer(LOCAL_FILE_HASH_COMPUTATION)),
+            executorService);
+
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets = graphs.unversionedTargetGraph;
+    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+        graphs.getTargetGraphForDistributedBuild();
 
     TypeCoercerFactory typeCoercerFactory =
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
@@ -633,18 +674,14 @@ public class BuildCommand extends AbstractCommand {
         new DistBuildTargetGraphCodec(
             parserTargetNodeFactory,
             input -> {
-              try {
-                return params
-                    .getParser()
-                    .getRawTargetNode(
-                        params.getBuckEventBus(),
-                        params.getCell().getCell(input.getBuildTarget()),
-                        false /* enableProfiling */,
-                        executorService,
-                        input);
-              } catch (BuildFileParseException e) {
-                throw new RuntimeException(e);
-              }
+              return params
+                  .getParser()
+                  .getRawTargetNode(
+                      params.getBuckEventBus(),
+                      params.getCell().getCell(input.getBuildTarget()),
+                      false /* enableProfiling */,
+                      executorService,
+                      input);
             },
             targetGraphAndBuildTargets
                 .getBuildTargets()
@@ -652,48 +689,59 @@ public class BuildCommand extends AbstractCommand {
                 .map(t -> t.getFullyQualifiedName())
                 .collect(Collectors.toSet()));
 
-    ActionGraphAndResolver actionGraphAndResolver = graphs.actionGraph;
-    DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-
-    DistBuildFileHashes distributedBuildFileHashes =
-        new DistBuildFileHashes(
-            actionGraphAndResolver.getActionGraph(),
-            pathResolver,
-            ruleFinder,
-            params.getFileHashCache(),
-            cellIndexer,
-            executorService,
-            params.getRuleKeyConfiguration(),
-            params.getCell());
-
-    return new Pair<>(
-        DistBuildState.dump(
-            cellIndexer,
-            distributedBuildFileHashes,
-            targetGraphCodec,
-            targetGraphAndBuildTargets.getTargetGraph(),
-            buildTargets),
+    return new AsyncJobStateAndCells(
+        executorService.submit(
+            () -> {
+              BuildJobState state =
+                  DistBuildState.dump(
+                      cellIndexer,
+                      distributedBuildFileHashes,
+                      targetGraphCodec,
+                      targetGraphAndBuildTargets.getTargetGraph(),
+                      buildTargets,
+                      clientStatsTracker);
+              LOG.info("Finished computing serializable distributed build state.");
+              return state;
+            }),
         cellIndexer);
   }
 
-  private int executeDistBuild(
+  private ExitCode executeDistBuild(
       CommandRunnerParams params,
       DistBuildConfig distBuildConfig,
       ActionAndTargetGraphs graphs,
       WeightedListeningExecutorService executorService,
       ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
-      BuildJobState jobState,
-      DistBuildCellIndexer distBuildCellIndexer,
       ClientStatsTracker distBuildClientStats)
       throws IOException, InterruptedException {
     Preconditions.checkNotNull(distBuildClientEventListener);
 
+    BuildEvent.DistBuildStarted started = null;
+    if (distributedBuildStateFile == null) {
+      if (distBuildConfig.getBuildMode().equals(BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR)
+          && !distBuildConfig.getMinionQueue().isPresent()) {
+        throw new HumanReadableException(
+            "Stampede Minion Queue name must be specified to use Local Coordinator Mode.");
+      }
+
+      started = BuildEvent.distBuildStarted();
+      params.getBuckEventBus().post(started);
+    }
+
+    LOG.info("Starting async file hash computation and job state serialization.");
+    AsyncJobStateAndCells stateAndCells =
+        computeDistBuildState(params, graphs, executorService, Optional.of(distBuildClientStats));
+    ListenableFuture<BuildJobState> asyncJobState = stateAndCells.asyncJobState;
+    DistBuildCellIndexer distBuildCellIndexer = stateAndCells.distBuildCellIndexer;
+
     if (distributedBuildStateFile != null) {
-      Path stateDumpPath = Paths.get(distributedBuildStateFile);
+      BuildJobState jobState;
+      try {
+        jobState = asyncJobState.get();
+      } catch (ExecutionException e) {
+        throw new RuntimeException("Failed to compute DistBuildState.", e);
+      }
 
       // Read all files inline if we're dumping state to a file.
       for (BuildJobStateFileHashes cell : jobState.getFileHashes()) {
@@ -707,12 +755,10 @@ public class BuildCommand extends AbstractCommand {
         }
       }
 
+      Path stateDumpPath = Paths.get(distributedBuildStateFile);
       BuildJobStateSerializer.serialize(jobState, filesystem.newFileOutputStream(stateDumpPath));
-      return 0;
+      return ExitCode.SUCCESS;
     }
-
-    BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
-    params.getBuckEventBus().post(started);
 
     int distBuildExitCode = DIST_BUILD_REMOTE_STEP_FAILED_EXIT_CODE;
     BuildController.ExecutionResult distBuildResult;
@@ -731,10 +777,13 @@ public class BuildCommand extends AbstractCommand {
         // Stampede has marked them as available.
         final RemoteBuildRuleSynchronizer remoteBuildSynchronizer =
             new RemoteBuildRuleSynchronizer();
-
         BuildController build =
             new BuildController(
-                jobState,
+                params.createBuilderArgs(),
+                buildTargets,
+                graphs,
+                Optional.of(new LocalCachingBuildEngineDelegate(params.getFileHashCache())),
+                asyncJobState,
                 distBuildCellIndexer,
                 service,
                 distBuildLogStateTracker,
@@ -752,16 +801,16 @@ public class BuildCommand extends AbstractCommand {
                 .submit(
                     () -> {
                       distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
-
                       try {
                         localBuildExitCode.set(
                             executeLocalBuild(
-                                params,
-                                graphs.actionGraph,
-                                executorService,
-                                Optional.empty(),
-                                remoteBuildSynchronizer,
-                                Optional.of(localBuildInitializationLatch)));
+                                    params,
+                                    graphs.getActionGraphAndResolver(),
+                                    executorService,
+                                    Optional.empty(),
+                                    remoteBuildSynchronizer,
+                                    Optional.of(localBuildInitializationLatch))
+                                .getCode());
 
                         LOG.info("Distributed build local client has finished building");
                       } catch (IOException e) {
@@ -783,15 +832,18 @@ public class BuildCommand extends AbstractCommand {
                 filesystem,
                 fileHashCache,
                 params.getBuckEventBus(),
-                params.getInvocationInfo().get().getBuildId(),
+                params.getInvocationInfo().get(),
                 distBuildConfig.getBuildMode(),
                 distBuildConfig.getNumberOfMinions(),
                 distBuildConfig.getRepository(),
-                distBuildConfig.getTenantId());
+                distBuildConfig.getTenantId(),
+                Futures.transform(
+                    localRuleKeyCalculator, Optional::of, MoreExecutors.directExecutor()));
         distBuildExitCode = distBuildResult.exitCode;
       } finally {
         BuildEvent.DistBuildFinished finished =
-            BuildEvent.distBuildFinished(started, distBuildExitCode);
+            BuildEvent.distBuildFinished(
+                Preconditions.checkNotNull(started), ExitCode.map(distBuildExitCode));
         params.getBuckEventBus().post(finished);
       }
 
@@ -838,7 +890,14 @@ public class BuildCommand extends AbstractCommand {
         try {
           Set<String> cacheMissRequestKeys =
               distBuildClientEventListener.getDefaultCacheMissRequestKeys();
-          List<RuleKeyLogEntry> ruleKeyLogs = service.fetchRuleKeyLogs(cacheMissRequestKeys);
+          ArtifactCacheBuckConfig artifactCacheBuckConfig =
+              ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
+          List<RuleKeyLogEntry> ruleKeyLogs =
+              service.fetchRuleKeyLogs(
+                  cacheMissRequestKeys,
+                  artifactCacheBuckConfig.getRepository(),
+                  artifactCacheBuckConfig.getScheduleType(),
+                  true /* distributedBuildModeEnabled */);
           params
               .getBuckEventBus()
               .post(
@@ -876,7 +935,7 @@ public class BuildCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));
-      return exitCode;
+      return ExitCode.map(exitCode);
     }
   }
 
@@ -884,7 +943,7 @@ public class BuildCommand extends AbstractCommand {
     if (buckBinary == null) {
       String gitHash = System.getProperty(BUCK_GIT_COMMIT_KEY, null);
       if (gitHash == null) {
-        throw new HumanReadableException(
+        throw new CommandLineException(
             String.format(
                 "Property [%s] is not set and the command line flag [%s] was not passed.",
                 BUCK_GIT_COMMIT_KEY, BUCK_BINARY_STRING_ARG));
@@ -895,7 +954,7 @@ public class BuildCommand extends AbstractCommand {
 
     Path binaryPath = Paths.get(buckBinary);
     if (!Files.isRegularFile(binaryPath)) {
-      throw new HumanReadableException(
+      throw new CommandLineException(
           String.format(
               "Buck binary [%s] passed under flag [%s] does not exist.",
               binaryPath, BUCK_BINARY_STRING_ARG));
@@ -905,7 +964,8 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void showOutputs(
-      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver) {
+      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver)
+      throws IOException {
     TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     SourcePathRuleFinder ruleFinder =
@@ -948,11 +1008,7 @@ public class BuildCommand extends AbstractCommand {
     if (showJsonOutput || showFullJsonOutput) {
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
-      try {
-        ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
       String output = stringWriter.getBuffer().toString();
       params.getConsole().getStdOut().println(output);
     }
@@ -973,7 +1029,7 @@ public class BuildCommand extends AbstractCommand {
               executor,
               parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
               parserConfig.getDefaultFlavorsMode());
-    } catch (BuildTargetException | BuildFileParseException e) {
+    } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
   }
@@ -1016,7 +1072,7 @@ public class BuildCommand extends AbstractCommand {
     return actionGraphAndResolver;
   }
 
-  protected int executeLocalBuild(
+  protected ExitCode executeLocalBuild(
       CommandRunnerParams params,
       ActionGraphAndResolver actionGraphAndResolver,
       WeightedListeningExecutorService executor,
@@ -1041,6 +1097,7 @@ public class BuildCommand extends AbstractCommand {
               ruleKeyLogger,
               remoteBuildRuleCompletionWaiter);
       lastBuild = builder.getBuild();
+      localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
 
       if (initializeBuildLatch.isPresent()) {
         // Signal to other threads that lastBuild has now been set.
@@ -1052,11 +1109,11 @@ public class BuildCommand extends AbstractCommand {
               .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
               .transform(target -> target.getFullyQualifiedName())
               .toList();
-      int exitCode =
+      int code =
           builder.buildLocallyAndReturnExitCode(
               targetStrings, getPathToBuildReport(params.getBuckConfig()));
       builder.shutdown();
-      return exitCode;
+      return ExitCode.map(code);
     }
   }
 
@@ -1107,14 +1164,6 @@ public class BuildCommand extends AbstractCommand {
     return "builds the specified target";
   }
 
-  protected static TargetGraphAndBuildTargets getTargetGraphForLocalBuild(
-      TargetGraphAndBuildTargets unversionedTargetGraph,
-      Optional<TargetGraphAndBuildTargets> versionedTargetGraph) {
-    // If a versioned target graph was produced then we always use this for the local build,
-    // otherwise the unversioned graph is used.
-    return versionedTargetGraph.isPresent() ? versionedTargetGraph.get() : unversionedTargetGraph;
-  }
-
   @Override
   public Iterable<BuckEventListener> getEventListeners(
       Map<ExecutorPool, ListeningExecutorService> executorPool,
@@ -1127,30 +1176,20 @@ public class BuildCommand extends AbstractCommand {
     return listeners.build();
   }
 
-  public static class ActionGraphCreationException extends Exception {
-    public ActionGraphCreationException(String message) {
-      super(message);
+  private static class AsyncJobStateAndCells {
+    final ListenableFuture<BuildJobState> asyncJobState;
+    final DistBuildCellIndexer distBuildCellIndexer;
+
+    AsyncJobStateAndCells(
+        ListenableFuture<BuildJobState> asyncJobState, DistBuildCellIndexer cellIndexer) {
+      this.asyncJobState = asyncJobState;
+      this.distBuildCellIndexer = cellIndexer;
     }
   }
 
-  protected static class ActionAndTargetGraphs {
-    final TargetGraphAndBuildTargets unversionedTargetGraph;
-    final Optional<TargetGraphAndBuildTargets> versionedTargetGraph;
-    final ActionGraphAndResolver actionGraph;
-
-    protected ActionAndTargetGraphs(
-        TargetGraphAndBuildTargets unversionedTargetGraph,
-        Optional<TargetGraphAndBuildTargets> versionedTargetGraph,
-        ActionGraphAndResolver actionGraph) {
-      this.unversionedTargetGraph = unversionedTargetGraph;
-      this.versionedTargetGraph = versionedTargetGraph;
-      this.actionGraph = actionGraph;
-    }
-
-    protected TargetGraphAndBuildTargets getTargetGraphForLocalBuild() {
-      // If a versioned target graph was produced then we always use this for the local build,
-      // otherwise the unversioned graph is used.
-      return BuildCommand.getTargetGraphForLocalBuild(unversionedTargetGraph, versionedTargetGraph);
+  public static class ActionGraphCreationException extends Exception {
+    public ActionGraphCreationException(String message) {
+      super(message);
     }
   }
 }

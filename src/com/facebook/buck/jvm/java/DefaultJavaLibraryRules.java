@@ -182,10 +182,16 @@ public abstract class DefaultJavaLibraryRules {
     buildRuleResolver.computeIfAbsent(
         rootmostTarget,
         target -> {
+          CalculateSourceAbi sourceOnlyAbiRule = buildSourceOnlyAbiRule();
           CalculateSourceAbi sourceAbiRule = buildSourceAbiRule();
           DefaultJavaLibrary libraryRule = buildLibraryRule(sourceAbiRule);
           CalculateClassAbi classAbiRule = buildClassAbiRule(libraryRule);
-          CompareAbis compareAbisRule = buildCompareAbisRule(sourceAbiRule, classAbiRule);
+          CompareAbis compareAbisRule;
+          if (sourceOnlyAbiRule != null) {
+            compareAbisRule = buildCompareAbisRule(sourceOnlyAbiRule, sourceAbiRule);
+          } else {
+            compareAbisRule = buildCompareAbisRule(sourceAbiRule, classAbiRule);
+          }
 
           if (HasJavaAbi.isLibraryTarget(target)) {
             return libraryRule;
@@ -200,13 +206,13 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Nullable
-  private CompareAbis buildCompareAbisRule(
-      @Nullable CalculateSourceAbi sourceAbi, @Nullable CalculateClassAbi classAbi) {
+  private <T extends BuildRule & CalculateAbi, U extends BuildRule & CalculateAbi>
+      CompareAbis buildCompareAbisRule(@Nullable T abi1, @Nullable U abi2) {
     if (!willProduceCompareAbis()) {
       return null;
     }
-    Preconditions.checkNotNull(sourceAbi);
-    Preconditions.checkNotNull(classAbi);
+    Preconditions.checkNotNull(abi1);
+    Preconditions.checkNotNull(abi2);
 
     BuildTarget compareAbisTarget = HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
     return getBuildRuleResolver()
@@ -215,11 +221,11 @@ public abstract class DefaultJavaLibraryRules {
                 compareAbisTarget,
                 getProjectFilesystem(),
                 getInitialParams()
-                    .withDeclaredDeps(ImmutableSortedSet.of(classAbi, sourceAbi))
+                    .withDeclaredDeps(ImmutableSortedSet.of(abi1, abi2))
                     .withoutExtraDeps(),
                 getSourcePathResolver(),
-                classAbi.getSourcePathToOutput(),
-                sourceAbi.getSourcePathToOutput(),
+                abi1.getSourcePathToOutput(),
+                abi2.getSourcePathToOutput(),
                 Preconditions.checkNotNull(getJavaBuckConfig()).getSourceAbiVerificationMode()));
   }
 
@@ -228,6 +234,8 @@ public abstract class DefaultJavaLibraryRules {
   BuildTarget getAbiJar() {
     if (willProduceCompareAbis()) {
       return HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
+    } else if (willProduceSourceOnlyAbi()) {
+      return HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
     } else if (willProduceSourceAbi()) {
       return HasJavaAbi.getSourceAbiJar(getLibraryTarget());
     } else if (willProduceClassAbi()) {
@@ -342,7 +350,7 @@ public abstract class DefaultJavaLibraryRules {
     ImmutableSortedSet.Builder<BuildRule> buildDepsBuilder = ImmutableSortedSet.naturalOrder();
 
     buildDepsBuilder.addAll(getFinalBuildDeps());
-    if (sourceAbiRule != null && !willProduceSourceOnlyAbi()) {
+    if (sourceAbiRule != null) {
       buildDepsBuilder.add(sourceAbiRule);
     }
 
@@ -363,7 +371,7 @@ public abstract class DefaultJavaLibraryRules {
                 getTests(),
                 getRequiredForSourceOnlyAbi());
 
-    if (sourceAbiRule != null && !willProduceSourceOnlyAbi()) {
+    if (sourceAbiRule != null) {
       libraryRule.setSourceAbi(sourceAbiRule);
     }
 
@@ -387,17 +395,33 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Nullable
+  private CalculateSourceAbi buildSourceOnlyAbiRule() {
+    if (!willProduceSourceOnlyAbi()) {
+      return null;
+    }
+
+    ImmutableSortedSet<BuildRule> buildDeps = getFinalBuildDepsForSourceOnlyAbi();
+    JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactoryForSourceOnlyAbi();
+
+    BuildTarget sourceAbiTarget = HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
+    return getBuildRuleResolver()
+        .addToIndex(
+            new CalculateSourceAbi(
+                sourceAbiTarget,
+                getProjectFilesystem(),
+                buildDeps,
+                getSourcePathRuleFinder(),
+                jarBuildStepsFactory));
+  }
+
+  @Nullable
   private CalculateSourceAbi buildSourceAbiRule() {
     if (!willProduceSourceAbi()) {
       return null;
     }
 
-    ImmutableSortedSet<BuildRule> buildDeps =
-        willProduceSourceOnlyAbi() ? getFinalBuildDepsForSourceOnlyAbi() : getFinalBuildDeps();
-    JarBuildStepsFactory jarBuildStepsFactory =
-        willProduceSourceOnlyAbi()
-            ? getJarBuildStepsFactoryForSourceOnlyAbi()
-            : getJarBuildStepsFactory();
+    ImmutableSortedSet<BuildRule> buildDeps = getFinalBuildDeps();
+    JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactory();
 
     BuildTarget sourceAbiTarget = HasJavaAbi.getSourceAbiJar(getLibraryTarget());
     return getBuildRuleResolver()
@@ -445,7 +469,7 @@ public abstract class DefaultJavaLibraryRules {
         .setBuildRuleParams(getInitialParams())
         .setConfiguredCompiler(getConfiguredCompiler())
         .setDeps(Preconditions.checkNotNull(getDeps()))
-        .setShouldCompileAgainstAbis(getConfiguredCompilerFactory().shouldCompileAgainstAbis())
+        .setShouldCompileAgainstAbis(shouldCompileAgainstAbis())
         .build();
   }
 
@@ -528,11 +552,21 @@ public abstract class DefaultJavaLibraryRules {
         // is that the ABI generation for that language isn't fully correct.
         .addAll(classpaths.getCompileTimeClasspathAbiDeps());
 
-    if (!getConfiguredCompilerFactory().shouldCompileAgainstAbis()) {
+    if (!shouldCompileAgainstAbis()) {
       depsBuilder.addAll(classpaths.getCompileTimeClasspathFullDeps());
     }
 
     return depsBuilder.build();
+  }
+
+  @Value.Lazy
+  boolean shouldCompileAgainstAbis() {
+    CoreArg args = getArgs();
+    boolean fromArgs =
+        args == null
+            || args.getCompileAgainst().map(v -> v == CompileAgainstLibraryType.ABI).orElse(true);
+
+    return fromArgs && getConfiguredCompilerFactory().shouldCompileAgainstAbis();
   }
 
   @Value.Lazy

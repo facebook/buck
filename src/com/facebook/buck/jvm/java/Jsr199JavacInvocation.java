@@ -84,7 +84,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final BuildTarget invokingRule;
   private final BuildTarget libraryTarget;
   private final AbiGenerationMode abiCompatibilityMode;
-  private final BuildTarget abiTarget;
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -119,7 +118,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             ? invokingRule
             : HasJavaAbi.getLibraryTarget(invokingRule);
     this.abiCompatibilityMode = abiCompatibilityMode;
-    this.abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
     this.options = options;
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
@@ -129,6 +127,11 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
     this.ruleInfo = ruleInfo;
+  }
+
+  @Override
+  public int buildSourceOnlyAbiJar() throws InterruptedException {
+    return getWorker().buildSourceOnlyAbiJar();
   }
 
   @Override
@@ -181,12 +184,13 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
   private class CompilerWorker implements AutoCloseable {
     private final ListeningExecutorService executor;
-    private final BuckJavacTaskProxy javacTask;
 
     private final SettableFuture<Integer> compilerResult = SettableFuture.create();
     private final SettableFuture<Boolean> shouldCompileFullJar = SettableFuture.create();
     private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     private final List<AutoCloseable> closeables = new ArrayList<>();
+
+    @Nullable private BuckJavacTaskProxy lazyJavacTask;
 
     /** A perf event that's used to show, on the background thread, what rule is being built. */
     @Nullable private JavacEventSinkScopedSimplePerfEvent targetEvent;
@@ -201,18 +205,17 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       this.executor = executor;
 
       classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
+    }
 
-      try {
-        boolean generatingSourceOnlyAbi =
-            HasJavaAbi.isSourceAbiTarget(invokingRule) && !abiGenerationMode.usesDependencies();
-        javacTask = newJavacTask(generatingSourceOnlyAbi);
-      } catch (IOException e) {
-        LOG.error(e);
-        throw new HumanReadableException("IOException during compilation: ", e.getMessage());
-      }
+    public int buildSourceOnlyAbiJar() throws InterruptedException {
+      return buildAbiJar(true);
     }
 
     public int buildSourceAbiJar() throws InterruptedException {
+      return buildAbiJar(false);
+    }
+
+    private int buildAbiJar(boolean buildSourceOnlyAbi) throws InterruptedException {
       SettableFuture<Integer> abiResult = SettableFuture.create();
       Futures.addCallback(
           compilerResult,
@@ -229,7 +232,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             }
           });
 
+      BuildTarget abiTarget =
+          buildSourceOnlyAbi
+              ? HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)
+              : HasJavaAbi.getSourceAbiJar(libraryTarget);
       JarParameters jarParameters = Preconditions.checkNotNull(abiJarParameters);
+      BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
             try {
@@ -279,7 +287,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           });
 
       try {
-        String threadName = startCompiler();
+        String threadName = startCompiler(javacTask);
         try (JavacEventSinkScopedSimplePerfEvent event =
             new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), threadName)) {
           return abiResult.get();
@@ -313,7 +321,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     public int buildClasses() throws InterruptedException {
       shouldCompileFullJar.set(true);
       try {
-        String threadName = startCompiler();
+        String threadName = startCompiler(getJavacTask(false));
         try (JavacEventSinkScopedSimplePerfEvent event =
             new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), threadName)) {
           return compilerResult.get();
@@ -383,7 +391,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       }
     }
 
-    private String startCompiler() throws ExecutionException, InterruptedException {
+    private String startCompiler(BuckJavacTaskProxy javacTask)
+        throws ExecutionException, InterruptedException {
       if (compilerThreadName == null) {
         final SettableFuture<String> threadName = SettableFuture.create();
         compilerResult.setFuture(
@@ -459,119 +468,129 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       return compilerThreadName;
     }
 
-    private BuckJavacTaskProxy newJavacTask(boolean generatingSourceOnlyAbi) throws IOException {
-      JavaCompiler compiler = compilerConstructor.get();
+    private BuckJavacTaskProxy getJavacTask(boolean generatingSourceOnlyAbi) {
+      if (lazyJavacTask == null) {
+        try {
+          JavaCompiler compiler = compilerConstructor.get();
 
-      StandardJavaFileManager standardFileManager =
-          compiler.getStandardFileManager(null, null, null);
-      addCloseable(standardFileManager);
+          StandardJavaFileManager standardFileManager =
+              compiler.getStandardFileManager(null, null, null);
+          addCloseable(standardFileManager);
 
-      StandardJavaFileManager fileManager;
-      if (libraryJarParameters != null) {
-        Path directToJarPath =
-            context
-                .getProjectFilesystem()
-                .getPathForRelativePath(libraryJarParameters.getJarPath());
-        inMemoryFileManager =
-            new JavaInMemoryFileManager(
-                standardFileManager,
-                directToJarPath,
-                libraryJarParameters.getRemoveEntryPredicate());
-        addCloseable(inMemoryFileManager);
-        fileManager = inMemoryFileManager;
-      } else {
-        inMemoryFileManager = null;
-        fileManager = standardFileManager;
+          StandardJavaFileManager fileManager;
+          if (libraryJarParameters != null) {
+            Path directToJarPath =
+                context
+                    .getProjectFilesystem()
+                    .getPathForRelativePath(libraryJarParameters.getJarPath());
+            inMemoryFileManager =
+                new JavaInMemoryFileManager(
+                    standardFileManager,
+                    directToJarPath,
+                    libraryJarParameters.getRemoveEntryPredicate());
+            addCloseable(inMemoryFileManager);
+            fileManager = inMemoryFileManager;
+          } else {
+            inMemoryFileManager = null;
+            fileManager = standardFileManager;
+          }
+
+          Iterable<? extends JavaFileObject> compilationUnits;
+          try {
+            compilationUnits =
+                createCompilationUnits(
+                    fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
+            compilationUnits.forEach(this::addCloseable);
+          } catch (IOException e) {
+            LOG.warn(e, "Error building compilation units");
+            throw e;
+          }
+
+          List<String> classNamesForAnnotationProcessing = ImmutableList.of();
+          Writer compilerOutputWriter =
+              new PrintWriter(context.getStdErr()); // NOPMD required by API
+          PluginClassLoaderFactory loaderFactory =
+              PluginLoader.newFactory(context.getClassLoaderCache());
+
+          ListenableFileManager wrappedFileManager = new ListenableFileManager(fileManager);
+          if (classUsageTracker != null) {
+            wrappedFileManager.addListener(classUsageTracker);
+          }
+          BuckJavacTaskProxy javacTask;
+          if (generatingSourceOnlyAbi) {
+            javacTask =
+                FrontendOnlyJavacTaskProxy.getTask(
+                    loaderFactory,
+                    compiler,
+                    compilerOutputWriter,
+                    wrappedFileManager,
+                    diagnostics,
+                    options,
+                    classNamesForAnnotationProcessing,
+                    compilationUnits);
+          } else {
+            javacTask =
+                BuckJavacTaskProxy.getTask(
+                    loaderFactory,
+                    compiler,
+                    compilerOutputWriter,
+                    wrappedFileManager,
+                    diagnostics,
+                    options,
+                    classNamesForAnnotationProcessing,
+                    compilationUnits);
+          }
+
+          PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
+
+          BuckJavacTaskListener taskListener = null;
+          if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()
+              && !generatingSourceOnlyAbi
+              && ruleInfo != null) {
+            ruleInfo.setFileManager(fileManager);
+            taskListener =
+                SourceBasedAbiStubber.newValidatingTaskListener(
+                    pluginLoader,
+                    javacTask,
+                    ruleInfo,
+                    () ->
+                        diagnostics
+                                .getDiagnostics()
+                                .stream()
+                                .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
+                                .count()
+                            > 0,
+                    abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
+          }
+
+          phaseEventLogger = new JavacPhaseEventLogger(invokingRule, context.getEventSink());
+          TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(phaseEventLogger);
+          // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
+          // in some unusual situations
+          addCloseable(tracer);
+
+          // Ensure annotation processors are loaded from their own classloader. If we don't do
+          // this, then the evidence suggests that they get one polluted with Buck's own classpath,
+          // which means that libraries that have dependencies on different versions of Buck's deps
+          // may choke with novel errors that don't occur on the command line.
+          AnnotationProcessorFactory processorFactory =
+              new AnnotationProcessorFactory(
+                  context.getEventSink(),
+                  compiler.getClass().getClassLoader(),
+                  context.getClassLoaderCache(),
+                  invokingRule);
+          addCloseable(processorFactory);
+
+          javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
+          javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+          lazyJavacTask = javacTask;
+        } catch (IOException e) {
+          LOG.error(e);
+          throw new HumanReadableException("IOException during compilation: ", e.getMessage());
+        }
       }
 
-      Iterable<? extends JavaFileObject> compilationUnits;
-      try {
-        compilationUnits =
-            createCompilationUnits(
-                fileManager, context.getProjectFilesystem()::resolve, javaSourceFilePaths);
-        compilationUnits.forEach(this::addCloseable);
-      } catch (IOException e) {
-        LOG.warn(e, "Error building compilation units");
-        throw e;
-      }
-
-      List<String> classNamesForAnnotationProcessing = ImmutableList.of();
-      Writer compilerOutputWriter = new PrintWriter(context.getStdErr()); // NOPMD required by API
-      PluginClassLoaderFactory loaderFactory =
-          PluginLoader.newFactory(context.getClassLoaderCache());
-
-      StandardJavaFileManager wrappedFileManager = fileManager;
-      if (classUsageTracker != null) {
-        wrappedFileManager = classUsageTracker.wrapFileManager(fileManager);
-      }
-      BuckJavacTaskProxy javacTask;
-      if (generatingSourceOnlyAbi) {
-        javacTask =
-            FrontendOnlyJavacTaskProxy.getTask(
-                loaderFactory,
-                compiler,
-                compilerOutputWriter,
-                wrappedFileManager,
-                diagnostics,
-                options,
-                classNamesForAnnotationProcessing,
-                compilationUnits);
-      } else {
-        javacTask =
-            BuckJavacTaskProxy.getTask(
-                loaderFactory,
-                compiler,
-                compilerOutputWriter,
-                wrappedFileManager,
-                diagnostics,
-                options,
-                classNamesForAnnotationProcessing,
-                compilationUnits);
-      }
-
-      PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
-
-      BuckJavacTaskListener taskListener = null;
-      if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()
-          && !generatingSourceOnlyAbi
-          && ruleInfo != null) {
-        ruleInfo.setFileManager(fileManager);
-        taskListener =
-            SourceBasedAbiStubber.newValidatingTaskListener(
-                pluginLoader,
-                javacTask,
-                ruleInfo,
-                () ->
-                    diagnostics
-                            .getDiagnostics()
-                            .stream()
-                            .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
-                            .count()
-                        > 0,
-                abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
-      }
-
-      phaseEventLogger = new JavacPhaseEventLogger(invokingRule, context.getEventSink());
-      TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(phaseEventLogger);
-      // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
-      // in some unusual situations
-      addCloseable(tracer);
-
-      // Ensure annotation processors are loaded from their own classloader. If we don't do
-      // this, then the evidence suggests that they get one polluted with Buck's own classpath,
-      // which means that libraries that have dependencies on different versions of Buck's deps
-      // may choke with novel errors that don't occur on the command line.
-      AnnotationProcessorFactory processorFactory =
-          new AnnotationProcessorFactory(
-              context.getEventSink(),
-              compiler.getClass().getClassLoader(),
-              context.getClassLoaderCache(),
-              invokingRule);
-      addCloseable(processorFactory);
-
-      javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
-      javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
-      return javacTask;
+      return lazyJavacTask;
     }
 
     private JarBuilder newJarBuilder(JarParameters jarParameters) throws IOException {

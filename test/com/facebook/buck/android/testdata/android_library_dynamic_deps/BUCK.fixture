@@ -26,6 +26,37 @@ android_resource(
     res = "res",
 )
 
+android_resource(
+    name = "res_with_deps",
+    package = "com.example",
+    res = "res",
+    deps = [
+        ":lib_b",
+    ],
+)
+
+android_library(
+    name = "needs_b_has_res",
+    srcs = [
+        "NeedsB.java",
+    ],
+    deps_query = "classpath($declared_deps, 1)",
+    deps = [
+        ":res_with_deps",
+    ],
+)
+
+android_library(
+    name = "needs_c_has_res",
+    srcs = [
+        "NeedsC.java",
+    ],
+    deps_query = "classpath($declared_deps, 1)",
+    deps = [
+        ":res_with_deps",
+    ],
+)
+
 android_library(
     name = "top_level",
     srcs = ["TopLevel.java"],

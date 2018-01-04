@@ -62,6 +62,7 @@ import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
@@ -420,10 +421,10 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(ExternalTestSpecCalculationEvent.started(buildTarget));
     eventBus.post(ExternalTestSpecCalculationEvent.finished(buildTarget));
 
-    eventBus.post(ExternalTestRunEvent.finished(ImmutableSet.of(), 0));
+    eventBus.post(ExternalTestRunEvent.finished(ImmutableSet.of(), ExitCode.SUCCESS));
 
-    eventBus.post(BuildEvent.finished(buildEventStarted, 0));
-    eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ 0));
+    eventBus.post(BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS));
+    eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ ExitCode.SUCCESS));
     listener.outputTrace(new BuildId("BUILD_ID"));
 
     List<ChromeTraceEvent> originalResultList =

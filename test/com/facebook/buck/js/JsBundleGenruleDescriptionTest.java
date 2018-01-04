@@ -193,6 +193,36 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
+  public void addsResourcesDirectoryAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "RES_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToResources()).toString()));
+  }
+
+  @Test
+  public void addsMiscDirectoryAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "MISC_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToMisc()).toString()));
+  }
+
+  @Test
   public void exportsResourcesOfJsBundle() {
     assertEquals(
         setup.jsBundle().getSourcePathToResources(), setup.genrule().getSourcePathToResources());

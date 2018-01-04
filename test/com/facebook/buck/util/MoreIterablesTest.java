@@ -72,6 +72,26 @@ public class MoreIterablesTest {
   }
 
   @Test
+  public void testForEachPair() {
+    StringBuilder builder = new StringBuilder();
+    MoreIterables.forEachPair(
+        lstV("l1", "l2"),
+        lstV("r1", "r2"),
+        (left, right) -> builder.append("|" + left + "," + right));
+    assertEquals("|l1,r1|l2,r2", builder.toString());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testForEachPairLeftSmaller() {
+    MoreIterables.forEachPair(lstV("l1"), lstV("r1", "r2"), (left, right) -> {});
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testForEachPairRightSmaller() {
+    MoreIterables.forEachPair(lstV("l1", "l2"), lstV("r1"), (left, right) -> {});
+  }
+
+  @Test
   public void enumerate() {
     assertThat(lstI(MoreIterables.enumerate(ImmutableList.of())), Matchers.empty());
     assertThat(

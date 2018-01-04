@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.exceptions;
 
-import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
+import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -24,11 +24,9 @@ import java.nio.file.Path;
  * Thrown if we encounter an unexpected, fatal condition while interacting with the build file
  * parser.
  */
-@SuppressWarnings("serial")
-public class BuildFileParseException extends Exception
-    implements ExceptionWithHumanReadableMessage {
+public class BuildFileParseException extends HumanReadableException {
 
-  private BuildFileParseException(String message) {
+  protected BuildFileParseException(String message) {
     super(message);
   }
 

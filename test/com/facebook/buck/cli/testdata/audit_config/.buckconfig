@@ -6,3 +6,7 @@ some_property = some_value
     short_value = short test value
     long_value = multiline value with \n \
       and \r\n chars in it
+
+[repositories]
+    secondary = secondary
+    

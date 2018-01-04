@@ -16,17 +16,19 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 
 public final class RootCommand extends AbstractCommand {
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     String path =
         params.getCell().getFilesystem().getRootPath().normalize().toAbsolutePath().toString();
 
     params.getConsole().getStdOut().println(path);
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

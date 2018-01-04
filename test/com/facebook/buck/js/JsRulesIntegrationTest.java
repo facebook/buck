@@ -77,6 +77,13 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void testBuildWithExtraJson() throws IOException {
+    workspace.runBuckBuild("//js:bundle_with_extra_json").assertSuccess();
+
+    workspace.verify(Paths.get("bundle_with_extra_json.expected"), genPath);
+  }
+
+  @Test
   public void testOptimizationBuild() throws IOException {
     workspace.runBuckBuild("//js:fruit#release,android").assertSuccess();
 

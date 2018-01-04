@@ -16,33 +16,13 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleImmutable
+@BuckStyleTuple
 abstract class AbstractProductType {
-  public static final ProductType STATIC_LIBRARY =
-      ProductType.of("com.apple.product-type.library.static");
-  public static final ProductType DYNAMIC_LIBRARY =
-      ProductType.of("com.apple.product-type.library.dynamic");
-  public static final ProductType TOOL = ProductType.of("com.apple.product-type.tool");
-  public static final ProductType BUNDLE = ProductType.of("com.apple.product-type.bundle");
-  public static final ProductType FRAMEWORK = ProductType.of("com.apple.product-type.framework");
-  public static final ProductType STATIC_FRAMEWORK =
-      ProductType.of("com.apple.product-type.framework.static");
-  public static final ProductType APPLICATION =
-      ProductType.of("com.apple.product-type.application");
-  public static final ProductType WATCH_APPLICATION =
-      ProductType.of("com.apple.product-type.application.watchapp2");
-  public static final ProductType UNIT_TEST =
-      ProductType.of("com.apple.product-type.bundle.unit-test");
-  public static final ProductType UI_TEST =
-      ProductType.of("com.apple.product-type.bundle.ui-testing");
-  public static final ProductType APP_EXTENSION =
-      ProductType.of("com.apple.product-type.app-extension");
 
-  @Value.Parameter
   public abstract String getIdentifier();
 
   @Override

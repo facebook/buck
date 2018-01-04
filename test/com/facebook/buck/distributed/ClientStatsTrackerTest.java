@@ -15,7 +15,21 @@
  */
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.CREATE_DISTRIBUTED_BUILD;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_FILE_HASH_COMPUTATION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_TARGET_GRAPH_SERIALIZATION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.MATERIALIZE_SLAVE_LOGS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_LOCAL_BUILD;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_BUILD_ANALYSIS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PUBLISH_BUILD_SLAVE_FINISHED_STATS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.SET_BUCK_VERSION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_BUCK_DOT_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_MISSING_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_TARGET_GRAPH;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,6 +52,8 @@ public class ClientStatsTrackerTest {
   private static final int LOCAL_GRAPH_CONSTRUCTION_DURATION = 10;
   private static final int POST_BUILD_ANALYSIS_DURATION_MS = 11;
   private static final int PUBLISH_BUILD_SLAVE_FINISHED_STATS_DURATION_MS = 12;
+  private static final int LOCAL_FILE_HASH_COMPUTATION_DURATION_MS = 13;
+  private static final int LOCAL_TARGET_GRAPH_SERIALIZATION_DURATION_MS = 14;
   private static final int MISSING_FILES_UPLOADED_COUNT = 2001;
   private static final String BUCK_CLIENT_ERROR_MESSAGE = "Some error message";
   private static final String BUILD_LABEL = "unit_test";
@@ -115,6 +131,9 @@ public class ClientStatsTrackerTest {
     tracker.setPerformedLocalBuild(true);
     tracker.setDurationMs(PERFORM_LOCAL_BUILD, PERFORM_LOCAL_BUILD_DURATION);
     tracker.setDurationMs(POST_BUILD_ANALYSIS, POST_BUILD_ANALYSIS_DURATION_MS);
+    tracker.setDurationMs(LOCAL_FILE_HASH_COMPUTATION, LOCAL_FILE_HASH_COMPUTATION_DURATION_MS);
+    tracker.setDurationMs(
+        LOCAL_TARGET_GRAPH_SERIALIZATION, LOCAL_TARGET_GRAPH_SERIALIZATION_DURATION_MS);
     tracker.setLocalBuildExitCode(LOCAL_BUILD_EXIT_CODE);
     DistBuildClientStats stats = tracker.generateStats();
     assertCommonStats(stats);
@@ -125,6 +144,12 @@ public class ClientStatsTrackerTest {
     Assert.assertEquals(PERFORM_LOCAL_BUILD_DURATION, (long) stats.localBuildDurationMs().get());
     Assert.assertEquals(
         POST_BUILD_ANALYSIS_DURATION_MS, (long) stats.postBuildAnalysisDurationMs().get());
+    Assert.assertEquals(
+        LOCAL_FILE_HASH_COMPUTATION_DURATION_MS,
+        (long) stats.localFileHashComputationDurationMs().get());
+    Assert.assertEquals(
+        LOCAL_TARGET_GRAPH_SERIALIZATION_DURATION_MS,
+        (long) stats.localTargetGraphSerializationDurationMs().get());
   }
 
   private void initializeCommonStats(ClientStatsTracker tracker) {
@@ -133,6 +158,9 @@ public class ClientStatsTrackerTest {
     tracker.setIsLocalFallbackBuildEnabled(IS_LOCAL_FALLBACK_BUILD_ENABLED);
     tracker.setDurationMs(LOCAL_PREPARATION, LOCAL_PREPARATION_DURATION);
     tracker.setDurationMs(LOCAL_GRAPH_CONSTRUCTION, LOCAL_GRAPH_CONSTRUCTION_DURATION);
+    tracker.setDurationMs(LOCAL_FILE_HASH_COMPUTATION, LOCAL_FILE_HASH_COMPUTATION_DURATION_MS);
+    tracker.setDurationMs(
+        LOCAL_TARGET_GRAPH_SERIALIZATION, LOCAL_TARGET_GRAPH_SERIALIZATION_DURATION_MS);
     tracker.setDurationMs(
         POST_DISTRIBUTED_BUILD_LOCAL_STEPS, POST_DISTRIBUTED_BUILD_LOCAL_STEPS_DURATION);
     tracker.setDurationMs(PERFORM_DISTRIBUTED_BUILD, PERFORM_DISTRIBUTED_BUILD_DURATION);
@@ -156,6 +184,12 @@ public class ClientStatsTrackerTest {
         LOCAL_GRAPH_CONSTRUCTION_DURATION, (long) stats.localGraphConstructionDurationMs().get());
     Assert.assertEquals(
         LOCAL_PREPARATION_DURATION, (long) stats.localPreparationDurationMs().get());
+    Assert.assertEquals(
+        LOCAL_FILE_HASH_COMPUTATION_DURATION_MS,
+        (long) stats.localFileHashComputationDurationMs().get());
+    Assert.assertEquals(
+        LOCAL_TARGET_GRAPH_SERIALIZATION_DURATION_MS,
+        (long) stats.localTargetGraphSerializationDurationMs().get());
     Assert.assertEquals(
         PERFORM_DISTRIBUTED_BUILD_DURATION, (long) stats.performDistributedBuildDurationMs().get());
     Assert.assertEquals(

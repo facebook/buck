@@ -5,11 +5,12 @@ import os
 import sys
 import uuid
 import zipfile
+import errno
 
 from buck_logging import setup_logging
 from buck_tool import ExecuteTarget, install_signal_handlers, \
     BuckStatusReporter
-from buck_project import BuckProject
+from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
 from subprocutils import propagate_failure
 
@@ -52,6 +53,7 @@ if __name__ == "__main__":
     exit_code = 0
     reporter = BuckStatusReporter(sys.argv)
     fn_exec = None
+    exception = None
     try:
         setup_logging()
         exit_code = main(sys.argv, reporter)
@@ -59,22 +61,36 @@ if __name__ == "__main__":
         # this is raised once 'buck run' has the binary
         # it can get here only if exit_code of corresponding buck build is 0
         fn_exec = e.execve
+    except NoBuckConfigFoundException:
+        exc_type, exception, exc_traceback = sys.exc_info()
+        # buck is started outside project root
+        exit_code = 3  # COMMANDLINE_ERROR
+    except IOError as e:
+        exc_type, exception, exc_traceback = sys.exc_info()
+        if e.errno == errno.ENOSPC:
+            exit_code = 14  # FATAL_DISK_FULL
+        elif e.errno == errno.EPIPE:
+            exit_code = 141  # SIGNAL_PIPE
+        else:
+            exit_code = 13  # FATAL_IO
     except KeyboardInterrupt:
         reporter.status_message = 'Python wrapper keyboard interrupt'
-        # Most shells set exit code to 128 + <Signal Number>
-        # So, when catching SIGINT (2), we return 130
-        exit_code = 130
-    except Exception as e:
-        logging.error(str(e))
-        reporter.status_message = str(e)
+        exit_code = 130  # SIGNAL_INTERRUPT
+    except Exception:
+        exc_type, exception, exc_traceback = sys.exc_info()
         # 11 is fatal bootstrapper error
         exit_code = 11
+
+    if exception is not None:
+        logging.error(exception, exc_info=(exc_type, exception, exc_traceback))
+        if reporter.status_message is None:
+            reporter.status_message = str(exception)
 
     # report result of Buck call
     try:
         reporter.report(exit_code)
     except Exception as e:
-        logging.warning(str(e))
+        logging.debug(str(e))
 
     # execute 'buck run' target
     if fn_exec is not None:

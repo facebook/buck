@@ -31,11 +31,6 @@ public class DefaultAndroidLegacyToolchain implements AndroidLegacyToolchain {
   }
 
   @Override
-  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
-    return androidPlatformTargetSupplier;
-  }
-
-  @Override
   public AndroidDirectoryResolver getAndroidDirectoryResolver() {
     return androidDirectoryResolver;
   }

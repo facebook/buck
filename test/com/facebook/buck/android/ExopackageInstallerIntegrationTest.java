@@ -635,10 +635,9 @@ public class ExopackageInstallerIntegrationTest {
             ExopackageInfo.DexInfo.of(
                 FakeSourcePath.of(filesystem, moduleManifest),
                 FakeSourcePath.of(filesystem, moduleDirectory)));
-        topLevelMetadata.add(dexJarName + " ");
+        topLevelMetadata.add(dexJarName + " " + moduleName + "\n");
       }
-      builder.addExoFile(
-          "modular-dex/metadata.txt", Joiner.on('\n').join(topLevelMetadata.build()));
+      builder.addExoFile("modular-dex/metadata.txt", Joiner.on("").join(topLevelMetadata.build()));
       moduleInfo = Optional.of(moduleInfoBuilder.build());
     }
 

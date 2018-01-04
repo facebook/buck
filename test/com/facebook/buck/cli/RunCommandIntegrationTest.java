@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import org.easymock.EasyMockSupport;
@@ -44,9 +45,9 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
 
     ProcessResult result = workspace.runBuckCommand("run");
 
-    result.assertFailure();
+    result.assertExitCode("missing argument is error", ExitCode.COMMANDLINE_ERROR);
     assertThat(result.getStderr(), containsString("buck run <target> <arg1> <arg2>..."));
-    assertThat(result.getStderr(), containsString("No target given to run"));
+    assertThat(result.getStderr(), containsString("no target given to run"));
   }
 
   @Test
@@ -68,7 +69,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
 
     ProcessResult result = workspace.runBuckCommand("run", "//:does_not_exist");
 
-    result.assertFailure();
+    result.assertExitCode(null, ExitCode.PARSE_ERROR);
     assertThat(
         result.getStderr(),
         containsString("No build file at BUCK when resolving target //:does_not_exist."));

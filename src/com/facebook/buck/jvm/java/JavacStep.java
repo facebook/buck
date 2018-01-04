@@ -92,6 +92,8 @@ public class JavacStep implements Step {
       Javac.Invocation invocation = pipeline.getJavacInvocation(context);
       if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
+      } else if (HasJavaAbi.isSourceOnlyAbiTarget(invokingRule)) {
+        declaredDepsBuildResult = invocation.buildSourceOnlyAbiJar();
       } else {
         declaredDepsBuildResult = invocation.buildClasses();
       }
@@ -165,9 +167,9 @@ public class JavacStep implements Step {
   public String getShortName() {
     String name;
     if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
-      return pipeline.getCompilerParameters().getAbiGenerationMode().usesDependencies()
-          ? "source_abi"
-          : "source_only_abi";
+      return "source_abi";
+    } else if (HasJavaAbi.isSourceOnlyAbiTarget(invokingRule)) {
+      return "source_only_abi";
     } else if (pipeline.getLibraryJarParameters().isPresent()) {
       name = "javac_jar";
     } else {

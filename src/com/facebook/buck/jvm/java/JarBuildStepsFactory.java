@@ -171,7 +171,9 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
-    Preconditions.checkArgument(buildTarget.equals(HasJavaAbi.getSourceAbiJar(libraryTarget)));
+    Preconditions.checkArgument(
+        buildTarget.equals(HasJavaAbi.getSourceAbiJar(libraryTarget))
+            || buildTarget.equals(HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     CompilerParameters compilerParameters = getCompilerParameters(context, buildTarget);
@@ -185,7 +187,7 @@ public class JarBuildStepsFactory
         compilerParameters,
         resourcesParameters,
         ImmutableList.of(),
-        getAbiJarParameters(context, compilerParameters).orElse(null),
+        getAbiJarParameters(buildTarget, context, compilerParameters).orElse(null),
         getLibraryJarParameters(context, compilerParameters).orElse(null),
         steps,
         buildableContext);
@@ -194,12 +196,15 @@ public class JarBuildStepsFactory
   }
 
   public ImmutableList<Step> getPipelinedBuildStepsForAbiJar(
-      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
+      BuildTarget buildTarget,
+      BuildContext context,
+      BuildableContext buildableContext,
+      JavacPipelineState state) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,
-            HasJavaAbi.getSourceAbiJar(libraryTarget),
+            buildTarget,
             state,
             getResourcesParameters(),
             postprocessClassesCommands,
@@ -290,8 +295,13 @@ public class JarBuildStepsFactory
   }
 
   protected Optional<JarParameters> getAbiJarParameters(
-      BuildContext context, CompilerParameters compilerParameters) {
-    return getJarParameters(context, HasJavaAbi.getSourceAbiJar(libraryTarget), compilerParameters);
+      BuildTarget target, BuildContext context, CompilerParameters compilerParameters) {
+    if (HasJavaAbi.isLibraryTarget(target)) {
+      return Optional.empty();
+    }
+    Preconditions.checkState(
+        HasJavaAbi.isSourceAbiTarget(target) || HasJavaAbi.isSourceOnlyAbiTarget(target));
+    return getJarParameters(context, target, compilerParameters);
   }
 
   private Optional<JarParameters> getJarParameters(
@@ -323,7 +333,8 @@ public class JarBuildStepsFactory
       return Optional.empty();
     }
 
-    if (HasJavaAbi.isSourceAbiTarget(buildTarget)) {
+    if (HasJavaAbi.isSourceAbiTarget(buildTarget)
+        || HasJavaAbi.isSourceOnlyAbiTarget(buildTarget)) {
       return Optional.of(CompilerParameters.getAbiJarPath(buildTarget, projectFilesystem));
     } else if (HasJavaAbi.isLibraryTarget(buildTarget)) {
       return Optional.of(DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystem));
@@ -362,7 +373,7 @@ public class JarBuildStepsFactory
     return javacToJarStepFactory.createPipelineState(
         firstRule,
         compilerParameters,
-        getAbiJarParameters(context, compilerParameters).orElse(null),
+        getAbiJarParameters(firstRule, context, compilerParameters).orElse(null),
         getLibraryJarParameters(context, compilerParameters).orElse(null));
   }
 }

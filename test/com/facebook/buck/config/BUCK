@@ -6,8 +6,11 @@ standard_java_test(
     deps = [
         ":FakeBuckConfig",
         ":testutil",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/concurrent:concurrent",
@@ -40,6 +43,7 @@ java_library(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules:cell_path_resolver_impls",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",

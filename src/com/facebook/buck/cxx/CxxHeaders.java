@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -40,7 +41,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Encapsulates headers from a single root location. */
-public abstract class CxxHeaders implements AddsToRuleKey {
+public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
 
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
@@ -57,6 +58,7 @@ public abstract class CxxHeaders implements AddsToRuleKey {
   public abstract void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder);
 
   /** @return all deps required by this header pack. */
+  @Override
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return BuildableSupport.deriveDeps(this, ruleFinder);
   }
@@ -153,7 +155,6 @@ public abstract class CxxHeaders implements AddsToRuleKey {
     }
   }
 
-  @SuppressWarnings("serial")
   public static class ConflictingHeadersException extends Exception {
     public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
       super(

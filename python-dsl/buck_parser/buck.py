@@ -13,7 +13,6 @@ from pywatchman import WatchmanError
 from .deterministic_set import DeterministicSet
 from .json_encoder import BuckJSONEncoder
 from .glob_internal import glob_internal
-from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
 from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
 from .module_whitelist import ImportWhitelistManager
@@ -116,7 +115,7 @@ class BuildFileContext(AbstractContext):
     def __init__(self, project_root, base_path, dirname, cell_name, allow_empty_globs,
                  ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_glob_stat_results,
-                 watchman_use_glob_generator, use_mercurial_glob):
+                 watchman_use_glob_generator):
         self.globals = {}
         self._includes = set()
         self._used_configs = {}
@@ -136,7 +135,6 @@ class BuildFileContext(AbstractContext):
         self.sync_cookie_state = sync_cookie_state
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
-        self.use_mercurial_glob = use_mercurial_glob
 
     @property
     def includes(self):
@@ -302,15 +300,10 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
 
     if search_base is None:
         search_base = Path(build_env.dirname)
-    mercurial_repo_info = load_mercurial_repo_info(build_env, search_base, allow_safe_import)
 
     results = None
     if not includes:
         results = []
-    elif mercurial_repo_info is not None:
-        results = glob_mercurial_manifest(
-            includes, excludes, build_env.ignore_paths, include_dotfiles, search_base,
-            build_env.project_root, mercurial_repo_info)
     elif build_env.watchman_client:
         results = glob_watchman(
             includes,
@@ -539,7 +532,7 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, cell_roots, cell_name, build_file_name, allow_empty_globs,
                  watchman_client, watchman_glob_stat_results,
-                 watchman_use_glob_generator, use_mercurial_glob,
+                 watchman_use_glob_generator,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
                  ignore_paths=None, freeze_globals=False):
@@ -568,7 +561,6 @@ class BuildFileProcessor(object):
         self._watchman_client = watchman_client
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._watchman_use_glob_generator = watchman_use_glob_generator
-        self._use_mercurial_glob = use_mercurial_glob
         self._configs = configs
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
@@ -1157,8 +1149,7 @@ class BuildFileProcessor(object):
             project_prefix,
             self._sync_cookie_state,
             self._watchman_glob_stat_results,
-            self._watchman_use_glob_generator,
-            self._use_mercurial_glob)
+            self._watchman_use_glob_generator)
 
         return self._process(build_env, path, is_implicit_include=False)
 
@@ -1421,11 +1412,6 @@ def main():
         dest='watchman_query_timeout_ms',
         help='Maximum time in milliseconds to wait for watchman query to respond.')
     parser.add_option(
-        '--use_mercurial_glob',
-        action='store_true',
-        dest='use_mercurial_glob',
-        help='Use the mercurial manifest to get lists of files instead of globbing from disk.')
-    parser.add_option(
         '--include',
         action='append',
         dest='include')
@@ -1467,7 +1453,6 @@ def main():
                       for (k, v) in options.cell_roots.iteritems())
 
     watchman_client = None
-    use_mercurial_glob = False
     if options.use_watchman_glob:
         client_args = {'sendEncoding': 'json', 'recvEncoding': 'json'}
         if options.watchman_query_timeout_ms is not None:
@@ -1480,20 +1465,6 @@ def main():
             client_args['sockpath'] = options.watchman_socket_path
             client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
-    elif options.use_mercurial_glob:
-        # exit early if the mercurial libraries can't be loaded
-        try:
-            from mercurial import ui, hg
-            use_mercurial_glob = True
-        except ImportError:
-            d = Diagnostic(
-                message='Mercurial not available for glob_handler = mercurial, aborting.',
-                level='fatal',
-                source='mercurial',
-                exception=None,
-            )
-            java_process_send_result(to_parent, [], [d], None)
-            raise
 
     configs = {}
     if options.config is not None:
@@ -1516,7 +1487,6 @@ def main():
         watchman_client,
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,
-        use_mercurial_glob,
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,

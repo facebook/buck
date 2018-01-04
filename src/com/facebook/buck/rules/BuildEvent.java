@@ -20,6 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
@@ -35,7 +36,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     return new Started(ImmutableSet.copyOf(buildArgs));
   }
 
-  public static Finished finished(Started started, int exitCode) {
+  public static Finished finished(Started started, ExitCode exitCode) {
     return new Finished(started, exitCode);
   }
 
@@ -43,7 +44,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     return new DistBuildStarted();
   }
 
-  public static DistBuildFinished distBuildFinished(DistBuildStarted started, int exitCode) {
+  public static DistBuildFinished distBuildFinished(DistBuildStarted started, ExitCode exitCode) {
     return new DistBuildFinished(started, exitCode);
   }
 
@@ -83,9 +84,9 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
   public static class Finished extends BuildEvent {
 
     private final ImmutableSet<String> buildArgs;
-    private final int exitCode;
+    private final ExitCode exitCode;
 
-    protected Finished(Started started, int exitCode) {
+    protected Finished(Started started, ExitCode exitCode) {
       super(started.getEventKey());
       this.buildArgs = started.getBuildArgs();
       this.exitCode = exitCode;
@@ -95,7 +96,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
       return buildArgs;
     }
 
-    public int getExitCode() {
+    public ExitCode getExitCode() {
       return exitCode;
     }
 
@@ -106,7 +107,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
     @Override
     protected String getValueString() {
-      return String.format("exit code: %d", exitCode);
+      return String.format("exit code: %d", exitCode.getCode());
     }
 
     @Override
@@ -144,14 +145,14 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
   public static class DistBuildFinished extends BuildEvent {
 
-    private final int exitCode;
+    private final ExitCode exitCode;
 
-    protected DistBuildFinished(DistBuildStarted started, int exitCode) {
+    protected DistBuildFinished(DistBuildStarted started, ExitCode exitCode) {
       super(started.getEventKey());
       this.exitCode = exitCode;
     }
 
-    public int getExitCode() {
+    public ExitCode getExitCode() {
       return exitCode;
     }
 
@@ -162,7 +163,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
     @Override
     protected String getValueString() {
-      return String.format("exit code: %d", exitCode);
+      return String.format("exit code: %d", exitCode.getCode());
     }
 
     @Override

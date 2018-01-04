@@ -32,7 +32,6 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
-import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -51,6 +50,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -970,7 +970,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     ProcessResult result =
         workspace.runBuckBuild(
-            "-c", "java.abi_generation_mode=source_only", "//:errors#source-abi");
+            "-c", "java.abi_generation_mode=source_only", "//:errors#source-only-abi");
     assertThat(result.getStderr(), Matchers.stringContainsInOrder("illegal start of expression"));
   }
 

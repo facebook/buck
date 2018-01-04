@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.Lists;
 import java.io.BufferedOutputStream;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -85,7 +87,8 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     Optional<StampedeId> stampedeId = getStampedeIdOptional();
     if (stampedeId.isPresent()) {
       runUsingStampedeId(params, stampedeId.get());
@@ -93,7 +96,7 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
       runLocally(params);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   /**
@@ -105,9 +108,12 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
         new CommandThreadManager(
             "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig()))) {
       BuildJobState jobState =
-          BuildCommand.getDistBuildState(
-              arguments, params, pool.getWeightedListeningExecutorService());
+          BuildCommand.getAsyncDistBuildState(
+                  arguments, params, pool.getWeightedListeningExecutorService())
+              .get();
       outputResultToTempFile(params, jobState);
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Could not create DistBuildState.", e);
     }
   }
 

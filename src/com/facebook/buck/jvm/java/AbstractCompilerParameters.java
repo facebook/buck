@@ -89,10 +89,8 @@ abstract class AbstractCompilerParameters {
   }
 
   public static Path getAbiJarPath(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-    if (HasJavaAbi.isLibraryTarget(buildTarget)) {
-      buildTarget = HasJavaAbi.getSourceAbiJar(buildTarget);
-    }
-    Preconditions.checkArgument(HasJavaAbi.isSourceAbiTarget(buildTarget));
+    Preconditions.checkArgument(
+        HasJavaAbi.isSourceAbiTarget(buildTarget) || HasJavaAbi.isSourceOnlyAbiTarget(buildTarget));
 
     return BuildTargets.getGenPath(projectFilesystem, buildTarget, "lib__%s__output")
         .resolve(String.format("%s-abi.jar", buildTarget.getShortName()));

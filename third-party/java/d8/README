@@ -1,3 +1,10 @@
-d8.jar was built by checking out d8 to rev 71995dd9382ba3e9aea8c2e38c6baac418cb2e63,
-applying the changes in changes.patch (can use git am), and building with
-tools/gradle.py -Pexclude_deps d8
+Use the following instructions to build d8.jar:
+
+- Install depot_tools: http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
+- Clone r8 repository: git clone https://r8.googlesource.com/r8
+- Checkout the current revision
+- Apply patch with Buck changes: git am <buck>/third-party/java/d8/changes.mbox
+- Build d8: tools/gradle.py -Pexclude_deps d8
+- d8.jar can be found in build/libs/d8.jar
+
+Current revision: 83d28183d26bb79af07be8561a5168b74584506c

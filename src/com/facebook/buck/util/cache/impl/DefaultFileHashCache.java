@@ -20,6 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
@@ -131,9 +132,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public static DefaultFileHashCache createBuckOutFileHashCache(
       ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
     return new DefaultFileHashCache(
-        projectFilesystem,
-        (path) -> !(path.startsWith(projectFilesystem.getBuckPaths().getBuckOut())),
-        fileHashCacheMode);
+        projectFilesystem, (path) -> !isInBuckOut(projectFilesystem, path), fileHashCacheMode);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(
@@ -142,10 +141,26 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         projectFilesystem, getDefaultPathPredicate(projectFilesystem), fileHashCacheMode);
   }
 
+  /**
+   * This predicate matches files that might be result of builds or files that are explicitly
+   * ignored.
+   */
   protected static Predicate<Path> getDefaultPathPredicate(ProjectFilesystem projectFilesystem) {
     return path ->
-        path.startsWith(projectFilesystem.getBuckPaths().getBuckOut())
+        isInBuckOut(projectFilesystem, path)
+            || isInEmbeddedCellBuckOut(projectFilesystem, path)
             || projectFilesystem.isIgnored(path);
+  }
+
+  /** Check that the file is in the buck-out of the cell that's related to the project filesystem */
+  private static boolean isInBuckOut(ProjectFilesystem projectFilesystem, Path path) {
+    return path.startsWith(projectFilesystem.getBuckPaths().getConfiguredBuckOut())
+        && !isInEmbeddedCellBuckOut(projectFilesystem, path);
+  }
+
+  /** Return true if file is the buck-out of a different cell when embedded buck-out is enabled */
+  private static boolean isInEmbeddedCellBuckOut(ProjectFilesystem projectFilesystem, Path path) {
+    return path.startsWith(projectFilesystem.getBuckPaths().getEmbeddedCellsBuckOutBaseDir());
   }
 
   public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches(
@@ -184,7 +199,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {
       return HashCodeAndFileType.ofArchive(
-          getFileHashCode(path), new DefaultJarContentHasher(projectFilesystem, path));
+          getFileHashCode(path),
+          new DefaultJarContentHasher(projectFilesystem, PathFragments.pathToFragment(path)));
     }
 
     return HashCodeAndFileType.ofFile(getFileHashCode(path));
@@ -295,7 +311,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
               hashCode,
               new DefaultJarContentHasher(
                   projectFilesystem,
-                  projectFilesystem.getPathRelativeToProjectRoot(relativePath).get()));
+                  PathFragments.pathToFragment(
+                      projectFilesystem.getPathRelativeToProjectRoot(relativePath).get())));
     } else {
       value = HashCodeAndFileType.ofFile(hashCode);
     }

@@ -15,9 +15,13 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import static com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType.local;
+import static com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType.remote;
+
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheEntries;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.artifact_cache.config.HttpCacheEntry;
 import com.facebook.buck.artifact_cache.config.MultiFetchType;
@@ -129,11 +133,21 @@ public class ArtifactCaches implements ArtifactCacheFactory {
    */
   @Override
   public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
-    return newInstance(false, distributedBuildModeEnabled);
+    return newInstanceInternal(ImmutableSet.of(), distributedBuildModeEnabled);
   }
 
   @Override
-  public ArtifactCache newInstance(boolean onlyRemote, boolean distributedBuildModeEnabled) {
+  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(local), distributedBuildModeEnabled);
+  }
+
+  @Override
+  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(remote), distributedBuildModeEnabled);
+  }
+
+  private ArtifactCache newInstanceInternal(
+      ImmutableSet<CacheType> cacheTypeBlacklist, boolean distributedBuildModeEnabled) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -145,7 +159,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             wifiSsid,
             httpWriteExecutorService,
             httpFetchExecutorService,
-            onlyRemote,
+            cacheTypeBlacklist,
             distributedBuildModeEnabled);
 
     if (asyncCloseable.isPresent()) {
@@ -189,7 +203,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
-      boolean onlyRemote,
+      ImmutableSet<CacheType> cacheTypeBlacklist,
       boolean distributedBuildModeEnabled) {
     ImmutableSet<ArtifactCacheMode> modes = buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
@@ -198,11 +212,13 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     ArtifactCacheEntries cacheEntries = buckConfig.getCacheEntries();
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
     for (ArtifactCacheMode mode : modes) {
+      if (cacheTypeBlacklist.contains(mode.getCacheType())) {
+        continue;
+      }
+
       switch (mode) {
         case dir:
-          if (!onlyRemote) {
-            initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
-          }
+          initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
           break;
         case http:
           initializeDistributedCaches(
@@ -218,9 +234,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               mode);
           break;
         case sqlite:
-          if (!onlyRemote) {
-            initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
-          }
+          initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
           break;
         case thrift_over_http:
           Preconditions.checkArgument(
@@ -240,6 +254,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
                       args,
                       buckConfig.getHybridThriftEndpoint().get(),
                       distributedBuildModeEnabled,
+                      buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig, buckEventBus),
                       buckConfig.getHttpFetchConcurrency()),
               mode);

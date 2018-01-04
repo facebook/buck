@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
@@ -90,7 +90,7 @@ public class NdkCxxPlatforms {
   public static final String BUILD_HOST_SUBST = "@BUILD_HOST@";
 
   public static final NdkCompilerType DEFAULT_COMPILER_TYPE = NdkCompilerType.GCC;
-  public static final String DEFAULT_TARGET_APP_PLATFORM = "android-9";
+  public static final String DEFAULT_TARGET_APP_PLATFORM = "android-16";
   public static final ImmutableSet<String> DEFAULT_CPU_ABIS =
       ImmutableSet.of("arm", "armv7", "x86");
   public static final NdkCxxRuntime DEFAULT_CXX_RUNTIME = NdkCxxRuntime.GNUSTL;

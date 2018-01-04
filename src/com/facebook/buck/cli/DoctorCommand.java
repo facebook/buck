@@ -32,6 +32,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,7 +43,8 @@ import java.util.Optional;
 public class DoctorCommand extends AbstractCommand {
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 
@@ -61,7 +63,7 @@ public class DoctorCommand extends AbstractCommand {
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
     if (!entry.isPresent()) {
       params.getConsole().getStdOut().println("No interesting commands found in buck-out/log.");
-      return 0;
+      return ExitCode.NOTHING_TO_DO;
     }
     Optional<String> issueDescription = helper.promptForIssue();
 
@@ -69,7 +71,7 @@ public class DoctorCommand extends AbstractCommand {
         generateReport(params, userInput, entry.get(), issueDescription);
     if (!reportResult.isPresent()) {
       params.getConsole().printErrorText("Failed to generate report to send.");
-      return 1;
+      return ExitCode.FATAL_GENERIC;
     }
 
     DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), reportResult.get());
@@ -78,7 +80,7 @@ public class DoctorCommand extends AbstractCommand {
     helper.presentResponse(response);
     helper.presentRageResult(reportResult);
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private Optional<DefectSubmitResult> generateReport(

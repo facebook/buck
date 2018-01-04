@@ -85,7 +85,7 @@ public class WatchmanWatcherIntegrationTest {
 
     // Verify we don't get an event for the path.
     watcher.postEvents(
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+        new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertThat(watchmanEventCollector.getEvents(), Matchers.empty());
   }
@@ -101,7 +101,7 @@ public class WatchmanWatcherIntegrationTest {
 
     // Verify we still get an event for the created path.
     watcher.postEvents(
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+        new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     ImmutableList<WatchmanEvent> events = watchmanEventCollector.getEvents();
     assertThat(events.size(), Matchers.equalTo(1));
@@ -129,7 +129,7 @@ public class WatchmanWatcherIntegrationTest {
 
     // Clear out the initial overflow event.
     watcher.postEvents(
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId()),
+        new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     watchmanEventCollector.clear();
 

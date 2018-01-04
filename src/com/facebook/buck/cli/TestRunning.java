@@ -598,6 +598,7 @@ public class TestRunning {
           testEl.setAttribute("name", testCase.getTestCaseName());
           testEl.setAttribute("status", testCase.isSuccess() ? "PASS" : "FAIL");
           testEl.setAttribute("time", Long.toString(testCase.getTotalTime()));
+          testEl.setAttribute("target", results.getBuildTarget().getFullyQualifiedName());
           testsEl.appendChild(testEl);
 
           // Loop through the test case and add XML data (name, message, and
@@ -639,11 +640,13 @@ public class TestRunning {
       // Extract the test name and time.
       String name = Strings.nullToEmpty(testResult.getTestName());
       String time = Long.toString(testResult.getTime());
+      String status = testResult.isSuccess() ? "PASS" : "FAIL";
 
       // Create the tag: <testresult name="..." time="...">
       Element testResultEl = doc.createElement("testresult");
       testResultEl.setAttribute("name", name);
       testResultEl.setAttribute("time", time);
+      testResultEl.setAttribute("status", status);
       testEl.appendChild(testResultEl);
 
       // Create the tag: <message>(Error message here)</message>

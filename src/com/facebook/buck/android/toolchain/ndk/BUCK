@@ -3,10 +3,14 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "ndk",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/toolchain:toolchain",
+    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/util:exceptions",
     ],
 )

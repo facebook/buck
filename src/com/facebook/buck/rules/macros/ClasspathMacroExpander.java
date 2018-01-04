@@ -59,17 +59,6 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ClasspathMacro input)
-      throws MacroException {
-    return ImmutableList.copyOf(
-        getHasClasspathEntries(resolve(resolver, input)).getTransitiveClasspathDeps());
-  }
-
-  @Override
   public String expandForFile(
       BuildTarget target,
       CellPathResolver cellNames,

@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractEmbeddedCellBuckOutInfo {
-  public abstract Path getRootCellBuckOut();
+  public abstract Path getEmbeddedCellsBuckOutBaseDir();
 
   public abstract String getCellName();
 }

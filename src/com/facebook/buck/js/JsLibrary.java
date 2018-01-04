@@ -33,13 +33,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.facebook.buck.util.JsonBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.function.BiFunction;
 
@@ -73,50 +69,28 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         getSourcePathToOutput(),
         getProjectFilesystem(),
         worker,
-        (resolver, outputPath) -> {
-          try {
-            return getJobArgs(resolver, outputPath);
-          } catch (IOException ex) {
-            throw JsUtil.getJobArgsException(ex, getBuildTarget());
-          }
-        });
+        this::getJobArgs);
   }
 
-  private String getJobArgs(SourcePathResolver resolver, Path outputPath) throws IOException {
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    JsonGenerator generator = ObjectMappers.createGenerator(stream);
-    BuildTarget target = getBuildTarget();
-    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
+  private String getJobArgs(SourcePathResolver resolver, Path outputPath) {
+    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
 
-    generator.writeStartObject();
-
-    generator.writeStringField("command", "library-dependencies");
-
-    generator.writeFieldName("release");
-    generator.writeBoolean(flavors.contains(JsFlavors.RELEASE));
-
-    generator.writeFieldName("rootPath");
-    generator.writeString(getProjectFilesystem().getRootPath().toString());
-
-    JsUtil.writePlatformFlavorToJson(generator, flavors, target);
-
-    generator.writeFieldName("outputPath");
-    generator.writeString(outputPath.toString());
-
-    generator.writeFieldName("dependencyLibraryFilePaths");
-    generator.writeStartArray();
-    for (SourcePath depPath : libraryDependencies) {
-      generator.writeString(resolver.getAbsolutePath(depPath).toString());
-    }
-    generator.writeEndArray();
-
-    generator.writeFieldName("aggregatedSourceFilesFilePath");
-    generator.writeString(resolver.getAbsolutePath(filesDependency).toString());
-
-    generator.writeEndObject();
-    generator.close();
-
-    return stream.toString(StandardCharsets.UTF_8.name());
+    return JsonBuilder.object()
+        .addString("command", "library-dependencies")
+        .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
+        .addString("rootPath", getProjectFilesystem().getRootPath().toString())
+        .addString("platform", JsUtil.getPlatformString(flavors))
+        .addString("outputPath", outputPath.toString())
+        .addArray(
+            "dependencyLibraryFilePaths",
+            libraryDependencies
+                .stream()
+                .map(resolver::getAbsolutePath)
+                .map(Path::toString)
+                .collect(JsonBuilder.toArrayOfStrings()))
+        .addString(
+            "aggregatedSourceFilesFilePath", resolver.getAbsolutePath(filesDependency).toString())
+        .toString();
   }
 
   @Override

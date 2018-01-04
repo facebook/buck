@@ -270,7 +270,7 @@ public class ExopackageInstaller {
     ImmutableSortedSet<Path> filesToDelete =
         presentFiles
             .stream()
-            .filter(p -> !p.getFileName().equals("lock") && !wantedFiles.contains(p))
+            .filter(p -> !p.getFileName().toString().equals("lock") && !wantedFiles.contains(p))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     deleteFiles(filesToDelete);
   }

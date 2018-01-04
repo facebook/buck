@@ -97,6 +97,8 @@ public class ExternallyBuiltApplePackageTest {
             config,
             FakeSourcePath.of(bundleLocation),
             true,
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty());
     resolver.addToIndex(rule);
     ShellStep step =
@@ -127,6 +129,8 @@ public class ExternallyBuiltApplePackageTest {
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty());
     resolver.addToIndex(rule);
     assertThat(
@@ -151,6 +155,8 @@ public class ExternallyBuiltApplePackageTest {
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty());
     resolver.addToIndex(rule);
     AbstractGenruleStep step =
@@ -179,6 +185,8 @@ public class ExternallyBuiltApplePackageTest {
                 config.withPlatform(config.getPlatform().withBuildVersion(input)),
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
     assertNotEquals(
         newRuleKeyFactory().build(packageWithVersion.apply("real")),
@@ -202,6 +210,8 @@ public class ExternallyBuiltApplePackageTest {
                         .withAppleSdk(config.getPlatform().getAppleSdk().withVersion(input))),
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
     assertNotEquals(
         newRuleKeyFactory().build(packageWithSdkVersion.apply("real")),

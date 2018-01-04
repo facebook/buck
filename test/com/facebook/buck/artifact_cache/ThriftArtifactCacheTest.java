@@ -41,6 +41,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.ThriftException;
@@ -145,7 +146,7 @@ public class ThriftArtifactCacheTest {
     EasyMock.replay(fetchClient);
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 0, 0)) {
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
       Path artifactPath = tempPaths.newFile().toAbsolutePath();
       CacheResult result =
           Futures.getUnchecked(
@@ -321,7 +322,7 @@ public class ThriftArtifactCacheTest {
     EasyMock.replay(fetchClient);
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 0, 0)) {
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
       MultiFetchResult result = cache.multiFetchImpl(requests);
       assertEquals(4, result.getResults().size());
       assertEquals(CacheResultType.MISS, result.getResults().get(0).getCacheResult().getType());
@@ -398,7 +399,7 @@ public class ThriftArtifactCacheTest {
     EasyMock.replay(fetchClient);
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 1, 1)) {
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 1, 1)) {
       MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
       assertEquals(4, result.getCacheResults().size());
       assertEquals(CacheResultType.MISS, result.getCacheResults().get(key0).getType());
@@ -454,7 +455,7 @@ public class ThriftArtifactCacheTest {
     EasyMock.replay(storeClient);
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 0, 0)) {
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
       CacheDeleteResult result =
           Futures.getUnchecked(
               cache.deleteAsync(

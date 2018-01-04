@@ -16,20 +16,27 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.python.toolchain.PexToolProvider;
+import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.python.toolchain.impl.DefaultPexToolProvider;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
-import com.facebook.buck.rules.keys.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
@@ -42,47 +49,74 @@ public class PythonTestBuilder
         PythonTestDescriptionArg.Builder, PythonTestDescriptionArg, PythonTestDescription,
         PythonTest> {
 
-  protected PythonTestBuilder(
-      BuildTarget target,
-      PythonBuckConfig pythonBuckConfig,
-      FlavorDomain<PythonPlatform> pythonPlatforms,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+  private PythonTestBuilder(
+      BuildTarget target, ToolchainProvider toolchainProvider, PythonBuckConfig pythonBuckConfig) {
     super(
         new PythonTestDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    PythonPlatformsProvider.DEFAULT_NAME,
-                    PythonPlatformsProvider.of(pythonPlatforms))
-                .build(),
+            toolchainProvider,
             new PythonBinaryDescription(
-                new ToolchainProviderBuilder()
-                    .withToolchain(
-                        PythonPlatformsProvider.DEFAULT_NAME,
-                        PythonPlatformsProvider.of(pythonPlatforms))
-                    .build(),
-                TestRuleKeyConfigurationFactory.create(),
-                pythonBuckConfig,
-                CxxPlatformUtils.DEFAULT_CONFIG,
-                defaultCxxPlatform,
-                cxxPlatforms),
+                toolchainProvider, pythonBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG),
             pythonBuckConfig,
-            CxxPlatformUtils.DEFAULT_CONFIG,
-            defaultCxxPlatform,
-            cxxPlatforms),
+            CxxPlatformUtils.DEFAULT_CONFIG),
         target);
   }
 
   public static PythonTestBuilder create(
       BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
-    return new PythonTestBuilder(
+    return create(
+        target, FakeBuckConfig.builder().build(), new ExecutableFinder(), pythonPlatforms);
+  }
+
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      BuckConfig buckConfig,
+      ExecutableFinder executableFinder,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
+    return create(target, pythonBuckConfig, executableFinder, pythonPlatforms);
+  }
+
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      PythonBuckConfig buckConfig,
+      ExecutableFinder executableFinder,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
+    return create(
         target,
-        pythonBuckConfig,
+        buckConfig,
+        executableFinder,
         pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      PythonBuckConfig buckConfig,
+      ExecutableFinder executableFinder,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    return new PythonTestBuilder(
+        target,
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.of(pythonPlatforms))
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+            .withToolchain(
+                PexToolProvider.DEFAULT_NAME,
+                new DefaultPexToolProvider(
+                    new ToolchainProviderBuilder()
+                        .withToolchain(
+                            PythonInterpreter.DEFAULT_NAME,
+                            new PythonInterpreterFromConfig(buckConfig, executableFinder))
+                        .build(),
+                    buckConfig,
+                    TestRuleKeyConfigurationFactory.create()))
+            .build(),
+        buckConfig);
   }
 
   public static PythonTestBuilder create(BuildTarget target) {

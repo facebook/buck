@@ -51,6 +51,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     DIMEN,
     DRAWABLE,
     FRACTION,
+    FONT,
     ID,
     INTEGER,
     INTERPOLATOR,

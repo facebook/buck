@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
-import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -40,42 +40,24 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
 public class NdkLibraryTest {
 
   private ExecutionContext executionContext;
-  private String ndkBuildCommand;
   private ProjectFilesystem projectFilesystem;
-  private AndroidPlatformTarget androidPlatformTarget;
 
   @Before
   public void setUp() throws InterruptedException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
-    AndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            projectFilesystem.getRootPath().getFileSystem(),
-            ImmutableMap.copyOf(System.getenv()),
-            AndroidNdkHelper.DEFAULT_CONFIG);
 
-    androidPlatformTarget =
-        AndroidPlatformTarget.getDefaultPlatformTarget(
-            resolver, Optional.empty(), Optional.empty());
     executionContext = TestExecutionContext.newBuilder().build();
-    ndkBuildCommand =
-        new ExecutableFinder()
-            .getOptionalExecutable(Paths.get("ndk-build"), resolver.getNdkOrAbsent().get())
-            .get()
-            .toAbsolutePath()
-            .toString();
   }
 
   @Test
@@ -85,12 +67,13 @@ public class NdkLibraryTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
 
+    Path androidNdk = Paths.get("/android/ndk");
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
-                AndroidLegacyToolchain.DEFAULT_NAME,
-                TestAndroidLegacyToolchainFactory.create(androidPlatformTarget))
-            .withToolchain(AndroidNdk.DEFAULT_NAME, AndroidNdk.of("1", Paths.get("/android/ndk")))
+                AndroidNdk.DEFAULT_NAME,
+                AndroidNdk.of(
+                    "1", androidNdk, new FakeExecutableFinder(androidNdk.resolve("ndk-build"))))
             .withDefaultNdkCxxPlatforms()
             .build();
 
@@ -122,7 +105,7 @@ public class NdkLibraryTest {
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(
             String.format(
-                "%s -j %d -C %s flag1 flag2 "
+                "%s/ndk-build -j %d -C %s flag1 flag2 "
                     + "APP_PROJECT_PATH=%s "
                     + "APP_BUILD_SCRIPT=%s "
                     + "NDK_OUT=%s "
@@ -130,7 +113,7 @@ public class NdkLibraryTest {
                     + "BUCK_PROJECT_DIR=../../../../.. "
                     + "host-echo-build-step=%s "
                     + "--silent",
-                ndkBuildCommand,
+                androidNdk,
                 Runtime.getRuntime().availableProcessors(),
                 Paths.get(basePath).toString(),
                 /* APP_PROJECT_PATH */ projectFilesystem.resolve(libbase) + File.separator,

@@ -16,20 +16,38 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.toolchain.ComparableToolchain;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Part of Android toolchain that provides access to Android NDK */
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
-public interface AbstractAndroidNdk extends ComparableToolchain {
-  String DEFAULT_NAME = "android-ndk-location";
+public abstract class AbstractAndroidNdk implements ComparableToolchain {
+  public static final String DEFAULT_NAME = "android-ndk-location";
 
   @Value.Parameter
-  String getNdkVersion();
+  public abstract String getNdkVersion();
 
   @Value.Parameter
-  Path getNdkRootPath();
+  public abstract Path getNdkRootPath();
+
+  @Value.Parameter
+  @Value.Auxiliary
+  protected abstract ExecutableFinder getExecutableFinder();
+
+  @Value.Lazy
+  public Path getNdkBuildExecutable() {
+    Optional<Path> ndkBuild =
+        getExecutableFinder().getOptionalExecutable(Paths.get("ndk-build"), getNdkRootPath());
+    if (!ndkBuild.isPresent()) {
+      throw new HumanReadableException("Unable to find ndk-build in " + getNdkRootPath());
+    }
+    return ndkBuild.get();
+  }
 }

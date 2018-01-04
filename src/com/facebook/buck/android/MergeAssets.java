@@ -35,6 +35,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
@@ -132,12 +133,12 @@ public class MergeAssets extends AbstractBuildRule {
                           !Files.getFileExtension(file.toString()).equals("gz"),
                           "BUCK doesn't support adding .gz files to assets (%s).",
                           file);
-                      assets.put(absolutePath, absolutePath.relativize(file));
+                      assets.put(absolutePath, absolutePath.relativize(file.normalize()));
                       return super.visitFile(file, attrs);
                     }
                   });
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
     steps.add(
@@ -228,7 +229,7 @@ public class MergeAssets extends AbstractBuildRule {
           }
         }
       }
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 }

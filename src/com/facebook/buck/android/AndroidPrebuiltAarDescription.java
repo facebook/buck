@@ -22,10 +22,10 @@ import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.MaybeRequiredForSourceOnlyAbiArg;
 import com.facebook.buck.jvm.java.PrebuiltJar;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -81,15 +81,11 @@ public class AndroidPrebuiltAarDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions javacOptions;
 
   public AndroidPrebuiltAarDescription(
-      ToolchainProvider toolchainProvider,
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions javacOptions) {
+      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacOptions = javacOptions;
   }
 
   @Override
@@ -224,7 +220,9 @@ public class AndroidPrebuiltAarDescription
             ruleFinder,
             projectFilesystem,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
-            javacOptions,
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
             new AndroidClasspathProvider(androidLegacyToolchain)),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()),

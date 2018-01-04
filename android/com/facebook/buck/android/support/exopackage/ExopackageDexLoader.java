@@ -48,6 +48,18 @@ public class ExopackageDexLoader {
    * DelegatingClassLoader instance.
    *
    * @param context The application context.
+   */
+  @SuppressWarnings("PMD.CollapsibleIfStatements")
+  public static void loadExopackageJars(Context context) {
+    loadExopackageJars(context, false);
+  }
+
+  /**
+   * Load JARs installed by Buck's Exopackage installer and add them to the Application ClassLoader.
+   * If modular exopackage is enabled, then load the modular-dex secondary directory into the
+   * DelegatingClassLoader instance.
+   *
+   * @param context The application context.
    * @param exopackageEnabledForModules whether modules should be loaded into a separate classloader
    *     or ignored and left to the app's own module system.
    */
@@ -76,10 +88,12 @@ public class ExopackageDexLoader {
   static List<File> getJarFilesFromContainingDirectory(File containingDirectory) {
     List<File> dexJars = new ArrayList();
     try {
+      final File metadataFile = new File(containingDirectory, "metadata.txt");
+      if (!metadataFile.exists()) {
+        return dexJars;
+      }
       BufferedReader metadataReader =
-          new BufferedReader(
-              new InputStreamReader(
-                  new FileInputStream(new File(containingDirectory, "metadata.txt"))));
+          new BufferedReader(new InputStreamReader(new FileInputStream(metadataFile)));
       try {
         String line;
         while ((line = metadataReader.readLine()) != null) {

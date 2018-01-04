@@ -25,7 +25,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -62,6 +61,8 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
@@ -295,7 +296,7 @@ public class TestCommand extends BuildCommand {
     return builder.build();
   }
 
-  private int runTestsInternal(
+  private ExitCode runTestsInternal(
       CommandRunnerParams params,
       BuildEngine buildEngine,
       Build build,
@@ -304,11 +305,8 @@ public class TestCommand extends BuildCommand {
       throws InterruptedException, IOException {
 
     if (!withDashArguments.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe("Unexpected arguments after \"--\" when using internal runner"));
-      return 1;
+      throw new CommandLineException(
+          "unexpected arguments after \"--\" when using internal runner");
     }
 
     ResourcesConfig resourcesConfig = params.getBuckConfig().getView(ResourcesConfig.class);
@@ -321,20 +319,22 @@ public class TestCommand extends BuildCommand {
             resourcesConfig.getMaximumResourceAmounts());
     try (CommandThreadManager testPool = new CommandThreadManager("Test-Run", concurrencyLimit)) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getRuleResolver());
-      return TestRunning.runTests(
-          params,
-          testRules,
-          build.getExecutionContext(),
-          getTestRunningOptions(params),
-          testPool.getWeightedListeningExecutorService(),
-          buildEngine,
-          new DefaultStepRunner(),
-          buildContext,
-          ruleFinder);
+      int exitCodeInt =
+          TestRunning.runTests(
+              params,
+              testRules,
+              build.getExecutionContext(),
+              getTestRunningOptions(params),
+              testPool.getWeightedListeningExecutorService(),
+              buildEngine,
+              new DefaultStepRunner(),
+              buildContext,
+              ruleFinder);
+      return ExitCode.map(exitCodeInt);
     }
   }
 
-  private int runTestsExternal(
+  private ExitCode runTestsExternal(
       final CommandRunnerParams params,
       Build build,
       Iterable<String> command,
@@ -353,7 +353,7 @@ public class TestCommand extends BuildCommand {
                   String.format(
                       "Test %s does not support external test running",
                       nonExternalTestRunnerRule.get().getBuildTarget())));
-      return 1;
+      return ExitCode.BUILD_ERROR;
     }
     TestRunningOptions options = getTestRunningOptions(params);
     // Walk the test rules, collecting all the specs.
@@ -425,7 +425,7 @@ public class TestCommand extends BuildCommand {
             .collect(ImmutableSet.toImmutableSet());
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
-    int exitCode = -1;
+    ExitCode exitCode = ExitCode.FATAL_GENERIC;
     try {
       params
           .getBuckEventBus()
@@ -435,7 +435,7 @@ public class TestCommand extends BuildCommand {
                   options.getTestSelectorList(),
                   options.shouldExplainTestSelectorList(),
                   testTargets));
-      exitCode = processExecutor.waitForProcess(process);
+      exitCode = ExitCode.map(processExecutor.waitForProcess(process));
       return exitCode;
     } finally {
       params.getBuckEventBus().post(ExternalTestRunEvent.finished(testTargets, exitCode));
@@ -445,7 +445,8 @@ public class TestCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     LOG.debug("Running with arguments %s", getArguments());
 
     try (CommandThreadManager pool =
@@ -535,11 +536,11 @@ public class TestCommand extends BuildCommand {
           targetGraphAndBuildTargets = toVersionedTargetGraph(params, targetGraphAndBuildTargets);
         }
 
-      } catch (BuildTargetException | BuildFileParseException | VersionException e) {
+      } catch (BuildFileParseException | VersionException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+        return ExitCode.PARSE_ERROR;
       }
 
       ActionGraphAndResolver actionGraphAndResolver =
@@ -574,7 +575,7 @@ public class TestCommand extends BuildCommand {
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
-                    new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+                    localCachingBuildEngineDelegate,
                     pool.getWeightedListeningExecutorService(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
@@ -608,7 +609,7 @@ public class TestCommand extends BuildCommand {
                     isKeepGoing())) {
 
           // Build all of the test rules.
-          int exitCode =
+          int exitCodeInt =
               build.executeAndPrintFailuresToEventBus(
                   RichStream.from(testRules)
                       .map(TestRule::getBuildTarget)
@@ -616,8 +617,9 @@ public class TestCommand extends BuildCommand {
                   params.getBuckEventBus(),
                   params.getConsole(),
                   getPathToBuildReport(params.getBuckConfig()));
+          ExitCode exitCode = ExitCode.map(exitCodeInt);
           params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
-          if (exitCode != 0) {
+          if (exitCode != ExitCode.SUCCESS) {
             return exitCode;
           }
 

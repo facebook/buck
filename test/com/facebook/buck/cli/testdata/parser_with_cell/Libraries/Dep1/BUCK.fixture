@@ -1,0 +1,14 @@
+cxx_library(
+    name = "Dep1_1",
+    srcs = [],
+    frameworks = [],
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+cxx_library(
+    name = "Dep1_2",
+    srcs = [],
+    visibility = ["PUBLIC"],
+    deps = [],
+)

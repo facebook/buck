@@ -20,6 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleStep;
 import java.io.IOException;
@@ -39,7 +40,7 @@ abstract class AbstractMkdirStep implements Step {
       throws IOException, InterruptedException {
     Files.createDirectories(
         context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot()));
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

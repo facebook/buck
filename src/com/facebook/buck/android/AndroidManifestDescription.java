@@ -25,14 +25,18 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 public class AndroidManifestDescription implements Description<AndroidManifestDescriptionArg> {
+
+  private final AndroidManifestFactory androidManifestFactory;
+
+  public AndroidManifestDescription(AndroidManifestFactory androidManifestFactory) {
+    this.androidManifestFactory = androidManifestFactory;
+  }
 
   @Override
   public Class<AndroidManifestDescriptionArg> getConstructorArgType() {
@@ -48,14 +52,8 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidManifestDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
-    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(resolver.getAllRules(args.getDeps()));
-    ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
-
-    return new AndroidManifest(
-        buildTarget, projectFilesystem, ruleFinder, args.getSkeleton(), manifestFiles);
+    return androidManifestFactory.createBuildRule(
+        buildTarget, projectFilesystem, resolver, args.getDeps(), args.getSkeleton());
   }
 
   @BuckStyleImmutable

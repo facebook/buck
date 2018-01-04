@@ -35,7 +35,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -47,6 +46,7 @@ import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -185,7 +185,7 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getBuildDeps(),
         Matchers.hasItems(
             FluentIterable.from(depInput.getArgs())
-                .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
                 .toArray(BuildRule.class)));
   }
 
@@ -431,8 +431,7 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void platformDepsSeparateLinkage() throws Exception {
-    PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
 
     CxxLibraryBuilder depBuilder =
@@ -451,22 +450,14 @@ public class CxxPythonExtensionDescriptionTest {
                         ImmutableSortedSet.of(depBuilder.getTarget()))
                     .build());
     PythonBinaryBuilder binary2Builder =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin2"),
-                pythonBuckConfig,
-                pythonPlatforms,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxTestUtils.createDefaultPlatforms())
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin2"), pythonBuckConfig, pythonPlatforms)
             .setMainModule("test")
             .setPlatform(PY2.getFlavor().toString())
             .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));
     PythonBinaryBuilder binary3Builder =
-        new PythonBinaryBuilder(
-                BuildTargetFactory.newInstance("//:bin3"),
-                pythonBuckConfig,
-                pythonPlatforms,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                CxxTestUtils.createDefaultPlatforms())
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin3"), pythonBuckConfig, pythonPlatforms)
             .setMainModule("test")
             .setPlatform(PY3.getFlavor().toString())
             .setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));

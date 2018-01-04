@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -149,7 +150,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     ImmutableSortedSet<BuildRule> deps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(ruleFinder.filterBuildRuleInputs(inputs))
-            .addAll(archiver.getDeps(ruleFinder))
+            .addAll(BuildableSupport.getDepsCollection(archiver, ruleFinder))
             .build();
 
     return new Archive(

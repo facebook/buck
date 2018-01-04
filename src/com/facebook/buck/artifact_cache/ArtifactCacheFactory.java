@@ -22,7 +22,9 @@ public interface ArtifactCacheFactory {
 
   ArtifactCache newInstance(boolean distributedBuildModeEnabled);
 
-  ArtifactCache newInstance(boolean onlyRemote, boolean distributedBuildModeEnabled);
+  ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled);
+
+  ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled);
 
   ArtifactCacheFactory cloneWith(BuckConfig newConfig);
 }

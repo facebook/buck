@@ -16,24 +16,23 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
-import com.facebook.buck.distributed.build_slave.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -69,7 +68,8 @@ public class DistBuildSlaveEventBusListener
         BuckEventListener,
         Closeable {
 
-  private static final Logger LOG = Logger.get(DistBuildSlaveEventBusListener.class);
+  private static final TimedLogger LOG =
+      new TimedLogger(Logger.get(DistBuildSlaveEventBusListener.class));
 
   private static final int DEFAULT_SERVER_UPDATE_PERIOD_MILLIS = 500;
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
@@ -82,6 +82,7 @@ public class DistBuildSlaveEventBusListener
   private final String hostname;
 
   private final Object consoleEventsLock = new Object();
+  private final Object sendServerUpdatesLock = new Object();
 
   @GuardedBy("consoleEventsLock")
   private final List<BuildSlaveConsoleEvent> consoleEvents = new LinkedList<>();
@@ -95,10 +96,12 @@ public class DistBuildSlaveEventBusListener
   private final AtomicInteger buildRulesFinishedCount = new AtomicInteger(0);
   private final AtomicInteger buildRulesSuccessCount = new AtomicInteger(0);
   private final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
+  private final AtomicInteger totalBuildRuleFinishedEventsSent = new AtomicInteger(0);
 
   private final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
+  private final HealthCheckStatsTracker healthCheckStatsTracker;
   private final BuildSlaveTimingStatsTracker slaveStatsTracker;
   private final DistBuildMode distBuildMode;
 
@@ -113,6 +116,7 @@ public class DistBuildSlaveEventBusListener
       Clock clock,
       BuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       ScheduledExecutorService networkScheduler) {
     this(
         stampedeId,
@@ -121,6 +125,7 @@ public class DistBuildSlaveEventBusListener
         clock,
         slaveStatsTracker,
         fileMaterializationStatsTracker,
+        healthCheckStatsTracker,
         networkScheduler,
         DEFAULT_SERVER_UPDATE_PERIOD_MILLIS);
   }
@@ -132,6 +137,7 @@ public class DistBuildSlaveEventBusListener
       Clock clock,
       BuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       ScheduledExecutorService networkScheduler,
       long serverUpdatePeriodMillis) {
     this.stampedeId = stampedeId;
@@ -139,6 +145,7 @@ public class DistBuildSlaveEventBusListener
     this.clock = clock;
     this.slaveStatsTracker = slaveStatsTracker;
     this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
+    this.healthCheckStatsTracker = healthCheckStatsTracker;
     this.networkScheduler = networkScheduler;
     this.distBuildMode = distBuildMode;
 
@@ -219,6 +226,7 @@ public class DistBuildSlaveEventBusListener
             .setBuildSlaveStatus(createBuildSlaveStatus())
             .setFileMaterializationStats(
                 fileMaterializationStatsTracker.getFileMaterializationStats())
+            .setHealthCheckStats(healthCheckStatsTracker.getHealthCheckStats())
             .setBuildSlavePerStageTimingStats(slaveStatsTracker.generateStats());
     Preconditions.checkState(
         exitCode.isPresent(),
@@ -275,6 +283,8 @@ public class DistBuildSlaveEventBusListener
     try {
       distBuildService.uploadBuildRuleFinishedEvents(
           stampedeId, buildSlaveRunId, finishedTargetsCopy);
+
+      totalBuildRuleFinishedEventsSent.addAndGet(finishedTargetsCopy.size());
     } catch (IOException e) {
       LOG.error(e, "Could not upload build rule finished events to frontend.");
     }
@@ -313,21 +323,39 @@ public class DistBuildSlaveEventBusListener
   }
 
   private void sendServerUpdates() {
-    try {
-      LOG.info("Sending server updates..");
-      sendStatusToFrontend();
-      sendConsoleEventsToFrontend();
-      sendBuildRuleCompletedEvents();
-    } catch (Exception ex) {
-      LOG.error(ex, "Failed to send slave server updates.");
+    synchronized (sendServerUpdatesLock) {
+      try {
+        LOG.info("Sending server updates..");
+        sendStatusToFrontend();
+        sendConsoleEventsToFrontend();
+        sendBuildRuleCompletedEvents();
+      } catch (Exception ex) {
+        LOG.error(ex, "Failed to send slave server updates.");
+      }
     }
   }
 
-  public void publishBuildSlaveFinishedEvent(
-      BuckEventBus eventBus, BuckConfig remoteBuckConfig, int exitCode) {
+  /** Publishes events from slave back to client that kicked off build (via frontend) */
+  public void sendFinalServerUpdates() {
+    synchronized (sendServerUpdatesLock) {
+      sendServerUpdates();
+      if (totalBuildRuleFinishedEventsSent.get() == 0) {
+        return; // This was not the co-ordiantor.
+      }
+      try {
+        if (distBuildService != null) {
+          distBuildService.sendAllBuildRulesPublishedEvent(stampedeId, buildSlaveRunId);
+        }
+
+      } catch (Exception e) {
+        LOG.error(e, "Failed to send slave final server updates.");
+      }
+    }
+  }
+
+  public void publishBuildSlaveFinishedEvent(int exitCode) {
     this.exitCode = Optional.of(exitCode);
     BuildSlaveFinishedStats finishedStats = createBuildSlaveFinishedStats();
-    eventBus.post(new BuildSlaveFinishedStatusEvent(finishedStats, remoteBuckConfig));
     networkScheduler.schedule(
         () -> sendFinishedStatsToFrontend(finishedStats), 0, TimeUnit.SECONDS);
   }
@@ -415,6 +443,9 @@ public class DistBuildSlaveEventBusListener
 
   @Override
   public void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets) {
+    if (finishedTargets.size() == 0) {
+      return;
+    }
     for (String target : finishedTargets) {
       LOG.info(String.format("Queueing build rule finished event for target [%s]", target));
     }

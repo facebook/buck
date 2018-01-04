@@ -16,21 +16,15 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** Implementation of a Tool that just delegates to another. */
-public abstract class DelegatingTool implements AbstractTool {
+public abstract class DelegatingTool implements Tool {
   @AddToRuleKey private final Tool tool;
 
   public DelegatingTool(Tool tool) {
     this.tool = tool;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return tool.getDeps(ruleFinder);
   }
 
   @Override

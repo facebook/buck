@@ -165,7 +165,6 @@ public class CxxPreprocessAndCompileTest {
                     projectFilesystem,
                     params,
                     new CompilerDelegate(
-                        pathResolver,
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
                         DEFAULT_TOOL_FLAGS),
@@ -185,7 +184,6 @@ public class CxxPreprocessAndCompileTest {
                     projectFilesystem,
                     params,
                     new CompilerDelegate(
-                        pathResolver,
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         new GccCompiler(
                             new HashedFileTool(
@@ -219,7 +217,6 @@ public class CxxPreprocessAndCompileTest {
                         Optional.empty(),
                         /* leadingIncludePaths */ Optional.empty()),
                     new CompilerDelegate(
-                        pathResolver,
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
                         DEFAULT_TOOL_FLAGS),
@@ -241,7 +238,6 @@ public class CxxPreprocessAndCompileTest {
                     projectFilesystem,
                     params,
                     new CompilerDelegate(
-                        pathResolver,
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
                         CxxToolFlags.explicitBuilder()
@@ -265,7 +261,6 @@ public class CxxPreprocessAndCompileTest {
                     projectFilesystem,
                     params,
                     new CompilerDelegate(
-                        pathResolver,
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
                         CxxToolFlags.explicitBuilder()
@@ -289,7 +284,6 @@ public class CxxPreprocessAndCompileTest {
                     projectFilesystem,
                     params,
                     new CompilerDelegate(
-                        pathResolver,
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
                         DEFAULT_TOOL_FLAGS),
@@ -343,7 +337,6 @@ public class CxxPreprocessAndCompileTest {
                         Optional.empty(),
                         /* leadingIncludePaths */ Optional.empty()),
                     new CompilerDelegate(
-                        pathResolver,
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
                         CxxToolFlags.of()),
@@ -389,10 +382,7 @@ public class CxxPreprocessAndCompileTest {
             projectFilesystem,
             params,
             new CompilerDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                DEFAULT_COMPILER,
-                flags),
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER, DEFAULT_COMPILER, flags),
             output,
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
@@ -454,7 +444,6 @@ public class CxxPreprocessAndCompileTest {
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(
-                pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 DEFAULT_COMPILER,
                 CxxToolFlags.of()),
@@ -474,7 +463,6 @@ public class CxxPreprocessAndCompileTest {
             projectFilesystem,
             params,
             new CompilerDelegate(
-                pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 new GccCompiler(compilerTool),
                 CxxToolFlags.of()),
@@ -502,7 +490,6 @@ public class CxxPreprocessAndCompileTest {
 
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(
-            pathResolver,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             COMPILER_WITH_COLOR_SUPPORT,
             CxxToolFlags.of());
@@ -561,7 +548,6 @@ public class CxxPreprocessAndCompileTest {
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(
-                pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 COMPILER_WITH_COLOR_SUPPORT,
                 CxxToolFlags.of()),

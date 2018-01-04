@@ -283,7 +283,6 @@
            >
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
-      <compilerarg value="-Xlint:serial" />
       <compilerarg value="-Werror" />
     </javac>
   </target>
@@ -426,10 +425,9 @@
         <compilerarg line="-properties '${eclipse.dir}/${eclipse.jdt.core.prefs.file}'" />
         <compilerarg value="-Xlint:rawtypes" />
         <compilerarg value="-Xlint:unchecked" />
-        <compilerarg value="-Xlint:serial" />
         <compilerarg value="-time" />
         <compilerclasspath>
-          <pathelement location="${eclipse.dir}/ecj-4.6.2.jar" />
+          <pathelement location="${eclipse.dir}/ecj-4.7.1.jar" />
         </compilerclasspath>
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
@@ -656,7 +654,6 @@
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
         <include name="com/facebook/buck/rules/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
-        <include name="com/facebook/buck/util/versioncontrol/rawmanifest.py"/>
       </fileset>
     </copy>
   </target>
@@ -717,7 +714,6 @@
       <ruleset>buck</ruleset>
       <fileset dir="${src.dir}">
         <include name="**/*.java"/>
-        <exclude name="com/facebook/buck/intellij/ideabuck/gen/**"/>
       </fileset>
       <fileset dir="${test.dir}">
         <include name="**/*.java"/>
@@ -729,6 +725,12 @@
   <target name="missing-test-files-check" depends="default">
     <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
       <arg line="verify-test-files.py" />
+    </exec>
+  </target>
+
+  <target name="verify-core-rules-boundaries" depends="default">
+    <exec dir="${user.dir}/tools/build/core-boundaries" executable="python" failonerror="true">
+      <arg line="verify-core-rules-boundaries.py" />
     </exec>
   </target>
 
@@ -880,7 +882,7 @@
     </sequential>
   </macrodef>
 
-  <target name="lint" depends="pmd, missing-test-files-check" />
+  <target name="lint" depends="pmd, missing-test-files-check, verify-core-rules-boundaries" />
 
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />
@@ -904,7 +906,6 @@
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
-          <exclude name="com/facebook/buck/intellij/**" />
         </fileset>
         <fileset dir="${gensrc.dir}" />
         <fileset dir="${buck.modules.classes.dir}/gen/" />

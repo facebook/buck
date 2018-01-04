@@ -1,12 +1,17 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
-java_immutables_library(
+java_library_with_plugins(
     name = "halide",
     srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/halide:halide",
     ],
-    visibility = ["PUBLIC"],
+    visibility = [
+        "//src/com/facebook/buck/apple:apple",
+        "//src/com/facebook/buck/apple/project_generator:project_generator",
+        "//src/com/facebook/buck/cli:main",
+        "//test/...",
+    ],
     deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
@@ -27,6 +32,7 @@ java_immutables_library(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/versions:translator",

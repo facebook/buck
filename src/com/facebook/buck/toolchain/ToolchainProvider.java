@@ -21,8 +21,11 @@ import java.util.Optional;
 
 /** An interface that give access to specific toolchains by toolchain name. */
 public interface ToolchainProvider {
+
+  /** @throws ToolchainInstantiationException when a toolchain cannot be created */
   Toolchain getByName(String toolchainName);
 
+  /** @throws ToolchainInstantiationException when a toolchain cannot be created */
   <T extends Toolchain> T getByName(String toolchainName, Class<T> toolchainClass);
 
   <T extends Toolchain> Optional<T> getByNameIfPresent(

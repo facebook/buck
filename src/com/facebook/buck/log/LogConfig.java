@@ -50,6 +50,7 @@ import org.stringtemplate.v4.ST;
 public class LogConfig {
 
   private static final byte[] NEWLINE = {'\n'};
+  private static volatile boolean useAsyncFileLogging = false;
 
   /** Default constructor, called by LogManager. */
   public LogConfig() throws IOException {
@@ -59,6 +60,14 @@ public class LogConfig {
             .setLogFilePrefix("launch-")
             .setCount(1)
             .build());
+  }
+
+  public static void setUseAsyncFileLogging(boolean useAsyncFileLogging) {
+    LogConfig.useAsyncFileLogging = useAsyncFileLogging;
+  }
+
+  public static boolean shouldUseAsyncFileLogging() {
+    return useAsyncFileLogging;
   }
 
   /**

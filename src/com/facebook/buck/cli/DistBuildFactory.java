@@ -31,12 +31,13 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutorArgs;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.rules.keys.impl.ConfigRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
@@ -109,6 +110,7 @@ public abstract class DistBuildFactory {
       Optional<StampedeId> stampedeId,
       BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
+      HealthCheckStatsTracker healthCheckStatsTracker,
       BuildSlaveTimingStatsTracker timingStatsTracker,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
       UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker) {
@@ -131,7 +133,8 @@ public abstract class DistBuildFactory {
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
                 .setRuleKeyConfiguration(
-                    ConfigRuleKeyConfigurationFactory.create(state.getRemoteRootCellConfig()))
+                    ConfigRuleKeyConfigurationFactory.create(
+                        state.getRemoteRootCellConfig(), params.getPluginManager()))
                 .setConsole(params.getConsole())
                 .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)
@@ -149,6 +152,7 @@ public abstract class DistBuildFactory {
                 .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
                 .setBuildRuleFinishedPublisher(buildRuleFinishedPublisher)
                 .setUnexpectedSlaveCacheMissTracker(unexpectedSlaveCacheMissTracker)
+                .setHealthCheckStatsTracker(healthCheckStatsTracker)
                 .build());
     return executor;
   }

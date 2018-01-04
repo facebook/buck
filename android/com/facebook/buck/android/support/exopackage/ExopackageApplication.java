@@ -77,8 +77,9 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
     if (isExopackageEnabledForSecondaryDex()) {
       ExopackageDexLoader.loadExopackageJars(this, isExopackageEnabledForModules());
       if (isExopackageEnabledForModules()) {
-        registerReceiver(
-            new ModularDexChangedReceiver(), ModularDexChangedReceiver.getIntentFilter());
+        ExoHelper.setupHotswap(this);
+        // Enable all class-loads to resolve hotswapped classes
+        DelegatingClassLoader.getInstance().installHelperAboveApplicationClassLoader();
       }
     }
 

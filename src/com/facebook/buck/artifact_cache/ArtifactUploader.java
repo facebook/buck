@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.CloseableHolder;
@@ -45,6 +46,8 @@ import java.util.SortedSet;
  * store that to the ArtifactCache.
  */
 public class ArtifactUploader {
+  private static final Logger LOG = Logger.get(ArtifactUploader.class);
+
   public static ListenableFuture<Void> performUploadToArtifactCache(
       ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
@@ -73,12 +76,24 @@ public class ArtifactUploader {
           @Override
           public void onFailure(Throwable t) {
             onCompletion();
-            ErrorLogger.logGeneric(
-                eventBus,
-                t,
-                "When storing RuleKeys %s to the cache for %s.",
-                ruleKeys,
-                buildTarget);
+            new ErrorLogger(
+                    new ErrorLogger.LogImpl() {
+                      @Override
+                      public void logUserVisible(String message) {}
+
+                      @Override
+                      public void logUserVisibleInternalError(String message) {}
+
+                      @Override
+                      public void logVerbose(Throwable e) {
+                        LOG.debug(
+                            t,
+                            "When storing RuleKeys %s to the cache for %s.",
+                            ruleKeys,
+                            buildTarget);
+                      }
+                    })
+                .logException(t);
           }
 
           private void onCompletion() {
@@ -89,12 +104,24 @@ public class ArtifactUploader {
                 zip.close();
               }
             } catch (IOException e) {
-              ErrorLogger.logGeneric(
-                  eventBus,
-                  e,
-                  "When deleting temporary zip %s for upload of %s.",
-                  zip.get(),
-                  buildTarget);
+              new ErrorLogger(
+                      new ErrorLogger.LogImpl() {
+                        @Override
+                        public void logUserVisible(String message) {}
+
+                        @Override
+                        public void logUserVisibleInternalError(String message) {}
+
+                        @Override
+                        public void logVerbose(Throwable e) {
+                          LOG.debug(
+                              e,
+                              "When deleting temporary zip %s for upload of %s.",
+                              zip.get(),
+                              buildTarget);
+                        }
+                      })
+                  .logException(e);
             }
           }
         });

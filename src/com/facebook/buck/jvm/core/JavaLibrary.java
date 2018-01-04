@@ -30,6 +30,7 @@ import java.util.Set;
 public interface JavaLibrary
     extends BuildRule,
         HasClasspathEntries,
+        HasClasspathDeps,
         HasJavaAbi,
         HasJavaClassHashes,
         HasMavenCoordinates,
@@ -67,6 +68,7 @@ public interface JavaLibrary
 
   // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
   // AndroidPackageable.
+  @Override
   Set<BuildRule> getDepsForTransitiveClasspathEntries();
 
   ImmutableSortedSet<SourcePath> getJavaSrcs();

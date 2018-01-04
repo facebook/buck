@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -432,5 +433,104 @@ public class ProjectIntegrationTest {
     assertEquals(
         "//lib:lib#default,static " + Paths.get("lib", "lib.xcworkspace") + System.lineSeparator(),
         result.getStdout());
+  }
+
+  @Test
+  public void testBuckProjectWithCell() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  @Test
+  public void testBuckProjectWithEmbeddedCellBuckout() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  @Test
+  public void testBuckProjectWithCellAndMergedHeaderMap() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project", "--config", "apple.merge_header_maps_in_xcode=true", "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  @Test
+  public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "--config",
+            "apple.merge_header_maps_in_xcode=true",
+            "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
+      throws IOException, InterruptedException {
+    ProcessExecutor.Result processResult =
+        workspace.runCommand(
+            "xcodebuild",
+
+            // "json" output.
+            "-json",
+
+            // Make sure the output stays in the temp folder.
+            "-derivedDataPath",
+            "xcode-out/",
+
+            // Build the project that we just generated
+            "-workspace",
+            workspacePath,
+            "-scheme",
+            schemeName,
+
+            // Build for iphonesimulator
+            "-arch",
+            "x86_64",
+            "-sdk",
+            "iphonesimulator");
+    processResult.getStderr().ifPresent(System.err::print);
+    assertEquals("xcodebuild should succeed", 0, processResult.getExitCode());
   }
 }

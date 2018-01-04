@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.NoOpUnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -41,6 +42,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -106,6 +108,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
 
+  private final HealthCheckStatsTracker healthCheckStatsTracker = new HealthCheckStatsTracker();
+
   private final BuildSlaveTimingStatsTracker timeStatsTracker = new BuildSlaveTimingStatsTracker();
 
   @Override
@@ -119,7 +123,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     Optional<StampedeId> stampedeId = getStampedeIdOptional();
     if (stampedeId.isPresent()) {
       params.getBuckEventBus().post(new DistBuildRunEvent(stampedeId.get(), getBuildSlaveRunId()));
@@ -194,6 +199,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   stampedeId,
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
+                  healthCheckStatsTracker,
                   timeStatsTracker,
                   getBuildRuleFinishedPublisher(),
                   getUnexpectedSlaveCacheMissTracker());
@@ -207,8 +213,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {
-            slaveEventListener.publishBuildSlaveFinishedEvent(
-                params.getBuckEventBus(), state.getRootCell().getBuckConfig(), returnCode);
+            slaveEventListener.sendFinalServerUpdates();
+            slaveEventListener.publishBuildSlaveFinishedEvent(returnCode);
           }
 
           if (returnCode == 0) {
@@ -221,7 +227,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 "Failed distributed build [%s] in [%d millis].",
                 buildName, timeStatsTracker.getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
           }
-          return returnCode;
+          return ExitCode.map(returnCode);
         }
       } catch (HumanReadableException e) {
         logBuildFailureEvent(e.getHumanReadableErrorMessage(), slaveEventListener);
@@ -314,6 +320,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               new DefaultClock(),
               timeStatsTracker,
               fileMaterializationStatsTracker,
+              healthCheckStatsTracker,
               scheduledExecutorService);
 
       buildRuleFinishedPublisher = slaveEventListener;

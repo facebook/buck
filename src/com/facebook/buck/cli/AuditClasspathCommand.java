@@ -21,7 +21,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -34,6 +33,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
@@ -89,7 +90,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
@@ -105,10 +106,7 @@ public class AuditClasspathCommand extends AbstractCommand {
             .collect(ImmutableSet.toImmutableSet());
 
     if (targets.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Please specify at least one build target."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     TargetGraph targetGraph;
@@ -123,11 +121,11 @@ public class AuditClasspathCommand extends AbstractCommand {
                   getEnableParserProfiling(),
                   pool.getListeningExecutorService(),
                   targets);
-    } catch (BuildFileParseException | BuildTargetException e) {
+    } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
     }
 
     try {
@@ -149,7 +147,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  int printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
+  ExitCode printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
     try {
       Dot.builder(targetGraph, "target_graph")
           .setNodeToName(
@@ -159,13 +157,13 @@ public class AuditClasspathCommand extends AbstractCommand {
           .build()
           .writeOutput(params.getConsole().getStdOut());
     } catch (IOException e) {
-      return 1;
+      return ExitCode.FATAL_IO;
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @VisibleForTesting
-  int printClasspath(
+  ExitCode printClasspath(
       CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
       throws InterruptedException, VersionException {
 
@@ -203,11 +201,11 @@ public class AuditClasspathCommand extends AbstractCommand {
       params.getConsole().getStdOut().println(path);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @VisibleForTesting
-  int printJsonClasspath(
+  ExitCode printJsonClasspath(
       CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
       throws IOException, InterruptedException, VersionException {
 
@@ -248,7 +246,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     // Note: using `asMap` here ensures that the keys are sorted
     ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Nullable

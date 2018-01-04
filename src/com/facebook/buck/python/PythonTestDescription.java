@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -41,9 +42,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.NeededCoverageSpec;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -80,22 +81,16 @@ public class PythonTestDescription
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
       ToolchainProvider toolchainProvider,
       PythonBinaryDescription binaryDescription,
       PythonBuckConfig pythonBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxBuckConfig cxxBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
@@ -155,9 +150,16 @@ public class PythonTestDescription
   }
 
   private CxxPlatform getCxxPlatform(BuildTarget target, AbstractPythonTestDescriptionArg args) {
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
     return cxxPlatforms
         .getValue(target)
-        .orElse(args.getCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform));
+        .orElse(
+            args.getCxxPlatform()
+                .map(cxxPlatforms::getValue)
+                .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
   @Override
@@ -265,6 +267,7 @@ public class PythonTestDescription
             .collect(ImmutableList.toImmutableList());
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             params,

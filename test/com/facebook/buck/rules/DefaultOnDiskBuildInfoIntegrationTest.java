@@ -66,7 +66,7 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
-    Clock clock = FakeClock.DO_NOT_CARE;
+    Clock clock = FakeClock.doNotCare();
     BuildId buildId = new BuildId("cat");
     BuildInfoStore buildInfoStore =
         metadataStorage == MetadataStorage.FILESYSTEM

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -37,6 +36,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -222,6 +222,6 @@ public class PythonTestIntegrationTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
-    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    return new PythonBuckConfig(buckConfig);
   }
 }

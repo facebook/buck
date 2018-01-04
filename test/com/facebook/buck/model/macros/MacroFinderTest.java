@@ -74,9 +74,10 @@ public class MacroFinderTest {
     String actual =
         MacroFinder.replace(
             ImmutableMap.of(
-                "macro", new FunctionMacroReplacer(args -> replacements.get(args.get(0)))),
+                "macro", new FunctionMacroReplacer<>(args -> replacements.get(args.get(0)))),
             "hello $(macro arg1) goodbye $(macro arg2)",
-            true);
+            true,
+            new StringMacroCombiner());
     assertEquals("hello something goodbye something else", actual);
   }
 
@@ -89,16 +90,19 @@ public class MacroFinderTest {
     String actual =
         MacroFinder.replace(
             ImmutableMap.of(
-                "macro", new FunctionMacroReplacer(args -> replacements.get(args.get(0)))),
+                "macro", new FunctionMacroReplacer<>(args -> replacements.get(args.get(0)))),
             "hello \\$(macro arg1) goodbye $(macro arg2)",
-            true);
+            true,
+            new StringMacroCombiner());
     assertEquals("hello $(macro arg1) goodbye something else", actual);
   }
 
   @Test
   public void replacePreserveEscaping() throws MacroException {
     String input = "hello \\$(escaped) goodbye";
-    assertThat(MacroFinder.replace(ImmutableMap.of(), input, false), Matchers.equalTo(input));
+    assertThat(
+        MacroFinder.replace(ImmutableMap.of(), input, false, new StringMacroCombiner()),
+        Matchers.equalTo(input));
   }
 
   @Test
@@ -111,9 +115,10 @@ public class MacroFinderTest {
     String actual =
         MacroFinder.replace(
             ImmutableMap.of(
-                "macro", new FunctionMacroReplacer(args -> replacements.get(args.get(0)))),
+                "macro", new FunctionMacroReplacer<>(args -> replacements.get(args.get(0)))),
             "hello $\\$(macro arg1) goodbye $$(macro arg2) $(macro \\$)",
-            true);
+            true,
+            new StringMacroCombiner());
     assertEquals("hello $$(macro arg1) goodbye $something else dollar", actual);
   }
 

@@ -17,16 +17,10 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 public interface HasCgo {
-  ImmutableSet<SourcePath> getCgoSrcs();
-
-  ImmutableSet<SourcePath> getCgoHeaders();
-
   @Value.Default
   default ImmutableSortedSet<BuildTarget> getCgoDeps() {
     return ImmutableSortedSet.of();

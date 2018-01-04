@@ -92,11 +92,12 @@ public class DistBuildSlaveExecutor {
               args.getBuildRuleFinishedPublisher(),
               args.getBuckEventBus(),
               args.getExecutorService(),
-              args.getArtifactCacheFactory().newInstance(true, true),
+              args.getArtifactCacheFactory().remoteOnlyInstance(true),
               args.getRuleKeyConfiguration(),
               /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()),
-              args.getTimingStatsTracker());
-      return setPreparationCallbackAndRunWithHeartbeatService(runner);
+              args.getHealthCheckStatsTracker(),
+              Optional.of(args.getTimingStatsTracker()));
+      return setPreparationCallbackAndRun(runner);
     }
 
     BuildExecutorArgs builderArgs = args.createBuilderArgs();
@@ -126,7 +127,8 @@ public class DistBuildSlaveExecutor {
                   args.getRemoteCoordinatorAddress(),
                   OptionalInt.of(args.getRemoteCoordinatorPort()),
                   args.getDistBuildConfig(),
-                  args.getUnexpectedSlaveCacheMissTracker());
+                  args.getUnexpectedSlaveCacheMissTracker(),
+                  args.getDistBuildConfig().getMinionBuildCapacityRatio());
           break;
 
         case COORDINATOR_AND_MINION:
@@ -145,9 +147,11 @@ public class DistBuildSlaveExecutor {
                   args.getUnexpectedSlaveCacheMissTracker(),
                   args.getBuckEventBus(),
                   args.getExecutorService(),
-                  args.getArtifactCacheFactory().newInstance(true, true),
+                  args.getArtifactCacheFactory().remoteOnlyInstance(true),
                   args.getRuleKeyConfiguration(),
-                  args.getTimingStatsTracker());
+                  args.getTimingStatsTracker(),
+                  args.getHealthCheckStatsTracker(),
+                  args.getDistBuildConfig().getCoordinatorBuildCapacityRatio());
           break;
 
         case COORDINATOR:
@@ -158,7 +162,7 @@ public class DistBuildSlaveExecutor {
           return -1;
       }
 
-      return setPreparationCallbackAndRunWithHeartbeatService(runner);
+      return setPreparationCallbackAndRun(runner);
     }
   }
 
@@ -179,7 +183,7 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  private int setPreparationCallbackAndRunWithHeartbeatService(DistBuildModeRunner runner)
+  private int setPreparationCallbackAndRun(DistBuildModeRunner runner)
       throws IOException, InterruptedException {
     runner
         .getAsyncPrepFuture()
@@ -194,10 +198,7 @@ public class DistBuildSlaveExecutor {
             },
             args.getExecutorService());
 
-    try (HeartbeatService service =
-        new HeartbeatService(args.getDistBuildConfig().getHearbeatServiceRateMillis())) {
-      return runner.runAndReturnExitCode(service);
-    }
+    return runner.runWithHeartbeatServiceAndReturnExitCode(args.getDistBuildConfig());
   }
 
   private FinalBuildStatusSetter createRemoteBuildFinalBuildStatusSetter() {

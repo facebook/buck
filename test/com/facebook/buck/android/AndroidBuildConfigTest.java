@@ -74,7 +74,7 @@ public class AndroidBuildConfigTest {
                 .getUnflavoredBuildTarget(),
             /* javaPackage */ "com.example",
             /* useConstantExpressions */ false,
-            /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
+            /* constants */ Suppliers.ofInstance(BuildConfigFields.of()),
             BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
@@ -117,7 +117,7 @@ public class AndroidBuildConfigTest {
         new FakeProjectFilesystem(),
         params,
         /* javaPackage */ "com.example",
-        /* values */ BuildConfigFields.empty(),
+        /* values */ BuildConfigFields.of(),
         /* valuesFile */ Optional.empty(),
         /* useConstantExpressions */ false);
   }

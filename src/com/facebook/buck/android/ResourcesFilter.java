@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.SourcePath;
@@ -36,6 +37,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
@@ -178,7 +180,7 @@ public class ResourcesFilter extends AbstractBuildRule
         .addAll(rulesWithResourceDirectories)
         .addAll(
             RichStream.from(postFilterResourcesCmd)
-                .flatMap(a -> a.getDeps(ruleFinder).stream())
+                .flatMap(a -> BuildableSupport.getDepsCollection(a, ruleFinder).stream())
                 .toOnceIterable())
         .build();
   }
@@ -241,7 +243,7 @@ public class ResourcesFilter extends AbstractBuildRule
                     stringFilesBuilder.build().stream().map(Object::toString)::iterator,
                     stringFiles);
             buildableContext.recordArtifact(stringFiles);
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
 

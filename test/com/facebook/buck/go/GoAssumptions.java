@@ -20,6 +20,7 @@ import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
@@ -54,7 +55,8 @@ abstract class GoAssumptions {
                   baseConfig.build(),
                   new FakeProjectFilesystem(),
                   executor,
-                  new ExecutableFinder()))
+                  new ExecutableFinder(),
+                  TestRuleKeyConfigurationFactory.create()))
           .get()
           .getCompiler();
     } catch (HumanReadableException e) {

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
@@ -119,7 +120,8 @@ public class RustTestDescription
 
     Tool testExe = testExeBuild.getExecutableCommand();
 
-    BuildRuleParams testParams = params.copyAppendingExtraDeps(testExe.getDeps(ruleFinder));
+    BuildRuleParams testParams =
+        params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(testExe, ruleFinder));
 
     return new RustTest(
         buildTarget,

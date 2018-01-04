@@ -100,6 +100,7 @@ public class DTestDescription
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
+            cellRoots,
             binaryTarget,
             projectFilesystem,
             params,

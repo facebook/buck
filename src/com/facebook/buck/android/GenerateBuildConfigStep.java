@@ -22,6 +22,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Objects;
 import java.io.IOException;
@@ -63,7 +64,7 @@ public class GenerateBuildConfigStep implements Step {
             source, javaPackage, useConstantExpressions, fields.get());
     filesystem.writeContentsToPath(java, outBuildConfigPath);
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

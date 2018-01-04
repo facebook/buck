@@ -77,7 +77,12 @@ public class NoopArtifactCache implements ArtifactCache {
     }
 
     @Override
-    public ArtifactCache newInstance(boolean onlyRemote, boolean distributedBuildModeEnabled) {
+    public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
+      return new NoopArtifactCache();
+    }
+
+    @Override
+    public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
       return new NoopArtifactCache();
     }
 

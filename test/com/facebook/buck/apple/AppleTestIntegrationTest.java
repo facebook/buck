@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,6 +37,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -742,6 +742,37 @@ public class AppleTestIntegrationTest {
   public void testObjCUsesAppleLibraryWithSwiftSourcesUsingPrivateIncludePrefix()
       throws IOException {
     testSwiftScenario("apple_test_objc_uses_apple_library_with_swift_sources_private_path");
+  }
+
+  @Test
+  public void successXctoolZipWithCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fbxctest_zip", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//:foo", "cell//:bar");
+    result.assertSuccess();
+    System.err.println(result.getStderr());
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   BarXCTest"));
+  }
+
+  @Test
+  public void successXctoolZipWithCellAndEmbeddedBuckout() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fbxctest_zip", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "//:foo",
+            "cell//:bar");
+    result.assertSuccess();
+    System.err.println(result.getStderr());
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   BarXCTest"));
   }
 
   private void testSwiftScenario(String scenarionName) throws IOException {

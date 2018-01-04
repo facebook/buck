@@ -18,6 +18,7 @@ java_library(
         ":options",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",

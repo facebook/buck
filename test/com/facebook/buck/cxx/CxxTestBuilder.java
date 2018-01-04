@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -29,6 +30,8 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -40,14 +43,26 @@ public class CxxTestBuilder
     extends AbstractNodeBuilder<
         CxxTestDescriptionArg.Builder, CxxTestDescriptionArg, CxxTestDescription, CxxTest> {
 
+  private static CxxTestDescription createCxxTestDescription(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+            .build();
+    return new CxxTestDescription(
+        toolchainProvider, cxxBuckConfig, new CxxBinaryMetadataFactory(toolchainProvider));
+  }
+
   public CxxTestBuilder(
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(
-        new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms),
-        target);
+    super(createCxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
   }
 
   public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {

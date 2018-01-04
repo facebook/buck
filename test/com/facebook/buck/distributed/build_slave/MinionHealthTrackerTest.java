@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.thrift.HealthCheckStats;
 import com.facebook.buck.util.timing.Clock;
 import java.util.List;
 import org.junit.Assert;
@@ -29,13 +30,24 @@ public class MinionHealthTrackerTest {
   private static final String MINION_TWO = "average minion number two";
   private static final String MINION_THREE = "no so cool minion number three";
 
+  private static final long EXPECTED_HEARTBEAT_INTERVAL_MILLIS = 10;
+  private static final long SLOW_HEARTBEAT_WARNING_THRESHOlD_MILLIS = 20;
+
   private SettableClock clock;
   private MinionHealthTracker tracker;
+  private HealthCheckStatsTracker healthCheckStatsTracker;
 
   @Before
   public void setUp() {
     clock = new SettableClock();
-    tracker = new MinionHealthTracker(clock, MAX_SILENCE_MILLIS);
+    healthCheckStatsTracker = new HealthCheckStatsTracker();
+    tracker =
+        new MinionHealthTracker(
+            clock,
+            MAX_SILENCE_MILLIS,
+            EXPECTED_HEARTBEAT_INTERVAL_MILLIS,
+            SLOW_HEARTBEAT_WARNING_THRESHOlD_MILLIS,
+            healthCheckStatsTracker);
   }
 
   @Test
@@ -43,6 +55,47 @@ public class MinionHealthTrackerTest {
     List<String> deadMinions = tracker.getDeadMinions();
     Assert.assertNotNull(deadMinions);
     Assert.assertTrue(deadMinions.isEmpty());
+  }
+
+  @Test
+  public void testSlowHeartbeatRecordedInStats() {
+    clock.setCurrentMillis(1);
+    tracker.getDeadMinions();
+    tracker.getDeadMinions();
+    tracker.reportMinionAlive(MINION_ONE); // Doesn't count, just initializes
+    tracker.reportMinionAlive(MINION_ONE);
+    clock.setCurrentMillis(SLOW_HEARTBEAT_WARNING_THRESHOlD_MILLIS + 1);
+    tracker.reportMinionAlive(MINION_ONE);
+
+    // Check health stats
+    HealthCheckStats healthCheckStats = healthCheckStatsTracker.getHealthCheckStats();
+    Assert.assertEquals(2, healthCheckStats.getHeartbeatsReceivedCount());
+    Assert.assertEquals(1, healthCheckStats.getSlowHeartbeatsReceivedCount());
+    Assert.assertEquals(MINION_ONE, healthCheckStats.getSlowestHeartbeatMinionId());
+    Assert.assertEquals(0, healthCheckStats.getSlowDeadMinionChecksCount());
+    Assert.assertEquals(0, healthCheckStats.getSlowestDeadMinionCheckIntervalMillis());
+    Assert.assertEquals(20, healthCheckStats.getSlowestHeartbeatIntervalMillis());
+
+    // First real health check took 0 millis. Second one took 20 millis. => 10 mills average
+    Assert.assertEquals(10, healthCheckStats.getAverageHeartbeatIntervalMillis());
+
+    tracker.reportMinionAlive(MINION_TWO); // Doesn't count, just initializes
+    clock.setCurrentMillis(clock.currentMillis + EXPECTED_HEARTBEAT_INTERVAL_MILLIS);
+    tracker.reportMinionAlive(MINION_ONE);
+    tracker.reportMinionAlive(MINION_TWO);
+    tracker.getDeadMinions();
+
+    // Check updated health stats
+    healthCheckStats = healthCheckStatsTracker.getHealthCheckStats();
+    Assert.assertEquals(4, healthCheckStats.getHeartbeatsReceivedCount());
+    Assert.assertEquals(1, healthCheckStats.getSlowHeartbeatsReceivedCount());
+    Assert.assertEquals(MINION_ONE, healthCheckStats.getSlowestHeartbeatMinionId());
+    Assert.assertEquals(1, healthCheckStats.getSlowDeadMinionChecksCount());
+    Assert.assertEquals(30, healthCheckStats.getSlowestDeadMinionCheckIntervalMillis());
+    Assert.assertEquals(20, healthCheckStats.getSlowestHeartbeatIntervalMillis());
+
+    // All heartbeats since last time were 10 more seconds, so average should stay the same.
+    Assert.assertEquals(10, healthCheckStats.getAverageHeartbeatIntervalMillis());
   }
 
   @Test

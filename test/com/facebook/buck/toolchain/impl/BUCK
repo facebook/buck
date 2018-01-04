@@ -7,6 +7,7 @@ java_test(
         "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/util:exceptions",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util:testutil",
         "//third-party/java/junit:junit",
@@ -26,7 +27,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",

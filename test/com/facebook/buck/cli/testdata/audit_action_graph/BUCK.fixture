@@ -1,0 +1,18 @@
+genrule(
+    name = "bin",
+    srcs = [
+        ":other",
+    ],
+    out = "bin",
+    cmd = """
+  echo $SRCS > $OUT
+  """,
+)
+
+genrule(
+    name = "other",
+    out = "other",
+    cmd = """
+  echo foo > $OUT
+  """,
+)

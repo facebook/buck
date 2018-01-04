@@ -323,7 +323,8 @@ public class DistBuildService implements Closeable {
       throws IOException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
-            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR,
+            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
+            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
         "BuildMode [%s=%d] is currently not supported.",
         buildMode.toString(),
         buildMode.ordinal());
@@ -567,10 +568,8 @@ public class DistBuildService implements Closeable {
     request.setStampedeId(stampedeId);
     request.setBuildSlaveRunId(runId);
     for (BuildSlaveConsoleEvent slaveEvent : events) {
-      BuildSlaveEvent buildSlaveEvent = new BuildSlaveEvent();
-      buildSlaveEvent.setEventType(BuildSlaveEventType.CONSOLE_EVENT);
-      buildSlaveEvent.setStampedeId(stampedeId);
-      buildSlaveEvent.setBuildSlaveRunId(runId);
+      BuildSlaveEvent buildSlaveEvent =
+          createBuildSlaveEvent(stampedeId, runId, BuildSlaveEventType.CONSOLE_EVENT);
       buildSlaveEvent.setConsoleEvent(slaveEvent);
       request.addToEvents(
           ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
@@ -598,17 +597,42 @@ public class DistBuildService implements Closeable {
     request.setStampedeId(stampedeId);
     request.setBuildSlaveRunId(runId);
     for (String target : finishedTargets) {
+      LOG.info(String.format("Uploading build rule finished event for target [%s]", target));
       BuildRuleFinishedEvent finishedEvent = new BuildRuleFinishedEvent();
       finishedEvent.setBuildTarget(target);
 
-      BuildSlaveEvent buildSlaveEvent = new BuildSlaveEvent();
-      buildSlaveEvent.setEventType(BuildSlaveEventType.BUILD_RULE_FINISHED_EVENT);
-      buildSlaveEvent.setStampedeId(stampedeId);
-      buildSlaveEvent.setBuildSlaveRunId(runId);
+      BuildSlaveEvent buildSlaveEvent =
+          createBuildSlaveEvent(stampedeId, runId, BuildSlaveEventType.BUILD_RULE_FINISHED_EVENT);
       buildSlaveEvent.setBuildRuleFinishedEvent(finishedEvent);
       request.addToEvents(
           ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
     }
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  /**
+   * Let the client no that there are no more build rule finished events on the way.
+   *
+   * @param stampedeId
+   * @param runId
+   * @throws IOException
+   */
+  public void sendAllBuildRulesPublishedEvent(StampedeId stampedeId, BuildSlaveRunId runId)
+      throws IOException {
+    LOG.info("Sending all build rules finished event");
+    AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
+    request.setStampedeId(stampedeId);
+    request.setBuildSlaveRunId(runId);
+
+    BuildSlaveEvent buildSlaveEvent =
+        createBuildSlaveEvent(
+            stampedeId, runId, BuildSlaveEventType.ALL_BUILD_RULES_FINISHED_EVENT);
+    request.addToEvents(
+        ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
 
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
@@ -737,9 +761,21 @@ public class DistBuildService implements Closeable {
     return Optional.of(status);
   }
 
-  public List<RuleKeyLogEntry> fetchRuleKeyLogs(Collection<String> ruleKeys) throws IOException {
+  /**
+   * Fetch rule key logs as name says. RKL are filtered by repository, schedule type and distributed
+   * flag.
+   */
+  public List<RuleKeyLogEntry> fetchRuleKeyLogs(
+      Collection<String> ruleKeys,
+      String repository,
+      String scheduleType,
+      boolean distributedBuildModeEnabled)
+      throws IOException {
     FetchRuleKeyLogsRequest request = new FetchRuleKeyLogsRequest();
     request.setRuleKeys(Lists.newArrayList(ruleKeys));
+    request.setRepository(repository);
+    request.setScheduleType(scheduleType);
+    request.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_RULE_KEY_LOGS);
@@ -829,5 +865,14 @@ public class DistBuildService implements Closeable {
     Preconditions.checkState(request.isSetType());
     Preconditions.checkState(request.getType().equals(response.getType()));
     return response;
+  }
+
+  private static BuildSlaveEvent createBuildSlaveEvent(
+      StampedeId stampedeId, BuildSlaveRunId runId, BuildSlaveEventType eventType) {
+    BuildSlaveEvent buildSlaveEvent = new BuildSlaveEvent();
+    buildSlaveEvent.setEventType(eventType);
+    buildSlaveEvent.setStampedeId(stampedeId);
+    buildSlaveEvent.setBuildSlaveRunId(runId);
+    return buildSlaveEvent;
   }
 }

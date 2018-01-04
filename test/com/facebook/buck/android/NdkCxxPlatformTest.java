@@ -24,8 +24,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
@@ -50,7 +50,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -61,6 +61,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -174,11 +175,12 @@ public class NdkCxxPlatformTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+      FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
       BuildRule rule =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               CxxPlatformUtils.DEFAULT_CONFIG,
               entry.getValue().getCxxPlatform(),
-              new FakeProjectFilesystem(),
+              filesystem,
               resolver,
               pathResolver,
               ruleFinder,
@@ -197,7 +199,8 @@ public class NdkCxxPlatformTest {
               NativeLinkableInput.builder()
                   .setArgs(SourcePathArg.from(FakeSourcePath.of("input.o")))
                   .build(),
-              Optional.empty());
+              Optional.empty(),
+              TestCellPathResolver.get(filesystem));
       ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));
     }
     return ruleKeys.build();

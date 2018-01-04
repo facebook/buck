@@ -21,10 +21,14 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -36,11 +40,19 @@ public class JavaTestBuilder
   private JavaTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new JavaTestDescription(
-            javaBuckConfig,
-            DEFAULT_JAVA_OPTIONS,
-            DEFAULT_JAVAC_OPTIONS,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS),
+            new ToolchainProviderBuilder()
+                .withDefaultCxxPlatforms()
+                .withToolchain(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM))
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+                .withToolchain(
+                    JavaOptionsProvider.DEFAULT_NAME,
+                    JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+                .build(),
+            javaBuckConfig),
         target);
   }
 

@@ -138,26 +138,6 @@ public class QueryTargetsAndOutputsMacroExpander
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      QueryTargetsAndOutputsMacro input,
-      QueryResults precomputedWork)
-      throws MacroException {
-    return precomputedWork
-        .results
-        .stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-            })
-        .sorted()
-        .collect(ImmutableList.toImmutableList());
-  }
-
-  @Override
   protected QueryTargetsAndOutputsMacro parse(
       BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {

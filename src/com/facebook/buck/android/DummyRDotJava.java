@@ -42,6 +42,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -302,7 +303,7 @@ public class DummyRDotJava extends AbstractBuildRule
         for (ZipEntry zipEntry : Collections.list(jar.entries())) {
           if (zipEntry.getName().endsWith(".class")) {
             // We found a class, so the jar is probably fine.
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         }
       }

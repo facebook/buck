@@ -31,27 +31,13 @@ Note: Buck is currently tested with (and therefore supports) version 1.5 of Go.
 {/template}
 
 /***/
-{template .cgo_srcs_arg}
+{template .cgo_compiler_flags_arg}
 {call buck.arg}
-  {param name : 'cgo_srcs' /}
+  {param name : 'cgo_compiler_flags_arg' /}
   {param default : '[]' /}
   {param desc}
   <p>
-    The set of source .go files to be compiled by this rule. The source files should use
-    cgo extention, that is import C extention: <code>import "C"</code>.
-  </p>
-  {/param}
-{/call}
-{/template}
-
-/***/
-{template .cgo_headers_arg}
-{call buck.arg}
-  {param name : 'cgo_headers' /}
-  {param default : '[]' /}
-  {param desc}
-  <p>
-    The set of .h header files included in <code>cgo_srcs</code>.
+    The set of additional compiler flags to pass to <code>go tool cgo</code>.
   </p>
   {/param}
 {/call}
@@ -63,7 +49,7 @@ Note: Buck is currently tested with (and therefore supports) version 1.5 of Go.
   {param name : 'cgo_deps' /}
   {param default : '[]' /}
   {param desc}
-  The set of cxx dependencies which gets compiled and linked as cgo extention.
+  The set of cgo_library dependencies which gets compiled and linked as cgo extension.
  {/param}
 {/call}
 {/template}

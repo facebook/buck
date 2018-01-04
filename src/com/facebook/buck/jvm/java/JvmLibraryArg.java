@@ -67,6 +67,8 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   Optional<AbiGenerationMode> getAbiGenerationMode();
 
+  Optional<CompileAgainstLibraryType> getCompileAgainst();
+
   Optional<SourceAbiVerificationMode> getSourceAbiVerificationMode();
 
   @Value.Derived

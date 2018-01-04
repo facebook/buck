@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -56,20 +55,6 @@ public class CommandTool implements Tool {
     this.environment = environment;
     this.extraInputs = extraInputs;
     this.nonHashableInputs = nonHashableInputs;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    baseTool.ifPresent(tool -> deps.addAll(tool.getDeps(ruleFinder)));
-    args.forEach(arg -> deps.addAll(arg.getDeps(ruleFinder)));
-    environment.values().forEach(value -> deps.addAll(value.getDeps(ruleFinder)));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(extraInputs));
-    deps.addAll(
-        ruleFinder.filterBuildRuleInputs(
-            nonHashableInputs.stream().map(NonHashableSourcePathContainer::getSourcePath)
-                ::iterator));
-    return deps.build();
   }
 
   @Override

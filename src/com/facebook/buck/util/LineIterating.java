@@ -249,7 +249,6 @@ public final class LineIterating {
    * @param bytes Input byte array containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code bytes}.
    */
-  @SuppressWarnings("javadoc")
   public static void iterateByLines(byte[] bytes, ByteLineHandler lineHandler) {
     iterateBufferByLines(ByteBuffer.wrap(bytes), lineHandler, BYTE_BUFFER_OPERATIONS);
   }
@@ -267,7 +266,6 @@ public final class LineIterating {
    * @param buffer Input byte buffer containing zero or more lines to be iterated.
    * @param lineHandler Callback to be invoked with each line present in {@code bytes}.
    */
-  @SuppressWarnings("javadoc")
   public static void iterateByLines(ByteBuffer buffer, ByteLineHandler lineHandler) {
     iterateBufferByLines(buffer, lineHandler, BYTE_BUFFER_OPERATIONS);
   }

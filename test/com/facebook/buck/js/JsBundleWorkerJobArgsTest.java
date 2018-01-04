@@ -19,17 +19,19 @@ package com.facebook.buck.js;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -51,10 +53,8 @@ public class JsBundleWorkerJobArgsTest {
   @Before
   public void setUp() throws NoSuchBuildTargetException {
     scenario = JsTestScenario.builder().build();
-    context =
-        FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
     fakeBuildableContext = new FakeBuildableContext();
+    buildContext(scenario);
   }
 
   @Test
@@ -134,6 +134,24 @@ public class JsBundleWorkerJobArgsTest {
     assertThat(getOutFile(bundle), equalTo(bundleName));
   }
 
+  @Test
+  public void testLocationMacrosInExtraJsonAreExpandedAndEscaped() {
+    BuildTarget referenced = BuildTargetFactory.newInstance("//needs\t\":escaping");
+    JsTestScenario scenario = JsTestScenario.builder().arbitraryRule(referenced).build();
+    JsBundle bundle =
+        scenario.createBundle(
+            "//:bundle",
+            builder -> builder.setExtraJson("[\"1 %s 2\"]", LocationMacro.of(referenced)));
+
+    buildContext(scenario);
+    assertThat(
+        getJobJson(bundle).get("extraData").toString(),
+        equalTo(
+            String.format(
+                "[\"1 %s/buck-out/gen/needs\\t\\\"/escaping/escaping 2\"]",
+                JsUtil.escapeJsonForStringEmbedding(context.getBuildCellRootPath().toString()))));
+  }
+
   private static String targetWithFlavors(String target, Flavor... flavors) {
     return BuildTargetFactory.newInstance(target)
         .withAppendedFlavors(flavors)
@@ -151,13 +169,22 @@ public class JsBundleWorkerJobArgsTest {
         .getJobArgs();
   }
 
-  private String getOutFile(JsBundle bundle) {
-    String jobArgs = getJobArgs(bundle);
+  private JsonNode getJobJson(JsBundle bundle) {
     try {
-      JsonNode args = ObjectMappers.readValue(jobArgs, JsonNode.class);
-      return Paths.get(args.get("bundlePath").asText()).getFileName().toString();
+      return ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
     } catch (IOException error) {
       throw new HumanReadableException(error, "Couldn't read bundle args as JSON");
     }
+  }
+
+  private String getOutFile(JsBundle bundle) {
+    JsonNode args = getJobJson(bundle);
+    return Paths.get(args.get("bundlePath").asText()).getFileName().toString();
+  }
+
+  private void buildContext(JsTestScenario scenario) {
+    context =
+        FakeBuildContext.withSourcePathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
   }
 }

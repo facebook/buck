@@ -17,14 +17,10 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
@@ -38,11 +34,6 @@ public class RustLibraryArg implements Arg, HasSourcePath {
     this.crate = crate;
     this.rlib = rlib;
     this.direct = direct;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(ImmutableList.of(rlib));
   }
 
   @Override

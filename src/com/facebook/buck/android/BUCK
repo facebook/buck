@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
 CXXRUNTIME_SRCS = [
     "AbstractNdkCxxPlatformCompiler.java",
@@ -63,6 +63,7 @@ RULES_SRCS = [
     "AndroidBuildConfig.java",
     "AndroidBuildConfigDescription.java",
     "AndroidBuildConfigJavaLibrary.java",
+    "AndroidDescriptionsProvider.java",
     "AndroidInstrumentationApk.java",
     "AndroidInstrumentationApkDescription.java",
     "AndroidInstrumentationTest.java",
@@ -74,6 +75,7 @@ RULES_SRCS = [
     "AndroidLibraryGraphEnhancer.java",
     "AndroidManifest.java",
     "AndroidManifestDescription.java",
+    "AndroidManifestFactory.java",
     "AndroidNativeLibsPackageableGraphEnhancer.java",
     "AndroidPrebuiltAar.java",
     "AndroidPrebuiltAarCollection.java",
@@ -133,7 +135,7 @@ RULES_SRCS = [
     "relinker/Symbols.java",
 ]
 
-java_immutables_library(
+java_library_with_plugins(
     name = "rules",
     srcs = RULES_SRCS,
     exported_deps = [
@@ -194,6 +196,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/java/runner:runner",
+        "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:api",
@@ -354,18 +357,13 @@ UTILS_SRCS = [
     "AndroidManifestReader.java",
     "DefaultAndroidDirectoryResolver.java",
     "DefaultAndroidManifestReader.java",
-    "HasInstallableApk.java",
-    "exopackage/AbstractExopackageInfo.java",
-    "exopackage/AbstractExopackagePathAndHash.java",
-    "exopackage/AndroidDevice.java",
-    "exopackage/AndroidDevicesHelper.java",
-    "exopackage/PackageInfo.java",
 ]
 
 java_immutables_library(
     name = "utils",
     srcs = UTILS_SRCS,
     exported_deps = [
+        "//src/com/facebook/buck/android:utils_api",
         "//third-party/java/android:ddmlib",
     ],
     tests = [
@@ -390,13 +388,45 @@ java_immutables_library(
     ],
 )
 
+UTILS_API_SRCS = [
+    "exopackage/AndroidDevicesHelper.java",
+    "exopackage/AbstractExopackageInfo.java",
+    "exopackage/AndroidDevice.java",
+    "HasInstallableApk.java",
+    "exopackage/PackageInfo.java",
+    "exopackage/AbstractExopackagePathAndHash.java",
+]
+
+java_immutables_library(
+    name = "utils_api",
+    srcs = UTILS_API_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/xml:xml",
+        "//third-party/java/android:ddmlib",
+        "//third-party/java/guava:guava",
+    ],
+)
+
 java_immutables_library(
     name = "steps",
     srcs = glob(
         ["*.java"],
         exclude = CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
-                  SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS,
+                  SPLIT_DEX_SRCS + UTILS_API_SRCS + UTILS_SRCS + HELPERS_SRCS,
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/step:step",
+    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -441,7 +471,6 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/shell:steps",
-        "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",

@@ -23,6 +23,7 @@ import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
@@ -143,6 +144,7 @@ public class AndroidBinary extends AbstractBuildRule
   AndroidBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidSdkLocation androidSdkLocation,
       AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -172,7 +174,8 @@ public class AndroidBinary extends AbstractBuildRule
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
-      Optional<ExopackageInfo> exopackageInfo) {
+      Optional<ExopackageInfo> exopackageInfo,
+      int apkCompressionLevel) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -223,6 +226,7 @@ public class AndroidBinary extends AbstractBuildRule
         new AndroidBinaryBuildable(
             getBuildTarget(),
             getProjectFilesystem(),
+            androidSdkLocation,
             androidLegacyToolchain,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
@@ -240,7 +244,8 @@ public class AndroidBinary extends AbstractBuildRule
             dexFilesInfo,
             nativeFilesInfo,
             resourceFilesInfo,
-            apkModules);
+            apkModules,
+            apkCompressionLevel);
     this.exopackageInfo = exopackageInfo;
 
     params =

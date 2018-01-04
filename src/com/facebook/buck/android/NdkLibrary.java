@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -34,6 +35,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -65,7 +67,7 @@ import javax.annotation.Nullable;
 public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements NativeLibraryBuildRule, AndroidPackageable {
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidNdk androidNdk;
 
   /** @see NativeLibraryBuildRule#isAsset() */
   @AddToRuleKey private final boolean isAsset;
@@ -93,7 +95,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   protected NdkLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidNdk androidNdk,
       BuildRuleParams params,
       Path makefile,
       String makefileContents,
@@ -103,7 +105,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String ndkVersion,
       Function<String, String> macroExpander) {
     super(buildTarget, projectFilesystem, params);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidNdk = androidNdk;
     this.isAsset = isAsset;
 
     this.root = buildTarget.getBasePath();
@@ -159,7 +161,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new NdkBuildStep(
             getBuildTarget(),
             getProjectFilesystem(),
-            androidLegacyToolchain,
+            androidNdk,
             root,
             makefile,
             buildArtifactsDirectory,
@@ -194,7 +196,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             for (Path path : unstrippedSharedObjs) {
               buildableContext.recordArtifact(path);
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
 

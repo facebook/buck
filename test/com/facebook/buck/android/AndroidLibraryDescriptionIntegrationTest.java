@@ -172,6 +172,19 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
         outputs, Matchers.not(Matchers.hasItemInArray("com/facebook/example/C.class")));
   }
 
+  @Test
+  public void testClasspathQueryCanTraverseAndroidResource() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    workspace.runBuckBuild("//:needs_b_has_res").assertSuccess();
+  }
+
+  @Test
+  public void testClasspathQueryOnAndroidResourceRespectsDepth() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    // Check that we have b in our resolved deps, but not c, due to the depth limiting
+    workspace.runBuckBuild("//:needs_c_has_res").assertFailure();
+  }
+
   private Path getOutputFile(String targetName) {
     try {
       ProjectWorkspace.ProcessResult buildResult =

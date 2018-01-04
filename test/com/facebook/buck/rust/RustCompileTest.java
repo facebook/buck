@@ -23,7 +23,6 @@ import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractTool;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -84,7 +83,7 @@ public class RustCompileTest {
   }
 
   private static Tool fakeTool() {
-    return new AbstractTool() {
+    return new Tool() {
       @Override
       public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
         return ImmutableList.of();

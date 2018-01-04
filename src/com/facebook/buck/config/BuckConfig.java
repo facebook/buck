@@ -944,10 +944,6 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("project", "buck_out_compat_link", false);
   }
 
-  public boolean isGrayscaleImageProcessingEnabled() {
-    // TODO(tyurins): move to android section
-    return config.getBooleanValue("resources", "resource_grayscale_enabled", false);
-  }
   /** @return whether to enabled versions on build/test command. */
   public boolean getBuildVersions() {
     return getBooleanValue("build", "versions", false);

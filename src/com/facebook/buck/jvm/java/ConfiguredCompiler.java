@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +46,7 @@ public interface ConfiguredCompiler extends AddsToRuleKey {
   }
 
   default Iterable<BuildRule> getExtraDeps(SourcePathRuleFinder ruleFinder) {
-    return getCompiler().getDeps(ruleFinder);
+    return BuildableSupport.getDepsCollection(getCompiler(), ruleFinder);
   }
 
   default Iterable<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder) {

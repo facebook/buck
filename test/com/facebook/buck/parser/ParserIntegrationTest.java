@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -142,7 +143,8 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
-    result.assertFailure("buck build should fail on empty glob results when set in config");
+    result.assertExitCode(
+        "buck build should fail on empty glob results when set in config", ExitCode.PARSE_ERROR);
     assertThat(
         "error message for failure to return results from glob is incorrect",
         result.getStderr(),
@@ -169,7 +171,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
-    result.assertFailure("glob should be empty because of ignores");
+    result.assertExitCode("glob should be empty because of ignores", ExitCode.PARSE_ERROR);
     assertThat(
         "error message for failure to return results from glob is incorrect",
         result.getStderr(),
@@ -196,7 +198,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//...");
-    result.assertFailure("missing attribute should error");
+    result.assertExitCode("missing attribute should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("name"));
   }
@@ -208,7 +210,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
-    result.assertFailure("missing name should error");
+    result.assertExitCode("missing name should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("gr"));
     assertThat(result.getStderr(), containsString("out"));
@@ -221,7 +223,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
-    result.assertFailure("extra attr should error");
+    result.assertExitCode("extra attr should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("gr"));
     assertThat(result.getStderr(), containsString("blurgle"));
@@ -289,7 +291,8 @@ public class ParserIntegrationTest {
     workspace.setUp();
     BigFileTree bigFileTree = new BigFileTree(workspace);
 
-    // We need to change a bunch of files to trigger watchman overflow.  Build a directory hierarchy to avoid overstuffing any individual directory.
+    // We need to change a bunch of files to trigger watchman overflow.  Build a directory hierarchy
+    // to avoid overstuffing any individual directory.
     byte[] initialContents = "xxx".getBytes();
     bigFileTree.visit(path -> Files.write(path, initialContents));
 

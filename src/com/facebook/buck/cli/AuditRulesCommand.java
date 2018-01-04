@@ -19,11 +19,10 @@ package com.facebook.buck.cli;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -93,7 +92,8 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
         ProjectBuildFileParserFactory.createBuildFileParser(
@@ -118,22 +118,16 @@ public class AuditRulesCommand extends AbstractCommand {
 
         // Parse the rules from the build file.
         List<Map<String, Object>> rawRules;
-        try {
-          rawRules = parser.getAll(path, new AtomicLong());
-        } catch (BuildFileParseException e) {
-          throw new HumanReadableException(e);
-        }
+        rawRules = parser.getAll(path, new AtomicLong());
 
         // Format and print the rules from the raw data, filtered by type.
         final ImmutableSet<String> types = getTypes();
         Predicate<String> includeType = type -> types.isEmpty() || types.contains(type);
         printRulesToStdout(params, rawRules, includeType);
       }
-    } catch (BuildFileParseException e) {
-      throw new HumanReadableException("Unable to create parser");
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

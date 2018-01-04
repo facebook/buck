@@ -19,6 +19,8 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -64,7 +66,9 @@ public class JsBundleGenrule extends Genrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       JsBundleOutputs jsBundle,
-      Optional<String> environmentExpansionSeparator) {
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidNdk> androidNdk,
+      Optional<AndroidSdkLocation> androidSdkLocation) {
     super(
         buildTarget,
         projectFilesystem,
@@ -80,7 +84,9 @@ public class JsBundleGenrule extends Genrule
         JsBundleOutputs.JS_DIR_NAME,
         false,
         true,
-        environmentExpansionSeparator);
+        environmentExpansionSeparator,
+        androidNdk,
+        androidSdkLocation);
     this.jsBundle = jsBundle;
     jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();
@@ -94,13 +100,17 @@ public class JsBundleGenrule extends Genrule
     environmentVariablesBuilder
         .put("JS_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToOutput()).toString())
         .put("JS_BUNDLE_NAME", jsBundle.getBundleName())
+        .put("MISC_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToMisc()).toString())
         .put(
             "PLATFORM",
             JsFlavors.PLATFORM_DOMAIN
                 .getFlavor(getBuildTarget().getFlavors())
                 .map(flavor -> flavor.getName())
                 .orElse(""))
-        .put("RELEASE", getBuildTarget().getFlavors().contains(JsFlavors.RELEASE) ? "1" : "");
+        .put("RELEASE", getBuildTarget().getFlavors().contains(JsFlavors.RELEASE) ? "1" : "")
+        .put(
+            "RES_DIR",
+            pathResolver.getAbsolutePath(jsBundle.getSourcePathToResources()).toString());
 
     if (rewriteSourcemap) {
       environmentVariablesBuilder.put(

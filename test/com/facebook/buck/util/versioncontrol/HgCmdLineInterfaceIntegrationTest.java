@@ -32,10 +32,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -166,60 +164,6 @@ public class HgCmdLineInterfaceIntegrationTest {
     assertEquals(
         String.join("\n", expectedValue),
         repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3"));
-  }
-
-  @Test
-  public void testExtractRawManifestNoChanges()
-      throws VersionControlCommandFailedException, InterruptedException, IOException {
-    HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(reposPath.resolve(REPO_TWO_DIR));
-    Path path = hgCmdLineInterface.extractRawManifest();
-    List<String> lines =
-        Files.readAllLines(path, Charset.forName(System.getProperty("file.encoding", "UTF-8")));
-    List<String> expected =
-        ImmutableList.of(
-            "change2\0b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file1\0b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file2\0b80de5d138758541c5f05265ad144ab9fa86d1db");
-    assertEquals(lines, expected);
-  }
-
-  @Test
-  public void testExtractRawManifestWithPatterns()
-      throws VersionControlCommandFailedException, InterruptedException, IOException {
-    // This repository has no treemanifest support, but passing paths should not break the extension
-    // and just return the full raw manifest.
-    HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(reposPath.resolve(REPO_TWO_DIR));
-    Path path = hgCmdLineInterface.extractRawManifest(ImmutableList.of("change2", "file1"));
-    List<String> lines =
-        Files.readAllLines(path, Charset.forName(System.getProperty("file.encoding", "UTF-8")));
-    List<String> expected =
-        ImmutableList.of(
-            "change2\0b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file1\0b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file2\0b80de5d138758541c5f05265ad144ab9fa86d1db");
-    assertEquals(lines, expected);
-  }
-
-  @Test
-  public void testExtractRawManifestFileRenamed()
-      throws VersionControlCommandFailedException, InterruptedException, IOException {
-    // In order to make changes without affecting other tests, extract a new repository copy
-    Path localTempFolder = Files.createTempDirectory(tempFolder.getRoot().toPath(), "temp-repo");
-    Path localReposPath = explodeReposZip(localTempFolder);
-    Files.delete(localReposPath.resolve(REPO_TWO_DIR + "/file1"));
-
-    HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(localReposPath.resolve(REPO_TWO_DIR));
-
-    Path path = hgCmdLineInterface.extractRawManifest();
-    List<String> lines =
-        Files.readAllLines(path, Charset.forName(System.getProperty("file.encoding", "UTF-8")));
-    List<String> expected =
-        ImmutableList.of(
-            "change2\u0000b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file1\u0000b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file2\u0000b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file1\u00000000000000000000000000000000000000000000r");
-    assertEquals(lines, expected);
   }
 
   @Test

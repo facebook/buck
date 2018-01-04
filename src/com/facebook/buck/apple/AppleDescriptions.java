@@ -22,6 +22,8 @@ import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -313,7 +315,6 @@ public class AppleDescriptions {
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ApplePlatform applePlatform,
@@ -390,16 +391,11 @@ public class AppleDescriptions {
       applePlatform = ApplePlatform.WATCHOS;
       targetSDKVersion = "1.0";
     }
-    BuildRuleParams assetParams =
-        params
-            .withoutExtraDeps()
-            .withDeclaredDeps(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(assetCatalogDirs)));
     return Optional.of(
         new AppleAssetCatalog(
             assetCatalogBuildTarget,
             projectFilesystem,
-            assetParams,
+            ruleFinder,
             applePlatform.getName(),
             targetSDKVersion,
             actool,
@@ -575,6 +571,7 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       boolean dryRunCodeSigning,
       boolean cacheable,
+      boolean verifyResources,
       AppleAssetCatalog.ValidationType assetCatalogValidation,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
@@ -646,7 +643,6 @@ public class AppleDescriptions {
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            params,
             sourcePathResolver,
             ruleFinder,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
@@ -793,6 +789,7 @@ public class AppleDescriptions {
         provisioningProfileStore,
         dryRunCodeSigning,
         cacheable,
+        verifyResources,
         codesignFlags,
         codesignAdhocIdentity,
         ibtoolModuleFlag);

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
 java_library(
     name = "fat-jar-main",
@@ -53,7 +53,6 @@ java_library(
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/immutables:immutables",
@@ -105,7 +104,6 @@ java_library(
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
@@ -148,6 +146,7 @@ java_immutables_library(
         "ExternalJavac.java",
         "ExternalOrJarBackedJavacProvider.java",
         "ExtraClasspathProvider.java",
+        "FileManagerListener.java",
         "ForwardingStandardJavaFileManager.java",
         "JarBackedJavac.java",
         "JarBackedJavacProvider.java",
@@ -167,6 +166,7 @@ java_immutables_library(
         "Jsr199Javac.java",
         "Jsr199JavacInvocation.java",
         "Jsr199TracingBridge.java",
+        "ListenableFileManager.java",
         "LoggingJarBuilderObserver.java",
         "MavenPublishable.java",
         "MaybeRequiredForSourceOnlyAbi.java",
@@ -231,7 +231,6 @@ java_immutables_library(
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/function:function",
@@ -281,7 +280,6 @@ java_library(
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
@@ -295,7 +293,7 @@ java_library(
     ],
 )
 
-java_immutables_library(
+java_library_with_plugins(
     name = "rules",
     srcs = [
         "AbstractDefaultJavaLibraryClasspaths.java",
@@ -304,6 +302,7 @@ java_immutables_library(
         "CalculateClassAbi.java",
         "CalculateSourceAbi.java",
         "CompareAbis.java",
+        "CompileAgainstLibraryType.java",
         "ConfiguredCompilerFactory.java",
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryRules.java",
@@ -317,6 +316,7 @@ java_immutables_library(
         "JavaBinary.java",
         "JavaBinaryDescription.java",
         "JavaConfiguredCompilerFactory.java",
+        "JavaDescriptionsProvider.java",
         "JavaLibraryClasspathProvider.java",
         "JavaLibraryDeps.java",
         "JavaLibraryDescription.java",
@@ -381,6 +381,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/java/lang/model:model",
+        "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/message_ipc:message_ipc",
@@ -415,11 +416,11 @@ java_immutables_library(
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
@@ -514,7 +515,6 @@ java_immutables_library(
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/immutables:immutables",

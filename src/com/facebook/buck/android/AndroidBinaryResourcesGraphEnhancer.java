@@ -78,6 +78,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean skipCrunchPngs;
   private final boolean includesVectorDrawables;
   private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
+  private final Optional<SourcePath> duplicateResourceWhitelistPath;
   private final ManifestEntries manifestEntries;
   private final BuildTarget originalBuildTarget;
   private final Optional<Arg> postFilterResourcesCmd;
@@ -102,6 +103,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
+      Optional<SourcePath> duplicateResourceWhitelistPath,
       ManifestEntries manifestEntries,
       Optional<Arg> postFilterResourcesCmd,
       boolean noAutoVersionResources) {
@@ -122,6 +124,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.skipCrunchPngs = skipCrunchPngs;
     this.includesVectorDrawables = includesVectorDrawables;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
+    this.duplicateResourceWhitelistPath = duplicateResourceWhitelistPath;
     this.manifestEntries = manifestEntries;
     this.originalBuildTarget = originalBuildTarget;
     this.postFilterResourcesCmd = postFilterResourcesCmd;
@@ -421,6 +424,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         projectFilesystem,
         ruleFinder,
         bannedDuplicateResourceTypes,
+        duplicateResourceWhitelistPath,
         pathToRDotTxtFile,
         resourceUnionPackage,
         resourceDeps,

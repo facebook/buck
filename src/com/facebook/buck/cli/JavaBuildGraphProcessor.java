@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -109,7 +108,7 @@ final class JavaBuildGraphProcessor {
                         TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
                 .getTargetGraph();
-      } catch (BuildTargetException | BuildFileParseException e) {
+      } catch (BuildFileParseException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

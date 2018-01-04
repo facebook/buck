@@ -18,6 +18,8 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -31,14 +33,15 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.WorkerMacroArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.macros.OutputToFileExpanderUtils;
+import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
@@ -152,6 +155,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path pathToTmpDirectory;
   private final Path pathToSrcDirectory;
   private final Boolean isWorkerGenrule;
+  private final Optional<AndroidNdk> androidNdk;
+  private final Optional<AndroidSdkLocation> androidSdkLocation;
 
   protected Genrule(
       BuildTarget buildTarget,
@@ -168,9 +173,12 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String out,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
-      Optional<String> environmentExpansionSeparator) {
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidNdk> androidNdk,
+      Optional<AndroidSdkLocation> androidSdkLocation) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidNdk = androidNdk;
     this.buildRuleResolver = buildRuleResolver;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = ImmutableList.copyOf(srcs);
@@ -183,6 +191,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     this.isCacheable = isCacheable;
     this.environmentExpansionSeparator = environmentExpansionSeparator.orElse(" ");
+    this.androidSdkLocation = androidSdkLocation;
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
@@ -245,14 +254,10 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     if (android != null) {
-      Optional<Path> sdkDirectory = android.getSdkDirectory();
-      if (sdkDirectory.isPresent()) {
-        environmentVariablesBuilder.put("ANDROID_HOME", sdkDirectory.get().toString());
-      }
-      Optional<Path> ndkDirectory = android.getNdkDirectory();
-      if (ndkDirectory.isPresent()) {
-        environmentVariablesBuilder.put("NDK_HOME", ndkDirectory.get().toString());
-      }
+      androidSdkLocation.ifPresent(
+          sdk -> environmentVariablesBuilder.put("ANDROID_HOME", sdk.getSdkRootPath().toString()));
+      androidNdk.ifPresent(
+          ndk -> environmentVariablesBuilder.put("NDK_HOME", ndk.getNdkRootPath().toString()));
 
       environmentVariablesBuilder.put("DX", android.getDxExecutable().toString());
       environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
@@ -364,7 +369,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<String> collectExistingArgInputs(
       SourcePathResolver sourcePathResolver, Arg arg) {
-    Collection<BuildRule> buildRules = arg.getDeps(new SourcePathRuleFinder(buildRuleResolver));
+    Collection<BuildRule> buildRules =
+        BuildableSupport.getDepsCollection(arg, new SourcePathRuleFinder(buildRuleResolver));
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     for (BuildRule buildRule : buildRules) {
       SourcePath inputPath = buildRule.getSourcePathToOutput();

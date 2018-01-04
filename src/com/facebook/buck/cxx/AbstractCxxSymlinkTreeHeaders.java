@@ -27,10 +27,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -39,6 +38,10 @@ import org.immutables.value.Value;
 @Value.Immutable(prehash = true)
 @BuckStyleImmutable
 abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleKeyAppendable {
+
+  @SuppressWarnings("immutables")
+  private Optional<ImmutableList<BuildRule>> computedDeps = Optional.empty();
+
   @Override
   @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
@@ -62,7 +65,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   public abstract Optional<SourcePath> getHeaderMap();
 
   @Value.Auxiliary
-  abstract ImmutableMap<Path, SourcePath> getNameToPathMap();
+  abstract ImmutableSortedMap<Path, SourcePath> getNameToPathMap();
 
   /** The build target that this object is modeling. */
   abstract BuildTarget getBuildTarget();
@@ -78,28 +81,39 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   // rulekey is really slow to compute.
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildRule> builder = Stream.builder();
-    getNameToPathMap().values().forEach(value -> ruleFinder.getRule(value).ifPresent(builder));
     ruleFinder.getRule(getRoot()).ifPresent(builder);
     if (getIncludeRoot().isRight()) {
       ruleFinder.getRule(getIncludeRoot().getRight()).ifPresent(builder);
     }
     getHeaderMap().flatMap(ruleFinder::getRule).ifPresent(builder);
-    return builder.build().distinct();
+
+    // return a stream of the cached dependencies, or compute and store it
+    return Stream.concat(
+            computedDeps
+                .orElseGet(
+                    () -> {
+                      ImmutableList.Builder<BuildRule> cachedBuilder = ImmutableList.builder();
+                      getNameToPathMap()
+                          .values()
+                          .forEach(
+                              value -> ruleFinder.getRule(value).ifPresent(cachedBuilder::add));
+                      computedDeps = Optional.of(cachedBuilder.build());
+                      return computedDeps.get();
+                    })
+                .stream(),
+            builder.build())
+        .distinct();
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // This needs to be done with direct calls to setReflectively for depfiles to work
-    // correctly.
-    AbstractCxxSymlinkTreeHeaders.this
-        .getNameToPathMap()
-        .entrySet()
-        .stream()
-        .sorted(Comparator.comparing(Entry::getKey))
-        .forEachOrdered(
-            entry ->
-                sink.setReflectively(
-                    "include(" + entry.getKey().toString() + ")", entry.getValue()));
+    // Add stringified paths as keys. The paths in this map represent include directives rather
+    // than actual on-disk locations. Also, manually wrap the beginning and end of the structure to
+    // delimit the contents of this map from other fields that may have the same key.
+    sink.setReflectively(".nameToPathMap", "start");
+    getNameToPathMap()
+        .forEach((path, sourcePath) -> sink.setReflectively(path.toString(), sourcePath));
+    sink.setReflectively(".nameToPathMap", "end");
   }
 
   /** @return a {@link CxxHeaders} constructed from the given {@link HeaderSymlinkTree}. */

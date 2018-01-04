@@ -62,7 +62,6 @@ public class BserDeserializer {
   }
 
   /** Exception thrown when BSER parser unexpectedly reaches the end of the input stream. */
-  @SuppressWarnings("serial")
   public static class BserEofException extends IOException {
     public BserEofException(String message) {
       super(message);

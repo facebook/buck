@@ -17,7 +17,7 @@
 package com.facebook.buck.log.views;
 
 /**
- * This defines the different views an object can have when serialised/de-serialised using Jackson.
+ * This defines the different views an object can have when serialized/de-serialized using Jackson.
  *
  * @see <a href="http://wiki.fasterxml.com/JacksonJsonViews">JacksonJsonViews</a>
  */

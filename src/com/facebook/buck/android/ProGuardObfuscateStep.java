@@ -26,6 +26,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
@@ -330,7 +331,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       String proGuardArguments = Joiner.on('\n').join(getParameters(filesystem.getRootPath()));
       filesystem.writeContentsToPath(proGuardArguments, pathToProGuardCommandLineArgsFile);
 
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     /** @return the list of arguments to pass to ProGuard. */

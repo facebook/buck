@@ -26,7 +26,6 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
-import com.facebook.buck.cli.ExitCode;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -43,7 +42,8 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.plugin.BuckPluginManagerFactory;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.CellProviderFactory;
@@ -51,7 +51,9 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -570,15 +572,14 @@ public class ProjectWorkspace {
 
       Main main =
           knownBuildRuleTypesFactoryFactory == null
-              ? new Main(stdout, stderr, stdin)
-              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
+              ? new Main(stdout, stderr, stdin, context)
+              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory, context);
       ExitCode exitCode;
       try {
         exitCode =
             main.runMainWithExitCode(
                 new BuildId(),
                 repoRoot,
-                context,
                 sanizitedEnv,
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
@@ -588,6 +589,12 @@ public class ProjectWorkspace {
         e.printStackTrace(stderr);
         exitCode = ExitCode.BUILD_ERROR;
         Threads.interruptCurrentThread();
+      } catch (CommandLineException e) {
+        stderr.println(e.getMessage());
+        exitCode = ExitCode.COMMANDLINE_ERROR;
+      } catch (BuildFileParseException e) {
+        stderr.println(e.getHumanReadableErrorMessage());
+        exitCode = ExitCode.PARSE_ERROR;
       }
 
       return new ProcessResult(

@@ -70,7 +70,6 @@ public class OcamlMLCompileStep extends ShellStep {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       try {
         sink.setReflectively("cCompiler", cCompiler)

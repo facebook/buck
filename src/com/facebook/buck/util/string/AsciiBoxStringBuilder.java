@@ -54,6 +54,9 @@ public class AsciiBoxStringBuilder {
 
         // Set the split to be after the space, so that we don't end up with leading spaces
         nextSpaceIndex = line.indexOf(' ', lineBreakIndex) + 1;
+        if (nextSpaceIndex == 0) {
+          nextSpaceIndex = maxLength;
+        }
       }
 
       writeLine(line.substring(0, lineBreakIndex));

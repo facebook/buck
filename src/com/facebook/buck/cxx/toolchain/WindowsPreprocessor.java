@@ -17,8 +17,6 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.rules.DelegatingTool;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -62,7 +60,7 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
   }
 
   @Override
-  public Iterable<String> prefixHeaderArgs(SourcePathResolver resolver, SourcePath prefixHeader) {
+  public Iterable<String> prefixHeaderArgs(Path prefixHeader) {
     throw new UnsupportedOperationException("prefix header not supported by " + getClass());
     // TODO(steveo) Should be easy to add support; will try @ later time,
     // when I can test w/ Windows.

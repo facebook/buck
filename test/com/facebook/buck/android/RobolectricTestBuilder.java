@@ -23,6 +23,8 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -36,7 +38,7 @@ public class RobolectricTestBuilder
 
   public static final AndroidLibraryCompilerFactory DEFAULT_ANDROID_COMPILER_FACTORY =
       new DefaultAndroidLibraryCompilerFactory(
-          new ToolchainProviderBuilder().build(),
+          new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
           DEFAULT_JAVA_CONFIG,
           new ScalaBuckConfig(FakeBuckConfig.builder().build()),
           new KotlinBuckConfig(FakeBuckConfig.builder().build()));
@@ -44,11 +46,16 @@ public class RobolectricTestBuilder
   private RobolectricTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new RobolectricTestDescription(
-            new ToolchainProviderBuilder().build(),
+            new ToolchainProviderBuilder()
+                .withDefaultCxxPlatforms()
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+                .withToolchain(
+                    JavaOptionsProvider.DEFAULT_NAME,
+                    JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+                .build(),
             javaBuckConfig,
-            DEFAULT_JAVA_OPTIONS,
-            ANDROID_JAVAC_OPTIONS,
-            null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target);
   }
@@ -56,11 +63,16 @@ public class RobolectricTestBuilder
   private RobolectricTestBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
         new RobolectricTestDescription(
-            new ToolchainProviderBuilder().build(),
+            new ToolchainProviderBuilder()
+                .withDefaultCxxPlatforms()
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+                .withToolchain(
+                    JavaOptionsProvider.DEFAULT_NAME,
+                    JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+                .build(),
             DEFAULT_JAVA_CONFIG,
-            DEFAULT_JAVA_OPTIONS,
-            ANDROID_JAVAC_OPTIONS,
-            null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
         filesystem);
@@ -70,11 +82,16 @@ public class RobolectricTestBuilder
       BuildTarget target, ProjectFilesystem filesystem, JavaBuckConfig javaBuckConfig) {
     super(
         new RobolectricTestDescription(
-            new ToolchainProviderBuilder().build(),
+            new ToolchainProviderBuilder()
+                .withDefaultCxxPlatforms()
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+                .withToolchain(
+                    JavaOptionsProvider.DEFAULT_NAME,
+                    JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+                .build(),
             javaBuckConfig,
-            DEFAULT_JAVA_OPTIONS,
-            ANDROID_JAVAC_OPTIONS,
-            null,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
         filesystem);

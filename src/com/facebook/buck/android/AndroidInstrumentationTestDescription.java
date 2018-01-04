@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaOptions;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -43,15 +43,13 @@ public class AndroidInstrumentationTestDescription
 
   private final BuckConfig buckConfig;
   private final ToolchainProvider toolchainProvider;
-  private final JavaOptions javaOptions;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
       resourceSupplierCache;
 
   public AndroidInstrumentationTestDescription(
-      BuckConfig buckConfig, ToolchainProvider toolchainProvider, JavaOptions javaOptions) {
+      BuckConfig buckConfig, ToolchainProvider toolchainProvider) {
     this.buckConfig = buckConfig;
     this.toolchainProvider = toolchainProvider;
-    this.javaOptions = javaOptions;
     this.resourceSupplierCache = new ConcurrentHashMap<>();
   }
 
@@ -89,7 +87,10 @@ public class AndroidInstrumentationTestDescription
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
-        javaOptions.getJavaRuntimeLauncher(),
+        toolchainProvider
+            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
+            .getJavaOptions()
+            .getJavaRuntimeLauncher(),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(buckConfig.getDefaultTestRuleTimeoutMs()),

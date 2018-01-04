@@ -41,8 +41,8 @@ public class OutputToFileExpanderUtils {
     return BuildTargets.getScratchPath(projectFilesystem, buildTarget, "%s__macros");
   }
 
-  public static MacroReplacer wrapReplacerWithFileOutput(
-      MacroReplacer replacer, BuildTarget target, BuildRuleResolver resolver) {
+  static MacroReplacer<String> wrapReplacerWithFileOutput(
+      MacroReplacer<String> replacer, BuildTarget target, BuildRuleResolver resolver) {
     return input -> {
       try {
         Optional<BuildRule> rule = resolver.getRuleOptional(target);

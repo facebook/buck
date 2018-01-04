@@ -15,7 +15,22 @@
  */
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.CREATE_DISTRIBUTED_BUILD;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_FILE_HASH_COMPUTATION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_TARGET_GRAPH_SERIALIZATION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_UPLOAD_FROM_DIR_CACHE;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.MATERIALIZE_SLAVE_LOGS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_LOCAL_BUILD;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_BUILD_ANALYSIS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PUBLISH_BUILD_SLAVE_FINISHED_STATS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.SET_BUCK_VERSION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_BUCK_DOT_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_MISSING_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_TARGET_GRAPH;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -31,6 +46,9 @@ public class ClientStatsTracker {
   public enum DistBuildClientStat {
     LOCAL_PREPARATION, // Measures everything that happens before starting distributed build
     LOCAL_GRAPH_CONSTRUCTION,
+    LOCAL_FILE_HASH_COMPUTATION,
+    LOCAL_TARGET_GRAPH_SERIALIZATION,
+    LOCAL_UPLOAD_FROM_DIR_CACHE,
     PERFORM_DISTRIBUTED_BUILD,
     PERFORM_LOCAL_BUILD,
     POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
@@ -47,6 +65,8 @@ public class ClientStatsTracker {
   private static final DistBuildClientStat[] REQUIRED_STATS = {
     LOCAL_PREPARATION,
     LOCAL_GRAPH_CONSTRUCTION,
+    LOCAL_FILE_HASH_COMPUTATION,
+    LOCAL_TARGET_GRAPH_SERIALIZATION,
     PERFORM_DISTRIBUTED_BUILD,
     POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
     CREATE_DISTRIBUTED_BUILD,
@@ -80,6 +100,8 @@ public class ClientStatsTracker {
   private volatile Optional<Integer> localBuildExitCode = Optional.empty();
 
   private volatile Optional<Long> missingFilesUploadedCount = Optional.empty();
+
+  private volatile Optional<Long> missingRulesUploadedFromDirCacheCount = Optional.empty();
 
   private volatile Optional<String> buckClientErrorMessage = Optional.empty();
 
@@ -151,6 +173,10 @@ public class ClientStatsTracker {
 
     builder.setLocalPreparationDurationMs(getDurationOrEmpty(LOCAL_PREPARATION));
     builder.setLocalGraphConstructionDurationMs(getDurationOrEmpty(LOCAL_GRAPH_CONSTRUCTION));
+    builder.setLocalFileHashComputationDurationMs(getDurationOrEmpty(LOCAL_FILE_HASH_COMPUTATION));
+    builder.setLocalTargetGraphSerializationDurationMs(
+        getDurationOrEmpty(LOCAL_TARGET_GRAPH_SERIALIZATION));
+    builder.setLocalUploadFromDirCacheDurationMs(getDurationOrEmpty(LOCAL_UPLOAD_FROM_DIR_CACHE));
     builder.setPostDistBuildLocalStepsDurationMs(
         getDurationOrEmpty(POST_DISTRIBUTED_BUILD_LOCAL_STEPS));
     builder.setPerformDistributedBuildDurationMs(getDurationOrEmpty(PERFORM_DISTRIBUTED_BUILD));
@@ -163,9 +189,14 @@ public class ClientStatsTracker {
     builder.setPublishBuildSlaveFinishedStatsDurationMs(
         getDurationOrEmpty(PUBLISH_BUILD_SLAVE_FINISHED_STATS));
 
+    builder.setMissingRulesUploadedFromDirCacheCount(missingRulesUploadedFromDirCacheCount);
     builder.setMissingFilesUploadedCount(missingFilesUploadedCount);
 
     return builder.build();
+  }
+
+  public void setMissingRulesUploadedFromDirCacheCount(long missingRulesUploadedFromDirCacheCount) {
+    this.missingRulesUploadedFromDirCacheCount = Optional.of(missingRulesUploadedFromDirCacheCount);
   }
 
   public void setMissingFilesUploadedCount(long missingFilesUploadedCount) {

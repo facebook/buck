@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -57,7 +58,9 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return Stream.concat(params.getBuildDeps().stream(), tool.getDeps(ruleFinder).stream())
+    return Stream.concat(
+            params.getBuildDeps().stream(),
+            BuildableSupport.getDepsCollection(tool, ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
 

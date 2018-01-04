@@ -28,19 +28,18 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.macros.StringWithMacrosArg;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.facebook.buck.util.JsonBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Optional;
 
 public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implements JsBundleOutputs {
 
@@ -51,6 +50,8 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
 
   @AddToRuleKey private final ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups;
+
+  @AddToRuleKey private final Optional<StringWithMacrosArg> extraJson;
 
   @AddToRuleKey private final WorkerTool worker;
 
@@ -65,10 +66,12 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
+      Optional<StringWithMacrosArg> extraJson,
       ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups,
       String bundleName,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
+    this.extraJson = extraJson;
     this.bundleName = bundleName;
     this.entryPoints = entryPoints;
     this.libraryPathGroups = libraryPathGroups;
@@ -85,13 +88,8 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     final SourcePath resourcesDir = getSourcePathToResources();
     final SourcePath miscDirPath = getSourcePathToMisc();
 
-    String jobArgs;
-    try {
-      jobArgs =
-          getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
-    } catch (IOException ex) {
-      throw JsUtil.getJobArgsException(ex, getBuildTarget());
-    }
+    String jobArgs =
+        getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));
@@ -138,78 +136,48 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       SourcePath jsOutputDir,
       SourcePath sourceMapFile,
       SourcePath resourcesDir,
-      SourcePath miscDirPath)
-      throws IOException {
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    JsonGenerator generator = ObjectMappers.createGenerator(stream);
-    BuildTarget target = getBuildTarget();
-    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
+      SourcePath miscDirPath) {
 
-    generator.writeStartObject();
+    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
 
-    generator.writeFieldName("assetsDirPath");
-    generator.writeString(sourcePathResolver.getAbsolutePath(resourcesDir).toString());
-
-    generator.writeFieldName("bundlePath");
-    generator.writeString(
-        String.format("%s/%s", sourcePathResolver.getAbsolutePath(jsOutputDir), bundleName));
-
-    generator.writeStringField("command", "bundle");
-
-    generator.writeFieldName("entryPoints");
-    generator.writeStartArray();
-    for (String entryPoint : entryPoints) {
-      generator.writeString(entryPoint);
-    }
-    generator.writeEndArray();
-
-    generator.writeFieldName("libraryGroups");
-    generator.writeStartArray();
-    for (ImmutableSet<SourcePath> libGroup : libraryPathGroups) {
-      generator.writeStartArray();
-      for (SourcePath lib : libGroup) {
-        generator.writeString(sourcePathResolver.getAbsolutePath(lib).toString());
-      }
-      generator.writeEndArray();
-    }
-    generator.writeEndArray();
-
-    generator.writeFieldName("libraries");
-    generator.writeStartArray();
-    for (SourcePath lib : libraries) {
-      generator.writeString(sourcePathResolver.getAbsolutePath(lib).toString());
-    }
-    generator.writeEndArray();
-
-    JsUtil.writePlatformFlavorToJson(generator, flavors, target);
-
-    JsFlavors.RAM_BUNDLE_DOMAIN
-        .getFlavor(flavors)
-        .ifPresent(
-            ramBundleMode -> {
-              try {
-                generator.writeFieldName("ramBundle");
-                generator.writeString(JsUtil.getValueForFlavor(RAM_BUNDLE_STRINGS, ramBundleMode));
-              } catch (IOException ex) {
-                throw JsUtil.getJobArgsException(ex, target);
-              }
-            });
-
-    generator.writeFieldName("release");
-    generator.writeBoolean(flavors.contains(JsFlavors.RELEASE));
-
-    generator.writeFieldName("rootPath");
-    generator.writeString(getProjectFilesystem().getRootPath().toString());
-
-    generator.writeFieldName("sourceMapPath");
-    generator.writeString(sourcePathResolver.getAbsolutePath(sourceMapFile).toString());
-
-    generator.writeFieldName("miscDirPath");
-    generator.writeString(sourcePathResolver.getAbsolutePath(miscDirPath).toString());
-
-    generator.writeEndObject();
-    generator.close();
-    return stream.toString(StandardCharsets.UTF_8.name());
+    return JsonBuilder.object()
+        .addString("assetsDirPath", sourcePathResolver.getAbsolutePath(resourcesDir).toString())
+        .addString(
+            "bundlePath",
+            String.format("%s/%s", sourcePathResolver.getAbsolutePath(jsOutputDir), bundleName))
+        .addString("command", "bundle")
+        .addArray("entryPoints", entryPoints.stream().collect(JsonBuilder.toArrayOfStrings()))
+        .addArray(
+            "libraryGroups",
+            libraryPathGroups
+                .stream()
+                .map(
+                    sourcePaths ->
+                        sourcePaths
+                            .stream()
+                            .map(sourcePathResolver::getAbsolutePath)
+                            .map(Path::toString)
+                            .collect(JsonBuilder.toArrayOfStrings()))
+                .collect(JsonBuilder.toArrayOfArrays()))
+        .addArray(
+            "libraries",
+            libraries
+                .stream()
+                .map(sourcePathResolver::getAbsolutePath)
+                .map(Path::toString)
+                .collect(JsonBuilder.toArrayOfStrings()))
+        .addString("platform", JsUtil.getPlatformString(flavors))
+        .addString(
+            "ramBundle",
+            JsFlavors.RAM_BUNDLE_DOMAIN
+                .getFlavor(flavors)
+                .map(mode -> JsUtil.getValueForFlavor(RAM_BUNDLE_STRINGS, mode)))
+        .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
+        .addString("rootPath", getProjectFilesystem().getRootPath().toString())
+        .addString("sourceMapPath", sourcePathResolver.getAbsolutePath(sourceMapFile).toString())
+        .addString("miscDirPath", sourcePathResolver.getAbsolutePath(miscDirPath).toString())
+        .addRaw("extraData", extraJson.map(JsUtil::expandJsonWithMacros))
+        .toString();
   }
 
   @Override

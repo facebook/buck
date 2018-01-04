@@ -29,6 +29,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -50,6 +51,17 @@ import org.junit.Test;
 
 public class CxxGtestTestTest {
 
+  /*
+   * exitCode files were generated with:
+   *
+   * public static void main(String[] args) throws Exception {
+   *   try (FileOutputStream fileOut = new FileOutputStream(new File("exitCode"));
+   *       ObjectOutputStream objectOut = new ObjectOutputStream(fileOut)) {
+   *     objectOut.writeInt(0);
+   *   }
+   * }
+   */
+
   private static final TypeReference<List<TestResultSummary>> SUMMARIES_REFERENCE =
       new TypeReference<List<TestResultSummary>>() {};
 
@@ -63,6 +75,8 @@ public class CxxGtestTestTest {
 
     ImmutableList<String> samples =
         ImmutableList.of(
+            "sigabrt_after_success",
+            "with_bad_exit_file",
             "big_output",
             "malformed_output",
             "malformed_results",
@@ -88,6 +102,7 @@ public class CxxGtestTestTest {
                 linkTarget,
                 filesystem,
                 ImmutableSortedSet::of,
+                TestCellPathResolver.get(filesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),
                 ImmutableMap.of(),
@@ -109,7 +124,7 @@ public class CxxGtestTestTest {
             /* maxTestOutputSize */ 100L);
 
     for (String sample : samples) {
-      Path exitCode = Paths.get("unused");
+      Path exitCode = workspace.resolve(Paths.get(sample)).resolve("exitCode");
       Path output = workspace.resolve(Paths.get(sample)).resolve("output");
       Path results = workspace.resolve(Paths.get(sample)).resolve("results");
       Path summaries = workspace.resolve(Paths.get(sample)).resolve("summaries");

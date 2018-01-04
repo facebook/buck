@@ -28,6 +28,7 @@ public class CGoCompileStep extends ShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> cgoCommandPrefix;
+  private final ImmutableList<String> cgoCompilerFlags;
   private final ImmutableList<Path> srcs;
   private final GoPlatform platform;
   private final Path outputDir;
@@ -37,12 +38,14 @@ public class CGoCompileStep extends ShellStep {
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cgoCommandPrefix,
+      ImmutableList<String> cgoCompilerFlags,
       ImmutableList<Path> srcs,
       GoPlatform platform,
       Path outputDir) {
     super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.cgoCommandPrefix = cgoCommandPrefix;
+    this.cgoCompilerFlags = cgoCompilerFlags;
     this.srcs = srcs;
     this.outputDir = outputDir;
     this.platform = platform;
@@ -55,6 +58,7 @@ public class CGoCompileStep extends ShellStep {
         .add("-importpath", context.getBuildCellRootPath().toString())
         .add("-srcdir", context.getBuildCellRootPath().toString())
         .add("-objdir", outputDir.toString())
+        .addAll(cgoCompilerFlags)
         .addAll(
             srcs.stream()
                 .map(x -> context.getBuildCellRootPath().relativize(x).toString())

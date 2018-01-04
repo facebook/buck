@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "java_test", "standard_java_test")
+
+standard_java_test(
+    name = "cache",
+    deps = [
+        "//src/com/facebook/buck/util/cache:cache",
+        "//test/com/facebook/buck/util/timing:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

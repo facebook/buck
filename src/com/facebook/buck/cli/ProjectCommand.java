@@ -31,6 +31,8 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -227,7 +229,10 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--view",
     usage =
-        "Option that builds a Project View which is a directory containing symlinks to a single"
+        "Deprecated: this feature will be removed in future versions, see "
+            + "https://github.com/facebook/buck/issues/1567."
+            + "\n"
+            + "Option that builds a Project View which is a directory containing symlinks to a single"
             + " project's code and resources. This directory looks a lot like a standard IntelliJ "
             + "project with all resources under /res, but what's really important is that it "
             + "generates a single IntelliJ module, so that editing is much faster than when you "
@@ -254,21 +259,18 @@ public class ProjectCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     final Ide projectIde =
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
     if (projectIde == null) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("\nCannot build a project: project IDE is not specified.");
-      return 1;
+      throw new CommandLineException("project IDE is not specified in Buck config or --ide");
     }
 
     int rc = runPreprocessScriptIfNeeded(params, projectIde);
     if (rc != 0) {
-      return rc;
+      return ExitCode.map(rc);
     }
 
     try (CommandThreadManager pool =
@@ -277,7 +279,7 @@ public class ProjectCommand extends BuildCommand {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
-      int result;
+      ExitCode result;
       try {
         switch (projectIde) {
           case INTELLIJ:
@@ -381,13 +383,13 @@ public class ProjectCommand extends BuildCommand {
     return false;
   }
 
-  private int runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
+  private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
       throws IOException, InterruptedException {
     BuildCommand buildCommand = new BuildCommand(arguments);
     return buildCommand.run(params);
   }
 
-  private int runBuild(
+  private ExitCode runBuild(
       CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching)
       throws IOException, InterruptedException {
     BuildCommand buildCommand =

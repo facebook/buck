@@ -31,6 +31,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
@@ -44,6 +46,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Charsets;
@@ -79,12 +82,14 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildRuleParams buildRuleParams;
   private final CxxBuckConfig cxxBuckConfig;
   private final SourcePathResolver pathResolver;
+  private final CellPathResolver cellPathResolver;
 
   public RelinkerRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      CellPathResolver cellPathResolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> symbolsNeededPaths,
       TargetCpuType cpuType,
@@ -97,6 +102,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(
         buildTarget, projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs));
     this.pathResolver = resolver;
+    this.cellPathResolver = cellPathResolver;
     this.cpuType = cpuType;
     this.objdump = objdump;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -111,7 +117,8 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static BuildRuleParams withDepsFromArgs(
       BuildRuleParams params, SourcePathRuleFinder ruleFinder, ImmutableList<Arg> args) {
     return params.copyAppendingExtraDeps(
-        Iterables.concat(Iterables.transform(args, arg -> arg.getDeps(ruleFinder))));
+        Iterables.concat(
+            Iterables.transform(args, arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))));
   }
 
   private static String getVersionScript(
@@ -175,6 +182,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                   getProjectFilesystem(),
                   buildRuleParams::getBuildDeps,
+                  cellPathResolver,
                   linker,
                   getLibFilePath(),
                   ImmutableMap.of(),
@@ -208,7 +216,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   for (Step s : relinkerSteps.build()) {
                     StepExecutionResult executionResult = s.execute(context);
                     if (!executionResult.isSuccess()) {
-                      return StepExecutionResult.ERROR;
+                      return StepExecutionResults.ERROR;
                     }
                   }
                 }
@@ -217,7 +225,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     Sets.union(
                         symbolsNeeded,
                         getSymbols(context.getProcessExecutor(), getLibFilePath()).undefined));
-                return StepExecutionResult.SUCCESS;
+                return StepExecutionResults.SUCCESS;
               }
             })
         .build();

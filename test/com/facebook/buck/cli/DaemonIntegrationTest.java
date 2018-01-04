@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.CommandMode;
@@ -204,12 +205,12 @@ public class DaemonIntegrationTest {
             new Main(
                 new CapturingPrintStream(),
                 new CapturingPrintStream(),
-                new ByteArrayInputStream("".getBytes("UTF-8")));
+                new ByteArrayInputStream("".getBytes("UTF-8")),
+                Optional.of(new TestContext()));
         ExitCode exitCode =
             main.runMainWithExitCode(
                 new BuildId(),
                 tmp.getRoot(),
-                Optional.of(new TestContext()),
                 ImmutableMap.copyOf(System.getenv()),
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
@@ -362,7 +363,7 @@ public class DaemonIntegrationTest {
     String fileName = "apps/myapp/BUCK";
     Files.delete(workspace.getPath(fileName));
 
-    workspace.runBuckdCommand("build", "app").assertFailure();
+    workspace.runBuckdCommand("build", "app").assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -376,7 +377,9 @@ public class DaemonIntegrationTest {
     String fileName = "java/com/example/activity/BUCK";
     Files.delete(workspace.getPath(fileName));
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
+    workspace
+        .runBuckdCommand("build", "//java/com/example/activity:activity")
+        .assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -433,7 +436,7 @@ public class DaemonIntegrationTest {
         "Failure should be due to syntax error.",
         result.getStderr(),
         containsString("Syntax error"));
-    result.assertFailure();
+    result.assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -628,6 +631,6 @@ public class DaemonIntegrationTest {
 
     primary.runBuckdCommand("build", ":rule").assertSuccess();
     Files.write(secondary.getPath("included_by_primary.py"), new byte[] {});
-    primary.runBuckdCommand("build", ":rule").assertFailure();
+    primary.runBuckdCommand("build", ":rule").assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 }
