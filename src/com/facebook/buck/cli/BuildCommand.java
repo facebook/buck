@@ -498,28 +498,36 @@ public class BuildCommand extends AbstractCommand {
               params, commandThreadManager.getListeningExecutorService(), Optional.empty());
       distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
 
-      try {
-        exitCode =
-            executeDistBuild(
-                params,
-                distBuildConfig,
-                graphs,
-                commandThreadManager.getWeightedListeningExecutorService(),
-                params.getCell().getFilesystem(),
-                params.getFileHashCache(),
-                distBuildClientStatsTracker);
-      } catch (Throwable ex) {
-        distBuildClientStatsTracker.setBuckClientError(true);
-        String stackTrace = Throwables.getStackTraceAsString(ex);
-        distBuildClientStatsTracker.setBuckClientErrorMessage(ex.toString() + "\n" + stackTrace);
-        throw ex;
-      } finally {
-        if (distBuildClientStatsTracker.hasStampedeId()) {
-          params
-              .getBuckEventBus()
-              .post(new DistBuildClientStatsEvent(distBuildClientStatsTracker.generateStats()));
-        } else {
-          LOG.error("Failed to published DistBuildClientStatsEvent as no Stampede ID was received");
+      try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+          getDefaultRuleKeyCacheScope(params, graphs.getActionGraphAndResolver())) {
+        try {
+          exitCode =
+              executeDistBuild(
+                  params,
+                  distBuildConfig,
+                  graphs,
+                  commandThreadManager.getWeightedListeningExecutorService(),
+                  params.getCell().getFilesystem(),
+                  params.getFileHashCache(),
+                  distBuildClientStatsTracker,
+                  ruleKeyCacheScope);
+        } catch (Throwable ex) {
+          distBuildClientStatsTracker.setBuckClientError(true);
+          String stackTrace = Throwables.getStackTraceAsString(ex);
+          distBuildClientStatsTracker.setBuckClientErrorMessage(ex.toString() + "\n" + stackTrace);
+          throw ex;
+        } finally {
+          if (distBuildClientStatsTracker.hasStampedeId()) {
+            params
+                .getBuckEventBus()
+                .post(new DistBuildClientStatsEvent(distBuildClientStatsTracker.generateStats()));
+          } else {
+            LOG.error(
+                "Failed to published DistBuildClientStatsEvent as no Stampede ID was received");
+          }
+        }
+        if (exitCode == ExitCode.SUCCESS) {
+          exitCode = processSuccessfulBuild(params, graphs, ruleKeyCacheScope);
         }
       }
     } else {
@@ -528,19 +536,24 @@ public class BuildCommand extends AbstractCommand {
         graphs =
             createGraphs(
                 params, commandThreadManager.getListeningExecutorService(), optionalRuleKeyLogger);
-        exitCode =
-            executeLocalBuild(
-                params,
-                graphs.getActionGraphAndResolver(),
-                commandThreadManager.getWeightedListeningExecutorService(),
-                optionalRuleKeyLogger,
-                new NoOpRemoteBuildRuleCompletionWaiter(),
-                Optional.empty());
+        try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+            getDefaultRuleKeyCacheScope(params, graphs.getActionGraphAndResolver())) {
+          exitCode =
+              executeLocalBuild(
+                  params,
+                  graphs.getActionGraphAndResolver(),
+                  commandThreadManager.getWeightedListeningExecutorService(),
+                  optionalRuleKeyLogger,
+                  new NoOpRemoteBuildRuleCompletionWaiter(),
+                  Optional.empty(),
+                  ruleKeyCacheScope);
+          if (exitCode == ExitCode.SUCCESS) {
+            exitCode = processSuccessfulBuild(params, graphs, ruleKeyCacheScope);
+          }
+        }
       }
     }
-    if (exitCode == ExitCode.SUCCESS) {
-      exitCode = processSuccessfulBuild(params, graphs);
-    }
+
     return exitCode;
   }
 
@@ -556,13 +569,16 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private ExitCode processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
+  private ExitCode processSuccessfulBuild(
+      CommandRunnerParams params,
+      ActionAndTargetGraphs graphs,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException {
     if (params.getBuckConfig().createBuildOutputSymLinksEnabled()) {
       symLinkBuildResults(params, graphs.getActionGraphAndResolver());
     }
     if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
-      showOutputs(params, graphs.getActionGraphAndResolver());
+      showOutputs(params, graphs.getActionGraphAndResolver(), ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
       BuildTarget loneTarget =
@@ -713,7 +729,8 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executorService,
       ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
-      ClientStatsTracker distBuildClientStats)
+      ClientStatsTracker distBuildClientStats,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException, InterruptedException {
     Preconditions.checkNotNull(distBuildClientEventListener);
 
@@ -809,7 +826,8 @@ public class BuildCommand extends AbstractCommand {
                                     executorService,
                                     Optional.empty(),
                                     remoteBuildSynchronizer,
-                                    Optional.of(localBuildInitializationLatch))
+                                    Optional.of(localBuildInitializationLatch),
+                                    ruleKeyCacheScope)
                                 .getCode());
 
                         LOG.info("Distributed build local client has finished building");
@@ -964,7 +982,9 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void showOutputs(
-      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver)
+      CommandRunnerParams params,
+      ActionGraphAndResolver actionGraphAndResolver,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException {
     TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
@@ -976,7 +996,12 @@ public class BuildCommand extends AbstractCommand {
       ruleKeyFactory =
           Optional.of(
               new DefaultRuleKeyFactory(
-                  fieldLoader, params.getFileHashCache(), pathResolver, ruleFinder));
+                  fieldLoader,
+                  params.getFileHashCache(),
+                  pathResolver,
+                  ruleFinder,
+                  ruleKeyCacheScope.getCache(),
+                  Optional.empty()));
     }
     for (BuildTarget buildTarget : buildTargets) {
       BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
@@ -1078,43 +1103,41 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executor,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
-      Optional<CountDownLatch> initializeBuildLatch)
+      Optional<CountDownLatch> initializeBuildLatch,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException, InterruptedException {
 
-    try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
-        getDefaultRuleKeyCacheScope(params, actionGraphAndResolver)) {
-      LocalBuildExecutor builder =
-          new LocalBuildExecutor(
-              params.createBuilderArgs(),
-              getExecutionContext(),
-              actionGraphAndResolver,
-              new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
-              executor,
-              isKeepGoing(),
-              useDistributedBuild,
-              Optional.of(ruleKeyCacheScope),
-              getBuildEngineMode(),
-              ruleKeyLogger,
-              remoteBuildRuleCompletionWaiter);
-      lastBuild = builder.getBuild();
-      localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
+    LocalBuildExecutor builder =
+        new LocalBuildExecutor(
+            params.createBuilderArgs(),
+            getExecutionContext(),
+            actionGraphAndResolver,
+            new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+            executor,
+            isKeepGoing(),
+            useDistributedBuild,
+            Optional.of(ruleKeyCacheScope),
+            getBuildEngineMode(),
+            ruleKeyLogger,
+            remoteBuildRuleCompletionWaiter);
+    lastBuild = builder.getBuild();
+    localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
 
-      if (initializeBuildLatch.isPresent()) {
-        // Signal to other threads that lastBuild has now been set.
-        initializeBuildLatch.get().countDown();
-      }
-
-      List<String> targetStrings =
-          FluentIterable.from(buildTargets)
-              .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
-              .transform(target -> target.getFullyQualifiedName())
-              .toList();
-      int code =
-          builder.buildLocallyAndReturnExitCode(
-              targetStrings, getPathToBuildReport(params.getBuckConfig()));
-      builder.shutdown();
-      return ExitCode.map(code);
+    if (initializeBuildLatch.isPresent()) {
+      // Signal to other threads that lastBuild has now been set.
+      initializeBuildLatch.get().countDown();
     }
+
+    List<String> targetStrings =
+        FluentIterable.from(buildTargets)
+            .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
+            .transform(target -> target.getFullyQualifiedName())
+            .toList();
+    int code =
+        builder.buildLocallyAndReturnExitCode(
+            targetStrings, getPathToBuildReport(params.getBuckConfig()));
+    builder.shutdown();
+    return ExitCode.map(code);
   }
 
   RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(
