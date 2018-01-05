@@ -20,6 +20,7 @@ java_binary(
         "//programs:bucklib",
         "//programs:bucklib-no-nailgun",
         "//src/com/facebook/buck/jvm/java:steps",
+        "//test/com/facebook/buck/cli:cli",
     ],
     deps = [
         ":coverage",
