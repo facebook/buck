@@ -20,6 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -31,11 +32,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.JsonBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.nio.file.Path;
 
 public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -64,19 +65,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
     final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
 
     SourcePath outputFile = getSourcePathToOutput();
-    String jobArgs =
-        Stream.concat(
-                Stream.of(
-                    "dependencies",
-                    JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
-                    JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
-                    String.format(
-                        "--root %s --out %s",
-                        getProjectFilesystem().getRootPath(),
-                        sourcePathResolver.getAbsolutePath(outputFile))),
-                entryPoints.stream())
-            .filter(s -> !s.isEmpty())
-            .collect(Collectors.joining(" "));
+    String jobArgs = getJobArgs(sourcePathResolver, outputFile);
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(outputFile));
 
@@ -90,6 +79,27 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
             JsUtil.workerShellStep(
                 worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
         .build();
+  }
+
+  private String getJobArgs(SourcePathResolver sourcePathResolver, SourcePath outputFilePath) {
+
+    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
+
+    return JsonBuilder.object()
+        .addString("outputFilePath", sourcePathResolver.getAbsolutePath(outputFilePath).toString())
+        .addString("command", "dependencies")
+        .addArray("entryPoints", entryPoints.stream().collect(JsonBuilder.toArrayOfStrings()))
+        .addArray(
+            "libraries",
+            libraries
+                .stream()
+                .map(sourcePathResolver::getAbsolutePath)
+                .map(Path::toString)
+                .collect(JsonBuilder.toArrayOfStrings()))
+        .addString("platform", JsUtil.getPlatformString(flavors))
+        .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
+        .addString("rootPath", getProjectFilesystem().getRootPath().toString())
+        .toString();
   }
 
   @Override
