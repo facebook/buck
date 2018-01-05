@@ -185,11 +185,11 @@ public class PythonBinaryDescription
                                     sourcePath -> sourcePath)))
                     .build()));
 
-    return PythonInPlaceBinary.from(
+    return new PythonInPlaceBinary(
         buildTarget,
         projectFilesystem,
-        params,
         resolver,
+        params.getDeclaredDeps(),
         cxxPlatform,
         pythonPlatform,
         mainModule,
@@ -233,11 +233,11 @@ public class PythonBinaryDescription
             preloadLibraries);
 
       case STANDALONE:
-        return PythonPackagedBinary.from(
+        return new PythonPackagedBinary(
             buildTarget,
             projectFilesystem,
-            params,
             ruleFinder,
+            params.getDeclaredDeps(),
             pythonPlatform,
             toolchainProvider
                 .getByName(PexToolProvider.DEFAULT_NAME, PexToolProvider.class)

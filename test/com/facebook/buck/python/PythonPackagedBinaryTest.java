@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -78,11 +77,11 @@ public class PythonPackagedBinaryTest {
 
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary =
-        PythonPackagedBinary.from(
+        new PythonPackagedBinary(
             target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(),
             ruleFinder,
+            ImmutableSortedSet::of,
             PythonTestUtils.PYTHON_PLATFORM,
             PEX,
             ImmutableList.of(),

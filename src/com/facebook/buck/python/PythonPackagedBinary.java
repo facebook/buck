@@ -25,7 +25,6 @@ import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CommandTool;
@@ -56,11 +55,12 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @AddToRuleKey private final PythonEnvironment pythonEnvironment;
   @AddToRuleKey private final ImmutableSet<String> preloadLibraries;
   private final boolean cache;
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
-  private PythonPackagedBinary(
+  PythonPackagedBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
       PythonPlatform pythonPlatform,
       Tool builder,
@@ -76,7 +76,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     super(
         buildTarget,
         projectFilesystem,
-        params,
         originalDeclareDeps,
         pythonPlatform,
         mainModule,
@@ -91,46 +90,11 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     this.mainModule = mainModule;
     this.preloadLibraries = preloadLibraries;
     this.cache = cache;
-  }
-
-  static PythonPackagedBinary from(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
-      PythonPlatform pythonPlatform,
-      Tool builder,
-      ImmutableList<String> buildArgs,
-      Tool pathToPexExecuter,
-      String pexExtension,
-      PythonEnvironment pythonEnvironment,
-      String mainModule,
-      PythonPackageComponents components,
-      ImmutableSet<String> preloadLibraries,
-      boolean cache,
-      boolean legacyOutputPath) {
-    return new PythonPackagedBinary(
-        buildTarget,
-        projectFilesystem,
-        params
-            .withDeclaredDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(components.getDeps(ruleFinder))
-                    .addAll(BuildableSupport.getDepsCollection(builder, ruleFinder))
-                    .build())
-            .withoutExtraDeps(),
-        params.getDeclaredDeps(),
-        pythonPlatform,
-        builder,
-        buildArgs,
-        pathToPexExecuter,
-        pexExtension,
-        pythonEnvironment,
-        mainModule,
-        components,
-        preloadLibraries,
-        cache,
-        legacyOutputPath);
+    this.buildDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(components.getDeps(ruleFinder))
+            .addAll(BuildableSupport.getDepsCollection(builder, ruleFinder))
+            .build();
   }
 
   @Override
@@ -213,5 +177,10 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @Override
   public boolean isCacheable() {
     return cache;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 }
