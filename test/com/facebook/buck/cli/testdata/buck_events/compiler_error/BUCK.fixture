@@ -1,7 +1,0 @@
-java_test(
-    name = "broken",
-    srcs = [
-        "Broken.java",
-    ],
-    labels = ["flaky"],
-)
