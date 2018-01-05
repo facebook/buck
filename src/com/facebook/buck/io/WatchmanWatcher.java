@@ -240,6 +240,9 @@ public class WatchmanWatcher {
                         SimplePerfEvent.scope(
                             buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath);
                     WatchmanClient client = watchmanClientFactory.newInstance()) {
+                  // Include the cellPath in the finished event so it can be matched with the begin
+                  // event.
+                  perfEvent.appendFinishedInfo("cell", cellPath);
                   postEvents(
                       buckEventBus,
                       freshInstanceAction,
