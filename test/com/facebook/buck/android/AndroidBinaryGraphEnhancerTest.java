@@ -68,6 +68,7 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -130,6 +131,11 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
             TestCellPathResolver.get(filesystem),
             apkTarget,
             filesystem,
@@ -164,7 +170,6 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -288,6 +293,11 @@ public class AndroidBinaryGraphEnhancerTest {
     Keystore keystore = createStrictMock(Keystore.class);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
             TestCellPathResolver.get(projectFilesystem),
             apkTarget,
             projectFilesystem,
@@ -322,7 +332,6 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -417,6 +426,11 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
             TestCellPathResolver.get(projectFilesystem),
             target,
             projectFilesystem,
@@ -451,7 +465,6 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -487,6 +500,11 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRuleParams originalParams = TestBuildRuleParams.create();
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
             TestCellPathResolver.get(projectFilesystem),
             target,
             projectFilesystem,
@@ -521,7 +539,6 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
@@ -586,6 +603,11 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
             TestCellPathResolver.get(projectFilesystem),
             target,
             projectFilesystem,
@@ -620,7 +642,6 @@ public class AndroidBinaryGraphEnhancerTest {
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            /* nativePlatforms */ NdkCxxPlatformsProvider.of(ImmutableMap.of()),
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),

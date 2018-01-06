@@ -52,8 +52,7 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
     Optional<String> ndkVersion = androidConfig.getNdkVersion();
-    if (!androidConfig.getNdkVersion().isPresent()
-        && toolchainProvider.isToolchainPresent(AndroidNdk.DEFAULT_NAME)) {
+    if (!androidConfig.getNdkVersion().isPresent()) {
       AndroidNdk androidNdk =
           toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
       ndkVersion = Optional.of(androidNdk.getNdkVersion());

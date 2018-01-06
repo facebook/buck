@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.toolchain.BaseToolchain;
+import com.facebook.buck.toolchain.ComparableToolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
@@ -28,7 +29,7 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
 public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
-    implements CxxPlatformsSupplier {
+    implements ComparableToolchain, CxxPlatformsSupplier {
   public static final String DEFAULT_NAME = "ndk-cxx-platforms";
 
   /** @return all {@link NdkCxxPlatform}s by {@link TargetCpuType}. */

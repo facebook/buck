@@ -202,9 +202,6 @@ public class NdkCxxPlatforms {
       Platform platform,
       ToolchainProvider toolchainProvider,
       Optional<String> ndkVersion) {
-    if (!toolchainProvider.isToolchainPresent(AndroidNdk.DEFAULT_NAME)) {
-      return ImmutableMap.of();
-    }
     AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     Path ndkRoot = androidNdk.getNdkRootPath();
 

@@ -27,7 +27,6 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -52,6 +51,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -130,6 +130,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
 
   AndroidBinaryGraphEnhancer(
+      ToolchainProvider toolchainProvider,
       CellPathResolver cellPathResolver,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -164,7 +165,6 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Integer> xzCompressionLevel,
       boolean trimResourceIds,
       Optional<String> keepResourcePattern,
-      NdkCxxPlatformsProvider ndkCxxPlatformsProvider,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
@@ -208,6 +208,7 @@ public class AndroidBinaryGraphEnhancer {
     this.nativeLibraryProguardConfigGenerator = nativeLibraryProguardConfigGenerator;
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            toolchainProvider,
             cellPathResolver,
             ruleResolver,
             originalBuildTarget,
@@ -215,7 +216,6 @@ public class AndroidBinaryGraphEnhancer {
             originalParams,
             cpuFilters,
             cxxBuckConfig,
-            ndkCxxPlatformsProvider,
             nativeLibraryMergeMap,
             nativeLibraryMergeGlue,
             nativeLibraryMergeLocalizedSymbols,

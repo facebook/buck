@@ -44,9 +44,11 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatforms = ImmutableMap.builder();
     for (String toolchainName : toolchainNames) {
-      CxxPlatformsSupplier cxxPlatformsSupplier =
-          toolchainProvider.getByName(toolchainName, CxxPlatformsSupplier.class);
-      cxxSystemPlatforms.putAll(cxxPlatformsSupplier.getCxxPlatforms());
+      if (toolchainProvider.isToolchainPresent(toolchainName)) {
+        CxxPlatformsSupplier cxxPlatformsSupplier =
+            toolchainProvider.getByName(toolchainName, CxxPlatformsSupplier.class);
+        cxxSystemPlatforms.putAll(cxxPlatformsSupplier.getCxxPlatforms());
+      }
     }
 
     try {

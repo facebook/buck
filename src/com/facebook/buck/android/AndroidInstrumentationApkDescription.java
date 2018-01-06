@@ -26,7 +26,6 @@ import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.DxToolchain;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -158,12 +157,9 @@ public class AndroidInstrumentationApkDescription
         toolchainProvider.getByName(
             AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
 
-    NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
-        toolchainProvider.getByName(
-            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
-
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
+            toolchainProvider,
             cellRoots,
             buildTarget,
             projectFilesystem,
@@ -203,7 +199,6 @@ public class AndroidInstrumentationApkDescription
             /* xzCompressionLevel */ Optional.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
-            ndkCxxPlatformsProvider,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),

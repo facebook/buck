@@ -41,6 +41,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -68,6 +69,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   private static final String COPY_NATIVE_LIBS = "copy_native_libs";
 
+  private final ToolchainProvider toolchainProvider;
   private final ProjectFilesystem projectFilesystem;
   private final BuildTarget originalBuildTarget;
   private final BuildRuleParams buildRuleParams;
@@ -76,7 +78,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final CxxBuckConfig cxxBuckConfig;
-  private final NdkCxxPlatformsProvider ndkCxxPlatformsProvider;
   private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
@@ -87,6 +88,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final CellPathResolver cellPathResolver;
 
   public AndroidNativeLibsPackageableGraphEnhancer(
+      ToolchainProvider toolchainProvider,
       CellPathResolver cellPathResolver,
       BuildRuleResolver ruleResolver,
       BuildTarget originalBuildTarget,
@@ -94,18 +96,17 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       BuildRuleParams originalParams,
       ImmutableSet<TargetCpuType> cpuFilters,
       CxxBuckConfig cxxBuckConfig,
-      NdkCxxPlatformsProvider ndkCxxPlatformsProvider,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
       ImmutableList<Pattern> relinkerWhitelist,
       APKModuleGraph apkModuleGraph) {
+    this.toolchainProvider = toolchainProvider;
     this.cellPathResolver = cellPathResolver;
     this.projectFilesystem = projectFilesystem;
     this.originalBuildTarget = originalBuildTarget;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    this.ndkCxxPlatformsProvider = ndkCxxPlatformsProvider;
     this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
     this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     this.buildRuleParams = originalParams;
@@ -185,6 +186,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms = ImmutableMap.of();
 
     if (!nativeLinkables.isEmpty() || !nativeLinkablesAssets.isEmpty()) {
+      NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+          toolchainProvider.getByName(
+              NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+
       nativePlatforms = ndkCxxPlatformsProvider.getNdkCxxPlatforms();
 
       if (nativePlatforms.isEmpty()) {
