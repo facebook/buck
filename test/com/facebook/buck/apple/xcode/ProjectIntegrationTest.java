@@ -438,6 +438,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithCell() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "project_with_cell", temporaryFolder);
@@ -452,6 +453,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithEmbeddedCellBuckout() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "project_with_cell", temporaryFolder);
@@ -471,6 +473,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithCellAndMergedHeaderMap() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "project_with_cell", temporaryFolder);
@@ -488,6 +491,7 @@ public class ProjectIntegrationTest {
   public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "project_with_cell", temporaryFolder);
