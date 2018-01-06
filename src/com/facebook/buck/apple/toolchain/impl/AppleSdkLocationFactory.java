@@ -22,9 +22,9 @@ import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -32,8 +32,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocation> {
-
-  private static final Logger LOG = Logger.get(AppleSdkLocationFactory.class);
 
   @Override
   public Optional<AppleSdkLocation> createToolchain(
@@ -61,9 +59,8 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
               appleConfig);
       return Optional.of(AppleSdkLocation.of(appleSdkPaths));
     } catch (IOException e) {
-      LOG.error(
+      throw new ToolchainInstantiationException(
           e, "Couldn't find the Apple SDK.\nPlease check that the SDK is installed properly.");
-      return Optional.empty();
     }
   }
 }
