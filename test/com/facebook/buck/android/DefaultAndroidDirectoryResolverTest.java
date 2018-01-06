@@ -50,7 +50,9 @@ public class DefaultAndroidDirectoryResolverTest {
             tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(Optional.empty(), resolver.getSdkOrAbsent());
-    assertEquals(Optional.empty(), resolver.getNdkOrAbsent());
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("");
+    resolver.getNdkOrThrow();
   }
 
   @Test
@@ -259,24 +261,6 @@ public class DefaultAndroidDirectoryResolverTest {
             AndroidNdkHelper.DEFAULT_CONFIG);
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
-  }
-
-  @Test
-  public void getNdkOrAbsent() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-old", "r9e")[0];
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-            AndroidNdkHelper.DEFAULT_CONFIG);
-
-    assertEquals(ndkDir, resolver.getNdkOrAbsent().get());
-
-    resolver =
-        new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
-
-    assertEquals(Optional.empty(), resolver.getNdkOrAbsent());
   }
 
   @Test

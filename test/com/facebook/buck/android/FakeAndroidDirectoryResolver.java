@@ -69,11 +69,6 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   }
 
   @Override
-  public Optional<Path> getNdkOrAbsent() {
-    return androidNdkDir;
-  }
-
-  @Override
   public Optional<String> getNdkVersion() {
     return ndkVersion;
   }

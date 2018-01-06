@@ -105,10 +105,9 @@ public class NdkCxxPlatformIntegrationTest {
             projectFilesystem.getRootPath().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
             AndroidNdkHelper.DEFAULT_CONFIG);
-    Optional<Path> ndkDir = resolver.getNdkOrAbsent();
-    assertTrue(ndkDir.isPresent());
-    assertTrue(java.nio.file.Files.exists(ndkDir.get()));
-    return ndkDir.get();
+    Path ndkDir = resolver.getNdkOrThrow();
+    assertTrue(java.nio.file.Files.exists(ndkDir));
+    return ndkDir;
   }
 
   @Before

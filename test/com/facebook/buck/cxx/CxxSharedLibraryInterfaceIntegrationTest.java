@@ -40,6 +40,7 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -67,8 +68,10 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             filesystem.getRootPath().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
             AndroidNdkHelper.DEFAULT_CONFIG);
-    Optional<Path> ndkDir = resolver.getNdkOrAbsent();
-    if (!ndkDir.isPresent()) {
+    Path ndkDir;
+    try {
+      ndkDir = resolver.getNdkOrThrow();
+    } catch (HumanReadableException e) {
       return Optional.empty();
     }
     NdkCompilerType compilerType = NdkCxxPlatforms.DEFAULT_COMPILER_TYPE;
@@ -87,7 +90,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             filesystem,
-            ndkDir.get(),
+            ndkDir,
             compiler,
             NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
             NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,

@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
@@ -63,10 +62,9 @@ public class AndroidNdkHelper {
             ImmutableMap.copyOf(System.getenv()),
             DEFAULT_CONFIG);
 
-    Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
-    assertTrue(ndkPath.isPresent());
+    Path ndkPath = androidResolver.getNdkOrThrow();
     Optional<String> ndkVersion =
-        DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath.get());
+        DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath);
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 
     ImmutableCollection<NdkCxxPlatform> platforms =
@@ -74,7 +72,7 @@ public class AndroidNdkHelper {
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 AndroidNdkHelper.DEFAULT_CONFIG,
                 filesystem,
-                ndkPath.get(),
+                ndkPath,
                 NdkCxxPlatformCompiler.builder()
                     .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
                     .setVersion(gccVersion)

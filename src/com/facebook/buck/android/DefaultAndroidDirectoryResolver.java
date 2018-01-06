@@ -138,17 +138,11 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   @Override
-  public Optional<Path> getNdkOrAbsent() {
-    return ndk;
-  }
-
-  @Override
   public Optional<String> getNdkVersion() {
-    Optional<Path> ndkPath = getNdkOrAbsent();
-    if (!ndkPath.isPresent()) {
+    if (!ndk.isPresent()) {
       return Optional.empty();
     }
-    return findNdkVersion(ndkPath.get());
+    return findNdkVersion(ndk.get());
   }
 
   /**
@@ -520,7 +514,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
     return Objects.equals(targetBuildToolsVersion, that.targetBuildToolsVersion)
         && Objects.equals(targetNdkVersion, that.targetNdkVersion)
-        && Objects.equals(getNdkOrAbsent(), that.getNdkOrAbsent());
+        && Objects.equals(ndk, that.ndk);
   }
 
   @Override

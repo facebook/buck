@@ -218,6 +218,7 @@ public class CxxLibraryIntegrationTest {
   public void testCxxLibraryWithDefaultsInFlagBuildsSomething()
       throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);

@@ -15,11 +15,13 @@
  */
 package com.facebook.buck.android;
 
+import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -29,7 +31,11 @@ public class AssumeAndroidPlatform {
   private AssumeAndroidPlatform() {}
 
   public static void assumeNdkIsAvailable() throws InterruptedException {
-    assumeNotNull(getAndroidDirectoryResolver().getNdkOrAbsent().orElse(null));
+    try {
+      getAndroidDirectoryResolver().getNdkOrThrow();
+    } catch (HumanReadableException e) {
+      assumeNoException(e);
+    }
   }
 
   public static void assumeSdkIsAvailable() throws InterruptedException {
