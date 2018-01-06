@@ -16,8 +16,10 @@
 
 package com.facebook.buck.toolchain.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.config.FakeBuckConfig;
@@ -162,6 +164,42 @@ public class DefaultToolchainProviderTest {
   }
 
   @Test
+  public void testExceptionNotThrownWhenAskingIfCreated() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    toolchainProvider.getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class);
+
+    assertFalse(toolchainProvider.isToolchainCreated(NoopToolchain.DEFAULT_NAME));
+  }
+
+  @Test
+  public void testAskingIfCreatedBeforeCreation() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    assertFalse(toolchainProvider.isToolchainCreated(NoopToolchain.DEFAULT_NAME));
+  }
+
+  @Test
+  public void testExceptionNotThrownWhenAskingIfFailed() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    toolchainProvider.getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class);
+
+    assertTrue(toolchainProvider.isToolchainFailed(NoopToolchain.DEFAULT_NAME));
+  }
+
+  @Test
+  public void testAskingIfFailedBeforeCreation() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    assertFalse(toolchainProvider.isToolchainFailed(NoopToolchain.DEFAULT_NAME));
+  }
+
+  @Test
   public void testExceptionNotThrownWhenConditionallyRequestingToolchain() {
     DefaultToolchainProvider toolchainProvider =
         createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
@@ -170,5 +208,19 @@ public class DefaultToolchainProviderTest {
         toolchainProvider
             .getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class)
             .isPresent());
+  }
+
+  @Test
+  public void testGettingException() {
+    DefaultToolchainProvider toolchainProvider =
+        createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
+
+    toolchainProvider.getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class);
+
+    Optional<ToolchainInstantiationException> exception =
+        toolchainProvider.getToolchainInstantiationException(NoopToolchain.DEFAULT_NAME);
+
+    assertTrue(exception.isPresent());
+    assertEquals(MESSAGE, exception.get().getHumanReadableErrorMessage());
   }
 }

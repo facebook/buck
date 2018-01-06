@@ -25,6 +25,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.toolchain.ComparableToolchain;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
@@ -99,30 +100,74 @@ abstract class AbstractCell {
     return true;
   }
 
+  /**
+   * Checks the state of two toolchains is compatible.
+   *
+   * <p>When comparing two toolchains:
+   *
+   * <ol>
+   *   <li>if both were not created nor failed then return true
+   *   <li>if one of the toolchains is failed then true only if second toolchain has the same
+   *       exception
+   *   <li>ask for presence and:
+   *       <ul>
+   *         <li>if both are not present then true
+   *         <li>if both are present compare them
+   *         <li>if one is not present then false
+   *       </ul>
+   * </ol>
+   */
   private boolean toolchainsStateEqual(
       String toolchain,
       ToolchainProvider toolchainProvider,
       ToolchainProvider otherToolchainProvider) {
+
+    boolean toolchainFailed = toolchainProvider.isToolchainFailed(toolchain);
+    boolean otherToolchainFailed = otherToolchainProvider.isToolchainFailed(toolchain);
     boolean toolchainCreated = toolchainProvider.isToolchainCreated(toolchain);
     boolean otherToolchainCreated = otherToolchainProvider.isToolchainCreated(toolchain);
-    if (!toolchainCreated && !otherToolchainCreated) {
+
+    boolean toolchainInstantiated = toolchainFailed || toolchainCreated;
+    boolean otherToolchainInstantiated = otherToolchainFailed || otherToolchainCreated;
+
+    if (!toolchainInstantiated && !otherToolchainInstantiated) {
       return true;
+    }
+
+    if (toolchainFailed || otherToolchainFailed) {
+      Optional<ToolchainInstantiationException> exception =
+          getFailedToolchainException(toolchainProvider, toolchain);
+      Optional<ToolchainInstantiationException> otherException =
+          getFailedToolchainException(otherToolchainProvider, toolchain);
+
+      return exception.isPresent()
+          && otherException.isPresent()
+          && exception
+              .get()
+              .getHumanReadableErrorMessage()
+              .equals(otherException.get().getHumanReadableErrorMessage());
     }
 
     boolean toolchainPresent = toolchainProvider.isToolchainPresent(toolchain);
     boolean otherToolchainPresent = otherToolchainProvider.isToolchainPresent(toolchain);
-    if (!toolchainPresent && !otherToolchainPresent) {
-      return true;
-    }
 
+    // Both toolchains exist, compare them
     if (toolchainPresent && otherToolchainPresent) {
       return toolchainProvider
           .getByName(toolchain)
           .equals(otherToolchainProvider.getByName(toolchain));
+    } else {
+      return !toolchainPresent && !otherToolchainPresent;
     }
+  }
 
-    // some toolchain is present and another is not
-    return false;
+  private Optional<ToolchainInstantiationException> getFailedToolchainException(
+      ToolchainProvider toolchainProvider, String toolchainName) {
+    if (toolchainProvider.isToolchainPresent(toolchainName)) {
+      return Optional.empty();
+    } else {
+      return toolchainProvider.getToolchainInstantiationException(toolchainName);
+    }
   }
 
   public String getBuildFileName() {

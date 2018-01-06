@@ -131,6 +131,11 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   }
 
   @Override
+  public boolean isToolchainFailed(String toolchainName) {
+    return failedToolchains.containsKey(toolchainName);
+  }
+
+  @Override
   public <T extends ToolchainWithCapability> Collection<String> getToolchainsWithCapability(
       Class<T> capability) {
     ImmutableList.Builder<String> toolchainsWithCapabilities = ImmutableList.builder();
@@ -142,6 +147,14 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     }
 
     return toolchainsWithCapabilities.build();
+  }
+
+  @Override
+  public Optional<ToolchainInstantiationException> getToolchainInstantiationException(
+      String toolchainName) {
+    return failedToolchains.containsKey(toolchainName)
+        ? Optional.of(failedToolchains.get(toolchainName))
+        : Optional.empty();
   }
 
   private Optional<? extends Toolchain> getOrCreate(String toolchainName) {

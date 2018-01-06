@@ -47,6 +47,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
@@ -61,10 +62,12 @@ public class DaemonLifecycleManagerTest {
   private ProjectFilesystem filesystem;
   private DaemonLifecycleManager daemonLifecycleManager;
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private BuckConfig buckConfig;
 
   @Before
   public void setUp() throws InterruptedException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    buckConfig = FakeBuckConfig.builder().build();
     daemonLifecycleManager = new DaemonLifecycleManager();
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     knownBuildRuleTypesProvider =
@@ -251,13 +254,7 @@ public class DaemonLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell =
-        new TestCellBuilder()
-            .setBuckConfig(buckConfig)
-            .setFilesystem(filesystem)
-            .addEnvironmentVariable("ANDROID_HOME", androidSdkPath.toString())
-            .addEnvironmentVariable("ANDROID_SDK", androidSdkPath.toString())
-            .build();
+    Cell cell = createCellWithAndroidSdk(androidSdkPath);
 
     Object daemon3 = daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
     assertEquals("Daemon should not be re-created", daemon2, daemon3);
@@ -314,18 +311,132 @@ public class DaemonLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell =
-        new TestCellBuilder()
-            .setBuckConfig(buckConfig)
-            .setFilesystem(filesystem)
-            .addEnvironmentVariable("ANDROID_HOME", androidSdkPath.toString())
-            .addEnvironmentVariable("ANDROID_SDK", androidSdkPath.toString())
-            .build();
+    Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider().getByName(AndroidSdkLocation.DEFAULT_NAME);
 
     Object daemon3 = daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
     assertNotEquals("Android SDK should be the other location", daemon2, daemon3);
     Object daemon4 = daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
     assertEquals("Android SDK should be the same other location", daemon3, daemon4);
+  }
+
+  private Cell createCellWithAndroidSdk(Path androidSdkPath)
+      throws IOException, InterruptedException {
+    return new TestCellBuilder()
+        .setBuckConfig(buckConfig)
+        .setFilesystem(filesystem)
+        .addEnvironmentVariable("ANDROID_HOME", androidSdkPath.toString())
+        .addEnvironmentVariable("ANDROID_SDK", androidSdkPath.toString())
+        .build();
+  }
+
+  @Test
+  public void testParserInvalidatedWhenToolchainFailsToCreateFirstTime()
+      throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+
+    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Files.deleteIfExists(androidSdkPath);
+
+    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getToolchainProvider()
+        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Daemon daemonWithBrokenAndroidSdk =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    tmp.newFolder("android-sdk");
+
+    cell = createCellWithAndroidSdk(androidSdkPath);
+    Daemon daemonWithWorkingAndroidSdk =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    assertNotEquals(daemonWithBrokenAndroidSdk, daemonWithWorkingAndroidSdk);
+  }
+
+  @Test
+  public void testParserInvalidatedWhenToolchainFailsToCreateAfterFirstCreation()
+      throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+
+    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+
+    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getToolchainProvider()
+        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Daemon daemonWithWorkingAndroidSdk =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    Files.deleteIfExists(androidSdkPath);
+
+    cell = createCellWithAndroidSdk(androidSdkPath);
+    Daemon daemonWithBrokenAndroidSdk =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    assertNotEquals(daemonWithWorkingAndroidSdk, daemonWithBrokenAndroidSdk);
+  }
+
+  @Test
+  public void testParserNotInvalidatedWhenToolchainFailsWithTheSameProblem()
+      throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+
+    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Files.deleteIfExists(androidSdkPath);
+
+    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getToolchainProvider()
+        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Daemon daemonWithBrokenAndroidSdk1 =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getToolchainProvider()
+        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Daemon daemonWithBrokenAndroidSdk2 =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    assertEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
+  }
+
+  @Test
+  public void testParserNotInvalidatedWhenToolchainFailsWithTheSameProblemButNotInstantiated()
+      throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+
+    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Files.deleteIfExists(androidSdkPath);
+
+    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getToolchainProvider()
+        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Daemon daemonWithBrokenAndroidSdk1 =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    cell = createCellWithAndroidSdk(androidSdkPath);
+    Daemon daemonWithBrokenAndroidSdk2 =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    assertEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
+  }
+
+  @Test
+  public void testParserInvalidatedWhenToolchainFailsWithDifferentProblem()
+      throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+
+    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Files.deleteIfExists(androidSdkPath);
+
+    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getToolchainProvider()
+        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Object daemonWithBrokenAndroidSdk1 =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    cell = createCellWithAndroidSdk(androidSdkPath.resolve("some-other-dir"));
+    Object daemonWithBrokenAndroidSdk2 =
+        daemonLifecycleManager.getDaemon(cell, knownBuildRuleTypesProvider);
+
+    assertNotEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
   }
 }
