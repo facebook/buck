@@ -81,6 +81,8 @@ def javac_messages(log_file):
 
         # Skip line 1; it's just the code
         match = JAVAC_LOCATION_PATTERN.match(message[2])
+        if not match:
+            continue
         col = len(match.group("spaces")) + 1
 
         details = [line.strip() for line in message[3:]]
