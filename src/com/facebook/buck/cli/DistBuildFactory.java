@@ -40,6 +40,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
+import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
@@ -71,9 +72,16 @@ public abstract class DistBuildFactory {
         config.getFrontendConfig().createClientSideSlb(params.getClock(), params.getBuckEventBus());
     OkHttpClient client = config.createOkHttpClient();
 
-    return new FrontendService(
-        ThriftOverHttpServiceConfig.of(
-            new LoadBalancedService(slb, client, params.getBuckEventBus())));
+    LoadBalancedService loadBalanceService =
+        new LoadBalancedService(slb, client, params.getBuckEventBus());
+    RetryingHttpService httpService =
+        new RetryingHttpService(
+            params.getBuckEventBus(),
+            loadBalanceService,
+            config.getFrontendRequestMaxRetries(),
+            config.getFrontendRequestRetryIntervalMillis());
+
+    return new FrontendService(ThriftOverHttpServiceConfig.of(httpService));
   }
 
   public static FileContentsProvider createMultiSourceContentsProvider(

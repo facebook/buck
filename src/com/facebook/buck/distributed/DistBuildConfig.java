@@ -85,6 +85,13 @@ public class DistBuildConfig {
 
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
+  private static final String FRONTEND_REQUEST_MAX_RETRIES = "frontend_request_max_retries";
+  private static final int DEFAULT_FRONTEND_REQUEST_MAX_RETRIES = 3;
+
+  private static final String FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS =
+      "frontend_request_retry_interval_millis";
+  private static final long DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS = 1000;
+
   private static final String MINION_POLL_LOOP_INTERVAL_MILLIS = "minion_poll_loop_interval_millis";
   private static final long DEFAULT_MINION_POLL_LOOP_INTERVAL_MILLIS = 10;
 
@@ -263,6 +270,18 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, MAX_MINION_SILENCE_MILLIS)
         .orElse(DEFAULT_MAX_MINION_SILENCE_MILLIS);
+  }
+
+  public int getFrontendRequestMaxRetries() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, FRONTEND_REQUEST_MAX_RETRIES)
+        .orElse(DEFAULT_FRONTEND_REQUEST_MAX_RETRIES);
+  }
+
+  public long getFrontendRequestRetryIntervalMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS)
+        .orElse(DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS);
   }
 
   /** @return Ratio of available build capacity that should be used by coordinator */
