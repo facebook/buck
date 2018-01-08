@@ -165,9 +165,9 @@ public class AndroidBinaryTest {
         /* proguardJarOverride */ Optional.empty(),
         /* proguardMaxHeapSize */ "1024M",
         /* proguardAgentPath */ Optional.empty(),
-        aaptProguardDir.resolve("proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(
-            proguardConfig.getFilesystem().resolve(proguardConfig.getRelativePath())),
+            proguardConfig.getFilesystem().resolve(proguardConfig.getRelativePath()),
+            proguardConfig.getFilesystem().resolve(aaptProguardDir.resolve("proguard.txt"))),
         ProGuardObfuscateStep.SdkProguardType.NONE,
         /* optimizationPasses */ Optional.empty(),
         /* proguardJvmArgs */ Optional.empty(),

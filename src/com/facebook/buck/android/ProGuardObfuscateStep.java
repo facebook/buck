@@ -82,7 +82,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
       Optional<String> proguardAgentPath,
-      Path generatedProGuardConfig,
       Set<Path> customProguardConfigs,
       SdkProguardType sdkProguardConfig,
       Optional<Integer> optimizationPasses,
@@ -106,7 +105,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
         new CommandLineHelperStep(
             filesystem,
             androidLegacyToolchain,
-            generatedProGuardConfig,
             customProguardConfigs,
             sdkProguardConfig,
             optimizationPasses,
@@ -280,7 +278,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     private final ProjectFilesystem filesystem;
     private final AndroidLegacyToolchain androidLegacyToolchain;
-    private final Path generatedProGuardConfig;
     private final Set<Path> customProguardConfigs;
     private final Map<Path, Path> inputAndOutputEntries;
     private final ImmutableSet<Path> additionalLibraryJarsForProguard;
@@ -290,7 +287,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
     private final Path pathToProGuardCommandLineArgsFile;
 
     /**
-     * @param generatedProGuardConfig Proguard configuration as produced by aapt.
      * @param customProguardConfigs Main rule and its dependencies proguard configurations.
      * @param sdkProguardConfig Which proguard config from the Android SDK to use.
      * @param inputAndOutputEntries Map of input/output pairs to proguard. The key represents an
@@ -303,7 +299,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
     private CommandLineHelperStep(
         ProjectFilesystem filesystem,
         AndroidLegacyToolchain androidLegacyToolchain,
-        Path generatedProGuardConfig,
         Set<Path> customProguardConfigs,
         SdkProguardType sdkProguardConfig,
         Optional<Integer> optimizationPasses,
@@ -315,7 +310,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
       this.filesystem = filesystem;
       this.androidLegacyToolchain = androidLegacyToolchain;
-      this.generatedProGuardConfig = generatedProGuardConfig;
       this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
       this.sdkProguardConfig = sdkProguardConfig;
       this.optimizationPasses = optimizationPasses;
@@ -364,7 +358,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
       for (Path proguardConfig : customProguardConfigs) {
         args.add("-include").add(proguardConfig.toString());
       }
-      args.add("-include").add(generatedProGuardConfig.toString());
 
       // -injars and -outjars paired together for each input.
       for (Map.Entry<Path, Path> inputOutputEntry : inputAndOutputEntries.entrySet()) {
@@ -410,7 +403,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
       return Objects.equal(sdkProguardConfig, that.sdkProguardConfig)
           && Objects.equal(additionalLibraryJarsForProguard, that.additionalLibraryJarsForProguard)
           && Objects.equal(customProguardConfigs, that.customProguardConfigs)
-          && Objects.equal(generatedProGuardConfig, that.generatedProGuardConfig)
           && Objects.equal(inputAndOutputEntries, that.inputAndOutputEntries)
           && Objects.equal(proguardDirectory, that.proguardDirectory)
           && Objects.equal(
@@ -423,7 +415,6 @@ public final class ProGuardObfuscateStep extends ShellStep {
           sdkProguardConfig,
           additionalLibraryJarsForProguard,
           customProguardConfigs,
-          generatedProGuardConfig,
           inputAndOutputEntries,
           proguardDirectory,
           pathToProGuardCommandLineArgsFile);

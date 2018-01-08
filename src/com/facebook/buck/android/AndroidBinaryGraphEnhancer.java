@@ -453,8 +453,8 @@ public class AndroidBinaryGraphEnhancer {
                     .map(BuildRule::getSourcePathToOutput)
                     .collect(ImmutableList.toImmutableList()))
             .build();
-    SourcePath aaptGeneratedProguardConfigFile =
-        resourcesEnhancementResult.getAaptGeneratedProguardConfigFile();
+    Optional<SourcePath> aaptGeneratedProguardConfigFile =
+        Optional.of(resourcesEnhancementResult.getAaptGeneratedProguardConfigFile());
     ImmutableList<SourcePath> proguardConfigs = proguardConfigsBuilder.build();
 
     Either<PreDexMerge, NonPreDexedDexBuildable> dexMergeRule;
@@ -663,7 +663,7 @@ public class AndroidBinaryGraphEnhancer {
       DexSplitMode dexSplitMode,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       Optional<Integer> xzCompressionLevel,
-      SourcePath aaptGeneratedProguardConfigFile,
+      Optional<SourcePath> aaptGeneratedProguardConfigFile,
       ImmutableList<SourcePath> proguardConfigs,
       AndroidPackageableCollection packageableCollection,
       ImmutableSet<SourcePath> classpathEntriesToDex,
