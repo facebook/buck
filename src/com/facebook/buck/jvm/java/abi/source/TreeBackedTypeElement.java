@@ -57,6 +57,13 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   }
 
   @Override
+  public void complete() {
+    asType();
+    getSuperclass();
+    getInterfaces();
+  }
+
+  @Override
   TreePath getTreePath() {
     return Preconditions.checkNotNull(super.getTreePath());
   }

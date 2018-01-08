@@ -63,6 +63,12 @@ class TreeBackedElements extends ElementsExtendedImpl {
     knownPackages.clear();
   }
 
+  public void complete() {
+    for (TreeBackedElement element : treeBackedElements.values()) {
+      element.complete();
+    }
+  }
+
   public <UnderlyingElement extends Element, WrappedElement extends TreeBackedElement>
       WrappedElement enterElement(
           UnderlyingElement underlyingElement,
