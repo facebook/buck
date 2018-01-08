@@ -49,7 +49,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
     implements HasRuntimeDeps, SupportsInputBasedRuleKey {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
 
-  protected UnstrippedNativeLibraries(
+  UnstrippedNativeLibraries(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
