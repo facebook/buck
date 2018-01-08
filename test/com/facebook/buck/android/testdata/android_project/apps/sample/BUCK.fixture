@@ -341,6 +341,25 @@ genrule(
     bash = "cat >$OUT $(location :app_proguard_dontobfuscate#proguard_text_output)/configuration.txt",
 )
 
+android_binary(
+    name = "app_proguard_dontobfuscate_no_aapt",
+    ignore_aapt_proguard_config = True,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "release",
+    proguard_config = "dontobfuscate.pro",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
+)
+
+genrule(
+    name = "proguard_output_dontobfuscate_no_aapt",
+    out = "proguard_output_dontobfuscate_no_aapt.txt",
+    bash = "cat >$OUT $(location :app_proguard_dontobfuscate_no_aapt#proguard_text_output)/configuration.txt",
+)
+
 android_aar(
     name = "nearly_empty_aar",
     manifest_skeleton = "AndroidManifest.xml",

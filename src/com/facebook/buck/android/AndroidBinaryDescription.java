@@ -329,6 +329,7 @@ public class AndroidBinaryDescription
               Optional.empty(),
               args.isTrimResourceIds(),
               args.getKeepResourcePattern(),
+              args.isIgnoreAaptProguardConfig(),
               Optional.of(args.getNativeLibraryMergeMap()),
               args.getNativeLibraryMergeGlue(),
               args.getNativeLibraryMergeCodeGenerator(),
@@ -689,6 +690,11 @@ public class AndroidBinaryDescription
 
     @Value.Default
     default boolean isBuildStringSourceMap() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isIgnoreAaptProguardConfig() {
       return false;
     }
 

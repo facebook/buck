@@ -105,6 +105,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
   private final Optional<String> keepResourcePattern;
+  private final boolean ignoreAaptProguardConfig;
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final BuildRuleResolver ruleResolver;
   private final SourcePathRuleFinder ruleFinder;
@@ -166,6 +167,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Integer> xzCompressionLevel,
       boolean trimResourceIds,
       Optional<String> keepResourcePattern,
+      boolean ignoreAaptProguardConfig,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
@@ -182,6 +184,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Arg> postFilterResourcesCmd,
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex) {
+    this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
     this.projectFilesystem = projectFilesystem;
     this.androidLegacyToolchain = androidLegacyToolchain;
@@ -454,7 +457,9 @@ public class AndroidBinaryGraphEnhancer {
                     .collect(ImmutableList.toImmutableList()))
             .build();
     Optional<SourcePath> aaptGeneratedProguardConfigFile =
-        Optional.of(resourcesEnhancementResult.getAaptGeneratedProguardConfigFile());
+        ignoreAaptProguardConfig
+            ? Optional.empty()
+            : Optional.of(resourcesEnhancementResult.getAaptGeneratedProguardConfigFile());
     ImmutableList<SourcePath> proguardConfigs = proguardConfigsBuilder.build();
 
     Either<PreDexMerge, NonPreDexedDexBuildable> dexMergeRule;

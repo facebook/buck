@@ -62,6 +62,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIn;
 import org.junit.Before;
@@ -729,9 +730,20 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testProguardOutput() throws IOException {
-    Path dumpPath = workspace.buildAndReturnOutput("//apps/sample:proguard_output_dontobfuscate");
-    String contents = workspace.getFileContents(dumpPath);
+    ImmutableMap<String, Path> outputs =
+        workspace.buildMultipleAndReturnOutputs(
+            "//apps/sample:proguard_output_dontobfuscate",
+            "//apps/sample:proguard_output_dontobfuscate_no_aapt");
 
-    assertThat(contents, containsString("-printmapping"));
+    String withAapt =
+        workspace.getFileContents(outputs.get("//apps/sample:proguard_output_dontobfuscate"));
+    String withoutAapt =
+        workspace.getFileContents(
+            outputs.get("//apps/sample:proguard_output_dontobfuscate_no_aapt"));
+
+    assertThat(withAapt, containsString("-printmapping"));
+    assertThat(withAapt, containsString("#generated"));
+    assertThat(withoutAapt, containsString("-printmapping"));
+    assertThat(withoutAapt, CoreMatchers.not(containsString("#generated")));
   }
 }
