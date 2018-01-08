@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.BuildExecutorArgs;
@@ -33,6 +34,7 @@ import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -161,12 +163,12 @@ public class BuildControllerTest {
         new RemoteBuildRuleSynchronizer());
   }
 
-  private void runBuildWithController(BuildController buildController)
+  private BuildController.ExecutionResult runBuildWithController(BuildController buildController)
       throws IOException, InterruptedException {
     // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
     // otherwise when we stop the timer it will fail with an exception about not being started.
     distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
-    buildController.executeAndPrintFailuresToEventBus(
+    return buildController.executeAndPrintFailuresToEventBus(
         directExecutor,
         fakeProjectFilesystem,
         fakeFileHashCache,
@@ -216,6 +218,79 @@ public class BuildControllerTest {
     return state;
   }
 
+  @Test
+  public void testReturnsExecutionResultOnSyncPreparationFailure()
+      throws IOException, InterruptedException {
+    final BuildJobState buildJobState = createMinimalFakeBuildJobState();
+
+    BuildController controller = createController(Futures.immediateFuture(buildJobState));
+
+    BuildJob job = new BuildJob();
+    job.setStampedeId(stampedeId);
+
+    BuildController.ExecutionResult executionResult = runBuildWithController(controller);
+    assertEquals(ExitCode.PREPARATION_STEP_FAILED.getCode(), executionResult.exitCode);
+  }
+
+  @Test
+  public void testReturnsExecutionResultOnAsyncPreparationFailure()
+      throws IOException, InterruptedException {
+
+    BuildJob job = new BuildJob();
+    job.setStampedeId(stampedeId);
+
+    // Ensure the synchronous steps succeed
+    expect(
+            mockDistBuildService.createBuild(
+                invocationInfo.getBuildId(), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+        .andReturn(job);
+
+    expect(
+            mockDistBuildService.uploadBuckDotFilesAsync(
+                stampedeId,
+                fakeProjectFilesystem,
+                fakeFileHashCache,
+                distBuildClientStatsTracker,
+                directExecutor))
+        .andReturn(Futures.immediateFuture(null));
+
+    replay(mockDistBuildService);
+
+    // Controller where async step fails
+    BuildController controller =
+        createController(Futures.immediateFailedFuture(new Exception("Async preparation failed")));
+
+    BuildController.ExecutionResult executionResult = runBuildWithController(controller);
+    assertEquals(ExitCode.PREPARATION_ASYNC_STEP_FAILED.getCode(), executionResult.exitCode);
+    assertEquals(stampedeId, executionResult.stampedeId);
+  }
+
+  @Test
+  public void testReturnsExecutionResultOnDistBuildException()
+      throws IOException, InterruptedException {
+    final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    buildSlaveRunId.setId("my-fav-runid");
+    BuildJob job = new BuildJob();
+    job.setStampedeId(stampedeId);
+
+    final BuildJobState buildJobState = createMinimalFakeBuildJobState();
+
+    setupExpectationsForSuccessfulDistBuildPrepStep(job, buildJobState);
+
+    // Throw an exception during distributed build step
+    expect(mockDistBuildService.startBuild(stampedeId, true))
+        .andThrow(new RuntimeException("Distributed build step local failure"));
+
+    replay(mockDistBuildService);
+
+    BuildController.ExecutionResult executionResult =
+        runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
+
+    assertEquals(
+        ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode(), executionResult.exitCode);
+    assertEquals(stampedeId, executionResult.stampedeId);
+  }
+
   /**
    * This test sees that executeAndPrintFailuresToEventBus(...) does the following: 1. Initiates the
    * build by uploading missing source files, dot files and target graph. 2. Kicks off the build. 3.
@@ -236,29 +311,7 @@ public class BuildControllerTest {
 
     final BuildJobState buildJobState = createMinimalFakeBuildJobState();
 
-    expect(
-            mockDistBuildService.createBuild(
-                invocationInfo.getBuildId(), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
-        .andReturn(job);
-    expect(
-            mockDistBuildService.uploadMissingFilesAsync(
-                distBuildCellIndexer.getLocalFilesystemsByCellIndex(),
-                buildJobState.fileHashes,
-                distBuildClientStatsTracker,
-                directExecutor))
-        .andReturn(Futures.immediateFuture(null));
-    expect(
-            mockDistBuildService.uploadBuckDotFilesAsync(
-                stampedeId,
-                fakeProjectFilesystem,
-                fakeFileHashCache,
-                distBuildClientStatsTracker,
-                directExecutor))
-        .andReturn(Futures.immediateFuture(null));
-    mockDistBuildService.uploadTargetGraph(buildJobState, stampedeId, distBuildClientStatsTracker);
-    expectLastCall().once();
-    mockDistBuildService.setBuckVersion(stampedeId, buckVersion, distBuildClientStatsTracker);
-    expectLastCall().once();
+    setupExpectationsForSuccessfulDistBuildPrepStep(job, buildJobState);
 
     // There's no point checking the DistBuildStatusEvent, since we don't know what 'stage' the
     // executor wants to print. Just check that it is called at least once in every status loop.
@@ -371,10 +424,42 @@ public class BuildControllerTest {
     replay(mockEventBus);
     replay(mockLogStateTracker);
 
-    runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
+    BuildController.ExecutionResult executionResult =
+        runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
+
+    assertEquals(
+        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(), executionResult.exitCode);
 
     verify(mockDistBuildService);
     verify(mockLogStateTracker);
     verify(mockEventBus);
+  }
+
+  // Sets up mock expectations for a successful distributed build preparation step
+  private void setupExpectationsForSuccessfulDistBuildPrepStep(
+      BuildJob job, BuildJobState buildJobState) throws IOException {
+    expect(
+            mockDistBuildService.createBuild(
+                invocationInfo.getBuildId(), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+        .andReturn(job);
+    expect(
+            mockDistBuildService.uploadMissingFilesAsync(
+                distBuildCellIndexer.getLocalFilesystemsByCellIndex(),
+                buildJobState.fileHashes,
+                distBuildClientStatsTracker,
+                directExecutor))
+        .andReturn(Futures.immediateFuture(null));
+    expect(
+            mockDistBuildService.uploadBuckDotFilesAsync(
+                stampedeId,
+                fakeProjectFilesystem,
+                fakeFileHashCache,
+                distBuildClientStatsTracker,
+                directExecutor))
+        .andReturn(Futures.immediateFuture(null));
+    mockDistBuildService.uploadTargetGraph(buildJobState, stampedeId, distBuildClientStatsTracker);
+    expectLastCall().once();
+    mockDistBuildService.setBuckVersion(stampedeId, buckVersion, distBuildClientStatsTracker);
+    expectLastCall().once();
   }
 }

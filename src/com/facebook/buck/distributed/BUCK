@@ -20,6 +20,7 @@ COMMON_FILES = (
     "DistBuildStatusEvent.java",
     "DistBuildTargetGraphCodec.java",
     "DistBuildUtil.java",
+    "ExitCode.java",
     "FileContentsProvider.java",
     "FileMaterializationStatsTracker.java",
     "FrontendService.java",

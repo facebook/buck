@@ -22,6 +22,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.build_client.BuildSlaveStats.Builder;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
@@ -113,7 +114,9 @@ public class PostBuildPhase {
 
     return new BuildController.ExecutionResult(
         finalJob.getStampedeId(),
-        finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ? 0 : 1);
+        finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)
+            ? 0
+            : ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode());
   }
 
   private void materializeSlaveLogDirs(BuildJob job) {

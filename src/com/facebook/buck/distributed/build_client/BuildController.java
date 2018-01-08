@@ -20,6 +20,7 @@ import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
@@ -157,43 +159,68 @@ public class BuildController {
       String tenantId,
       ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> ruleKeyCalculatorFuture)
       throws IOException, InterruptedException {
-    Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture =
-        preBuildPhase.runPreDistBuildLocalStepsAsync(
-            executorService,
-            projectFilesystem,
-            fileHashCache,
-            eventBus,
-            invocationInfo.getBuildId(),
-            buildMode,
-            numberOfMinions,
-            repository,
-            tenantId,
-            ruleKeyCalculatorFuture);
+    Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture = null;
+    try {
+      stampedeIdAndPendingPrepFuture =
+          preBuildPhase.runPreDistBuildLocalStepsAsync(
+              executorService,
+              projectFilesystem,
+              fileHashCache,
+              eventBus,
+              invocationInfo.getBuildId(),
+              buildMode,
+              numberOfMinions,
+              repository,
+              tenantId,
+              ruleKeyCalculatorFuture);
+    } catch (Exception ex) {
+      LOG.error(ex, "Distributed build preparation steps failed.");
+      StampedeId stampedeId = new StampedeId();
+      stampedeId.setId("UNKNOWN_ID");
+      return createFailedExecutionResult(stampedeId, ExitCode.PREPARATION_STEP_FAILED);
+    }
+
+    stampedeIdAndPendingPrepFuture = Preconditions.checkNotNull(stampedeIdAndPendingPrepFuture);
+    StampedeId stampedeId = stampedeIdAndPendingPrepFuture.getFirst();
 
     ListenableFuture<Void> pendingPrepFuture = stampedeIdAndPendingPrepFuture.getSecond();
     try {
       LOG.info("Waiting for pre-build preparation to finish.");
       pendingPrepFuture.get();
-    } catch (ExecutionException e) {
-      throw new RuntimeException("Stampede preparation failed.", e);
+    } catch (ExecutionException ex) {
+      LOG.error(ex, "Distributed build preparation async steps failed.");
+      return createFailedExecutionResult(stampedeId, ExitCode.PREPARATION_ASYNC_STEP_FAILED);
     }
 
+    BuildPhase.BuildResult buildResult = null;
+
     EventSender eventSender = new EventSender(eventBus);
-    StampedeId stampedeId = stampedeIdAndPendingPrepFuture.getFirst();
+    try {
+      buildResult =
+          buildPhase.runDistBuildAndUpdateConsoleStatus(
+              executorService,
+              eventSender,
+              stampedeId,
+              buildMode,
+              invocationInfo,
+              ruleKeyCalculatorFuture);
+    } catch (Exception ex) {
+      LOG.error(ex, "Distributed build step failed.");
+      return createFailedExecutionResult(
+          stampedeId, ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION);
+    }
 
-    BuildPhase.BuildResult buildResult =
-        buildPhase.runDistBuildAndUpdateConsoleStatus(
-            executorService,
-            eventSender,
-            stampedeId,
-            buildMode,
-            invocationInfo,
-            ruleKeyCalculatorFuture);
-
+    // Note: always returns distributed exit code 0
+    // TODO(alisdair,ruibm,shivanker): consider new exit code if failed to fetch finished stats
     return postBuildPhase.runPostDistBuildLocalSteps(
         executorService,
         buildResult.getBuildSlaveStatusList(),
         buildResult.getFinalBuildJob(),
         eventSender);
+  }
+
+  private static ExecutionResult createFailedExecutionResult(
+      StampedeId stampedeId, ExitCode exitCode) {
+    return new ExecutionResult(stampedeId, exitCode.getCode());
   }
 }

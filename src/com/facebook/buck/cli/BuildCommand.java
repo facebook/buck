@@ -844,20 +844,25 @@ public class BuildCommand extends AbstractCommand {
                     });
 
         // Kick off the distributed build
-        distBuildResult =
-            build.executeAndPrintFailuresToEventBus(
-                executorService,
-                filesystem,
-                fileHashCache,
-                params.getBuckEventBus(),
-                params.getInvocationInfo().get(),
-                distBuildConfig.getBuildMode(),
-                distBuildConfig.getNumberOfMinions(),
-                distBuildConfig.getRepository(),
-                distBuildConfig.getTenantId(),
-                Futures.transform(
-                    localRuleKeyCalculator, Optional::of, MoreExecutors.directExecutor()));
-        distBuildExitCode = distBuildResult.exitCode;
+        try {
+          distBuildResult =
+              build.executeAndPrintFailuresToEventBus(
+                  executorService,
+                  filesystem,
+                  fileHashCache,
+                  params.getBuckEventBus(),
+                  params.getInvocationInfo().get(),
+                  distBuildConfig.getBuildMode(),
+                  distBuildConfig.getNumberOfMinions(),
+                  distBuildConfig.getRepository(),
+                  distBuildConfig.getTenantId(),
+                  Futures.transform(
+                      localRuleKeyCalculator, Optional::of, MoreExecutors.directExecutor()));
+          distBuildExitCode = distBuildResult.exitCode;
+        } finally {
+          // Local build should not be blocked, even if one of the distributed stages failed.
+          remoteBuildSynchronizer.signalCompletionOfRemoteBuild();
+        }
       } finally {
         BuildEvent.DistBuildFinished finished =
             BuildEvent.distBuildFinished(

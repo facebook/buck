@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
@@ -176,7 +177,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       }
 
       Assert.assertEquals(
-          ThriftCoordinatorServer.GET_WORK_FAILED_EXIT_CODE,
+          ExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(),
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
@@ -209,7 +210,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       }
 
       Assert.assertEquals(
-          ThriftCoordinatorServer.GET_WORK_FAILED_EXIT_CODE,
+          ExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(),
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
