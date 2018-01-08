@@ -217,6 +217,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     return getRootGenPath().resolve("proguard");
   }
 
+  SourcePath getProguardConfigSourcePath() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigDir());
+  }
+
   @VisibleForTesting
   Path getProguardInputsDir() {
     Preconditions.checkState(shouldProguard);

@@ -125,6 +125,7 @@ public class AndroidBinaryDescription
           PACKAGE_STRING_ASSETS_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR,
           AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
+          AndroidBinaryGraphEnhancer.PROGUARD_TEXT_OUTPUT_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
 
   private final ToolchainProvider toolchainProvider;

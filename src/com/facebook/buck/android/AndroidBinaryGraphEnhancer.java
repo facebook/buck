@@ -94,6 +94,7 @@ public class AndroidBinaryGraphEnhancer {
       InternalFlavor.of("generate_proguard_config_from_native_libs");
   static final Flavor UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR =
       InternalFlavor.of("unstripped_native_libraries");
+  static final Flavor PROGUARD_TEXT_OUTPUT_FLAVOR = InternalFlavor.of("proguard_text_output");
   static final Flavor NON_PREDEXED_DEX_BUILDABLE_FLAVOR =
       InternalFlavor.of("class_file_to_dex_processing");
 
@@ -706,6 +707,16 @@ public class AndroidBinaryGraphEnhancer {
             originalBuildTarget.withFlavors(NON_PREDEXED_DEX_BUILDABLE_FLAVOR),
             dexTool);
     ruleResolver.addToIndex(nonPreDexedDexBuildable);
+
+    if (nonPreDexedDexBuildableArgs.getShouldProguard()) {
+      ProguardTextOutput proguardTextOutput =
+          new ProguardTextOutput(
+              originalBuildTarget.withFlavors(PROGUARD_TEXT_OUTPUT_FLAVOR),
+              nonPreDexedDexBuildable,
+              ruleFinder);
+      ruleResolver.addToIndex(proguardTextOutput);
+    }
+
     return nonPreDexedDexBuildable;
   }
 

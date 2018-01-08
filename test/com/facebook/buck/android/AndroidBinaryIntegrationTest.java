@@ -726,4 +726,12 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     assertThat(contents, containsString("READ_CALENDAR"));
   }
+
+  @Test
+  public void testProguardOutput() throws IOException {
+    Path dumpPath = workspace.buildAndReturnOutput("//apps/sample:proguard_output_dontobfuscate");
+    String contents = workspace.getFileContents(dumpPath);
+
+    assertThat(contents, containsString("-printmapping"));
+  }
 }

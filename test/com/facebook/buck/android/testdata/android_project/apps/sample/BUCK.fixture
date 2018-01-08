@@ -335,6 +335,12 @@ android_binary(
     ],
 )
 
+genrule(
+    name = "proguard_output_dontobfuscate",
+    out = "proguard_output_dontobfuscate.txt",
+    bash = "cat >$OUT $(location :app_proguard_dontobfuscate#proguard_text_output)/configuration.txt",
+)
+
 android_aar(
     name = "nearly_empty_aar",
     manifest_skeleton = "AndroidManifest.xml",
