@@ -43,12 +43,18 @@ class TreeBackedMessager implements Messager {
 
   @Override
   public void printMessage(Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a) {
-    throw new UnsupportedOperationException("Annotations NYI");
+    javacMessager.printMessage(
+        kind, msg, task.getElements().getJavacElement(e), task.getElements().getJavacAnnotation(a));
   }
 
   @Override
   public void printMessage(
       Diagnostic.Kind kind, CharSequence msg, Element e, AnnotationMirror a, AnnotationValue v) {
-    throw new UnsupportedOperationException("Annotations NYI");
+    javacMessager.printMessage(
+        kind,
+        msg,
+        task.getElements().getJavacElement(e),
+        task.getElements().getJavacAnnotation(a),
+        task.getElements().getJavacAnnotationValue(v));
   }
 }

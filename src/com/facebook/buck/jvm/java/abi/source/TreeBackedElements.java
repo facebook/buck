@@ -142,6 +142,24 @@ class TreeBackedElements extends ElementsExtendedImpl {
     return element;
   }
 
+  /* package */ AnnotationMirror getJavacAnnotation(AnnotationMirror annotation) {
+    if (annotation instanceof TreeBackedAnnotationMirror) {
+      TreeBackedAnnotationMirror treeBackedAnnotation = (TreeBackedAnnotationMirror) annotation;
+      return treeBackedAnnotation.getUnderlyingAnnotationMirror();
+    }
+
+    return annotation;
+  }
+
+  /* package */ AnnotationValue getJavacAnnotationValue(AnnotationValue value) {
+    if (value instanceof TreeBackedAnnotationValue) {
+      TreeBackedAnnotationValue treeBackedValue = (TreeBackedAnnotationValue) value;
+      return treeBackedValue.getUnderlyingAnnotationValue();
+    }
+
+    return value;
+  }
+
   public ArtificialPackageElement getOrCreatePackageElement(
       @Nullable PackageElement enclosingPackage, Name simpleName) {
     Name qualifiedName = getFullyQualifiedName(enclosingPackage, simpleName);
