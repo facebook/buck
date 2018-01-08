@@ -45,7 +45,8 @@ class InferredTypeElement extends InferredElement implements ArtificialTypeEleme
   @Override
   public List<ArtificialElement> getEnclosedElements() {
     throw new UnsupportedOperationException(
-        "We cannot know the enclosed elements of an inferred type.");
+        String.format(
+            "We cannot know the enclosed elements of an inferred type: %s.", qualifiedName));
   }
 
   @Override
