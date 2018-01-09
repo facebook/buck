@@ -27,9 +27,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -37,6 +39,11 @@ import org.immutables.value.Value;
 @Value.Immutable(prehash = true)
 @BuckStyleImmutable
 abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleKeyAppendable {
+
+  @SuppressWarnings("immutables")
+  private AtomicReference<Optional<ImmutableList<BuildRule>>> computedDeps =
+      new AtomicReference<>(Optional.empty());
+
   @Override
   @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
@@ -76,13 +83,34 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   // rulekey is really slow to compute.
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildRule> builder = Stream.builder();
-    getNameToPathMap().values().forEach(value -> ruleFinder.getRule(value).ifPresent(builder));
     ruleFinder.getRule(getRoot()).ifPresent(builder);
     if (getIncludeRoot().isRight()) {
       ruleFinder.getRule(getIncludeRoot().getRight()).ifPresent(builder);
     }
     getHeaderMap().flatMap(ruleFinder::getRule).ifPresent(builder);
-    return builder.build().distinct();
+
+    // return a stream of the cached dependencies, or compute and store it
+    return Stream.concat(
+            computedDeps
+                .get()
+                .orElseGet(
+                    () -> {
+                      // We can cache the list here because getNameToPathMap() is an ImmutableMap,
+                      // and if a value in the map is not in ruleFinder, an exception will be
+                      // thrown. Since ruleFinder rules only increase, the output of this will never
+                      // change if we do not get an exception.
+                      ImmutableList.Builder<BuildRule> cachedBuilder = ImmutableList.builder();
+                      getNameToPathMap()
+                          .values()
+                          .forEach(
+                              value -> ruleFinder.getRule(value).ifPresent(cachedBuilder::add));
+                      ImmutableList<BuildRule> rules = cachedBuilder.build();
+                      computedDeps.set(Optional.of(rules));
+                      return rules;
+                    })
+                .stream(),
+            builder.build())
+        .distinct();
   }
 
   @Override
