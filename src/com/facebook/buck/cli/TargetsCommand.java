@@ -59,6 +59,8 @@ import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -413,27 +415,36 @@ public class TargetsCommand extends AbstractCommand {
       }
     }
 
-    // ruleKeyFactory is used to calculate rule key that we also want to display on a graph
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
-    DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
-            params.getFileHashCache(),
-            DefaultSourcePathResolver.from(ruleFinder),
-            ruleFinder);
+    try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+        getDefaultRuleKeyCacheScope(
+            params,
+            new RuleKeyCacheRecycler.SettingsAffectingCache(
+                params.getBuckConfig().getKeySeed(), result.getActionGraph()))) {
 
-    // it is time to construct DOT output
-    Dot.builder(new DirectedAcyclicGraph<>(actionGraphMutable), "action_graph")
-        .setNodeToName(
-            node ->
-                node.getFullyQualifiedName()
-                    + " "
-                    + node.getType()
-                    + " "
-                    + ruleKeyFactory.build(node).toString())
-        .setNodeToTypeName(node -> node.getType())
-        .build()
-        .writeOutput(params.getConsole().getStdOut());
+      // ruleKeyFactory is used to calculate rule key that we also want to display on a graph
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
+      DefaultRuleKeyFactory ruleKeyFactory =
+          new DefaultRuleKeyFactory(
+              new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
+              params.getFileHashCache(),
+              DefaultSourcePathResolver.from(ruleFinder),
+              ruleFinder,
+              ruleKeyCacheScope.getCache(),
+              Optional.empty());
+
+      // it is time to construct DOT output
+      Dot.builder(new DirectedAcyclicGraph<>(actionGraphMutable), "action_graph")
+          .setNodeToName(
+              node ->
+                  node.getFullyQualifiedName()
+                      + " "
+                      + node.getType()
+                      + " "
+                      + ruleKeyFactory.build(node).toString())
+          .setNodeToTypeName(node -> node.getType())
+          .build()
+          .writeOutput(params.getConsole().getStdOut());
+    }
   }
 
   private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
@@ -861,19 +872,28 @@ public class TargetsCommand extends AbstractCommand {
         buildRuleResolver = Optional.of(result.getResolver());
         if (isShowRuleKey) {
           SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
-          // Setup a parallel rule key calculator to use when building rule keys.
-          ruleKeyCalculator =
-              Optional.of(
-                  new ParallelRuleKeyCalculator<>(
-                      executor,
-                      new DefaultRuleKeyFactory(
-                          new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
-                          params.getFileHashCache(),
-                          DefaultSourcePathResolver.from(ruleFinder),
-                          ruleFinder,
-                          Optional.ofNullable(ruleKeyLogger)),
-                      new RuleDepsCache(buildRuleResolver.get()),
-                      (eventBus, rule) -> () -> {}));
+
+          try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+              getDefaultRuleKeyCacheScope(
+                  params,
+                  new RuleKeyCacheRecycler.SettingsAffectingCache(
+                      params.getBuckConfig().getKeySeed(), result.getActionGraph()))) {
+
+            // Setup a parallel rule key calculator to use when building rule keys.
+            ruleKeyCalculator =
+                Optional.of(
+                    new ParallelRuleKeyCalculator<>(
+                        executor,
+                        new DefaultRuleKeyFactory(
+                            new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
+                            params.getFileHashCache(),
+                            DefaultSourcePathResolver.from(ruleFinder),
+                            ruleFinder,
+                            ruleKeyCacheScope.getCache(),
+                            Optional.ofNullable(ruleKeyLogger)),
+                        new RuleDepsCache(buildRuleResolver.get()),
+                        (eventBus, rule) -> () -> {}));
+          }
         }
       } else {
         actionGraph = Optional.empty();
