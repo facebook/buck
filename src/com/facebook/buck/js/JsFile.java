@@ -177,14 +177,17 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
-      final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      final String jobArgs =
-          String.format(
-              "optimize %s %s --out %s %s",
-              getExtraArgs().orElse(""),
-              JsFlavors.platformArgForRelease(getBuildTarget().getFlavors()),
-              outputPath,
-              sourcePathResolver.getAbsolutePath(devFile).toString());
+      Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
+      String jobArgs =
+          JsonBuilder.object()
+              .addString("command", "optimize")
+              .addString("outputFilePath", outputPath.toString())
+              .addString("platform", JsUtil.getPlatformString(getBuildTarget().getFlavors()))
+              .addString(
+                  "transformedJsFilePath", sourcePathResolver.getAbsolutePath(devFile).toString())
+              .addRaw("extraData", getExtraJson().map(JsUtil::expandJsonWithMacros))
+              .addString("extraArgs", getExtraArgs())
+              .toString();
 
       return getBuildSteps(context, jobArgs, outputPath);
     }

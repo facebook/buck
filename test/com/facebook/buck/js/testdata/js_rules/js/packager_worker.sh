@@ -118,6 +118,11 @@ run_command() {
       outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
     fi
 
+    if [[ "$command" == "optimize" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"transformedJsFilePath":"\([^"]*\)".*/\1/p')
+      outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
+    fi
+
   else
 
     # Process args_string ($2) as command-line arguments
