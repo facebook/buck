@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -42,24 +43,28 @@ class CompletionSimulator {
   }
 
   @Nullable
-  public CompletedType complete(Element element) {
+  public CompletedType complete(Element element, boolean transitive) {
     ElementKind kind = element.getKind();
     if (!kind.isClass() && !kind.isInterface()) {
       return null;
     }
 
-    return new CompletedType((TypeElement) element);
+    return complete((TypeElement) element, transitive);
+  }
+
+  public CompletedType complete(TypeElement type, boolean transitive) {
+    return new CompletedType(type, transitive);
   }
 
   @Nullable
-  private CompletedType complete(TypeMirror type) {
+  private CompletedType complete(TypeMirror type, boolean transitive) {
     if (type.getKind() != TypeKind.DECLARED) {
       return null;
     }
 
     DeclaredType declaredType = (DeclaredType) type;
     TypeElement element = (TypeElement) declaredType.asElement();
-    return complete(element);
+    return complete(element, transitive);
   }
 
   public class CompletedType {
@@ -72,18 +77,23 @@ class CompletionSimulator {
 
     @Nullable private List<String> missingDependencies = null;
 
-    private CompletedType(TypeElement element) {
+    private CompletedType(TypeElement element, boolean transitive) {
       this.element = element;
+      enclosingType = complete(element.getEnclosingElement(), transitive);
 
-      enclosingType = complete(element.getEnclosingElement());
-      superclass = complete(element.getSuperclass());
-      interfaces =
-          element
-              .getInterfaces()
-              .stream()
-              .map(CompletionSimulator.this::complete)
-              .filter(Objects::nonNull)
-              .collect(Collectors.toList());
+      if (transitive) {
+        superclass = complete(element.getSuperclass(), transitive);
+        interfaces =
+            element
+                .getInterfaces()
+                .stream()
+                .map(it -> complete(it, transitive))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+      } else {
+        superclass = null;
+        interfaces = Collections.emptyList();
+      }
 
       this.kind = computeKind();
     }

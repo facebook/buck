@@ -182,7 +182,8 @@ class InterfaceValidator {
 
       DeclaredType declaredType = (DeclaredType) typeMirror;
       TypeElement typeElement = (TypeElement) declaredType.asElement();
-      CompletedType completedType = Preconditions.checkNotNull(completer.complete(typeElement));
+      CompletedType completedType =
+          Preconditions.checkNotNull(completer.complete(typeElement, true));
 
       switch (completedType.kind) {
         case COMPLETED_TYPE:

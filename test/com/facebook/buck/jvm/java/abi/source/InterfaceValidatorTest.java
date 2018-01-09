@@ -356,7 +356,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
             + "  Inner i;\n"
             + "  ^\n"
-            + "  To fix, add the following rules to source_only_abi_deps in //:rule: //com/facebook/bar:bar, //com/facebook/baz:baz");
+            + "  To fix, add the following rules to source_only_abi_deps in //:rule: //com/facebook/baz:baz");
   }
 
   @Test

@@ -126,6 +126,12 @@ public class CompilerTypeResolutionSimulatorTest extends CompilerTreeApiTest {
 
   @Test
   public void testResolvingTypeViaLocalSubclass() throws IOException {
+    if (kind == ResolvedTypeKind.ERROR_TYPE) {
+      // It isn't actually possible to get an error type in this situation, because once you've
+      // started traversing enclosing classes, you've got to be able to traverse them all.
+      return;
+    }
+
     compile(
         Joiner.on('\n')
             .join(

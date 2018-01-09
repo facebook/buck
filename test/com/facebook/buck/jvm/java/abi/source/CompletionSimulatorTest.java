@@ -64,7 +64,8 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testLocalClassWithAllSupersPresentCompletesSuccessfully() throws IOException {
+  public void testTransitiveCompletionWithAllSupersPresentCompletesSuccessfully()
+      throws IOException {
     compile(SimulatorTestSources.SUBCLASS);
 
     ruleInfo.addAvailableRule("//com/facebook/superclass:superclass");
@@ -73,14 +74,15 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
     ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
     ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
 
-    CompletedType result = completeSubclass();
+    CompletedType result = completeSubclass(true);
 
     assertThat(result.getMissingDependencies(), Matchers.empty());
     assertEquals(CompletedTypeKind.COMPLETED_TYPE, result.kind);
   }
 
   @Test
-  public void testLocalMemberClassWithAllSupersPresentCompletesSuccessfully() throws IOException {
+  public void testTransitiveMemberClassCompletionWithAllSupersPresentCompletesSuccessfully()
+      throws IOException {
     compile(SimulatorTestSources.SUBCLASS);
 
     ruleInfo.addAvailableRule("//com/facebook/superclass:superclass");
@@ -89,14 +91,14 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
     ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
     ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
 
-    CompletedType result = completeSubclassMember();
+    CompletedType result = completeSubclassMember(true);
 
     assertThat(result.getMissingDependencies(), Matchers.empty());
     assertEquals(CompletedTypeKind.COMPLETED_TYPE, result.kind);
   }
 
   @Test
-  public void testLocalClassWithSomeSupersMissingCompletesPartially() throws IOException {
+  public void testTransitiveCompletionWithSomeSupersMissingCompletesPartially() throws IOException {
     compile(SimulatorTestSources.SUBCLASS);
 
     ruleInfo.addAvailableRule("//com/facebook/grandsuper:grandsuper");
@@ -104,7 +106,7 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
     ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
     ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
 
-    CompletedType result = completeSubclass();
+    CompletedType result = completeSubclass(true);
 
     assertThat(
         result.getMissingDependencies(),
@@ -113,7 +115,22 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testLocalMemberClassWithSomeOuterSupersMissingCompletesPartially()
+  public void testNonTransitiveCompletionWithSomeSupersMissingCompletes() throws IOException {
+    compile(SimulatorTestSources.SUBCLASS);
+
+    ruleInfo.addAvailableRule("//com/facebook/grandsuper:grandsuper");
+    ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
+    ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
+    ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
+
+    CompletedType result = completeSubclass(false);
+
+    assertThat(result.getMissingDependencies(), Matchers.empty());
+    assertEquals(CompletedTypeKind.COMPLETED_TYPE, result.kind);
+  }
+
+  @Test
+  public void testTransitiveMemberClassCompletionWithSomeOuterSupersMissingCompletesPartially()
       throws IOException {
     compile(SimulatorTestSources.SUBCLASS);
 
@@ -122,7 +139,7 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
     ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
     ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
 
-    CompletedType result = completeSubclassMember();
+    CompletedType result = completeSubclassMember(true);
 
     assertThat(
         result.getMissingDependencies(),
@@ -131,14 +148,31 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testLocalClassWithSomeSupersPresentButGrandSupersMissingCrashes() throws IOException {
+  public void testNonTransitiveMemberClassCompletionWithSomeOuterSupersMissingCompletes()
+      throws IOException {
+    compile(SimulatorTestSources.SUBCLASS);
+
+    ruleInfo.addAvailableRule("//com/facebook/superclass:superclass");
+    ruleInfo.addAvailableRule("//com/facebook/grandsuper:grandsuper");
+    ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
+    ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
+
+    CompletedType result = completeSubclassMember(false);
+
+    assertThat(result.getMissingDependencies(), Matchers.empty());
+    assertEquals(CompletedTypeKind.COMPLETED_TYPE, result.kind);
+  }
+
+  @Test
+  public void testTransitiveCompletionWithSomeSupersPresentButGrandSupersMissingCrashes()
+      throws IOException {
     compile(SimulatorTestSources.SUBCLASS);
 
     ruleInfo.addAvailableRule("//com/facebook/superclass:superclass");
     ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
     ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
 
-    CompletedType result = completeSubclass();
+    CompletedType result = completeSubclass(true);
     assertThat(
         result.getMissingDependencies(),
         Matchers.containsInAnyOrder(
@@ -148,8 +182,23 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testLocalMemberClassWithSomeOuterSupersPresentButGrandSupersMissingCrashes()
+  public void testNonTransitiveCompletionWithSomeSupersPresentButGrandSupersMissingCompletes()
       throws IOException {
+    compile(SimulatorTestSources.SUBCLASS);
+
+    ruleInfo.addAvailableRule("//com/facebook/superclass:superclass");
+    ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
+    ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
+
+    CompletedType result = completeSubclass(false);
+    assertThat(result.getMissingDependencies(), Matchers.empty());
+    assertEquals(CompletedTypeKind.COMPLETED_TYPE, result.kind);
+  }
+
+  @Test
+  public void
+      testTransitiveMemberClassCompletionWithSomeOuterSupersPresentButGrandSupersMissingCrashes()
+          throws IOException {
     compile(SimulatorTestSources.SUBCLASS);
 
     ruleInfo.addAvailableRule("//com/facebook/superclass:superclass");
@@ -157,7 +206,7 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
     ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
     ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
 
-    CompletedType result = completeSubclassMember();
+    CompletedType result = completeSubclassMember(true);
     assertThat(
         result.getMissingDependencies(),
         Matchers.containsInAnyOrder("//com/facebook/grandinterface:grandinterface"));
@@ -165,14 +214,31 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testMissingDepClassWithSomeSupersMissingReturnsErrorType() throws IOException {
+  public void
+      testNonTransitiveMemberClassCompletionWithSomeOuterSupersPresentButGrandSupersMissingCompletes()
+          throws IOException {
+    compile(SimulatorTestSources.SUBCLASS);
+
+    ruleInfo.addAvailableRule("//com/facebook/superclass:superclass");
+    ruleInfo.addAvailableRule("//com/facebook/grandsuper:grandsuper");
+    ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
+    ruleInfo.addAvailableRule("//com/facebook/iface2:iface2");
+
+    CompletedType result = completeSubclassMember(false);
+    assertThat(result.getMissingDependencies(), Matchers.empty());
+    assertEquals(CompletedTypeKind.COMPLETED_TYPE, result.kind);
+  }
+
+  @Test
+  public void testTransitiveCompletionOfMissingDepClassWithSomeSupersMissingReturnsErrorType()
+      throws IOException {
     withClasspath(SimulatorTestSources.SUBCLASS);
     initCompiler();
 
     ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
     ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
 
-    CompletedType result = completeSubclass();
+    CompletedType result = completeSubclass(true);
     assertThat(
         result.getMissingDependencies(),
         Matchers.containsInAnyOrder(
@@ -184,7 +250,23 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testDepClassWithSomeSupersMissingCrashes() throws IOException {
+  public void testNonTransitiveCompletionOfMissingDepClassWithSomeSupersMissingReturnsErrorType()
+      throws IOException {
+    withClasspath(SimulatorTestSources.SUBCLASS);
+    initCompiler();
+
+    ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
+    ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
+
+    CompletedType result = completeSubclass(false);
+    assertThat(
+        result.getMissingDependencies(),
+        Matchers.containsInAnyOrder("//com/facebook/subclass:subclass"));
+    assertEquals(CompletedTypeKind.ERROR_TYPE, result.kind);
+  }
+
+  @Test
+  public void testTransitiveCompletionOfDepClassWithSomeSupersMissingCrashes() throws IOException {
     withClasspath(SimulatorTestSources.SUBCLASS);
     initCompiler();
 
@@ -192,7 +274,7 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
     ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
     ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
 
-    CompletedType result = completeSubclass();
+    CompletedType result = completeSubclass(true);
     assertThat(
         result.getMissingDependencies(),
         Matchers.containsInAnyOrder(
@@ -202,16 +284,31 @@ public class CompletionSimulatorTest extends CompilerTreeApiTest {
     assertEquals(CompletedTypeKind.CRASH, result.kind);
   }
 
-  private CompletedType completeSubclass() {
+  @Test
+  public void testNonTransitiveCompletionOfDepClassWithSomeSupersMissingReturnsCompletedType()
+      throws IOException {
+    withClasspath(SimulatorTestSources.SUBCLASS);
+    initCompiler();
+
+    ruleInfo.addAvailableRule("//com/facebook/subclass:subclass");
+    ruleInfo.addAvailableRule("//com/facebook/iface1:iface1");
+    ruleInfo.addAvailableRule("//com/facebook/grandinterface:grandinterface");
+
+    CompletedType result = completeSubclass(false);
+    assertThat(result.getMissingDependencies(), Matchers.empty());
+    assertEquals(CompletedTypeKind.COMPLETED_TYPE, result.kind);
+  }
+
+  private CompletedType completeSubclass(boolean transitive) {
     TypeElement subclass = elements.getTypeElement("com.facebook.subclass.Subclass");
-    CompletedType result = completer.complete(subclass);
+    CompletedType result = completer.complete(subclass, transitive);
 
     return result;
   }
 
-  private CompletedType completeSubclassMember() {
+  private CompletedType completeSubclassMember(boolean transitive) {
     TypeElement subclass = elements.getTypeElement("com.facebook.subclass.Subclass.SubclassMember");
-    CompletedType result = completer.complete(subclass);
+    CompletedType result = completer.complete(subclass, transitive);
 
     return result;
   }

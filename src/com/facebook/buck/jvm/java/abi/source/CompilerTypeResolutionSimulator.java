@@ -16,17 +16,19 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.CompletionSimulator.CompletedType;
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
+import com.sun.source.tree.AnnotatedTypeTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.util.TreePath;
+import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.lang.model.element.NestingKind;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
 /**
@@ -56,78 +58,109 @@ class CompilerTypeResolutionSimulator {
       return null;
     }
 
-    return new TreePathScannerForTypeResolution<ResolvedType, Void>(trees) {
+    return new TreePathScanner<ResolvedType, Void>() {
       @Override
-      protected ResolvedType resolveType(
-          TreePath referencingPath, TypeElement referencedType, Void aVoid) {
-        Set<String> missingDependencies = new HashSet<>();
-        ResolvedTypeKind kind;
-        if (referencedType.getNestingKind() == NestingKind.TOP_LEVEL) {
-          kind =
-              fileManager.typeWillBeAvailable(referencedType)
-                  ? ResolvedTypeKind.RESOLVED_TYPE
-                  : ResolvedTypeKind.ERROR_TYPE;
-        } else {
-          ResolvedType enclosingReference = resolveEnclosingElement(aVoid);
-          TypeElement enclosingType;
-          if (enclosingReference != null) {
-            missingDependencies.addAll(enclosingReference.missingDependencies);
-            enclosingType = enclosingReference.type;
-          } else if (fileManager.isCompiledInCurrentRun(referencedType)) {
-            return new ResolvedType(
-                ResolvedTypeKind.RESOLVED_TYPE, referencedType, Collections.emptySet());
-          } else if (imports != null
-              && (imports.isSingleTypeImported(referencedType)
-                  || imports.isOnDemandImported(referencedType))) {
-            enclosingType =
-                (TypeElement) Preconditions.checkNotNull(referencedType.getEnclosingElement());
-          } else if (imports != null && imports.isStaticImported(referencedType)) {
-            enclosingType =
-                Preconditions.checkNotNull(imports.getStaticImportContainer(referencedType));
-          } else if (imports != null && imports.isOnDemandStaticImported(referencedType)) {
-            enclosingType =
-                Preconditions.checkNotNull(
-                    imports.getOnDemandStaticImportContainer(referencedType));
-          } else {
-            return new ResolvedType(
-                ResolvedTypeKind.ERROR_TYPE, referencedType, Collections.emptySet());
-          }
-
-          CompletedType completedEnclosingType =
-              Preconditions.checkNotNull(completer.complete(enclosingType));
-          missingDependencies.addAll(completedEnclosingType.getMissingDependencies());
-          if (enclosingReference != null
-              && enclosingReference.kind == ResolvedTypeKind.ERROR_TYPE) {
-            // Once we're in error-type land, the compiler won't really look at the rest of things
-            kind = ResolvedTypeKind.ERROR_TYPE;
-          } else {
-            switch (completedEnclosingType.kind) {
-              case COMPLETED_TYPE:
-                kind = ResolvedTypeKind.RESOLVED_TYPE;
-                break;
-              case PARTIALLY_COMPLETED_TYPE:
-              case ERROR_TYPE:
-                // In the case of a partially-completed type we haven't done enough work to know
-                // whether the resolution would succeed, so we'll be conservative and assume that
-                // it wouldn't
-                kind = ResolvedTypeKind.ERROR_TYPE;
-                break;
-              case CRASH:
-                kind = ResolvedTypeKind.CRASH;
-                break;
-              default:
-                throw new IllegalArgumentException();
-            }
-          }
-        }
-        return new ResolvedType(kind, referencedType, missingDependencies);
+      public ResolvedType visitAnnotatedType(AnnotatedTypeTree node, Void aVoid) {
+        return scan(node.getUnderlyingType(), aVoid);
       }
 
       @Override
-      @Nullable
-      protected ResolvedType resolvePackage(
-          TreePath referencingPath, PackageElement referencedPackage, Void aVoid) {
-        throw new AssertionError();
+      public ResolvedType visitParameterizedType(ParameterizedTypeTree node, Void aVoid) {
+        return scan(node.getType(), aVoid);
+      }
+
+      @Override
+      public ResolvedType visitIdentifier(IdentifierTree node, Void aVoid) {
+        TypeElement typeElement = (TypeElement) trees.getElement(getCurrentPath());
+        return newResolvedType(typeElement);
+      }
+
+      private ResolvedType newResolvedType(TypeElement typeElement) {
+        ResolvedTypeKind kind = ResolvedTypeKind.RESOLVED_TYPE;
+        Set<String> missingDependencies = new HashSet<>();
+
+        if (!fileManager.typeWillBeAvailable(typeElement)) {
+          kind = ResolvedTypeKind.ERROR_TYPE;
+          missingDependencies.add(fileManager.getOwningTarget(typeElement));
+        }
+
+        return new ResolvedType(kind, typeElement, missingDependencies);
+      }
+
+      @Override
+      public ResolvedType visitMemberSelect(MemberSelectTree node, Void aVoid) {
+        TypeElement type = (TypeElement) trees.getElement(getCurrentPath());
+        return new Object() {
+          private ResolvedTypeKind kind = ResolvedTypeKind.RESOLVED_TYPE;
+          private Set<String> missingDependencies = new HashSet<>();
+
+          {
+            CompletionSimulator.CompletedType completedType = completer.complete(type, false);
+            if (completedType.kind != CompletedTypeKind.COMPLETED_TYPE) {
+              kind = kind.merge(ResolvedTypeKind.ERROR_TYPE);
+              missingDependencies.addAll(completedType.getMissingDependencies());
+            }
+          }
+
+          public ResolvedType resolve() {
+            if (type.getNestingKind() != NestingKind.TOP_LEVEL) {
+              ResolvedType referencedEnclosingType = scan(node.getExpression(), aVoid);
+              missingDependencies.addAll(referencedEnclosingType.missingDependencies);
+              resolveMemberType(type, referencedEnclosingType.type);
+
+              if (referencedEnclosingType.kind == ResolvedTypeKind.ERROR_TYPE) {
+                // If the originally referenced enclosing type was not found, the compiler would
+                // actually have stopped right there. We kept going because we wanted to get all
+                // the things that would be necessary to convert that error type into a resolved
+                // type
+                kind = ResolvedTypeKind.ERROR_TYPE;
+              }
+            }
+            return new ResolvedType(kind, type, missingDependencies);
+          }
+
+          private boolean resolveMemberType(
+              TypeElement type, @Nullable TypeElement referencedEnclosingType) {
+            if (referencedEnclosingType == null) {
+              // Ran out of places to look
+              return false;
+            }
+
+            if (type.getEnclosingElement() == referencedEnclosingType) {
+              // Found it!
+              return true;
+            }
+
+            TypeElement superclass = MoreElements.getSuperclass(referencedEnclosingType);
+            markAsCrashIfNotResolvable(superclass);
+            if (resolveMemberType(type, superclass)) {
+              return true;
+            }
+
+            Iterable<TypeElement> interfaces =
+                MoreElements.getInterfaces(referencedEnclosingType)::iterator;
+            for (TypeElement interfaceElement : interfaces) {
+              markAsCrashIfNotResolvable(interfaceElement);
+              if (resolveMemberType(type, interfaceElement)) {
+                return true;
+              }
+            }
+
+            return false;
+          }
+
+          private void markAsCrashIfNotResolvable(@Nullable TypeElement type) {
+            if (type == null) {
+              return;
+            }
+
+            CompletionSimulator.CompletedType completedType = completer.complete(type, false);
+            if (completedType.kind != CompletedTypeKind.COMPLETED_TYPE) {
+              kind = kind.merge(ResolvedTypeKind.CRASH);
+              missingDependencies.addAll(completedType.getMissingDependencies());
+            }
+          }
+        }.resolve();
       }
     }.scan(referencingPath, null);
   }
