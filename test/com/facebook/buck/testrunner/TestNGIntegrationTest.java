@@ -24,43 +24,47 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class TestNGIntegrationTest {
 
+  private ProjectWorkspace workspace;
+
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Before
+  public void setupSimpleTestNGWorkspace() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_testng", temporaryFolder, true);
+    workspace.setUp();
+  }
 
   @Test
   public void testThatSuccessfulTestNGTestWorks() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_testng", temporaryFolder, true);
-    workspace.setUp();
-
     ProcessResult simpleTestNGTestResult = workspace.runBuckCommand("test", "//test:simple-test");
     simpleTestNGTestResult.assertSuccess();
   }
 
   @Test
   public void testThatFailingTestNGTestWorks() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_testng", temporaryFolder, true);
-    workspace.setUp();
-
-    ProcessResult simpleFailingTestNGTestResult =
+    ProcessResult failingTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-failing-test");
-    simpleFailingTestNGTestResult.assertTestFailure();
+    failingTestNGTestResult.assertTestFailure();
   }
 
   @Test
-  public void testThatInjectionWorks() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_testng", temporaryFolder, true);
-    workspace.setUp();
+  public void testThatSkippedTestNGTestFails() throws IOException {
+    ProcessResult skippedTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:simple-skipped-test");
+    assertThat(skippedTestNGTestResult.getStderr(), containsString(
+        "TESTS PASSED (with some assumption violations)"));
+  }
 
+  @Test
+
+  public void testThatInjectionWorks() throws IOException {
     ProcessResult injectionTestNGTestResult =
         workspace.runBuckCommand("test", "//test:injection-test");
     injectionTestNGTestResult.assertSuccess();
