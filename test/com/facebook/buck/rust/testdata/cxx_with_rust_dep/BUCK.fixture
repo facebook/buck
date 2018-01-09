@@ -3,6 +3,7 @@ cxx_binary(
     #link_style = "shared",
     srcs = ["main.c"],
     link_style = "static",
+    linker_flags = ["-lresolv"],
     deps = [":helloer"],
 )
 
