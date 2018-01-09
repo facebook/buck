@@ -69,6 +69,17 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'skip_non_union_r_dot_java' /}
+  {param default : 'false' /}
+  {param desc}
+  When using <code>resource_union_package</code> setting <code>skip_non_union_r_dot_java</code> will
+  skip generating dummy R.java for other packages which are unnecessary. Reducing the number of
+  R.java helps in improving the overall compile time especially in libraries with large number of
+  dependent prebuilt targets.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}

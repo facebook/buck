@@ -67,7 +67,9 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
+
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             new SingleThreadedBuildRuleResolver(
@@ -90,7 +92,9 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
+
     BuildRuleResolver buildRuleResolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -138,7 +142,9 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
+
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             ruleResolver, /* createBuildableIfEmptyDeps */ false);
@@ -203,7 +209,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             ruleResolver, /* createBuildableIfEmptyDeps */ false);
@@ -243,7 +250,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             resolver, /* createdBuildableIfEmptyDeps */ true);
