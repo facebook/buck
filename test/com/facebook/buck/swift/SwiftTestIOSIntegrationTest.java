@@ -110,7 +110,7 @@ public class SwiftTestIOSIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:swifttest#iphonesimulator-x86_64");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("test", target.getFullyQualifiedName());
     result.assertSuccess();
   }
