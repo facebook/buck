@@ -52,6 +52,7 @@ public class AndroidLibraryGraphEnhancer {
   private final Optional<String> finalRName;
   private final boolean useOldStyleableFormat;
   private final ProjectFilesystem projectFilesystem;
+  private final boolean skipNonUnionRDotJava;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
@@ -63,7 +64,8 @@ public class AndroidLibraryGraphEnhancer {
       boolean forceFinalResourceIds,
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
-      boolean useOldStyleableFormat) {
+      boolean useOldStyleableFormat,
+      boolean skipNonUnionRDotJava) {
     this.projectFilesystem = projectFilesystem;
     Preconditions.checkState(!HasJavaAbi.isAbiTarget(buildTarget));
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
@@ -79,6 +81,7 @@ public class AndroidLibraryGraphEnhancer {
     this.resourceUnionPackage = resourceUnionPackage;
     this.finalRName = finalRName;
     this.useOldStyleableFormat = useOldStyleableFormat;
+    this.skipNonUnionRDotJava = skipNonUnionRDotJava;
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
@@ -142,7 +145,8 @@ public class AndroidLibraryGraphEnhancer {
                   forceFinalResourceIds,
                   resourceUnionPackage,
                   finalRName,
-                  useOldStyleableFormat);
+                  useOldStyleableFormat,
+                  skipNonUnionRDotJava);
             });
 
     return Optional.of((DummyRDotJava) dummyRDotJava);

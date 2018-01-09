@@ -59,6 +59,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -78,6 +79,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final String rName;
   private final boolean useOldStyleableFormat;
   private final Optional<Path> overrideSymbolsPath;
+  private final boolean skipNonUnionRDotJava;
 
   /**
    * Merges text symbols files from {@code aapt} for each of the input {@code android_resource} into
@@ -98,7 +100,8 @@ public class MergeAndroidResourcesStep implements Step {
       Optional<Path> overrideSymbolsPath,
       Optional<String> unionPackage,
       Optional<String> rName,
-      boolean useOldStyleableFormat) {
+      boolean useOldStyleableFormat,
+      boolean skipNonUnionRDotJava) {
     this.filesystem = filesystem;
     this.pathResolver = pathResolver;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
@@ -111,6 +114,7 @@ public class MergeAndroidResourcesStep implements Step {
     this.overrideSymbolsPath = overrideSymbolsPath;
     this.rName = rName.orElse("R");
     this.useOldStyleableFormat = useOldStyleableFormat;
+    this.skipNonUnionRDotJava = skipNonUnionRDotJava;
   }
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
@@ -121,7 +125,8 @@ public class MergeAndroidResourcesStep implements Step {
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> rName,
-      boolean useOldStyleableFormat) {
+      boolean useOldStyleableFormat,
+      boolean skipNonUnionRDotJava) {
     return new MergeAndroidResourcesStep(
         filesystem,
         pathResolver,
@@ -134,7 +139,8 @@ public class MergeAndroidResourcesStep implements Step {
         Optional.empty(),
         unionPackage,
         rName,
-        useOldStyleableFormat);
+        useOldStyleableFormat,
+        skipNonUnionRDotJava);
   }
 
   public static MergeAndroidResourcesStep createStepForUberRDotJava(
@@ -159,15 +165,23 @@ public class MergeAndroidResourcesStep implements Step {
         overrideSymbolsPath,
         unionPackage,
         /* rName */ Optional.empty(),
-        false);
+        /* useOldStyleableFormat */ false,
+        /* skipNonUnionRDotJava */ false);
   }
 
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
-    return FluentIterable.from(androidResourceDeps)
-        .transform(HasAndroidResourceDeps::getRDotJavaPackage)
-        .append(unionPackage.map(Collections::singletonList).orElse(Collections.emptyList()))
-        .transform(this::getPathToRDotJava)
-        .toSortedSet(natural());
+    FluentIterable<String> packages =
+        FluentIterable.from(
+            unionPackage.map(Collections::singletonList).orElse(Collections.emptyList()));
+
+    if (!skipNonUnionRDotJava) {
+      packages =
+          packages.append(
+              FluentIterable.from(androidResourceDeps)
+                  .transform(HasAndroidResourceDeps::getRDotJavaPackage));
+    }
+
+    return packages.transform(this::getPathToRDotJava).toSortedSet(natural());
   }
 
   @Override
@@ -230,25 +244,41 @@ public class MergeAndroidResourcesStep implements Step {
               filesystem,
               useOldStyleableFormat);
 
+      ImmutableSet.Builder<String> requiredPackages = ImmutableSet.<String>builder();
+
+      // Create a temporary list as the multimap
+      // will be concurrently modified below.
+      ArrayList<Entry<String, RDotTxtEntry>> entries =
+          new ArrayList<>(rDotJavaPackageToResources.entries());
+
+      if (skipNonUnionRDotJava) {
+        Preconditions.checkArgument(
+            unionPackage.isPresent(),
+            "union_package should be specified if skip_non_union_r_dot_java is set");
+
+        // If skip_non_union_r_dot_java is true remove all packages except union package
+        rDotJavaPackageToResources = TreeMultimap.create();
+
+      } else {
+        requiredPackages.addAll(symbolsFileToRDotJavaPackage.values());
+      }
+
       // If a resource_union_package was specified, copy all resource into that package,
       // unless they are already present.
       if (unionPackage.isPresent()) {
         String unionPackageName = unionPackage.get();
-        // Create a temporary list to avoid concurrent modification problems.
-        for (Map.Entry<String, RDotTxtEntry> entry :
-            new ArrayList<>(rDotJavaPackageToResources.entries())) {
-          if (rDotJavaPackageToResources.containsEntry(unionPackageName, entry.getValue())) {
-            continue;
+        requiredPackages.add(unionPackageName);
+
+        for (Map.Entry<String, RDotTxtEntry> entry : entries) {
+          if (!rDotJavaPackageToResources.containsEntry(unionPackageName, entry.getValue())) {
+            rDotJavaPackageToResources.put(unionPackageName, entry.getValue());
           }
-          rDotJavaPackageToResources.put(unionPackageName, entry.getValue());
         }
       }
 
       writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
       Set<String> emptyPackages =
-          Sets.difference(
-              ImmutableSet.copyOf(symbolsFileToRDotJavaPackage.values()),
-              rDotJavaPackageToResources.keySet());
+          Sets.difference(requiredPackages.build(), rDotJavaPackageToResources.keySet());
 
       if (!emptyPackages.isEmpty()) {
         writeEmptyRDotJavaForPackages(emptyPackages, filesystem);
@@ -633,7 +663,7 @@ public class MergeAndroidResourcesStep implements Step {
     return getShortName() + " " + Joiner.on(' ').join(resources);
   }
 
-  private Path getPathToRDotJava(String rDotJavaPackage) {
+  protected Path getPathToRDotJava(String rDotJavaPackage) {
     return outputDir
         .resolve(rDotJavaPackage.replace('.', '/'))
         .resolve(String.format("%s.java", rName));
