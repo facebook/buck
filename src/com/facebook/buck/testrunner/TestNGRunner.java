@@ -43,6 +43,10 @@ public final class TestNGRunner extends BaseRunner {
   @Override
   public void run() throws Throwable {
     for (String className : testClassNames) {
+      if (!shouldIncludeTest(className)) {
+        continue;
+      }
+
       final Class<?> testClass = Class.forName(className);
 
       List<TestResult> results;
@@ -103,6 +107,11 @@ public final class TestNGRunner extends BaseRunner {
       }
     }
     return hasAtLeastOneTestMethod;
+  }
+
+  private boolean shouldIncludeTest(String className) {
+    TestDescription testDescription = new TestDescription(className, null);
+    return testSelectorList.isIncluded(testDescription);
   }
 
   public class FilteringAnnotationTransformer implements IAnnotationTransformer {
