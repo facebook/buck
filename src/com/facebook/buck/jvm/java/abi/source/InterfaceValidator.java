@@ -230,17 +230,26 @@ class InterfaceValidator {
         QualifiedNameable leafmostElement,
         @Nullable Name memberName) {
       if (leafmostElement.getKind() != ElementKind.PACKAGE) {
-        ResolvedType compilerResolvedType = compilerResolver.resolve(leafmostElementPath);
-        if (compilerResolvedType != null && compilerResolvedType.kind == ResolvedTypeKind.CRASH) {
-          reportMissingDeps(compilerResolvedType, leafmostElementPath);
+        if (isStatic) {
+          CompletedType completedType = completer.complete(leafmostElement, true);
+          if (completedType != null
+              && (completedType.kind == CompletedTypeKind.CRASH
+                  || completedType.kind == CompletedTypeKind.PARTIALLY_COMPLETED_TYPE)) {
+            reportMissingDeps(completedType, leafmostElementPath);
+          }
         } else {
-          TreeBackedResolvedType treeBackedResolvedType =
-              treeBackedResolver.resolve(leafmostElementPath);
-          if (!treeBackedResolvedType.isCorrect()) {
-            if (treeBackedResolvedType.isCorrectable()) {
-              treeBackedResolvedType.reportErrors(messageKind);
-            } else {
-              reportMissingDeps(compilerResolvedType, leafmostElementPath);
+          ResolvedType compilerResolvedType = compilerResolver.resolve(leafmostElementPath);
+          if (compilerResolvedType != null && compilerResolvedType.kind == ResolvedTypeKind.CRASH) {
+            reportMissingDeps(compilerResolvedType, leafmostElementPath);
+          } else {
+            TreeBackedResolvedType treeBackedResolvedType =
+                treeBackedResolver.resolve(leafmostElementPath);
+            if (!treeBackedResolvedType.isCorrect()) {
+              if (treeBackedResolvedType.isCorrectable()) {
+                treeBackedResolvedType.reportErrors(messageKind);
+              } else {
+                reportMissingDeps(compilerResolvedType, leafmostElementPath);
+              }
             }
           }
         }

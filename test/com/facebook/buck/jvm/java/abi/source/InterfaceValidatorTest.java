@@ -295,6 +295,35 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testStaticImportedMemberWithMissingSuperclassFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/base/Base.java",
+            Joiner.on('\n').join("package com.facebook.base;", "public class Base {", "}")));
+
+    testCompiler.setAllowCompilationErrors(true);
+    this.compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar extends com.facebook.base.Base {",
+                    "  public static void foo() { }",
+                    "}"),
+            "com/facebook/foo/Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import static com.facebook.bar.Bar.foo;",
+                    "public class Foo {",
+                    "}")));
+
+    assertError(
+        "Foo.java:2: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\nimport static com.facebook.bar.Bar.foo;\n                              ^\n  To fix, add the following rules to source_only_abi_deps in //:rule: //com/facebook/base:base");
+  }
+
+  @Test
   public void testCanonicallyStaticImportedTypeFails() throws IOException {
     withClasspath(
         ImmutableMap.of(
@@ -320,7 +349,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                 "  Inner i;",
                 "}"));
 
-    assertError(
+    assertErrors(
         "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
             + "  Inner i;\n"
             + "  ^\n"
@@ -352,7 +381,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                 "  Inner i;",
                 "}"));
 
-    assertError(
+    assertErrors(
         "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
             + "  Inner i;\n"
             + "  ^\n"
