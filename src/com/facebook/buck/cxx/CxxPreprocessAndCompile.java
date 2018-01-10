@@ -246,6 +246,15 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    preprocessDelegate.ifPresent(
+        delegate -> {
+          try {
+            CxxHeaders.checkConflictingHeaders(delegate.getCxxIncludePaths().getIPaths());
+          } catch (CxxHeaders.ConflictingHeadersException e) {
+            throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+          }
+        });
+
     buildableContext.recordArtifact(output);
 
     for (String flag :
@@ -277,7 +286,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   private static boolean hasGcno(Path output) {
     return !MorePaths.getNameWithoutExtension(output).endsWith(".S");
   }
-    
+
   @VisibleForTesting
   static Path getGcnoPath(Path output) {
     String basename = MorePaths.getNameWithoutExtension(output);

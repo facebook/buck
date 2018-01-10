@@ -249,12 +249,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Preprocessor preprocessor,
       CxxToolFlags preprocessorFlags) {
-    ImmutableList<CxxHeaders> includes = getIncludes(cxxPlatform);
-    try {
-      CxxHeaders.checkConflictingHeaders(includes);
-    } catch (CxxHeaders.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-    }
     return new PreprocessorDelegate(
         pathResolver,
         cxxPlatform.getCompilerDebugPathSanitizer(),

@@ -2484,6 +2484,17 @@ public class CxxBinaryIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void conflictingHeadersBuildFails() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_conflicts", tmp);
+    workspace.setUp();
+    String errorMsg = workspace.runBuckBuild(":main").assertFailure().getStderr();
+    assertTrue(
+        errorMsg.contains(
+            "has dependencies using headers that can be included using the same path"));
+  }
+
   private ImmutableSortedSet<Path> findFiles(Path root, final PathMatcher matcher)
       throws IOException {
     final ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();

@@ -109,6 +109,12 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    try {
+      CxxHeaders.checkConflictingHeaders(preprocessorDelegate.getCxxIncludePaths().getIPaths());
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+    }
+
     ImmutableList<String> frontendCommand = getFrontendCommand();
 
     buildableContext.recordArtifact(
