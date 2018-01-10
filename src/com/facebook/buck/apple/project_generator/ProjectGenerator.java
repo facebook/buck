@@ -2572,7 +2572,7 @@ public class ProjectGenerator {
   }
 
   private String getSwiftObjCGeneratedHeaderName(TargetNode<?, ?> node) {
-    return getProductNameForBuildTargetNode(node) + "-Swift.h";
+    return getModuleName(node) + "-Swift.h";
   }
 
   private Path getSwiftObjCGeneratedHeaderPath(TargetNode<?, ?> node, ProjectFilesystem fs) {

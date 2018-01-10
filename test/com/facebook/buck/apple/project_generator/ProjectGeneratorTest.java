@@ -4692,6 +4692,29 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibraryWithModuleName()
+      throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "BarWithSuffix");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .setModuleName("Bar")
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(node));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:BarWithSuffix");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+
+    assertThat(buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo("Bar-Swift.h"));
+  }
+
+  @Test
   public void testGeneratedProjectSettingForSwiftWholeModuleOptimizationForAppleLibrary()
       throws IOException {
     ImmutableMap<String, ImmutableMap<String, String>> sections =

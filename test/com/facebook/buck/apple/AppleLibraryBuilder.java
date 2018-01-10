@@ -215,4 +215,9 @@ public class AppleLibraryBuilder
     getArgForPopulating().setXcodePublicHeadersSymlinks(Optional.of(xcodePublicHeadersSymlinks));
     return this;
   }
+
+  public AppleLibraryBuilder setModuleName(String moduleName) {
+    getArgForPopulating().setModuleName(moduleName);
+    return this;
+  }
 }
