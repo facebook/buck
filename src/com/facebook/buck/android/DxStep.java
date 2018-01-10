@@ -21,6 +21,7 @@ import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
+import com.android.tools.r8.OutputMode;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -266,7 +267,7 @@ public class DxStep extends ShellStep {
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
-                .setOutputPath(output);
+                .setOutput(output, OutputMode.DexIndexed);
         D8Command d8Command = builder.build();
         com.android.tools.r8.D8.run(d8Command);
 
