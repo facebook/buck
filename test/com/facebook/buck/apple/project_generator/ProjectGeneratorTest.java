@@ -4712,6 +4712,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
 
     assertThat(buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo("Bar-Swift.h"));
+    assertThat(buildSettings.get("PRODUCT_MODULE_NAME"), equalTo("Bar"));
   }
 
   @Test
