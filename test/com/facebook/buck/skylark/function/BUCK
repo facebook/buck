@@ -9,6 +9,7 @@ standard_java_test(
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//src/com/facebook/buck/skylark/packages:packages",
+        "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/bazel:skylark-lang",
         "//third-party/java/guava:guava",

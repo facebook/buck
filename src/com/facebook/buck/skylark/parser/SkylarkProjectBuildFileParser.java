@@ -28,6 +28,7 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
+import com.facebook.buck.skylark.function.HostInfo;
 import com.facebook.buck.skylark.function.ReadConfig;
 import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
@@ -263,6 +264,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     env.setupDynamic(PARSE_CONTEXT, parseContext);
     env.setup("glob", Glob.create());
     env.setup("package_name", SkylarkNativeModule.packageName);
+    env.setup("host_info", HostInfo.create());
     PackageContext packageContext =
         PackageContext.builder()
             .setGlobber(SimpleGlobber.create(fileSystem.getPath(buildFile.getParent().toString())))
