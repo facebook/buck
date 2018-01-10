@@ -71,7 +71,6 @@ java_test(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:caching_build_engine_delegates",
         "//src/com/facebook/buck/rules:cell_path_resolver_impls",
-        "//src/com/facebook/buck/rules:cell_path_resolver_serializer",
         "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:command_tool",
         "//src/com/facebook/buck/rules:interfaces",

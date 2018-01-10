@@ -83,7 +83,6 @@ PROCESS_EXECUTOR_SRCS = [
     "ListeningProcessExecutor.java",
     "PrintStreamProcessExecutorFactory.java",
     "ProcessExecutor.java",
-    "ProcessExecutorSerializer.java",
     "ProcessExecutorFactory.java",
     "ProcessHelper.java",
     "ProcessManager.java",
