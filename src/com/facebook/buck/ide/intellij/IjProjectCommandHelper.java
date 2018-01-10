@@ -126,6 +126,10 @@ public class IjProjectCommandHelper {
           "params are view_path target(s), but you didn't supply any targets");
     }
 
+    if (projectViewParameters.hasViewPath()) {
+      console.printErrorText("`--view` option is deprecated and will be removed soon.");
+    }
+
     List<String> targets = arguments;
     if (targets.isEmpty()) {
       targets = ImmutableList.of("//...");
