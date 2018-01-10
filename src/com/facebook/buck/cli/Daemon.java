@@ -238,11 +238,13 @@ final class Daemon implements Closeable {
     // so needs to be left in a consistent state even if the current command is interrupted
     // due to a client disconnection.
     synchronized (parser) {
-      LOG.info("Client disconnected.");
+      LOG.info("Nailgun server detects that client was disconnected");
       // Client should no longer be connected, but printing helps detect false disconnections.
-      err.println("Client disconnected.");
+      err.println(
+          "Server detected that Buck client has disconnected. If you see"
+              + " this message then it is probably false detection.");
 
-      throw new InterruptedException("Client disconnected.");
+      throw new InterruptedException("Client disconnected");
     }
   }
 
