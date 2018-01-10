@@ -82,6 +82,12 @@ class BuildPrehook implements AutoCloseable {
     writeJsonBuckconfigFile();
     Preconditions.checkState(tempFile != null);
     environmentBuilder.put("BUCKCONFIG_FILE", tempFile.get().toString());
+    environmentBuilder.put("BUCK_ROOT", cell.getRoot().toString());
+    environmentBuilder.put(
+        "BUCK_OUT",
+        cell.getRoot()
+            .resolve(cell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
+            .toString());
 
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
