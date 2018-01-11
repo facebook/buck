@@ -15,14 +15,13 @@
  */
 package com.facebook.buck.android;
 
-import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -32,11 +31,11 @@ public class AssumeAndroidPlatform {
   private AssumeAndroidPlatform() {}
 
   public static void assumeNdkIsAvailable() throws InterruptedException {
-    try {
-      getAndroidDirectoryResolver().getNdkOrThrow();
-    } catch (HumanReadableException e) {
-      assumeNoException(e);
-    }
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+    Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
+
+    assumeTrue(androidNdk.isPresent());
   }
 
   public static void assumeSdkIsAvailable() throws InterruptedException {

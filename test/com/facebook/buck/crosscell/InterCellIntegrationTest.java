@@ -654,8 +654,7 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
 
-    NdkCxxPlatform platform =
-        AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
+    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
@@ -703,8 +702,7 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
 
-    NdkCxxPlatform platform =
-        AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
+    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(

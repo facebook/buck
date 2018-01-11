@@ -19,19 +19,29 @@ package com.facebook.buck.android.toolchain.ndk.impl;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.android.DefaultAndroidLegacyToolchain;
 import com.facebook.buck.android.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.relinker.Symbols;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
@@ -46,27 +56,60 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 import java.util.zip.ZipFile;
 import org.tukaani.xz.XZInputStream;
 
 public class AndroidNdkHelper {
+
+  private static final Logger LOG = Logger.get(AndroidNdkHelper.class);
 
   private AndroidNdkHelper() {}
 
   public static final AndroidBuckConfig DEFAULT_CONFIG =
       new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
 
-  public static NdkCxxPlatform getNdkCxxPlatform(
-      ProjectWorkspace workspace, ProjectFilesystem filesystem)
+  public static Optional<AndroidNdk> detectAndroidNdk(ProjectFilesystem filesystem) {
+    DefaultAndroidDirectoryResolver resolver =
+        new DefaultAndroidDirectoryResolver(
+            filesystem.getRootPath().getFileSystem(),
+            ImmutableMap.copyOf(System.getenv()),
+            AndroidNdkHelper.DEFAULT_CONFIG);
+
+    Optional<AndroidNdk> androidNdk;
+    try {
+      androidNdk =
+          new AndroidNdkFactory()
+              .createToolchain(
+                  new ToolchainProviderBuilder()
+                      .withToolchain(
+                          AndroidLegacyToolchain.DEFAULT_NAME,
+                          new DefaultAndroidLegacyToolchain(
+                              () ->
+                                  AndroidPlatformTarget.getDefaultPlatformTarget(
+                                      resolver, Optional.empty(), Optional.empty()),
+                              resolver))
+                      .build(),
+                  ToolchainCreationContext.of(
+                      ImmutableMap.copyOf(System.getenv()),
+                      FakeBuckConfig.builder().build(),
+                      filesystem,
+                      new DefaultProcessExecutor(new TestConsole()),
+                      new ExecutableFinder(),
+                      TestRuleKeyConfigurationFactory.create()));
+    } catch (HumanReadableException e) {
+      LOG.warn(e, "Cannot detect Android NDK");
+      androidNdk = Optional.empty();
+    }
+    return androidNdk;
+  }
+
+  public static NdkCxxPlatform getNdkCxxPlatform(ProjectFilesystem filesystem)
       throws IOException, InterruptedException {
     // TODO(cjhopman): is this really the simplest way to get the objdump tool?
-    AndroidDirectoryResolver androidResolver =
-        new DefaultAndroidDirectoryResolver(
-            workspace.asCell().getRoot().getFileSystem(),
-            ImmutableMap.copyOf(System.getenv()),
-            DEFAULT_CONFIG);
+    Optional<AndroidNdk> androidNdk = detectAndroidNdk(filesystem);
 
-    Path ndkPath = androidResolver.getNdkOrThrow();
+    Path ndkPath = androidNdk.get().getNdkRootPath();
     String ndkVersion = DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath).get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 

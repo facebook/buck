@@ -40,7 +40,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -101,12 +100,7 @@ public class NdkCxxPlatformIntegrationTest {
   private Path getNdkRoot() throws InterruptedException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            projectFilesystem.getRootPath().getFileSystem(),
-            ImmutableMap.copyOf(System.getenv()),
-            AndroidNdkHelper.DEFAULT_CONFIG);
-    Path ndkDir = resolver.getNdkOrThrow();
+    Path ndkDir = AndroidNdkHelper.detectAndroidNdk(projectFilesystem).get().getNdkRootPath();
     assertTrue(java.nio.file.Files.exists(ndkDir));
     return ndkDir;
   }
