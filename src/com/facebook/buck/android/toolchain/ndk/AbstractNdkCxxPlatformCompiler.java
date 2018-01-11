@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain.ndk;
 
-import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 

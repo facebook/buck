@@ -20,6 +20,8 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformTargetConfiguration;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;

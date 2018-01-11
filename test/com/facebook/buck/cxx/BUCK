@@ -21,7 +21,6 @@ java_test(
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:config",
-        "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
@@ -165,7 +164,6 @@ java_test(
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:config",
-        "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",

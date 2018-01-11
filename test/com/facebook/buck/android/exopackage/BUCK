@@ -55,7 +55,6 @@ java_test(
     ),
     deps = [
         "//src/com/facebook/buck/android:config",
-        "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
