@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
@@ -70,18 +71,6 @@ import java.util.regex.Pattern;
 public class NdkCxxPlatforms {
 
   private static final Logger LOG = Logger.get(NdkCxxPlatforms.class);
-
-  /**
-   * Magic path prefix we use to denote the machine-specific location of the Android NDK. Why "@"?
-   * It's uncommon enough to mark that path element as special while not being a metacharacter in
-   * either make, shell, or regular expression syntax.
-   *
-   * <p>We also have prefixes for tool specific paths, even though they're sub-paths of
-   * `@ANDROID_NDK_ROOT@`. This is to sanitize host-specific sub-directories in the toolchain (e.g.
-   * darwin-x86_64) which would otherwise break determinism and caching when using
-   * cross-compilation.
-   */
-  public static final String ANDROID_NDK_ROOT = "@ANDROID_NDK_ROOT@";
 
   /**
    * Magic string we substitute into debug paths in place of the build-host name, erasing the
@@ -436,7 +425,7 @@ public class NdkCxxPlatforms {
       sanitizePathsBuilder.put(
           toolchainPaths.getNdkGccToolRoot(), sanitizedPaths.getNdkGccToolRoot().toString());
     }
-    sanitizePathsBuilder.put(ndkRoot, ANDROID_NDK_ROOT);
+    sanitizePathsBuilder.put(ndkRoot, AndroidNdkConstants.ANDROID_NDK_ROOT);
 
     CxxToolProvider.Type type =
         compilerType == NdkCompilerType.CLANG
@@ -922,7 +911,7 @@ public class NdkCxxPlatforms {
     NdkCxxToolchainPaths getSanitizedPaths() {
       return new NdkCxxToolchainPaths(
           filesystem,
-          Paths.get(ANDROID_NDK_ROOT),
+          Paths.get(AndroidNdkConstants.ANDROID_NDK_ROOT),
           ndkVersion,
           targetConfiguration,
           BUILD_HOST_SUBST,

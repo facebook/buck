@@ -16,6 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
@@ -241,7 +242,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     }
 
     // GCC-only magic that rewrites non-deterministic parts of builds
-    String ndksubst = NdkCxxPlatforms.ANDROID_NDK_ROOT;
+    String ndksubst = AndroidNdkConstants.ANDROID_NDK_ROOT;
 
     outputLinesBuilder.addAll(
         ImmutableList.copyOf(
