@@ -16,7 +16,7 @@ import time
 # Classes
 ############################################################
 class Log(object):
-    '''Pretty print to the console.'''
+    """Pretty print to the console."""
     BLUE = '\033[1;34m'
     GREEN = '\033[0;32m'
     RED = '\033[1;31m'
@@ -52,7 +52,7 @@ class Log(object):
 
 
 class Paths(object):
-    '''All the output paths used in this script.'''
+    """All the output paths used in this script."""
     def __init__(self, root_dir):
         if not os.path.isdir(root_dir):
             Log.info('Creating root dir [{}].'.format(root_dir))
@@ -141,7 +141,7 @@ def parse_args():
 
 
 def unique_list(src_list):
-    '''Return unique elements of the list maintaining the original order.'''
+    """Return unique elements of the list maintaining the original order."""
     dst_list = []
     all_elements = set()
     for e in src_list:
@@ -152,7 +152,7 @@ def unique_list(src_list):
 
 
 def run_cmd(cmd):
-    '''Run a command on the bash. Raise an exception on error.'''
+    """Run a command on the bash. Raise an exception on error."""
     Log.info('Running the following command:')
     Log.info('  {0}'.format(cmd))
     try:
@@ -167,7 +167,7 @@ def run_cmd(cmd):
 
 
 def run_strace(out_file, build_targets):
-    '''Run a buck build wrapped with strace.'''
+    """Run a buck build wrapped with strace."""
     assert type(build_targets) == list
     buck_cmd = ('buck build {build_targets} '
                 '--no-cache '
@@ -181,7 +181,7 @@ def run_strace(out_file, build_targets):
 
 
 def run_stampede(out_file, build_targets):
-    '''Run stampede build outputing the required source dependencies.'''
+    """Run stampede build outputing the required source dependencies."""
     assert type(build_targets) == list
     cells_root_path = os.path.abspath(os.path.dirname(os.getcwd()))
     cmd = ('buck distbuild sourcefiles '
@@ -198,7 +198,7 @@ def run_stampede(out_file, build_targets):
 
 
 def process_stampede(raw_file, processed_file, includes):
-    '''Process and sanitise the stampede output file.'''
+    """Process and sanitise the stampede output file."""
     Log.info('Processing file [{}].'.format(raw_file))
     all_lines = set()
     with open(raw_file) as fp:

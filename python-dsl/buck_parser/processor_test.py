@@ -1274,12 +1274,12 @@ class BuckTest(unittest.TestCase):
             self.project_root,
             path='BUCK',
             contents=(
-                '''
+                """
 foo_rule(
   name="foo",
   srcs=['Foo.java'],
 )
-'''
+"""
             ))
         java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
         self.write_files(build_file, java_file)
@@ -1304,7 +1304,7 @@ foo_rule(
             self.project_root,
             path='BUCK',
             contents=(
-                '''
+                """
 import collections
 
 class ListLike(collections.MutableSequence):
@@ -1325,7 +1325,7 @@ foo_rule(
   name="foo",
   srcs=ListLike(['Foo.java','Foo.c']),
 )
-'''
+"""
             ))
         java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
         c_file = ProjectFile(self.project_root, path='Foo.c', contents=())
@@ -1355,7 +1355,7 @@ foo_rule(
             self.project_root,
             path='BUCK',
             contents=(
-                '''
+                """
 import collections
 
 class DictLike(collections.MutableMapping):
@@ -1379,7 +1379,7 @@ foo_rule(
   srcs=[],
   options=DictLike({'foo':'bar','baz':'blech'}),
 )
-'''
+"""
             ))
         self.write_file(build_file)
         with build_file_processor.with_builtins(__builtin__.__dict__):
@@ -1407,13 +1407,13 @@ foo_rule(
             self.project_root,
             path='BUCK',
             contents=(
-                '''
+                """
 foo_rule(
   name="foo",
   srcs=[],
   options={'foo':'bar','baz':'blech'},
 )
-'''
+"""
             ))
         self.write_file(build_file)
         with build_file_processor.with_builtins(__builtin__.__dict__):

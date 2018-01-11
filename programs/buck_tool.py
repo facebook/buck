@@ -260,19 +260,19 @@ class BuckTool(object):
         return env
 
     def _add_args(self, argv, args):
-        '''
+        """
         Add new arguments to the beginning of arguments string
         Adding to the end will mess up with custom test runner params
-        '''
+        """
         if (len(argv) < 2):
             return argv + args
         return [argv[0]] + args + argv[1:]
 
     def _add_args_from_env(self, argv):
-        '''
+        """
         Implicitly add command line arguments based on environmental variables. This is a bad
         practice and should be considered for infrastructure / debugging purposes only
-        '''
+        """
 
         if os.environ.get('BUCK_NO_CACHE') == '1' and '--no-cache' not in argv:
             argv = self._add_args(argv, ['--no-cache'])
@@ -281,9 +281,9 @@ class BuckTool(object):
         return argv
 
     def _run_with_nailgun(self, argv, env):
-        '''
+        """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
-        '''
+        """
         exit_code = 2
         busy_diagnostic_displayed = False
         while exit_code == 2:
@@ -310,9 +310,9 @@ class BuckTool(object):
         return exit_code
 
     def _run_without_nailgun(self, argv, env):
-        '''
+        """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
-        '''
+        """
         command = ["buck"]
         extra_default_options = [
             "-Djava.io.tmpdir={0}".format(self._tmp_dir),
@@ -336,10 +336,10 @@ class BuckTool(object):
                                    executable=java)
 
     def _execute_command_and_maybe_run_target(self, run_fn, env):
-        '''
+        """
         Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
         args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
-        '''
+        """
         with Tracing('buck', args={'command': sys.argv[1:]}):
             argv = sys.argv[1:]
             if len(argv) == 0 or argv[0] != 'run':
@@ -455,14 +455,14 @@ class BuckTool(object):
             buckd_tmp_dir = self._buck_project.create_buckd_tmp_dir()
             ngserver_output_path = os.path.join(buckd_tmp_dir, 'ngserver-out')
 
-            '''
+            """
             Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
             Set timeout to 60s (longer than the biggest GC pause seen for a 2GB
             heap) and GC target to 15s. This means that the GC has to miss its
             target by 100% or many 500ms heartbeats must be missed before a client
             disconnection occurs. Specify port 0 to allow Nailgun to find an
             available port, then parse the port number out of the first log entry.
-            '''
+            """
             command = ["buckd"]
             extra_default_options = [
                 "-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()),
@@ -508,10 +508,10 @@ class BuckTool(object):
                         pass
                     else:
                         raise e
-                '''
+                """
                 Change the process group of the child buckd process so that when this
                 script is interrupted, it does not kill buckd.
-                '''
+                """
 
                 def preexec_fn():
                     # Close any open file descriptors to further separate buckd from its
