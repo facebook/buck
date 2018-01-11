@@ -25,4 +25,6 @@ public enum CompileAgainstLibraryType {
   FULL,
   /** Compile against the ABI jar. */
   ABI,
+  /** Compile against the source-only ABI jar, if available. Else the ABI jar. */
+  SOURCE_ONLY_ABI,
 }

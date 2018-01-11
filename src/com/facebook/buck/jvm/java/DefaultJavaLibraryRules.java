@@ -61,6 +61,7 @@ public abstract class DefaultJavaLibraryRules {
         ImmutableSortedSet<BuildRule> fullJarExportedDeps,
         ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
         @Nullable BuildTarget abiJar,
+        @Nullable BuildTarget sourceOnlyAbiJar,
         Optional<String> mavenCoords,
         ImmutableSortedSet<BuildTarget> tests,
         boolean requiredForSourceOnlyAbi);
@@ -234,12 +235,20 @@ public abstract class DefaultJavaLibraryRules {
   BuildTarget getAbiJar() {
     if (willProduceCompareAbis()) {
       return HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
-    } else if (willProduceSourceOnlyAbi()) {
-      return HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
     } else if (willProduceSourceAbi()) {
       return HasJavaAbi.getSourceAbiJar(getLibraryTarget());
     } else if (willProduceClassAbi()) {
       return HasJavaAbi.getClassAbiJar(getLibraryTarget());
+    }
+
+    return null;
+  }
+
+  @Value.Lazy
+  @Nullable
+  BuildTarget getSourceOnlyAbiJar() {
+    if (willProduceSourceOnlyAbi()) {
+      return HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
     }
 
     return null;
@@ -367,6 +376,7 @@ public abstract class DefaultJavaLibraryRules {
                 Preconditions.checkNotNull(getDeps()).getExportedDeps(),
                 Preconditions.checkNotNull(getDeps()).getProvidedDeps(),
                 getAbiJar(),
+                getSourceOnlyAbiJar(),
                 getMavenCoords(),
                 getTests(),
                 getRequiredForSourceOnlyAbi());

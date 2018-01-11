@@ -108,6 +108,10 @@ public interface HasJavaAbi {
     return Optional.of(getBuildTarget().withAppendedFlavors(CLASS_ABI_FLAVOR));
   }
 
+  default Optional<BuildTarget> getSourceOnlyAbiJar() {
+    return Optional.empty();
+  }
+
   class JarContentsSupplier {
     private final SourcePathResolver resolver;
     @Nullable private final SourcePath jarSourcePath;

@@ -98,6 +98,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @AddToRuleKey private final Optional<String> mavenCoords;
   private final JarContentsSupplier outputJarContentsSupplier;
   @Nullable private final BuildTarget abiJar;
+  @Nullable private final BuildTarget sourceOnlyAbiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
 
@@ -154,6 +155,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       @Nullable BuildTarget abiJar,
+      @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       boolean requiredForSourceOnlyAbi) {
@@ -191,6 +193,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
     this.abiJar = abiJar;
+    this.sourceOnlyAbiJar = sourceOnlyAbiJar;
 
     this.outputClasspathEntriesSupplier =
         MoreSuppliers.memoize(
@@ -344,6 +347,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public final Optional<BuildTarget> getAbiJar() {
     return Optional.ofNullable(abiJar);
+  }
+
+  @Override
+  public Optional<BuildTarget> getSourceOnlyAbiJar() {
+    return Optional.ofNullable(sourceOnlyAbiJar);
   }
 
   @Override

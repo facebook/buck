@@ -103,6 +103,9 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
       case ABI:
         buildRules = getCompileTimeClasspathAbiDeps();
         break;
+      case SOURCE_ONLY_ABI:
+        buildRules = getCompileTimeClasspathSourceOnlyAbiDeps();
+        break;
       default:
         throw new IllegalStateException();
     }
@@ -132,6 +135,18 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
     }
 
     return JavaLibraryRules.getAbiRules(getBuildRuleResolver(), classpathFullDeps);
+  }
+
+  @Value.Lazy
+  public ImmutableSortedSet<BuildRule> getCompileTimeClasspathSourceOnlyAbiDeps() {
+    Iterable<BuildRule> classpathFullDeps = getCompileTimeClasspathFullDeps();
+    if (shouldCreateSourceOnlyAbi()) {
+      classpathFullDeps =
+          Iterables.concat(
+              rulesRequiredForSourceOnlyAbi(classpathFullDeps), getDeps().getSourceOnlyAbiDeps());
+    }
+
+    return JavaLibraryRules.getSourceOnlyAbiRules(getBuildRuleResolver(), classpathFullDeps);
   }
 
   @Value.Lazy

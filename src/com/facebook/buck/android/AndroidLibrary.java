@@ -85,6 +85,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       @Nullable BuildTarget abiJar,
+      @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<BuildTarget> tests,
@@ -100,6 +101,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         fullJarExportedDeps,
         fullJarProvidedDeps,
         abiJar,
+        sourceOnlyAbiJar,
         mavenCoords,
         tests,
         requiredForSourceOnlyAbi);
@@ -154,6 +156,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 ImmutableSortedSet<BuildRule> fullJarExportedDeps,
                 ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
                 @Nullable BuildTarget abiJar,
+                @Nullable BuildTarget sourceOnlyAbiJar,
                 Optional<String> mavenCoords,
                 ImmutableSortedSet<BuildTarget> tests,
                 boolean requiredForSourceOnlyAbi) {
@@ -168,6 +171,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   fullJarExportedDeps,
                   fullJarProvidedDeps,
                   abiJar,
+                  sourceOnlyAbiJar,
                   mavenCoords,
                   args.getManifest(),
                   tests,
