@@ -19,13 +19,13 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
+import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;

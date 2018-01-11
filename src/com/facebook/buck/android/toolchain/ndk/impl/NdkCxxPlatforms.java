@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain.ndk.impl;
 
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
