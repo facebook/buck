@@ -230,7 +230,7 @@ public class CompilationDatabaseIntegrationTest {
       clang += "++";
     }
     ImmutableList<String> commandArgs1 =
-        ImmutableList.of("'" + languageStandard + "'", "-Wno-deprecated", "-Wno-conversion");
+        ImmutableList.of(languageStandard, "-Wno-deprecated", "-Wno-conversion");
 
     ImmutableList<String> commandArgs2 =
         ImmutableList.of(
@@ -238,7 +238,7 @@ public class CompilationDatabaseIntegrationTest {
             sdkRoot.toString(),
             "-arch",
             "x86_64",
-            "'-mios-simulator-version-min=8.0'",
+            "-mios-simulator-version-min=8.0",
             "-iquote",
             tmpRoot.toString());
 
@@ -278,7 +278,7 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-o");
     commandArgs.add(output);
     assertThat(
-        RichStream.from(entry.getCommand().split(" "))
+        RichStream.from(entry.getArguments())
             .filter(c -> !c.contains("-fdebug-prefix-map"))
             .toImmutableList(),
         equalTo(commandArgs));
