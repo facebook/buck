@@ -58,6 +58,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -181,7 +182,8 @@ public class CxxCompilationDatabaseTest {
 
     CxxCompilationDatabase.GenerateCompilationCommandsJson step =
         (CxxCompilationDatabase.GenerateCompilationCommandsJson) buildSteps.get(1);
-    Iterable<CxxCompilationDatabaseEntry> observedEntries = step.createEntries();
+    Iterable<CxxCompilationDatabaseEntry> observedEntries =
+        step.createEntries().collect(Collectors.toList());
     Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
             CxxCompilationDatabaseEntry.of(

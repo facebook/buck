@@ -39,6 +39,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.ObjectMappers;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,8 +47,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class CxxCompilationDatabase extends AbstractBuildRule implements HasRuntimeDeps {
@@ -156,22 +156,24 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      Iterable<CxxCompilationDatabaseEntry> entries = createEntries();
       try (OutputStream outputStream =
           getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
-        ObjectMappers.WRITER.writeValue(outputStream, entries);
+        try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {
+          jsonGen.writeStartArray();
+          for (Iterator<CxxCompilationDatabaseEntry> entry = createEntries().iterator();
+              entry.hasNext(); ) {
+            jsonGen.writeObject(entry.next());
+          }
+          jsonGen.writeEndArray();
+        }
       }
 
       return StepExecutionResult.of(0);
     }
 
     @VisibleForTesting
-    Iterable<CxxCompilationDatabaseEntry> createEntries() {
-      List<CxxCompilationDatabaseEntry> entries = new ArrayList<>();
-      for (CxxPreprocessAndCompile compileRule : compileRules) {
-        entries.add(createEntry(compileRule));
-      }
-      return entries;
+    Stream<CxxCompilationDatabaseEntry> createEntries() {
+      return compileRules.stream().map(compileRule -> createEntry(compileRule));
     }
 
     private CxxCompilationDatabaseEntry createEntry(CxxPreprocessAndCompile compileRule) {
