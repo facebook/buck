@@ -109,7 +109,7 @@ public class AndroidNdkHelper {
     Optional<AndroidNdk> androidNdk = detectAndroidNdk(filesystem);
 
     Path ndkPath = androidNdk.get().getNdkRootPath();
-    String ndkVersion = DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath).get();
+    String ndkVersion = AndroidNdkResolver.findNdkVersionFromDirectory(ndkPath).get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 
     ImmutableCollection<NdkCxxPlatform> platforms =

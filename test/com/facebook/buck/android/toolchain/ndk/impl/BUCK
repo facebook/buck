@@ -5,6 +5,9 @@ java_test(
     srcs = glob(
         ["*Test.java"],
     ),
+    resources = glob(
+        ["testdata/**"],
+    ),
     deps = [
         ":testutil",
         "//src/com/facebook/buck/android:config",

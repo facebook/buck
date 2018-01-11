@@ -350,6 +350,7 @@ java_immutables_library(
     srcs = UTILS_SRCS,
     exported_deps = [
         "//src/com/facebook/buck/android:utils_api",
+        "//src/com/facebook/buck/android/toolchain/common:common",
         "//third-party/java/android:ddmlib",
     ],
     tests = [
@@ -430,6 +431,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+        "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/elf:elf",

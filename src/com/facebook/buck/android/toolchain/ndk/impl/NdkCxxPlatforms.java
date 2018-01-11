@@ -17,7 +17,6 @@
 package com.facebook.buck.android.toolchain.ndk.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
@@ -555,7 +554,7 @@ public class NdkCxxPlatforms {
    * @return the version of the Android NDK located in {@code ndkRoot}.
    */
   private static String readVersion(Path ndkRoot) {
-    return DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkRoot).get();
+    return AndroidNdkResolver.findNdkVersionFromDirectory(ndkRoot).get();
   }
 
   private static Path getToolPath(
