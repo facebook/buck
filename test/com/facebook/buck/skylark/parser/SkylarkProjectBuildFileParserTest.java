@@ -48,6 +48,7 @@ import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.Type;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -421,6 +422,34 @@ public class SkylarkProjectBuildFileParserTest {
 
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage("Cannot evaluate build file " + buildFile);
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
+  public void extensionFileEvaluationErrorIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(buildFile, Arrays.asList("load('//src/test:build_rules.bzl', 'guava_jar')"));
+    Files.write(extensionFile, Arrays.asList("error"));
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate extension file //src/test:build_rules.bzl");
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
+  public void extensionFileIoEvaluationErrorIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("load('//src/test:build_rule.bzl', 'guava_jar')"));
+
+    thrown.expect(FileNotFoundException.class);
+    thrown.expectMessage(Matchers.endsWith("build_rule.bzl (No such file or directory)"));
 
     parser.getAll(buildFile, new AtomicLong());
   }

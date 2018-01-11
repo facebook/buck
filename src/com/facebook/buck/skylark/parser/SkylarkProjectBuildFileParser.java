@@ -37,6 +37,7 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
@@ -289,11 +291,41 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /** Loads all extensions identified by corresponding {@link SkylarkImport}s. */
-  private ImmutableList<ExtensionData> loadExtensions(ImmutableList<SkylarkImport> skylarkImports) {
-    return skylarkImports
-        .stream()
-        .map(extensionDataCache::getUnchecked)
-        .collect(ImmutableList.toImmutableList());
+  private ImmutableList<ExtensionData> loadExtensions(ImmutableList<SkylarkImport> skylarkImports)
+      throws BuildFileParseException, IOException, InterruptedException {
+    try {
+      return skylarkImports
+          .stream()
+          .map(extensionDataCache::getUnchecked)
+          .collect(ImmutableList.toImmutableList());
+    } catch (UncheckedExecutionException e) {
+      return propagateRootCause(e);
+    }
+  }
+
+  /**
+   * Propagates underlying parse exception from {@link UncheckedExecutionException}.
+   *
+   * <p>This is an unfortunate consequence of having to use {@link
+   * LoadingCache#getUnchecked(Object)} in when using stream transformations :(
+   *
+   * <p>TODO(ttsugrii): the logic of extracting root causes to make them user-friendly should be
+   * happening somewhere in {@link com.facebook.buck.cli.Main#main(String[])}, since this behavior
+   * is not unique to parsing.
+   */
+  private ImmutableList<ExtensionData> propagateRootCause(UncheckedExecutionException e)
+      throws IOException, InterruptedException {
+    Throwable rootCause = Throwables.getRootCause(e);
+    if (rootCause instanceof BuildFileParseException) {
+      throw (BuildFileParseException) rootCause;
+    }
+    if (rootCause instanceof IOException) {
+      throw (IOException) rootCause;
+    }
+    if (rootCause instanceof InterruptedException) {
+      throw (InterruptedException) rootCause;
+    }
+    throw e;
   }
 
   /**
