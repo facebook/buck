@@ -469,7 +469,7 @@ public abstract class DefaultJavaLibraryRules {
         .setBuildRuleParams(getInitialParams())
         .setConfiguredCompiler(getConfiguredCompiler())
         .setDeps(Preconditions.checkNotNull(getDeps()))
-        .setShouldCompileAgainstAbis(shouldCompileAgainstAbis())
+        .setCompileAgainstLibraryType(getCompileAgainstLibraryType())
         .build();
   }
 
@@ -552,7 +552,7 @@ public abstract class DefaultJavaLibraryRules {
         // is that the ABI generation for that language isn't fully correct.
         .addAll(classpaths.getCompileTimeClasspathAbiDeps());
 
-    if (!shouldCompileAgainstAbis()) {
+    if (getCompileAgainstLibraryType() == CompileAgainstLibraryType.FULL) {
       depsBuilder.addAll(classpaths.getCompileTimeClasspathFullDeps());
     }
 
@@ -560,13 +560,18 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  boolean shouldCompileAgainstAbis() {
+  CompileAgainstLibraryType getCompileAgainstLibraryType() {
     CoreArg args = getArgs();
-    boolean fromArgs =
-        args == null
-            || args.getCompileAgainst().map(v -> v == CompileAgainstLibraryType.ABI).orElse(true);
+    CompileAgainstLibraryType result = CompileAgainstLibraryType.ABI;
+    if (args != null) {
+      result = args.getCompileAgainst().orElse(result);
+    }
 
-    return fromArgs && getConfiguredCompilerFactory().shouldCompileAgainstAbis();
+    if (!getConfiguredCompilerFactory().shouldCompileAgainstAbis()) {
+      result = CompileAgainstLibraryType.FULL;
+    }
+
+    return result;
   }
 
   @Value.Lazy

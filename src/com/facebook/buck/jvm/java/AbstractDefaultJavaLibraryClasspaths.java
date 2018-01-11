@@ -48,8 +48,8 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   abstract ConfiguredCompiler getConfiguredCompiler();
 
   @Value.Default
-  public boolean shouldCompileAgainstAbis() {
-    return false;
+  public CompileAgainstLibraryType getCompileAgainstLibraryType() {
+    return CompileAgainstLibraryType.FULL;
   }
 
   @Value.Default
@@ -94,10 +94,18 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
-    ImmutableSortedSet<BuildRule> buildRules =
-        shouldCompileAgainstAbis()
-            ? getCompileTimeClasspathAbiDeps()
-            : getCompileTimeClasspathFullDeps();
+    ImmutableSortedSet<BuildRule> buildRules;
+
+    switch (getCompileAgainstLibraryType()) {
+      case FULL:
+        buildRules = getCompileTimeClasspathFullDeps();
+        break;
+      case ABI:
+        buildRules = getCompileTimeClasspathAbiDeps();
+        break;
+      default:
+        throw new IllegalStateException();
+    }
 
     return buildRules
         .stream()
