@@ -619,22 +619,41 @@ public class NdkCxxPlatforms {
                 .toString());
         break;
       case LIBCXX:
-        flags.add(
-            "-isystem",
-            toolchainPaths
-                .getCxxRuntimeDirectory()
-                .resolve("libcxx")
-                .resolve("include")
-                .toString());
-        flags.add(
-            "-isystem",
-            toolchainPaths
-                .getCxxRuntimeDirectory()
-                .getParent()
-                .resolve("llvm-libc++abi")
-                .resolve("libcxxabi")
-                .resolve("include")
-                .toString());
+        String ndkVersion = readVersion(toolchainPaths.getNdkRoot());
+        // NDK r12b has a different include path for the LLVM headers
+        if (getNdkMajorVersion(ndkVersion) <= 12) {
+          flags.add(
+              "-isystem",
+              toolchainPaths
+                  .getCxxRuntimeDirectory()
+                  .resolve("libcxx")
+                  .resolve("include")
+                  .toString());
+          flags.add(
+              "-isystem",
+              toolchainPaths
+                  .getCxxRuntimeDirectory()
+                  .getParent()
+                  .resolve("llvm-libc++abi")
+                  .resolve("libcxxabi")
+                  .resolve("include")
+                  .toString());
+        } else {
+          flags.add(
+              "-isystem",
+              toolchainPaths
+                  .getCxxRuntimeDirectory()
+                  .resolve("include")
+                  .toString());
+          flags.add(
+              "-isystem",
+              toolchainPaths
+                  .getCxxRuntimeDirectory()
+                  .getParent()
+                  .resolve("llvm-libc++abi")
+                  .resolve("include")
+                  .toString());
+        }
         flags.add(
             "-isystem",
             toolchainPaths
