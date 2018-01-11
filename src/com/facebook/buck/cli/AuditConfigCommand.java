@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.BuckCellArg;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
@@ -92,8 +93,9 @@ public class AuditConfigCommand extends AbstractCommand {
             .stream()
             .flatMap(
                 input -> {
-                  BuckConfig buckConfig = getCellBuckConfig(rootCell, parseInputCell(input));
-                  String[] parts = sanitizeInput(input).split("\\.", 2);
+                  BuckCellArg arg = BuckCellArg.of(input);
+                  BuckConfig buckConfig = getCellBuckConfig(rootCell, arg.getCellName());
+                  String[] parts = arg.getArg().split("\\.", 2);
 
                   DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();
                   if (parts.length == 1) {
@@ -136,22 +138,6 @@ public class AuditConfigCommand extends AbstractCommand {
       printBuckconfigOutput(params, configs);
     }
     return ExitCode.SUCCESS;
-  }
-
-  private Optional<String> parseInputCell(String input) {
-    int index = input.indexOf("//");
-    if (index <= 0) {
-      return Optional.empty();
-    }
-    return Optional.of(input.substring(0, index));
-  }
-
-  private String sanitizeInput(String input) {
-    int index = input.indexOf("//");
-    if (index >= 0) {
-      return input.substring(index + 2);
-    }
-    return input;
   }
 
   private BuckConfig getCellBuckConfig(Cell cell, Optional<String> cellName) {

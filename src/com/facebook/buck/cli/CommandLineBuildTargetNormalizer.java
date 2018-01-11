@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.BuckCellArg;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -109,16 +109,8 @@ class CommandLineBuildTargetNormalizer {
     String target = buildTargetFromCommandLine;
 
     // Save the cell
-    int targetSeparator = target.indexOf("//");
-    String cellName = "";
-    if (targetSeparator > 0) {
-      cellName = target.substring(0, targetSeparator);
-      target = target.substring(targetSeparator);
-    }
-
-    // Strip out the leading "//" if there is one to make it easier to normalize the
-    // remaining target string.  We'll add this back at the end.
-    target = MoreStrings.stripPrefix(target, "//").orElse(target);
+    BuckCellArg arg = BuckCellArg.of(target);
+    target = arg.getArg();
 
     // Add the colon, if necessary.
     int colonIndex = target.indexOf(':');
@@ -141,6 +133,6 @@ class CommandLineBuildTargetNormalizer {
       }
     }
 
-    return cellName + "//" + target;
+    return arg.getCellName().orElse("") + "//" + target;
   }
 }
