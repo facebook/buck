@@ -660,6 +660,7 @@ class BuildFileProcessor(object):
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
         self._freeze_globals = freeze_globals
+        self._native_module = self._create_native_module(BUILD_FUNCTIONS)
 
         lazy_functions = {}
         for func in BUILD_FUNCTIONS + extra_funcs:
@@ -670,6 +671,26 @@ class BuildFileProcessor(object):
             import_whitelist=self._create_import_whitelist(project_import_whitelist),
             safe_modules_config=self.SAFE_MODULES_CONFIG,
             path_predicate=lambda path: is_in_dir(path, self._project_root))
+
+    def _create_native_module(self, build_functions):
+        # type: (List[Callable]) -> tuple
+        """
+        Creates a native module exposing built-in Buck rules.
+
+        This module allows clients to refer to built-in Buck rules using
+        "native.<native_rule>" syntax in their build files. For example,
+        "native.java_library(...)" will use a native Java library rule.
+
+        :param build_functions:
+        :return:
+        """
+        native_globals = {
+            f.__name__: f for f in build_functions
+        }
+        assert 'glob' not in native_globals
+        native_globals['glob'] = self._glob
+        native_module_type = collections.namedtuple('native', native_globals.keys())
+        return native_module_type(**native_globals)
 
     def _wrap_env_var_read(self, read, real):
         """
@@ -1171,6 +1192,7 @@ class BuildFileProcessor(object):
                 'struct': self._struct,
                 'provider': self._provider,
                 'host_info': self._host_info,
+                'native': self._native_module,
             }
 
             # Don't include implicit includes if the current file being
