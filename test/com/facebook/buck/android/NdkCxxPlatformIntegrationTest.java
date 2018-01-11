@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

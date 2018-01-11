@@ -14,10 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain.ndk.impl;
 
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.android.NdkCxxPlatformCompiler;
+import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.config.FakeBuckConfig;

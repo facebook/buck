@@ -23,3 +23,28 @@ java_test(
         "//third-party/java/junit:junit",
     ],
 )
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/android:config",
+        "//src/com/facebook/buck/android:cxxruntime",
+        "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/android:steps",
+        "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/cxx/toolchain:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
+        "//third-party/java/xz-java-1.5:xz",
+    ],
+)

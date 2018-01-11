@@ -281,6 +281,7 @@ java_test(
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/android/toolchain/ndk/impl:testutil",
         "//test/com/facebook/buck/apple:testutil",
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/cxx:testutil",
