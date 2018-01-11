@@ -75,7 +75,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
       return Optional.empty();
     }
     NdkCompilerType compilerType = NdkCxxPlatforms.DEFAULT_COMPILER_TYPE;
-    Optional<String> ndkVersion = resolver.getNdkVersion();
+    String ndkVersion = resolver.getNdkVersion().get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
     String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
     String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;

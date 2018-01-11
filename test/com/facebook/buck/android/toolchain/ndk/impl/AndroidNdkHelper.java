@@ -46,7 +46,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Optional;
 import java.util.zip.ZipFile;
 import org.tukaani.xz.XZInputStream;
 
@@ -68,8 +67,7 @@ public class AndroidNdkHelper {
             DEFAULT_CONFIG);
 
     Path ndkPath = androidResolver.getNdkOrThrow();
-    Optional<String> ndkVersion =
-        DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath);
+    String ndkVersion = DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath).get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 
     ImmutableCollection<NdkCxxPlatform> platforms =

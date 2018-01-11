@@ -169,21 +169,16 @@ public class NdkCxxPlatforms {
                                 : ndkVersion.startsWith("16.") ? 16 : -1;
   }
 
-  public static String getDefaultGccVersionForNdk(Optional<String> ndkVersion) {
-    if (ndkVersion.isPresent() && getNdkMajorVersion(ndkVersion.get()) < 11) {
-      return "4.8";
-    }
-    return "4.9";
+  public static String getDefaultGccVersionForNdk(String ndkVersion) {
+    return getNdkMajorVersion(ndkVersion) < 11 ? "4.8" : "4.9";
   }
 
-  public static String getDefaultClangVersionForNdk(Optional<String> ndkVersion) {
-    if (ndkVersion.isPresent()) {
-      int ndkMajorVersion = getNdkMajorVersion(ndkVersion.get());
-      if (ndkMajorVersion < 11) {
-        return "3.5";
-      } else if (ndkMajorVersion >= 15) {
-        return "5.0";
-      }
+  public static String getDefaultClangVersionForNdk(String ndkVersion) {
+    int ndkMajorVersion = getNdkMajorVersion(ndkVersion);
+    if (ndkMajorVersion < 11) {
+      return "3.5";
+    } else if (ndkMajorVersion >= 15) {
+      return "5.0";
     }
     return "3.8";
   }
@@ -201,7 +196,7 @@ public class NdkCxxPlatforms {
       ProjectFilesystem filesystem,
       Platform platform,
       ToolchainProvider toolchainProvider,
-      Optional<String> ndkVersion) {
+      String ndkVersion) {
     AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     Path ndkRoot = androidNdk.getNdkRootPath();
 
@@ -640,11 +635,7 @@ public class NdkCxxPlatforms {
                   .toString());
         } else {
           flags.add(
-              "-isystem",
-              toolchainPaths
-                  .getCxxRuntimeDirectory()
-                  .resolve("include")
-                  .toString());
+              "-isystem", toolchainPaths.getCxxRuntimeDirectory().resolve("include").toString());
           flags.add(
               "-isystem",
               toolchainPaths

@@ -51,11 +51,13 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
     AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
-    Optional<String> ndkVersion = androidConfig.getNdkVersion();
-    if (!androidConfig.getNdkVersion().isPresent()) {
+    String ndkVersion;
+    if (androidConfig.getNdkVersion().isPresent()) {
+      ndkVersion = androidConfig.getNdkVersion().get();
+    } else {
       AndroidNdk androidNdk =
           toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
-      ndkVersion = Optional.of(androidNdk.getNdkVersion());
+      ndkVersion = androidNdk.getNdkVersion();
     }
 
     ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
