@@ -383,6 +383,21 @@ public class QueryCommand extends AbstractCommand {
   private void collectAndPrintAttributes(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
+    Map<String, SortedMap<String, Object>> result = collectAttributes(params, env, queryResult);
+    StringWriter stringWriter = new StringWriter();
+    try {
+      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
+    } catch (IOException e) {
+      // Shouldn't be possible while writing to a StringWriter...
+      throw new RuntimeException(e);
+    }
+    String output = stringWriter.getBuffer().toString();
+    params.getConsole().getStdOut().println(output);
+  }
+
+  private SortedMap<String, SortedMap<String, Object>> collectAttributes(
+      CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
+      throws QueryException {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
     SortedMap<String, SortedMap<String, Object>> result = new TreeMap<>();
     for (QueryTarget target : queryResult) {
@@ -421,15 +436,7 @@ public class QueryCommand extends AbstractCommand {
         continue;
       }
     }
-    StringWriter stringWriter = new StringWriter();
-    try {
-      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
-    } catch (IOException e) {
-      // Shouldn't be possible while writing to a StringWriter...
-      throw new RuntimeException(e);
-    }
-    String output = stringWriter.getBuffer().toString();
-    params.getConsole().getStdOut().println(output);
+    return result;
   }
 
   @Override
