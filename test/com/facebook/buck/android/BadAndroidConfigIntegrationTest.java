@@ -28,9 +28,11 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+@Ignore
 public class BadAndroidConfigIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();

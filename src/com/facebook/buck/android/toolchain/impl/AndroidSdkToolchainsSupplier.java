@@ -18,6 +18,7 @@ package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.DxToolchain;
@@ -33,6 +34,10 @@ public class AndroidSdkToolchainsSupplier implements ToolchainSupplier {
   @Override
   public Collection<ToolchainDescriptor<?>> getToolchainDescriptor() {
     return Arrays.asList(
+        ToolchainDescriptor.of(
+            AndroidBuildToolsLocation.DEFAULT_NAME,
+            AndroidBuildToolsLocation.class,
+            AndroidBuildToolsLocationFactory.class),
         ToolchainDescriptor.of(
             AndroidLegacyToolchain.DEFAULT_NAME,
             AndroidLegacyToolchain.class,

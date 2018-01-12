@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
@@ -78,7 +79,10 @@ public class AndroidResourceFilterIntegrationTest {
             AndroidNdkHelper.DEFAULT_CONFIG);
     pathToAapt =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-                resolver, Optional.empty(), Optional.empty())
+                AndroidBuildToolsLocation.of(resolver.getBuildToolsOrThrow()),
+                resolver,
+                Optional.empty(),
+                Optional.empty())
             .getAaptExecutable();
     String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;

@@ -19,6 +19,7 @@ import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
@@ -77,7 +78,10 @@ public class AssumeAndroidPlatform {
       throws InterruptedException {
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-            androidDirectoryResolver, Optional.empty(), Optional.empty());
+            AndroidBuildToolsLocation.of(androidDirectoryResolver.getBuildToolsOrThrow()),
+            androidDirectoryResolver,
+            Optional.empty(),
+            Optional.empty());
 
     assumeTrue(androidPlatformTarget.getAapt2Executable().toFile().exists());
   }

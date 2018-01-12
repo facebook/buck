@@ -19,6 +19,7 @@ package com.facebook.buck.android.toolchain.impl;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidPlatformTargetProducer;
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
@@ -53,6 +54,8 @@ public class AndroidPlatformTargetFactory implements ToolchainFactory<AndroidPla
       return Optional.of(
           AndroidPlatformTargetProducer.getTargetForId(
               androidPlatformTargetId,
+              toolchainProvider.getByName(
+                  AndroidBuildToolsLocation.DEFAULT_NAME, AndroidBuildToolsLocation.class),
               toolchainProvider
                   .getByName(AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class)
                   .getAndroidDirectoryResolver(),

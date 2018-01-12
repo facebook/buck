@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.util.HumanReadableException;
@@ -51,13 +52,14 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir),
-            /* buildToolsDir */ Optional.of(androidSdkDir.resolve("platform-tools")),
+            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
 
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.createFromDefaultDirectoryStructure(
             name,
+            AndroidBuildToolsLocation.of(androidSdkDir.resolve("platform-tools")),
             androidDirectoryResolver,
             platformDirectoryPath,
             additionalJarPaths,
@@ -105,7 +107,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.of(buildToolsDir.toPath()),
+            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
 
@@ -123,6 +125,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
             "Google Inc.:Google APIs:17",
+            AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
@@ -147,7 +150,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.of(buildToolsDir.toPath()),
+            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
     File optionalLibsDir = new File(androidSdkDir, "platforms/android-23/optional");
@@ -165,6 +168,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
             platformId,
+            AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
@@ -197,6 +201,7 @@ public class AndroidPlatformTargetProducerTest {
     try {
       AndroidPlatformTargetProducer.getTargetForId(
           platformId,
+          AndroidBuildToolsLocation.of(androidSdkDir.toPath().resolve("build-tools")),
           androidDirectoryResolver,
           /* aaptOverride */ Optional.empty(),
           /* aapt2Override */ Optional.empty());
@@ -224,7 +229,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.of(buildToolsDir.toPath()),
+            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
 
@@ -238,6 +243,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidPlatformTarget androidPlatformTarget1 =
         AndroidPlatformTargetProducer.getTargetForId(
             "Google Inc.:Google APIs:17",
+            AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
@@ -253,6 +259,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidPlatformTarget androidPlatformTarget2 =
         AndroidPlatformTargetProducer.getTargetForId(
             "android-17",
+            AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
@@ -271,7 +278,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.of(buildToolsDirFromOldUpgradePath.toPath()),
+            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
     Files.touch(new File(buildToolsDirFromOldUpgradePath, "zipalign"));
@@ -283,6 +290,7 @@ public class AndroidPlatformTargetProducerTest {
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
             platformId,
+            AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());
@@ -298,6 +306,7 @@ public class AndroidPlatformTargetProducerTest {
     androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
             platformId,
+            AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty());

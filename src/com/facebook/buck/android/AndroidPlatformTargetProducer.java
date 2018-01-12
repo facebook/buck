@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
@@ -43,6 +44,7 @@ public class AndroidPlatformTargetProducer {
   /** @param platformId for the platform, such as "Google Inc.:Google APIs:16" */
   public static AndroidPlatformTarget getTargetForId(
       String platformId,
+      AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidDirectoryResolver androidDirectoryResolver,
       Optional<Path> aaptOverride,
       Optional<Path> aapt2Override) {
@@ -57,7 +59,11 @@ public class AndroidPlatformTargetProducer {
         platformTargetFactory = new AndroidWithoutGoogleApisFactory();
       }
       return platformTargetFactory.newInstance(
-          androidDirectoryResolver, apiLevel, aaptOverride, aapt2Override);
+          androidBuildToolsLocation,
+          androidDirectoryResolver,
+          apiLevel,
+          aaptOverride,
+          aapt2Override);
     } else {
       String messagePrefix =
           String.format("The Android SDK for '%s' could not be found. ", platformId);
@@ -68,11 +74,13 @@ public class AndroidPlatformTargetProducer {
   }
 
   public static AndroidPlatformTarget getDefaultPlatformTarget(
+      AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidDirectoryResolver androidDirectoryResolver,
       Optional<Path> aaptOverride,
       Optional<Path> aapt2Override) {
     return getTargetForId(
         AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET,
+        androidBuildToolsLocation,
         androidDirectoryResolver,
         aaptOverride,
         aapt2Override);
@@ -80,6 +88,7 @@ public class AndroidPlatformTargetProducer {
 
   private interface Factory {
     AndroidPlatformTarget newInstance(
+        AndroidBuildToolsLocation androidBuildToolsLocation,
         AndroidDirectoryResolver androidDirectoryResolver,
         String apiLevel,
         Optional<Path> aaptOverride,
@@ -94,6 +103,7 @@ public class AndroidPlatformTargetProducer {
   @VisibleForTesting
   static AndroidPlatformTarget createFromDefaultDirectoryStructure(
       String name,
+      AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidDirectoryResolver androidDirectoryResolver,
       String platformDirectoryPath,
       Set<Path> additionalJarPaths,
@@ -131,7 +141,7 @@ public class AndroidPlatformTargetProducer {
 
     // This is the directory under the Android SDK directory that contains the dx script, jack,
     // jill, and binaries.
-    Path buildToolsDir = androidDirectoryResolver.getBuildToolsOrThrow();
+    Path buildToolsDir = androidBuildToolsLocation.getBuildToolsPath();
 
     // This is the directory under the Android SDK directory that contains the aapt, aidl, and
     // zipalign binaries. Before Android SDK Build-tools 23.0.0_rc1, this was the same as
@@ -185,6 +195,7 @@ public class AndroidPlatformTargetProducer {
 
     @Override
     public AndroidPlatformTarget newInstance(
+        AndroidBuildToolsLocation androidBuildToolsLocation,
         final AndroidDirectoryResolver androidDirectoryResolver,
         final String apiLevel,
         Optional<Path> aaptOverride,
@@ -231,6 +242,7 @@ public class AndroidPlatformTargetProducer {
 
             return createFromDefaultDirectoryStructure(
                 "Google Inc.:Google APIs:" + apiLevel,
+                androidBuildToolsLocation,
                 androidDirectoryResolver,
                 "platforms/android-" + apiLevel,
                 additionalJarPaths.build(),
@@ -253,12 +265,14 @@ public class AndroidPlatformTargetProducer {
   private static class AndroidWithoutGoogleApisFactory implements Factory {
     @Override
     public AndroidPlatformTarget newInstance(
+        AndroidBuildToolsLocation androidBuildToolsLocation,
         final AndroidDirectoryResolver androidDirectoryResolver,
         final String apiLevel,
         Optional<Path> aaptOverride,
         Optional<Path> aapt2Override) {
       return createFromDefaultDirectoryStructure(
           "android-" + apiLevel,
+          androidBuildToolsLocation,
           androidDirectoryResolver,
           "platforms/android-" + apiLevel,
           /* additionalJarPaths */ ImmutableSet.of(),
