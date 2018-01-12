@@ -16,10 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -47,7 +43,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -206,15 +201,26 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void androidClasspathFromContextFunctionAddsLibsFromAndroidPlatformTarget() {
-    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    List<Path> entries =
+    ImmutableList<Path> entries =
         ImmutableList.of(
             Paths.get("add-ons/addon-google_apis-google-15/libs/effects.jar"),
             Paths.get("add-ons/addon-google_apis-google-15/libs/maps.jar"),
             Paths.get("add-ons/addon-google_apis-google-15/libs/usb.jar"));
-    expect(androidPlatformTarget.getBootclasspathEntries()).andReturn(entries);
-
-    replay(androidPlatformTarget);
+    AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            entries,
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
 
     ExtraClasspathProvider extraClasspathProvider =
         new AndroidClasspathProvider(
@@ -233,8 +239,6 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
                     + "add-ons/addon-google_apis-google-15/libs/usb.jar")
                 .replace("/", File.separator)),
         updated.getBootclasspath());
-
-    verify(androidPlatformTarget);
   }
 
   @Test

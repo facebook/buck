@@ -79,9 +79,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -603,12 +603,23 @@ public class GenruleTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
+    AndroidPlatformTarget android =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("zipalign"),
+            Paths.get("."),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
     Path sdkDir = Paths.get("/opt/users/android_sdk");
     Path ndkDir = Paths.get("/opt/users/android_ndk");
-    EasyMock.expect(android.getDxExecutable()).andStubReturn(Paths.get("."));
-    EasyMock.expect(android.getZipalignExecutable()).andStubReturn(Paths.get("zipalign"));
-    EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ToolchainProvider toolchainProvider =
@@ -634,8 +645,6 @@ public class GenruleTest {
     assertEquals(Paths.get("zipalign").toString(), env.get("ZIPALIGN"));
     assertEquals(sdkDir.toString(), env.get("ANDROID_HOME"));
     assertEquals(ndkDir.toString(), env.get("NDK_HOME"));
-
-    EasyMock.verify(android);
   }
 
   @Test

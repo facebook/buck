@@ -157,7 +157,7 @@ public class AndroidPlatformTargetProducer {
     Path optimizedProguardConfig =
         androidSdkDir.resolve("tools/proguard/proguard-android-optimize.txt");
 
-    return new AndroidPlatformTarget(
+    return AndroidPlatformTarget.of(
         name,
         androidJar.toAbsolutePath(),
         bootclasspathEntries,

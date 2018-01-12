@@ -338,8 +338,8 @@ java_immutables_library(
 )
 
 UTILS_SRCS = [
+    "AbstractAndroidPlatformTarget.java",
     "AndroidDirectoryResolver.java",
-    "AndroidPlatformTarget.java",
     "AndroidPlatformTargetProducer.java",
     "AndroidManifestReader.java",
     "DefaultAndroidDirectoryResolver.java",

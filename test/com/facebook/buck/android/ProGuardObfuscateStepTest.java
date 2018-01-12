@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -44,12 +42,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class ProGuardObfuscateStepTest extends EasyMockSupport {
+public class ProGuardObfuscateStepTest {
   @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
 
   private ExecutionContext executionContext;
@@ -57,13 +54,21 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
 
   @Before
   public void setUp() {
-    androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
-    expect(androidPlatformTarget.getOptimizedProguardConfig())
-        .andStubReturn(Paths.get("sdk-optimized.pro"));
-    expect(androidPlatformTarget.getBootclasspathEntries()).andStubReturn(ImmutableList.of());
-    expect(androidPlatformTarget.getProguardJar()).andStubReturn(Paths.get("proguard.jar"));
-    replay(androidPlatformTarget);
+    androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("proguard.jar"),
+            Paths.get("sdk-default.pro"),
+            Paths.get("sdk-optimized.pro"));
     executionContext = TestExecutionContext.newBuilder().build();
   }
 
@@ -99,7 +104,6 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
     checkSdkConfig(cwd, ProGuardObfuscateStep.SdkProguardType.NONE, Optional.empty(), null);
     checkSdkConfig(
         cwd, ProGuardObfuscateStep.SdkProguardType.NONE, Optional.of("/some/path"), null);
-    verifyAll();
   }
 
   @Test

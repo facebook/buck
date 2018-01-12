@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.easymock.EasyMock.createNiceMock;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -30,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
@@ -96,7 +94,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.LinkOption;
@@ -107,8 +104,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.Nullable;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -160,14 +155,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         AndroidLibraryBuilder.createBuilder(buildTarget).addSrc(src).build(ruleResolver);
     DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) libraryRule;
 
-    String bootclasspath =
-        "effects.jar"
-            + File.pathSeparator
-            + "maps.jar"
-            + File.pathSeparator
-            + "usb.jar"
-            + File.pathSeparator;
-    BuildContext context = createBuildContext(bootclasspath);
+    BuildContext context = createBuildContext();
 
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
@@ -820,7 +808,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of());
 
-    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext();
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -843,7 +831,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
-    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext();
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -866,7 +854,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
             /* postprocessClassesCommands */ ImmutableList.of());
 
-    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext();
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -1446,15 +1434,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   // test.
-  private BuildContext createBuildContext(@Nullable String bootclasspath) {
-    AndroidPlatformTarget platformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
-    ImmutableList<Path> bootclasspathEntries =
-        (bootclasspath == null)
-            ? ImmutableList.of(Paths.get("I am not used"))
-            : ImmutableList.of(Paths.get(bootclasspath));
-    expect(platformTarget.getBootclasspathEntries()).andStubReturn(bootclasspathEntries);
-    replay(platformTarget);
-
+  private BuildContext createBuildContext() {
     return FakeBuildContext.withSourcePathResolver(
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)));
   }
@@ -1544,7 +1524,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ProjectFilesystem projectFilesystem =
           TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);
-      BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+      BuildContext buildContext = createBuildContext();
       List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);
 

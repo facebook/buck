@@ -36,14 +36,13 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
-import org.easymock.EasyMock;
-import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DxStepTest extends EasyMockSupport {
+public class DxStepTest {
 
   private static final String BASE_DX_PREFIX = Paths.get("/usr/bin/dx").toString();
 
@@ -59,9 +58,21 @@ public class DxStepTest extends EasyMockSupport {
 
   @Before
   public void setUp() {
-    androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    EasyMock.expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
-    replayAll();
+    androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("/usr/bin/dx"),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
   }
 
   @Test
@@ -91,7 +102,6 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-      verifyAll();
     }
   }
 
@@ -120,7 +130,6 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-      verifyAll();
     }
   }
 
@@ -151,7 +160,6 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-      verifyAll();
     }
   }
 
@@ -185,7 +193,6 @@ public class DxStepTest extends EasyMockSupport {
           "Should print stdout to show statistics.", dx.shouldPrintStdout(context.getVerbosity()));
       assertTrue(
           "Should print stderr to show statistics.", dx.shouldPrintStderr(context.getVerbosity()));
-      verifyAll();
     }
   }
 
@@ -221,7 +228,6 @@ public class DxStepTest extends EasyMockSupport {
       assertTrue(
           "Should print stdout since `dx --verbose` is enabled.",
           dx.shouldPrintStderr(context.getVerbosity()));
-      verifyAll();
     }
   }
 
@@ -253,8 +259,6 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-
-      verifyAll();
     }
   }
 
