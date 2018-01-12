@@ -87,7 +87,7 @@ public class AndroidResourceFilterIntegrationTest {
     pathToAapt =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
                 AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
-                resolver,
+                AndroidSdkLocation.of(resolver.getSdkOrThrow()),
                 Optional.empty(),
                 Optional.empty())
             .getAaptExecutable();

@@ -85,7 +85,7 @@ public class AssumeAndroidPlatform {
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
             AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
-            androidDirectoryResolver,
+            AndroidSdkLocation.of(androidDirectoryResolver.getSdkOrThrow()),
             Optional.empty(),
             Optional.empty());
 

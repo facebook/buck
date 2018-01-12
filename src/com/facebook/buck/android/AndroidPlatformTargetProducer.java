@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,7 +46,7 @@ public class AndroidPlatformTargetProducer {
   public static AndroidPlatformTarget getTargetForId(
       String platformId,
       AndroidBuildToolsLocation androidBuildToolsLocation,
-      AndroidDirectoryResolver androidDirectoryResolver,
+      AndroidSdkLocation androidSdkLocation,
       Optional<Path> aaptOverride,
       Optional<Path> aapt2Override) {
 
@@ -59,11 +60,7 @@ public class AndroidPlatformTargetProducer {
         platformTargetFactory = new AndroidWithoutGoogleApisFactory();
       }
       return platformTargetFactory.newInstance(
-          androidBuildToolsLocation,
-          androidDirectoryResolver,
-          apiLevel,
-          aaptOverride,
-          aapt2Override);
+          androidBuildToolsLocation, androidSdkLocation, apiLevel, aaptOverride, aapt2Override);
     } else {
       String messagePrefix =
           String.format("The Android SDK for '%s' could not be found. ", platformId);
@@ -75,13 +72,13 @@ public class AndroidPlatformTargetProducer {
 
   public static AndroidPlatformTarget getDefaultPlatformTarget(
       AndroidBuildToolsLocation androidBuildToolsLocation,
-      AndroidDirectoryResolver androidDirectoryResolver,
+      AndroidSdkLocation androidSdkLocation,
       Optional<Path> aaptOverride,
       Optional<Path> aapt2Override) {
     return getTargetForId(
         AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET,
         androidBuildToolsLocation,
-        androidDirectoryResolver,
+        androidSdkLocation,
         aaptOverride,
         aapt2Override);
   }
@@ -89,7 +86,7 @@ public class AndroidPlatformTargetProducer {
   private interface Factory {
     AndroidPlatformTarget newInstance(
         AndroidBuildToolsLocation androidBuildToolsLocation,
-        AndroidDirectoryResolver androidDirectoryResolver,
+        AndroidSdkLocation androidSdkLocation,
         String apiLevel,
         Optional<Path> aaptOverride,
         Optional<Path> aapt2Override);
@@ -104,12 +101,12 @@ public class AndroidPlatformTargetProducer {
   static AndroidPlatformTarget createFromDefaultDirectoryStructure(
       String name,
       AndroidBuildToolsLocation androidBuildToolsLocation,
-      AndroidDirectoryResolver androidDirectoryResolver,
+      AndroidSdkLocation androidSdkLocation,
       String platformDirectoryPath,
       Set<Path> additionalJarPaths,
       Optional<Path> aaptOverride,
       Optional<Path> aapt2Override) {
-    Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
+    Path androidSdkDir = androidSdkLocation.getSdkRootPath();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
           "Path to Android SDK must be absolute but was: %s.", androidSdkDir);
@@ -196,12 +193,12 @@ public class AndroidPlatformTargetProducer {
     @Override
     public AndroidPlatformTarget newInstance(
         AndroidBuildToolsLocation androidBuildToolsLocation,
-        final AndroidDirectoryResolver androidDirectoryResolver,
+        AndroidSdkLocation androidSdkLocation,
         final String apiLevel,
         Optional<Path> aaptOverride,
         Optional<Path> aapt2Override) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
-      Path androidSdkDir = androidDirectoryResolver.getSdkOrThrow();
+      Path androidSdkDir = androidSdkLocation.getSdkRootPath();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
       String apiDirPrefix = "addon-google_apis-google-" + apiLevel;
       final Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);
@@ -243,7 +240,7 @@ public class AndroidPlatformTargetProducer {
             return createFromDefaultDirectoryStructure(
                 "Google Inc.:Google APIs:" + apiLevel,
                 androidBuildToolsLocation,
-                androidDirectoryResolver,
+                androidSdkLocation,
                 "platforms/android-" + apiLevel,
                 additionalJarPaths.build(),
                 aaptOverride,
@@ -266,14 +263,14 @@ public class AndroidPlatformTargetProducer {
     @Override
     public AndroidPlatformTarget newInstance(
         AndroidBuildToolsLocation androidBuildToolsLocation,
-        final AndroidDirectoryResolver androidDirectoryResolver,
+        AndroidSdkLocation androidSdkLocation,
         final String apiLevel,
         Optional<Path> aaptOverride,
         Optional<Path> aapt2Override) {
       return createFromDefaultDirectoryStructure(
           "android-" + apiLevel,
           androidBuildToolsLocation,
-          androidDirectoryResolver,
+          androidSdkLocation,
           "platforms/android-" + apiLevel,
           /* additionalJarPaths */ ImmutableSet.of(),
           aaptOverride,
