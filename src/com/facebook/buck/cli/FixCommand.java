@@ -22,7 +22,8 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
-import java.lang.ProcessBuilder.Redirect;
+import java.util.EnumSet;
+import java.util.Optional;
 
 /**
  * Attempts to fix errors encountered in the previous build.
@@ -44,12 +45,18 @@ public class FixCommand extends AbstractCommand {
             .addCommand(Preconditions.checkNotNull(scriptPath))
             .setEnvironment(params.getEnvironment())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
-            .setRedirectOutput(Redirect.INHERIT)
-            .setRedirectError(Redirect.INHERIT)
-            .setRedirectInput(Redirect.INHERIT)
             .build();
 
-    int code = processExecutor.launchAndExecute(processParams).getExitCode();
+    int code =
+        processExecutor
+            .launchAndExecute(
+                processParams,
+                EnumSet.of(
+                    ProcessExecutor.Option.PRINT_STD_ERR, ProcessExecutor.Option.PRINT_STD_OUT),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())
+            .getExitCode();
     return ExitCode.map(code);
   }
 
