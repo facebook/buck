@@ -19,7 +19,7 @@ package com.facebook.buck.android.toolchain.impl;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidPlatformTargetProducer;
 import com.facebook.buck.android.DefaultAndroidLegacyToolchain;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -76,7 +76,7 @@ public class AndroidSdkLocationFactoryTest {
                 AndroidLegacyToolchain.DEFAULT_NAME,
                 new DefaultAndroidLegacyToolchain(
                     () ->
-                        AndroidPlatformTarget.getDefaultPlatformTarget(
+                        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
                             androidDirectoryResolver, Optional.empty(), Optional.empty()),
                     androidDirectoryResolver))
             .build();
@@ -111,7 +111,7 @@ public class AndroidSdkLocationFactoryTest {
                 AndroidLegacyToolchain.DEFAULT_NAME,
                 new DefaultAndroidLegacyToolchain(
                     () ->
-                        AndroidPlatformTarget.getDefaultPlatformTarget(
+                        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
                             androidDirectoryResolver, Optional.empty(), Optional.empty()),
                     androidDirectoryResolver))
             .build();

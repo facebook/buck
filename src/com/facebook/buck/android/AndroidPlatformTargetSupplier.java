@@ -62,7 +62,7 @@ public class AndroidPlatformTargetSupplier implements Supplier<AndroidPlatformTa
 
     try {
       androidPlatformTarget =
-          AndroidPlatformTarget.getTargetForId(
+          AndroidPlatformTargetProducer.getTargetForId(
               androidPlatformTargetId,
               androidDirectoryResolver,
               androidBuckConfig.getAaptOverride(),

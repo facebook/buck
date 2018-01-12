@@ -37,7 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class AndroidPlatformTargetTest {
+public class AndroidPlatformTargetProducerTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
   @Rule public TemporaryFolder projectRoot = new TemporaryFolder();
 
@@ -55,7 +55,7 @@ public class AndroidPlatformTargetTest {
             /* ndkVersion */ Optional.empty());
 
     AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.createFromDefaultDirectoryStructure(
+        AndroidPlatformTargetProducer.createFromDefaultDirectoryStructure(
             name,
             androidDirectoryResolver,
             platformDirectoryPath,
@@ -120,7 +120,7 @@ public class AndroidPlatformTargetTest {
     Files.touch(new File(addOnsLibsDir3, "ignored.jar"));
 
     AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.getTargetForId(
+        AndroidPlatformTargetProducer.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
@@ -162,7 +162,7 @@ public class AndroidPlatformTargetTest {
 
     String platformId = "Google Inc.:Google APIs:23";
     AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.getTargetForId(
+        AndroidPlatformTargetProducer.getTargetForId(
             platformId,
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
@@ -194,7 +194,7 @@ public class AndroidPlatformTargetTest {
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
     try {
-      AndroidPlatformTarget.getTargetForId(
+      AndroidPlatformTargetProducer.getTargetForId(
           platformId,
           androidDirectoryResolver,
           /* aaptOverride */ Optional.empty(),
@@ -235,7 +235,7 @@ public class AndroidPlatformTargetTest {
 
     // This one should include the Google jars
     AndroidPlatformTarget androidPlatformTarget1 =
-        AndroidPlatformTarget.getTargetForId(
+        AndroidPlatformTargetProducer.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
@@ -250,7 +250,7 @@ public class AndroidPlatformTargetTest {
 
     // This one should only include android.jar
     AndroidPlatformTarget androidPlatformTarget2 =
-        AndroidPlatformTarget.getTargetForId(
+        AndroidPlatformTargetProducer.getTargetForId(
             "android-17",
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
@@ -280,7 +280,7 @@ public class AndroidPlatformTargetTest {
 
     String platformId = "Google Inc.:Google APIs:17";
     AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.getTargetForId(
+        AndroidPlatformTargetProducer.getTargetForId(
             platformId,
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
@@ -295,7 +295,7 @@ public class AndroidPlatformTargetTest {
     toolsDir.mkdirs();
     Files.touch(new File(toolsDir, "zipalign"));
     androidPlatformTarget =
-        AndroidPlatformTarget.getTargetForId(
+        AndroidPlatformTargetProducer.getTargetForId(
             platformId,
             androidDirectoryResolver,
             /* aaptOverride */ Optional.empty(),
@@ -319,7 +319,7 @@ public class AndroidPlatformTargetTest {
   }
 
   private void testPlatformTargetRegex(String input, boolean matches, String id) {
-    Matcher matcher = AndroidPlatformTarget.PLATFORM_TARGET_PATTERN.matcher(input);
+    Matcher matcher = AndroidPlatformTargetProducer.PLATFORM_TARGET_PATTERN.matcher(input);
     assertEquals(matches, matcher.matches());
     if (matches) {
       assertEquals(id, matcher.group(1));

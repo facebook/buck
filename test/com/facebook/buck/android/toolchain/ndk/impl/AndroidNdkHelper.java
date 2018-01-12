@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidPlatformTargetProducer;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.DefaultAndroidLegacyToolchain;
 import com.facebook.buck.android.relinker.Symbols;
@@ -85,7 +85,7 @@ public class AndroidNdkHelper {
                           AndroidLegacyToolchain.DEFAULT_NAME,
                           new DefaultAndroidLegacyToolchain(
                               () ->
-                                  AndroidPlatformTarget.getDefaultPlatformTarget(
+                                  AndroidPlatformTargetProducer.getDefaultPlatformTarget(
                                       resolver, Optional.empty(), Optional.empty()),
                               resolver))
                       .build(),

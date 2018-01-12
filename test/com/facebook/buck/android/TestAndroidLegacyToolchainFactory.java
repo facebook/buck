@@ -29,7 +29,7 @@ public class TestAndroidLegacyToolchainFactory {
             Optional.of(MorePathsForTests.rootRelativePath("AndroidNDK")),
             Optional.of("15"));
     AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.getDefaultPlatformTarget(
+        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
             androidDirectoryResolver, Optional.empty(), Optional.empty());
 
     return new DefaultAndroidLegacyToolchain(() -> androidPlatformTarget, androidDirectoryResolver);

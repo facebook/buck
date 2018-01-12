@@ -75,7 +75,7 @@ public class AssumeAndroidPlatform {
   private static void assumeAapt2IsAvailable(AndroidDirectoryResolver androidDirectoryResolver)
       throws InterruptedException {
     AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.getDefaultPlatformTarget(
+        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
             androidDirectoryResolver, Optional.empty(), Optional.empty());
 
     assumeTrue(androidPlatformTarget.getAapt2Executable().toFile().exists());

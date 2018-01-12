@@ -77,7 +77,8 @@ public class AndroidResourceFilterIntegrationTest {
             ImmutableMap.copyOf(System.getenv()),
             AndroidNdkHelper.DEFAULT_CONFIG);
     pathToAapt =
-        AndroidPlatformTarget.getDefaultPlatformTarget(resolver, Optional.empty(), Optional.empty())
+        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
+                resolver, Optional.empty(), Optional.empty())
             .getAaptExecutable();
     String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
