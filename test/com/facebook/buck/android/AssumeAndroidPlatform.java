@@ -78,7 +78,7 @@ public class AssumeAndroidPlatform {
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
-            Optional.of(AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath())));
+            AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath()));
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
             AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
@@ -99,7 +99,7 @@ public class AssumeAndroidPlatform {
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
-            Optional.of(AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath())));
+            AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath()));
     Optional<String> sdkBuildToolsVersion = buildToolsResolver.getBuildToolsVersion();
 
     assumeTrue(sdkBuildToolsVersion.isPresent());

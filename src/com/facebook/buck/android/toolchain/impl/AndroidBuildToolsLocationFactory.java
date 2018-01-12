@@ -39,8 +39,7 @@ public class AndroidBuildToolsLocationFactory
     AndroidBuildToolsResolver androidBuildToolsResolver =
         new AndroidBuildToolsResolver(
             androidBuckConfig,
-            toolchainProvider.getByNameIfPresent(
-                AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
+            toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
 
     try {
       return Optional.of(

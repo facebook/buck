@@ -29,7 +29,6 @@ import com.facebook.buck.util.environment.Platform;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,22 +49,11 @@ public class AndroidBuildToolsResolverTest {
   }
 
   @Test
-  public void throwAtAbsentBuildTools() {
-    AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(androidBuckConfig, Optional.empty());
-
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage(AndroidBuildToolsResolver.TOOLS_NEED_SDK_MESSAGE);
-    resolver.getBuildToolsPath();
-  }
-
-  @Test
   public void buildToolsFallsBacktoPlatformTools() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "platform-tools");
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
     assertThat(resolver.getBuildToolsPath().getFileName().toString(), equalTo("platform-tools"));
   }
 
@@ -74,8 +62,7 @@ public class AndroidBuildToolsResolverTest {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/android-4.2.2");
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
     assertThat(resolver.getBuildToolsPath().getFileName().toString(), equalTo("android-4.2.2"));
   }
@@ -85,8 +72,7 @@ public class AndroidBuildToolsResolverTest {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/build-tools-17.2.2");
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
     assertThat(
         resolver.getBuildToolsPath().getFileName().toString(), equalTo("build-tools-17.2.2"));
@@ -97,8 +83,7 @@ public class AndroidBuildToolsResolverTest {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/foobar-17.2.2");
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("foobar-17.2.2");
@@ -112,8 +97,7 @@ public class AndroidBuildToolsResolverTest {
     sdkDir.resolve("tools").toFile().mkdir();
     Path toolsDir = sdkDir.resolve("tools").toAbsolutePath();
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -130,8 +114,7 @@ public class AndroidBuildToolsResolverTest {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/23.0.0_rc1");
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
     assertThat(resolver.getBuildToolsPath().getFileName().toString(), equalTo("23.0.0_rc1"));
   }
@@ -141,8 +124,7 @@ public class AndroidBuildToolsResolverTest {
     Path sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/22.0.0", "build-tools/23.0.0_rc1");
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
     assertThat(resolver.getBuildToolsPath().getFileName().toString(), equalTo("23.0.0_rc1"));
   }
@@ -159,8 +141,7 @@ public class AndroidBuildToolsResolverTest {
         "build-tools/17.0.0",
         "build-tools/16.0.0");
     AndroidBuildToolsResolver resolver =
-        new AndroidBuildToolsResolver(
-            androidBuckConfig, Optional.of(AndroidSdkLocation.of(sdkDir)));
+        new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
     assertThat(resolver.getBuildToolsPath().getFileName().toString(), equalTo("17.0.0"));
   }
@@ -173,7 +154,7 @@ public class AndroidBuildToolsResolverTest {
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(
             FakeAndroidBuckConfig.builder().setBuildToolsVersion("17.0.0").build(),
-            Optional.of(AndroidSdkLocation.of(sdkDir)));
+            AndroidSdkLocation.of(sdkDir));
 
     assertThat(resolver.getBuildToolsPath().getFileName().toString(), equalTo("17.0.0"));
   }
@@ -185,7 +166,7 @@ public class AndroidBuildToolsResolverTest {
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(
             FakeAndroidBuckConfig.builder().setBuildToolsVersion("2.0.0").build(),
-            Optional.of(AndroidSdkLocation.of(sdkDir)));
+            AndroidSdkLocation.of(sdkDir));
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("2.0.0");

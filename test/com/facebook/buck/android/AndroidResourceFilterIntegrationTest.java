@@ -78,8 +78,7 @@ public class AndroidResourceFilterIntegrationTest {
 
     AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
     AndroidBuildToolsResolver buildToolsResolver =
-        new AndroidBuildToolsResolver(
-            AndroidNdkHelper.DEFAULT_CONFIG, Optional.of(androidSdkLocation));
+        new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, androidSdkLocation);
     pathToAapt =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
                 AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),

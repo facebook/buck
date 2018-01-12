@@ -30,11 +30,6 @@ import java.util.Optional;
 
 public class AndroidBuildToolsResolver {
 
-  @VisibleForTesting
-  static final String TOOLS_NEED_SDK_MESSAGE =
-      "Android SDK Build tools require Android SDK. "
-          + "Make sure one of these environment variables was set: ANDROID_SDK, ANDROID_HOME";
-
   public static final ImmutableSet<String> BUILD_TOOL_PREFIXES =
       ImmutableSet.of("android-", "build-tools-");
 
@@ -45,9 +40,9 @@ public class AndroidBuildToolsResolver {
   private Optional<String> discoveredBuildToolsVersion = Optional.empty();
 
   public AndroidBuildToolsResolver(
-      AndroidBuckConfig config, Optional<AndroidSdkLocation> androidSdkLocation) {
+      AndroidBuckConfig config, AndroidSdkLocation androidSdkLocation) {
     this.targetBuildToolsVersion = config.getBuildToolsVersion();
-    this.buildTools = findBuildTools(androidSdkLocation.map(AndroidSdkLocation::getSdkRootPath));
+    this.buildTools = findBuildTools(androidSdkLocation.getSdkRootPath());
   }
 
   public Path getBuildToolsPath() {
@@ -67,13 +62,8 @@ public class AndroidBuildToolsResolver {
         : targetBuildToolsVersion;
   }
 
-  private Optional<Path> findBuildTools(Optional<Path> sdkPath) {
-    if (!sdkPath.isPresent()) {
-      buildToolsErrorMessage = Optional.of(TOOLS_NEED_SDK_MESSAGE);
-      return Optional.empty();
-    }
-    final Path sdkDir = sdkPath.get();
-    final Path toolsDir = sdkDir.resolve("build-tools");
+  private Optional<Path> findBuildTools(Path sdkPath) {
+    final Path toolsDir = sdkPath.resolve("build-tools");
 
     if (toolsDir.toFile().isDirectory()) {
       // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
@@ -112,7 +102,7 @@ public class AndroidBuildToolsResolver {
 
       if (targetBuildToolsVersion.isPresent()) {
         if (directories.length == 0) {
-          buildToolsErrorMessage = unableToFindTargetBuildTools(sdkPath.get());
+          buildToolsErrorMessage = unableToFindTargetBuildTools(sdkPath);
           return Optional.empty();
         } else {
           return Optional.of(directories[0].toPath());
@@ -149,11 +139,11 @@ public class AndroidBuildToolsResolver {
     if (targetBuildToolsVersion.isPresent()) {
       // We were looking for a specific version, but we aren't going to find it at this point since
       // nothing under platform-tools was versioned.
-      buildToolsErrorMessage = unableToFindTargetBuildTools(sdkPath.get());
+      buildToolsErrorMessage = unableToFindTargetBuildTools(sdkPath);
       return Optional.empty();
     }
     // Build tools used to exist inside of platform-tools, so fallback to that.
-    return Optional.of(sdkDir.resolve("platform-tools"));
+    return Optional.of(sdkPath.resolve("platform-tools"));
   }
 
   private static String stripBuildToolsPrefix(String name) {
