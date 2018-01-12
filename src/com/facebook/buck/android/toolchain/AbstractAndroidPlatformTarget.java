@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,7 +28,9 @@ import org.immutables.value.Value;
  */
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public abstract class AbstractAndroidPlatformTarget {
+public abstract class AbstractAndroidPlatformTarget implements Toolchain {
+
+  public static final String DEFAULT_NAME = "android-platform-target";
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
 
