@@ -159,7 +159,7 @@ public class AndroidBinaryTest {
 
     ProGuardObfuscateStep.create(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(),
+        TestAndroidPlatformTargetFactory.create(),
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),

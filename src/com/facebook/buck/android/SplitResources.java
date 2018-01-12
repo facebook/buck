@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -57,18 +58,18 @@ public class SplitResources extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath pathToAaptResources;
   @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final SourcePathRuleFinder ruleFinder;
 
   public SplitResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToAaptResources,
-      SourcePath pathToOriginalRDotTxt) {
+      SourcePath pathToOriginalRDotTxt,
+      AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.ruleFinder = ruleFinder;
     this.pathToAaptResources = pathToAaptResources;
     this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
@@ -104,9 +105,9 @@ public class SplitResources extends AbstractBuildRule {
         .add(new SplitResourcesStep(context.getSourcePathResolver()))
         .add(
             new ZipalignStep(
-                androidLegacyToolchain,
                 getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
+                androidPlatformTarget,
                 getUnalignedExoPath(),
                 exoResourcesOutputPath))
         .build();

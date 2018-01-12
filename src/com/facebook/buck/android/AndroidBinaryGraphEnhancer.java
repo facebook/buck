@@ -27,6 +27,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -101,7 +102,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildTarget originalBuildTarget;
   private final SortedSet<BuildRule> originalDeps;
   private final ProjectFilesystem projectFilesystem;
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
   private final Optional<String> keepResourcePattern;
@@ -136,7 +137,7 @@ public class AndroidBinaryGraphEnhancer {
       CellPathResolver cellPathResolver,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
       AaptMode aaptMode,
@@ -185,9 +186,9 @@ public class AndroidBinaryGraphEnhancer {
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
+    this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
     this.projectFilesystem = projectFilesystem;
-    this.androidLegacyToolchain = androidLegacyToolchain;
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalBuildTarget;
     this.originalDeps = originalParams.getBuildDeps();
@@ -230,7 +231,8 @@ public class AndroidBinaryGraphEnhancer {
         new AndroidBinaryResourcesGraphEnhancer(
             originalBuildTarget,
             projectFilesystem,
-            androidLegacyToolchain,
+            toolchainProvider.getByName(
+                AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
             ruleResolver,
             originalBuildTarget,
             ExopackageMode.enabledForResources(exopackageModes),
@@ -441,7 +443,7 @@ public class AndroidBinaryGraphEnhancer {
             originalBuildTarget.withAppendedFlavors(
                 DEX_UBER_R_DOT_JAVA_FLAVOR, getDexFlavor(dexTool)),
             projectFilesystem,
-            androidLegacyToolchain,
+            androidPlatformTarget,
             paramsForDexUberRDotJava,
             compileUberRDotJava,
             dexTool);
@@ -602,7 +604,7 @@ public class AndroidBinaryGraphEnhancer {
         new PreDexMerge(
             originalBuildTarget.withAppendedFlavors(DEX_MERGE_FLAVOR, getDexFlavor(dexTool)),
             projectFilesystem,
-            androidLegacyToolchain,
+            androidPlatformTarget,
             paramsForPreDexMerge,
             dexSplitMode,
             apkModuleGraph,
@@ -653,7 +655,7 @@ public class AndroidBinaryGraphEnhancer {
                 return new DexProducedFromJavaLibrary(
                     preDexTarget,
                     projectFilesystem,
-                    androidLegacyToolchain,
+                    androidPlatformTarget,
                     paramsForPreDex,
                     javaLibrary,
                     dexTool);
@@ -695,7 +697,7 @@ public class AndroidBinaryGraphEnhancer {
                     packageableCollection.getModuleMappedClasspathEntriesToDex()));
     NonPreDexedDexBuildable nonPreDexedDexBuildable =
         new NonPreDexedDexBuildable(
-            androidLegacyToolchain,
+            androidPlatformTarget,
             ruleFinder,
             aaptGeneratedProguardConfigFile,
             additionalJarsForProguard,

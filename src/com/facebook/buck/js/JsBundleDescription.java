@@ -17,10 +17,10 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.Aapt2Compile;
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
@@ -264,13 +264,13 @@ public class JsBundleDescription
       JsBundle jsBundle,
       String rDotJavaPackage) {
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
-      AndroidLegacyToolchain androidLegacyToolchain =
+      AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
-              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          androidLegacyToolchain,
+          androidPlatformTarget,
           ImmutableSortedSet.of(jsBundle),
           jsBundle.getSourcePathToResources());
     }

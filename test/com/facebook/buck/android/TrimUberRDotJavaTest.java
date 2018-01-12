@@ -116,7 +116,7 @@ public class TrimUberRDotJavaTest {
         new DexProducedFromJavaLibrary(
             dexTarget,
             filesystem,
-            TestAndroidLegacyToolchainFactory.create(),
+            TestAndroidPlatformTargetFactory.create(),
             TestBuildRuleParams.create(),
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary

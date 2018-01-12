@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -84,28 +85,28 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   @AddToRuleKey private final SourcePath javaLibrarySourcePath;
   @AddToRuleKey private final String dexTool;
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       JavaLibrary javaLibrary) {
-    this(buildTarget, projectFilesystem, androidLegacyToolchain, params, javaLibrary, DxStep.DX);
+    this(buildTarget, projectFilesystem, androidPlatformTarget, params, javaLibrary, DxStep.DX);
   }
 
   DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       JavaLibrary javaLibrary,
       String dexTool) {
     super(buildTarget, projectFilesystem, params);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.javaLibrary = javaLibrary;
     this.dexTool = dexTool;
     this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
@@ -152,7 +153,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
           new DxStep(
               getBuildTarget(),
               getProjectFilesystem(),
-              androidLegacyToolchain,
+              androidPlatformTarget,
               getPathToDex(),
               Collections.singleton(pathToOutputFile),
               EnumSet.of(

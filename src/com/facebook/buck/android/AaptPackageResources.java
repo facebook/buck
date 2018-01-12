@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -59,7 +60,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   static ImmutableSortedSet<BuildRule> getAllDeps(
@@ -88,7 +89,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   AaptPackageResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
@@ -98,7 +99,7 @@ public class AaptPackageResources extends AbstractBuildRule {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(buildTarget, projectFilesystem);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.skipCrunchPngs = skipCrunchPngs;
@@ -176,7 +177,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     steps.add(
         new AaptStep(
             getBuildTarget(),
-            androidLegacyToolchain,
+            androidPlatformTarget,
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getRelativeResDirectories(

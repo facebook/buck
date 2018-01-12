@@ -114,7 +114,7 @@ public class ProGuardObfuscateStepTest {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
+        androidPlatformTarget,
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
@@ -149,7 +149,7 @@ public class ProGuardObfuscateStepTest {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
+        androidPlatformTarget,
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
@@ -182,7 +182,7 @@ public class ProGuardObfuscateStepTest {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
+        androidPlatformTarget,
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),

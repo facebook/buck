@@ -39,6 +39,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
@@ -225,7 +226,9 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     ExtraClasspathProvider extraClasspathProvider =
         new AndroidClasspathProvider(
-            TestAndroidLegacyToolchainFactory.create(androidPlatformTarget));
+            new ToolchainProviderBuilder()
+                .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, androidPlatformTarget)
+                .build());
 
     JavacOptions options =
         JavacOptions.builder().setSourceLevel("1.7").setTargetLevel("1.7").build();

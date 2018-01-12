@@ -78,7 +78,7 @@ public class SmartDexingStepTest {
     DxPseudoRule rule =
         new DxPseudoRule(
             BuildTargetFactory.newInstance("//dummy:target"),
-            TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+            createAndroidPlatformTarget(),
             FakeBuildContext.NOOP_CONTEXT,
             filesystem,
             ImmutableMap.of(testIn.toPath(), actualHashCode),
@@ -112,7 +112,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -155,7 +155,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -198,7 +198,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -235,7 +235,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -276,7 +276,7 @@ public class SmartDexingStepTest {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         new ImmutableList.Builder<>(),
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,

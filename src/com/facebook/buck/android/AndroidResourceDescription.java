@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -147,13 +148,13 @@ public class AndroidResourceDescription
           resDir.isPresent(),
           "Tried to require rule %s, but no resource dir is preset.",
           buildTarget);
-      AndroidLegacyToolchain androidLegacyToolchain =
+      AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
-              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          androidLegacyToolchain,
+          androidPlatformTarget,
           ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())),
           resDir.get());
     }

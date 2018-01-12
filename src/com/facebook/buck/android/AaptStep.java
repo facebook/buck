@@ -64,7 +64,7 @@ public class AaptStep extends ShellStep {
         || fileName.endsWith("~");
   }
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final Path androidManifest;
   private final ImmutableList<Path> resDirectories;
   private final ImmutableSortedSet<Path> assetsDirectories;
@@ -78,7 +78,7 @@ public class AaptStep extends ShellStep {
 
   public AaptStep(
       BuildTarget buildTarget,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       Path workingDirectory,
       Path androidManifest,
       ImmutableList<Path> resDirectories,
@@ -90,7 +90,7 @@ public class AaptStep extends ShellStep {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(Optional.of(buildTarget), workingDirectory);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.androidManifest = androidManifest;
     this.resDirectories = resDirectories;
     this.assetsDirectories = assetsDirectories;
@@ -105,7 +105,6 @@ public class AaptStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    AndroidPlatformTarget androidPlatformTarget = androidLegacyToolchain.getAndroidPlatformTarget();
 
     builder.add(androidPlatformTarget.getAaptExecutable().toString());
     builder.add("package");

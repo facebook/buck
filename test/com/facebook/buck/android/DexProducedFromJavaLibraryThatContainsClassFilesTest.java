@@ -122,12 +122,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
-            buildTarget,
-            filesystem,
-            TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
-            params,
-            javaLibraryRule,
-            DxStep.DX);
+            buildTarget, filesystem, androidPlatformTarget, params, javaLibraryRule, DxStep.DX);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
@@ -192,7 +187,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         new DexProducedFromJavaLibrary(
             buildTarget,
             projectFilesystem,
-            TestAndroidLegacyToolchainFactory.create(),
+            TestAndroidPlatformTargetFactory.create(),
             params,
             javaLibrary,
             DxStep.DX);
@@ -237,7 +232,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         new DexProducedFromJavaLibrary(
             buildTarget,
             projectFilesystem,
-            TestAndroidLegacyToolchainFactory.create(),
+            TestAndroidPlatformTargetFactory.create(),
             params,
             accumulateClassNames,
             DxStep.DX);

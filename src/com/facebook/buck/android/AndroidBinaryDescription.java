@@ -27,6 +27,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
@@ -286,9 +287,9 @@ public class AndroidBinaryDescription
       ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-      AndroidLegacyToolchain androidLegacyToolchain =
+      AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
-              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
 
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
@@ -296,7 +297,7 @@ public class AndroidBinaryDescription
               cellRoots,
               buildTarget,
               projectFilesystem,
-              androidLegacyToolchain,
+              androidPlatformTarget,
               params,
               resolver,
               args.getAaptMode(),
@@ -374,7 +375,7 @@ public class AndroidBinaryDescription
               projectFilesystem,
               toolchainProvider.getByName(
                   AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
-              androidLegacyToolchain,
+              androidPlatformTarget,
               params,
               ruleFinder,
               Optional.of(args.getProguardJvmArgs()),

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -95,7 +96,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final DexSplitMode dexSplitMode;
   @AddToRuleKey private final String dexTool;
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final APKModuleGraph apkModuleGraph;
   private final ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps;
   private final DexProducedFromJavaLibrary dexForUberRDotJava;
@@ -106,7 +107,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public PreDexMerge(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       DexSplitMode dexSplitMode,
       APKModuleGraph apkModuleGraph,
@@ -117,7 +118,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Optional<String> dxMaxHeapSize,
       String dexTool) {
     super(buildTarget, projectFilesystem, params);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
     this.preDexDeps = preDexDeps;
@@ -313,7 +314,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(
         new SmartDexingStep(
             getBuildTarget(),
-            androidLegacyToolchain,
+            androidPlatformTarget,
             context,
             getProjectFilesystem(),
             primaryDexPath,
@@ -428,7 +429,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new DxStep(
             getBuildTarget(),
             getProjectFilesystem(),
-            androidLegacyToolchain,
+            androidPlatformTarget,
             primaryDexPath,
             filesToDex,
             DX_MERGE_OPTIONS,
