@@ -384,6 +384,11 @@ public class QueryCommand extends AbstractCommand {
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
     Map<String, SortedMap<String, Object>> result = collectAttributes(params, env, queryResult);
+    printAttributes(result, params.getConsole().getStdOut());
+  }
+
+  private void printAttributes(
+      Map<String, SortedMap<String, Object>> result, PrintStream outputStream) {
     StringWriter stringWriter = new StringWriter();
     try {
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
@@ -392,7 +397,7 @@ public class QueryCommand extends AbstractCommand {
       throw new RuntimeException(e);
     }
     String output = stringWriter.getBuffer().toString();
-    params.getConsole().getStdOut().println(output);
+    outputStream.println(output);
   }
 
   private SortedMap<String, SortedMap<String, Object>> collectAttributes(
