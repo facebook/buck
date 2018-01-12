@@ -17,8 +17,6 @@
 package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
@@ -37,8 +35,8 @@ public class AndroidSdkLocationFactory implements ToolchainFactory<AndroidSdkLoc
     AndroidBuckConfig androidBuckConfig =
         new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
-    AndroidDirectoryResolver androidDirectoryResolver =
-        new DefaultAndroidDirectoryResolver(
+    AndroidSdkDirectoryResolver androidDirectoryResolver =
+        new AndroidSdkDirectoryResolver(
             context.getFilesystem().getRootPath().getFileSystem(),
             context.getEnvironment(),
             androidBuckConfig);

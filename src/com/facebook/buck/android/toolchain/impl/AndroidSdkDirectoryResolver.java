@@ -13,8 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain.impl;
 
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.common.BaseAndroidToolchainResolver;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
@@ -26,8 +27,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** Utility class used for resolving the location of Android specific directories. */
-public class DefaultAndroidDirectoryResolver extends BaseAndroidToolchainResolver
-    implements AndroidDirectoryResolver {
+public class AndroidSdkDirectoryResolver extends BaseAndroidToolchainResolver {
   @VisibleForTesting
   static final String SDK_NOT_FOUND_MESSAGE =
       "Android SDK could not be found. Make sure to set "
@@ -37,7 +37,7 @@ public class DefaultAndroidDirectoryResolver extends BaseAndroidToolchainResolve
   private Optional<String> sdkErrorMessage;
   private final Optional<Path> sdk;
 
-  public DefaultAndroidDirectoryResolver(
+  public AndroidSdkDirectoryResolver(
       FileSystem fileSystem, ImmutableMap<String, String> environment, AndroidBuckConfig config) {
     super(fileSystem, environment);
 
@@ -47,7 +47,6 @@ public class DefaultAndroidDirectoryResolver extends BaseAndroidToolchainResolve
     this.sdk = sdkPath;
   }
 
-  @Override
   public Path getSdkOrThrow() {
     if (!sdk.isPresent() && sdkErrorMessage.isPresent()) {
       throw new HumanReadableException(sdkErrorMessage.get());

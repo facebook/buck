@@ -13,10 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.FakeAndroidBuckConfig;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
@@ -27,7 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class DefaultAndroidDirectoryResolverTest {
+public class AndroidSdkDirectoryResolverTest {
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
@@ -35,20 +36,20 @@ public class DefaultAndroidDirectoryResolverTest {
 
   @Test
   public void throwAtAbsentSdk() {
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
 
     expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage(DefaultAndroidDirectoryResolver.SDK_NOT_FOUND_MESSAGE);
+    expectedException.expectMessage(AndroidSdkDirectoryResolver.SDK_NOT_FOUND_MESSAGE);
     resolver.getSdkOrThrow();
   }
 
   @Test
   public void throwAtSdkPathIsNotDirectory() throws IOException {
     Path file = tmpDir.getRoot().resolve(tmpDir.newFile("file"));
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", file.toString()),
             AndroidNdkHelper.DEFAULT_CONFIG);
@@ -56,17 +57,15 @@ public class DefaultAndroidDirectoryResolverTest {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         String.format(
-            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
-            "ANDROID_SDK",
-            file));
+            AndroidSdkDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE, "ANDROID_SDK", file));
     resolver.getSdkOrThrow();
   }
 
   @Test
   public void testGetSdkFromBuckconfig() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of(),
             FakeAndroidBuckConfig.builder().setSdkPath(sdkDir.toString()).build());
@@ -77,15 +76,15 @@ public class DefaultAndroidDirectoryResolverTest {
   @Test
   public void testSdkFromEnvironmentSupercedesBuckconfig() throws IOException {
     Path sdkDir = tmpDir.newFolder("sdk");
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", sdkDir.resolve("also-wrong").toString()),
             FakeAndroidBuckConfig.builder().setSdkPath(sdkDir.toString()).build());
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         String.format(
-            DefaultAndroidDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
+            AndroidSdkDirectoryResolver.INVALID_DIRECTORY_MESSAGE_TEMPLATE,
             "ANDROID_SDK",
             sdkDir.resolve("also-wrong")));
     resolver.getSdkOrThrow();
