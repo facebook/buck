@@ -25,6 +25,7 @@ import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
+import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;

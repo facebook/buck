@@ -17,7 +17,6 @@
 package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidPlatformTargetProducer;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
