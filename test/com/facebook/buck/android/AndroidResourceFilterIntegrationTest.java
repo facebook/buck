@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -43,7 +44,6 @@ import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,19 +75,14 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
 
-    AndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(),
-            ImmutableMap.copyOf(System.getenv()),
-            AndroidNdkHelper.DEFAULT_CONFIG);
+    AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
-            AndroidNdkHelper.DEFAULT_CONFIG,
-            Optional.of(AndroidSdkLocation.of(resolver.getSdkOrThrow())));
+            AndroidNdkHelper.DEFAULT_CONFIG, Optional.of(androidSdkLocation));
     pathToAapt =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
                 AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
-                AndroidSdkLocation.of(resolver.getSdkOrThrow()),
+                androidSdkLocation,
                 Optional.empty(),
                 Optional.empty())
             .getAaptExecutable();

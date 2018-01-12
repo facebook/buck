@@ -22,13 +22,13 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -46,20 +46,16 @@ public class AssumeAndroidPlatform {
 
   public static void assumeSdkIsAvailable() throws InterruptedException {
     try {
-      assumeNotNull(getAndroidDirectoryResolver().getSdkOrThrow());
+      assumeNotNull(getAndroidSdkLocation().getSdkRootPath());
     } catch (HumanReadableException e) {
       assumeNoException(e);
     }
   }
 
-  private static DefaultAndroidDirectoryResolver getAndroidDirectoryResolver()
-      throws InterruptedException {
+  private static AndroidSdkLocation getAndroidSdkLocation() throws InterruptedException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
-    return new DefaultAndroidDirectoryResolver(
-        projectFilesystem.getRootPath().getFileSystem(),
-        ImmutableMap.copyOf(System.getenv()),
-        AndroidNdkHelper.DEFAULT_CONFIG);
+    return TestAndroidSdkLocationFactory.create(projectFilesystem);
   }
 
   /**
@@ -69,23 +65,23 @@ public class AssumeAndroidPlatform {
    * version of build tools, it doesn't run aapt2 to verify it actually supports the option.
    */
   public static void assumeAapt2WithOutputTextSymbolsIsAvailable() throws InterruptedException {
-    DefaultAndroidDirectoryResolver androidDirectoryResolver = getAndroidDirectoryResolver();
+    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
 
-    assumeBuildToolsIsNewer(androidDirectoryResolver, "26.0.2");
+    assumeBuildToolsIsNewer(androidSdkLocation, "26.0.2");
 
-    assumeAapt2IsAvailable(androidDirectoryResolver);
+    assumeAapt2IsAvailable(androidSdkLocation);
   }
 
-  private static void assumeAapt2IsAvailable(AndroidDirectoryResolver androidDirectoryResolver)
+  private static void assumeAapt2IsAvailable(AndroidSdkLocation androidSdkLocation)
       throws InterruptedException {
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
-            Optional.of(AndroidSdkLocation.of(androidDirectoryResolver.getSdkOrThrow())));
+            Optional.of(AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath())));
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
             AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
-            AndroidSdkLocation.of(androidDirectoryResolver.getSdkOrThrow()),
+            AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath()),
             Optional.empty(),
             Optional.empty());
 
@@ -98,11 +94,11 @@ public class AssumeAndroidPlatform {
    * <p>Versions are expected to be in format like "25.0.2".
    */
   private static void assumeBuildToolsIsNewer(
-      DefaultAndroidDirectoryResolver androidDirectoryResolver, String expectedBuildToolsVersion) {
+      AndroidSdkLocation androidSdkLocation, String expectedBuildToolsVersion) {
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
-            Optional.of(AndroidSdkLocation.of(androidDirectoryResolver.getSdkOrThrow())));
+            Optional.of(AndroidSdkLocation.of(androidSdkLocation.getSdkRootPath())));
     Optional<String> sdkBuildToolsVersion = buildToolsResolver.getBuildToolsVersion();
 
     assumeTrue(sdkBuildToolsVersion.isPresent());
