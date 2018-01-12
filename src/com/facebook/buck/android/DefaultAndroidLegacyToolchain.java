@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import java.util.function.Supplier;
 
 public class DefaultAndroidLegacyToolchain implements AndroidLegacyToolchain {

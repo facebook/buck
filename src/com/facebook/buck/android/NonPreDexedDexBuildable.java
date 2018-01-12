@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.AndroidBinaryBuildable.SMART_DEX_SECONDARY_DEX_SUBDIR;
 
 import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;

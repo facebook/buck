@@ -338,7 +338,6 @@ java_immutables_library(
 )
 
 UTILS_SRCS = [
-    "AbstractAndroidPlatformTarget.java",
     "AndroidDirectoryResolver.java",
     "AndroidPlatformTargetProducer.java",
     "AndroidManifestReader.java",
@@ -351,6 +350,7 @@ java_immutables_library(
     srcs = UTILS_SRCS,
     exported_deps = [
         "//src/com/facebook/buck/android:utils_api",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/common:common",
         "//third-party/java/android:ddmlib",
     ],

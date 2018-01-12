@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;

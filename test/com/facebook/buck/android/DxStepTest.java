@@ -20,6 +20,7 @@ import static com.facebook.buck.util.Verbosity.COMMANDS_AND_SPECIAL_OUTPUT;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.cli.VerbosityParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;

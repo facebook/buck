@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.ManifestEntries;
