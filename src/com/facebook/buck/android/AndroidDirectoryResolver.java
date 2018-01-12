@@ -17,13 +17,9 @@
 package com.facebook.buck.android;
 
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** Defines an implementation capable of locating Android SDK and NDK directories. */
 public interface AndroidDirectoryResolver {
-  /** @return {@code Optional<Path>} pointing to Android SDK or {@code Optional.empty()}. */
-  Optional<Path> getSdkOrAbsent();
-
   /** @return {@code Path} pointing to Android SDK or throws an exception why SDK was not found. */
   Path getSdkOrThrow();
 

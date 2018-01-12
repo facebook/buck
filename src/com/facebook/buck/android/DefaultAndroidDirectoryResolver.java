@@ -87,11 +87,6 @@ public class DefaultAndroidDirectoryResolver extends BaseAndroidToolchainResolve
     return buildTools.get();
   }
 
-  @Override
-  public Optional<Path> getSdkOrAbsent() {
-    return sdk;
-  }
-
   /**
    * Returns Android SDK build tools version that was either discovered or provided during creation.
    */

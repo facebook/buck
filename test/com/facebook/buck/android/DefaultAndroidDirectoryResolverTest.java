@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,15 +36,6 @@ public class DefaultAndroidDirectoryResolverTest {
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
-
-  @Test
-  public void getAbsentSdk() {
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            tmpDir.getRoot().getFileSystem(), ImmutableMap.of(), AndroidNdkHelper.DEFAULT_CONFIG);
-
-    assertEquals(Optional.empty(), resolver.getSdkOrAbsent());
-  }
 
   @Test
   public void throwAtAbsentSdk() {

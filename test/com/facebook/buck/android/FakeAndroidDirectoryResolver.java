@@ -46,11 +46,6 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   }
 
   @Override
-  public Optional<Path> getSdkOrAbsent() {
-    return androidSdkDir;
-  }
-
-  @Override
   public Path getSdkOrThrow() {
     Preconditions.checkState(androidSdkDir.isPresent());
     return androidSdkDir.get();
