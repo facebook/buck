@@ -22,10 +22,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -43,15 +43,18 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.function.Predicate;
 
 /** Generate the CFG for a source file */
-class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsDependencyFileRuleKey {
+class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFileRuleKey {
+
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   @AddToRuleKey private final InferBuckConfig inferConfig;
   @AddToRuleKey private final CxxToolFlags preprocessorFlags;
@@ -69,7 +72,7 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   CxxInferCapture(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      ImmutableSortedSet<BuildRule> buildDeps,
       CxxToolFlags preprocessorFlags,
       CxxToolFlags compilerFlags,
       SourcePath input,
@@ -77,7 +80,8 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path output,
       PreprocessorDelegate preprocessorDelegate,
       InferBuckConfig inferConfig) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
+    this.buildDeps = buildDeps;
     this.preprocessorFlags = preprocessorFlags;
     this.compilerFlags = compilerFlags;
     this.input = input;
@@ -87,6 +91,11 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.inferConfig = inferConfig;
     this.resultsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-out-%s");
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   private CxxToolFlags getSearchPathFlags() {

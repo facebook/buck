@@ -30,7 +30,6 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -42,7 +41,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -53,6 +51,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,7 +68,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
   private CxxInferCapture createCaptureRule(
       BuildTarget buildTarget,
-      BuildRuleParams buildRuleParams,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem filesystem,
       InferBuckConfig inferBuckConfig)
@@ -107,7 +105,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     return new CxxInferCapture(
         buildTarget,
         filesystem,
-        buildRuleParams,
+        ImmutableSortedSet.of(),
         CxxToolFlags.of(),
         CxxToolFlags.of(),
         FakeSourcePath.of("src.c"),
@@ -205,7 +203,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             UnflavoredBuildTarget.of(
                 filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
             ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
         new SingleThreadedBuildRuleResolver(
@@ -216,8 +213,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCapture captureRule =
-        createCaptureRule(
-            buildTarget2, buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
+        createCaptureRule(buildTarget2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
@@ -264,7 +260,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             UnflavoredBuildTarget.of(
                 filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
             ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
         new SingleThreadedBuildRuleResolver(
@@ -275,8 +270,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCapture captureRule =
-        createCaptureRule(
-            buildTarget2, buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
+        createCaptureRule(buildTarget2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(

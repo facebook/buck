@@ -36,7 +36,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
@@ -76,7 +75,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -400,7 +398,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxPreprocessAndCompile.compile(
         target,
         getProjectFilesystem(),
-        buildRuleParamsWithAndDeps(depsBuilder.build()),
+        depsBuilder.build(),
         compilerDelegate,
         getCompileOutputPath(target, name),
         source.getPath(),
@@ -488,7 +486,7 @@ abstract class AbstractCxxSourceRuleFactory {
                   return new CxxInferCapture(
                       target,
                       getProjectFilesystem(),
-                      buildRuleParamsWithAndDeps(depsBuilder.build()),
+                      depsBuilder.build(),
                       ppFlags,
                       cFlags,
                       source.getPath(),
@@ -548,7 +546,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxPreprocessAndCompile.preprocessAndCompile(
         target,
         getProjectFilesystem(),
-        buildRuleParamsWithAndDeps(depsBuilder.build()),
+        depsBuilder.build(),
         preprocessorDelegate,
         compilerDelegate,
         getCompileOutputPath(target, name),
@@ -790,7 +788,7 @@ abstract class AbstractCxxSourceRuleFactory {
                   return new CxxPrecompiledHeader(
                       target,
                       getProjectFilesystem(),
-                      buildRuleParamsWithAndDeps(depsBuilder.build()),
+                      depsBuilder.build(),
                       output,
                       preprocessorDelegate,
                       compilerDelegate,
@@ -875,10 +873,6 @@ abstract class AbstractCxxSourceRuleFactory {
     return type.isAssembly()
         ? getCxxPlatform().getAssemblerDebugPathSanitizer()
         : getCxxPlatform().getCompilerDebugPathSanitizer();
-  }
-
-  private BuildRuleParams buildRuleParamsWithAndDeps(SortedSet<BuildRule> deps) {
-    return new BuildRuleParams(() -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
   }
 
   @Value.Immutable

@@ -21,10 +21,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -46,11 +46,13 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 
@@ -78,8 +80,10 @@ import java.util.function.Predicate;
  * (effectively) random unique IDs, they are not amenable to the InputBasedRuleKey optimization when
  * used to compile another file.
  */
-class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
+class CxxPrecompiledHeader extends AbstractBuildRule
     implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
+
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   // Fields that are added to rule key as is.
   @AddToRuleKey private final PreprocessorDelegate preprocessorDelegate;
@@ -104,7 +108,7 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public CxxPrecompiledHeader(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      ImmutableSortedSet<BuildRule> buildDeps,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
@@ -112,9 +116,10 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(
         !inputType.isAssembly(), "Asm files do not use precompiled headers.");
+    this.buildDeps = buildDeps;
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
     this.compilerFlags = compilerFlags;
@@ -152,6 +157,11 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)))
         .add(makeMainStep(context.getSourcePathResolver(), scratchDir))
         .build();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   public SourcePath getInput() {
