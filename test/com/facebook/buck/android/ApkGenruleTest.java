@@ -132,11 +132,7 @@ public class ApkGenruleTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
-    ToolchainProvider toolchainProvider =
-        new ToolchainProviderBuilder()
-            .withToolchain(
-                AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
-            .build();
+    ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
 
     ApkGenruleDescription description =
         new ApkGenruleDescription(toolchainProvider, new NoSandboxExecutionStrategy());

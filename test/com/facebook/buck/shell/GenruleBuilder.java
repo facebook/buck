@@ -16,8 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -69,10 +67,7 @@ public class GenruleBuilder
   }
 
   private static ToolchainProvider createToolchainProvider() {
-    return new ToolchainProviderBuilder()
-        .withToolchain(
-            AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
-        .build();
+    return new ToolchainProviderBuilder().build();
   }
 
   public static GenruleBuilder newGenruleBuilder(BuildTarget target) {

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android.toolchain;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.DefaultAndroidLegacyToolchainFactory;
 import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -40,17 +38,9 @@ public class TestAndroidSdkLocationFactory {
             new ExecutableFinder(),
             TestRuleKeyConfigurationFactory.create());
 
-    AndroidLegacyToolchain androidLegacyToolchain =
-        new DefaultAndroidLegacyToolchainFactory()
-            .createToolchain(new ToolchainProviderBuilder().build(), toolchainCreationContext)
-            .get();
     AndroidSdkLocation androidSdkLocation =
         new AndroidSdkLocationFactory()
-            .createToolchain(
-                new ToolchainProviderBuilder()
-                    .withToolchain(AndroidLegacyToolchain.DEFAULT_NAME, androidLegacyToolchain)
-                    .build(),
-                toolchainCreationContext)
+            .createToolchain(new ToolchainProviderBuilder().build(), toolchainCreationContext)
             .get();
     return androidSdkLocation;
   }

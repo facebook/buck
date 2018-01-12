@@ -278,9 +278,6 @@ java_library(
 
 HELPERS_SRCS = [
     "AdbHelper.java",
-    "AndroidLegacyToolchain.java",
-    "DefaultAndroidLegacyToolchain.java",
-    "DefaultAndroidLegacyToolchainFactory.java",
     "DexFilesInfo.java",
     "NativeFilesInfo.java",
     "ResourceFilesInfo.java",

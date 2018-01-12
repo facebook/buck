@@ -19,9 +19,6 @@ package com.facebook.buck.android.toolchain.ndk.impl;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.android.DefaultAndroidLegacyToolchain;
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
@@ -68,22 +65,12 @@ public class AndroidNdkHelper {
       new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
 
   public static Optional<AndroidNdk> detectAndroidNdk(ProjectFilesystem filesystem) {
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(),
-            ImmutableMap.copyOf(System.getenv()),
-            AndroidNdkHelper.DEFAULT_CONFIG);
-
     Optional<AndroidNdk> androidNdk;
     try {
       androidNdk =
           new AndroidNdkFactory()
               .createToolchain(
-                  new ToolchainProviderBuilder()
-                      .withToolchain(
-                          AndroidLegacyToolchain.DEFAULT_NAME,
-                          new DefaultAndroidLegacyToolchain(resolver))
-                      .build(),
+                  new ToolchainProviderBuilder().build(),
                   ToolchainCreationContext.of(
                       ImmutableMap.copyOf(System.getenv()),
                       FakeBuckConfig.builder().build(),

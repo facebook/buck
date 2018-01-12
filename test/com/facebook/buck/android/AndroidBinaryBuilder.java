@@ -63,8 +63,6 @@ public class AndroidBinaryBuilder
   private static ToolchainProvider createToolchainProvider() {
     return new ToolchainProviderBuilder()
         .withToolchain(
-            AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
-        .withToolchain(
             AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
         .withDefaultNdkCxxPlatforms()
         .withToolchain(
