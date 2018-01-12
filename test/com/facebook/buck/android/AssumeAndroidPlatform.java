@@ -21,6 +21,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -76,9 +78,13 @@ public class AssumeAndroidPlatform {
 
   private static void assumeAapt2IsAvailable(AndroidDirectoryResolver androidDirectoryResolver)
       throws InterruptedException {
+    AndroidBuildToolsResolver buildToolsResolver =
+        new AndroidBuildToolsResolver(
+            AndroidNdkHelper.DEFAULT_CONFIG,
+            Optional.of(AndroidSdkLocation.of(androidDirectoryResolver.getSdkOrThrow())));
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-            AndroidBuildToolsLocation.of(androidDirectoryResolver.getBuildToolsOrThrow()),
+            AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
             androidDirectoryResolver,
             Optional.empty(),
             Optional.empty());
@@ -93,7 +99,11 @@ public class AssumeAndroidPlatform {
    */
   private static void assumeBuildToolsIsNewer(
       DefaultAndroidDirectoryResolver androidDirectoryResolver, String expectedBuildToolsVersion) {
-    Optional<String> sdkBuildToolsVersion = androidDirectoryResolver.getBuildToolsVersion();
+    AndroidBuildToolsResolver buildToolsResolver =
+        new AndroidBuildToolsResolver(
+            AndroidNdkHelper.DEFAULT_CONFIG,
+            Optional.of(AndroidSdkLocation.of(androidDirectoryResolver.getSdkOrThrow())));
+    Optional<String> sdkBuildToolsVersion = buildToolsResolver.getBuildToolsVersion();
 
     assumeTrue(sdkBuildToolsVersion.isPresent());
 

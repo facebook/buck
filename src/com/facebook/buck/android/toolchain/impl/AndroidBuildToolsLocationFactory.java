@@ -16,14 +16,15 @@
 
 package com.facebook.buck.android.toolchain.impl;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
 
 public class AndroidBuildToolsLocationFactory
@@ -32,16 +33,18 @@ public class AndroidBuildToolsLocationFactory
   @Override
   public Optional<AndroidBuildToolsLocation> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+    AndroidBuckConfig androidBuckConfig =
+        new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
-    AndroidDirectoryResolver androidDirectoryResolver =
-        androidLegacyToolchain.getAndroidDirectoryResolver();
+    AndroidBuildToolsResolver androidBuildToolsResolver =
+        new AndroidBuildToolsResolver(
+            androidBuckConfig,
+            toolchainProvider.getByNameIfPresent(
+                AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
 
     try {
       return Optional.of(
-          AndroidBuildToolsLocation.of(androidDirectoryResolver.getBuildToolsOrThrow()));
+          AndroidBuildToolsLocation.of(androidBuildToolsResolver.getBuildToolsPath()));
     } catch (HumanReadableException e) {
       throw ToolchainInstantiationException.wrap(e);
     }

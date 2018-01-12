@@ -22,10 +22,4 @@ import java.nio.file.Path;
 public interface AndroidDirectoryResolver {
   /** @return {@code Path} pointing to Android SDK or throws an exception why SDK was not found. */
   Path getSdkOrThrow();
-
-  /**
-   * @return {@code Path} pointing to Android SDK build tools or throws an exception why the build
-   *     tools were not found.
-   */
-  Path getBuildToolsOrThrow();
 }

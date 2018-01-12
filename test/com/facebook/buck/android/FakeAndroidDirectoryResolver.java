@@ -22,25 +22,19 @@ import java.util.Optional;
 
 public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   private final Optional<Path> androidSdkDir;
-  private final Optional<Path> androidBuildToolsDir;
   private final Optional<Path> androidNdkDir;
   private final Optional<String> ndkVersion;
 
   public FakeAndroidDirectoryResolver() {
     this(
         /* androidSdkDir */ Optional.empty(),
-        /* androidBuildToolsDir */ Optional.empty(),
         /* androidNdkDir */ Optional.empty(),
         /* ndkVersion */ Optional.empty());
   }
 
   public FakeAndroidDirectoryResolver(
-      Optional<Path> androidSdkDir,
-      Optional<Path> androidBuildToolsDir,
-      Optional<Path> androidNdkDir,
-      Optional<String> ndkVersion) {
+      Optional<Path> androidSdkDir, Optional<Path> androidNdkDir, Optional<String> ndkVersion) {
     this.androidSdkDir = Preconditions.checkNotNull(androidSdkDir);
-    this.androidBuildToolsDir = Preconditions.checkNotNull(androidBuildToolsDir);
     this.androidNdkDir = Preconditions.checkNotNull(androidNdkDir);
     this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
   }
@@ -49,12 +43,6 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   public Path getSdkOrThrow() {
     Preconditions.checkState(androidSdkDir.isPresent());
     return androidSdkDir.get();
-  }
-
-  @Override
-  public Path getBuildToolsOrThrow() {
-    Preconditions.checkState(androidBuildToolsDir.isPresent());
-    return androidBuildToolsDir.get();
   }
 
   @Override
@@ -70,7 +58,6 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
 
     return Objects.equals(androidNdkDir, that.androidNdkDir)
         && Objects.equals(androidSdkDir, that.androidSdkDir)
-        && Objects.equals(androidBuildToolsDir, that.androidBuildToolsDir)
         && Objects.equals(ndkVersion, that.ndkVersion);
   }
 

@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
@@ -72,14 +74,19 @@ public class AndroidResourceFilterIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+
     AndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
             filesystem.getRootPath().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
             AndroidNdkHelper.DEFAULT_CONFIG);
+    AndroidBuildToolsResolver buildToolsResolver =
+        new AndroidBuildToolsResolver(
+            AndroidNdkHelper.DEFAULT_CONFIG,
+            Optional.of(AndroidSdkLocation.of(resolver.getSdkOrThrow())));
     pathToAapt =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-                AndroidBuildToolsLocation.of(resolver.getBuildToolsOrThrow()),
+                AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
                 resolver,
                 Optional.empty(),
                 Optional.empty())

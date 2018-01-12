@@ -98,7 +98,7 @@ public class AndroidSdkLocationFactoryTest {
 
     FakeAndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
-            Optional.of(sdkLocation), Optional.empty(), Optional.empty(), Optional.empty());
+            Optional.of(sdkLocation), Optional.empty(), Optional.empty());
 
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()

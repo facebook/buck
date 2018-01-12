@@ -52,7 +52,6 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir),
-            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
 
@@ -107,7 +106,6 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
 
@@ -150,7 +148,6 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
     File optionalLibsDir = new File(androidSdkDir, "platforms/android-23/optional");
@@ -195,7 +192,6 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /* buildToolsDir */ Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
     try {
@@ -229,7 +225,6 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
 
@@ -278,7 +273,6 @@ public class AndroidPlatformTargetProducerTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            Optional.empty(),
             /* androidNdkDir */ Optional.empty(),
             /* ndkVersion */ Optional.empty());
     Files.touch(new File(buildToolsDirFromOldUpgradePath, "zipalign"));

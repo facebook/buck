@@ -27,12 +27,12 @@ public class TestAndroidPlatformTargetFactory {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(MorePathsForTests.rootRelativePath("AndroidSDK")),
-            Optional.of(MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
             Optional.of(MorePathsForTests.rootRelativePath("AndroidNDK")),
             Optional.of("15"));
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-            AndroidBuildToolsLocation.of(androidDirectoryResolver.getBuildToolsOrThrow()),
+            AndroidBuildToolsLocation.of(
+                MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
             androidDirectoryResolver,
             Optional.empty(),
             Optional.empty());

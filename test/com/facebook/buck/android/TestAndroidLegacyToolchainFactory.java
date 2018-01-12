@@ -25,7 +25,6 @@ public class TestAndroidLegacyToolchainFactory {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(MorePathsForTests.rootRelativePath("AndroidSDK")),
-            Optional.of(MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
             Optional.of(MorePathsForTests.rootRelativePath("AndroidNDK")),
             Optional.of("15"));
 
