@@ -76,6 +76,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
           HTTP_CACHE_ERROR_MESSAGE_NAME,
           HTTP_MAX_STORE_SIZE);
   private static final String HTTP_MAX_FETCH_RETRIES = "http_max_fetch_retries";
+  private static final String HTTP_MAX_STORE_ATTEMPTS = "http_max_store_attempts";
+  private static final String HTTP_STORE_RETRY_INTERVAL_MILLIS = "http_store_retry_interval_millis";
 
   private static final String DIR_FIELD = "dir";
   private static final String DIR_MODE_FIELD = "dir_mode";
@@ -92,6 +94,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_HTTP_CACHE_ERROR_MESSAGE =
       "{cache_name} cache encountered an error: {error_message}";
   private static final int DEFAULT_HTTP_MAX_FETCH_RETRIES = 2;
+  private static final int DEFAULT_HTTP_MAX_STORE_ATTEMPTS = 1; // Make a single request, no retries
+  private static final long DEFAULT_HTTP_STORE_RETRY_INTERVAL = 1000;
 
   private static final String SQLITE_MODE_FIELD = "sqlite_mode";
   private static final String SQLITE_MAX_SIZE_FIELD = "sqlite_max_size";
@@ -203,6 +207,18 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig
         .getInteger(CACHE_SECTION_NAME, HTTP_MAX_FETCH_RETRIES)
         .orElse(DEFAULT_HTTP_MAX_FETCH_RETRIES);
+  }
+
+  public int getMaxStoreAttempts() {
+    return buckConfig
+        .getInteger(CACHE_SECTION_NAME, HTTP_MAX_STORE_ATTEMPTS)
+        .orElse(DEFAULT_HTTP_MAX_STORE_ATTEMPTS);
+  }
+
+  public long getStoreRetryIntervalMillis() {
+    return buckConfig
+        .getLong(CACHE_SECTION_NAME, HTTP_STORE_RETRY_INTERVAL_MILLIS)
+        .orElse(DEFAULT_HTTP_STORE_RETRY_INTERVAL);
   }
 
   public boolean hasAtLeastOneWriteableCache() {

@@ -957,6 +957,24 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'http_max_store_attempts' /}
+  {param example_value: '1' /}
+  {param description}
+    Maximum number of times to attempt to store item to the cache before giving up.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_store_retry_interval_millis' /}
+  {param example_value: '1000' /}
+  {param description}
+    Interval to wait if previous cache store request failed.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'http_max_store_size' /}
   {param example_value: '5000000' /}
   {param description}
