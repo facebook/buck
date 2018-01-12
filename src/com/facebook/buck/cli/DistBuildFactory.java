@@ -78,6 +78,7 @@ public abstract class DistBuildFactory {
         new RetryingHttpService(
             params.getBuckEventBus(),
             loadBalanceService,
+            "buck_frontend_http_retries",
             config.getFrontendRequestMaxRetries(),
             config.getFrontendRequestRetryIntervalMillis());
 

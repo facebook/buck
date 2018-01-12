@@ -490,6 +490,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             new RetryingHttpService(
                 buckEventBus,
                 new LoadBalancedService(clientSideSlb, fetchClient, buckEventBus),
+                "buck_cache_fetch_request_http_retries",
                 config.getMaxFetchRetries());
         storeService = new LoadBalancedService(clientSideSlb, storeClient, buckEventBus);
         break;

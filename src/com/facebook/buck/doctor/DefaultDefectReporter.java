@@ -179,6 +179,7 @@ public class DefaultDefectReporter implements DefectReporter {
         new RetryingHttpService(
             buckEventBus,
             new LoadBalancedService(slb, httpClient, buckEventBus),
+            "buck_defect_reporter_http_retries",
             doctorConfig.getReportMaxUploadRetries());
 
     try {
