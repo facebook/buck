@@ -16,13 +16,11 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 public class DefaultAndroidLegacyToolchainFactory
     implements ToolchainFactory<AndroidLegacyToolchain> {
@@ -40,10 +38,6 @@ public class DefaultAndroidLegacyToolchainFactory
             context.getEnvironment(),
             androidBuckConfig);
 
-    Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-        new AndroidPlatformTargetSupplier(androidDirectoryResolver, androidBuckConfig);
-
-    return Optional.of(
-        new DefaultAndroidLegacyToolchain(androidPlatformTargetSupplier, androidDirectoryResolver));
+    return Optional.of(new DefaultAndroidLegacyToolchain(androidDirectoryResolver));
   }
 }

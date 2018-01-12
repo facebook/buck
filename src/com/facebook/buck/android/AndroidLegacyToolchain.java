@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.toolchain.Toolchain;
 
 /**
@@ -37,6 +36,4 @@ public interface AndroidLegacyToolchain extends Toolchain {
   String DEFAULT_NAME = "legacy-android";
 
   AndroidDirectoryResolver getAndroidDirectoryResolver();
-
-  AndroidPlatformTarget getAndroidPlatformTarget();
 }

@@ -16,28 +16,16 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import java.util.function.Supplier;
-
 public class DefaultAndroidLegacyToolchain implements AndroidLegacyToolchain {
 
-  private final Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier;
   private final AndroidDirectoryResolver androidDirectoryResolver;
 
-  public DefaultAndroidLegacyToolchain(
-      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
-      AndroidDirectoryResolver androidDirectoryResolver) {
-    this.androidPlatformTargetSupplier = androidPlatformTargetSupplier;
+  public DefaultAndroidLegacyToolchain(AndroidDirectoryResolver androidDirectoryResolver) {
     this.androidDirectoryResolver = androidDirectoryResolver;
   }
 
   @Override
   public AndroidDirectoryResolver getAndroidDirectoryResolver() {
     return androidDirectoryResolver;
-  }
-
-  @Override
-  public AndroidPlatformTarget getAndroidPlatformTarget() {
-    return androidPlatformTargetSupplier.get();
   }
 }
