@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
@@ -62,7 +63,7 @@ public class RobolectricTest extends JavaTest {
 
   private static final Logger LOG = Logger.get(RobolectricTest.class);
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
   private final Optional<SourcePath> robolectricManifest;
   private final Optional<String> robolectricRuntimeDependency;
@@ -88,7 +89,7 @@ public class RobolectricTest extends JavaTest {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       JavaLibrary compiledTestsLibrary,
       Set<String> labels,
       Set<String> contacts,
@@ -133,7 +134,7 @@ public class RobolectricTest extends JavaTest {
         stdOutLogLevel,
         stdErrLogLevel,
         unbundledResourcesRoot);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.optionalDummyRDotJava = optionalDummyRDotJava;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
@@ -159,8 +160,7 @@ public class RobolectricTest extends JavaTest {
 
   @Override
   protected ImmutableSet<Path> getBootClasspathEntries(ExecutionContext context) {
-    return ImmutableSet.copyOf(
-        androidLegacyToolchain.getAndroidPlatformTarget().getBootclasspathEntries());
+    return ImmutableSet.copyOf(androidPlatformTarget.getBootclasspathEntries());
   }
 
   @Override

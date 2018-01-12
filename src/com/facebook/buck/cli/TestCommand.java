@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
@@ -662,10 +661,7 @@ public class TestCommand extends BuildCommand {
         .setTargetDevice(getTargetDeviceOptional())
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
-                params
-                    .getCell()
-                    .getToolchainProvider()
-                    .getByName(AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class),
+                params.getCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 getAdbOptions(params.getBuckConfig()),

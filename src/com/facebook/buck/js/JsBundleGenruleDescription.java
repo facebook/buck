@@ -16,7 +16,7 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.AppleBundleResources;
@@ -118,15 +118,10 @@ public class JsBundleGenruleDescription
           buildTarget, bundleTarget);
     }
 
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
-
     Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
     return new JsBundleGenrule(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
         sandboxExecutionStrategy,
         resolver,
         params.withExtraDeps(
@@ -142,6 +137,8 @@ public class JsBundleGenruleDescription
         cmdExe,
         (JsBundleOutputs) jsBundle,
         args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
         toolchainProvider.getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));

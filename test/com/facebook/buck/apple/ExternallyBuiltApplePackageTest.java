@@ -25,7 +25,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
+import com.facebook.buck.android.TestAndroidPlatformTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -90,7 +90,6 @@ public class ExternallyBuiltApplePackageTest {
         new ExternallyBuiltApplePackage(
             buildTarget,
             projectFilesystem,
-            TestAndroidLegacyToolchainFactory.create(),
             new NoSandboxExecutionStrategy(),
             resolver,
             params,
@@ -98,6 +97,7 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of(bundleLocation),
             true,
             Optional.empty(),
+            Optional.of(TestAndroidPlatformTargetFactory.create()),
             Optional.empty(),
             Optional.empty());
     resolver.addToIndex(rule);
@@ -122,7 +122,6 @@ public class ExternallyBuiltApplePackageTest {
         new ExternallyBuiltApplePackage(
             buildTarget,
             projectFilesystem,
-            TestAndroidLegacyToolchainFactory.create(),
             new NoSandboxExecutionStrategy(),
             resolver,
             params,
@@ -130,6 +129,7 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
             Optional.empty(),
+            Optional.of(TestAndroidPlatformTargetFactory.create()),
             Optional.empty(),
             Optional.empty());
     resolver.addToIndex(rule);
@@ -148,7 +148,6 @@ public class ExternallyBuiltApplePackageTest {
         new ExternallyBuiltApplePackage(
             buildTarget,
             projectFilesystem,
-            TestAndroidLegacyToolchainFactory.create(),
             new NoSandboxExecutionStrategy(),
             resolver,
             params,
@@ -156,6 +155,7 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
             Optional.empty(),
+            Optional.of(TestAndroidPlatformTargetFactory.create()),
             Optional.empty(),
             Optional.empty());
     resolver.addToIndex(rule);
@@ -178,7 +178,6 @@ public class ExternallyBuiltApplePackageTest {
             new ExternallyBuiltApplePackage(
                 buildTarget,
                 projectFilesystem,
-                TestAndroidLegacyToolchainFactory.create(),
                 new NoSandboxExecutionStrategy(),
                 resolver,
                 params,
@@ -186,6 +185,7 @@ public class ExternallyBuiltApplePackageTest {
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
                 Optional.empty(),
+                Optional.of(TestAndroidPlatformTargetFactory.create()),
                 Optional.empty(),
                 Optional.empty());
     assertNotEquals(
@@ -200,7 +200,6 @@ public class ExternallyBuiltApplePackageTest {
             new ExternallyBuiltApplePackage(
                 buildTarget,
                 projectFilesystem,
-                TestAndroidLegacyToolchainFactory.create(),
                 new NoSandboxExecutionStrategy(),
                 resolver,
                 params,
@@ -211,6 +210,7 @@ public class ExternallyBuiltApplePackageTest {
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
                 Optional.empty(),
+                Optional.of(TestAndroidPlatformTargetFactory.create()),
                 Optional.empty(),
                 Optional.empty());
     assertNotEquals(

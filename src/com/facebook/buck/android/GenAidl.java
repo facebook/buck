@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -61,7 +62,7 @@ import java.nio.file.Path;
  */
 public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
 
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.
@@ -73,12 +74,12 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   GenAidl(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       SourcePath aidlFilePath,
       String importPath) {
     super(buildTarget, projectFilesystem, params);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     this.genPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
@@ -115,7 +116,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new AidlStep(
             getProjectFilesystem(),
             target,
-            androidLegacyToolchain,
+            androidPlatformTarget,
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
             ImmutableSet.of(importPath),
             outputDirectory);

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
@@ -147,7 +146,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final boolean isCacheable;
   @AddToRuleKey private final String environmentExpansionSeparator;
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final BuildRuleResolver buildRuleResolver;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
   protected final Path pathToOutDirectory;
@@ -155,13 +153,13 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path pathToTmpDirectory;
   private final Path pathToSrcDirectory;
   private final Boolean isWorkerGenrule;
+  private final Optional<AndroidPlatformTarget> androidPlatformTarget;
   private final Optional<AndroidNdk> androidNdk;
   private final Optional<AndroidSdkLocation> androidSdkLocation;
 
   protected Genrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleResolver buildRuleResolver,
       BuildRuleParams params,
       SandboxExecutionStrategy sandboxExecutionStrategy,
@@ -174,10 +172,11 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
+      Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<AndroidNdk> androidNdk,
       Optional<AndroidSdkLocation> androidSdkLocation) {
     super(buildTarget, projectFilesystem, params);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.androidNdk = androidNdk;
     this.buildRuleResolver = buildRuleResolver;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
@@ -246,22 +245,16 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
-    AndroidPlatformTarget android;
-    try {
-      android = androidLegacyToolchain.getAndroidPlatformTarget();
-    } catch (HumanReadableException e) {
-      android = null;
-    }
 
-    if (android != null) {
-      androidSdkLocation.ifPresent(
-          sdk -> environmentVariablesBuilder.put("ANDROID_HOME", sdk.getSdkRootPath().toString()));
-      androidNdk.ifPresent(
-          ndk -> environmentVariablesBuilder.put("NDK_HOME", ndk.getNdkRootPath().toString()));
-
-      environmentVariablesBuilder.put("DX", android.getDxExecutable().toString());
-      environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
-    }
+    androidSdkLocation.ifPresent(
+        sdk -> environmentVariablesBuilder.put("ANDROID_HOME", sdk.getSdkRootPath().toString()));
+    androidNdk.ifPresent(
+        ndk -> environmentVariablesBuilder.put("NDK_HOME", ndk.getNdkRootPath().toString()));
+    androidPlatformTarget.ifPresent(
+        target -> {
+          environmentVariablesBuilder.put("DX", target.getDxExecutable().toString());
+          environmentVariablesBuilder.put("ZIPALIGN", target.getZipalignExecutable().toString());
+        });
 
     // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
     environmentVariablesBuilder.put("NO_BUCKD", "1");

@@ -26,6 +26,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -33,6 +34,7 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -82,7 +84,10 @@ public class AdbHelperTest {
     return new AdbHelper(
         adbOptions,
         targetDeviceOptions,
-        TestAndroidLegacyToolchainFactory.create(),
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+            .build(),
         () -> executionContext,
         true,
         ImmutableList.of());
@@ -405,7 +410,10 @@ public class AdbHelperTest {
     return new AdbHelper(
         new AdbOptions(),
         new TargetDeviceOptions(),
-        TestAndroidLegacyToolchainFactory.create(),
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+            .build(),
         () -> testContext,
         true,
         ImmutableList.of()) {

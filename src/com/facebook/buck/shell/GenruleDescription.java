@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.config.BuckConfig;
@@ -60,9 +60,9 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+    Optional<AndroidPlatformTarget> androidPlatformTarget =
+        toolchainProvider.getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
     Optional<AndroidNdk> androidNdk =
         toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     Optional<AndroidSdkLocation> androidSdkLocation =
@@ -74,7 +74,6 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       return new Genrule(
           buildTarget,
           projectFilesystem,
-          androidLegacyToolchain,
           resolver,
           params,
           sandboxExecutionStrategy,
@@ -88,13 +87,13 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
+          androidPlatformTarget,
           androidNdk,
           androidSdkLocation);
     } else {
       return new GenruleBinary(
           buildTarget,
           projectFilesystem,
-          androidLegacyToolchain,
           sandboxExecutionStrategy,
           resolver,
           params,
@@ -106,6 +105,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOut(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
+          androidPlatformTarget,
           androidNdk,
           androidSdkLocation);
     }

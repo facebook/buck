@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidInstallConfig;
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
@@ -327,10 +326,7 @@ public class InstallCommand extends BuildCommand {
     return super.getExecutionContextBuilder(params)
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
-                params
-                    .getCell()
-                    .getToolchainProvider()
-                    .getByName(AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class),
+                params.getCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 adbOptions(params.getBuckConfig()),

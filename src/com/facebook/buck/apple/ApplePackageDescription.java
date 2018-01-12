@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
@@ -100,15 +100,10 @@ public class ApplePackageDescription
                 cellRoots,
                 resolver));
 
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
-
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
           buildTarget,
           projectFilesystem,
-          androidLegacyToolchain,
           sandboxExecutionStrategy,
           resolver,
           params.withExtraDeps(
@@ -123,6 +118,8 @@ public class ApplePackageDescription
           Preconditions.checkNotNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable(),
           Optional.empty(),
+          toolchainProvider.getByNameIfPresent(
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
           toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
           toolchainProvider.getByNameIfPresent(
               AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));

@@ -17,18 +17,18 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.function.Supplier;
 
 public class AndroidDevicesHelperFactory {
   protected AndroidDevicesHelperFactory() {}
 
   public static AndroidDevicesHelper get(
-      AndroidLegacyToolchain androidLegacyToolchain,
+      ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
       BuckConfig buckConfig,
       AdbOptions adbOptions,
@@ -36,7 +36,7 @@ public class AndroidDevicesHelperFactory {
     return new AdbHelper(
         adbOptions,
         targetDeviceOptions,
-        androidLegacyToolchain,
+        toolchainProvider,
         contextSupplier,
         buckConfig.getRestartAdbOnFailure(),
         buckConfig.getAdbRapidInstallTypes());

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -57,7 +57,6 @@ public class JsBundleGenrule extends Genrule
   public JsBundleGenrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
       BuildRuleParams params,
@@ -67,12 +66,12 @@ public class JsBundleGenrule extends Genrule
       Optional<Arg> cmdExe,
       JsBundleOutputs jsBundle,
       Optional<String> environmentExpansionSeparator,
+      Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<AndroidNdk> androidNdk,
       Optional<AndroidSdkLocation> androidSdkLocation) {
     super(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
         resolver,
         params,
         sandboxExecutionStrategy,
@@ -85,6 +84,7 @@ public class JsBundleGenrule extends Genrule
         false,
         true,
         environmentExpansionSeparator,
+        androidPlatformTarget,
         androidNdk,
         androidSdkLocation);
     this.jsBundle = jsBundle;

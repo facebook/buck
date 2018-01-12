@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -75,14 +76,11 @@ public class AndroidInstrumentationTestDescription
           buildTarget, apk.getFullyQualifiedName(), apk.getType());
     }
 
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
-
     return new AndroidInstrumentationTest(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,
         args.getLabels(),

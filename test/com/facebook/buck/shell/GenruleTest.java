@@ -22,8 +22,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
@@ -624,9 +622,7 @@ public class GenruleTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
-            .withToolchain(
-                AndroidLegacyToolchain.DEFAULT_NAME,
-                TestAndroidLegacyToolchainFactory.create(android))
+            .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, android)
             .withToolchain(
                 AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir, new ExecutableFinder()))
             .withToolchain(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkDir))

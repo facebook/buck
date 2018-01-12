@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -102,13 +102,9 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
     return new Genrule(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
         resolver,
         params,
         sandboxExecutionStrategy,
@@ -121,6 +117,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getEnableSandbox().orElse(enableSandbox),
         true,
         args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
         toolchainProvider.getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
