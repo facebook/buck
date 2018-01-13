@@ -336,7 +336,7 @@ public class QueryCommand extends AbstractCommand {
 
     PrintStream stdOut = params.getConsole().getStdOut();
     if (shouldOutputAttributes()) {
-      Map<String, SortedMap<String, Object>> attributes =
+      ImmutableSortedMap<String, SortedMap<String, Object>> attributes =
           collectAttributes(params, env, queryResult);
       ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
           extendAttributesWithRankMetadata(outputFormat, entries, attributes);
@@ -421,13 +421,13 @@ public class QueryCommand extends AbstractCommand {
   private void collectAndPrintAttributes(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
-    SortedMap<String, SortedMap<String, Object>> result =
+    ImmutableSortedMap<String, SortedMap<String, Object>> result =
         collectAttributes(params, env, queryResult);
     printAttributes(result, params.getConsole().getStdOut());
   }
 
   private <T extends SortedMap<String, Object>> void printAttributes(
-      SortedMap<String, T> result, PrintStream outputStream) {
+      ImmutableSortedMap<String, T> result, PrintStream outputStream) {
     StringWriter stringWriter = new StringWriter();
     try {
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
@@ -439,11 +439,12 @@ public class QueryCommand extends AbstractCommand {
     outputStream.println(output);
   }
 
-  private SortedMap<String, SortedMap<String, Object>> collectAttributes(
+  private ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
-    SortedMap<String, SortedMap<String, Object>> result = new TreeMap<>();
+    ImmutableSortedMap.Builder<String, SortedMap<String, Object>> attributesBuilder =
+        ImmutableSortedMap.naturalOrder();
     for (QueryTarget target : queryResult) {
       if (!(target instanceof QueryBuildTarget)) {
         continue;
@@ -470,7 +471,7 @@ public class QueryCommand extends AbstractCommand {
           }
         }
 
-        result.put(toPresentationForm(node), attributes);
+        attributesBuilder.put(toPresentationForm(node), attributes);
       } catch (BuildFileParseException e) {
         params
             .getConsole()
@@ -479,7 +480,7 @@ public class QueryCommand extends AbstractCommand {
         continue;
       }
     }
-    return result;
+    return attributesBuilder.build();
   }
 
   private String toPresentationForm(TargetNode<?, ?> node) {
