@@ -40,7 +40,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -56,6 +58,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -281,15 +284,14 @@ public class QueryCommand extends AbstractCommand {
     ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
 
     LOG.debug("Printing out the following targets: " + queryResult);
-    if (shouldOutputAttributes()) {
+    if (getOutputFormat() == OutputFormat.MINRANK || getOutputFormat() == OutputFormat.MAXRANK) {
+      printRankOutput(params, env, queryResult, getOutputFormat());
+    } else if (shouldOutputAttributes()) {
       collectAndPrintAttributes(params, env, queryResult);
     } else if (shouldGenerateDotOutput()) {
       printDotOutput(params, env, queryResult);
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
-    } else if (getOutputFormat() == OutputFormat.MINRANK
-        || getOutputFormat() == OutputFormat.MAXRANK) {
-      printRankOutput(params, env, queryResult, getOutputFormat());
     } else {
       CommandHelper.printToConsole(params, queryResult);
     }
@@ -333,12 +335,48 @@ public class QueryCommand extends AbstractCommand {
             .collect(toList());
 
     PrintStream stdOut = params.getConsole().getStdOut();
-    for (Map.Entry<TargetNode<?, ?>, Integer> entry : entries) {
-      int rank = entry.getValue();
-      String name =
-          entry.getKey().getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
-      stdOut.println(rank + " " + name);
+    if (shouldOutputAttributes()) {
+      Map<String, SortedMap<String, Object>> attributes =
+          collectAttributes(params, env, queryResult);
+      ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
+          extendAttributesWithRankMetadata(outputFormat, entries, attributes);
+      printAttributes(attributesWithRanks, stdOut);
+    } else {
+      for (Map.Entry<TargetNode<?, ?>, Integer> entry : entries) {
+        int rank = entry.getValue();
+        String name = toPresentationForm(entry.getKey());
+        stdOut.println(rank + " " + name);
+      }
     }
+  }
+
+  /** Returns {@code attributes} with included min/max rank metadata into. */
+  private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
+      extendAttributesWithRankMetadata(
+          OutputFormat outputFormat,
+          List<Entry<TargetNode<?, ?>, Integer>> entries,
+          Map<String, SortedMap<String, Object>> attributes) {
+    ImmutableMap<String, Integer> rankIndex =
+        entries
+            .stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    entry -> entry.getKey().getBuildTarget().getFullyQualifiedName(),
+                    Entry::getValue));
+    return entries
+        .stream()
+        .collect(
+            ImmutableSortedMap.toImmutableSortedMap(
+                Comparator.<String>comparingInt(rankIndex::get)
+                    .thenComparing(Comparator.naturalOrder()),
+                entry -> toPresentationForm(entry.getKey()),
+                entry -> {
+                  String label = toPresentationForm(entry.getKey());
+                  return ImmutableSortedMap.<String, Object>naturalOrder()
+                      .putAll(attributes.get(label))
+                      .put(outputFormat.name().toLowerCase(), rankIndex.get(label))
+                      .build();
+                }));
   }
 
   private Map<TargetNode<?, ?>, Integer> computeRanks(
@@ -383,12 +421,13 @@ public class QueryCommand extends AbstractCommand {
   private void collectAndPrintAttributes(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
-    Map<String, SortedMap<String, Object>> result = collectAttributes(params, env, queryResult);
+    SortedMap<String, SortedMap<String, Object>> result =
+        collectAttributes(params, env, queryResult);
     printAttributes(result, params.getConsole().getStdOut());
   }
 
-  private void printAttributes(
-      Map<String, SortedMap<String, Object>> result, PrintStream outputStream) {
+  private <T extends SortedMap<String, Object>> void printAttributes(
+      SortedMap<String, T> result, PrintStream outputStream) {
     StringWriter stringWriter = new StringWriter();
     try {
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
@@ -431,8 +470,7 @@ public class QueryCommand extends AbstractCommand {
           }
         }
 
-        result.put(
-            node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(), attributes);
+        result.put(toPresentationForm(node), attributes);
       } catch (BuildFileParseException e) {
         params
             .getConsole()
@@ -442,6 +480,10 @@ public class QueryCommand extends AbstractCommand {
       }
     }
     return result;
+  }
+
+  private String toPresentationForm(TargetNode<?, ?> node) {
+    return node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
   }
 
   @Override
