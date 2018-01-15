@@ -26,6 +26,7 @@ public class ActionGraph {
     this.nodes = nodes;
   }
 
+  /** NOTE: This may contain duplicate nodes. */
   public Iterable<BuildRule> getNodes() {
     return nodes;
   }

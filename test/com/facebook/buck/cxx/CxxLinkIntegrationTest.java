@@ -16,7 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItemInArray;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -28,9 +32,10 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,8 +59,7 @@ public class CxxLinkIntegrationTest {
     workspace.runBuckBuild(target.toString());
     BuckBuildLog.BuildLogEntry firstRunEntry = workspace.getBuildLog().getLogEntry(linkTarget);
     assertThat(
-        firstRunEntry.getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+        firstRunEntry.getSuccessType(), equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     // Now modify the unused header.
     workspace.writeContentsToPath(
@@ -67,16 +71,15 @@ public class CxxLinkIntegrationTest {
     BuckBuildLog.BuildLogEntry secondRunEntry = workspace.getBuildLog().getLogEntry(linkTarget);
     assertThat(
         secondRunEntry.getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+        equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
 
     // Also, make sure the original rule keys are actually different.
-    assertThat(
-        secondRunEntry.getRuleKey(), Matchers.not(Matchers.equalTo(firstRunEntry.getRuleKey())));
+    assertThat(secondRunEntry.getRuleKey(), not(equalTo(firstRunEntry.getRuleKey())));
   }
 
   @Test
   public void osoSymbolsAreScrubbedCorrectly() throws Exception {
-    Assume.assumeThat(Platform.detect(), Matchers.equalTo(Platform.MACOS));
+    Assume.assumeThat(Platform.detect(), equalTo(Platform.MACOS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_link_oso_symbol_scrub", tmp);
     workspace.setUp();
@@ -88,10 +91,27 @@ public class CxxLinkIntegrationTest {
     assertThat(
         "Path in root cell is relativized to ./",
         lines,
-        hasItemInArray(Matchers.matchesPattern(".*N_OSO.*'\\./buck-out/.*")));
+        hasItemInArray(matchesPattern(".*N_OSO.*'\\./buck-out/.*")));
     assertThat(
         "Path in non-root cell is relativized relative to root cell",
         lines,
-        hasItemInArray(Matchers.matchesPattern(".*N_OSO.*'\\.\\./other_cell/buck-out/.*")));
+        hasItemInArray(matchesPattern(".*N_OSO.*'\\.\\./other_cell/buck-out/.*")));
+  }
+
+  @Test
+  public void linkerExtraOutputsWork() throws Exception {
+    // The test uses a dummy ld using python.
+    Assume.assumeThat(Platform.detect(), not(equalTo(Platform.WINDOWS)));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "linker_extra_outputs_work", tmp);
+    workspace.setUp();
+    Path result = workspace.buildAndReturnOutput(":map-extractor");
+    String contents;
+
+    contents = new String(Files.readAllBytes(result.resolve("bin")), StandardCharsets.UTF_8);
+    assertThat(contents, not(emptyString()));
+
+    contents = new String(Files.readAllBytes(result.resolve("shared_lib")), StandardCharsets.UTF_8);
+    assertThat(contents, not(emptyString()));
   }
 }

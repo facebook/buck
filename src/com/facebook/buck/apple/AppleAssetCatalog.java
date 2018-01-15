@@ -22,13 +22,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -44,9 +46,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class AppleAssetCatalog extends AbstractBuildRule {
 
   public static final Flavor FLAVOR = InternalFlavor.of("apple-asset-catalog");
 
@@ -71,6 +75,8 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final AppleAssetCatalogDescription.Optimization optimization;
 
+  private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
+
   private static final ImmutableSet<String> TYPES_REQUIRING_CONTENTS_JSON =
       ImmutableSet.of(
           "appiconset",
@@ -90,7 +96,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
   AppleAssetCatalog(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       String applePlatformName,
       String targetSDKVersion,
       Tool actool,
@@ -99,7 +105,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> launchImage,
       AppleAssetCatalogDescription.Optimization optimization,
       String bundleName) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.actool = actool;
@@ -112,6 +118,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.appIcon = appIcon;
     this.launchImage = launchImage;
     this.optimization = optimization;
+    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
   @Override
@@ -131,6 +138,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
         context.getSourcePathResolver().getAllAbsolutePaths(assetCatalogDirs);
     stepsBuilder.add(
         new ActoolStep(
+            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             applePlatformName,
             targetSDKVersion,
@@ -240,8 +248,10 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
             if (catalogPath.equals(existingCatalogPath)) {
               continue;
             } else {
-              // All asset catalogs (.xcassets directories) get merged into a single directory per apple bundle.
-              // Imagesets containing images with identical names can overwrite one another, this is especially
+              // All asset catalogs (.xcassets directories) get merged into a single directory per
+              // apple bundle.
+              // Imagesets containing images with identical names can overwrite one another, this is
+              // especially
               // problematic if two images share a name but are different
               errors.add(
                   String.format(
@@ -262,6 +272,11 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
       throw new HumanReadableException(
           "Failed to process asset catalog at %s: %s", catalogPath, e.getMessage());
     }
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   public enum ValidationType {

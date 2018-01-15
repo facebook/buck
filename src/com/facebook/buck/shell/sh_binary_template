@@ -7,23 +7,43 @@ SCRIPT_TO_RUN=<script_to_run>
 # This script can be cached and used on machines other than the one where it was created. That
 # means it can't contain any absolute filepaths. Expose the absolute filepath of the root of
 # the project as $BUCK_REAL_ROOT, determined at runtime.
-BUCK_REAL_ROOT="$(cd `dirname $0`/<path_back_to_root>; pwd)"
-BUCK_TMP_ROOT=`mktemp -d -t sh_binary.XXXXXXXXXX`
+BUCK_REAL_ROOT="$(cd `dirname $0`; pwd)"
+BUCK_TMP_ROOT="`mktemp -d -t sh_binary.XXXXXXXXXX`"
 trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
 
 # Setup the symlinks in a subshell to avoid modifying state (e.g. chdir).
 (
   cd "$BUCK_TMP_ROOT"
 
+  # Create symlink to the cells in the folder containing this script.
+  CELLS_NAMES=(
+  <cell_names:{x|   <x><\n>}>
+  )
+  CELLS_PATHS=(
+  <cell_paths:{x|   <x><\n>}>
+  )
+
+  # The following operation needs to be atomic.
+  if [ ! -d "$BUCK_REAL_ROOT/cells/" ] ; then
+    tmpfolder="`mktemp -d "$BUCK_REAL_ROOT/tmp.XXXXXXXXXX"`"
+    for idx in "${!CELLS_NAMES[@]}"; do
+      name="${CELLS_NAMES[$idx]}"
+      path="${CELLS_PATHS[$idx]}"
+      ln -sf "../$path" "$tmpfolder/$name"
+    done
+    mv -n "$tmpfolder/" "$BUCK_REAL_ROOT/cells/" 2>/dev/null || true
+  fi
+
   # Symlink the resources to the $BUCK_TMP_ROOT directory.
   SYMLINK_PATHS=(
-  <resources:{x|  <x><\n>}>
-    "$SCRIPT_TO_RUN"
+  <resources:{x|   <x><\n>}>
+    "__default__/$SCRIPT_TO_RUN"
   )
+
   for path in "${SYMLINK_PATHS[@]}"; do
     mkdir -p "$(dirname "$path")"
-    ln -s "$BUCK_REAL_ROOT/$path" "$BUCK_TMP_ROOT/$path"
+    ln -sf "$BUCK_REAL_ROOT/cells/$path" "$BUCK_TMP_ROOT/$path"
   done
 )
 
-BUCK_PROJECT_ROOT="$BUCK_TMP_ROOT" "$BUCK_TMP_ROOT/$SCRIPT_TO_RUN" "$@"
+BUCK_PROJECT_ROOT="$BUCK_TMP_ROOT/__default__" "$BUCK_TMP_ROOT/__default__/$SCRIPT_TO_RUN" "$@"

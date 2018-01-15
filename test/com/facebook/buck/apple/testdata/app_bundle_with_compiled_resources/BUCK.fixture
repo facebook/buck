@@ -1,52 +1,61 @@
 apple_resource(
-  name = 'DemoAppResources',
-  files = glob(['*.xib','*.storyboard']),
-  dirs = [],
+    name = "DemoAppResources",
+    dirs = [],
+    files = glob([
+        "*.xib",
+        "*.storyboard",
+    ]),
 )
 
 core_data_model(
-  name = 'DemoAppCoreDataModel',
-  path = 'Model.xcdatamodeld',
+    name = "DemoAppCoreDataModel",
+    path = "Model.xcdatamodeld",
 )
 
 apple_bundle(
-  name = 'DemoApp',
-  binary = ':DemoAppBinary',
-  deps = [':DemoAppCoreDataModel', ':DemoAppSceneKitAssets'],
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [
+        ":DemoAppCoreDataModel",
+        ":DemoAppSceneKitAssets",
+    ],
 )
 
 core_data_model(
-  name = 'DemoAppCoreDataModel2',
-  path = 'Model2.xcdatamodeld',
+    name = "DemoAppCoreDataModel2",
+    path = "Model2.xcdatamodeld",
 )
 
 scene_kit_assets(
-  name = 'DemoAppSceneKitAssets',
-  path = 'DemoApp.scnassets'
+    name = "DemoAppSceneKitAssets",
+    path = "DemoApp.scnassets",
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  deps = [':DemoAppResources', ':DemoAppCoreDataModel2'],
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = [],
-  srcs = ['AppDelegate.m'],
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
+    name = "DemoAppBinary",
+    srcs = ["AppDelegate.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = [],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":DemoAppCoreDataModel2",
+        ":DemoAppResources",
+    ],
 )
 
 apple_test(
-    name = 'AppTest',
-    test_host_app = ':DemoApp',
-    srcs = ['AppTest.m'],
-    info_plist = 'AppTest.plist',
+    name = "AppTest",
+    srcs = ["AppTest.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
     ],
+    info_plist = "AppTest.plist",
+    test_host_app = ":DemoApp",
 )

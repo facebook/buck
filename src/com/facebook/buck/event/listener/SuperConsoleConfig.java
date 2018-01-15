@@ -17,7 +17,9 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
 
 public class SuperConsoleConfig {
@@ -26,6 +28,13 @@ public class SuperConsoleConfig {
   private static final int DEFAULT_THREAD_LINE_LIMIT = 10;
   private static final long DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS = 0;
   private static final int DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW = 0;
+
+  /** Whether the super console is forced on, off or should we auto detect it */
+  private enum Mode {
+    ENABLED,
+    DISABLED,
+    AUTO
+  }
 
   private final BuckConfig delegate;
 
@@ -84,5 +93,29 @@ public class SuperConsoleConfig {
           "Configuration %s:%s contains value out of range: %s.", sectionName, propertyName, value);
     }
     return Optional.of((int) value);
+  }
+
+  /**
+   * Whether the SuperConsole is enabled
+   *
+   * @param console the console configuration being used
+   * @param platform the platform we are running on
+   * @return whether the output should be presented using the super console style
+   */
+  public boolean isEnabled(Console console, Platform platform) {
+    Mode mode = delegate.getEnum(SECTION_NAME, "superconsole", Mode.class).orElse(Mode.AUTO);
+    switch (mode) {
+      case ENABLED:
+        return true;
+      case DISABLED:
+        return false;
+      case AUTO:
+        return Platform.WINDOWS != platform
+            && console.getAnsi().isAnsiTerminal()
+            && !console.getVerbosity().shouldPrintCommand()
+            && console.getVerbosity().shouldPrintStandardInformation();
+      default:
+        throw new IllegalArgumentException("Unhandled case: " + mode);
+    }
   }
 }

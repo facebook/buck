@@ -21,7 +21,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -40,8 +42,7 @@ public class ToolTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("path", Strings.repeat("a", 40))
@@ -50,30 +51,31 @@ public class ToolTest {
                     .build()),
             pathResolver,
             ruleFinder);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Path path = Paths.get("path");
     Path otherPath = Paths.get("other-path");
     Path same = Paths.get("same");
 
-    Tool tool1 = new HashedFileTool(path);
+    Tool tool1 = new HashedFileTool(PathSourcePath.of(filesystem, path));
     RuleKey tool1RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool1).build(RuleKey::new);
 
-    Tool tool2 = new HashedFileTool(path);
+    Tool tool2 = new HashedFileTool(PathSourcePath.of(filesystem, path));
     RuleKey tool2RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool2).build(RuleKey::new);
 
     // Same name, same sha1
     assertEquals(tool1RuleKey, tool2RuleKey);
 
-    Tool tool3 = new HashedFileTool(otherPath);
+    Tool tool3 = new HashedFileTool(PathSourcePath.of(filesystem, otherPath));
     RuleKey tool3RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool3).build(RuleKey::new);
 
     // Different name, different sha1
     assertNotEquals(tool1RuleKey, tool3RuleKey);
 
-    Tool tool4 = new HashedFileTool(same);
+    Tool tool4 = new HashedFileTool(PathSourcePath.of(filesystem, same));
     RuleKey tool4RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool4).build(RuleKey::new);
 
@@ -89,8 +91,8 @@ public class ToolTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
 
     String tool = "tool";
     String version = "version";
@@ -109,9 +111,12 @@ public class ToolTest {
   @Test
   public void shouldAssumeThatToolsInDifferentAbsoluteLocationsWithTheSameNameAreTheSame() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     // Note: both file names are the same
-    HashedFileTool tool1 = new HashedFileTool(Paths.get("/usr/local/bin/python2.7"));
-    HashedFileTool tool2 = new HashedFileTool(Paths.get("/opt/bin/python2.7"));
+    HashedFileTool tool1 =
+        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/usr/local/bin/python2.7")));
+    HashedFileTool tool2 =
+        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/usr/local/bin/python2.7")));
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
@@ -119,8 +124,7 @@ public class ToolTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0,
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     // Note: the hashes of both files are the same

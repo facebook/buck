@@ -17,13 +17,14 @@
 package com.facebook.buck.android.resources;
 
 import com.facebook.buck.io.file.MoreFiles;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -268,11 +270,14 @@ public class ExoResourcesRewriter {
       this.entries =
           Collections.list(zipFile.entries())
               .stream()
-              .collect(MoreCollectors.toImmutableSortedMap(ZipEntry::getName, e -> e));
+              .collect(
+                  ImmutableSortedMap.toImmutableSortedMap(
+                      Ordering.natural(), ZipEntry::getName, e -> e));
       this.entryContents = new HashMap<>();
       this.xmlEntries = new HashMap<>();
       this.resourceTable =
-          Suppliers.memoize(() -> ResourceTable.get(ResChunk.wrap(getContent("resources.arsc"))));
+          MoreSuppliers.memoize(
+              () -> ResourceTable.get(ResChunk.wrap(getContent("resources.arsc"))));
     }
 
     @Override
@@ -314,7 +319,7 @@ public class ExoResourcesRewriter {
                           && !name.startsWith("res/raw")
                           && name.endsWith(".xml"))))
           .map(this::getXml)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
     }
 
     byte[] getContent(String path) {

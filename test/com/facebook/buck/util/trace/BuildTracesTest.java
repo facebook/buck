@@ -23,9 +23,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +40,7 @@ public class BuildTracesTest {
 
   @Test
   public void testGetTraceAttributesForId() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.DO_NOT_CARE);
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.doNotCare());
     projectFilesystem.writeContentsToPath(
         "[\n"
             + "  {\n"
@@ -75,7 +75,7 @@ public class BuildTracesTest {
         Optional.of("buck build buck"),
         traceAttributes.getCommand());
     assertEquals(
-        FileTime.fromMillis(FakeClock.DO_NOT_CARE.currentTimeMillis()),
+        FileTime.fromMillis(FakeClock.doNotCare().currentTimeMillis()),
         traceAttributes.getLastModifiedTime());
 
     // We cannot verify the contents of getFormattedDateTime() because they may vary depending on
@@ -85,7 +85,7 @@ public class BuildTracesTest {
 
   @Test
   public void testGetTraceAttributesForJsonWithoutName() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.DO_NOT_CARE);
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.doNotCare());
     projectFilesystem.writeContentsToPath(
         "["
             + "{"
@@ -107,13 +107,13 @@ public class BuildTracesTest {
         Optional.empty(),
         traceAttributes.getCommand());
     assertEquals(
-        FileTime.fromMillis(FakeClock.DO_NOT_CARE.currentTimeMillis()),
+        FileTime.fromMillis(FakeClock.doNotCare().currentTimeMillis()),
         traceAttributes.getLastModifiedTime());
   }
 
   @Test
   public void testGetTraceAttributesForJsonWithoutCommandArgs() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.DO_NOT_CARE);
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.doNotCare());
     projectFilesystem.writeContentsToPath(
         "["
             + "{"
@@ -134,7 +134,7 @@ public class BuildTracesTest {
         Optional.empty(),
         traceAttributes.getCommand());
     assertEquals(
-        FileTime.fromMillis(FakeClock.DO_NOT_CARE.currentTimeMillis()),
+        FileTime.fromMillis(FakeClock.doNotCare().currentTimeMillis()),
         traceAttributes.getLastModifiedTime());
   }
 
@@ -169,7 +169,7 @@ public class BuildTracesTest {
 
   @Test(expected = HumanReadableException.class)
   public void testInputsForTracesThrowsWhenEmpty() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.DO_NOT_CARE);
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.doNotCare());
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTraceDir());
     BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getInputsForTraces("nonexistent");
@@ -177,7 +177,7 @@ public class BuildTracesTest {
 
   @Test(expected = HumanReadableException.class)
   public void testTraceAttributesThrowsWhenEmpty() throws IOException {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.DO_NOT_CARE);
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(FakeClock.doNotCare());
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTraceDir());
     BuildTraces helper = new BuildTraces(projectFilesystem);
     helper.getTraceAttributesFor("nonexistent");

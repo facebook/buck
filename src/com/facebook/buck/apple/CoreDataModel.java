@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -39,6 +40,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -88,7 +90,7 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath dataModelPath : dataModelPaths) {
       stepsBuilder.add(
-          new ShellStep(getProjectFilesystem().getRootPath()) {
+          new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().getRootPath()) {
             @Override
             protected ImmutableList<String> getShellCommandInternal(
                 ExecutionContext executionContext) {

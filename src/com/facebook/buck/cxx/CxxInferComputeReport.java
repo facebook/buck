@@ -30,9 +30,9 @@ import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.SortedSet;
 
@@ -77,7 +77,7 @@ class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSte
             .stream()
             .map(CxxInferAnalyze::getSourcePathToOutput)
             .map(context.getSourcePathResolver()::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     ImmutableSortedSet<Path> reportsToMerge =
         ImmutableSortedSet.<Path>naturalOrder()

@@ -29,6 +29,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
@@ -57,7 +59,8 @@ public class SwiftNativeLinkableTest {
   @Test
   public void testStaticLinkerFlagsOnMobile() {
     SwiftPlatform swiftPlatform =
-        SwiftPlatforms.build("iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+        SwiftPlatformFactory.build(
+            "iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkable.populateLinkerArguments(
@@ -88,7 +91,8 @@ public class SwiftNativeLinkableTest {
   @Test
   public void testStaticLinkerFlagsOnMac() {
     SwiftPlatform swiftPlatform =
-        SwiftPlatforms.build("macosx", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+        SwiftPlatformFactory.build(
+            "macosx", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkable.populateLinkerArguments(

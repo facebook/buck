@@ -19,12 +19,32 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class GuavaRuleKeyHasherTest extends AbstractRuleKeyHasherTest<HashCode> {
+@RunWith(Enclosed.class)
+public class GuavaRuleKeyHasherTest {
 
-  @Override
-  protected GuavaRuleKeyHasher newHasher() {
+  @RunWith(Parameterized.class)
+  public static class UniquenessTest extends CommonRuleKeyHasherTest.UniquenessTest<HashCode> {
+    @Parameters(name = "{0} != {2}")
+    public static Iterable<Object[]> cases() {
+      return CommonRuleKeyHasherTest.uniquenessTestCases(GuavaRuleKeyHasherTest::newHasher);
+    }
+  }
+
+  public static class ConsistencyTest extends CommonRuleKeyHasherTest.ConsistencyTest<HashCode> {
+
+    @Override
+    protected GuavaRuleKeyHasher newHasher() {
+      return GuavaRuleKeyHasherTest.newHasher();
+    }
+  }
+
+  public static GuavaRuleKeyHasher newHasher() {
     return new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
   }
 }

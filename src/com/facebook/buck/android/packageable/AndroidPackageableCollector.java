@@ -27,12 +27,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.util.HashMap;
@@ -213,6 +213,11 @@ public class AndroidPackageableCollector {
     return this;
   }
 
+  public AndroidPackageableCollector addManifestPiece(SourcePath manifest) {
+    collectionBuilder.addAndroidManifestPieces(manifest);
+    return this;
+  }
+
   public AndroidPackageableCollector addPathToThirdPartyJar(
       BuildTarget owner, SourcePath pathToThirdPartyJar) {
     if (buildTargetsToExcludeFromDex.contains(owner)) {
@@ -240,16 +245,17 @@ public class AndroidPackageableCollector {
         javaClassProviders
             .stream()
             .map(HasJavaClassHashes::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     collectionBuilder.setClassNamesToHashesSupplier(
-        Suppliers.memoize(
-            () -> {
-              ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
-              for (HasJavaClassHashes hasJavaClassHashes : javaClassProviders) {
-                builder.putAll(hasJavaClassHashes.getClassNamesToHashes());
-              }
-              return builder.build();
-            }));
+        MoreSuppliers.memoize(
+                () -> {
+                  Builder<String, HashCode> builder = ImmutableMap.builder();
+                  for (HasJavaClassHashes hasJavaClassHashes : javaClassProviders) {
+                    builder.putAll(hasJavaClassHashes.getClassNamesToHashes());
+                  }
+                  return builder.build();
+                })
+            ::get);
 
     ImmutableSet<BuildTarget> resources = ImmutableSet.copyOf(resourcesWithNonEmptyResDir.build());
     for (BuildTarget buildTarget : resourcesWithAssets.build()) {

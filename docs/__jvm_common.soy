@@ -109,3 +109,58 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .source_only_abi_deps}
+{call buck.arg}
+  {param name: 'source_only_abi_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  <p>
+    These are dependencies that must be present during&nbsp;
+    {call buck.concept_link}{param page: 'java_abis' /}{param name: 'source-only ABI generation' /}{/call}.
+    Typically such dependencies are added when some property of the code in this rule prevents source-only ABI
+    generation from being correct without these dependencies being present.
+  </p>
+  <p>
+    Having <code>source_only_abi_deps</code> prevents Buck from
+    completely flattening the build graph, thus reducing the performance win from source-only
+    ABI generation. They should be avoided when possible. Often only a small code change is needed to avoid them.
+    For more information on such code changes, read about&nbsp;
+    {call buck.concept_link}{param page: 'java_abis' /}{param name: 'source-only ABI generation' /}{/call}.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .abi_generation_mode}
+{call buck.arg}
+  {param name: 'abi_generation_mode' /}
+  {param default: 'None' /}
+  {param desc}
+  Overrides {call buckconfig.java_abi_generation_mode /} for this rule.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .required_for_source_only_abi}
+{call buck.arg}
+  {param name: 'required_for_source_only_abi' /}
+  {param default: 'False' /}
+  {param desc}
+  <p>
+    Indicates that this rule must be present on the classpath during&nbsp;
+    {call buck.concept_link}{param page: 'java_abis' /}{param name: 'source-only ABI generation' /}{/call}&nbsp;
+    of any rule that depends on it. Typically this is done when a rule contains annotations,
+    enums, constants, or interfaces.
+  </p>
+  <p>
+    Having rules present on the classpath during source-only ABI generation prevents Buck from
+    completely flattening the build graph, thus reducing the performance win from source-only
+    ABI generation. These rules should be kept small (ideally just containing annotations,
+    constants, enums, and interfaces) and with minimal dependencies of their own.
+  </p>
+  {/param}
+{/call}
+{/template}

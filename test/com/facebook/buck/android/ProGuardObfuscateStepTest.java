@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
@@ -52,22 +53,18 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
 
   private ExecutionContext executionContext;
+  private AndroidPlatformTarget androidPlatformTarget;
 
   @Before
   public void setUp() {
-    final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
+    androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
     expect(androidPlatformTarget.getOptimizedProguardConfig())
         .andStubReturn(Paths.get("sdk-optimized.pro"));
     expect(androidPlatformTarget.getBootclasspathEntries()).andStubReturn(ImmutableList.of());
     expect(androidPlatformTarget.getProguardJar()).andStubReturn(Paths.get("proguard.jar"));
     replay(androidPlatformTarget);
-    executionContext =
-        TestExecutionContext.newBuilder()
-            .setAndroidPlatformTargetSupplier(() -> androidPlatformTarget)
-            .build();
-
-    assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);
+    executionContext = TestExecutionContext.newBuilder().build();
   }
 
   @Test
@@ -93,25 +90,15 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
     Path cwd = Paths.get("root");
 
     checkSdkConfig(
-        executionContext,
-        cwd,
-        ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        Optional.empty(),
-        "sdk-default.pro");
+        cwd, ProGuardObfuscateStep.SdkProguardType.DEFAULT, Optional.empty(), "sdk-default.pro");
     checkSdkConfig(
-        executionContext,
         cwd,
         ProGuardObfuscateStep.SdkProguardType.OPTIMIZED,
         Optional.empty(),
         "sdk-optimized.pro");
+    checkSdkConfig(cwd, ProGuardObfuscateStep.SdkProguardType.NONE, Optional.empty(), null);
     checkSdkConfig(
-        executionContext, cwd, ProGuardObfuscateStep.SdkProguardType.NONE, Optional.empty(), null);
-    checkSdkConfig(
-        executionContext,
-        cwd,
-        ProGuardObfuscateStep.SdkProguardType.NONE,
-        Optional.of("/some/path"),
-        null);
+        cwd, ProGuardObfuscateStep.SdkProguardType.NONE, Optional.of("/some/path"), null);
     verifyAll();
   }
 
@@ -121,12 +108,13 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
         "1024M",
         Optional.empty(),
-        Paths.get("generated/proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         /* optimizationPasses */ Optional.empty(),
@@ -141,7 +129,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
-    ImmutableList<String> parameters = commandLineHelperStep.getParameters(executionContext, cwd);
+    ImmutableList<String> parameters = commandLineHelperStep.getParameters(cwd);
     int libraryJarsArgIndex = parameters.indexOf("-libraryjars");
     int libraryJarsValueIndex =
         parameters.indexOf("myfavorite.jar" + File.pathSeparatorChar + "another.jar");
@@ -155,12 +143,13 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
         "1024M",
         Optional.empty(),
-        Paths.get("generated/proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         /* optimizationPasses */ Optional.empty(),
@@ -181,19 +170,19 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   }
 
   private void checkSdkConfig(
-      ExecutionContext context,
       Path cwd,
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
       Optional<String> proguardAgentPath,
       String expectedPath) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
         "1024M",
         proguardAgentPath,
-        Paths.get("generated/proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(),
         sdkProguardConfig,
         /* optimizationPasses */ Optional.empty(),
@@ -209,7 +198,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
 
     String found = null;
-    Iterator<String> argsIt = commandLineHelperStep.getParameters(context, cwd).iterator();
+    Iterator<String> argsIt = commandLineHelperStep.getParameters(cwd).iterator();
     while (argsIt.hasNext()) {
       String arg = argsIt.next();
       if (!arg.equals("-include")) {

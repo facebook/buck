@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "parser",
     srcs = glob(["*.java"]),
     tests = [
@@ -17,6 +19,9 @@ java_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/skylark/function:function",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/skylark/io/impl:impl",
+        "//src/com/facebook/buck/skylark/packages:packages",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/bazel:skylark-lang",

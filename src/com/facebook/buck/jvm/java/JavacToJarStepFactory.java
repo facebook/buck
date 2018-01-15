@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -32,71 +33,96 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public class JavacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private JavacOptions javacOptions;
-  @AddToRuleKey private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
+  @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
       Javac javac,
       JavacOptions javacOptions,
-      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+      ExtraClasspathProvider extraClasspathProvider) {
+    super(resolver, ruleFinder, projectFilesystem);
     this.javac = javac;
     this.javacOptions = javacOptions;
-    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
+    this.extraClasspathProvider = extraClasspathProvider;
+  }
+
+  public JavacPipelineState createPipelineState(
+      BuildTarget invokingRule,
+      CompilerParameters compilerParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters) {
+    final JavacOptions buildTimeOptions =
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
+
+    return new JavacPipelineState(
+        javac,
+        buildTimeOptions,
+        invokingRule,
+        resolver,
+        projectFilesystem,
+        new ClasspathChecker(),
+        compilerParameters,
+        abiJarParameters,
+        libraryJarParameters);
   }
 
   @Override
   public void createCompileStep(
       BuildContext context,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
       CompilerParameters parameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
     final JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
     if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
       addAnnotationGenFolderStep(
-          parameters.getGeneratedCodeDirectory(), filesystem, steps, buildableContext, context);
+          CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
+          projectFilesystem,
+          steps,
+          buildableContext,
+          context,
+          null);
     }
 
-    final ClassUsageFileWriter usedClassesFileWriter =
-        parameters.shouldTrackClassUsage()
-            ? new DefaultClassUsageFileWriter(parameters.getDepFilePath())
-            : NoOpClassUsageFileWriter.instance();
     steps.add(
         new JavacStep(
-            usedClassesFileWriter,
             javac,
             buildTimeOptions,
             invokingRule,
             resolver,
-            filesystem,
+            projectFilesystem,
             new ClasspathChecker(),
             parameters,
-            Optional.empty(),
-            parameters.shouldGenerateAbiJar() ? parameters.getAbiJarPath() : null));
+            null,
+            null));
   }
 
   @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
     JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
     return buildTimeOptions.getBootclasspath();
   }
 
@@ -114,21 +140,60 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         ruleFinder.filterBuildRuleInputs(javacOptions.getAnnotationProcessingParams().getInputs()));
   }
 
+  public final void createPipelinedCompileToJarStep(
+      BuildContext context,
+      BuildTarget target,
+      JavacPipelineState pipeline,
+      ResourcesParameters resourcesParameters,
+      ImmutableList<String> postprocessClassesCommands,
+      Builder<Step> steps,
+      BuildableContext buildableContext) {
+    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
+    CompilerParameters compilerParameters = pipeline.getCompilerParameters();
+
+    if (!pipeline.isRunning()) {
+      addCompilerSetupSteps(context, target, compilerParameters, resourcesParameters, steps);
+    }
+
+    Optional<JarParameters> jarParameters =
+        HasJavaAbi.isLibraryTarget(target)
+            ? pipeline.getLibraryJarParameters()
+            : pipeline.getAbiJarParameters();
+
+    if (jarParameters.isPresent()) {
+      addJarSetupSteps(context, jarParameters.get(), steps);
+    }
+
+    // Only run javac if there are .java files to compile or we need to shovel the manifest file
+    // into the built jar.
+    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
+      recordDepFileIfNecessary(target, compilerParameters, buildableContext);
+
+      // This adds the javac command, along with any supporting commands.
+      createPipelinedCompileStep(context, pipeline, target, steps, buildableContext);
+    }
+
+    if (jarParameters.isPresent()) {
+      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters.get());
+    }
+  }
+
   @Override
   public void createCompileToJarStepImpl(
       BuildContext context,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem filesystem,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
-      JarParameters jarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
     Preconditions.checkArgument(
-        jarParameters.getEntriesToJar().contains(compilerParameters.getOutputDirectory()));
+        libraryJarParameters == null
+            || libraryJarParameters
+                .getEntriesToJar()
+                .contains(compilerParameters.getOutputDirectory()));
 
     String spoolMode = javacOptions.getSpoolMode().name();
     // In order to use direct spooling to the Jar:
@@ -150,61 +215,87 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
     if (isSpoolingToJarEnabled) {
       final JavacOptions buildTimeOptions =
-          javacOptions.withBootclasspathFromContext(extraClasspathFromContextFunction, context);
+          javacOptions.withBootclasspathFromContext(extraClasspathProvider);
       boolean generatingCode = !buildTimeOptions.getAnnotationProcessingParams().isEmpty();
       if (generatingCode) {
         // Javac requires that the root directory for generated sources already exists.
         addAnnotationGenFolderStep(
-            compilerParameters.getGeneratedCodeDirectory(),
-            filesystem,
+            CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
+            projectFilesystem,
             steps,
             buildableContext,
-            context);
+            context,
+            null);
       }
 
-      final ClassUsageFileWriter usedClassesFileWriter =
-          compilerParameters.shouldTrackClassUsage()
-              ? new DefaultClassUsageFileWriter(compilerParameters.getDepFilePath())
-              : NoOpClassUsageFileWriter.instance();
       steps.add(
           new JavacStep(
-              usedClassesFileWriter,
               javac,
               buildTimeOptions,
               invokingRule,
               resolver,
-              filesystem,
+              projectFilesystem,
               new ClasspathChecker(),
               compilerParameters,
-              Optional.of(jarParameters),
-              compilerParameters.shouldGenerateAbiJar()
-                  ? compilerParameters.getAbiJarPath()
-                  : null));
+              abiJarParameters,
+              libraryJarParameters));
     } else {
       super.createCompileToJarStepImpl(
           context,
           invokingRule,
-          resolver,
-          ruleFinder,
-          filesystem,
           compilerParameters,
           postprocessClassesCommands,
-          jarParameters,
+          null,
+          libraryJarParameters,
           steps,
           buildableContext);
     }
   }
 
+  public void createPipelinedCompileStep(
+      BuildContext context,
+      JavacPipelineState pipeline,
+      BuildTarget invokingRule,
+      Builder<Step> steps,
+      BuildableContext buildableContext) {
+    boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
+    if (generatingCode) {
+      // Javac requires that the root directory for generated sources already exist.
+      addAnnotationGenFolderStep(
+          CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
+          projectFilesystem,
+          steps,
+          buildableContext,
+          context,
+          pipeline);
+
+      if (pipeline.isRunning()) {
+        steps.add(
+            SymlinkFileStep.of(
+                projectFilesystem,
+                CompilerParameters.getAnnotationPath(
+                        projectFilesystem, HasJavaAbi.getSourceAbiJar(invokingRule))
+                    .get(),
+                CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get()));
+      }
+    }
+
+    steps.add(new JavacStep(pipeline, invokingRule));
+  }
+
   private static void addAnnotationGenFolderStep(
       Path annotationGenFolder,
       ProjectFilesystem filesystem,
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext,
-      BuildContext buildContext) {
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder)));
+      BuildContext buildContext,
+      @Nullable JavacPipelineState pipeline) {
+    if (pipeline == null || !pipeline.isRunning()) {
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder)));
+    }
     buildableContext.recordArtifact(annotationGenFolder);
   }
 

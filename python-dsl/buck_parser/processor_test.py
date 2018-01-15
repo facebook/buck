@@ -79,6 +79,7 @@ class ProjectFile(object):
         """
         self.path = path
         self.name = '//{0}'.format(path)
+        self.load_name = '//{0}:{1}'.format(*os.path.split(path))
         self.root = root
         self.prefix = None
         if isinstance(contents, (tuple, list)):
@@ -119,7 +120,6 @@ class BuckTest(unittest.TestCase):
             self.watchman_client,
             False,              # watchman_glob_stat_results
             False,              # watchman_use_glob_generator
-            False,              # use_mercurial_glob
             self.project_import_whitelist,
             includes or [],
             **kwargs)
@@ -435,6 +435,50 @@ class BuckTest(unittest.TestCase):
         self.assertEqual('Nobody watches the watchmen', exception['value'])
         self.assertTrue(len(exception['traceback']) > 0)
 
+    def test_glob_exclude_is_supported(self):
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'foo_rule(',
+                '  name="foo",'
+                '  srcs=glob(["*.java"], exclude=[]),',
+                ')'
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        self.write_files(build_file, java_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('srcs'), ['Foo.java'])
+
+    def test_glob_exclude_cannot_be_mixed_with_excludes(self):
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'foo_rule(',
+                '  name="foo",'
+                '  srcs=glob(["*.java"], exclude=["e1"], excludes=["e2"]),',
+                ')'
+            ))
+        java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
+        self.write_files(build_file, java_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            self.assertRaisesRegexp(
+                AssertionError,
+                "Mixing 'exclude' and 'excludes' attributes is not allowed. Please replace your "
+                "exclude and excludes arguments with a single 'excludes = \['e1', 'e2'\]'.",
+                build_file_processor.process,
+                build_file.root,
+                build_file.prefix,
+                build_file.path,
+                diagnostics)
+
     def test_watchman_glob_warning_adds_diagnostic(self):
         class FakeWatchmanClient:
             def query(self, *args):
@@ -536,6 +580,104 @@ class BuckTest(unittest.TestCase):
         self.assertEquals(
             get_config_from_results(result),
             {'hello': {'world': 'foo', 'bar': None, 'goo': None}})
+
+    def test_struct_is_available(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                's = struct(name="foo")',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "s")',
+                'foo_rule(',
+                '  name=s.name,',
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'foo')
+
+    def test_provider_is_available(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'Info = provider()',
+                'info = Info(name="foo")',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "info")',
+                'foo_rule(',
+                '  name=info.name,',
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'foo')
+
+    def test_package_name_is_available(self):
+        package_dir = os.path.join(self.project_root, 'pkg')
+        os.makedirs(package_dir)
+        build_file = ProjectFile(
+            self.project_root,
+            path='pkg/BUCK',
+            contents=(
+                'foo_rule(',
+                '  name=package_name(),',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'pkg')
+
+    def test_package_name_in_extension_returns_build_file_package(self):
+        package_dir = os.path.join(self.project_root, 'pkg')
+        os.makedirs(package_dir)
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'def foo():',
+                '  return package_name()',
+            ))
+        self.write_file(extension_file)
+        build_file = ProjectFile(
+            self.project_root,
+            path='pkg/BUCK',
+            contents=(
+                'load("//:ext.bzl", "foo")',
+                'foo_rule(',
+                '  name=foo(),',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'pkg')
 
     def test_add_build_file_dep(self):
         """
@@ -1028,6 +1170,38 @@ class BuckTest(unittest.TestCase):
                 processor.process(self.project_root, None, 'BUCK_fail', [])
             self.assertEqual(e.exception.message, expected_msg)
 
+    def test_fail_function_throws_an_error(self):
+        build_file = ProjectFile(
+            root=self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'fail("expected error")',
+            )
+        )
+        self.write_files(build_file)
+
+        processor = self.create_build_file_processor()
+
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(AssertionError, "expected error"):
+                processor.process(self.project_root, None, 'BUCK_fail', [])
+
+    def test_fail_function_includes_attribute_information(self):
+        build_file = ProjectFile(
+            root=self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'fail("error", "foo")',
+            )
+        )
+        self.write_files(build_file)
+
+        processor = self.create_build_file_processor()
+
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(AssertionError, "attribute foo: error"):
+                processor.process(self.project_root, None, 'BUCK_fail', [])
+
     def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
         defs_file = ProjectFile(
             root=self.project_root,
@@ -1231,6 +1405,53 @@ foo_rule(
             '"visibility": []}, {"__includes": ["BUCK"]}, {"__configs": {}}, '
             '{"__env": {}}]}',
             result)
+
+    def test_file_parsed_as_build_file_and_include_def(self):
+        """
+        Test that paths can be parsed as both build files and include defs.
+        """
+
+        # Setup a build file, foo, and another build file bar which includes
+        # the former.
+        foo = ProjectFile(self.project_root, path='foo', contents=('FOO = 1',))
+        bar = (
+            ProjectFile(
+                self.project_root,
+                path='bar',
+                contents=('include_defs({0!r})'.format(foo.name))))
+        self.write_files(foo, bar)
+
+        # Parse bar, which parses foo as an include def, then parse foo as a
+        # build file.
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(bar.root, bar.prefix, bar.path, [])
+        build_file_processor.process(foo.root, foo.prefix, foo.path, [])
+
+    def test_load_with_implicit_includes(self):
+        """
+        Test a `load()` statement inside an implicit include.
+        """
+
+        # Setup the includes defs.  The second just includes the first one via
+        # the `load()` function.
+        include_def1 = ProjectFile(self.project_root, path='inc_def1', contents=())
+        include_def2 = (
+            ProjectFile(
+                self.project_root,
+                path='inc_def2',
+                contents=(
+                    'load({0!r})'.format(include_def1.load_name),
+                )))
+        self.write_files(include_def1, include_def2)
+
+        # Construct a processor using the above as default includes, and run
+        # it to verify nothing crashes.
+        build_file = ProjectFile(self.project_root, path='BUCK', contents='')
+        self.write_file(build_file)
+        build_file_processor = (
+            self.create_build_file_processor(includes=[include_def2.name]))
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, [])
+
 
 if __name__ == '__main__':
     unittest.main()

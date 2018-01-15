@@ -1,10 +1,10 @@
-include_defs('other//DEFS')
+include_defs("other//DEFS")
 
 genrule(
-  name='rule',
-  bash=r'''
+    name = "rule",
+    out = "rule",
+    bash = """
     touch $OUT
     [[ '{0}' == 'from other' ]]
-    exit $?;'''.format(from_other()),
-  out='rule',
+    exit $?;""".format(from_other()),
 )

@@ -78,6 +78,7 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     ocamlContext.getNativeOutput().getParent())))
         .add(
             new OcamlBuildStep(
+                getBuildTarget(),
                 context,
                 getProjectFilesystem(),
                 ocamlContext,

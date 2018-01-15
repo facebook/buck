@@ -1,52 +1,52 @@
 FORK_TESTS = [
-  'JavaTestFork1Test.java',
-  'JavaTestFork2Test.java',
+    "JavaTestFork1Test.java",
+    "JavaTestFork2Test.java",
 ]
 
 java_test(
-  name = 'fork-mode',
-  srcs = FORK_TESTS,
-  fork_mode = 'per_test',
-  deps = [
-    ':junit'
-  ],
+    name = "fork-mode",
+    srcs = FORK_TESTS,
+    fork_mode = "per_test",
+    deps = [
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'spinning',
-  srcs = [
-    'SpinningTest.java',
-  ],
-  deps = [
-    ':junit',
-  ],
+    name = "spinning",
+    srcs = [
+        "SpinningTest.java",
+    ],
+    deps = [
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'slow',
-  srcs = [
-    'SlowTest.java',
-  ],
-  deps = [
-    ':junit',
-  ],
+    name = "slow",
+    srcs = [
+        "SlowTest.java",
+    ],
+    deps = [
+        ":junit",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
-  deps = [
-    ':hamcrest-core',
-    ':hamcrest-library',
-  ],
+    name = "junit",
+    binary_jar = "junit-4.11.jar",
+    deps = [
+        ":hamcrest-core",
+        ":hamcrest-library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-core",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+    name = "hamcrest-library",
+    binary_jar = "hamcrest-library-1.3.jar",
 )

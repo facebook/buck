@@ -1,105 +1,105 @@
 cxx_library(
-  name = 'lib',
-  headers = [
-    'lib.h',
-  ],
-  srcs = [
-    'lib.cpp',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib",
+    srcs = [
+        "lib.cpp",
+    ],
+    headers = [
+        "lib.h",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 cxx_library(
-  name = 'libasset',
-  headers = [
-    'lib.h',
-  ],
-  srcs = [
-    'lib.cpp',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-  can_be_asset = True
+    name = "libasset",
+    srcs = [
+        "lib.cpp",
+    ],
+    can_be_asset = True,
+    headers = [
+        "lib.h",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 cxx_library(
-  name = 'libasset2',
-  headers = [
-    'lib.h',
-  ],
-  srcs = [
-    'lib.cpp',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-  can_be_asset = True
+    name = "libasset2",
+    srcs = [
+        "lib.cpp",
+    ],
+    can_be_asset = True,
+    headers = [
+        "lib.h",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 cxx_library(
-  name = 'foo1',
-  srcs = [
-    'foo.cpp',
-  ],
-  deps = [
-    ':bar',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "foo1",
+    srcs = [
+        "foo.cpp",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":bar",
+    ],
 )
 
 cxx_library(
-  name = 'foo2',
-  srcs = [
-    'foo.cpp',
-  ],
-  deps = [
-    ':bar',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "foo2",
+    srcs = [
+        "foo.cpp",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":bar",
+    ],
 )
 
 cxx_library(
-  name = 'bar',
-  force_static = True,
-  exported_headers = [
-    'bar.h',
-  ],
-  srcs = [
-    'bar.cpp',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "bar",
+    srcs = [
+        "bar.cpp",
+    ],
+    exported_headers = [
+        "bar.h",
+    ],
+    force_static = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 cxx_library(
-  name = 'headeronly',
-  exported_headers = [
-    'bar.h',
-  ],
-  visibility = [ 'PUBLIC' ],
+    name = "headeronly",
+    exported_headers = [
+        "bar.h",
+    ],
+    visibility = ["PUBLIC"],
 )
 
 cxx_library(
-  name = 'x86-only',
-  srcs = ['x86-only.c'],
-  supported_platforms_regex = "^android-x86$",
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "x86-only",
+    srcs = ["x86-only.c"],
+    supported_platforms_regex = "^android-x86$",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 cxx_library(
-  name = 'symbols',
-  srcs = ['symbols.cpp'],
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "symbols",
+    srcs = ["symbols.cpp"],
+    visibility = [
+        "PUBLIC",
+    ],
 )

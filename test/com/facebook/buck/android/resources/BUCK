@@ -1,9 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
 java_test(
     name = "resources",
     srcs = glob(["*.java"]),
     resources = glob(
         ["testdata/**"],
-        include_dotfiles = True,
     ),
     deps = [
         "//src/com/facebook/buck/android/resources:resources",

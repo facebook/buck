@@ -1,19 +1,19 @@
 cxx_library(
-  name = 'library',
-  srcs = ['library.cpp'],
-  visibility = ['PUBLIC'],
+    name = "library",
+    srcs = ["library.cpp"],
+    visibility = ["PUBLIC"],
 )
 
 cxx_library(
-  name = 'library1',
-  soname = 'liblibrary.$(ext)',
-  srcs = ['library.cpp'],
-  visibility = ['PUBLIC'],
+    name = "library1",
+    srcs = ["library.cpp"],
+    soname = "liblibrary.$(ext)",
+    visibility = ["PUBLIC"],
 )
 
 cxx_library(
-  name = 'library2',
-  soname = 'liblibrary.$(ext)',
-  srcs = ['library.cpp'],
-  visibility = ['PUBLIC'],
+    name = "library2",
+    srcs = ["library.cpp"],
+    soname = "liblibrary.$(ext)",
+    visibility = ["PUBLIC"],
 )

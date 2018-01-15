@@ -1,38 +1,38 @@
 rust_binary(
-  name = "hello",
-  srcs = [
-    "main.rs",
-  ],
-  deps = [
-    "//messenger:messenger",
-  ],
+    name = "hello",
+    srcs = [
+        "main.rs",
+    ],
+    deps = [
+        "//messenger:messenger",
+    ],
 )
 
 rust_binary(
-  name = "transitive",
-  srcs = [
-    "transitive.rs",
-  ],
-  deps = [
-    "//messenger:messenger",
-    "//messenger/messengerdep:messengerdep",
-  ],
+    name = "transitive",
+    srcs = [
+        "transitive.rs",
+    ],
+    deps = [
+        "//messenger:messenger",
+        "//messenger/messengerdep:messengerdep",
+    ],
 )
 
 rust_binary(
-  name = "illegal_dep",
-  srcs = [
-    "main.rs",
-  ],
-  deps = [
-    ":python_dep",
-    "//messenger:messenger",
-  ],
+    name = "illegal_dep",
+    srcs = [
+        "main.rs",
+    ],
+    deps = [
+        ":python_dep",
+        "//messenger:messenger",
+    ],
 )
 
 python_library(
-  name = "python_dep",
-  srcs = [
-    "empty.py"
-  ]
+    name = "python_dep",
+    srcs = [
+        "empty.py",
+    ],
 )

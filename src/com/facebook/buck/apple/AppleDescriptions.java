@@ -19,6 +19,11 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.apple.AppleAssetCatalog.validateAssetCatalogs;
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
+import com.facebook.buck.apple.platform_type.ApplePlatformType;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -55,15 +60,11 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,6 +81,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -154,8 +157,8 @@ public class AppleDescriptions {
                     .orElse(Stream.empty())
                     .distinct() // allow duplicate entries as long as they map to the same path
                     .collect(
-                        MoreCollectors.toImmutableSortedMap(
-                            Map.Entry::getKey, Map.Entry::getValue)));
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue)));
 
     return headersMapBuilder.build();
   }
@@ -251,8 +254,8 @@ public class AppleDescriptions {
                             .stream())
                     .distinct() // allow duplicate entries as long as they map to the same path
                     .collect(
-                        MoreCollectors.toImmutableSortedMap(
-                            Map.Entry::getKey, Map.Entry::getValue)))
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue)))
             .build();
 
     ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
@@ -312,7 +315,6 @@ public class AppleDescriptions {
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ApplePlatform applePlatform,
@@ -389,16 +391,11 @@ public class AppleDescriptions {
       applePlatform = ApplePlatform.WATCHOS;
       targetSDKVersion = "1.0";
     }
-    BuildRuleParams assetParams =
-        params
-            .withoutExtraDeps()
-            .withDeclaredDeps(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(assetCatalogDirs)));
     return Optional.of(
         new AppleAssetCatalog(
             assetCatalogBuildTarget,
             projectFilesystem,
-            assetParams,
+            ruleFinder,
             applePlatform.getName(),
             targetSDKVersion,
             actool,
@@ -440,7 +437,7 @@ public class AppleDescriptions {
               coreDataModelArgs
                   .stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
-                  .collect(MoreCollectors.toImmutableSet())));
+                  .collect(ImmutableSet.toImmutableSet())));
     }
   }
 
@@ -473,7 +470,7 @@ public class AppleDescriptions {
               sceneKitAssetsArgs
                   .stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
-                  .collect(MoreCollectors.toImmutableSet())));
+                  .collect(ImmutableSet.toImmutableSet())));
     }
   }
 
@@ -489,7 +486,7 @@ public class AppleDescriptions {
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     // Target used as the base target of AppleDebuggableBinary.
 
-    BuildTarget baseTarget = strippedBinaryRule.getBuildTarget();
+    BuildTarget baseTarget = unstrippedBinaryRule.getBuildTarget();
     switch (debugFormat) {
       case DWARF:
         return AppleDebuggableBinary.createFromUnstrippedBinary(
@@ -548,7 +545,7 @@ public class AppleDescriptions {
                   unstrippedBinaryRule
                       .getAppleDebugSymbolDeps()
                       .map(BuildRule::getSourcePathToOutput)
-                      .collect(MoreCollectors.toImmutableSortedSet()),
+                      .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
                   AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem));
             });
   }
@@ -574,7 +571,11 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       boolean dryRunCodeSigning,
       boolean cacheable,
-      AppleAssetCatalog.ValidationType assetCatalogValidation) {
+      boolean verifyResources,
+      AppleAssetCatalog.ValidationType assetCatalogValidation,
+      ImmutableList<String> codesignFlags,
+      Optional<String> codesignAdhocIdentity,
+      Optional<Boolean> ibtoolModuleFlag) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
@@ -642,7 +643,6 @@ public class AppleDescriptions {
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            params,
             sourcePathResolver,
             ruleFinder,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
@@ -672,12 +672,14 @@ public class AppleDescriptions {
 
     // TODO(beng): Sort through the changes needed to make project generation work with
     // binary being optional.
+    ImmutableSortedSet<Flavor> flavoredBinaryRuleFlavors =
+        buildTargetWithoutBundleSpecificFlavors.getFlavors();
     BuildRule flavoredBinaryRule =
         getFlavoredBinaryRule(
             cxxPlatformFlavorDomain,
             defaultCxxFlavor,
             targetGraph,
-            buildTargetWithoutBundleSpecificFlavors.getFlavors(),
+            flavoredBinaryRuleFlavors,
             resolver,
             binary);
 
@@ -726,6 +728,17 @@ public class AppleDescriptions {
       appleDsym = Optional.empty();
     }
 
+    ImmutableSet<BuildRule> extraBinaries =
+        collectFirstLevelExtraBinariesFromDeps(
+            appleCxxPlatform.getAppleSdk().getApplePlatform().getType(),
+            deps,
+            binary,
+            cxxPlatformFlavorDomain,
+            defaultCxxFlavor,
+            targetGraph,
+            flavoredBinaryRuleFlavors,
+            resolver);
+
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
         getBundleParamsWithUpdatedDeps(
             params,
@@ -743,8 +756,9 @@ public class AppleDescriptions {
                             .concat(frameworks.stream())
                             .filter(BuildTargetSourcePath.class)
                             .map(BuildTargetSourcePath::getTarget)
-                            .collect(MoreCollectors.toImmutableSet())))
+                            .collect(ImmutableSet.toImmutableSet())))
                 .addAll(Optionals.toStream(appleDsym).iterator())
+                .addAll(extraBinaries)
                 .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths =
@@ -761,6 +775,7 @@ public class AppleDescriptions {
         infoPlistSubstitutions,
         Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)),
         appleDsym,
+        extraBinaries,
         destinations,
         collectedResources,
         extensionBundlePaths,
@@ -773,7 +788,11 @@ public class AppleDescriptions {
         codeSignIdentityStore,
         provisioningProfileStore,
         dryRunCodeSigning,
-        cacheable);
+        cacheable,
+        verifyResources,
+        codesignFlags,
+        codesignAdhocIdentity,
+        ibtoolModuleFlag);
   }
 
   private static void addToIndex(BuildRuleResolver resolver, Optional<? extends BuildRule> rule) {
@@ -862,17 +881,20 @@ public class AppleDescriptions {
       final Set<BuildRule> newDeps) {
     // Remove the unflavored binary rule and add the flavored one instead.
     final Predicate<BuildRule> notOriginalBinaryRule =
-        Predicates.not(BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
+        BuildRules.isBuildRuleWithTarget(originalBinaryTarget).negate();
     return params
         .withDeclaredDeps(
             FluentIterable.from(params.getDeclaredDeps().get())
-                .filter(notOriginalBinaryRule)
+                .filter(notOriginalBinaryRule::test)
                 .append(newDeps)
                 .toSortedSet(Ordering.natural()))
         .withExtraDeps(
-            FluentIterable.from(params.getExtraDeps().get())
+            params
+                .getExtraDeps()
+                .get()
+                .stream()
                 .filter(notOriginalBinaryRule)
-                .toSortedSet(Ordering.natural()));
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   private static ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(
@@ -910,11 +932,57 @@ public class AppleDescriptions {
             .toFileExtension()
             .equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getFrameworksPath().toString());
+        } else if (AppleBundleExtension.XPC.toFileExtension().equals(appleBundle.getExtension())) {
+          extensionBundlePaths.put(sourcePath, destinations.getXPCServicesPath().toString());
         }
       }
     }
 
     return extensionBundlePaths.build();
+  }
+
+  private static ImmutableSet<BuildRule> collectFirstLevelExtraBinariesFromDeps(
+      ApplePlatformType platformType,
+      ImmutableSortedSet<BuildTarget> depBuildTargets,
+      BuildTarget primaryBinaryTarget,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      Flavor defaultCxxFlavor,
+      TargetGraph targetGraph,
+      ImmutableSet<Flavor> flavors,
+      BuildRuleResolver resolver) {
+    if (platformType != ApplePlatformType.MAC) {
+      // Multiple binaries are only supported on macOS
+      return ImmutableSet.of();
+    }
+
+    ImmutableSet.Builder<BuildRule> flavoredBinariesBuilder = ImmutableSet.builder();
+
+    for (BuildTarget dep : depBuildTargets) {
+      if (dep.equals(primaryBinaryTarget)) {
+        continue;
+      }
+
+      Optional<TargetNode<?, ?>> depTargetNode = targetGraph.getOptional(dep);
+      Optional<TargetNode<AppleBinaryDescriptionArg, ?>> binaryDepNode =
+          depTargetNode.flatMap(n -> n.castArg(AppleBinaryDescriptionArg.class));
+      if (!binaryDepNode.isPresent()) {
+        // Skip any deps which are not apple_binary
+        continue;
+      }
+
+      BuildRule flavoredBinary =
+          getFlavoredBinaryRule(
+              cxxPlatformFlavorDomain,
+              defaultCxxFlavor,
+              targetGraph,
+              flavors,
+              resolver,
+              binaryDepNode.get().getBuildTarget());
+
+      flavoredBinariesBuilder.add(getBinaryFromBuildRuleWithBinary(flavoredBinary));
+    }
+
+    return flavoredBinariesBuilder.build();
   }
 
   /**

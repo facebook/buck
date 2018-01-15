@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -71,6 +72,10 @@ public interface CxxLibraryDescriptionDelegate {
    */
   Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+
+  /** Provides the ability to inject additional exported linker flags. */
+  ImmutableList<Arg> getAdditionalExportedLinkerFlags(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform cxxPlatform);
 
   /**
    * Specifies whether a library artifact (e.g., libName.a) should be produced. For example,

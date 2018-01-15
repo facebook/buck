@@ -1,7 +1,0 @@
-library --release --platform ios --root @
-optimize --arbitrary extra --flags --platform ios
-transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
-var choclateChips;
-optimize --arbitrary extra --flags --platform ios
-transform --arbitrary extra --flags --filename js/extras/yoghurt.js
-var yoghurt;

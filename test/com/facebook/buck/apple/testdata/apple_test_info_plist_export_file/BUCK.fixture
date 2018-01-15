@@ -1,10 +1,10 @@
 export_file(
-    name = 'Test.plist',
-    visibility = ['PUBLIC'],
+    name = "Test.plist",
+    visibility = ["PUBLIC"],
 )
 
 apple_test(
-    name='foo',
-    srcs = ['Foo.m'],
-    info_plist = ':Test.plist',
+    name = "foo",
+    srcs = ["Foo.m"],
+    info_plist = ":Test.plist",
 )

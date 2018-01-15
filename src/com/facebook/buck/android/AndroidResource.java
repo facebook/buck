@@ -21,6 +21,8 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -32,7 +34,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -41,12 +42,9 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,7 +52,9 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -76,11 +76,9 @@ import javax.annotation.Nullable;
 public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
         HasAndroidResourceDeps,
+        HasClasspathDeps,
         InitializableFromDisk<String>,
         SupportsInputBasedRuleKey {
-
-  @VisibleForTesting
-  static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE";
 
   @AddToRuleKey @Nullable private final SourcePath res;
 
@@ -152,7 +150,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         buildTarget,
         projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
-            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
+            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps::get)));
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
           "When the 'res' is specified for android_resource() %s, at least one of 'package' or "
@@ -317,8 +315,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
           new ExtractFromAndroidManifestStep(
               context.getSourcePathResolver().getAbsolutePath(manifestFile),
               getProjectFilesystem(),
-              buildableContext,
-              METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
               Preconditions.checkNotNull(pathToRDotJavaPackageFile)));
     } else {
       steps.add(
@@ -334,7 +330,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .get()
             .stream()
             .map(context.getSourcePathResolver()::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     steps.add(
         new MiniAapt(
             context.getSourcePathResolver(),
@@ -374,7 +370,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public String initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public String initializeFromDisk() {
     String rDotJavaPackageFromFile =
         getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
     if (rDotJavaPackageArgument != null
@@ -410,5 +406,15 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (assets != null) {
       collector.addAssetsDirectory(getBuildTarget(), assets);
     }
+    if (manifestFile != null) {
+      collector.addManifestPiece(manifestFile);
+    }
+  }
+
+  @Override
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return deps.stream()
+        .filter(rule -> rule instanceof HasClasspathEntries)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

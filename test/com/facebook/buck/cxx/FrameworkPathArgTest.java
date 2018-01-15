@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -31,8 +32,8 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.Consumer;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -44,8 +45,7 @@ public class FrameworkPathArgTest {
     }
 
     @Override
-    public void appendToCommandLine(
-        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       throw new UnsupportedOperationException();
     }
   }
@@ -68,6 +68,8 @@ public class FrameworkPathArgTest {
         FrameworkPath.ofSourcePath(genrule.getSourcePathToOutput());
 
     FrameworkPathArg sourcePathFrameworkPathArg = new TestFrameworkPathArg(sourcePathFrameworkPath);
-    assertThat(sourcePathFrameworkPathArg.getDeps(ruleFinder), Matchers.contains(genrule));
+    assertThat(
+        BuildableSupport.getDepsCollection(sourcePathFrameworkPathArg, ruleFinder),
+        Matchers.contains(genrule));
   }
 }

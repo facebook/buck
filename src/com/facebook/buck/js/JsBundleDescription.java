@@ -17,6 +17,7 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.android.Aapt2Compile;
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -45,14 +46,15 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.WorkerTool;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.Collection;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -60,7 +62,8 @@ import org.immutables.value.Value;
 public class JsBundleDescription
     implements Description<JsBundleDescriptionArg>,
         Flavored,
-        HasAppleBundleResourcesDescription<JsBundleDescriptionArg> {
+        HasAppleBundleResourcesDescription<JsBundleDescriptionArg>,
+        JsBundleOutputsDescription<JsBundleDescriptionArg> {
 
   static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
       ImmutableSet.of(
@@ -68,6 +71,12 @@ public class JsBundleDescription
           JsFlavors.OPTIMIZATION_DOMAIN,
           JsFlavors.RAM_BUNDLE_DOMAIN,
           JsFlavors.OUTPUT_OPTIONS_DOMAIN);
+
+  private final ToolchainProvider toolchainProvider;
+
+  public JsBundleDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
+  }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
@@ -109,10 +118,24 @@ public class JsBundleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          JsUtil.copyParamsWithDependencies(params),
+          new SourcePathRuleFinder(resolver),
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToSourceMap());
+    }
+
+    if (flavors.contains(JsFlavors.MISC)) {
+      BuildTarget bundleTarget = buildTarget.withoutFlavors(JsFlavors.MISC);
+      resolver.requireRule(bundleTarget);
+      JsBundleOutputs bundleOutputs = resolver.getRuleWithType(bundleTarget, JsBundleOutputs.class);
+
+      return new ExportFile(
+          buildTarget,
+          projectFilesystem,
+          new SourcePathRuleFinder(resolver),
+          bundleOutputs.getBundleName() + "-misc",
+          ExportFileDescription.Mode.REFERENCE,
+          bundleOutputs.getSourcePathToMisc());
     }
 
     // For Android, we bundle JS output as assets, and images etc. as resources.
@@ -122,7 +145,8 @@ public class JsBundleDescription
     if (flavors.contains(JsFlavors.ANDROID)
         && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)
         && !flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
-      return createAndroidRule(buildTarget, projectFilesystem, resolver, args.getAndroidPackage());
+      return createAndroidRule(
+          toolchainProvider, buildTarget, projectFilesystem, resolver, args.getAndroidPackage());
     }
 
     // Flavors are propagated from js_bundle targets to their js_library dependencies
@@ -140,7 +164,7 @@ public class JsBundleDescription
         libraryDeps
             .stream()
             .map(JsLibrary::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     ImmutableSet<String> entryPoints =
         entryPoint.isLeft() ? entryPoint.getLeft() : ImmutableSet.of(entryPoint.getRight());
 
@@ -163,9 +187,12 @@ public class JsBundleDescription
                 group ->
                     group
                         .stream()
-                        .map(lib -> libsResolver.requireLibrary(lib).getSourcePathToOutput())
-                        .collect(MoreCollectors.toImmutableSet()))
-            .collect(MoreCollectors.toImmutableList());
+                        .map(
+                            lib ->
+                                (SourcePath)
+                                    libsResolver.requireLibrary(lib).getSourcePathToOutput())
+                        .collect(ImmutableSet.toImmutableSet()))
+            .collect(ImmutableList.toImmutableList());
 
     String bundleName = getBundleName(args, buildTarget.getFlavors());
 
@@ -175,12 +202,14 @@ public class JsBundleDescription
         paramsWithLibraries,
         libraries,
         entryPoints,
+        JsUtil.getExtraJson(args, buildTarget, resolver, cellRoots),
         libraryPathGroups,
         bundleName,
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
   }
 
   private static BuildRule createAndroidRule(
+      ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
@@ -200,7 +229,8 @@ public class JsBundleDescription
                   new HumanReadableException(
                       "Specify `android_package` when building %s for Android.",
                       buildTarget.getUnflavoredBuildTarget()));
-      return createAndroidResources(buildTarget, projectFilesystem, resolver, jsBundle, rDot);
+      return createAndroidResources(
+          toolchainProvider, buildTarget, projectFilesystem, resolver, jsBundle, rDot);
     } else {
       return createAndroidBundle(buildTarget, projectFilesystem, resolver, jsBundle);
     }
@@ -227,15 +257,20 @@ public class JsBundleDescription
   }
 
   private static BuildRule createAndroidResources(
+      ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       JsBundle jsBundle,
       String rDotJavaPackage) {
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      AndroidLegacyToolchain androidLegacyToolchain =
+          toolchainProvider.getByName(
+              AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          androidLegacyToolchain,
           ImmutableSortedSet.of(jsBundle),
           jsBundle.getSourcePathToResources());
     }
@@ -280,7 +315,8 @@ public class JsBundleDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJsBundleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractJsBundleDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasExtraJson {
 
     Either<ImmutableSet<String>, String> getEntry();
 
@@ -333,7 +369,7 @@ public class JsBundleDescription
                       JsLibraryDescription.FLAVOR_DOMAINS
                           .stream()
                           .anyMatch(domain -> domain.contains(flavor)))
-              .collect(MoreCollectors.toImmutableSortedSet());
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       ruleFinder = new SourcePathRuleFinder(resolver);
     }
 
@@ -383,7 +419,7 @@ public class JsBundleDescription
                                       + "js_library targets as lib",
                                   library.getBuildTarget(), sourcePath)))
           .map(BuildRule::getBuildTarget)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
     }
   }
 }

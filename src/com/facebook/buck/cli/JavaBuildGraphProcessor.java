@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -32,6 +31,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -108,7 +108,7 @@ final class JavaBuildGraphProcessor {
                         TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
                 .getTargetGraph();
-      } catch (BuildTargetException | BuildFileParseException e) {
+      } catch (BuildFileParseException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -137,12 +137,12 @@ final class JavaBuildGraphProcessor {
               cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
               cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
               RuleKeyFactories.of(
-                  params.getBuckConfig().getKeySeed(),
+                  params.getRuleKeyConfiguration(),
                   cachingBuildEngineDelegate.getFileHashCache(),
                   buildRuleResolver,
-                  cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                  params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                   new DefaultRuleKeyCache<>()),
-              params.getBuckConfig().getFileHashCacheMode()); ) {
+              new NoOpRemoteBuildRuleCompletionWaiter()); ) {
         // Create a BuildEngine because we store symbol information as build artifacts.
         BuckEventBus eventBus = params.getBuckEventBus();
         ExecutionContext executionContext =

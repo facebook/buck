@@ -1,0 +1,6 @@
+# BUILD FILE SYNTAX: SKYLARK
+
+java_library(
+    name = "java-lib",
+    srcs = depset(),
+)

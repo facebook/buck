@@ -20,6 +20,7 @@ import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 
+/** Interface for a c/c++ archiver. */
 public interface Archiver extends Tool {
 
   ImmutableList<FileScrubber> getScrubbers();

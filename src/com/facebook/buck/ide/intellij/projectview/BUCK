@@ -1,8 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 java_immutables_library(
     name = "projectview",
     srcs = glob(
         ["*.java"],
-        excludes = ["shared/*.*"],
+        exclude = ["shared/*.*"],
     ),
     visibility = [
         "//src/com/facebook/buck/ide/intellij:intellij",
@@ -16,7 +18,7 @@ java_immutables_library(
         "//src/com/facebook/buck/ide/intellij/projectview/shared:shared",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/jvm/core:classhash",
+        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/model:model",

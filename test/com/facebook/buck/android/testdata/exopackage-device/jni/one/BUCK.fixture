@@ -1,6 +1,6 @@
 cxx_library(
-  name = 'one',
-  soname = 'libone.so',
-  srcs = glob(['*.c']),
-  visibility = ['PUBLIC']
+    name = "one",
+    srcs = glob(["*.c"]),
+    soname = "libone.so",
+    visibility = ["PUBLIC"],
 )

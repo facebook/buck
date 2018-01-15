@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -28,6 +27,7 @@ import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -114,15 +114,15 @@ public interface RichStream<T> extends Stream<T> {
   }
 
   default ImmutableList<T> toImmutableList() {
-    return collect(MoreCollectors.toImmutableList());
+    return collect(ImmutableList.toImmutableList());
   }
 
   default ImmutableSet<T> toImmutableSet() {
-    return collect(MoreCollectors.toImmutableSet());
+    return collect(ImmutableSet.toImmutableSet());
   }
 
   default ImmutableSortedSet<T> toImmutableSortedSet(Comparator<? super T> ordering) {
-    return collect(MoreCollectors.toImmutableSortedSet(ordering));
+    return collect(ImmutableSortedSet.toImmutableSortedSet(ordering));
   }
 
   default Iterable<T> toOnceIterable() {

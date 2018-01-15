@@ -21,11 +21,12 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -59,6 +61,7 @@ public class TargetNodeParsePipeline
   private final boolean speculativeDepsTraversal;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final SimplePerfEvent.Scope targetNodePipelineLifetimeEventScope;
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   /**
    * Create new pipeline for parsing Buck files.
@@ -76,7 +79,8 @@ public class TargetNodeParsePipeline
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
       boolean speculativeDepsTraversal,
-      RawNodeParsePipeline rawNodeParsePipeline) {
+      RawNodeParsePipeline rawNodeParsePipeline,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
     super(executorService, cache);
 
     this.delegate = targetNodeDelegate;
@@ -85,6 +89,7 @@ public class TargetNodeParsePipeline
     this.rawNodeParsePipeline = rawNodeParsePipeline;
     this.targetNodePipelineLifetimeEventScope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("target_node_parse_pipeline"));
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
   }
 
   @Override
@@ -97,6 +102,7 @@ public class TargetNodeParsePipeline
   @Override
   protected TargetNode<?, ?> computeNode(
       final Cell cell,
+      final KnownBuildRuleTypes knownBuildRuleTypes,
       final BuildTarget buildTarget,
       final Map<String, Object> rawNode,
       AtomicLong processedBytes)
@@ -117,6 +123,7 @@ public class TargetNodeParsePipeline
       final TargetNode<?, ?> targetNode =
           delegate.createTargetNode(
               cell,
+              knownBuildRuleTypes,
               cell.getAbsolutePathToBuildFile(buildTarget),
               buildTarget,
               rawNode,
@@ -127,14 +134,17 @@ public class TargetNodeParsePipeline
             () -> {
               for (BuildTarget depTarget : targetNode.getParseDeps()) {
                 Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
+                KnownBuildRuleTypes depKnownBuildRuleTypes =
+                    knownBuildRuleTypesProvider.get(depCell);
                 try {
                   if (depTarget.isFlavored()) {
                     getNodeJob(
                         depCell,
+                        depKnownBuildRuleTypes,
                         BuildTarget.of(depTarget.getUnflavoredBuildTarget()),
                         processedBytes);
                   }
-                  getNodeJob(depCell, depTarget, processedBytes);
+                  getNodeJob(depCell, depKnownBuildRuleTypes, depTarget, processedBytes);
                 } catch (BuildTargetException e) {
                   // No biggie, we'll hit the error again in the non-speculative path.
                   LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
@@ -149,14 +159,20 @@ public class TargetNodeParsePipeline
 
   @Override
   protected ListenableFuture<ImmutableSet<Map<String, Object>>> getItemsToConvert(
-      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
-    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile, processedBytes);
+      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
+      throws BuildTargetException {
+    return rawNodeParsePipeline.getAllNodesJob(
+        cell, knownBuildRuleTypes, buildFile, processedBytes);
   }
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
-      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
-    return rawNodeParsePipeline.getNodeJob(cell, buildTarget, processedBytes);
+      Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      BuildTarget buildTarget,
+      AtomicLong processedBytes)
+      throws BuildTargetException {
+    return rawNodeParsePipeline.getNodeJob(cell, knownBuildRuleTypes, buildTarget, processedBytes);
   }
 
   @Override

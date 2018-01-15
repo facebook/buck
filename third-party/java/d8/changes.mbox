@@ -1,0 +1,129 @@
+From 0758ad0794e755b1d2baf754178fb3e48aaee19b Mon Sep 17 00:00:00 2001
+From: Gautam Korlam <gkorlam@uber.com>
+Date: Tue, 21 Nov 2017 22:52:39 -0800
+Subject: [PATCH] Compute referenced resources in D8 and disable
+ interface/trywithresources desugaring
+
+Computing referenced resources is used to trim the Uber R.java.
+Interface desugaring requires classpaths available during dexing.
+trywithresources can be disabled if targeting ICS+
+---
+ src/main/java/com/android/tools/r8/D8Command.java         |  8 +++++++-
+ src/main/java/com/android/tools/r8/dex/FileWriter.java    |  6 ++++--
+ .../java/com/android/tools/r8/graph/DexItemFactory.java   | 15 +++++++++++++++
+ .../java/com/android/tools/r8/utils/InternalOptions.java  |  7 +++++--
+ 4 files changed, 31 insertions(+), 5 deletions(-)
+
+diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
+index fece59d1..aecb6afe 100644
+--- a/src/main/java/com/android/tools/r8/D8Command.java
++++ b/src/main/java/com/android/tools/r8/D8Command.java
+@@ -184,6 +184,11 @@ public class D8Command extends BaseCompilerCommand {
+       "  --help                  # Print this message."));
+ 
+   private boolean intermediate = false;
++  private DexItemFactory dexItemFactory;
++
++  public DexItemFactory getDexItemFactory() {
++    return dexItemFactory;
++  }
+ 
+   public static Builder builder() {
+     return new Builder();
+@@ -309,7 +314,8 @@ public class D8Command extends BaseCompilerCommand {
+ 
+   @Override
+   InternalOptions getInternalOptions() {
+-    InternalOptions internal = new InternalOptions(new DexItemFactory(), getReporter());
++    dexItemFactory = new DexItemFactory();
++    InternalOptions internal = new InternalOptions(dexItemFactory, getReporter());
+     assert !internal.debug;
+     internal.debug = getMode() == CompilationMode.DEBUG;
+     internal.programConsumer = getProgramConsumer();
+diff --git a/src/main/java/com/android/tools/r8/dex/FileWriter.java b/src/main/java/com/android/tools/r8/dex/FileWriter.java
+index ced33f61..51814a68 100644
+--- a/src/main/java/com/android/tools/r8/dex/FileWriter.java
++++ b/src/main/java/com/android/tools/r8/dex/FileWriter.java
+@@ -51,6 +51,7 @@ import com.android.tools.r8.utils.AndroidApiLevel;
+ import com.android.tools.r8.utils.DexVersion;
+ import com.android.tools.r8.utils.InternalOptions;
+ import com.android.tools.r8.utils.LebUtils;
++import com.android.tools.r8.utils.OffOrAuto;
+ import com.android.tools.r8.utils.ThrowingConsumer;
+ import com.google.common.collect.Sets;
+ import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
+@@ -226,7 +227,7 @@ public class FileWriter {
+     if (application.dexItemFactory.isClassConstructor(method.method)) {
+       return; // Class constructor is always OK.
+     }
+-    if (method.accessFlags.isStatic()) {
++    if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) && method.accessFlags.isStatic()) {
+       if (!options.canUseDefaultAndStaticInterfaceMethods()) {
+         throw new ApiLevelException(
+             AndroidApiLevel.N,
+@@ -239,7 +240,8 @@ public class FileWriter {
+         throw new CompilationError(
+             "Interface must not have constructors: " + method.method.toSourceString());
+       }
+-      if (!method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
++      if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) &&
++          !method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
+           !options.canUseDefaultAndStaticInterfaceMethods()) {
+         throw new ApiLevelException(
+             AndroidApiLevel.N,
+diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
+index e9207519..0589c1c0 100644
+--- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
++++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
+@@ -23,9 +23,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.IdentityHashMap;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Set;
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.function.Consumer;
+ 
+@@ -560,4 +562,17 @@ public class DexItemFactory {
+   synchronized public void forAllTypes(Consumer<DexType> f) {
+     new ArrayList<>(types.values()).forEach(f);
+   }
++
++  // Facebook addition: compute the resources referenced by this dex file.
++  // Does not apply to any merging, just the input class.
++  public Collection<String> computeReferencedResources() {
++    Set<String> resourceNames = new HashSet<>();
++    for (DexField item: fields.values()) {
++      DexType clazz = item.clazz;
++      if (clazz.toDescriptorString().contains("/R$")) {
++        resourceNames.add(clazz.getPackageDescriptor().replaceAll("/", ".") + "." + item.name.toString());
++      }
++    }
++    return resourceNames;
++  }
+ }
+diff --git a/src/main/java/com/android/tools/r8/utils/InternalOptions.java b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
+index 2eba6c13..5e8ef8d8 100644
+--- a/src/main/java/com/android/tools/r8/utils/InternalOptions.java
++++ b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
+@@ -146,9 +146,12 @@ public class InternalOptions {
+   // Flag to turn on/off desugaring in D8/R8.
+   public boolean enableDesugaring = true;
+   // Defines interface method rewriter behavior.
+-  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Auto;
++  // Facebook: Disabled by default as it kills incremental builds
++  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Off;
+   // Defines try-with-resources rewriter behavior.
+-  public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Auto;
++  // Facebook: Disabled by default as it is not necessary if targeting ICS+
++  // despite the official policy being that KK is required
++  public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Off;
+ 
+   // Whether or not to check for valid multi-dex builds.
+   //
+-- 
+2.14.1
+

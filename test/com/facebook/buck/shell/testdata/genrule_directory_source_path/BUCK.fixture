@@ -1,13 +1,13 @@
 genrule(
-  name = 'mkdir',
-  bash = 'mkdir $OUT && touch $OUT/hello',
-  cmd_exe = 'powershell -Command mkdir $env:OUT ; Out-File -FilePath "${env:OUT}/hello" -InputObject \'\'',
-  out = 'directory',
+    name = "mkdir",
+    out = "directory",
+    bash = "mkdir $OUT && touch $OUT/hello",
+    cmd_exe = "powershell -Command mkdir $env:OUT ; Out-File -FilePath \"${env:OUT}/hello\" -InputObject ''",
 )
 
 genrule(
-  name = 'cpdir',
-  bash = 'cp -r $(location :mkdir) $OUT',
-  cmd_exe = 'powershell -Command cp -r $(location :mkdir) $env:OUT',
-  out = 'copy',
+    name = "cpdir",
+    out = "copy",
+    bash = "cp -r $(location :mkdir) $OUT",
+    cmd_exe = "powershell -Command cp -r $(location :mkdir) $env:OUT",
 )

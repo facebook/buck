@@ -142,7 +142,6 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
     return new CycleException(chain);
   }
 
-  @SuppressWarnings("serial")
   public static final class CycleException extends Exception {
 
     private final ImmutableList<?> nodes;

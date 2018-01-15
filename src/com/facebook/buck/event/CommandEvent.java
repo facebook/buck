@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 
 /** Events tracking the start and stop of a buck command. */
@@ -71,11 +72,11 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
     return new Started(commandName, args, isDaemon, pid);
   }
 
-  public static Finished finished(Started started, int exitCode) {
+  public static Finished finished(Started started, ExitCode exitCode) {
     return new Finished(started, exitCode);
   }
 
-  public static Interrupted interrupted(Started started, int exitCode) {
+  public static Interrupted interrupted(Started started, ExitCode exitCode) {
     return new Interrupted(started, exitCode);
   }
 
@@ -91,9 +92,9 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   public static class Finished extends CommandEvent {
-    private final int exitCode;
+    private final ExitCode exitCode;
 
-    private Finished(Started started, int exitCode) {
+    private Finished(Started started, ExitCode exitCode) {
       super(
           started.getEventKey(),
           started.getCommandName(),
@@ -103,7 +104,7 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
       this.exitCode = exitCode;
     }
 
-    public int getExitCode() {
+    public ExitCode getExitCode() {
       return exitCode;
     }
 
@@ -114,9 +115,9 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
   }
 
   public static class Interrupted extends CommandEvent implements BroadcastEvent {
-    private final int exitCode;
+    private final ExitCode exitCode;
 
-    private Interrupted(Started started, int exitCode) {
+    private Interrupted(Started started, ExitCode exitCode) {
       super(
           started.getEventKey(),
           started.getCommandName(),
@@ -126,7 +127,7 @@ public abstract class CommandEvent extends AbstractBuckEvent implements WorkAdva
       this.exitCode = exitCode;
     }
 
-    public int getExitCode() {
+    public ExitCode getExitCode() {
       return exitCode;
     }
 

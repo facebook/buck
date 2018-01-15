@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -33,10 +32,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.NestingKind;
 import javax.tools.FileObject;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
@@ -78,33 +79,44 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
 
   @Override
   public Iterable<JavaFileObject> list(
-      Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse)
+      JavaFileManager.Location location,
+      String packageName,
+      Set<JavaFileObject.Kind> kinds,
+      boolean recurse)
       throws IOException {
     return files;
   }
 
   @Override
   public JavaFileObject getJavaFileForInput(
-      Location location, String className, JavaFileObject.Kind kind) throws IOException {
-    return getFile(className);
-  }
-
-  @Override
-  public JavaFileObject getJavaFileForOutput(
-      Location location, String className, JavaFileObject.Kind kind, FileObject sibling)
+      JavaFileManager.Location location, String className, JavaFileObject.Kind kind)
       throws IOException {
     return getFile(className);
   }
 
   @Override
-  public FileObject getFileForInput(Location location, String packageName, String relativeName)
+  public JavaFileObject getJavaFileForOutput(
+      JavaFileManager.Location location,
+      String className,
+      JavaFileObject.Kind kind,
+      FileObject sibling)
+      throws IOException {
+    return getFile(className);
+  }
+
+  @Override
+  public FileObject getFileForInput(
+      JavaFileManager.Location location, String packageName, String relativeName)
       throws IOException {
     return getFile(relativeName);
   }
 
   @Override
   public FileObject getFileForOutput(
-      Location location, String packageName, String relativeName, FileObject sibling)
+      JavaFileManager.Location location,
+      String packageName,
+      String relativeName,
+      FileObject sibling)
       throws IOException {
     return getFile(relativeName);
   }
@@ -112,31 +124,31 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjectsFromFiles(
       Iterable<? extends File> files) {
-    return Iterables.transform(files, fileToJavaFileObject);
+    return Iterables.transform(files, fileToJavaFileObject::apply);
   }
 
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjects(File... files) {
-    return Iterables.transform(Lists.newArrayList(files), fileToJavaFileObject);
+    return Iterables.transform(Lists.newArrayList(files), fileToJavaFileObject::apply);
   }
 
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjectsFromStrings(Iterable<String> names) {
-    return Iterables.transform(names, stringToJavaFileObject);
+    return Iterables.transform(names, stringToJavaFileObject::apply);
   }
 
   @Override
   public Iterable<? extends JavaFileObject> getJavaFileObjects(String... names) {
-    return Iterables.transform(Lists.newArrayList(names), stringToJavaFileObject);
+    return Iterables.transform(Lists.newArrayList(names), stringToJavaFileObject::apply);
   }
 
   @Override
-  public ClassLoader getClassLoader(Location location) {
+  public ClassLoader getClassLoader(JavaFileManager.Location location) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public String inferBinaryName(Location location, JavaFileObject file) {
+  public String inferBinaryName(JavaFileManager.Location location, JavaFileObject file) {
     throw new UnsupportedOperationException();
   }
 
@@ -151,7 +163,7 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
   }
 
   @Override
-  public boolean hasLocation(Location location) {
+  public boolean hasLocation(JavaFileManager.Location location) {
     throw new UnsupportedOperationException();
   }
 
@@ -166,12 +178,13 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
   }
 
   @Override
-  public void setLocation(Location location, Iterable<? extends File> path) throws IOException {
+  public void setLocation(JavaFileManager.Location location, Iterable<? extends File> path)
+      throws IOException {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Iterable<? extends File> getLocation(Location location) {
+  public Iterable<? extends File> getLocation(JavaFileManager.Location location) {
     throw new UnsupportedOperationException();
   }
 
@@ -190,12 +203,12 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
     }
 
     @Override
-    public Kind getKind() {
+    public JavaFileObject.Kind getKind() {
       return kind;
     }
 
     @Override
-    public boolean isNameCompatible(String simpleName, Kind kind) {
+    public boolean isNameCompatible(String simpleName, JavaFileObject.Kind kind) {
       throw new UnsupportedOperationException();
     }
 
@@ -259,12 +272,12 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
 
     @Override
     public OutputStream openOutputStream() throws IOException {
-      throw new UnsupportedOperationException();
+      return null;
     }
 
     @Override
     public Writer openWriter() throws IOException {
-      throw new UnsupportedOperationException();
+      return null;
     }
 
     @Override

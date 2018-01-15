@@ -33,15 +33,17 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -176,7 +178,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
               getProjectFilesystem(),
               context.getSourcePathResolver().getAbsolutePath(valuesFile.get()));
       steps.add(readValuesStep);
-      totalFields = Suppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
+      totalFields = MoreSuppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
     } else {
       totalFields = Suppliers.ofInstance(defaultValues);
     }
@@ -235,7 +237,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
       values = BuildConfigFields.fromFieldDeclarations(filesystem.readLines(valuesFile));
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

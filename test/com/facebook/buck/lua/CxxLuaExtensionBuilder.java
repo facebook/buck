@@ -27,6 +27,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,7 +45,12 @@ public class CxxLuaExtensionBuilder
   public CxxLuaExtensionBuilder(BuildTarget target, LuaPlatform luaPlatform) {
     this(
         new CxxLuaExtensionDescription(
-            FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform),
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    LuaPlatformsProvider.DEFAULT_NAME,
+                    LuaPlatformsProvider.of(
+                        luaPlatform, FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform)))
+                .build(),
             new CxxBuckConfig(FakeBuckConfig.builder().build())),
         target);
   }

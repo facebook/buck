@@ -19,11 +19,12 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosArg;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 public class OcamlDescriptionEnhancer {
 
@@ -40,6 +41,7 @@ public class OcamlDescriptionEnhancer {
           StringWithMacrosArg.of(
               flag,
               ImmutableList.of(new LocationMacroExpander(), new ExecutableMacroExpander()),
+              Optional.empty(),
               target,
               cellPathResolver,
               resolver));

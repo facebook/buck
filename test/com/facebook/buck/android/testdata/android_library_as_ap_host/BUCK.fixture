@@ -1,57 +1,57 @@
 java_annotation_processor(
-  name = 'processor',
-  processor_class = 'com.facebook.example.MyAnnotationProcessor',
-  deps = [':processor-lib'],
+    name = "processor",
+    processor_class = "com.facebook.example.MyAnnotationProcessor",
+    deps = [":processor-lib"],
 )
 
 java_library(
-  name = 'processor-lib',
-  srcs = [ 'MyAnnotationProcessor.java' ],
+    name = "processor-lib",
+    srcs = ["MyAnnotationProcessor.java"],
 )
 
 java_library(
-  name = 'annotation',
-  srcs = [ 'MyAnnotation.java' ],
+    name = "annotation",
+    srcs = ["MyAnnotation.java"],
 )
 
 java_library(
-  name = 'lib',
-  srcs = [
-    'Lib.java',
-    #add_file 'Unrelated.java',
-  ],
-  resources = [
-    'res/META-INF/res1.json',
-    'res/META-INF/unread.json',
-    #add_res 'res/META-INF/res2.json',
-  ],
-  resources_root = 'res',
+    name = "lib",
+    srcs = [
+        "Lib.java",
+        #add_file 'Unrelated.java',
+    ],
+    resources = [
+        "res/META-INF/res1.json",
+        "res/META-INF/unread.json",
+        #add_res 'res/META-INF/res2.json',
+    ],
+    resources_root = "res",
 )
 
 java_library(
-  name = 'lib2',
-  srcs = [],
-  resources = [
-    'res/META-INF/res2.json',
-  ],
-  resources_root = 'res',
+    name = "lib2",
+    srcs = [],
+    resources = [
+        "res/META-INF/res2.json",
+    ],
+    resources_root = "res",
 )
 
 android_library(
-  name = 'top_level',
-  srcs = [ 'Source.java', ],
-  deps = [
-    ':annotation',
-    ':lib',
-    #add_dep ':lib2',
-  ],
-  plugins = [
-    ':processor',
-  ]
+    name = "top_level",
+    srcs = ["Source.java"],
+    plugins = [
+        ":processor",
+    ],
+    deps = [
+        ":annotation",
+        ":lib",
+        #add_dep ':lib2',
+    ],
 )
 
 genrule(
-  name = 'extract_resulting_config',
-  out = 'collected_configs.json',
-  cmd = 'unzip -p $(location :top_level) com/facebook/example/config/collected_configs.json > $OUT',
+    name = "extract_resulting_config",
+    out = "collected_configs.json",
+    cmd = "unzip -p $(location :top_level) com/facebook/example/config/collected_configs.json > $OUT",
 )

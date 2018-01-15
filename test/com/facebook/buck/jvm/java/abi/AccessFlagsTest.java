@@ -214,13 +214,8 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
         "enum Foo { Item }", "Foo", Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_FINAL);
   }
 
-  /**
-   * The {@link javax.lang.model.element.TypeElement} for an abstract Enum will *sometimes* report
-   * that the enum is abstract, but not in all the cases where ACC_ABSTRACT needs to appear in the
-   * class file. For this and other reasons we just never use the flag.
-   */
   @Test
-  public void testEnumAbstractFlagIsRemoved() throws IOException {
+  public void testExplicitEnumAbstractFlag() throws IOException {
     testTypeFlags(
         Joiner.on('\n')
             .join(
@@ -229,6 +224,29 @@ public class AccessFlagsTest extends CompilerTreeApiTest {
                 "    int get() { return 3; }",
                 "  };",
                 "  abstract int get();",
+                "}"),
+        "Foo",
+        Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_ABSTRACT);
+  }
+
+  @Test
+  public void testImplicitEnumAbstractFlag() throws IOException {
+    testTypeFlags(
+        Joiner.on('\n').join("enum Foo implements Runnable {", "  Value;", "}"),
+        "Foo",
+        Opcodes.ACC_ENUM | Opcodes.ACC_SUPER | Opcodes.ACC_ABSTRACT);
+  }
+
+  @Test
+  public void testNonAbstractGenericEnumAbstractFlag() throws IOException {
+    testTypeFlags(
+        Joiner.on('\n')
+            .join(
+                "enum Foo implements java.util.Comparator<Foo>{",
+                "  Value {",
+                "    int get() { return 3; }",
+                "  };",
+                "  public int compare(Foo a, Foo b) { return 0; }",
                 "}"),
         "Foo",
         Opcodes.ACC_ENUM | Opcodes.ACC_SUPER);

@@ -1,0 +1,31 @@
+python_library(
+    name = "hash_files-lib",
+    srcs = [
+        "hash_files.py",
+    ],
+    tests = [
+        ":test_hash_files",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+python_test(
+    name = "test_hash_files",
+    srcs = [
+        "test_hash_files.py",
+    ],
+    deps = [
+        ":hash_files-lib",
+    ],
+)
+
+python_binary(
+    name = "hash_files",
+    main = "hash_files.py",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "hash_files.py",
+    visibility = ["PUBLIC"],
+)

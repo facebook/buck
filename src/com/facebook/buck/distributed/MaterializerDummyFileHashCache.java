@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,11 +60,13 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
   private final ProjectFileHashCache delegate;
   private final Map<BuildJobStateFileHashEntry, ListenableFuture<?>>
       fileMaterializationFuturesByFileHashEntry;
+  private final ListeningExecutorService executorService;
 
   public MaterializerDummyFileHashCache(
       ProjectFileHashCache delegate,
       BuildJobStateFileHashes remoteFileHashes,
-      FileContentsProvider provider) {
+      FileContentsProvider provider,
+      ListeningExecutorService executorService) {
     this.delegate = delegate;
     this.remoteFileHashesByAbsPath =
         DistBuildFileHashes.indexEntriesByPath(delegate.getFilesystem(), remoteFileHashes);
@@ -71,6 +74,7 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
     this.provider = provider;
     this.projectFilesystem = delegate.getFilesystem();
     this.fileMaterializationFuturesByFileHashEntry = new ConcurrentHashMap<>();
+    this.executorService = executorService;
   }
 
   /**
@@ -217,9 +221,14 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
                           absPath, fileHashEntry),
                       e);
                 }
-              });
+              },
+              executorService);
 
-      fileMaterializationFuturesByFileHashEntry.put(fileHashEntry, materializationFuture);
+      ListenableFuture<?> prevValue =
+          fileMaterializationFuturesByFileHashEntry.put(fileHashEntry, materializationFuture);
+
+      Preconditions.checkState(prevValue == null, "must not override prev value");
+
       return materializationFuture;
     }
   }

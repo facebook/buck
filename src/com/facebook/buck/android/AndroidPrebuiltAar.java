@@ -18,13 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.AbiGenerationMode;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
-import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -71,6 +71,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
+            androidLibraryBuildTarget,
             configuredCompiler,
             /* srcs */ ImmutableSortedSet.of(),
             /* resources */ ImmutableSortedSet.of(),
@@ -82,6 +83,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
                 prebuiltJar.getSourcePathToOutput()),
             RemoveClassesPatternsMatcher.EMPTY,
+            AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
             /* sourceOnlyAbiRuleInfo */ null),
         Optional.of(proguardConfig),

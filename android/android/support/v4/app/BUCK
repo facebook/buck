@@ -1,0 +1,12 @@
+# Stubs for a very minimal subset of the support-v4 lib, to avoid taking a dep on a specific version
+android_library(
+    name = "support_stub",
+    srcs = [
+        "Fragment.java",
+        "FragmentManager.java",
+        "FragmentTransaction.java",
+    ],
+    visibility = [
+        "//android/com/facebook/buck/android/support/...",
+    ],
+)

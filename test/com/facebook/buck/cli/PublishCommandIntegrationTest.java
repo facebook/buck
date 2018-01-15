@@ -27,6 +27,7 @@ import com.facebook.buck.maven.TestPublisher;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.FluentIterable;
 import java.io.IOException;
 import java.util.List;
@@ -95,7 +96,7 @@ public class PublishCommandIntegrationTest {
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("publish", "//:foo");
-    result.assertFailure();
+    result.assertExitCode("url is required", ExitCode.COMMANDLINE_ERROR);
     assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
   }
 

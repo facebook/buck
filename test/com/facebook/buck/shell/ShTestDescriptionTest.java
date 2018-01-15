@@ -35,6 +35,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -64,8 +67,10 @@ public class ShTestDescriptionTest {
     ShTestBuilder shTestBuilder =
         new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setTest(FakeSourcePath.of("test.sh"))
-            .setArgs(ImmutableList.of("$(location //:dep)"));
-    assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
+            .setArgs(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(dep.getBuildTarget()))));
+    assertThat(shTestBuilder.build().getParseDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
     assertThat(shTest.getBuildDeps(), Matchers.contains(dep));
     assertThat(
@@ -87,8 +92,11 @@ public class ShTestDescriptionTest {
     ShTestBuilder shTestBuilder =
         new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setTest(FakeSourcePath.of("test.sh"))
-            .setEnv(ImmutableMap.of("LOC", "$(location //:dep)"));
-    assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
+            .setEnv(
+                ImmutableMap.of(
+                    "LOC",
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(dep.getBuildTarget()))));
+    assertThat(shTestBuilder.build().getParseDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
     assertThat(shTest.getBuildDeps(), Matchers.contains(dep));
     assertThat(
@@ -157,7 +165,7 @@ public class ShTestDescriptionTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
     return factory.build(rule);
   }
 }

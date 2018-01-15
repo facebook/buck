@@ -25,10 +25,6 @@ GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
 
-# While waiting for the daemon to terminate, print a message at most
-# every DAEMON_BUSY_MESSAGE_SECONDS seconds.
-DAEMON_BUSY_MESSAGE_SECONDS = 1.0
-
 
 class Resource(object):
     """Describes a resource used by this driver.
@@ -45,13 +41,11 @@ class Resource(object):
 
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
+    Resource("fix_script", executable=True),
     Resource("testrunner_classes"),
-    Resource("path_to_asm_jar"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
-    Resource("path_to_rawmanifest_py", basename='rawmanifest.py'),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
-    Resource("path_to_intellij_py"),
     Resource("path_to_pex"),
     Resource("path_to_pywatchman"),
     Resource("path_to_typing"),
@@ -105,8 +99,29 @@ class ExecuteTarget(Exception):
 
     def execve(self):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
-        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        if os.name != 'nt':
+            signal.signal(signal.SIGPIPE, signal.SIG_DFL)
         os.execvpe(self._path, self._argv, self._envp)
+
+
+class BuckStatusReporter(object):
+    """ Add custom logic to log Buck completion statuses or errors including
+    critical ones like JVM crashes and OOMs. This object is fully mutable with
+    all fields optional which get populated on the go. Only safe operations
+    are allowed in the reporter except for report() function which can throw
+    """
+    def __init__(self, argv):
+        self.argv = argv
+        self.build_id = None
+        self.buck_version = None
+        self.is_buckd = False
+        self.status_message = None
+        self.repository = None
+        self.start_time = time.time()
+
+    def report(self, exit_code):
+        """ Add custom code here to track Buck invocations """
+        pass
 
 
 class JvmCrashLogger(object):
@@ -147,7 +162,9 @@ class JvmCrashLogger(object):
 
 
 class BuckTool(object):
-    def __init__(self, buck_project):
+    def __init__(self, buck_project, buck_reporter):
+        self._reporter = buck_reporter
+        self._package_info = self._get_package_info()
         self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
@@ -159,6 +176,10 @@ class BuckTool(object):
         self._pathsep = os.pathsep
         if sys.platform == 'cygwin':
             self._pathsep = ';'
+
+
+    def _get_package_info(self):
+        raise NotImplementedError()
 
     def _has_resource(self, resource):
         """Check whether the given resource exists."""
@@ -178,10 +199,18 @@ class BuckTool(object):
         raise NotImplementedError()
 
     def _get_buck_version_uid(self):
-        raise NotImplementedError()
+        if self._fake_buck_version:
+            return self._fake_buck_version
+        return self._package_info['version']
 
     def _get_buck_version_timestamp(self):
+        return self._package_info['timestamp']
+
+    def _get_buck_git_commit(self):
         raise NotImplementedError()
+
+    def _get_buck_repo_dirty(self):
+        return self._package_info['is_dirty']
 
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()
@@ -189,7 +218,16 @@ class BuckTool(object):
     def _get_java_classpath(self):
         raise NotImplementedError()
 
-    def _is_buck_production(self):
+    def _get_buck_binary_hash(self):
+        """
+        Returns Buck binary hash
+
+        This hash reflects the code that can affect the content of artifacts.
+        """
+
+        raise NotImplementedError()
+
+    def _unpack_modules(self):
         raise NotImplementedError()
 
     def _get_extra_java_args(self):
@@ -221,6 +259,27 @@ class BuckTool(object):
                 pass
         return env
 
+    def _add_args(self, argv, args):
+        '''
+        Add new arguments to the beginning of arguments string
+        Adding to the end will mess up with custom test runner params
+        '''
+        if (len(argv) < 2):
+            return argv + args
+        return [argv[0]] + args + argv[1:]
+
+    def _add_args_from_env(self, argv):
+        '''
+        Implicitly add command line arguments based on environmental variables. This is a bad
+        practice and should be considered for infrastructure / debugging purposes only
+        '''
+
+        if os.environ.get('BUCK_NO_CACHE') == '1' and '--no-cache' not in argv:
+            argv = self._add_args(argv, ['--no-cache'])
+        if os.environ.get('BUCK_CACHE_READONLY') == '1':
+            argv = self._add_args(argv, ['-c', 'cache.http_mode=readonly'])
+        return argv
+
     def _run_with_nailgun(self, argv, env):
         '''
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
@@ -236,12 +295,11 @@ class BuckTool(object):
                     str(now - self._init_timestamp)
                 exit_code = c.send_command(
                     'com.facebook.buck.cli.Main',
-                    argv,
+                    self._add_args_from_env(argv),
                     env=env,
                     cwd=self._buck_project.root)
                 if exit_code == 2:
                     env['BUCK_BUILD_ID'] = str(uuid.uuid4())
-                    now = time.time()
                     if not busy_diagnostic_displayed:
                         logging.info("Buck daemon is busy with another command. " +
                                      "Waiting for it to become free...\n" +
@@ -265,8 +323,7 @@ class BuckTool(object):
         command.extend(self._get_java_args(self._get_buck_version_uid(), extra_default_options))
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
         command.append("com.facebook.buck.cli.Main")
-        command.extend(argv)
-
+        command.extend(self._add_args_from_env(argv))
         now = int(round(time.time() * 1000))
         env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
         java = which('java')
@@ -305,11 +362,22 @@ class BuckTool(object):
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                self._reporter.build_id = build_id
+
+                try:
+                    repository = self._get_repository()
+                    self._reporter.repository = repository
+                except Exception as e:
+                    # _get_repository() is only for reporting,
+                    # so skip on error
+                    logging.warning('Failed to get repo name: ' + str(e))
+
                 if self._command_line.command == "clean" and \
                         not self._command_line.is_help():
                     self.kill_buckd()
 
                 buck_version_uid = self._get_buck_version_uid()
+                self._reporter.buck_version = buck_version_uid
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
@@ -335,9 +403,21 @@ class BuckTool(object):
                 env['BUCK_BUILD_ID'] = build_id
 
                 use_nailgun = use_buckd and self._is_buckd_running()
+                self._reporter.is_buckd = use_nailgun
                 run_fn = self._run_with_nailgun if use_nailgun else self._run_without_nailgun
 
-                return self._execute_command_and_maybe_run_target(run_fn, env)
+                self._unpack_modules()
+
+                exit_code = self._execute_command_and_maybe_run_target(
+                    run_fn, env)
+
+                # Most shells return process termination with signal as
+                # 128 + N, where N is the signal. However Python's subprocess
+                # call returns them as negative numbers. Buck binary protocol
+                # uses shell's convention, so convert
+                if (exit_code < 0):
+                    exit_code = 128 + (-1 * exit_code)
+                return exit_code
 
 
     def _generate_log_entry(self, message, logs_array):
@@ -346,7 +426,9 @@ class BuckTool(object):
         traits = {
             "severity": "SEVERE",
             "logger": "com.facebook.buck.python.buck_tool.py",
-            "buckGitCommit": self._get_buck_version_uid(),
+            "buckGitCommit": self._get_buck_git_commit(),
+            "buckVersion": self._get_buck_version_uid(),
+            "isBuckRepoDirty": self._get_buck_repo_dirty(),
             "os": platform.system(),
             "osVersion": platform.release(),
             "user": getpass.getuser(),
@@ -466,6 +548,13 @@ class BuckTool(object):
 
             return returncode
 
+    def _get_repository(self):
+        arcconfig = os.path.join(self._buck_project.root, '.arcconfig')
+        if os.path.isfile(arcconfig):
+            with open(arcconfig, 'r') as fp:
+                return json.load(fp).get('project_id', None)
+        return os.path.basename(self._buck_project.root)
+
 
     def kill_buckd(self):
         with Tracing('BuckTool.kill_buckd'):
@@ -518,6 +607,9 @@ class BuckTool(object):
                 "-Dbuck.version_uid={0}".format(version_uid),
                 "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
                 "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
+                "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
+                "-Dbuck.git_commit_timestamp={0}".format(self._get_buck_version_timestamp()),
+                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash())
             ]
 
             resource_lock_path = self._get_resource_lock_path()
@@ -559,6 +651,8 @@ class BuckTool(object):
             return java_args
 
 
+
+
 def install_signal_handlers():
     if os.name == 'posix':
         signal.signal(
@@ -570,17 +664,6 @@ def platform_path(path):
     if sys.platform != 'cygwin':
         return path
     return check_output(['cygpath', '-w', path]).strip()
-
-
-def truncate_logs_pretty(logs):
-    NUMBER_OF_LINES_BEFORE = 100
-    NUMBER_OF_LINES_AFTER = 100
-    if len(logs) <= NUMBER_OF_LINES_BEFORE + NUMBER_OF_LINES_AFTER:
-        return logs
-    new_logs = logs[:NUMBER_OF_LINES_BEFORE]
-    new_logs.append('...<truncated>...')
-    new_logs.extend(logs[-NUMBER_OF_LINES_AFTER:])
-    return new_logs
 
 
 def setup_watchman_watch():

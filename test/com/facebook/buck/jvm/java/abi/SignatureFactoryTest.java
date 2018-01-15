@@ -55,6 +55,11 @@ public class SignatureFactoryTest extends DescriptorAndSignatureFactoryTestBase 
     if (signature == null) {
       return null;
     }
+
+    if (isTestingWithDependencies() || !signature.contains(":Lcom/facebook/foo/Dep")) {
+      return signature;
+    }
+
     SignatureWriter writer = new SignatureWriter();
     new SignatureReader(signature).accept(new SourceAbiCompatibleSignatureVisitor(writer));
     return writer.toString();

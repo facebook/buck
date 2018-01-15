@@ -19,6 +19,7 @@ import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
+import com.facebook.buck.distributed.DistBuildRunEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -32,9 +33,10 @@ import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestStatusMessage;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
@@ -94,6 +96,16 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   public static String getBuildLogLine(BuildId buildId) {
     return "Build UUID: " + buildId.toString();
+  }
+
+  /** Print information regarding the current distributed build. */
+  @Subscribe
+  public void onDistbuildRunEvent(DistBuildRunEvent event) {
+    String line =
+        String.format(
+            "StampedeId=[%s] BuildSlaveRunId=[%s]",
+            event.getStampedeId().id, event.getBuildSlaveRunId().id);
+    printLines(ImmutableList.<String>builder().add(line));
   }
 
   @Override
@@ -174,7 +186,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     showTopSlowBuildRules(lines);
 
-    lines.add(finished.getExitCode() == 0 ? "BUILD SUCCEEDED" : "BUILD FAILED");
+    lines.add(finished.getExitCode() == ExitCode.SUCCESS ? "BUILD SUCCEEDED" : "BUILD FAILED");
 
     printLines(lines);
   }
@@ -319,8 +331,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void onDistBuildCreatedEvent(DistBuildCreatedEvent distBuildCreatedEvent) {
     ImmutableList.Builder<String> lines =
-        ImmutableList.<String>builder()
-            .add("STAMPEDE ID: " + distBuildCreatedEvent.getStampedeId());
+        ImmutableList.<String>builder().add(distBuildCreatedEvent.getConsoleLogLine());
     printLines(lines);
   }
 

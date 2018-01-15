@@ -1,9 +1,9 @@
 android_resource(
-  name = 'dep2',
-  package = 'com.test',
-  res = subdir_glob([('res', '**')]),
-  assets = subdir_glob([('assets', '**')]),
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "dep2",
+    assets = subdir_glob([("assets", "**")]),
+    package = "com.test",
+    res = subdir_glob([("res", "**")]),
+    visibility = [
+        "PUBLIC",
+    ],
 )

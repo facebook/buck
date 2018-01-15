@@ -21,6 +21,8 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -72,6 +74,13 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild("//js:extras").assertSuccess();
 
     workspace.verify(Paths.get("with_extra_args.expected"), genPath);
+  }
+
+  @Test
+  public void testBuildWithExtraJson() throws IOException {
+    workspace.runBuckBuild("//js:bundle_with_extra_json").assertSuccess();
+
+    workspace.verify(Paths.get("bundle_with_extra_json.expected"), genPath);
   }
 
   @Test
@@ -176,6 +185,7 @@ public class JsRulesIntegrationTest {
   @Test
   public void iOSApplicationContainsJsAndResources() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace.runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(Paths.get("ios_app.expected"), genPath);
@@ -189,6 +199,11 @@ public class JsRulesIntegrationTest {
             "//js:fruit-with-extras#android,dependencies")
         .assertSuccess();
     workspace.verify(Paths.get("dependencies.expected"), genPath);
+  }
+
+  @Test
+  public void sourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
+    workspace.runBuckBuild("//js:genrule-using-only-sourcemap").assertSuccess();
   }
 
   @Test
@@ -215,6 +230,7 @@ public class JsRulesIntegrationTest {
   @Test
   public void appleBundleDependingOnJsBundleGenruleContainsBundleAndResources() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace
         .runBuckBuild("//ios:DemoAppWithJsBundleGenrule#iphonesimulator-x86_64,no-debug")
@@ -242,5 +258,10 @@ public class JsRulesIntegrationTest {
   public void genruleAllowsToRewriteSourcemap() throws IOException {
     workspace.runBuckBuild("//js:sourcemap-genrule#source_map").assertSuccess();
     workspace.verify(Paths.get("sourcemap_genrule.expected"), genPath);
+  }
+
+  @Test
+  public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
+    workspace.runBuckBuild("//js:genrule-using-only-sourcemap-of-bundle-genrule").assertSuccess();
   }
 }

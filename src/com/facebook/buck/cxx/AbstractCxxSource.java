@@ -27,7 +27,7 @@ import org.immutables.value.Value;
  * Describes a source file written in the C programming language or a derivative (C++, Objective-C,
  * Objective-C++, etc.) and the various paths it uses from input to output.
  */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 // PMD is disabled for the line below. We have a check that Abstract immutable types are
 // package-private. The Immutables generator is super-helpeful and makes references to the abstract

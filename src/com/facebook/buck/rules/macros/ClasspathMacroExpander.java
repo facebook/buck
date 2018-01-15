@@ -16,15 +16,15 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Objects;
@@ -59,17 +59,6 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ClasspathMacro input)
-      throws MacroException {
-    return ImmutableList.copyOf(
-        getHasClasspathEntries(resolve(resolver, input)).getTransitiveClasspathDeps());
-  }
-
-  @Override
   public String expandForFile(
       BuildTarget target,
       CellPathResolver cellNames,
@@ -86,7 +75,8 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   }
 
   @Override
-  protected String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
+  protected String expand(SourcePathResolver resolver, ClasspathMacro ignored, BuildRule rule)
+      throws MacroException {
     return getHasClasspathEntries(rule)
         .getTransitiveClasspathDeps()
         .stream()
@@ -109,6 +99,6 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
         .stream()
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 }

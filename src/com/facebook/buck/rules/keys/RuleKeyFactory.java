@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 public interface RuleKeyFactory<RULE_KEY> {
@@ -40,4 +41,8 @@ public interface RuleKeyFactory<RULE_KEY> {
   default RULE_KEY getFromCache(BuildRule buildRule) {
     return null;
   }
+
+  default Optional<Long> getInputSizeLimit() {
+    return Optional.empty();
+  };
 }

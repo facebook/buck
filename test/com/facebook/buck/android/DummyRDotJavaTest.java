@@ -25,11 +25,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -48,7 +47,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -98,11 +96,17 @@ public class DummyRDotJavaTest {
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
+                pathResolver,
+                ruleFinder,
+                filesystem,
+                DEFAULT_JAVAC,
+                ANDROID_JAVAC_OPTIONS,
+                ExtraClasspathProvider.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
@@ -128,7 +132,7 @@ public class DummyRDotJavaTest {
     List<String> sortedSymbolsFiles =
         Stream.of((AndroidResource) resourceRule1, (AndroidResource) resourceRule2)
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.of(rDotJavaSrcFolder.resolve("com/facebook/R.java"));
 
@@ -142,12 +146,11 @@ public class DummyRDotJavaTest {
             .add(String.format("mkdir -p %s", genFolder))
             .add(
                 new JavacStep(
-                        NoOpClassUsageFileWriter.instance(),
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
                             .build(),
-                        null,
+                        dummyRDotJava.getBuildTarget(),
                         pathResolver,
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),
@@ -155,14 +158,13 @@ public class DummyRDotJavaTest {
                             .setOutputDirectory(rDotJavaBinFolder)
                             .setGeneratedCodeDirectory(Paths.get("generated"))
                             .setWorkingDirectory(Paths.get("working"))
-                            .setDepFilePath(Paths.get("depFile"))
                             .setSourceFilePaths(javaSourceFiles)
                             .setPathToSourcesList(
                                 BuildTargets.getGenPath(
                                     filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"))
                             .setClasspathEntries(ImmutableSortedSet.of())
                             .build(),
-                        Optional.empty(),
+                        null,
                         null)
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
@@ -182,10 +184,12 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testRDotJavaBinFolder() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
@@ -194,11 +198,17 @@ public class DummyRDotJavaTest {
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
+                pathResolver,
+                ruleFinder,
+                filesystem,
+                DEFAULT_JAVAC,
+                ANDROID_JAVAC_OPTIONS,
+                ExtraClasspathProvider.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
     assertEquals(
         BuildTargets.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),

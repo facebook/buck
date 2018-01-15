@@ -23,6 +23,8 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -33,9 +35,9 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Charsets;
@@ -75,15 +77,16 @@ public class PythonPackagedBinaryTest {
 
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary =
-        PythonPackagedBinary.from(
+        new PythonPackagedBinary(
             target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(),
             ruleFinder,
+            ImmutableSortedSet::of,
             PythonTestUtils.PYTHON_PLATFORM,
             PEX,
             ImmutableList.of(),
-            new HashedFileTool(Paths.get("dummy_path_to_pex_runner")),
+            new HashedFileTool(
+                PathSourcePath.of(projectFilesystem, Paths.get("dummy_path_to_pex_runner"))),
             ".pex",
             new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("CPython", "2.7")),
             "main",
@@ -136,7 +139,7 @@ public class PythonPackagedBinaryTest {
     // across different python libraries.
     RuleKey pair1 =
         getRuleKeyForModuleLayout(
-            new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -146,7 +149,7 @@ public class PythonPackagedBinaryTest {
             source2Relative);
     RuleKey pair2 =
         getRuleKeyForModuleLayout(
-            new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -156,7 +159,7 @@ public class PythonPackagedBinaryTest {
             source1Relative);
     RuleKey pair3 =
         getRuleKeyForModuleLayout(
-            new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -166,7 +169,7 @@ public class PythonPackagedBinaryTest {
             source1Relative);
     RuleKey pair4 =
         getRuleKeyForModuleLayout(
-            new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,

@@ -15,8 +15,11 @@
  */
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -38,6 +41,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
@@ -53,11 +57,20 @@ public class PrebuiltAppleFrameworkDescription
         Flavored,
         MetadataProvidingDescription<PrebuiltAppleFrameworkDescriptionArg> {
 
-  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
+  private final ToolchainProvider toolchainProvider;
+  private final ImmutableSet<Flavor> declaredPlatforms;
 
   public PrebuiltAppleFrameworkDescription(
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
-    this.appleCxxPlatformsFlavorDomain = appleCxxPlatformsFlavorDomain;
+      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
+    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
+  }
+
+  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformsFlavorDomain() {
+    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
+    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
   }
 
   @Override
@@ -65,7 +78,11 @@ public class PrebuiltAppleFrameworkDescription
     // This class supports flavors that other apple targets support.
     // It's mainly there to be compatible with other apple rules which blindly add flavor tags to
     // all its targets.
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
+        getAppleCxxPlatformsFlavorDomain();
     return RichStream.from(flavors)
+            .filter(flavor -> !declaredPlatforms.contains(flavor))
+            .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
             .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
             .filter(flavor -> !AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor))
             .filter(flavor -> !AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor))
@@ -78,7 +95,7 @@ public class PrebuiltAppleFrameworkDescription
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
     return Optional.of(
         ImmutableSet.of(
-            appleCxxPlatformsFlavorDomain,
+            getAppleCxxPlatformsFlavorDomain(),
             AppleDebugFormat.FLAVOR_DOMAIN,
             AppleDescriptions.INCLUDE_FRAMEWORKS,
             StripStyle.FLAVOR_DOMAIN));
@@ -109,7 +126,8 @@ public class PrebuiltAppleFrameworkDescription
         args.getSupportedPlatformsRegex(),
         input ->
             CxxFlags.getFlagsWithPlatformMacroExpansion(
-                args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input));
+                args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input),
+        getAppleCxxPlatformsFlavorDomain());
   }
 
   @Override

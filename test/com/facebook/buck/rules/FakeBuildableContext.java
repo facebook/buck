@@ -20,8 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -37,27 +35,8 @@ public class FakeBuildableContext implements BuildableContext {
   private final Set<Path> artifacts = new HashSet<>();
 
   @Override
-  public void addMetadata(String key, String value) {
-    Object oldValue = metadata.put(key, value);
-    if (oldValue != null) {
-      throw new IllegalStateException(
-          String.format(
-              "Duplicate values for key %s: old is %s and new is %s.", key, oldValue, value));
-    }
-  }
-
-  @Override
-  public void addMetadata(String key, ImmutableList<String> values) {
-    metadata.put(key, values);
-  }
-
-  @Override
   public void recordArtifact(Path pathToArtifact) {
     artifacts.add(pathToArtifact);
-  }
-
-  public ImmutableMap<String, Object> getRecordedMetadata() {
-    return ImmutableMap.copyOf(metadata);
   }
 
   public ImmutableSet<Path> getRecordedArtifacts() {

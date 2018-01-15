@@ -1,0 +1,15 @@
+import os
+
+def create_cpp_flags():
+    # Hack until Buck can provide the JDK include path automatically.
+    # If JAVA_HOME is defined, we will use it.
+    # Otherwise, just fake it with typedefs.
+    if 'JAVA_HOME' in os.environ:
+        cppflags = [
+            '-DUSE_JNI_H',
+            '-I' + os.environ['JAVA_HOME'] + '/include',
+            '-I' + os.environ['JAVA_HOME'] + '/include/darwin',
+            '-I' + os.environ['JAVA_HOME'] + '/include/linux',
+        ]
+    else:
+        cppflags = []

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParseException;
@@ -40,15 +40,14 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -104,7 +103,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
-    return getFwdDepsStream(targets).collect(MoreCollectors.toImmutableSet());
+    return getFwdDepsStream(targets).collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -124,7 +123,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .stream()
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -184,13 +183,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
               Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
               return resolver.get().requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
             })
-        .filter(rule -> rule instanceof JavaLibrary)
-        .map(rule -> (JavaLibrary) rule)
-        .flatMap(library -> library.getDepsForTransitiveClasspathEntries().stream())
+        .filter(rule -> rule instanceof HasClasspathDeps)
+        .flatMap(rule -> ((HasClasspathDeps) rule).getDepsForTransitiveClasspathEntries().stream())
         .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()));
   }
 
-  public static final Iterable<QueryFunction> QUERY_FUNCTIONS =
+  public static final Iterable<QueryEnvironment.QueryFunction> QUERY_FUNCTIONS =
       ImmutableList.of(
           new AttrFilterFunction(),
           new ClasspathFunction(),
@@ -202,7 +200,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
           new InputsFunction());
 
   @Override
-  public Iterable<QueryFunction> getFunctions() {
+  public Iterable<QueryEnvironment.QueryFunction> getFunctions() {
     return QUERY_FUNCTIONS;
   }
 
@@ -226,7 +224,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         return declaredDeps
             .stream()
             .map(QueryBuildTarget::of)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
       }
       try {
         BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(target, context, cellNames);
@@ -237,7 +235,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     }
 
     @Override
-    public Type getType() {
+    public QueryEnvironment.TargetEvaluator.Type getType() {
       return Type.IMMEDIATE;
     }
   }

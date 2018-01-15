@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -195,7 +194,7 @@ public class GraphEnhancementQueryEnvironmentTest {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
     ImmutableSet<QueryTarget> classpath =
         env.getFirstOrderClasspath(ImmutableSet.of(getQueryTarget("//:lib")))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     assertThat(classpath, Matchers.hasItems(getQueryTarget("//:sublib")));
   }
 }

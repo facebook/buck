@@ -1,21 +1,21 @@
 cxx_library(
-    name='lib',
+    name = "lib",
     srcs = [
-        'src/lib.c'
+        "src/lib.c",
     ],
-    exported_headers = {
-        'lib.h': 'include/lib.h',
-    },
-    include_dirs = ['include'],
-    link_style = 'static',
     compiler_flags = WINDOWS_COMPILE_FLAGS,
+    exported_headers = {
+        "lib.h": "include/lib.h",
+    },
+    include_dirs = ["include"],
+    link_style = "static",
     linker_flags = WINDOWS_LINK_FLAGS,
-    preferred_linkage = 'static',
-    visibility = ['PUBLIC'],
+    preferred_linkage = "static",
+    visibility = ["PUBLIC"],
 )
 
 genrule(
-  name = 'out',
-  cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,static)" %OUT%',
-  out = 'lib.lib',
+    name = "out",
+    out = "lib.lib",
+    cmd_exe = "copy \"$(location //lib:lib#windows-x86_64,static)\" %OUT%",
 )

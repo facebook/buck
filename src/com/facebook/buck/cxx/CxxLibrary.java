@@ -40,9 +40,7 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,6 +51,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -163,7 +163,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
-    CxxPreprocessorInput publicHeaders = getPublicCxxPreprocessorInput(cxxPlatform);
+    CxxPreprocessorInput publicHeaders =
+        getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform);
     Optional<CxxPreprocessorInput> pluginHeaders =
         delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
 
@@ -174,7 +175,11 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     return publicHeaders;
   }
 
-  public CxxPreprocessorInput getPublicCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  /**
+   * Returns public headers excluding contribution from any {@link CxxLibraryDescriptionDelegate}.
+   */
+  public CxxPreprocessorInput getPublicCxxPreprocessorInputExcludingDelegate(
+      CxxPlatform cxxPlatform) {
     return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
   }
 
@@ -273,7 +278,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                     d.getShouldProduceLibraryArtifact(
                         getBuildTarget(), ruleResolver, cxxPlatform, type, forceLinkWhole))
             .orElse(false);
-    final boolean headersOnly = headerOnly.apply(cxxPlatform);
+    final boolean headersOnly = headerOnly.test(cxxPlatform);
     final boolean shouldProduceArtifact =
         (!headersOnly || delegateWantsArtifact) && propagateLinkables;
 
@@ -323,8 +328,11 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                 cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
                     ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
                     : CxxLibraryDescription.Type.SHARED.getFlavor());
-        linkerArgsBuilder.add(
-            SourcePathArg.of(Preconditions.checkNotNull(rule.getSourcePathToOutput())));
+        SourcePath sourcePathForLinking =
+            rule instanceof CxxLink
+                ? ((CxxLink) rule).getSourcePathToOutputForLinking()
+                : rule.getSourcePathToOutput();
+        linkerArgsBuilder.add(SourcePathArg.of(Preconditions.checkNotNull(sourcePathForLinking)));
       }
     }
 
@@ -380,7 +388,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-    if (headerOnly.apply(cxxPlatform)) {
+    if (headerOnly.test(cxxPlatform)) {
       return ImmutableMap.of();
     }
     if (!isPlatformSupported(cxxPlatform)) {

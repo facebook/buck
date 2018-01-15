@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Supplier;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 // TODO(mbolin): Only one such Supplier should be created per Cell per Buck execution.

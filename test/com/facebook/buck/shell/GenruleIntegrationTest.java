@@ -18,11 +18,13 @@ package com.facebook.buck.shell;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -332,6 +334,80 @@ public class GenruleIntegrationTest {
     Path outputTwo = workspace.buildAndReturnOutput("//:extended-time-two");
 
     assertZipsAreEqual(outputOne, outputTwo);
+  }
+
+  @Test
+  public void genruleCanUseExportFileInReferenceMode() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_export_file", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:re-exported").assertSuccess();
+
+    // rebuild with changed contents
+    String contents = "new contents";
+    workspace.writeContentsToPath(contents, "source.txt");
+    Path genruleOutput = workspace.buildAndReturnOutput("//:re-exported");
+
+    assertEquals(contents, workspace.getFileContents(genruleOutput));
+  }
+
+  @Test
+  public void genruleWithSandboxFailsAccessingUndeclaredFile() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_sandbox", temporaryFolder);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:cat_input");
+    String expected =
+        new String(Files.readAllBytes(workspace.getPath("undeclared_input.txt")), UTF_8);
+    String actual = new String(Files.readAllBytes(output), UTF_8);
+    assertEquals(expected, actual);
+
+    ProcessResult result = workspace.runBuckBuild("//:cat_input_with_sandbox");
+    assertTrue(result.getStderr().contains("undeclared_input.txt: Operation not permitted"));
+  }
+
+  @Test
+  public void disabledDarwinSandboxingNotBreakingViolators() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_sandbox", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "--config", "sandbox.darwin_sandbox_enabled=False", "//:cat_input");
+    String actual = new String(Files.readAllBytes(output), UTF_8);
+
+    String expected =
+        new String(Files.readAllBytes(workspace.getPath("undeclared_input.txt")), UTF_8);
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void disabledGenruleSandboxingNotBreakingViolators() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_with_sandbox", temporaryFolder);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "--config", "sandbox.genrule_sandbox_enabled=False", "//:cat_input");
+    String actual = new String(Files.readAllBytes(output), UTF_8);
+
+    String expected =
+        new String(Files.readAllBytes(workspace.getPath("undeclared_input.txt")), UTF_8);
+    assertEquals(expected, actual);
   }
 
   private void assertZipsAreEqual(Path zipPathOne, Path zipPathTwo) throws IOException {

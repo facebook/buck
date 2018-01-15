@@ -24,13 +24,12 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -168,7 +167,7 @@ public class TimeoutIntegrationTest {
       throws IOException {
     Path javaFile = temporaryFolder.getRoot().resolve(path);
     List<String> lines = Files.readAllLines(javaFile, Charsets.UTF_8);
-    String java = Joiner.on("").join(Iterables.transform(lines, transform));
+    String java = lines.stream().map(transform).collect(Collectors.joining(""));
     Files.write(javaFile, java.getBytes(Charsets.UTF_8));
   }
 }

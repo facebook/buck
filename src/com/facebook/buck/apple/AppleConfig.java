@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.io.ExecutableFinder;
@@ -26,11 +27,13 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Option;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -40,9 +43,16 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
+
+  public static final ImmutableList<String> DEFAULT_IDENTITIES_COMMAND =
+      ImmutableList.of("security", "find-identity", "-v", "-p", "codesigning");
+  public static final ImmutableList<String> DEFAULT_READ_COMMAND =
+      ImmutableList.of("openssl", "smime", "-inform", "der", "-verify", "-noverify", "-in");
+
   private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
   private static final String DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE = "FB_LOG_LEVEL";
   private static final String DEFAULT_TEST_LOG_LEVEL = "debug";
@@ -85,23 +95,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     }
   }
 
-  /**
-   * If specified, the value of {@code [apple] xcode_developer_dir_for_tests} wrapped in a {@link
-   * Supplier}. Otherwise, this falls back to {@code [apple] xcode_developer_dir} and finally {@code
-   * xcode-select --print-path}.
-   */
-  public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplierForTests(
-      ProcessExecutor processExecutor) {
-    Optional<String> xcodeDeveloperDirectory =
-        delegate.getValue(APPLE_SECTION, "xcode_developer_dir_for_tests");
-    if (xcodeDeveloperDirectory.isPresent()) {
-      Path developerDirectory =
-          delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
-              Paths.get(xcodeDeveloperDirectory.get()));
-      return Suppliers.ofInstance(Optional.of(normalizePath(developerDirectory)));
-    } else {
-      return getAppleDeveloperDirectorySupplier(processExecutor);
-    }
+  public Optional<String> getXcodeDeveloperDirectoryForTests() {
+    return delegate.getValue(APPLE_SECTION, "xcode_developer_dir_for_tests");
   }
 
   public ImmutableList<Path> getExtraToolchainPaths() {
@@ -140,38 +135,35 @@ public class AppleConfig implements ConfigView<BuckConfig> {
    */
   private static Supplier<Optional<Path>> createAppleDeveloperDirectorySupplier(
       final ProcessExecutor processExecutor) {
-    return Suppliers.memoize(
-        new Supplier<Optional<Path>>() {
-          @Override
-          public Optional<Path> get() {
-            ProcessExecutorParams processExecutorParams =
-                ProcessExecutorParams.builder()
-                    .setCommand(ImmutableList.of("xcode-select", "--print-path"))
-                    .build();
-            // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
-            Set<ProcessExecutor.Option> options =
-                EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-            ProcessExecutor.Result result;
-            try {
-              result =
-                  processExecutor.launchAndExecute(
-                      processExecutorParams,
-                      options,
-                      /* stdin */ Optional.empty(),
-                      /* timeOutMs */ Optional.empty(),
-                      /* timeOutHandler */ Optional.empty());
-            } catch (InterruptedException | IOException e) {
-              LOG.warn("Could not execute xcode-select, continuing without developer dir.");
-              return Optional.empty();
-            }
-
-            if (result.getExitCode() != 0) {
-              throw new RuntimeException(
-                  result.getMessageForUnexpectedResult("xcode-select --print-path"));
-            }
-
-            return Optional.of(normalizePath(Paths.get(result.getStdout().get().trim())));
+    return MoreSuppliers.memoize(
+        () -> {
+          ProcessExecutorParams processExecutorParams =
+              ProcessExecutorParams.builder()
+                  .setCommand(ImmutableList.of("xcode-select", "--print-path"))
+                  .build();
+          // Must specify that stdout is expected or else output may be wrapped in Ansi escape
+          // chars.
+          Set<Option> options = EnumSet.of(Option.EXPECTING_STD_OUT);
+          Result result;
+          try {
+            result =
+                processExecutor.launchAndExecute(
+                    processExecutorParams,
+                    options,
+                    /* stdin */ Optional.empty(),
+                    /* timeOutMs */ Optional.empty(),
+                    /* timeOutHandler */ Optional.empty());
+          } catch (InterruptedException | IOException e) {
+            LOG.warn("Could not execute xcode-select, continuing without developer dir.");
+            return Optional.empty();
           }
+
+          if (result.getExitCode() != 0) {
+            throw new RuntimeException(
+                result.getMessageForUnexpectedResult("xcode-select --print-path"));
+          }
+
+          return Optional.of(normalizePath(Paths.get(result.getStdout().get().trim())));
         });
   }
 
@@ -201,7 +193,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     } else {
       Optional<Path> codesignPath = delegate.getPath(APPLE_SECTION, codesignField);
       Path defaultCodesignPath = Paths.get("/usr/bin/codesign");
-      HashedFileTool codesign = new HashedFileTool(codesignPath.orElse(defaultCodesignPath));
+      HashedFileTool codesign =
+          new HashedFileTool(delegate.getPathSourcePath(codesignPath.orElse(defaultCodesignPath)));
       return new ConstantToolProvider(codesign);
     }
   }
@@ -267,9 +260,17 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "generate_header_symlink_tree_only", false);
   }
 
+  public boolean shouldGenerateMissingUmbrellaHeaders() {
+    return delegate.getBooleanValue(APPLE_SECTION, "generate_missing_umbrella_headers", false);
+  }
+
   public boolean shouldUseSwiftDelegate() {
     // TODO(mgd): Remove Swift delegation from Apple rules
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);
+  }
+
+  public boolean shouldVerifyBundleResources() {
+    return delegate.getBooleanValue(APPLE_SECTION, "verify_bundle_resources", false);
   }
 
   public AppleAssetCatalog.ValidationType assetCatalogValidation() {
@@ -315,7 +316,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getProvisioningProfileReadCommand() {
     Optional<String> value = delegate.getValue(APPLE_SECTION, "provisioning_profile_read_command");
     if (!value.isPresent()) {
-      return ProvisioningProfileStore.DEFAULT_READ_COMMAND;
+      return DEFAULT_READ_COMMAND;
     }
     return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }
@@ -323,7 +324,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public ImmutableList<String> getCodeSignIdentitiesCommand() {
     Optional<String> value = delegate.getValue(APPLE_SECTION, "code_sign_identities_command");
     if (!value.isPresent()) {
-      return CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND;
+      return DEFAULT_IDENTITIES_COMMAND;
     }
     return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }

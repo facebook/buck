@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -42,7 +43,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -111,7 +111,7 @@ public class HaskellLibraryDescriptionTest {
                 Preconditions.checkNotNull(sharedLib.getSourcePathToOutput()))
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     assertThat(outputs.size(), Matchers.equalTo(ImmutableSet.copyOf(outputs).size()));
 
     ImmutableList<BuildTarget> targets =
@@ -213,7 +213,11 @@ public class HaskellLibraryDescriptionTest {
         new CxxBuckConfig(
             FakeBuckConfig.builder().setSections("[cxx]", "archive_contents=thin").build());
     HaskellLibraryBuilder builder =
-        new HaskellLibraryBuilder(target, HaskellTestUtils.DEFAULT_PLATFORMS, cxxBuckConfig)
+        new HaskellLibraryBuilder(
+                target,
+                HaskellTestUtils.DEFAULT_PLATFORM,
+                HaskellTestUtils.DEFAULT_PLATFORMS,
+                cxxBuckConfig)
             .setSrcs(
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("Test.hs"))))
             .setLinkWhole(true);
@@ -229,7 +233,8 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
     assertThat(
         FluentIterable.from(staticInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(new SourcePathRuleFinder(resolver)))
+            .transformAndConcat(
+                arg -> BuildableSupport.getDepsCollection(arg, new SourcePathRuleFinder(resolver)))
             .transform(BuildRule::getBuildTarget)
             .toList(),
         Matchers.hasItem(
@@ -274,6 +279,9 @@ public class HaskellLibraryDescriptionTest {
     assertThat(
         ImmutableList.copyOf(
             rule.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)),
+        Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
+    assertThat(
+        rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
   }
 }

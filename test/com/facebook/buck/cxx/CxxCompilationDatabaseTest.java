@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -49,7 +50,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -114,6 +114,18 @@ public class CxxCompilationDatabaseTest {
     BuildRuleParams compileBuildRuleParams =
         TestBuildRuleParams.create()
             .withDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
+    class FrameworkPathAppendableFunction
+        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+      @Override
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        // Do nothing.
+      }
+
+      @Override
+      public Path apply(FrameworkPath input) {
+        throw new UnsupportedOperationException("should not be called");
+      }
+    }
     rules.add(
         testBuildRuleResolver.addToIndex(
             CxxPreprocessAndCompile.preprocessAndCompile(
@@ -125,25 +137,17 @@ public class CxxCompilationDatabaseTest {
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     filesystem.getRootPath(),
-                    new GccPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
+                    new GccPreprocessor(
+                        new HashedFileTool(
+                            PathSourcePath.of(filesystem, Paths.get("preprocessor")))),
                     preprocessorFlags,
-                    new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-                      @Override
-                      public void appendToRuleKey(RuleKeyObjectSink sink) {
-                        // Do nothing.
-                      }
-
-                      @Override
-                      public Path apply(FrameworkPath input) {
-                        throw new UnsupportedOperationException("should not be called");
-                      }
-                    },
+                    new FrameworkPathAppendableFunction(),
                     Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
-                    testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
+                    new GccCompiler(
+                        new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler")))),
                     CxxToolFlags.of()),
                 Paths.get("test.o"),
                 FakeSourcePath.of(filesystem, "test.cpp"),
@@ -158,13 +162,13 @@ public class CxxCompilationDatabaseTest {
     testBuildRuleResolver.addToIndex(compilationDatabase);
 
     assertThat(
-        compilationDatabase.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
+        compilationDatabase.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         Matchers.contains(
             exportedSymlinkTree.getBuildTarget(), privateSymlinkTree.getBuildTarget()));
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
-        BuildTargets.getGenPath(filesystem, testBuildTarget, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, testBuildTarget, "__%s/compile_commands.json"),
         testSourcePathResolver.getRelativePath(compilationDatabase.getSourcePathToOutput()));
 
     List<Step> buildSteps =
@@ -184,7 +188,7 @@ public class CxxCompilationDatabaseTest {
                 root,
                 root + "/test.cpp",
                 ImmutableList.of(
-                    "compiler",
+                    "/Users/user/src/compiler",
                     "-x",
                     "c++",
                     "-isystem",

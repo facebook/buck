@@ -27,6 +27,7 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -124,6 +125,7 @@ public class MultiSourceContentsProviderTest {
             mockInlineProvider,
             Optional.of(mockLocalFsContentsProvider),
             mockServerContentsProvider,
+            MoreExecutors.newDirectExecutorService(),
             mockStatsTracker)) {
       provider
           .materializeFileContentsAsync(entry1, targetAbsPath)

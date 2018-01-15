@@ -1,36 +1,36 @@
 apple_resource(
-    name = 'TestHostAppResources',
+    name = "TestHostAppResources",
     dirs = [],
-    files = glob(['host_app/*.png']),
+    files = glob(["host_app/*.png"]),
 )
 
 apple_binary(
-    name = 'TestHostBinary',
-    srcs = ['host_app/TestHostApp.m'],
-    headers = ['host_app/TestHostApp.h'],
+    name = "TestHostBinary",
+    srcs = ["host_app/TestHostApp.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
     ],
+    headers = ["host_app/TestHostApp.h"],
 )
 
 apple_bundle(
-    name = 'TestHostApp',
-    binary = ':TestHostBinary',
-    deps = [':TestHostAppResources'],
-    tests = [':AppTest'],
-    extension = 'app',
-    info_plist = 'host_app/TestHostApp.plist',
+    name = "TestHostApp",
+    binary = ":TestHostBinary",
+    extension = "app",
+    info_plist = "host_app/TestHostApp.plist",
+    tests = [":AppTest"],
+    deps = [":TestHostAppResources"],
 )
 
 apple_test(
-    name = 'AppTest',
-    test_host_app = ':TestHostApp',
-    srcs = ['test/AppTest.m'],
-    info_plist = 'test/AppTest.plist',
+    name = "AppTest",
+    srcs = ["test/AppTest.m"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
-        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
     ],
+    info_plist = "test/AppTest.plist",
+    test_host_app = ":TestHostApp",
 )

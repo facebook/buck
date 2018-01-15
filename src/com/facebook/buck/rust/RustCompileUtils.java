@@ -44,11 +44,14 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
@@ -152,7 +155,7 @@ public class RustCompileUtils {
         ruledeps
             .stream()
             .flatMap(r -> r.getBuildDeps().stream())
-            .collect(MoreCollectors.toImmutableList())) {
+            .collect(ImmutableList.toImmutableList())) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
         SortedSet<BuildRule> deps = ImmutableSortedSet.of();
@@ -177,8 +180,7 @@ public class RustCompileUtils {
                   cxxPlatform,
                   ruledeps,
                   depType,
-                  RustLinkable.class::isInstance,
-                  RustLinkable.class::isInstance)
+                  r -> r instanceof RustLinkable ? Optional.of(r.getBuildDeps()) : Optional.empty())
               .getArgs();
 
       // Add necessary rpaths if we're dynamically linking with things
@@ -195,7 +197,7 @@ public class RustCompileUtils {
       args.add(StringArg.of("-Cprefer-dynamic"));
     }
 
-    String filename = crateType.filenameFor(crateName, cxxPlatform);
+    String filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
     return RustCompileRule.from(
         ruleFinder,
@@ -210,7 +212,8 @@ public class RustCompileUtils {
         linkerArgs.build(),
         CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
         CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule),
-        crateType.hasOutput());
+        crateType.hasOutput(),
+        rustConfig.getRemapSrcPaths());
   }
 
   public static RustCompileRule requireBuild(
@@ -345,8 +348,10 @@ public class RustCompileUtils {
                   projectFilesystem,
                   cxxPlatform,
                   params.getBuildDeps(),
-                  RustLinkable.class::isInstance,
-                  RustLinkable.class::isInstance));
+                  r ->
+                      r instanceof RustLinkable
+                          ? Optional.of(r.getBuildDeps())
+                          : Optional.empty()));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
@@ -365,7 +370,7 @@ public class RustCompileUtils {
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
-      executableBuilder.addDep(sharedLibraries);
+      executableBuilder.addNonHashableInput(sharedLibraries.getRootSourcePath());
       executableBuilder.addInputs(sharedLibraries.getLinks().values());
 
       // Also add Rust shared libraries as runtime deps. We don't need these in the symlink tree
@@ -442,7 +447,7 @@ public class RustCompileUtils {
                   String name = resolver.getRelativePath(src).getFileName().toString();
                   return defaults.contains(name) || name.equals(crateName);
                 })
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     if (res.size() == 1) {
       return Optional.of(res.get(0));
@@ -483,12 +488,14 @@ public class RustCompileUtils {
       public Iterable<BuildRule> visit(BuildRule rule) {
         Set<BuildRule> deps = ImmutableSet.of();
         if (rule instanceof RustLinkable) {
-          deps = rule.getBuildDeps();
-
           RustLinkable rustLinkable = (RustLinkable) rule;
 
-          if (rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
-            libs.putAll(rustLinkable.getRustSharedLibraries(cxxPlatform));
+          if (!rustLinkable.isProcMacro()) {
+            deps = rule.getBuildDeps();
+
+            if (rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
+              libs.putAll(rustLinkable.getRustSharedLibraries(cxxPlatform));
+            }
           }
         }
         return deps;
@@ -524,5 +531,21 @@ public class RustCompileUtils {
                     "Can't find suitable top-level source file for %s: %s",
                     target.getFullyQualifiedName(), fixedSrcs)),
         fixedSrcs);
+  }
+
+  /**
+   * Approximate what Cargo does - it computes a hash based on the crate version and its
+   * dependencies. Buck will deal with the dependencies and we don't need to worry about the
+   * version, but we do need to make sure that two crates with the same name in the build are
+   * distinct - so compute the hash from the full target path.
+   *
+   * @param target Which target we're computing the hash for
+   * @return Truncated MD5 hash of the target path
+   */
+  static String hashForTarget(BuildTarget target) {
+    String name = target.getUnflavoredBuildTarget().getFullyQualifiedName();
+    Hasher hasher = Hashing.md5().newHasher();
+    HashCode hash = hasher.putString(name, StandardCharsets.UTF_8).hash();
+    return hash.toString().substring(0, 16);
   }
 }

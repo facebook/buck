@@ -229,7 +229,8 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   preprocessorDelegate.getHeaderPathNormalizer(),
                   preprocessorDelegate.getHeaderVerification(),
                   getDepFilePath(context.getSourcePathResolver()),
-                  // TODO(10194465): This uses relative path so as to get relative paths in the dep file
+                  // TODO(10194465): This uses relative path so as to get relative paths in the dep
+                  // file
                   getRelativeInputPath(context.getSourcePathResolver()),
                   output,
                   compilerDelegate.getDependencyTrackingMode()));

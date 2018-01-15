@@ -20,6 +20,7 @@ import static com.facebook.buck.d.DDescriptionUtils.SOURCE_LINK_TREE;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
@@ -50,20 +52,15 @@ public class DTestDescription
         ImplicitDepsInferringDescription<DTestDescription.AbstractDTestDescriptionArg>,
         VersionRoot<DTestDescriptionArg> {
 
+  private final ToolchainProvider toolchainProvider;
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public DTestDescription(
-      DBuckConfig dBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatform = cxxPlatform;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -93,6 +90,8 @@ public class DTestDescription
         (SymlinkTree)
             buildRuleResolver.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
+    CxxPlatform cxxPlatform = getCxxPlatform();
+
     // Create a helper rule to build the test binary.
     // The rule needs its own target so that we can depend on it without creating cycles.
     BuildTarget binaryTarget =
@@ -101,6 +100,7 @@ public class DTestDescription
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
+            cellRoots,
             binaryTarget,
             projectFilesystem,
             params,
@@ -124,7 +124,9 @@ public class DTestDescription
         binaryRule,
         args.getContacts(),
         args.getLabels(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs));
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(dBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()));
   }
 
   @Override
@@ -134,7 +136,13 @@ public class DTestDescription
       AbstractDTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(cxxPlatform.getLd().getParseTimeDeps());
+    extraDepsBuilder.addAll(getCxxPlatform().getLd().getParseTimeDeps());
+  }
+
+  private CxxPlatform getCxxPlatform() {
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
   }
 
   @BuckStyleImmutable

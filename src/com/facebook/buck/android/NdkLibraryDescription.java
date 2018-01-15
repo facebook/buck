@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidToolchain;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -36,6 +36,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -57,7 +58,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -87,13 +87,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
           ImmutableMap.of("env", new EnvironmentVariableMacroExpander(Platform.detect())));
 
   private final ToolchainProvider toolchainProvider;
-  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms;
 
-  public NdkLibraryDescription(
-      ToolchainProvider toolchainProvider,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
+  public NdkLibraryDescription(ToolchainProvider toolchainProvider) {
     this.toolchainProvider = toolchainProvider;
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
   @Override
@@ -167,7 +163,12 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+    NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+
+    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry :
+        ndkCxxPlatformsProvider.getNdkCxxPlatforms().entrySet()) {
       CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
@@ -202,7 +203,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
               cxxPlatform,
               params.getBuildDeps(),
               Linker.LinkableDepType.SHARED,
-              NdkLibrary.class::isInstance);
+              r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
 
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.
@@ -210,7 +211,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
           nativeLinkableInput
               .getArgs()
               .stream()
-              .flatMap(arg -> arg.getDeps(ruleFinder).stream())
+              .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
               .iterator());
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
@@ -345,11 +346,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     } else {
       sources = findSources(projectFilesystem, buildTarget.getBasePath());
     }
-    AndroidToolchain androidToolchain =
-        toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
+    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     return new NdkLibrary(
         buildTarget,
         projectFilesystem,
+        toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
         params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
         getGeneratedMakefilePath(buildTarget, projectFilesystem),
@@ -357,7 +358,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
         sources,
         args.getFlags(),
         args.getIsAsset(),
-        androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkVersion),
+        androidNdk.getNdkVersion(),
         MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver));
   }
 

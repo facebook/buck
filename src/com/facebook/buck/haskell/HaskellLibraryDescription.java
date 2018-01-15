@@ -19,11 +19,11 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -56,16 +57,18 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -90,12 +93,12 @@ public class HaskellLibraryDescription
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Haskell Library Type", Type.class);
 
-  private final FlavorDomain<HaskellPlatform> platforms;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
 
   public HaskellLibraryDescription(
-      FlavorDomain<HaskellPlatform> platforms, CxxBuckConfig cxxBuckConfig) {
-    this.platforms = platforms;
+      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
   }
 
@@ -104,8 +107,11 @@ public class HaskellLibraryDescription
     return HaskellLibraryDescriptionArg.class;
   }
 
-  private BuildTarget getBaseBuildTarget(BuildTarget target) {
-    return target.withoutFlavors(Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()));
+  private BuildTarget getBaseBuildTarget(
+      HaskellPlatformsProvider haskellPlatformsProvider, BuildTarget target) {
+    return target.withoutFlavors(
+        Sets.union(
+            Type.FLAVOR_VALUES, haskellPlatformsProvider.getHaskellPlatforms().getFlavors()));
   }
 
   /** @return the package identifier to use for the library with the given target. */
@@ -188,9 +194,7 @@ public class HaskellLibraryDescription
             projectFilesystem,
             target.withoutFlavors(HaskellDescriptionUtils.PROF),
             platform.getFlavor(),
-            depType == Linker.LinkableDepType.STATIC
-                ? CxxSourceRuleFactory.PicType.PDC
-                : CxxSourceRuleFactory.PicType.PIC,
+            depType == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC,
             platform.getCxxPlatform().getStaticLibraryExtension(),
             hsProfile ? "_p" : "",
             cxxBuckConfig.isUniqueLibraryNameEnabled()),
@@ -214,6 +218,7 @@ public class HaskellLibraryDescription
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -221,7 +226,10 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
+                baseTarget.getFlavors(),
+                Sets.union(
+                    Type.FLAVOR_VALUES,
+                    haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
             .isEmpty());
     BuildTarget target =
         baseTarget.withAppendedFlavors(
@@ -261,6 +269,7 @@ public class HaskellLibraryDescription
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -273,12 +282,13 @@ public class HaskellLibraryDescription
       case SHARED:
         library =
             requireSharedLibrary(
-                getBaseBuildTarget(target),
+                getBaseBuildTarget(haskellPlatformsProvider, target),
                 projectFilesystem,
                 baseParams,
                 resolver,
                 pathResolver,
                 ruleFinder,
+                haskellPlatformsProvider,
                 platform,
                 args,
                 deps,
@@ -289,12 +299,13 @@ public class HaskellLibraryDescription
       case STATIC_PIC:
         library =
             requireStaticLibrary(
-                getBaseBuildTarget(target),
+                getBaseBuildTarget(haskellPlatformsProvider, target),
                 projectFilesystem,
                 baseParams,
                 resolver,
                 pathResolver,
                 ruleFinder,
+                haskellPlatformsProvider,
                 platform,
                 args,
                 deps,
@@ -309,12 +320,13 @@ public class HaskellLibraryDescription
 
           BuildRule profiledLibrary =
               requireStaticLibrary(
-                  getBaseBuildTarget(target),
+                  getBaseBuildTarget(haskellPlatformsProvider, target),
                   projectFilesystem,
                   baseParams,
                   resolver,
                   pathResolver,
                   ruleFinder,
+                  haskellPlatformsProvider,
                   platform,
                   args,
                   deps,
@@ -410,6 +422,7 @@ public class HaskellLibraryDescription
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -417,7 +430,10 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
+                baseTarget.getFlavors(),
+                Sets.union(
+                    Type.FLAVOR_VALUES,
+                    haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
             .isEmpty());
     BuildTarget target = baseTarget.withAppendedFlavors(platform.getFlavor());
     switch (depType) {
@@ -449,6 +465,7 @@ public class HaskellLibraryDescription
                     resolver,
                     pathResolver,
                     ruleFinder,
+                    haskellPlatformsProvider,
                     platform,
                     args,
                     deps,
@@ -596,13 +613,17 @@ public class HaskellLibraryDescription
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
+                baseTarget.getFlavors(),
+                Sets.union(
+                    Type.FLAVOR_VALUES,
+                    haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
             .isEmpty());
 
     return (HaskellLinkRule)
@@ -622,6 +643,16 @@ public class HaskellLibraryDescription
                     hsProfile));
   }
 
+  private HaskellPlatform getPlatform(
+      HaskellPlatformsProvider haskellPlatformsProvider, BuildTarget buildTarget) {
+    Optional<HaskellPlatform> platform =
+        haskellPlatformsProvider.getHaskellPlatforms().getValue(buildTarget);
+    if (platform.isPresent()) {
+      return platform.get();
+    }
+    return haskellPlatformsProvider.getDefaultHaskellPlatform();
+  }
+
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -632,6 +663,9 @@ public class HaskellLibraryDescription
       CellPathResolver cellRoots,
       final HaskellLibraryDescriptionArg args) {
 
+    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxDeps allDeps =
@@ -640,15 +674,13 @@ public class HaskellLibraryDescription
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<HaskellPlatform> platform = platforms.getValue(buildTarget);
+    HaskellPlatform platform = getPlatform(haskellPlatformsProvider, buildTarget);
     if (type.isPresent()) {
-      Preconditions.checkState(platform.isPresent());
-
       // Get the base build, without any flavors referring to the library type or platform.
       BuildTarget baseTarget =
           buildTarget.withoutFlavors(Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()));
 
-      ImmutableSet<BuildRule> deps = allDeps.get(resolver, platform.get().getCxxPlatform());
+      ImmutableSet<BuildRule> deps = allDeps.get(resolver, platform.getCxxPlatform());
 
       switch (type.get().getValue()) {
         case PACKAGE_SHARED:
@@ -669,7 +701,8 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              haskellPlatformsProvider,
+              platform,
               args,
               deps,
               depType,
@@ -682,7 +715,8 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              haskellPlatformsProvider,
+              platform,
               args,
               deps,
               args.isEnableProfiling());
@@ -695,7 +729,8 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              haskellPlatformsProvider,
+              platform,
               args,
               deps,
               type.get().getValue() == Type.STATIC
@@ -710,8 +745,27 @@ public class HaskellLibraryDescription
               resolver,
               pathResolver,
               ruleFinder,
-              platform.get(),
+              platform,
               args);
+        case GHCI:
+          return HaskellDescriptionUtils.requireGhciRule(
+              // The GHCi rule is a user-facing "deployable" rule, rather than a factory rule, so
+              // make sure to use the original build target when generating it.
+              buildTarget,
+              projectFilesystem,
+              params,
+              cellRoots,
+              resolver,
+              platform,
+              cxxBuckConfig,
+              args.getDeps(),
+              args.getPlatformDeps(),
+              args.getSrcs(),
+              args.getGhciPreloadDeps(),
+              args.getGhciPlatformPreloadDeps(),
+              args.getCompilerFlags(),
+              Optional.empty(),
+              Optional.empty());
       }
 
       throw new IllegalStateException(
@@ -732,12 +786,13 @@ public class HaskellLibraryDescription
           HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile) {
         HaskellPackageRule rule =
             requirePackage(
-                getBaseBuildTarget(getBuildTarget()),
+                getBaseBuildTarget(haskellPlatformsProvider, getBuildTarget()),
                 projectFilesystem,
                 params,
                 resolver,
                 pathResolver,
                 ruleFinder,
+                haskellPlatformsProvider,
                 platform,
                 args,
                 allDeps.get(resolver, platform.getCxxPlatform()),
@@ -758,9 +813,53 @@ public class HaskellLibraryDescription
       }
 
       @Override
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+        CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+
+        Optional<Linker.LinkableDepType> depType =
+            platforms.getValue(cxxPlatform.getFlavor()).getLinkStyleForStubHeader();
+        if (depType.isPresent()) {
+          HaskellCompileRule compileRule =
+              requireCompileRule(
+                  buildTarget,
+                  projectFilesystem,
+                  params,
+                  resolver,
+                  pathResolver,
+                  ruleFinder,
+                  platforms.getValue(cxxPlatform.getFlavor()),
+                  args,
+                  allDeps.get(resolver, cxxPlatform),
+                  depType.get(),
+                  args.isEnableProfiling());
+          builder.addIncludes(
+              CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, compileRule.getStubsDir()));
+        }
+
+        return builder.build();
+      }
+
+      @Override
+      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+        return RichStream.from(allDeps.get(resolver, cxxPlatform))
+            .filter(CxxPreprocessorDep.class)
+            .toImmutableList();
+      }
+
+      @Override
+      public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+          CxxPlatform cxxPlatform) {
+        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+      }
+
+      @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
         return ImmutableList.of();
       }
+
+      private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+          transitiveCxxPreprocessorInputCache =
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
@@ -783,18 +882,19 @@ public class HaskellLibraryDescription
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
           ImmutableSet<LanguageExtensions> languageExtensions) {
-        Iterable<com.facebook.buck.rules.args.Arg> linkArgs;
+        Iterable<Arg> linkArgs;
         switch (type) {
           case STATIC:
           case STATIC_PIC:
             Archive archive =
                 requireStaticLibrary(
-                    getBaseBuildTarget(getBuildTarget()),
+                    getBaseBuildTarget(haskellPlatformsProvider, getBuildTarget()),
                     projectFilesystem,
                     params,
                     resolver,
                     pathResolver,
                     ruleFinder,
+                    haskellPlatformsProvider,
                     platforms.getValue(cxxPlatform.getFlavor()),
                     args,
                     allDeps.get(resolver, cxxPlatform),
@@ -808,12 +908,13 @@ public class HaskellLibraryDescription
           case SHARED:
             BuildRule rule =
                 requireSharedLibrary(
-                    getBaseBuildTarget(getBuildTarget()),
+                    getBaseBuildTarget(haskellPlatformsProvider, getBuildTarget()),
                     projectFilesystem,
                     params,
                     resolver,
                     pathResolver,
                     ruleFinder,
+                    haskellPlatformsProvider,
                     platforms.getValue(cxxPlatform.getFlavor()),
                     args,
                     allDeps.get(resolver, cxxPlatform),
@@ -839,12 +940,13 @@ public class HaskellLibraryDescription
                 Optional.empty(), getBuildTarget(), cxxPlatform);
         BuildRule sharedLibraryBuildRule =
             requireSharedLibrary(
-                getBaseBuildTarget(getBuildTarget()),
+                getBaseBuildTarget(haskellPlatformsProvider, getBuildTarget()),
                 projectFilesystem,
                 params,
                 resolver,
                 pathResolver,
                 ruleFinder,
+                haskellPlatformsProvider,
                 platforms.getValue(cxxPlatform.getFlavor()),
                 args,
                 allDeps.get(resolver, cxxPlatform),
@@ -857,7 +959,7 @@ public class HaskellLibraryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (platforms.containsAnyOf(flavors)) {
+    if (getHaskellPlatformsProvider().getHaskellPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -877,7 +979,14 @@ public class HaskellLibraryDescription
       AbstractHaskellLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    HaskellDescriptionUtils.getParseTimeDeps(platforms.getValues(), extraDepsBuilder);
+    HaskellDescriptionUtils.getParseTimeDeps(
+        getHaskellPlatformsProvider().getHaskellPlatforms().getValues(),
+        targetGraphOnlyDepsBuilder);
+  }
+
+  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+    return toolchainProvider.getByName(
+        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
   }
 
   protected enum Type implements FlavorConvertible {
@@ -889,13 +998,14 @@ public class HaskellLibraryDescription
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
 
+    GHCI(HaskellDescriptionUtils.GHCI_FLAV),
     HADDOCK(InternalFlavor.of("haddock"));
 
     public static final ImmutableSet<Flavor> FLAVOR_VALUES =
         ImmutableList.copyOf(Type.values())
             .stream()
             .map(Type::getFlavor)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     private final Flavor flavor;
 
@@ -944,6 +1054,16 @@ public class HaskellLibraryDescription
     @Value.Default
     default ImmutableList<String> getHaddockFlags() {
       return ImmutableList.of();
+    }
+
+    @Value.Default
+    default ImmutableSortedSet<BuildTarget> getGhciPreloadDeps() {
+      return ImmutableSortedSet.of();
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getGhciPlatformPreloadDeps() {
+      return PatternMatchedCollection.of();
     }
   }
 }

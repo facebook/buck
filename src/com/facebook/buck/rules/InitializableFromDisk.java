@@ -35,11 +35,10 @@ import java.io.IOException;
 public interface InitializableFromDisk<T> {
 
   /**
-   * @param onDiskBuildInfo can be used to read metadata from disk to help initialize the rule.
    * @return an object that has the in-memory data structures that need to be populated as a result
    *     of executing this object's steps.
    */
-  T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException;
+  T initializeFromDisk() throws IOException;
 
   BuildOutputInitializer<T> getBuildOutputInitializer();
 }

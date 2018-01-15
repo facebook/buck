@@ -32,10 +32,13 @@ import org.objectweb.asm.signature.SignatureWriter;
  * the ability to verify them by binary comparison against class ABIs.
  */
 public class SourceAbiCompatibleVisitor extends ClassVisitor {
+
+  private final AbiGenerationMode compatibilityMode;
   @Nullable private String name;
 
-  public SourceAbiCompatibleVisitor(ClassVisitor cv) {
+  public SourceAbiCompatibleVisitor(ClassVisitor cv, AbiGenerationMode compatibilityMode) {
     super(Opcodes.ASM6, cv);
+    this.compatibilityMode = compatibilityMode;
   }
 
   @Override
@@ -55,9 +58,10 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Nullable
   public MethodVisitor visitMethod(
       int access, String name, String desc, String signature, String[] exceptions) {
-    if ((access & Opcodes.ACC_BRIDGE) != 0) {
+    if (!compatibilityMode.usesDependencies() && (access & Opcodes.ACC_BRIDGE) != 0) {
       return null;
     }
+
     return super.visitMethod(access, name, desc, fixupSignature(signature), exceptions);
   }
 
@@ -70,7 +74,9 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
     Preconditions.checkNotNull(this.name);
-    if (!this.name.equals(name) && !this.name.equals(outerName)) {
+    if (!compatibilityMode.usesDependencies()
+        && !this.name.equals(name)
+        && !this.name.equals(outerName)) {
       // Because we can't know the flags for inferred types, InnerClassesTable marks all entries
       // as ACC_STATIC except for the class itself and its member classes. It could technically
       // use the correct flags for non-inferred types, but then it becomes impossible for us to
@@ -81,8 +87,8 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
     super.visitInnerClass(name, outerName, innerName, access);
   }
 
-  private static String fixupSignature(@PropagatesNullable String signature) {
-    if (signature == null) {
+  private String fixupSignature(@PropagatesNullable String signature) {
+    if (signature == null || compatibilityMode.usesDependencies()) {
       return signature;
     }
 
@@ -94,7 +100,11 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
     return writer.toString();
   }
 
-  private static int stripAbstractFromEnums(int access) {
+  private int stripAbstractFromEnums(int access) {
+    if (compatibilityMode.usesDependencies()) {
+      return access;
+    }
+
     if ((access & Opcodes.ACC_ENUM) == Opcodes.ACC_ENUM) {
       access = access & ~Opcodes.ACC_ABSTRACT;
     }

@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/** Interface for a c/c++ compiler. */
 public interface Compiler extends Tool {
 
   ImmutableList<String> getFlagsForReproducibleBuild(

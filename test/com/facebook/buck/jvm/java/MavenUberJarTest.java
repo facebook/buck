@@ -19,9 +19,10 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;

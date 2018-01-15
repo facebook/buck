@@ -62,10 +62,12 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToSourceMap()));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToResources()));
+    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToMisc()));
 
-    final Path jsDir = sourcePathResolver.getRelativePath(getSourcePathToOutput());
-    final Path resourcesDir = sourcePathResolver.getRelativePath(getSourcePathToResources());
-    final Path sourceMapFile = sourcePathResolver.getRelativePath(getSourcePathToSourceMap());
+    Path jsDir = sourcePathResolver.getRelativePath(getSourcePathToOutput());
+    Path resourcesDir = sourcePathResolver.getRelativePath(getSourcePathToResources());
+    Path sourceMapFile = sourcePathResolver.getRelativePath(getSourcePathToSourceMap());
+    Path miscDirPath = sourcePathResolver.getRelativePath(getSourcePathToMisc());
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -90,6 +92,11 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     sourceMapFile.getParent())),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    miscDirPath.getParent())),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
                 sourcePathResolver.getAbsolutePath(delegate.getSourcePathToOutput()),
@@ -104,6 +111,11 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 sourcePathResolver.getAbsolutePath(delegate.getSourcePathToSourceMap()),
                 sourceMapFile.getParent(),
+                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
+            CopyStep.forDirectory(
+                getProjectFilesystem(),
+                sourcePathResolver.getAbsolutePath(delegate.getSourcePathToMisc()),
+                miscDirPath.getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS))
         .build();
   }

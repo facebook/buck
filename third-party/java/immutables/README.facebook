@@ -1,4 +1,14 @@
 This is the Immutables.org open-source library.
 
 License: Apache 2.0
-Fetched from: http://central.maven.org/maven2/org/immutables/value/2.5.6/value-2.5.6.jar
+
+The jars were built using the following actions:
+
+git clone git@github.com:immutables/immutables.git
+git checkout b61c6517b8cbed79770c96c6e508c6ef055c6734
+mvn package source:jar
+cp ./builder/target/builder-2.5.7-SNAPSHOT-sources.jar \
+   ./builder/target/builder-2.5.7-SNAPSHOT.jar \
+   ./value/target/value-2.5.7-SNAPSHOT.jar \
+   ./value/target/value-2.5.7-SNAPSHOT-sources.jar \
+   <buck-repository-location>/third-party/java/immutables

@@ -33,11 +33,11 @@ a {
   height: 18px;
 }
 
-.row-0 {
+tr.row:nth-child(even) {
   background-color: white;
 }
 
-.row-1 {
+tr.row:nth-child(odd) {
   background-color: rgb(242, 242, 242);
 }
 

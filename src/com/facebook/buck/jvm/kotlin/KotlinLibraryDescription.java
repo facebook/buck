@@ -17,16 +17,17 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
-import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -48,20 +50,20 @@ import org.immutables.value.Value;
 public class KotlinLibraryDescription
     implements Description<KotlinLibraryDescriptionArg>, Flavored {
 
+  private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions defaultOptions;
 
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
   public KotlinLibraryDescription(
+      ToolchainProvider toolchainProvider,
       KotlinBuckConfig kotlinBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions defaultOptions) {
+      JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.defaultOptions = defaultOptions;
   }
 
   @Override
@@ -116,7 +118,14 @@ public class KotlinLibraryDescription
       }
     }
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
+        JavacOptionsFactory.create(
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
 
     DefaultJavaLibraryRules defaultKotlinLibraryBuilder =
         KotlinLibraryBuilder.newInstance(

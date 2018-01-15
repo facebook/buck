@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
 java_test(
     name = "zip",
     srcs = glob(["*Test.java"]),
@@ -7,6 +9,7 @@ java_test(
         "macbeth.properties",
         "sample-bytes.properties",
     ],
+    source_only_abi_deps = ["//src/com/facebook/buck/util/zip:zip"],
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",

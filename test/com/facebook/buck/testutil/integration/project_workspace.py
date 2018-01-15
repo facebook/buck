@@ -23,11 +23,10 @@ import tempfile
 def run_buck_process(command, cwd=None):
     root_directory = os.getcwd()
     cwd = cwd or root_directory
+    buck_path = os.path.join(root_directory, 'buck-out', 'gen', 'programs', 'buck.pex')
     if platform.system() == 'Windows':
-        buck_path = os.path.join(root_directory, 'bin', 'buck.bat')
-        args = ['cmd.exe', '/C', buck_path] + list(command)
+        args = ['python', buck_path] + list(command)
     else:
-        buck_path = os.path.join(root_directory, 'buck-out', 'gen', 'programs', 'buck.pex')
         args = [buck_path] + list(command)
     # Pass thru our environment, except disabling buckd so that we can be sure the right buck
     # is run.

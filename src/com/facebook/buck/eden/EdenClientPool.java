@@ -16,8 +16,8 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;

@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
+
 CXXRUNTIME_SRCS = [
     "AbstractNdkCxxPlatformCompiler.java",
 ]
@@ -6,6 +8,9 @@ java_immutables_library(
     name = "cxxruntime",
     srcs = CXXRUNTIME_SRCS,
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+    ],
 )
 
 BUCK_CONFIG_SRCS = [
@@ -18,7 +23,7 @@ java_immutables_library(
     name = "config",
     srcs = BUCK_CONFIG_SRCS,
     exported_deps = [
-        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
+        "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
     ],
     resources = [
         ":guava.jar",
@@ -29,7 +34,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":cxxruntime",
-        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -50,6 +55,7 @@ RULES_SRCS = [
     "AndroidBinary.java",
     "AndroidBinaryBuildable.java",
     "AndroidBinaryDescription.java",
+    "AndroidBinaryFilesInfo.java",
     "AndroidBinaryGraphEnhancer.java",
     "AndroidBinaryInstallGraphEnhancer.java",
     "AndroidBinaryResourcesGraphEnhancer.java",
@@ -57,6 +63,7 @@ RULES_SRCS = [
     "AndroidBuildConfig.java",
     "AndroidBuildConfigDescription.java",
     "AndroidBuildConfigJavaLibrary.java",
+    "AndroidDescriptionsProvider.java",
     "AndroidInstrumentationApk.java",
     "AndroidInstrumentationApkDescription.java",
     "AndroidInstrumentationTest.java",
@@ -68,6 +75,7 @@ RULES_SRCS = [
     "AndroidLibraryGraphEnhancer.java",
     "AndroidManifest.java",
     "AndroidManifestDescription.java",
+    "AndroidManifestFactory.java",
     "AndroidNativeLibsPackageableGraphEnhancer.java",
     "AndroidPrebuiltAar.java",
     "AndroidPrebuiltAarCollection.java",
@@ -87,16 +95,18 @@ RULES_SRCS = [
     "ExopackageInstallFinisher.java",
     "ExopackageDeviceDirectoryLister.java",
     "ExopackageFilesInstaller.java",
+    "ExopackageResourcesInstaller.java",
     "DummyRDotJava.java",
     "FilteredResourcesProvider.java",
     "GenAidl.java",
     "GenAidlDescription.java",
     "GenerateRDotJava.java",
-    "GenerateStringSourceMap.java",
+    "GenerateStringResources.java",
     "HasAndroidResourceDeps.java",
     "IdentityResourcesProvider.java",
     "MergeAndroidResourcesStep.java",
     "MergeAssets.java",
+    "MergeThirdPartyJarResources.java",
     "NativeLibraryBuildRule.java",
     "NdkLibrary.java",
     "NdkLibraryDescription.java",
@@ -107,6 +117,7 @@ RULES_SRCS = [
     "PrebuiltNativeLibrary.java",
     "PrebuiltNativeLibraryDescription.java",
     "ProGuardConfig.java",
+    "ProguardTextOutput.java",
     "ResourcesFilter.java",
     "RobolectricTest.java",
     "RobolectricTestDescription.java",
@@ -115,6 +126,7 @@ RULES_SRCS = [
     "TrimUberRDotJava.java",
     "UnsortedAndroidResourceDeps.java",
     "UnzipAar.java",
+    "WriteFileHashCode.java",
     # This and the InstrumentationStep would make more sense in the steps
     # library, but are added here to avoid circular dependencies.
     "ApkInstallStep.java",
@@ -124,13 +136,14 @@ RULES_SRCS = [
     "relinker/Symbols.java",
 ]
 
-java_immutables_library(
+java_library_with_plugins(
     name = "rules",
     srcs = RULES_SRCS,
     exported_deps = [
         ":utils",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/keys:keys",
     ],
@@ -142,7 +155,8 @@ java_immutables_library(
     ],
     tests = [
         "//test/com/facebook/buck/android:aar-integration",
-        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:binary-integration-1",
+        "//test/com/facebook/buck/android:binary-integration-2",
         "//test/com/facebook/buck/android:build-config-integration",
         "//test/com/facebook/buck/android:instrumentation-integration",
         "//test/com/facebook/buck/android:integration1",
@@ -158,30 +172,32 @@ java_immutables_library(
         ":steps",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/android/dalvik:dalvik",
+        "//src/com/facebook/buck/android/dalvik:steps",
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android/redex:redex",
         "//src/com/facebook/buck/android/resources:resources",
         "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
-        "//src/com/facebook/buck/dalvik:dalvik",
-        "//src/com/facebook/buck/dalvik:steps",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/jvm/core:classhash",
+        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/java/runner:runner",
+        "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:api",
@@ -197,9 +213,11 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/rules/tool/config:config",
+        "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
@@ -238,7 +256,7 @@ export_file(
 
 export_file(
     name = "guava.jar",
-    src = "//third-party/java/guava:guava",
+    src = "//third-party/java/guava:shaded-guava-20",
 )
 
 export_file(
@@ -255,7 +273,8 @@ java_library(
     name = "split_dex",
     srcs = SPLIT_DEX_SRCS,
     tests = [
-        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:binary-integration-1",
+        "//test/com/facebook/buck/android:binary-integration-2",
         "//test/com/facebook/buck/android:instrumentation-integration",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -265,7 +284,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/dalvik:dalvik",
+        "//src/com/facebook/buck/android/dalvik:dalvik",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
         "//third-party/java/guava:guava",
@@ -274,12 +293,20 @@ java_library(
 
 HELPERS_SRCS = [
     "AdbHelper.java",
+    "AndroidLegacyToolchain.java",
     "AndroidPlatformTargetSupplier.java",
+    "DefaultAndroidLegacyToolchain.java",
+    "DefaultAndroidLegacyToolchainFactory.java",
     "DexFilesInfo.java",
+    "NativeFilesInfo.java",
+    "ResourceFilesInfo.java",
+    "HasInstallableApkSupport.java",
     "exopackage/AndroidDevicesHelperFactory.java",
     "exopackage/DexExoHelper.java",
+    "exopackage/ModuleExoHelper.java",
     "exopackage/ExopackageAgent.java",
     "exopackage/ExopackageInstaller.java",
+    "exopackage/ExopackageMode.java",
     "exopackage/ExopackageUtil.java",
     "exopackage/NativeExoHelper.java",
     "exopackage/RealAndroidDevice.java",
@@ -289,6 +316,9 @@ HELPERS_SRCS = [
 java_immutables_library(
     name = "helpers",
     srcs = HELPERS_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/toolchain:toolchain",
+    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -299,7 +329,7 @@ java_immutables_library(
         ":config",
         ":utils",
         "//src/com/facebook/buck/android/agent/util:util",
-        "//src/com/facebook/buck/annotations:annotations",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -316,6 +346,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//third-party/java/android:ddmlib",
     ],
@@ -327,16 +358,15 @@ UTILS_SRCS = [
     "AndroidManifestReader.java",
     "DefaultAndroidDirectoryResolver.java",
     "DefaultAndroidManifestReader.java",
-    "HasInstallableApk.java",
-    "exopackage/AbstractExopackageInfo.java",
-    "exopackage/AndroidDevice.java",
-    "exopackage/AndroidDevicesHelper.java",
-    "exopackage/PackageInfo.java",
 ]
 
 java_immutables_library(
     name = "utils",
     srcs = UTILS_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/android:utils_api",
+        "//third-party/java/android:ddmlib",
+    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -344,11 +374,40 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/annotations:annotations",
+        "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/xml:xml",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+UTILS_API_SRCS = [
+    "exopackage/AndroidDevicesHelper.java",
+    "exopackage/AbstractExopackageInfo.java",
+    "exopackage/AndroidDevice.java",
+    "HasInstallableApk.java",
+    "exopackage/PackageInfo.java",
+    "exopackage/AbstractExopackagePathAndHash.java",
+]
+
+java_immutables_library(
+    name = "utils_api",
+    srcs = UTILS_API_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
@@ -363,9 +422,12 @@ java_immutables_library(
     name = "steps",
     srcs = glob(
         ["*.java"],
-        excludes = CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
-                   SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS,
+        exclude = CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
+                  SPLIT_DEX_SRCS + UTILS_API_SRCS + UTILS_SRCS + HELPERS_SRCS,
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/step:step",
+    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -375,18 +437,20 @@ java_immutables_library(
     deps = [
         ":config",
         ":cxxruntime",
+        ":helpers",
         ":split_dex",
         ":utils",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/android/dalvik:dalvik",
+        "//src/com/facebook/buck/android/dalvik/firstorder:firstorder",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/elf:elf",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
-        "//src/com/facebook/buck/dalvik:dalvik",
-        "//src/com/facebook/buck/dalvik/firstorder:firstorder",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
@@ -408,7 +472,6 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/shell:steps",
-        "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
@@ -423,6 +486,7 @@ java_immutables_library(
         "//third-party/java/android:sdklib",
         "//third-party/java/aosp:aosp",
         "//third-party/java/asm:asm",
+        "//third-party/java/d8:d8",
         "//third-party/java/dx:dx",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",

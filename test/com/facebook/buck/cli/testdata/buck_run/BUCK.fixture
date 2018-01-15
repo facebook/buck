@@ -2,7 +2,7 @@ java_library(
     name = "hello-java-lib",
     srcs = ["hello.java"],
 )
-    
+
 java_binary(
     name = "hello-java",
     main_class = "hello",

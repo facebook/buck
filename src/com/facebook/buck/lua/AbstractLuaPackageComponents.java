@@ -17,9 +17,9 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
@@ -33,17 +33,20 @@ import org.immutables.value.Value;
 /** Components that contribute to a Lua package. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
+abstract class AbstractLuaPackageComponents implements AddsToRuleKey {
 
   /** @return mapping of module names to their respective {@link SourcePath}s. */
+  @AddToRuleKey
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<String, SourcePath> getModules();
 
   /** @return mapping of python module names to their respective {@link SourcePath}s. */
+  @AddToRuleKey
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<String, SourcePath> getPythonModules();
 
   /** @return a mapping of shared native library names to their respective {@link SourcePath}s. */
+  @AddToRuleKey
   @Value.NaturalOrder
   public abstract ImmutableSortedMap<String, SourcePath> getNativeLibraries();
 
@@ -54,26 +57,11 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
     builder.putAllNativeLibraries(components.getNativeLibraries());
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("modules", getModules());
-    sink.setReflectively("pythonModules", getPythonModules());
-    sink.setReflectively("nativeLibraries", getNativeLibraries());
-  }
-
   public ImmutableSortedSet<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(ruleFinder.filterBuildRuleInputs(getModules().values()))
         .addAll(ruleFinder.filterBuildRuleInputs(getPythonModules().values()))
         .addAll(ruleFinder.filterBuildRuleInputs(getNativeLibraries().values()))
-        .build();
-  }
-
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    return ImmutableSortedSet.<SourcePath>naturalOrder()
-        .addAll(getModules().values())
-        .addAll(getPythonModules().values())
-        .addAll(getNativeLibraries().values())
         .build();
   }
 

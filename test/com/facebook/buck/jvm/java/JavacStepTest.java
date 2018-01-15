@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -75,10 +76,9 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            NoOpClassUsageFileWriter.instance(),
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
@@ -86,10 +86,9 @@ public class JavacStepTest {
                 .setOutputDirectory(Paths.get("output"))
                 .setGeneratedCodeDirectory(Paths.get("generated"))
                 .setWorkingDirectory(Paths.get("working"))
-                .setDepFilePath(Paths.get("depFile"))
                 .setPathToSourcesList(Paths.get("pathToSrcsList"))
                 .build(),
-            Optional.empty(),
+            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
@@ -105,7 +104,7 @@ public class JavacStepTest {
     StepExecutionResult result = step.execute(executionContext);
 
     // Note that we don't include stderr in the step result on success.
-    assertThat(result, equalTo(StepExecutionResult.SUCCESS));
+    assertThat(result, equalTo(StepExecutionResults.SUCCESS));
     assertThat(listener.getLogMessages(), empty());
   }
 
@@ -126,10 +125,9 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            NoOpClassUsageFileWriter.instance(),
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
@@ -137,12 +135,11 @@ public class JavacStepTest {
                 .setOutputDirectory(Paths.get("output"))
                 .setGeneratedCodeDirectory(Paths.get("generated"))
                 .setWorkingDirectory(Paths.get("working"))
-                .setDepFilePath(Paths.get("depFile"))
                 .setSourceFilePaths(ImmutableSortedSet.of())
                 .setPathToSourcesList(Paths.get("pathToSrcsList"))
                 .setClasspathEntries(ImmutableSortedSet.of())
                 .build(),
-            Optional.empty(),
+            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
@@ -184,10 +181,9 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            NoOpClassUsageFileWriter.instance(),
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
@@ -195,12 +191,11 @@ public class JavacStepTest {
                 .setOutputDirectory(Paths.get("output"))
                 .setGeneratedCodeDirectory(Paths.get("generated"))
                 .setWorkingDirectory(Paths.get("working"))
-                .setDepFilePath(Paths.get("depFile"))
                 .setSourceFilePaths(ImmutableSortedSet.of())
                 .setPathToSourcesList(Paths.get("pathToSrcsList"))
                 .setClasspathEntries(ImmutableSortedSet.of())
                 .build(),
-            Optional.empty(),
+            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
@@ -215,7 +210,7 @@ public class JavacStepTest {
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
-    assertThat(result, equalTo(StepExecutionResult.SUCCESS));
+    assertThat(result, equalTo(StepExecutionResults.SUCCESS));
     assertThat(listener.getLogMessages(), empty());
   }
 
@@ -240,10 +235,9 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            NoOpClassUsageFileWriter.instance(),
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
@@ -251,12 +245,11 @@ public class JavacStepTest {
                 .setOutputDirectory(Paths.get("output"))
                 .setGeneratedCodeDirectory(Paths.get("generated"))
                 .setWorkingDirectory(Paths.get("working"))
-                .setDepFilePath(Paths.get("depFile"))
                 .setSourceFilePaths(ImmutableSortedSet.of())
                 .setPathToSourcesList(Paths.get("pathToSrcsList"))
                 .setClasspathEntries(ImmutableSortedSet.of())
                 .build(),
-            Optional.empty(),
+            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
@@ -302,7 +295,6 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            NoOpClassUsageFileWriter.instance(),
             fakeJavac,
             javacOptions,
             BuildTargetFactory.newInstance("//foo:bar"),
@@ -313,12 +305,11 @@ public class JavacStepTest {
                 .setOutputDirectory(Paths.get("output"))
                 .setGeneratedCodeDirectory(Paths.get("generated"))
                 .setWorkingDirectory(Paths.get("working"))
-                .setDepFilePath(Paths.get("depFile"))
                 .setSourceFilePaths(ImmutableSortedSet.of())
                 .setPathToSourcesList(Paths.get("pathToSrcsList"))
                 .setClasspathEntries(ImmutableSortedSet.of())
                 .build(),
-            Optional.empty(),
+            null,
             null);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");

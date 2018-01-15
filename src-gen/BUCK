@@ -4,6 +4,7 @@ java_library(
     exported_deps = [
         "//third-party/java/thrift:libthrift",
     ],
+    abi_generation_mode = "source",
     visibility = ["PUBLIC"],
     deps = [
         # This dep is looked up at runtime by reflection.

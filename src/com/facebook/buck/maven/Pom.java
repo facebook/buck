@@ -16,7 +16,7 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.jvm.java.HasMavenCoordinates;
+import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -166,7 +166,7 @@ public class Pom {
 
     Model model = first.clone();
 
-    //---- Values from ModelBase
+    // ---- Values from ModelBase
 
     List<String> modules = second.getModules();
     if (modules != null) {
@@ -215,7 +215,7 @@ public class Pom {
 
     // Ignore reports, reporting, and locations
 
-    //----- From Model
+    // ----- From Model
     Parent parent = second.getParent();
     if (parent != null) {
       model.setParent(parent);

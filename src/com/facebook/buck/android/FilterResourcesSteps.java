@@ -20,6 +20,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.shell.BashStep;
@@ -32,8 +33,6 @@ import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +47,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -115,7 +115,6 @@ public class FilterResourcesSteps {
       @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
-    Preconditions.checkArgument(filterByDensity || enableStringWhitelisting || !locales.isEmpty());
     Preconditions.checkArgument(
         !filterByDensity || (targetDensities != null && drawableFinder != null));
 
@@ -228,7 +227,7 @@ public class FilterResourcesSteps {
             }
           });
     }
-    return Predicates.and(pathPredicates);
+    return pathPredicates.stream().reduce(p -> true, Predicate::and);
   }
 
   private boolean isPathWhitelisted(Path path) {
@@ -362,9 +361,11 @@ public class FilterResourcesSteps {
    */
   static class ImageMagickScaler implements ImageScaler {
 
+    private final BuildTarget target;
     private final Path workingDirectory;
 
-    public ImageMagickScaler(Path workingDirectory) {
+    public ImageMagickScaler(BuildTarget target, Path workingDirectory) {
+      this.target = target;
       this.workingDirectory = workingDirectory;
     }
 
@@ -380,6 +381,7 @@ public class FilterResourcesSteps {
         throws IOException, InterruptedException {
       Step convertStep =
           new BashStep(
+              target,
               workingDirectory,
               "convert",
               "-adaptive-resize",
@@ -451,6 +453,7 @@ public class FilterResourcesSteps {
 
   public static class Builder {
 
+    private BuildTarget target;
     @Nullable private ProjectFilesystem filesystem;
     @Nullable private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
     @Nullable private ResourceFilter resourceFilter;
@@ -459,6 +462,11 @@ public class FilterResourcesSteps {
     private boolean enableStringWhitelisting = false;
 
     private Builder() {}
+
+    public Builder setTarget(BuildTarget target) {
+      this.target = target;
+      return this;
+    }
 
     public Builder setProjectFilesystem(ProjectFilesystem filesystem) {
       this.filesystem = filesystem;
@@ -506,7 +514,7 @@ public class FilterResourcesSteps {
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
           resourceFilter.shouldDownscale()
-              ? new ImageMagickScaler(filesystem.getRootPath())
+              ? new ImageMagickScaler(target, filesystem.getRootPath())
               : null);
     }
   }

@@ -1,7 +1,7 @@
 graphql_library(
-  name = 'LibraryOneGraphQl',
-  srcs = [
-    'A.graphql',
-  ],
-  visibility = ['PUBLIC'],
+    name = "LibraryOneGraphQl",
+    srcs = [
+        "A.graphql",
+    ],
+    visibility = ["PUBLIC"],
 )

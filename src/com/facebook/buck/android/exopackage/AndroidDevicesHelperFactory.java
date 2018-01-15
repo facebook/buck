@@ -17,21 +17,28 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 public class AndroidDevicesHelperFactory {
   protected AndroidDevicesHelperFactory() {}
 
   public static AndroidDevicesHelper get(
+      AndroidLegacyToolchain androidLegacyToolchain,
       Supplier<ExecutionContext> contextSupplier,
       BuckConfig buckConfig,
       AdbOptions adbOptions,
       TargetDeviceOptions targetDeviceOptions) {
     return new AdbHelper(
-        adbOptions, targetDeviceOptions, contextSupplier, buckConfig.getRestartAdbOnFailure());
+        adbOptions,
+        targetDeviceOptions,
+        androidLegacyToolchain,
+        contextSupplier,
+        buckConfig.getRestartAdbOnFailure(),
+        buckConfig.getAdbRapidInstallTypes());
   }
 }

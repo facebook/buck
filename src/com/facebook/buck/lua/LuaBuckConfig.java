@@ -50,6 +50,7 @@ public class LuaBuckConfig {
                     () ->
                         SystemToolProvider.builder()
                             .setExecutableFinder(finder)
+                            .setSourcePathConverter(delegate::getPathSourcePath)
                             .setName(Paths.get("lua"))
                             .setEnvironment(delegate.getEnvironment())
                             .build()))

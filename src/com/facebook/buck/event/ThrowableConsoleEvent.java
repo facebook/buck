@@ -21,7 +21,12 @@ import com.google.common.base.Throwables;
 import java.util.IllegalFormatException;
 import java.util.logging.Level;
 
-/** Event for tracking {@link Throwable} */
+/**
+ * Event for tracking {@link Throwable}.
+ *
+ * <p>Deprecated, use ErrorLogger.
+ */
+@Deprecated
 public class ThrowableConsoleEvent extends ConsoleEvent {
 
   protected ThrowableConsoleEvent(Throwable throwable, String message) {

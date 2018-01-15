@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -69,6 +70,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public static final String FAT_JAR_MAIN_SRC_RESOURCE =
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final SourcePath innerJar;
@@ -80,6 +82,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public JarFattener(
       BuildTarget buildTarget,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Javac javac,
@@ -88,6 +91,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableMap<String, SourcePath> nativeLibraries,
       Tool javaRuntimeLauncher) {
     super(buildTarget, projectFilesystem, params);
+    this.ruleFinder = ruleFinder;
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
@@ -179,7 +183,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
-            .setStandardPaths(getBuildTarget(), getProjectFilesystem())
+            .setScratchPaths(getBuildTarget(), getProjectFilesystem())
             .setOutputDirectory(fatJarDir)
             .build();
 
@@ -191,16 +195,16 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 compilerParameters.getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
-        new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY);
+        new JavacToJarStepFactory(
+            context.getSourcePathResolver(),
+            ruleFinder,
+            getProjectFilesystem(),
+            javac,
+            javacOptions,
+            ExtraClasspathProvider.EMPTY);
 
     compileStepFactory.createCompileStep(
-        context,
-        getBuildTarget(),
-        context.getSourcePathResolver(),
-        getProjectFilesystem(),
-        compilerParameters,
-        steps,
-        buildableContext);
+        context, getBuildTarget(), compilerParameters, steps, buildableContext);
 
     steps.add(zipStep);
     JarParameters jarParameters =

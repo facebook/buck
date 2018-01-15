@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/swift/toolchain:toolchain",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/apple/platform_type:type",
+        "//src/com/facebook/buck/apple/toolchain:toolchain",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/swift/toolchain:toolchain",
+        "//third-party/java/guava:guava",
+    ],
+)

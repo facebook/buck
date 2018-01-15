@@ -1,8 +1,0 @@
-java_library(
-    name = "annotations",
-    srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
-
-    # Keep this list empty!
-    deps = [],
-)

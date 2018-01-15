@@ -61,6 +61,8 @@ import java.nio.file.Path;
  */
 public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
+
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.
   @AddToRuleKey private final SourcePath aidlFilePath;
@@ -71,10 +73,12 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   GenAidl(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       SourcePath aidlFilePath,
       String importPath) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     this.genPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
@@ -111,6 +115,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new AidlStep(
             getProjectFilesystem(),
             target,
+            androidLegacyToolchain,
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
             ImmutableSet.of(importPath),
             outputDirectory);

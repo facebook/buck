@@ -20,6 +20,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -49,6 +51,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -59,7 +62,6 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -255,6 +257,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .build();
 
     return new JUnitStep(
+        getBuildTarget(),
         getProjectFilesystem(),
         nativeLibsEnvironment,
         testRuleTimeoutMs,
@@ -408,7 +411,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getBuildTarget(),
             ImmutableList.of(),
             contacts,
-            labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+            labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
       }
 
       List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
@@ -446,7 +449,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
           .setBuildTarget(getBuildTarget())
           .setTestCases(summaries)
           .setContacts(contacts)
-          .setLabels(labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()))
+          .setLabels(labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()))
           .addTestLogPaths(getProjectFilesystem().resolve(pathToTestLogs))
           .build();
     };
@@ -581,7 +584,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 return;
               }
 
-              // Make sure it is a .class file that corresponds to a top-level .class file and not an
+              // Make sure it is a .class file that corresponds to a top-level .class file and not
+              // an
               // inner class.
               if (!name.contains("$")) {
                 String fullyQualifiedNameWithDotClassSuffix = zipEntry.getName().replace('/', '.');
@@ -618,10 +622,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             // By the end of the build, all the transitive Java library dependencies *must* be
             // available on disk, so signal this requirement via the {@link HasRuntimeDeps}
             // interface.
-            compiledTestsLibrary
-                .getTransitiveClasspathDeps()
-                .stream()
-                .filter(rule -> !this.equals(rule)),
+            compiledTestsLibrary.getTransitiveClasspathDeps().stream(),
             // It's possible that the user added some tool as a dependency, so make sure we promote
             // this rules first-order deps to runtime deps, so that these potential tools are
             // available when this test runs.
@@ -683,7 +684,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                 .getTransitiveClasspaths()
                                 .stream()
                                 .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-                                .collect(MoreCollectors.toImmutableSet()))
+                                .collect(ImmutableSet.toImmutableSet()))
                         .addAll(
                             additionalClasspathEntries
                                 .stream()
@@ -694,14 +695,14 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                                 .getSourcePathResolver()
                                                 .getAbsolutePath(e.getLeft())
                                             : e.getRight())
-                                .collect(MoreCollectors.toImmutableSet()))
+                                .collect(ImmutableSet.toImmutableSet()))
                         .addAll(getBootClasspathEntries(context))
                         .build();
                 getProjectFilesystem()
                     .writeLinesToPath(
                         Iterables.transform(classpathEntries, Object::toString),
                         getClassPathFile());
-                return StepExecutionResult.SUCCESS;
+                return StepExecutionResults.SUCCESS;
               }
             })
         .build();

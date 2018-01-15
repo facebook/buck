@@ -1,10 +1,13 @@
 java_library(
     name = "function",
-    srcs = ["Glob.java"],
+    srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/skylark/packages:packages",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/bazel:skylark-lang",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )

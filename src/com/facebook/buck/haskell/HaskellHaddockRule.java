@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -38,15 +39,16 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -92,10 +94,10 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableSet<SourcePath> outDirs = outDirsBuilder.build();
 
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(haddockTool.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(haddockTool, ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(ifaces))
                     .addAll(ruleFinder.filterBuildRuleInputs(outDirs))
                     .build());
@@ -134,7 +136,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
-    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context));
+    steps.add(new HaddockStep(getBuildTarget(), getProjectFilesystem().getRootPath(), context));
 
     // Copy the generated data from dependencies into our output directory
     for (SourcePath odir : outputDirs) {
@@ -154,8 +156,8 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     private BuildContext buildContext;
 
-    public HaddockStep(Path rootPath, BuildContext buildContext) {
-      super(rootPath);
+    public HaddockStep(BuildTarget buildTarget, Path rootPath, BuildContext buildContext) {
+      super(Optional.of(buildTarget), rootPath);
       this.buildContext = buildContext;
     }
 

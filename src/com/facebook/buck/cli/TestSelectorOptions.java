@@ -19,9 +19,9 @@ package com.facebook.buck.cli;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.test.selectors.TestSelectorParseException;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import java.util.function.Supplier;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -79,7 +79,7 @@ public class TestSelectorOptions {
         CmdLineParser parser, OptionDef option, Setter<Supplier<TestSelectorList>> setter)
         throws CmdLineException {
       super(parser, option, setter);
-      setter.addValue(Suppliers.memoize(builder::build));
+      setter.addValue(MoreSuppliers.memoize(builder::build));
     }
 
     @Override

@@ -84,6 +84,7 @@ public class CalculateSourceAbiIntegrationTest {
               "com/example/",
               "com/example/buck/",
               "com/example/buck/Lib.class",
+              "com/example/buck/Lib2.class",
               "com/example/buck/Test.class"));
 
       // And the manifest has one too
@@ -141,5 +142,22 @@ public class CalculateSourceAbiIntegrationTest {
       Manifest manifest = abiJar.getManifest();
       assertNull(manifest.getAttributes("com/example/buck/Test.class"));
     }
+  }
+
+  @Test
+  public void testAbiJarSupportsDepFileRuleKey() throws IOException {
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    ProjectWorkspace.ProcessResult buildResult =
+        workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:lib#source-abi");
+
+    workspace.replaceFileContents("Lib2.java", "changeMe", "changedMe");
+    buildResult = workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:lib#source-abi");
+    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:main");
   }
 }

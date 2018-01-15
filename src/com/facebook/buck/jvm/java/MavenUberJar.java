@@ -18,6 +18,10 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasMavenCoordinates;
+import com.facebook.buck.jvm.core.HasSources;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
@@ -29,9 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -125,7 +127,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .map(pathResolver::getAbsolutePath)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -187,13 +189,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedSet<SourcePath> sourcePaths =
           FluentIterable.from(traversedDeps.packagedDeps)
               .filter(HasSources.class)
-              .transformAndConcat(
-                  new Function<HasSources, Iterable<SourcePath>>() {
-                    @Override
-                    public Iterable<SourcePath> apply(HasSources input) {
-                      return input.getSources();
-                    }
-                  })
+              .transformAndConcat(HasSources::getSources)
               .append(topLevelSrcs)
               .toSortedSet(Ordering.natural());
       return new SourceJar(

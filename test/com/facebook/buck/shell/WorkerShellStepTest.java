@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -79,6 +80,7 @@ public class WorkerShellStepTest {
       @Nullable WorkerJobParams bashParams,
       @Nullable WorkerJobParams cmdExeParams) {
     return new WorkerShellStep(
+        BuildTargetFactory.newInstance("//dummy:target"),
         Optional.ofNullable(cmdParams),
         Optional.ofNullable(bashParams),
         Optional.ofNullable(cmdExeParams),
@@ -356,12 +358,19 @@ public class WorkerShellStepTest {
     assertTrue(firstEvent instanceof ConsoleEvent);
     assertThat(((ConsoleEvent) firstEvent).getLevel(), Matchers.is(Level.SEVERE));
     assertThat(((ConsoleEvent) firstEvent).getMessage(), Matchers.is(stderr));
+    BuckEvent secondEvent = listener.getEvents().get(1);
+    assertTrue(secondEvent instanceof ConsoleEvent);
+    assertThat(((ConsoleEvent) secondEvent).getLevel(), Matchers.is(Level.INFO));
+    assertThat(
+        ((ConsoleEvent) secondEvent).getMessage(),
+        Matchers.containsString("When building rule //dummy:target"));
   }
 
   @Test
   public void testGetEnvironmentForProcess() {
     WorkerShellStep step =
         new WorkerShellStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             Optional.of(
                 createJobParams(
                     ImmutableList.of(), ImmutableMap.of("BAK", "chicken"), "$FOO $BAR $BAZ $BAK")),
@@ -370,7 +379,7 @@ public class WorkerShellStepTest {
             new WorkerProcessPoolFactory(new FakeProjectFilesystem())) {
 
           @Override
-          protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+          protected ImmutableMap<String, String> getEnvironmentVariables() {
             return ImmutableMap.of(
                 "FOO", "foo_expanded",
                 "BAR", "bar_expanded");
@@ -415,6 +424,7 @@ public class WorkerShellStepTest {
     class WorkerShellStepWithFakeProcesses extends WorkerShellStep {
       WorkerShellStepWithFakeProcesses(WorkerJobParams jobParams) {
         super(
+            BuildTargetFactory.newInstance("//dummy:target"),
             Optional.ofNullable(jobParams),
             Optional.empty(),
             Optional.empty(),

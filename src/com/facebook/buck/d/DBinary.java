@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -71,6 +72,8 @@ public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     // Return the actual executable as a runtime dependency.
     // Without this, the file is not written when we get a cache hit.
-    return executable.getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget);
+    return BuildableSupport.getDepsCollection(executable, ruleFinder)
+        .stream()
+        .map(BuildRule::getBuildTarget);
   }
 }

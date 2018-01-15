@@ -27,8 +27,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
@@ -64,6 +64,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -370,9 +371,12 @@ public class TestRunningTest {
     NodeList testList = testsEl.getElementsByTagName("test");
     assertEquals(testList.getLength(), 1);
 
+    // Check the target has been set
+    Element testEl = (Element) testList.item(0);
+    assertEquals(testEl.getAttribute("target"), "//foo/bar:baz");
+
     // Check for exactly three <testresult> tags.
     // There should be two failures and one success.
-    Element testEl = (Element) testList.item(0);
     NodeList resultsList = testEl.getElementsByTagName("testresult");
     assertEquals(resultsList.getLength(), 3);
 
@@ -380,6 +384,7 @@ public class TestRunningTest {
     Element passResultEl = (Element) resultsList.item(0);
     assertEquals(passResultEl.getAttribute("name"), "passTest");
     assertEquals(passResultEl.getAttribute("time"), "5000");
+    assertEquals(passResultEl.getAttribute("status"), "PASS");
     checkXmlTextContents(passResultEl, "message", "");
     checkXmlTextContents(passResultEl, "stacktrace", "");
 
@@ -388,6 +393,7 @@ public class TestRunningTest {
     Element failResultEl1 = (Element) resultsList.item(1);
     assertEquals(failResultEl1.getAttribute("name"), "failWithMsg");
     assertEquals(failResultEl1.getAttribute("time"), "7000");
+    assertEquals(failResultEl1.getAttribute("status"), "FAIL");
     checkXmlTextContents(failResultEl1, "message", "Index out of bounds!");
     checkXmlTextContents(failResultEl1, "stacktrace", "Stacktrace");
 
@@ -395,6 +401,7 @@ public class TestRunningTest {
     Element failResultEl2 = (Element) resultsList.item(2);
     assertEquals(failResultEl2.getAttribute("name"), "failNoMsg");
     assertEquals(failResultEl2.getAttribute("time"), "4000");
+    assertEquals(failResultEl2.getAttribute("status"), "PASS");
     checkXmlTextContents(failResultEl2, "message", "");
     checkXmlTextContents(failResultEl2, "stacktrace", "");
   }
@@ -805,6 +812,6 @@ public class TestRunningTest {
             FakeBuildContext.withSourcePathResolver(resolver),
             ruleFinder);
 
-    assertThat(ret, equalTo(TestRunning.TEST_FAILURES_EXIT_CODE));
+    assertThat(ret, equalTo(ExitCode.TEST_ERROR.getCode()));
   }
 }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-@SuppressWarnings("serial")
 public class CoerceFailedException extends Exception {
 
   public CoerceFailedException(String message) {

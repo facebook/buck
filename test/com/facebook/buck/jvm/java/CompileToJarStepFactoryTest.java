@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -54,6 +55,7 @@ public class CompileToJarStepFactoryTest {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.addAll(
         CompileToJarStepFactory.addPostprocessClassesCommands(
+            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             postprocessClassesCommands,
             outputDirectory,

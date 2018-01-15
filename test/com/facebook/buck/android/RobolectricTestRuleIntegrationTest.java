@@ -20,6 +20,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,8 +35,43 @@ public class RobolectricTestRuleIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder, true);
     workspace.setUp();
-    workspace.runBuckBuild("//java/com/sample/lib:test").assertSuccess();
+    workspace.addBuckConfigLocalOption(
+        "test",
+        "robolectric_location",
+        Paths.get(ProjectWorkspace.TEST_CELL_LOCATION).toAbsolutePath().toString());
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
+  }
+
+  @Test
+  public void testRobolectricTestWithExternalRunnerWithPassingDirectoriesInArgument()
+      throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder, true);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption(
+        "test",
+        "external_runner",
+        tmpFolder.getRoot().resolve("test_runner.py").toAbsolutePath().toString());
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
+  }
+
+  @Test
+  public void testRobolectricTestWithExternalRunnerWithPassingDirectoriesInFile()
+      throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder, true);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption(
+        "test",
+        "external_runner",
+        tmpFolder.getRoot().resolve("test_runner.py").toAbsolutePath().toString());
+    workspace.addBuckConfigLocalOption("test", "pass_robolectric_directories_in_file", "true");
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 }

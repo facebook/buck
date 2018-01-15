@@ -21,10 +21,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteSource;
 import java.io.ByteArrayInputStream;
@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.function.Supplier;
 
 public class WriteFileStep implements Step {
 
@@ -83,7 +84,7 @@ public class WriteFileStep implements Step {
         Path resolvedPath = filesystem.resolve(outputPath);
         MoreFiles.makeExecutable(resolvedPath);
       }
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 

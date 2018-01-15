@@ -296,4 +296,19 @@ public class ManifestTest {
             .size(),
         Matchers.equalTo(2));
   }
+
+  @Test
+  public void stats() {
+    assertThat(
+        Manifest.fromMap(
+                new RuleKey("cc"),
+                ImmutableMap.of(
+                    new RuleKey("aa"),
+                    ImmutableMap.of("foo.h", HashCode.fromInt(0)),
+                    new RuleKey("bb"),
+                    ImmutableMap.of("bar.h", HashCode.fromInt(0))))
+            .getStats(),
+        Matchers.equalTo(
+            ManifestStats.builder().setNumDepFiles(2).setNumInputs(2).setNumHashes(1).build()));
+  }
 }

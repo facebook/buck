@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MoreFiles;
@@ -53,6 +54,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
@@ -1371,7 +1373,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
-    //Build the given target and check that it succeeds.
+    // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
 
     String specsPathList =
@@ -1502,7 +1504,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("clean").assertSuccess();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetWasFetchedFromCache(target.toString());
+    buildLog.assertTargetBuiltLocally(target.toString());
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
   }
 
@@ -1728,7 +1730,7 @@ public class CxxBinaryIntegrationTest {
         CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(depTarget, cxxPlatform.getFlavor());
     BuildTarget depArchiveTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            depTarget, cxxPlatform.getFlavor(), CxxSourceRuleFactory.PicType.PDC);
+            depTarget, cxxPlatform.getFlavor(), PicType.PDC);
     BuildTarget depAggregatedDepsTarget =
         depCxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
@@ -1895,7 +1897,7 @@ public class CxxBinaryIntegrationTest {
 
     workspace.resetBuildLogFile();
 
-    workspace.replaceFileContents("BUCK", "['lib1.h']", "['lib1.h', 'lib2.h']");
+    workspace.replaceFileContents("BUCK", "[\"lib1.h\"]", "[\"lib1.h\", \"lib2.h\"]");
 
     result = workspace.runBuckCommand("build", "//:bin");
     result.assertSuccess();
@@ -2458,6 +2460,28 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:bin").assertSuccess();
     BuckBuildLog log = workspace.getBuildLog();
     log.assertTargetBuiltLocally("//:bin#binary");
+  }
+
+  /** Tests --config cxx.declared_platforms */
+  @Test
+  public void testDeclaredPlatforms() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "declared_platforms", tmp);
+    workspace.setUp();
+    workspace.setupCxxSandboxing(sandboxSources);
+    workspace
+        .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:simple")
+        .assertSuccess();
+  }
+
+  @Test
+  public void targetsInPlatformSpecificFlagsDoNotBecomeDependencies() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_in_platform_specific_flags_do_not_become_dependencies", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckBuild(":bin");
+    result.assertSuccess();
   }
 
   private ImmutableSortedSet<Path> findFiles(Path root, final PathMatcher matcher)

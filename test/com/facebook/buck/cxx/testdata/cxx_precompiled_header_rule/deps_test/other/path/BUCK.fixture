@@ -1,5 +1,5 @@
-cxx_library (
+cxx_library(
     name = "lib2",
-    visibility = ["PUBLIC"],
     exported_headers = ["lib2.h"],
+    visibility = ["PUBLIC"],
 )

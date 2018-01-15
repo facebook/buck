@@ -20,6 +20,8 @@ import static com.facebook.buck.util.zip.ZipCompressionLevel.DEFAULT_COMPRESSION
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -161,7 +163,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), uncompressedOutputDir)));
     steps.add(
-        new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
+        new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().resolve(scratchDir)) {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return ImmutableList.of(

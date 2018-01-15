@@ -15,14 +15,12 @@
  */
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /**
  * Arg that represents object file that should be linked into resulting binary using normal
@@ -33,8 +31,7 @@ import java.nio.file.Path;
  * linker.
  */
 public class FileListableLinkerInputArg implements Arg, HasSourcePath {
-
-  private final SourcePathArg value;
+  @AddToRuleKey private final SourcePathArg value;
 
   public static Arg withSourcePathArg(SourcePathArg value) {
     return new FileListableLinkerInputArg(value);
@@ -53,26 +50,13 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return value.getDeps(ruleFinder);
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return value.getInputs();
-  }
-
-  @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    value.appendToCommandLine(builder, pathResolver);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    value.appendToCommandLine(consumer, pathResolver);
   }
 
   public void appendToCommandLineRel(
-      ImmutableCollection.Builder<String> builder,
-      Path currentCellPath,
-      SourcePathResolver pathResolver) {
-    value.appendToCommandLineRel(builder, currentCellPath, pathResolver);
+      Consumer<String> consumer, Path currentCellPath, SourcePathResolver pathResolver) {
+    value.appendToCommandLineRel(consumer, currentCellPath, pathResolver);
   }
 
   @Override
@@ -93,11 +77,6 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
   @Override
   public int hashCode() {
     return value.hashCode();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    value.appendToRuleKey(sink);
   }
 
   @Override

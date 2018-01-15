@@ -16,11 +16,14 @@
 
 package com.facebook.buck.shell;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,9 +41,7 @@ public class ExportFileIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "export_file_source_path_dep", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:file");
-
-    result.assertSuccess();
+    workspace.runBuckCommand("build", "//:file").assertSuccess();
   }
 
   @Test
@@ -50,5 +51,32 @@ public class ExportFileIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:dir");
     assertTrue(Files.exists(output.resolve("file.txt")));
+  }
+
+  @Test
+  public void exportFileHandlesUnexpectedFileAtOutputDirectoryPath() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "export_file_source_path_dep", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:file");
+    // Without this early build, buck will just delete all of buck-out.
+    workspace.runBuckBuild("//:magic").assertSuccess();
+
+    result.assertSuccess();
+    String output = result.getStdout();
+    Path outputPath = workspace.getPath(output.split("\\s+")[1]);
+    Path parent = outputPath.getParent();
+
+    Path sibling = parent.resolveSibling("other");
+    Files.createDirectories(parent.getParent());
+    // Create the parent as a file to ensure export_file can overwrite it without failing.
+    Files.write(parent, ImmutableList.of("some data"));
+    // To ensure that something isn't just deleting all of buck-out, write a sibling file and verify
+    // it exists after.
+    Files.write(sibling, ImmutableList.of("some data"));
+
+    workspace.runBuckBuild("//:file").assertSuccess();
+    assertEquals("some data\n", workspace.getFileContents(sibling));
   }
 }

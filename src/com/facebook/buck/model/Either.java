@@ -16,71 +16,148 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import java.util.function.Function;
 
-/**
- * A simple discriminated union of two parameters.
- *
- * <p>Note that the corresponding coercer #{link EitherTypeCoercer} is left-biased. That is, if the
- * input value can coerce to the left parameter, then the left value will be populated, even if it
- * can also be coerced to the right parameter.
- */
-public final class Either<LEFT, RIGHT> {
-  @Nullable public final LEFT left;
-  @Nullable public final RIGHT right;
+/** A discriminated union of two parameters that holds a value of either the LEFT or RIGHT type. */
+public abstract class Either<LEFT, RIGHT> {
 
-  private Either(@Nullable LEFT left, @Nullable RIGHT right) {
-    Preconditions.checkState(
-        left != null ^ right != null, "Exactly one of left or right must be set");
-    this.left = left;
-    this.right = right;
-  }
+  /** Returns whether the instance holds a left value. */
+  public abstract boolean isLeft();
 
-  public boolean isLeft() {
-    return left != null;
-  }
+  /** Returns whether the instance holds a right value. */
+  public abstract boolean isRight();
 
-  public boolean isRight() {
-    return right != null;
-  }
+  /**
+   * Returns the left value.
+   *
+   * @throws IllegalStateException if this instance does not hold a left value.
+   */
+  public abstract LEFT getLeft();
 
-  public LEFT getLeft() {
-    return Preconditions.checkNotNull(left);
-  }
+  /**
+   * Returns the right value.
+   *
+   * @throws IllegalStateException if this instance does not hold a right value.
+   */
+  public abstract RIGHT getRight();
 
-  public RIGHT getRight() {
-    return Preconditions.checkNotNull(right);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(left, right);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof Either) {
-      Either<?, ?> that = (Either<?, ?>) obj;
-      return Objects.equals(this.left, that.left) && Objects.equals(this.right, that.right);
-    }
-    return false;
-  }
+  /** Apply a function based on whether the instance holds a left or right value. */
+  public abstract <X> X transform(
+      Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer);
 
   public static <LEFT, RIGHT> Either<LEFT, RIGHT> ofLeft(LEFT value) {
-    return new Either<>(value, null);
+    return new Left<>(value);
   }
 
   public static <LEFT, RIGHT> Either<LEFT, RIGHT> ofRight(RIGHT value) {
-    return new Either<>(null, value);
+    return new Right<>(value);
   }
 
-  public <X> X transform(Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer) {
-    if (isLeft()) {
-      return lhsTransformer.apply(getLeft());
+  // Close this class to subclassing outside of this file. This avoids ambiguities regarding
+  // equality checks.
+  private Either() {}
+
+  private static final class Left<LEFT, RIGHT> extends Either<LEFT, RIGHT> {
+
+    private final LEFT value;
+
+    private Left(LEFT value) {
+      this.value = value;
     }
-    return rhsTransformer.apply(getRight());
+
+    @Override
+    public boolean isLeft() {
+      return true;
+    }
+
+    @Override
+    public boolean isRight() {
+      return false;
+    }
+
+    @Override
+    public LEFT getLeft() {
+      return value;
+    }
+
+    @Override
+    public RIGHT getRight() {
+      throw new IllegalStateException("Cannot get Right value of a Left either.");
+    }
+
+    @Override
+    public <X> X transform(Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer) {
+      return lhsTransformer.apply(value);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Left<?, ?> left = (Left<?, ?>) o;
+      return Objects.equals(value, left.value);
+    }
+
+    @Override
+    public int hashCode() {
+      // Hash a bit denoting that this is a Left value.
+      return Objects.hash(false, value);
+    }
+  }
+
+  private static final class Right<LEFT, RIGHT> extends Either<LEFT, RIGHT> {
+
+    private final RIGHT value;
+
+    private Right(RIGHT value) {
+      this.value = value;
+    }
+
+    @Override
+    public boolean isLeft() {
+      return false;
+    }
+
+    @Override
+    public boolean isRight() {
+      return true;
+    }
+
+    @Override
+    public LEFT getLeft() {
+      throw new IllegalStateException("Cannot get Left value of a Right either.");
+    }
+
+    @Override
+    public RIGHT getRight() {
+      return value;
+    }
+
+    @Override
+    public <X> X transform(Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer) {
+      return rhsTransformer.apply(value);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Right<?, ?> right = (Right<?, ?>) o;
+      return Objects.equals(value, right.value);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(true, value);
+    }
   }
 }

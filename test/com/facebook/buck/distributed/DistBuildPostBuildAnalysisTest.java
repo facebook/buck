@@ -115,6 +115,8 @@ public class DistBuildPostBuildAnalysisTest {
             false,
             outputHash.map(s -> HashCode.fromString(s)),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     finishedEvent.configure(durationMs, 0, 0, 0, buildId);

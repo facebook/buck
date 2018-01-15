@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,6 +37,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -326,16 +328,41 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  public void skipsXCUITests() throws IOException {
+  public void skipsRunButBuildsTargetsForLegacyXCUITests() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xcuitest", tmp);
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo", "//:bar");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//:LogicTest", "//:UITestLegacy");
     result.assertSuccess();
+    workspace
+        .getBuildLog()
+        .assertTargetBuiltLocally("//:TestHostApp#dwarf,no-include-frameworks,strip-non-global");
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+  }
+
+  @Test
+  public void canBuildAndRunXCUITest() throws IOException {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xcuitest", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
+    workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:UITest");
+    result.assertSuccess();
+    workspace
+        .getBuildLog()
+        .assertTargetBuiltLocally("//:TestHostApp#dwarf,no-include-frameworks,strip-non-global");
+    workspace
+        .getBuildLog()
+        .assertTargetBuiltLocally("//:TestTargetApp#dwarf,no-include-frameworks,strip-non-global");
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
   }
 
   @Test
@@ -348,7 +375,7 @@ public class AppleTestIntegrationTest {
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertThat(result.getStderr(), containsString("Timed out after 100 ms running test command"));
   }
 
@@ -361,7 +388,7 @@ public class AppleTestIntegrationTest {
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertThat(result.getStderr(), containsString("0 Passed   0 Skipped   1 Failed   FooXCTest"));
     assertThat(
         result.getStderr(),
@@ -435,7 +462,7 @@ public class AppleTestIntegrationTest {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(
             "test", "--config", "apple.xctool_path=fbxctest/bin/fbxctest", "//:AppTest");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertThat(result.getStderr(), containsString("0 Passed   0 Skipped   1 Failed   AppTest"));
     assertThat(
         result.getStderr(),
@@ -715,6 +742,37 @@ public class AppleTestIntegrationTest {
   public void testObjCUsesAppleLibraryWithSwiftSourcesUsingPrivateIncludePrefix()
       throws IOException {
     testSwiftScenario("apple_test_objc_uses_apple_library_with_swift_sources_private_path");
+  }
+
+  @Test
+  public void successXctoolZipWithCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fbxctest_zip", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//:foo", "cell//:bar");
+    result.assertSuccess();
+    System.err.println(result.getStderr());
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   BarXCTest"));
+  }
+
+  @Test
+  public void successXctoolZipWithCellAndEmbeddedBuckout() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "fbxctest_zip", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "//:foo",
+            "cell//:bar");
+    result.assertSuccess();
+    System.err.println(result.getStderr());
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   BarXCTest"));
   }
 
   private void testSwiftScenario(String scenarionName) throws IOException {

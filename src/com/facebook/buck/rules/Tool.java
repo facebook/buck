@@ -16,21 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** An abstraction for describing some tools used as part of the build. */
-public interface Tool extends RuleKeyAppendable {
-
-  /**
-   * @return all {@link BuildRule}s this tool requires to run.
-   * @param ruleFinder Used to find any build rules from {@link SourcePath}s.
-   */
-  ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
-
-  /** @return all {@link SourcePath}s this tool requires to run. */
-  ImmutableCollection<SourcePath> getInputs();
+public interface Tool extends AddsToRuleKey {
 
   /** @return the prefix command use to run this tool. */
   ImmutableList<String> getCommandPrefix(SourcePathResolver resolver);

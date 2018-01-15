@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +45,8 @@ public class GenerateRDotJava extends AbstractBuildRule {
   @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
   @AddToRuleKey private final SourcePath pathToRDotTxtFile;
   @AddToRuleKey private final Optional<SourcePath> pathToOverrideSymbolsFile;
-  @AddToRuleKey private Optional<String> resourceUnionPackage;
+  @AddToRuleKey private final Optional<SourcePath> duplicateResourceWhitelistPath;
+  @AddToRuleKey private final Optional<String> resourceUnionPackage;
 
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   private FilteredResourcesProvider resourcesProvider;
@@ -59,6 +59,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
+      Optional<SourcePath> duplicateResourceWhitelistPath,
       SourcePath pathToRDotTxtFile,
       Optional<String> resourceUnionPackage,
       ImmutableSortedSet<BuildRule> resourceDeps,
@@ -66,6 +67,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
     super(buildTarget, projectFilesystem);
     this.ruleFinder = ruleFinder;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
+    this.duplicateResourceWhitelistPath = duplicateResourceWhitelistPath;
     this.pathToRDotTxtFile = pathToRDotTxtFile;
     this.resourceUnionPackage = resourceUnionPackage;
     this.allResourceDeps = resourceDeps;
@@ -73,7 +75,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
         resourceDeps
             .stream()
             .map(HasAndroidResourceDeps.class::cast)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     this.resourcesProvider = resourcesProvider;
     this.pathToOverrideSymbolsFile = resourcesProvider.getOverrideSymbolsPath();
   }
@@ -87,6 +89,8 @@ public class GenerateRDotJava extends AbstractBuildRule {
                 pathToRDotTxtFile, resourcesProvider.getOverrideSymbolsPath().orElse(null)))
         .addAll(allResourceDeps);
     resourcesProvider.getResourceFilterRule().ifPresent(builder::add);
+    duplicateResourceWhitelistPath.ifPresent(
+        p -> builder.addAll(ruleFinder.filterBuildRuleInputs(p)));
     return builder.build();
   }
 
@@ -114,6 +118,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
             rDotTxtPath,
             rDotJavaSrc,
             bannedDuplicateResourceTypes,
+            duplicateResourceWhitelistPath.map(pathResolver::getAbsolutePath),
             pathToOverrideSymbolsFile.map(pathResolver::getAbsolutePath),
             resourceUnionPackage);
     steps.add(mergeStep);

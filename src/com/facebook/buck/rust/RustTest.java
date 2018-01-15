@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
@@ -45,7 +46,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -133,7 +133,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
           getBuildTarget(),
           summaries,
           getContacts(),
-          getLabels().stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          getLabels().stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 
@@ -288,7 +288,8 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
-            getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
+            getDeclaredDeps().stream(),
+            BuildableSupport.getDepsCollection(getExecutableCommand(), ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
 }

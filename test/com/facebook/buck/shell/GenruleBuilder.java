@@ -16,10 +16,17 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -27,16 +34,54 @@ import javax.annotation.Nullable;
 public class GenruleBuilder
     extends AbstractNodeBuilder<
         GenruleDescriptionArg.Builder, GenruleDescriptionArg, GenruleDescription, Genrule> {
+
   private GenruleBuilder(BuildTarget target) {
-    super(new GenruleDescription(), target);
+    super(
+        new GenruleDescription(
+            createToolchainProvider(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy()),
+        target);
+  }
+
+  private GenruleBuilder(BuildTarget target, BuckConfig buckConfig) {
+    super(
+        new GenruleDescription(
+            createToolchainProvider(), buckConfig, new NoSandboxExecutionStrategy()),
+        target);
+  }
+
+  private GenruleBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
+    super(
+        new GenruleDescription(
+            toolchainProvider, FakeBuckConfig.builder().build(), new NoSandboxExecutionStrategy()),
+        target);
   }
 
   private GenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
-    super(new GenruleDescription(), target, filesystem);
+    super(
+        new GenruleDescription(
+            createToolchainProvider(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy()),
+        target,
+        filesystem);
+  }
+
+  private static ToolchainProvider createToolchainProvider() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
+        .build();
   }
 
   public static GenruleBuilder newGenruleBuilder(BuildTarget target) {
     return new GenruleBuilder(target);
+  }
+
+  public static GenruleBuilder newGenruleBuilder(
+      BuildTarget target, ToolchainProvider toolchainProvider) {
+    return new GenruleBuilder(target, toolchainProvider);
   }
 
   public static GenruleBuilder newGenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
@@ -70,6 +115,18 @@ public class GenruleBuilder
 
   public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
     getArgForPopulating().setSrcs(Optional.ofNullable(srcs).orElse(ImmutableList.of()));
+    return this;
+  }
+
+  public GenruleBuilder setCacheable(@Nullable Boolean isCacheable) {
+    getArgForPopulating().setCacheable(Optional.ofNullable(isCacheable));
+    return this;
+  }
+
+  public GenruleBuilder setEnvironmentExpansionSeparator(
+      @Nullable String environmentExpansionSeparator) {
+    getArgForPopulating()
+        .setEnvironmentExpansionSeparator(Optional.ofNullable(environmentExpansionSeparator));
     return this;
   }
 }

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.jvm.java.JavaLibrary.MAVEN_JAR;
-import static com.facebook.buck.jvm.java.JavaLibrary.SRC_JAR;
+import static com.facebook.buck.jvm.core.JavaLibrary.MAVEN_JAR;
+import static com.facebook.buck.jvm.core.JavaLibrary.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
 import com.facebook.buck.config.BuckConfig;
@@ -30,6 +30,8 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -104,30 +106,27 @@ public class PublishCommand extends BuildCommand {
   private String password = null;
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
 
     // Input validation
     if (remoteRepo == null && !toMavenCentral) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe(
-                  "Please specify a remote repository to publish to.\n"
-                      + "Use "
-                      + REMOTE_REPO_LONG_ARG
-                      + " <URL> or "
-                      + TO_MAVEN_CENTRAL_LONG_ARG));
-      return 1;
+      throw new CommandLineException(
+          "please specify a remote repository to publish to.\n"
+              + "Use "
+              + REMOTE_REPO_LONG_ARG
+              + " <URL> or "
+              + TO_MAVEN_CENTRAL_LONG_ARG);
     }
 
     // Build the specified target(s).
-    int exitCode = super.runWithoutHelp(params);
-    if (exitCode != 0) {
+    ExitCode exitCode = super.runWithoutHelp(params);
+    if (exitCode != ExitCode.SUCCESS) {
       return exitCode;
     }
 
     // Publish starting with the given targets.
-    return publishTargets(getBuildTargets(), params) ? 0 : 1;
+    return publishTargets(getBuildTargets(), params) ? ExitCode.SUCCESS : ExitCode.RUN_ERROR;
   }
 
   private boolean publishTargets(

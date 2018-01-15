@@ -24,7 +24,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -47,7 +46,8 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
 
   @Override
   @SuppressWarnings(
-      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
+  // TargetNode not TargetNode<?, ?>
   public IjModule createModule(
       Path moduleBasePath, ImmutableSet<TargetNode> targetNodes, Set<Path> excludes) {
     return createModuleUsingSortedTargetNodes(
@@ -60,10 +60,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
     ImmutableSet<BuildTarget> moduleBuildTargets =
-        targetNodes
-            .stream()
-            .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet());
+        targetNodes.stream().map(TargetNode::getBuildTarget).collect(ImmutableSet.toImmutableSet());
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
@@ -97,6 +94,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     return IjModule.builder()
         .setModuleBasePath(moduleBasePath)
         .setTargets(moduleBuildTargets)
+        .setNonSourceBuildTargets(context.getNonSourceBuildTargets())
         .addAllFolders(context.getSourceFolders())
         .putAllDependencies(context.getDependencies())
         .setAndroidFacet(context.getAndroidFacet())

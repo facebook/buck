@@ -19,10 +19,10 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * In actual build files, Buck requires that build targets are well-formed, which means that they

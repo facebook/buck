@@ -24,6 +24,5 @@ package com.facebook.buck.rules;
  */
 @Deprecated
 public interface RuleKeyAppendable extends AddsToRuleKey {
-
   void appendToRuleKey(RuleKeyObjectSink sink);
 }

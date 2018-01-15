@@ -25,7 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.android.toolchain.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -59,17 +60,17 @@ public class NdkCxxPlatformIntegrationTest {
   public static Collection<Object[]> data() {
     List<Object[]> data = new ArrayList<>();
     for (String arch : ImmutableList.of("arm", "armv7", "arm64", "x86", "x86_64")) {
-      data.add(new Object[] {NdkCxxPlatformCompiler.Type.GCC, NdkCxxRuntime.GNUSTL, arch});
+      data.add(new Object[] {NdkCompilerType.GCC, NdkCxxRuntime.GNUSTL, arch});
       // We don't support 64-bit clang yet.
       if (!arch.equals("arm64") && !arch.equals("x86_64")) {
-        data.add(new Object[] {NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.GNUSTL, arch});
-        data.add(new Object[] {NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.LIBCXX, arch});
+        data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.GNUSTL, arch});
+        data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.LIBCXX, arch});
       }
     }
     return data;
   }
 
-  @Parameterized.Parameter public NdkCxxPlatformCompiler.Type compiler;
+  @Parameterized.Parameter public NdkCompilerType compiler;
 
   @Parameterized.Parameter(value = 1)
   public NdkCxxRuntime cxxRuntime;
@@ -103,12 +104,10 @@ public class NdkCxxPlatformIntegrationTest {
         new DefaultAndroidDirectoryResolver(
             projectFilesystem.getRootPath().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
-            Optional.empty(),
-            Optional.empty());
-    Optional<Path> ndkDir = resolver.getNdkOrAbsent();
-    assertTrue(ndkDir.isPresent());
-    assertTrue(java.nio.file.Files.exists(ndkDir.get()));
-    return ndkDir.get();
+            AndroidNdkHelper.DEFAULT_CONFIG);
+    Path ndkDir = resolver.getNdkOrThrow();
+    assertTrue(java.nio.file.Files.exists(ndkDir));
+    return ndkDir;
   }
 
   @Before

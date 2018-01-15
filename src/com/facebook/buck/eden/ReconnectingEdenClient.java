@@ -18,7 +18,7 @@ package com.facebook.buck.eden;
 
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.MountInfo;

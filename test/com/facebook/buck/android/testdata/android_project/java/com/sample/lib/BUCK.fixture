@@ -1,107 +1,115 @@
 android_library(
-  name = 'lib',
-  srcs = glob(['Sample*.java']),
-  deps = [
-    '//res/com/sample/title:title',
-    '//res/com/sample/top:top',
-    '//res/com/sample/asset_only:asset_only',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib",
+    srcs = glob(["Sample*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
 )
 
 android_library(
-  name = 'lib_with_dep_with_exported_and_provided_deps',
-  srcs = glob(['Sample*.java']),
-  deps = [
-    ':dep_with_exported_provided_dep',
-    '//res/com/sample/title:title',
-    '//res/com/sample/top:top',
-    '//res/com/sample/asset_only:asset_only',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib_with_dep_with_exported_and_provided_deps",
+    srcs = glob(["Sample*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_with_exported_provided_dep",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
 )
 
 android_library(
-  name = 'dep_with_exported_provided_dep',
-  srcs = [
-    'Dep.java',
-  ],
-  deps = [
-    ':dep_provided_dep',
-  ],
-  exported_deps = [
-    ':exported_dep',
-    ':exported_provided_dep',
-  ],
-  provided_deps = [
-    ':dep_provided_dep',
-    ':exported_provided_dep',
-    ':provided_dep',
-  ],
+    name = "dep_with_exported_provided_dep",
+    srcs = [
+        "Dep.java",
+    ],
+    exported_deps = [
+        ":exported_dep",
+        ":exported_provided_dep",
+    ],
+    provided_deps = [
+        ":dep_provided_dep",
+        ":exported_provided_dep",
+        ":provided_dep",
+    ],
+    deps = [
+        ":dep_provided_dep",
+    ],
 )
 
 android_library(
-  name = 'dep_provided_dep',
-  srcs = [
-    'DepProvidedDep.java',
-  ],
+    name = "dep_provided_dep",
+    srcs = [
+        "DepProvidedDep.java",
+    ],
 )
 
 android_library(
-  name = 'exported_provided_dep',
-  srcs = [
-    'ExportedProvidedDep.java',
-  ],
+    name = "exported_provided_dep",
+    srcs = [
+        "ExportedProvidedDep.java",
+    ],
 )
 
 android_library(
-  name = 'exported_dep',
-  srcs = [
-    'ExportedDep.java',
-  ],
+    name = "exported_dep",
+    srcs = [
+        "ExportedDep.java",
+    ],
 )
 
 android_library(
-  name = 'provided_dep',
-  srcs = [
-    'ProvidedDep.java',
-  ],
+    name = "provided_dep",
+    srcs = [
+        "ProvidedDep.java",
+    ],
 )
 
 android_library(
-  name = 'lib_using_transitive_empty_res',
-  srcs = glob(['Sample*.java']),
-  deps = [
-    '//res/com/sample/empty_res:empty_res',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib_using_transitive_empty_res",
+    srcs = glob(["Sample*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/empty_res:empty_res",
+    ],
 )
 
 android_library(
-  name = 'lib_depending_on_main_lib',
-  deps = [
-    ':lib',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib_depending_on_main_lib",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":lib",
+    ],
 )
 
 robolectric_test(
-  name = 'test',
-  srcs = glob(['*.java']),
-  deps = [
-    '//res/com/sample/title:title',
-    '//res/com/sample/top:top',
-    '//res/com/sample/asset_only:asset_only',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "test",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    vm_args = [
+        "-Drobolectric.dependency.dir=" + read_config("test", "robolectric_location", "") + "/third-party/java/robolectric",
+    ],
+    deps = [
+        "buck//third-party/java/asm:asm",
+        "buck//third-party/java/bouncycastle:bcprov",
+        "buck//third-party/java/guava:guava",
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
 )

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
@@ -28,10 +29,13 @@ import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePath;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import org.hamcrest.Matchers;
@@ -43,7 +47,10 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   private List<String> typeReferences;
   private List<String> constantReferences;
   private List<TypeElement> importedTypes;
-  private List<TypeElement> annotationTypesFound = new ArrayList<>();
+  private List<TypeElement> declaredTypes;
+  private List<QualifiedNameable> starImportedElements;
+  private Map<String, TypeElement> staticImportOwners;
+  private List<TypeElement> staticStarImports;
 
   @Test
   public void testFindsVariableTypeReference() throws IOException {
@@ -127,6 +134,15 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         Matchers.containsInAnyOrder(
             createSymbolicReference("java.lang.Runnable", 1, 21),
             createSymbolicReference("java.lang.CharSequence", 1, 32)));
+  }
+
+  @Test
+  public void testReportsLeafmostTypeReference() throws IOException {
+    findTypeReferences("import java.util.Map;", "class Foo {", "  Map.Entry entry;", "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.util.Map.Entry", 3, 3)));
   }
 
   @Test
@@ -313,7 +329,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testFindsReferencesInConstants() throws IOException {
+  public void testIgnoresReferencesInInitializers() throws IOException {
     findTypeReferences(
         "class Foo {",
         "  public static final String s = Constants.CONSTANT;",
@@ -326,7 +342,6 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         typeReferences,
         Matchers.containsInAnyOrder(
             createSymbolicReference("java.lang.String", 2, 23),
-            createSymbolicReference("Constants", 2, 34),
             createSymbolicReference("java.lang.String", 5, 23)));
   }
 
@@ -363,7 +378,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testFindsReferencesInMethodDefaultValues() throws IOException {
+  public void testIgnoresReferencesInMethodDefaultValuePrimitiveConstants() throws IOException {
     findTypeReferences(
         "@interface Foo {",
         "  String value() default Constants.CONSTANT;",
@@ -376,12 +391,47 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         typeReferences,
         Matchers.containsInAnyOrder(
             createSymbolicReference("java.lang.String", 2, 3),
-            createSymbolicReference("Constants", 2, 26),
             createSymbolicReference("java.lang.String", 5, 23)));
   }
 
   @Test
-  public void testFindsReferencesInAnnotationValues() throws IOException {
+  public void testFindsReferencesInMethodDefaultValueClassLiterals() throws IOException {
+    findTypeReferences(
+        "@interface Foo {",
+        "  Class value() default Constants.class;",
+        "}",
+        "class Constants {",
+        "  public static final String CONSTANT = \"Hello\";",
+        "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.Class", 2, 3),
+            createSymbolicReference("Constants", 2, 25),
+            createSymbolicReference("java.lang.String", 5, 23)));
+  }
+
+  @Test
+  public void testFindsReferencesInMethodDefaultValueEnumConstants() throws IOException {
+    findTypeReferences(
+        "@interface Foo {",
+        "  Constants value() default Constants.CONSTANT;",
+        "}",
+        "enum Constants {",
+        "  CONSTANT;",
+        "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Constants", 2, 3),
+            createSymbolicReference("Constants", 2, 29),
+            createSymbolicReference("Constants", 5, 3)));
+  }
+
+  @Test
+  public void testIgnoresReferencesInAnnotationValuePrimitiveConstants() throws IOException {
     findTypeReferences(
         "@SuppressWarnings(Constants.CONSTANT)",
         "class Foo {",
@@ -394,8 +444,39 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
         typeReferences,
         Matchers.containsInAnyOrder(
             createSymbolicReference("java.lang.SuppressWarnings", 1, 2),
-            createSymbolicReference("Constants", 1, 19),
             createSymbolicReference("java.lang.String", 5, 23)));
+  }
+
+  @Test
+  public void testFindsReferencesInAnnotationValueEnumConstants() throws IOException {
+    findTypeReferences(
+        "import java.lang.annotation.*;", "@Target(ElementType.TYPE)", "@interface Foo {", "}");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("java.lang.annotation.Target", 2, 2),
+            createSymbolicReference("java.lang.annotation.ElementType", 2, 9)));
+  }
+
+  @Test
+  public void testFindsReferencesInAnnotationValueClassLiterals() throws IOException {
+    findTypeReferences(
+        "@Anno(Bar.class)",
+        "class Foo {",
+        "}",
+        "class Bar {",
+        "}",
+        "@interface Anno {",
+        "  Class<?> value();",
+        " }");
+
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(
+            createSymbolicReference("Anno", 1, 2),
+            createSymbolicReference("Bar", 1, 7),
+            createSymbolicReference("java.lang.Class", 7, 3)));
   }
 
   @Test
@@ -446,12 +527,56 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testFindsStarImportedPackages() throws IOException {
+    findTypeReferences("import java.util.*;", "class Foo { }");
+
+    assertThat(
+        starImportedElements, Matchers.containsInAnyOrder(elements.getPackageElement("java.util")));
+  }
+
+  @Test
+  public void testFindsStarImportedTypes() throws IOException {
+    findTypeReferences("import java.util.HashMap.*;", "class Foo { }");
+
+    assertThat(
+        starImportedElements,
+        Matchers.containsInAnyOrder(elements.getTypeElement("java.util.HashMap")));
+  }
+
+  @Test
   public void testFindsStaticImportsOfNestedTypes() throws IOException {
     findTypeReferences("import static java.text.DateFormat.Field;", "class Foo { }");
 
+    assertSame(
+        staticImportOwners.get("Field"),
+        elements.getTypeElement("java.text.DateFormat.Field").getEnclosingElement());
+  }
+
+  @Test
+  public void testFindsStaticOnDemandImports() throws IOException {
+    findTypeReferences("import static java.text.DateFormat.*;", "class Foo { }");
+
     assertThat(
-        importedTypes,
-        Matchers.containsInAnyOrder(elements.getTypeElement("java.text.DateFormat.Field")));
+        staticStarImports,
+        Matchers.containsInAnyOrder(elements.getTypeElement("java.text.DateFormat")));
+  }
+
+  @Test
+  public void testIgnoresStaticImportsOfNonStaticTypes() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar {",
+                    "  public class Inner { }",
+                    "  public static void Inner() {}",
+                    "}")));
+
+    findTypeReferences("import static com.facebook.bar.Bar.Inner;", "class Foo { }");
+
+    assertThat(importedTypes, Matchers.empty());
   }
 
   @Test
@@ -538,6 +663,27 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testFindsSimpleNameInstanceConstants() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/foo/Constants.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "class Constants {",
+                    "  protected final int CONSTANT = 3;",
+                    "}")));
+    findTypeReferences(
+        "package com.facebook.foo;",
+        "class Foo extends Constants {",
+        "  public final int CONSTANT2 = CONSTANT;",
+        "}");
+
+    assertThat(
+        constantReferences, Matchers.containsInAnyOrder(createSymbolicReference("3", 3, 32)));
+  }
+
+  @Test
   public void testIgnoresReferencesToNonexistentTypes() throws IOException {
     findTypeReferencesErrorsOK(
         "package com.facebook.foo;",
@@ -553,7 +699,20 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     findTypeReferences("@interface Foo {", "  @interface Inner { }", "}", "@interface Bar { }");
 
     assertThat(
-        annotationTypesFound
+        declaredTypes
+            .stream()
+            .map(TypeElement::getQualifiedName)
+            .map(Name::toString)
+            .collect(Collectors.toList()),
+        Matchers.contains("Foo", "Foo.Inner", "Bar"));
+  }
+
+  @Test
+  public void testFindsClassDefinitions() throws IOException {
+    findTypeReferences("public class Foo {", "  private class Inner { }", "}", "class Bar { }");
+
+    assertThat(
+        declaredTypes
             .stream()
             .map(TypeElement::getQualifiedName)
             .map(Name::toString)
@@ -573,6 +732,10 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     constantReferences = new ArrayList<>();
     typeReferences = new ArrayList<>();
     importedTypes = new ArrayList<>();
+    starImportedElements = new ArrayList<>();
+    declaredTypes = new ArrayList<>();
+    staticImportOwners = new HashMap<>();
+    staticStarImports = new ArrayList<>();
 
     testCompiler.setAllowCompilationErrors(errorsOK);
     compile(
@@ -585,8 +748,11 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
             return new PostEnterCallback() {
               @Override
               protected void enterComplete(List<CompilationUnitTree> compilationUnits) {
-                InterfaceScanner finder = new InterfaceScanner(trees, new FinderListener());
-                finder.findReferences(compilationUnits);
+                FinderListener listener = new FinderListener();
+                InterfaceScanner finder = new InterfaceScanner(trees);
+                for (CompilationUnitTree compilationUnit : compilationUnits) {
+                  finder.findReferences(compilationUnit, listener);
+                }
               }
             };
           }
@@ -626,24 +792,40 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   private class FinderListener implements InterfaceScanner.Listener {
+
     @Override
-    public void onAnnotationTypeFound(TypeElement type, TreePath path) {
-      annotationTypesFound.add(type);
+    public void onTypeDeclared(TypeElement type, TreePath path) {
+      declaredTypes.add(type);
     }
 
     @Override
-    public void onTypeImported(TypeElement type) {
-      importedTypes.add(type);
+    public void onImport(
+        boolean isStatic,
+        boolean isStarImport,
+        TreePath leafmostElementPath,
+        QualifiedNameable leafmostElement,
+        Name memberName) {
+      if (!isStatic) {
+        if (isStarImport) {
+          starImportedElements.add(leafmostElement);
+        } else {
+          importedTypes.add((TypeElement) leafmostElement);
+        }
+      } else if (!isStarImport) {
+        staticImportOwners.put(memberName.toString(), (TypeElement) leafmostElement);
+      } else {
+        staticStarImports.add((TypeElement) leafmostElement);
+      }
     }
 
     @Override
-    public void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement) {
+    public void onTypeReferenceFound(TypeElement type, TreePath path, Element referencingElement) {
       typeReferences.add(createSymbolicReference(type.getQualifiedName().toString(), path));
     }
 
     @Override
     public void onConstantReferenceFound(
-        VariableElement constant, TreePath path, Element enclosingElement) {
+        VariableElement constant, TreePath path, Element referencingElement) {
       constantReferences.add(createSymbolicReference(constant.getConstantValue().toString(), path));
     }
   }

@@ -1,88 +1,109 @@
 android_library(
-  name = 'lib',
-  srcs = glob(['Activity.kt', 'Sample.kt', 'Sample2.kt']),
-  language = 'KOTLIN',
-  deps = [
-    '//res/com/sample/title:title',
-    '//res/com/sample/top:top',
-    '//res/com/sample/asset_only:asset_only',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib",
+    srcs = glob([
+        "Activity.kt",
+        "Sample.kt",
+        "Sample2.kt",
+    ]),
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
 )
 
 android_library(
-  name = 'lib_using_transitive_empty_res',
-  srcs = glob(['Activity.kt', 'Sample.kt', 'Sample2.kt']),
-  language = 'KOTLIN',
-  deps = [
-    '//res/com/sample/empty_res:empty_res',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib_using_transitive_empty_res",
+    srcs = glob([
+        "Activity.kt",
+        "Sample.kt",
+        "Sample2.kt",
+    ]),
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/empty_res:empty_res",
+    ],
 )
 
 android_library(
-  name = 'lib_depending_on_main_lib',
-  srcs = [
-    'Depending.kt',
-  ],
-  language = 'KOTLIN',
-  deps = [
-    ':lib',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-
-android_library(
-  name = 'lib_extra_kotlinc_arguments',
-  srcs = glob(['Activity.kt', 'Sample.kt', 'Sample2.kt']),
-  language = 'KOTLIN',
-  extra_kotlinc_arguments = [
-    '-Xplugin=',
-  ],
-  deps = [
-    '//res/com/sample/title:title',
-    '//res/com/sample/top:top',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib_depending_on_main_lib",
+    srcs = [
+        "Depending.kt",
+    ],
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":lib",
+    ],
 )
 
 android_library(
-  name = 'lib_mixed_sources',
-  srcs = glob(['*.kt', 'JavaClass.java']),
-  language = 'KOTLIN',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "lib_extra_kotlinc_arguments",
+    srcs = glob([
+        "Activity.kt",
+        "Sample.kt",
+        "Sample2.kt",
+    ]),
+    extra_kotlinc_arguments = [
+        "-Xplugin=",
+    ],
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)
+
+android_library(
+    name = "lib_mixed_sources",
+    srcs = glob([
+        "*.kt",
+        "JavaClass.java",
+    ]),
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 robolectric_test(
-  name = 'test',
-  srcs = glob(['Activity.kt', 'Sample.kt', 'Sample2.kt']),
-  language = 'KOTLIN',
-  deps = [
-    '//res/com/sample/title:title',
-    '//res/com/sample/top:top',
-    '//res/com/sample/asset_only:asset_only',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "test",
+    srcs = glob([
+        "Activity.kt",
+        "Sample.kt",
+        "Sample2.kt",
+    ]),
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
 )
 
 robolectric_test(
-  name = 'test_mixed_sources',
-  srcs = glob(['*.kt', 'JavaClass.java']),
-  language = 'KOTLIN',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "test_mixed_sources",
+    srcs = glob([
+        "*.kt",
+        "JavaClass.java",
+    ]),
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
 )

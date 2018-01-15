@@ -16,14 +16,15 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class GoLinkStep extends ShellStep {
 
@@ -53,6 +54,7 @@ public class GoLinkStep extends ShellStep {
   private final Path output;
 
   public GoLinkStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxLinkCommandPrefix,
@@ -63,7 +65,7 @@ public class GoLinkStep extends ShellStep {
       Path mainArchive,
       LinkMode linkMode,
       Path output) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.cxxLinkCommandPrefix = cxxLinkCommandPrefix;
     this.linkCommandPrefix = linkCommandPrefix;
@@ -93,10 +95,11 @@ public class GoLinkStep extends ShellStep {
       if (cxxLinkCommandPrefix.size() > 1) {
         command.add(
             "-extldflags",
-            FluentIterable.from(cxxLinkCommandPrefix)
+            cxxLinkCommandPrefix
+                .stream()
                 .skip(1)
-                .transform(Escaper.BASH_ESCAPER)
-                .join(Joiner.on(" ")));
+                .map(Escaper.BASH_ESCAPER)
+                .collect(Collectors.joining(" ")));
       }
     } else {
       command.add("-linkmode", "internal");

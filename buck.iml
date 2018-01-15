@@ -10,13 +10,16 @@
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables-test" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/src-gen" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/config/testdata" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/toolchain/impl/testdata" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/exopackage/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/clang/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/simulator/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/xcode/testdata" />
@@ -71,11 +74,11 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="asm" level="project" />
     <orderEntry type="library" name="buck-lib" level="project" />
-    <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
     <orderEntry type="module" module-name="aosp" />
     <orderEntry type="library" name="concurrent-locks" level="project" />
     <orderEntry type="library" name="dd-plist" level="project" />
-    <orderEntry type="library" name="gson-2.2.4" level="project" />
+    <orderEntry type="library" name="gson" level="project" />
+    <orderEntry type="library" name="guava" level="project" />
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jetty" level="project" />
     <orderEntry type="library" name="slf4j-api-1.7.2" level="project" />
@@ -96,10 +99,17 @@
     <orderEntry type="library" name="jna-platform-4.4.0" level="project" />
     <orderEntry type="library" name="diffutils-1.3.0" level="project" />
     <orderEntry type="library" name="jdom" level="project" />
-    <orderEntry type="library" name="okhttp-3.6.0" level="project" />
+    <orderEntry type="library" name="okio" level="project" />
+    <orderEntry type="library" name="okhttp" level="project" />
     <orderEntry type="library" name="sqlite" level="project" />
     <orderEntry type="library" name="android-tools-25.3.0" level="project" />
     <orderEntry type="library" name="jmh" level="project" />
     <orderEntry type="library" name="bazel" level="project" />
+    <orderEntry type="library" name="pf4j-2.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
+    <orderEntry type="library" name="fastutil-7.2.0" level="project" />
+    <orderEntry type="library" name="jopt-simple" level="project" />
+    <orderEntry type="library" name="json-simple" level="project" />
+    <orderEntry type="library" name="d8" level="project" />
   </component>
 </module>

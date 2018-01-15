@@ -41,7 +41,4 @@ abstract class AbstractStepExecutionResult {
   public static StepExecutionResult of(ProcessExecutor.Result result) {
     return StepExecutionResult.of(result.getExitCode(), result.getStderr());
   }
-
-  public static final StepExecutionResult SUCCESS = StepExecutionResult.of(0);
-  public static final StepExecutionResult ERROR = StepExecutionResult.of(1);
 }

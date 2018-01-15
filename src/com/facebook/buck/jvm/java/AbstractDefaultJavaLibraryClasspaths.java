@@ -16,18 +16,19 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.Objects;
 import org.immutables.builder.Builder;
@@ -102,7 +103,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
         .stream()
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Value.Lazy
@@ -110,14 +111,16 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
     return getCompileTimeClasspathUnfilteredFullDeps()
         .stream()
         .filter(dep -> dep instanceof HasJavaAbi)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
     Iterable<BuildRule> classpathFullDeps = getCompileTimeClasspathFullDeps();
     if (shouldCreateSourceOnlyAbi()) {
-      classpathFullDeps = rulesRequiredForSourceOnlyAbi(classpathFullDeps);
+      classpathFullDeps =
+          Iterables.concat(
+              rulesRequiredForSourceOnlyAbi(classpathFullDeps), getDeps().getSourceOnlyAbiDeps());
     }
 
     return JavaLibraryRules.getAbiRules(getBuildRuleResolver(), classpathFullDeps);
@@ -130,7 +133,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
         getCompileTimeClasspathAbiDeps()
             .stream()
             .map(BuildRule::getSourcePathToOutput)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Value.Lazy
@@ -144,7 +147,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
         BuildRules.getExportedRules(firstOrderDeps);
 
     return RichStream.from(Iterables.concat(firstOrderDeps, rulesExportedByDependencies))
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   private Iterable<BuildRule> rulesRequiredForSourceOnlyAbi(Iterable<BuildRule> rules) {

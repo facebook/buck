@@ -1,10 +1,10 @@
 android_resource(
-  name = 'res',
-  res = 'res',
-  package = 'com.sample2',
-  visibility = [
-    'PUBLIC',
-  ],
-  deps = [
-  ],
+    name = "res",
+    package = "com.sample2",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
 )

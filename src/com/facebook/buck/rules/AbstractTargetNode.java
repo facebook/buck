@@ -19,6 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.rules.visibility.ObeysVisibility;
+import com.facebook.buck.rules.visibility.VisibilityChecker;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
@@ -49,7 +52,7 @@ abstract class AbstractTargetNode<T, U extends Description<T>>
   public abstract BuildTarget getBuildTarget();
 
   @Value.Parameter
-  public abstract TargetNodeFactory getTargetNodeFactory();
+  public abstract NodeCopier getNodeCopier();
 
   /** @return A hash of the raw input from the build file used to construct the node. */
   @Value.Parameter
@@ -168,7 +171,7 @@ abstract class AbstractTargetNode<T, U extends Description<T>>
   //
   // Note that this method strips away selected versions, and may be buggy because of it.
   public <V, W extends Description<V>> TargetNode<V, W> copyWithDescription(W description) {
-    return getTargetNodeFactory().copyNodeWithDescription(TargetNode.copyOf(this), description);
+    return getNodeCopier().copyNodeWithDescription(TargetNode.copyOf(this), description);
   }
 
   // This method uses the TargetNodeFactory, rather than just calling withBuildTarget, because
@@ -176,7 +179,7 @@ abstract class AbstractTargetNode<T, U extends Description<T>>
   //
   // Note that this method strips away selected versions, and may be buggy because of it.
   public TargetNode<T, U> copyWithFlavors(ImmutableSet<Flavor> flavors) {
-    return getTargetNodeFactory().copyNodeWithFlavors(TargetNode.copyOf(this), flavors);
+    return getNodeCopier().copyNodeWithFlavors(TargetNode.copyOf(this), flavors);
   }
 
   // Note that this method bypasses TargetNodeFactory, and may be buggy because it doesn't

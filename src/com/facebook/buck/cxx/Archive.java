@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -43,7 +44,6 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -150,7 +150,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     ImmutableSortedSet<BuildRule> deps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(ruleFinder.filterBuildRuleInputs(inputs))
-            .addAll(archiver.getDeps(ruleFinder))
+            .addAll(BuildableSupport.getDepsCollection(archiver, ruleFinder))
             .build();
 
     return new Archive(
@@ -215,16 +215,14 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             archiverFlags,
             archiver.getArchiveOptions(contents == ArchiveContents.THIN),
             output,
-            inputs
-                .stream()
-                .map(resolver::getRelativePath)
-                .collect(MoreCollectors.toImmutableList()),
+            inputs.stream().map(resolver::getRelativePath).collect(ImmutableList.toImmutableList()),
             archiver,
             getScratchPath()));
 
     if (archiver.isRanLibStepRequired()) {
       builder.add(
           new RanlibStep(
+              getBuildTarget(),
               getProjectFilesystem(),
               ranlib.getEnvironment(resolver),
               ranlib.getCommandPrefix(resolver),

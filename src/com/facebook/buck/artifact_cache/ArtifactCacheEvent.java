@@ -35,6 +35,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     FETCH,
     MULTI_FETCH,
     STORE,
+    MULTI_CONTAINS,
   }
 
   public enum InvocationType {
@@ -137,7 +138,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
       Preconditions.checkArgument(
           (!operation.equals(Operation.FETCH) || cacheResult.isPresent()),
           "For FETCH operations, cacheResult must be non-null. "
-              + "For non-FETCH operations, cacheResult must be null.");
+              + "For non-FETCH operations, cacheResult may be null.");
       this.cacheResult = cacheResult;
     }
 

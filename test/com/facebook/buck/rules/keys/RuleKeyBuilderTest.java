@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
@@ -37,8 +38,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -79,9 +78,9 @@ public class RuleKeyBuilderTest {
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
 
-  private static final RuleKeyAppendable IGNORED_APPENDABLE = new FakeRuleKeyAppendable("");
-  private static final RuleKeyAppendable APPENDABLE_1 = new FakeRuleKeyAppendable("");
-  private static final RuleKeyAppendable APPENDABLE_2 = new FakeRuleKeyAppendable("42");
+  private static final AddsToRuleKey IGNORED_APPENDABLE = new FakeRuleKeyAppendable("");
+  private static final AddsToRuleKey APPENDABLE_1 = new FakeRuleKeyAppendable("");
+  private static final AddsToRuleKey APPENDABLE_2 = new FakeRuleKeyAppendable("42");
 
   private static final Path PATH_1 = Paths.get("path1");
   private static final Path PATH_2 = Paths.get("path2");
@@ -232,7 +231,7 @@ public class RuleKeyBuilderTest {
             ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(
-        ruleFinder, pathResolver, hashCache, RuleKeyBuilder.createDefaultHasher()) {
+        ruleFinder, pathResolver, hashCache, RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
 
       @Override
       protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {
@@ -281,17 +280,12 @@ public class RuleKeyBuilderTest {
     }
   }
 
-  private static class FakeRuleKeyAppendable implements RuleKeyAppendable {
+  private static class FakeRuleKeyAppendable implements AddsToRuleKey {
 
-    private final String field;
+    @AddToRuleKey private final String field;
 
     public FakeRuleKeyAppendable(String field) {
       this.field = field;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("field", field);
     }
   }
 

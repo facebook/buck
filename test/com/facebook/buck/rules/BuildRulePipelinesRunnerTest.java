@@ -22,6 +22,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -215,7 +216,8 @@ public class BuildRulePipelinesRunnerTest {
     }
 
     public PipelineTester startPipelineAtRule(int ruleNum) {
-      pipelineRunnableFuture = runner.runPipelineStartingAt(rules.get(ruleNum), executor);
+      pipelineRunnableFuture =
+          runner.runPipelineStartingAt(FakeBuildContext.NOOP_CONTEXT, rules.get(ruleNum), executor);
       return this;
     }
 
@@ -263,6 +265,9 @@ public class BuildRulePipelinesRunnerTest {
 
   private static class TestPipelineState implements RulePipelineState {
     private boolean isClosed;
+
+    @SuppressWarnings("unused")
+    public TestPipelineState(BuildContext context, BuildTarget firstTarget) {}
 
     @Override
     public void close() {

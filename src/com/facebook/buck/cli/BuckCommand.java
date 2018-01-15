@@ -16,11 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Optional;
-import java.util.OptionalInt;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -34,13 +33,18 @@ public class BuckCommand extends AbstractContainerCommand {
     @SubCommand(name = "audit", impl = AuditCommand.class),
     @SubCommand(name = "build", impl = BuildCommand.class),
     @SubCommand(name = "cache", impl = CacheCommand.class),
+    // TODO(nga): rename to `cache delete`
+    @SubCommand(name = "cachedelete", impl = CacheDeleteCommand.class),
     @SubCommand(name = "clean", impl = CleanCommand.class),
     @SubCommand(name = "distbuild", impl = DistBuildCommand.class),
     @SubCommand(name = "doctor", impl = DoctorCommand.class),
     @SubCommand(name = "fetch", impl = FetchCommand.class),
+    @SubCommand(name = "fix", impl = FixCommand.class),
     @SubCommand(name = "help", impl = HelpCommand.class),
     @SubCommand(name = "install", impl = InstallCommand.class),
+    @SubCommand(name = "kill", impl = KillCommand.class),
     @SubCommand(name = "machoutils", impl = MachOUtilsCommand.class),
+    @SubCommand(name = "parser-cache", impl = ParserCacheCommand.class),
     @SubCommand(name = "project", impl = ProjectCommand.class),
     @SubCommand(name = "publish", impl = PublishCommand.class),
     @SubCommand(name = "query", impl = QueryCommand.class),
@@ -58,7 +62,6 @@ public class BuckCommand extends AbstractContainerCommand {
   Command subcommand;
 
   // --version is handled in python, but leave it here for --help
-  @SuppressWarnings("unused")
   @Option(
     name = "--version",
     aliases = {"-V"},
@@ -67,16 +70,11 @@ public class BuckCommand extends AbstractContainerCommand {
   private boolean version;
 
   @Override
-  public OptionalInt runHelp(PrintStream stream) {
+  public Optional<ExitCode> runHelp(PrintStream stream) {
     if (subcommand != null && subcommand instanceof HelpCommand) {
-      return OptionalInt.of(((HelpCommand) subcommand).run(stream));
+      return Optional.of(((HelpCommand) subcommand).run(stream));
     }
     return super.runHelp(stream);
-  }
-
-  @Override
-  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    return super.run(params);
   }
 
   @Override

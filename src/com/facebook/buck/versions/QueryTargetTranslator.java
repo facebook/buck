@@ -24,7 +24,6 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -50,7 +49,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     try {
       targets =
           QueryUtils.extractBuildTargets(cellPathResolver, pattern, query)
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing/executing query from deps", e);
     }

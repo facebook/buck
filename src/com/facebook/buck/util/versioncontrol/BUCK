@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 CONFIG_SRCS = [
     "VersionControlBuckConfig.java",
 ]
@@ -6,7 +8,6 @@ VALUE_TYPES_SRCS = [
     "AbstractFullVersionControlStats.java",
     "AbstractFastVersionControlStats.java",
     "AbstractSlowVersionControlStats.java",
-    "AbstractSparseSummary.java",
     "CommonFastVersionControlStats.java",
     "CommonSlowVersionControlStats.java",
 ]
@@ -60,14 +61,6 @@ java_library(
     ],
 )
 
-export_file(
-    name = "rawmanifest",
-    src = "rawmanifest.py",
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
 java_immutables_library(
     name = "value_types",
     srcs = VALUE_TYPES_SRCS,
@@ -86,11 +79,8 @@ java_library(
     name = "versioncontrol",
     srcs = glob(
         ["*.java"],
-        excludes = CONFIG_SRCS + GENERATOR_SRCS + VALUE_TYPES_SRCS,
+        exclude = CONFIG_SRCS + GENERATOR_SRCS + VALUE_TYPES_SRCS,
     ),
-    resources = [
-        "rawmanifest.py",
-    ],
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],

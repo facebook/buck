@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
  * throw new RuntimeException(exception);} for throwing arbitrary checked exceptions as unchecked.
  * Even better would be to specify that the function throws BuckExecutionException.
  */
-@SuppressWarnings("unused")
 public class BuckUncheckedExecutionException extends RuntimeException
     implements ExceptionWithContext, WrapsException {
   private @Nullable final String context;
@@ -53,6 +52,22 @@ public class BuckUncheckedExecutionException extends RuntimeException
   public BuckUncheckedExecutionException(Throwable cause, @Nullable String context) {
     super(cause);
     this.context = context;
+  }
+
+  @Override
+  public String getLocalizedMessage() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(context);
+    String parentMessage = super.getLocalizedMessage();
+    if (!parentMessage.isEmpty()) {
+      builder.append(": ");
+      builder.append(parentMessage);
+    }
+    return builder.toString();
+  }
+
+  public BuckUncheckedExecutionException(Throwable cause, String format, Object... args) {
+    this(cause, String.format(format, args));
   }
 
   @Override

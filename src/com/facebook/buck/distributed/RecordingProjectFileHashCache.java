@@ -28,6 +28,7 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.LinkOption;
@@ -50,6 +51,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
   private final ProjectFileHashCache delegate;
   private final ProjectFilesystem projectFilesystem;
+  private final ImmutableSet<Path> cellPaths;
 
   @GuardedBy("this")
   private final RecordedFileHashes remoteFileHashes;
@@ -78,17 +80,45 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     this.delegate = delegate;
     this.projectFilesystem = delegate.getFilesystem();
     this.remoteFileHashes = remoteFileHashes;
+    ImmutableSet.Builder<Path> cellPaths = ImmutableSet.builder();
+    cellPaths.add(MorePaths.normalize(projectFilesystem.getRootPath()));
+    distBuildConfig.ifPresent(
+        config ->
+            config
+                .getBuckConfig()
+                .getCellPathResolver()
+                .getCellPaths()
+                .values()
+                .forEach(p -> cellPaths.add(MorePaths.normalize(p))));
+    this.cellPaths = cellPaths.build();
 
-    if (distBuildConfig.isPresent()) {
-      // TODO(alisdair,ruibm): Capture all .buckconfig dependencies automatically.
-      recordWhitelistedPaths(distBuildConfig.get());
-    }
+    // TODO(alisdair,ruibm): Capture all .buckconfig dependencies automatically.
+    distBuildConfig.ifPresent(this::recordWhitelistedPaths);
   }
 
-  private boolean isExternalSymlink(Path relPath) {
-    return !projectFilesystem
-        .getPathRelativeToProjectRoot(findSafeRealPath(projectFilesystem.resolve(relPath)))
+  /**
+   * Returns true if symlinks resolves to a target inside the known cell roots, and false if it
+   * points outside of all known cell root.
+   */
+  private boolean isSymlinkInternalToKnownCellRoots(Path relPath) {
+    return getCellRootForAbsolutePath(findSafeRealPath(projectFilesystem.resolve(relPath)))
         .isPresent();
+  }
+
+  /**
+   * Check if the given absolute path is inside any of the known cells, and if yes, return the
+   * corresponding the root path of the cell to which it belongs. Does not resolve/follow symlinks.
+   */
+  private Optional<Path> getCellRootForAbsolutePath(Path absPath) {
+    absPath = MorePaths.normalize(absPath);
+    Preconditions.checkState(absPath.isAbsolute());
+
+    for (Path cellRoot : cellPaths) {
+      if (absPath.startsWith(cellRoot)) {
+        return Optional.of(cellRoot);
+      }
+    }
+    return Optional.empty();
   }
 
   @Override
@@ -101,7 +131,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       Path nextPath = remainingPaths.remove();
       Optional<HashCode> hashCode = Optional.empty();
       List<PathWithUnixSeparators> children = ImmutableList.of();
-      if (!isExternalSymlink(nextPath)) {
+      if (isSymlinkInternalToKnownCellRoots(nextPath)) {
         hashCode = Optional.of(delegate.get(nextPath));
         if (projectFilesystem.isDirectory(nextPath)) {
           children = processDirectory(nextPath, remainingPaths);
@@ -144,7 +174,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
   /**
    * This method does the same job as {@link Path#toRealPath}, except that: 1. It doesn't care once
-   * the resolved target is outside of projectFileSystem. 2. The final target need not exist. We'll
+   * the resolved target is outside of known cell roots. 2. The final target need not exist. We'll
    * resolve the links as far as we can.
    */
   private Path findSafeRealPath(Path symlinkPath) {
@@ -158,11 +188,12 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
           String.format("Too many levels of symbolic links in path [%s].", symlinkAbsPath));
     }
 
-    if (!projectFilesystem.getPathRelativeToProjectRoot(symlinkAbsPath).isPresent()) {
+    Optional<Path> cellRoot = getCellRootForAbsolutePath(symlinkAbsPath);
+    if (!cellRoot.isPresent()) {
       return symlinkAbsPath;
     }
 
-    int projectRootLength = projectFilesystem.getRootPath().getNameCount();
+    int projectRootLength = cellRoot.get().getNameCount();
     for (int index = projectRootLength + 1; index <= symlinkAbsPath.getNameCount(); ++index) {
 
       // Note: subpath(..) does not return a rooted path, so we need to prepend an additional '/'.
@@ -212,8 +243,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       Path symlinkSubpath = symlinkPath.getRoot().resolve(symlinkPath.subpath(0, pathEndIndex));
       Path realSubpath = findSafeRealPath(symlinkSubpath);
 
-      boolean realPathOutsideProject =
-          !projectFilesystem.getPathRelativeToProjectRoot(realSubpath).isPresent();
+      boolean realPathOutsideProject = !getCellRootForAbsolutePath(realSubpath).isPresent();
       if (realPathOutsideProject) {
         return new Pair<>(
             projectFilesystem.getPathRelativeToProjectRoot(symlinkSubpath).get(), realSubpath);
@@ -250,7 +280,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
 
     LOG.verbose("Recording path: [%s]", projectFilesystem.resolve(relPath));
 
-    boolean isRealPathInsideProject = !isExternalSymlink(relPath);
+    boolean isRealPathInsideProject = isSymlinkInternalToKnownCellRoots(relPath);
     if (isRealPathInsideProject && !hashCode.isPresent()) {
       throw new RuntimeException(
           String.format("Path [%s] is not an external symlink and HashCode was not set.", relPath));
@@ -263,11 +293,12 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     boolean isDirectory = isRealPathInsideProject && projectFilesystem.isDirectory(relPath);
 
     // Symlink handling:
-    // 1) Symlink points inside the project:
+    // 1) Symlink points inside a known cell root:
     // - We treat it like a regular file when uploading/re-materializing.
     // 2) Symlink points outside the project:
     // - We find the highest level part of the path that points outside the project and upload
-    // meta-data about this before it is re-materialized. See findExternalSymlinkRoot() for more details.
+    // meta-data about this before it is re-materialized. See findExternalSymlinkRoot() for more
+    // details.
     if (!isRealPathInsideProject && !pathIsAbsolute) {
       Pair<Path, Path> symLinkRootAndTarget =
           findExternalSymlinkRoot(projectFilesystem.resolve(relPath).toAbsolutePath());
@@ -341,7 +372,10 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
           continue;
         }
 
-        if (isExternalSymlink(relPath)) {
+        if (!isSymlinkInternalToKnownCellRoots(relPath)) {
+          LOG.info(
+              "Not recording file because it's a symlink external to known cell roots: [%s].",
+              relPath);
           record(relPath, Optional.empty(), Optional.empty(), ImmutableList.of());
           continue;
         }

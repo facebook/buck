@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -39,6 +40,7 @@ public class GoCompileStep extends ShellStep {
   private final Path output;
 
   public GoCompileStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compilerCommandPrefix,
@@ -51,7 +53,7 @@ public class GoCompileStep extends ShellStep {
       boolean allowExternalReferences,
       GoPlatform platform,
       Path output) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;

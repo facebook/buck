@@ -63,9 +63,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -73,6 +71,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -729,10 +728,9 @@ public class IjModuleGraphTest {
     return FluentIterable.from(graph.getNodes())
         .filter(type)
         .firstMatch(
-            (Predicate<IjProjectElement>)
-                input ->
-                    FluentIterable.from(input.getTargets())
-                        .anyMatch(input1 -> input1.equals(target.getBuildTarget())))
+            input ->
+                FluentIterable.from(input.getTargets())
+                    .anyMatch(input1 -> input1.equals(target.getBuildTarget())))
         .get();
   }
 

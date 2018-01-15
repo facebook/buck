@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -34,7 +34,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -60,7 +59,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
   /** Tests whether pseudo rule cache detection is working properly. */
   @Test
-  public void testDxPseudoRuleCaching() throws InterruptedException, IOException {
+  public void testDxPseudoRuleCaching() throws Exception {
     File testIn = new File(tmpDir.getRoot(), "testIn");
     try (ZipOutputStream zipOut =
         new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(testIn)))) {
@@ -78,6 +77,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
     DxPseudoRule rule =
         new DxPseudoRule(
+            BuildTargetFactory.newInstance("//dummy:target"),
+            TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
             FakeBuildContext.NOOP_CONTEXT,
             filesystem,
             ImmutableMap.of(testIn.toPath(), actualHashCode),
@@ -86,7 +87,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
             outputHashFile,
             EnumSet.of(DxStep.Option.NO_OPTIMIZE),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            DxStep.DX);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -99,8 +101,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithXzOutput()
-      throws InterruptedException, IOException {
+  public void testCreateDxStepForDxPseudoRuleWithXzOutput() throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -110,6 +111,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -117,7 +120,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -137,14 +141,13 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps.build(),
-        createMockedExecutionContext());
+        TestExecutionContext.newBuilder().build());
 
     verifyAll();
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression()
-      throws InterruptedException, IOException {
+  public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression() throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -153,6 +156,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -160,7 +165,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.of(9),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -180,14 +186,13 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -9 --check=crc32 classes.dex.jar"),
         steps.build(),
-        createMockedExecutionContext());
+        TestExecutionContext.newBuilder().build());
 
     verifyAll();
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexOutput()
-      throws InterruptedException, IOException {
+  public void testCreateDxStepForDxPseudoRuleWithDexOutput() throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -196,6 +201,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -203,7 +210,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     assertEquals(
         Joiner.on(" ")
@@ -216,13 +224,13 @@ public class SmartDexingStepTest extends EasyMockSupport {
                 filesystem.resolve("classes.dex"),
                 filesystem.resolve("foo.dex.jar"),
                 filesystem.resolve("bar.dex.jar") + ")"),
-        Iterables.getOnlyElement(steps.build()).getDescription(createMockedExecutionContext()));
+        Iterables.getOnlyElement(steps.build())
+            .getDescription(TestExecutionContext.newBuilder().build()));
     verifyAll();
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput()
-      throws InterruptedException, IOException {
+  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ImmutableList<Path> filesToDex =
@@ -231,6 +239,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -238,7 +248,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
 
     MoreAsserts.assertSteps(
         "Wrong steps",
@@ -256,12 +267,12 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "zip-scrub " + filesystem.resolve("classes.dex.jar")),
         steps.build(),
-        createMockedExecutionContext());
+        TestExecutionContext.newBuilder().build());
     verifyAll();
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() throws InterruptedException {
+  public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() throws Exception {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
@@ -270,6 +281,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
         new ImmutableList.Builder<>(),
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -277,16 +290,15 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputPath,
         dxOptions,
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        DxStep.DX);
   }
 
-  private ExecutionContext createMockedExecutionContext() throws IOException {
+  private AndroidPlatformTarget createAndroidPlatformTarget() throws IOException {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
     replayAll();
 
-    return TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
+    return androidPlatformTarget;
   }
 }

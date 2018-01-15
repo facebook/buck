@@ -38,10 +38,8 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -112,7 +110,7 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
@@ -191,7 +189,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path headerSymlinkTreeFolder =
@@ -271,7 +269,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
@@ -576,7 +574,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
     assertEquals(
-        Joiner.on(' ').join(Iterables.transform(command, Escaper.SHELL_ESCAPER)),
+        command.stream().map(Escaper.SHELL_ESCAPER).collect(Collectors.joining(" ")),
         entry.getCommand());
   }
 

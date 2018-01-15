@@ -25,9 +25,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -92,25 +91,11 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
         .results
         .stream()
         .map(QueryTarget::toString)
-        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
   boolean detectsTargetGraphOnlyDeps() {
     return true;
-  }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      QueryTargetsMacro input,
-      QueryResults precomputedQueryResults)
-      throws MacroException {
-    // The query_targets macro is only used for inspecting the build graph or creating
-    // log files, or buck invocations, so it should not depend on actual builds of the referenced
-    // rules
-    return ImmutableList.of();
   }
 }

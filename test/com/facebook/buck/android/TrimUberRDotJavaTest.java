@@ -29,7 +29,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -43,6 +42,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -116,18 +116,17 @@ public class TrimUberRDotJavaTest {
         new DexProducedFromJavaLibrary(
             dexTarget,
             filesystem,
+            TestAndroidLegacyToolchainFactory.create(),
             TestBuildRuleParams.create(),
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(
-            dexProducedFromJavaLibrary.initializeFromDisk(
-                new FakeOnDiskBuildInfo()
-                    .putMetadata(DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "1")
-                    .putMetadata(DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES, "{}")
-                    .putMetadata(
-                        DexProducedFromJavaLibrary.REFERENCED_RESOURCES,
-                        ImmutableList.of("com.test.my_first_resource"))));
+            new DexProducedFromJavaLibrary.BuildOutput(
+                1,
+                ImmutableSortedMap.of(),
+                Optional.of(ImmutableList.of("com.test.my_first_resource"))));
+
     resolver.addToIndex(dexProducedFromJavaLibrary);
 
     BuildTarget trimTarget = BuildTargetFactory.newInstance("//:trim");

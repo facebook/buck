@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.ForkJoinPool;
@@ -53,26 +54,47 @@ public class VersionedTargetGraphCache {
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       ForkJoinPool pool,
-      TypeCoercerFactory typeCoercerFactory)
+      TypeCoercerFactory typeCoercerFactory,
+      CacheStatsTracker statsTracker)
       throws VersionException, InterruptedException {
+
+    CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
 
     // If new inputs match old ones, we can used the cached graph, if present.
     VersionedTargetGraphInputs newInputs =
         VersionedTargetGraphInputs.of(targetGraphAndBuildTargets, versionUniverses);
     if (cachedVersionedTargetGraph != null
         && newInputs.equals(cachedVersionedTargetGraph.getInputs())) {
-      return VersionedTargetGraphCacheResult.of(
-          ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphAndBuildTargets());
+
+      VersionedTargetGraphCacheResult result =
+          VersionedTargetGraphCacheResult.of(
+              ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphAndBuildTargets());
+
+      request.recordHit();
+
+      return result;
     }
 
     // Build and cache new versioned target graph.
-    ResultType resultType =
-        cachedVersionedTargetGraph == null ? ResultType.EMPTY : ResultType.MISMATCH;
+    ResultType resultType;
+    if (cachedVersionedTargetGraph == null) {
+      request.recordMiss();
+      resultType = ResultType.EMPTY;
+    } else {
+      request.recordMissMatch();
+      resultType = ResultType.MISMATCH;
+    }
+
     TargetGraphAndBuildTargets newVersionedTargetGraph =
         createdVersionedTargetGraph(
             targetGraphAndBuildTargets, versionUniverses, pool, typeCoercerFactory);
     cachedVersionedTargetGraph = CachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
-    return VersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
+    VersionedTargetGraphCacheResult result =
+        VersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
+
+    request.recordLoadSuccess();
+
+    return result;
   }
 
   /**
@@ -84,7 +106,8 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
-      ForkJoinPool pool)
+      ForkJoinPool pool,
+      CacheStatsTracker statsTracker)
       throws VersionException, InterruptedException {
 
     VersionedTargetGraphEvent.Started started = VersionedTargetGraphEvent.started();
@@ -92,7 +115,7 @@ public class VersionedTargetGraphCache {
     try {
       VersionedTargetGraphCacheResult result =
           getVersionedTargetGraph(
-              targetGraphAndBuildTargets, versionUniverses, pool, typeCoercerFactory);
+              targetGraphAndBuildTargets, versionUniverses, pool, typeCoercerFactory, statsTracker);
       LOG.info("versioned target graph " + result.getType().getDescription());
       eventBus.post(result.getType().getEvent());
       return result;
@@ -105,14 +128,16 @@ public class VersionedTargetGraphCache {
       BuckEventBus eventBus,
       BuckConfig buckConfig,
       TypeCoercerFactory typeCoercerFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      CacheStatsTracker statsTracker)
       throws VersionException, InterruptedException {
     return getVersionedTargetGraph(
             eventBus,
             typeCoercerFactory,
             targetGraphAndBuildTargets,
             new VersionBuckConfig(buckConfig).getVersionUniverses(),
-            new ForkJoinPool(buckConfig.getNumThreads()))
+            new ForkJoinPool(buckConfig.getNumThreads()),
+            statsTracker)
         .getTargetGraphAndBuildTargets();
   }
 

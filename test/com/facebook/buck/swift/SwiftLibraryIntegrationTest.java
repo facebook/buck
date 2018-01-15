@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.FakeCxxLibrary;
@@ -31,7 +31,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -175,7 +175,7 @@ public class SwiftLibraryIntegrationTest {
                     .getRelativePath(buildRule.getSourcePathToOutput())
                     .resolve("bar.swiftmodule"))));
 
-    Arg objArg = buildRule.getFileListLinkArg();
+    Arg objArg = buildRule.getFileListLinkArg().get(0);
     assertThat(objArg, Matchers.instanceOf(FileListableLinkerInputArg.class));
     FileListableLinkerInputArg fileListArg = (FileListableLinkerInputArg) objArg;
     ExplicitBuildTargetSourcePath fileListSourcePath =

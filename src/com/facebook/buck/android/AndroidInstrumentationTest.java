@@ -47,7 +47,6 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -76,6 +75,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
           System.getProperty(
               "buck.testrunner_classes", new File("build/testrunner/classes").getAbsolutePath()));
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
+
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   private final ImmutableSet<String> labels;
@@ -93,6 +94,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   protected AndroidInstrumentationTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       HasInstallableApk apk,
       Set<String> labels,
@@ -104,6 +106,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       PackagedResource guavaJar,
       PackagedResource toolsCommonJar) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.labels = ImmutableSet.copyOf(labels);
@@ -190,7 +193,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     steps.add(
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
-            executionContext.getPathToAdbExecutable(),
+            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
             Optional.empty(),
@@ -253,6 +256,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .build();
 
     return new InstrumentationStep(
+        getBuildTarget(),
         getProjectFilesystem(),
         javaRuntimeLauncher.getCommandPrefix(pathResolver),
         jvmArgs,
@@ -316,7 +320,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
           getBuildTarget(),
           summaries.build(),
           contacts,
-          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 
@@ -357,7 +361,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     InstrumentationStep step =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
-            executionContext.getPathToAdbExecutable(),
+            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
@@ -380,11 +384,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildTarget> builder = Stream.builder();
     builder.add(apk.getBuildTarget());
-
-    if (apk instanceof ApkGenrule) {
-      builder.add(ApkGenruleDescription.getUnderlyingApk(apk).getBuildTarget());
-    }
-
     return builder.build();
   }
 }

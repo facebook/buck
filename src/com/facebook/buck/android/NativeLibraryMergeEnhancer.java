@@ -17,9 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
@@ -40,11 +41,12 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -54,7 +56,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
@@ -113,6 +115,7 @@ class NativeLibraryMergeEnhancer {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   static NativeLibraryMergeEnhancementResult enhance(
+      CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -148,7 +151,7 @@ class NativeLibraryMergeEnhancer {
     Iterable<NativeLinkable> allLinkables =
         allModulesLinkables
             .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     final ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
     Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
@@ -192,6 +195,7 @@ class NativeLibraryMergeEnhancer {
 
     Set<MergedLibNativeLinkable> mergedLinkables =
         createLinkables(
+            cellPathResolver,
             cxxBuckConfig,
             ruleResolver,
             pathResolver,
@@ -418,6 +422,7 @@ class NativeLibraryMergeEnhancer {
 
   /** Create the final Linkables that will be passed to the later stages of graph enhancement. */
   private static Set<MergedLibNativeLinkable> createLinkables(
+      CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -451,6 +456,7 @@ class NativeLibraryMergeEnhancer {
 
       MergedLibNativeLinkable mergedLinkable =
           new MergedLibNativeLinkable(
+              cellPathResolver,
               cxxBuckConfig,
               ruleResolver,
               pathResolver,
@@ -503,7 +509,7 @@ class NativeLibraryMergeEnhancer {
         .keySet()
         .stream()
         .sorted(Comparator.comparing(MergedLibNativeLinkable::getBuildTarget))
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**
@@ -546,7 +552,7 @@ class NativeLibraryMergeEnhancer {
     }
   }
 
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   @BuckStyleImmutable
   abstract static class AbstractNativeLibraryMergeEnhancementResult {
     public abstract ImmutableMultimap<APKModule, NativeLinkable> getMergedLinkables();
@@ -575,9 +581,11 @@ class NativeLibraryMergeEnhancer {
     private final Map<NativeLinkable, MergedLibNativeLinkable> mergedDepMap;
     private final BuildTarget buildTarget;
     private final boolean canUseOriginal;
+    private final CellPathResolver cellPathResolver;
     // Note: update constructBuildTarget whenever updating new fields.
 
     MergedLibNativeLinkable(
+        CellPathResolver cellPathResolver,
         CxxBuckConfig cxxBuckConfig,
         BuildRuleResolver ruleResolver,
         SourcePathResolver pathResolver,
@@ -589,6 +597,7 @@ class NativeLibraryMergeEnhancer {
         List<MergedLibNativeLinkable> orderedExportedDeps,
         Optional<NativeLinkable> glueLinkable,
         Optional<ImmutableSortedSet<String>> symbolsToLocalize) {
+      this.cellPathResolver = cellPathResolver;
       this.cxxBuckConfig = cxxBuckConfig;
       this.ruleResolver = ruleResolver;
       this.pathResolver = pathResolver;
@@ -892,9 +901,10 @@ class NativeLibraryMergeEnhancer {
                       Optional.of(soname),
                       BuildTargets.getGenPath(
                           projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
+                      ImmutableList.of(),
                       // Android Binaries will use share deps by default.
                       Linker.LinkableDepType.SHARED,
-                      /* thinLto */ false,
+                      CxxLinkOptions.of(),
                       Iterables.concat(
                           getNativeLinkableDepsForPlatform(cxxPlatform),
                           getNativeLinkableExportedDepsForPlatform(cxxPlatform)),
@@ -905,22 +915,19 @@ class NativeLibraryMergeEnhancer {
                       getImmediateNativeLinkableInput(cxxPlatform),
                       constituents.isActuallyMerged()
                           ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
-                          : Optional.empty()));
+                          : Optional.empty(),
+                      cellPathResolver));
       return ImmutableMap.of(soname, rule.getSourcePathToOutput());
     }
   }
 
   private static class SymbolLocalizingPostprocessor implements LinkOutputPostprocessor {
-    private final ImmutableSortedSet<String> symbolsToLocalize;
+    @AddToRuleKey private final ImmutableSortedSet<String> symbolsToLocalize;
+
+    @AddToRuleKey private final String postprocessorType = "localize-dynamic-symbols";
 
     SymbolLocalizingPostprocessor(ImmutableSortedSet<String> symbolsToLocalize) {
       this.symbolsToLocalize = symbolsToLocalize;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("postprocessor.type", "localize-dynamic-symbols");
-      sink.setReflectively("symbolsToLocalize", symbolsToLocalize);
     }
 
     @Override
@@ -942,7 +949,7 @@ class NativeLibraryMergeEnhancer {
                 fixSection(elf, ".dynsym", ".dynstr");
                 fixSection(elf, ".symtab", ".strtab");
               }
-              return StepExecutionResult.SUCCESS;
+              return StepExecutionResults.SUCCESS;
             }
 
             void fixSection(Elf elf, String sectionName, String stringSectionName)

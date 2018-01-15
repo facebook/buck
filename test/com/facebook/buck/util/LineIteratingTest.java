@@ -23,12 +23,12 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Predicate;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class LineIteratingTest {
     @Override
     public boolean handleLine(CharBuffer line) {
       lines.add(line.toString());
-      return shouldContinue.apply(lines);
+      return shouldContinue.test(lines);
     }
   }
 
@@ -63,7 +63,7 @@ public class LineIteratingTest {
     public boolean handleLine(ByteBuffer line) {
       String lineString = StandardCharsets.UTF_8.decode(line).toString();
       lines.add(lineString);
-      return shouldContinue.apply(lines);
+      return shouldContinue.test(lines);
     }
   }
 

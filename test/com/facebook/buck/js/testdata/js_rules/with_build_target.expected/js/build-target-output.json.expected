@@ -1,3 +1,0 @@
-library --root @
-transform --filename buck-out/gen/external/exported.js
-var exported;

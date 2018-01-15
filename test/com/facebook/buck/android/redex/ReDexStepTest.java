@@ -18,8 +18,9 @@ package com.facebook.buck.android.redex;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.KeystoreProperties;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +39,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.easymock.EasyMock;
+import java.util.function.Supplier;
 import org.junit.Test;
 
 public class ReDexStepTest {
@@ -68,9 +68,13 @@ public class ReDexStepTest {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
+    Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
+
     ReDexStep redex =
         new ReDexStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             workingDirectory,
+            AndroidSdkLocation.of(sdkDirectory),
             redexBinaryArgs,
             redexEnvironmentVariables,
             inputApkPath,
@@ -85,20 +89,10 @@ public class ReDexStepTest {
 
     assertEquals("redex", redex.getShortName());
 
-    AndroidPlatformTarget androidPlatform = EasyMock.createMock(AndroidPlatformTarget.class);
-    Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
-    EasyMock.expect(androidPlatform.checkSdkDirectory()).andReturn(sdkDirectory);
-    EasyMock.replay(androidPlatform);
-
-    ExecutionContext context =
-        TestExecutionContext.newBuilder()
-            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatform))
-            .build();
+    ExecutionContext context = TestExecutionContext.newBuilder().build();
     assertEquals(
         ImmutableMap.of("ANDROID_SDK", sdkDirectory.toString(), "REDEX_DEBUG", "1"),
         redex.getEnvironmentVariables(context));
-
-    EasyMock.verify(androidPlatform);
 
     assertEquals(
         ImmutableList.of(

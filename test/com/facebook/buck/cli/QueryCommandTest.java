@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -33,6 +31,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +71,6 @@ public class QueryCommandTest {
         TestProjectFilesystems.createProjectFilesystem(
             workspace.getDestPath().toRealPath().normalize());
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
@@ -82,7 +80,6 @@ public class QueryCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             console,
             cell,
-            androidDirectoryResolver,
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),
@@ -100,6 +97,43 @@ public class QueryCommandTest {
     EasyMock.replay(env);
     queryCommand.formatAndRunQuery(params, env);
     EasyMock.verify(env);
+  }
+
+  @Test
+  public void testRunMultiQueryWithSingleSetUsedMultipleTimes() throws Exception {
+    queryCommand.setArguments(
+        ImmutableList.of("deps(%Ss) union testsof(%Ss)", "//foo:libfoo", "//foo:libfootoo"));
+    EasyMock.expect(
+            env.evaluateQuery(
+                "deps(set('//foo:libfoo' '//foo:libfootoo')) union testsof(set('//foo:libfoo' '//foo:libfootoo'))"))
+        .andReturn(ImmutableSet.of());
+    EasyMock.replay(env);
+    queryCommand.formatAndRunQuery(params, env);
+    EasyMock.verify(env);
+  }
+
+  @Test
+  public void testRunMultiQueryWithMultipleDifferentSets() throws Exception {
+    queryCommand.setArguments(
+        ImmutableList.of(
+            "deps(%Ss) union testsof(%Ss)",
+            "//foo:libfoo", "//foo:libfootoo", "--", "//bar:libbar", "//bar:libbaz"));
+    EasyMock.expect(
+            env.evaluateQuery(
+                "deps(set('//foo:libfoo' '//foo:libfootoo')) union testsof(set('//bar:libbar' '//bar:libbaz'))"))
+        .andReturn(ImmutableSet.of());
+    EasyMock.replay(env);
+    queryCommand.formatAndRunQuery(params, env);
+    EasyMock.verify(env);
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testRunMultiQueryWithIncorrectNumberOfSets() throws Exception {
+    queryCommand.setArguments(
+        ImmutableList.of(
+            "deps(%Ss) union testsof(%Ss) union %Ss",
+            "//foo:libfoo", "//foo:libfootoo", "--", "//bar:libbar", "//bar:libbaz"));
+    queryCommand.formatAndRunQuery(params, env);
   }
 
   @Test

@@ -1,124 +1,148 @@
 android_build_config(
-  name = 'build_config',
-  package = 'exotest',
-  values = [],
+    name = "build_config",
+    package = "exotest",
+    values = [],
 )
 
 android_binary(
-  name = 'exotest',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':debug_keystore',
-  use_split_dex = True,
-  exopackage_modes = [
-    'native_library',
-    'secondary_dex',
-    'resources',
-  ],
-  primary_dex_patterns = [
-    '^exotest/AppShell^',
-    '^exotest/BuildConfig^',
-    '^com/facebook/buck/android/support/exopackage/'
-  ],
-  deps = [
-    ':main-lib',
-    ':app-lib',
-  ],
+    name = "exotest",
+    application_module_configs = {
+        "mod": [
+            ":module-lib",
+        ],
+    },
+    exopackage_modes = [
+        "native_library",
+        "secondary_dex",
+        "resources",
+        "modules",
+    ],
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "^exotest/AppShell^",
+        "^exotest/BuildConfig^",
+        "^com/facebook/buck/android/support/exopackage/",
+    ],
+    use_split_dex = True,
+    deps = [
+        ":app-lib",
+        ":main-lib",
+        ":module-lib",
+    ],
 )
 
 android_binary(
-  name = 'exotest-noexo',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':debug_keystore',
-  deps = [
-    ':main-lib',
-    ':app-lib',
-  ],
+    name = "exotest-noexo",
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        ":app-lib",
+        ":main-lib",
+        ":module-lib",
+    ],
 )
 
 android_library(
-  name = 'app-lib',
-  srcs = ['AppShell.java'],
-  deps = [
-    ':buck-android-support',
-    ':build_config',
-    ':res-real-name',
-  ],
+    name = "app-lib",
+    srcs = ["AppShell.java"],
+    deps = [
+        ":buck-android-support",
+        ":build_config",
+        ":res-real-name",
+    ],
 )
 
 android_library(
-  name = 'main-lib',
-  srcs = [
-    'LogActivity.java',
-    '//:value',
-  ],
-  deps = [
-    '//jni/one:one',
-    '//jni/two:two',
-    ':buck-android-support',
-    ':extra_asset',
-    ':res',
-  ]
+    name = "main-lib",
+    srcs = [
+        "LogActivity.java",
+        "//:value",
+    ],
+    deps = [
+        ":buck-android-support",
+        ":extra_asset",
+        ":res",
+        "//jni/one:one",
+        "//jni/two:two",
+    ],
+)
+
+android_library(
+    name = "module-lib",
+    srcs = [
+        "//:module",
+    ],
 )
 
 genrule(
-  name = 'value',
-  out = 'Value.java',
-  srcs = [
-    'value.txt',
-    'Value.java.template',
-  ],
-  cmd = 'VALUE=`cat value.txt` ; sed s/HERE/$VALUE/ < Value.java.template > $OUT'
+    name = "value",
+    srcs = [
+        "value.txt",
+        "Value.java.template",
+    ],
+    out = "Value.java",
+    cmd = "VALUE=`cat value.txt` ; sed s/HERE/$VALUE/ < Value.java.template > $OUT",
+)
+
+genrule(
+    name = "module",
+    srcs = [
+        "module_value.txt",
+        "Module.java.template",
+    ],
+    out = "Module.java",
+    cmd = "VALUE=`cat module_value.txt` ; sed s/HERE/$VALUE/ < Module.java.template > $OUT",
 )
 
 android_resource(
-  name = 'res-real-name',
-  res = subdir_glob([('res-real-name', '**')]),
-  package = 'buck.exotest',
-  deps = [
-   ':res',
-  ],
-)
-
-
-android_resource(
-  name = 'res',
-  res = subdir_glob([('res', '**')]),
-  assets = subdir_glob([('assets', '**')]),
-  package = 'buck.exotest',
-  deps = [
-   ':res-name-and-icon',
-  ],
+    name = "res-real-name",
+    package = "buck.exotest",
+    res = subdir_glob([("res-real-name", "**")]),
+    deps = [
+        ":res",
+    ],
 )
 
 android_resource(
-  name = 'res-name-and-icon',
-  res = subdir_glob([('res-name-and-icon', '**')]),
-  package = 'buck.exotest',
-  deps = [
-    ':res-other',
-  ],
+    name = "res",
+    assets = subdir_glob([("assets", "**")]),
+    package = "buck.exotest",
+    res = subdir_glob([("res", "**")]),
+    deps = [
+        ":res-name-and-icon",
+    ],
 )
 
 android_resource(
-  name = 'res-other',
-  res = subdir_glob([('res-other', '**')]),
-  package = 'buck.exotest',
+    name = "res-name-and-icon",
+    package = "buck.exotest",
+    res = subdir_glob([("res-name-and-icon", "**")]),
+    deps = [
+        ":res-other",
+    ],
 )
 
 android_resource(
-  name = 'extra_asset',
-  assets = subdir_glob([('assets2', '**')]),
-  package = 'buck.exotest',
+    name = "res-other",
+    package = "buck.exotest",
+    res = subdir_glob([("res-other", "**")]),
+)
+
+android_resource(
+    name = "extra_asset",
+    assets = subdir_glob([("assets2", "**")]),
+    package = "buck.exotest",
 )
 
 prebuilt_jar(
-  name = 'buck-android-support',
-  binary_jar = 'buck-android-support.jar',
+    name = "buck-android-support",
+    binary_jar = "buck-android-support.jar",
 )
 
 keystore(
-  name = 'debug_keystore',
-  store = 'debug.keystore',
-  properties = 'debug.keystore.properties',
-  visibility = [ 'PUBLIC' ],
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
 )

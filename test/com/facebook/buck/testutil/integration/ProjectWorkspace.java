@@ -27,10 +27,9 @@ import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.facebook.buck.cli.Main;
-import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePaths;
@@ -43,18 +42,18 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
-import com.facebook.buck.rules.CellProvider;
+import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -69,7 +68,6 @@ import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -101,6 +99,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import javax.tools.ToolProvider;
 import org.hamcrest.Matchers;
@@ -150,7 +149,7 @@ public class ProjectWorkspace {
         }
       };
 
-  private static final String TEST_CELL_LOCATION =
+  public static final String TEST_CELL_LOCATION =
       "test/com/facebook/buck/testutil/integration/testlibs";
 
   private boolean isSetUp = false;
@@ -158,6 +157,7 @@ public class ProjectWorkspace {
   private final Path templatePath;
   private final Path destPath;
   private final boolean addBuckRepoCell;
+  private final ProcessExecutor processExecutor;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
   @Nullable private Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
 
@@ -177,6 +177,7 @@ public class ProjectWorkspace {
     this.templatePath = templateDir;
     this.destPath = targetFolder;
     this.addBuckRepoCell = addBuckRepoCell;
+    this.processExecutor = new DefaultProcessExecutor(new TestConsole());
   }
 
   @VisibleForTesting
@@ -215,8 +216,10 @@ public class ProjectWorkspace {
             public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
                 throws IOException {
               // On Windows, symbolic links from git repository are checked out as normal files
-              // containing a one-line path. In order to distinguish them, paths are read and pointed
-              // files are trued to locate. Once the pointed file is found, it will be copied to target.
+              // containing a one-line path. In order to distinguish them, paths are read and
+              // pointed
+              // files are trued to locate. Once the pointed file is found, it will be copied to
+              // target.
               // On NTFS length of path must be greater than 0 and less than 4096.
               if (attrs.size() > 0 && attrs.size() <= 4096) {
                 String linkTo = new String(Files.readAllBytes(path), UTF_8);
@@ -224,7 +227,8 @@ public class ProjectWorkspace {
                 try {
                   linkToFile = templatePath.resolve(linkTo);
                 } catch (InvalidPathException e) {
-                  // Let's assume we were reading a normal text file, and not something meant to be a
+                  // Let's assume we were reading a normal text file, and not something meant to be
+                  // a
                   // link.
                   return FileVisitResult.CONTINUE;
                 }
@@ -332,6 +336,13 @@ public class ProjectWorkspace {
     return runBuckCommand(totalArgs);
   }
 
+  public ProcessResult runBuckTest(String... args) throws IOException {
+    String[] totalArgs = new String[args.length + 1];
+    totalArgs[0] = "test";
+    System.arraycopy(args, 0, totalArgs, 1, args.length);
+    return runBuckCommand(totalArgs);
+  }
+
   public ProcessResult runBuckDistBuildRun(String... args) throws IOException {
     String[] totalArgs = new String[args.length + 2];
     totalArgs[0] = "distbuild";
@@ -373,7 +384,7 @@ public class ProjectWorkspace {
         .entrySet()
         .stream()
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> getPath(entry.getValue())));
   }
 
@@ -397,7 +408,7 @@ public class ProjectWorkspace {
         .entrySet()
         .stream()
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));
   }
 
@@ -447,8 +458,7 @@ public class ProjectWorkspace {
             .setCommand(command)
             .setDirectory(destPath.toAbsolutePath())
             .build();
-    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-    return executor.launchAndExecute(params);
+    return processExecutor.launchAndExecute(params);
   }
 
   /**
@@ -562,15 +572,14 @@ public class ProjectWorkspace {
 
       Main main =
           knownBuildRuleTypesFactoryFactory == null
-              ? new Main(stdout, stderr, stdin)
-              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
-      int exitCode;
+              ? new Main(stdout, stderr, stdin, context)
+              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory, context);
+      ExitCode exitCode;
       try {
         exitCode =
             main.runMainWithExitCode(
                 new BuildId(),
                 repoRoot,
-                context,
                 sanizitedEnv,
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
@@ -578,8 +587,14 @@ public class ProjectWorkspace {
                 ImmutableList.copyOf(args));
       } catch (InterruptedException e) {
         e.printStackTrace(stderr);
-        exitCode = Main.FAIL_EXIT_CODE;
+        exitCode = ExitCode.BUILD_ERROR;
         Threads.interruptCurrentThread();
+      } catch (CommandLineException e) {
+        stderr.println(e.getMessage());
+        exitCode = ExitCode.COMMANDLINE_ERROR;
+      } catch (BuildFileParseException e) {
+        stderr.println(e.getHumanReadableErrorMessage());
+        exitCode = ExitCode.PARSE_ERROR;
       }
 
       return new ProcessResult(
@@ -750,9 +765,7 @@ public class ProjectWorkspace {
     ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;
     Config config = filesystemAndConfig.config;
 
-    TestConsole console = new TestConsole();
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
     BuckConfig buckConfig =
         new BuckConfig(
             config,
@@ -761,17 +774,16 @@ public class ProjectWorkspace {
             Platform.detect(),
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
-    return CellProvider.createForLocalBuild(
+    return CellProviderFactory.createForLocalBuild(
             filesystem,
-            Watchman.NULL_WATCHMAN,
+            WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider),
-            sdkEnvironment,
+            BuckPluginManagerFactory.createPluginManager(),
+            env,
+            processExecutor,
+            new ExecutableFinder(),
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }
@@ -784,11 +796,11 @@ public class ProjectWorkspace {
 
   /** The result of running {@code buck} from the command line. */
   public static class ProcessResult {
-    private final int exitCode;
+    private final ExitCode exitCode;
     private final String stdout;
     private final String stderr;
 
-    private ProcessResult(int exitCode, String stdout, String stderr) {
+    private ProcessResult(ExitCode exitCode, String stdout, String stderr) {
       this.exitCode = exitCode;
       this.stdout = Preconditions.checkNotNull(stdout);
       this.stderr = Preconditions.checkNotNull(stderr);
@@ -800,7 +812,7 @@ public class ProjectWorkspace {
      * <p>Currently, in practice, any time a client might want to use it, it is more appropriate to
      * use {@link #assertSuccess()} or {@link #assertFailure()} instead.
      */
-    public int getExitCode() {
+    public ExitCode getExitCode() {
       return exitCode;
     }
 
@@ -813,36 +825,37 @@ public class ProjectWorkspace {
     }
 
     public ProcessResult assertSuccess() {
-      return assertExitCode(null, 0);
+      return assertExitCode(null, ExitCode.SUCCESS);
     }
 
     public ProcessResult assertSuccess(String message) {
-      return assertExitCode(message, 0);
+      return assertExitCode(message, ExitCode.SUCCESS);
     }
 
     public ProcessResult assertFailure() {
-      return assertExitCode(null, Main.FAIL_EXIT_CODE);
+      return assertExitCode(null, ExitCode.BUILD_ERROR);
     }
 
     public ProcessResult assertTestFailure() {
-      return assertExitCode(null, TestRunning.TEST_FAILURES_EXIT_CODE);
+      return assertExitCode(null, ExitCode.TEST_ERROR);
     }
 
     public ProcessResult assertTestFailure(String message) {
-      return assertExitCode(message, TestRunning.TEST_FAILURES_EXIT_CODE);
+      return assertExitCode(message, ExitCode.TEST_ERROR);
     }
 
     public ProcessResult assertFailure(String message) {
-      return assertExitCode(message, 1);
+      return assertExitCode(message, ExitCode.BUILD_ERROR);
     }
 
-    public ProcessResult assertExitCode(@Nullable String message, int exitCode) {
+    public ProcessResult assertExitCode(@Nullable String message, ExitCode exitCode) {
       if (exitCode == getExitCode()) {
         return this;
       }
 
       String failureMessage =
-          String.format("Expected exit code %d but was %d.", exitCode, getExitCode());
+          String.format(
+              "Expected exit code %d but was %d.", exitCode.getCode(), getExitCode().getCode());
       if (message != null) {
         failureMessage = message + " " + failureMessage;
       }
@@ -856,7 +869,7 @@ public class ProjectWorkspace {
       return this;
     }
 
-    public ProcessResult assertSpecialExitCode(String message, int exitCode) {
+    public ProcessResult assertSpecialExitCode(String message, ExitCode exitCode) {
       return assertExitCode(message, exitCode);
     }
   }

@@ -6,8 +6,8 @@ android_binary(
         "PUBLIC",
     ],
     deps = [
-        "//testdata/src:src",
         "//testdata/android_res:android_res",
+        "//testdata/src:src",
     ],
 )
 

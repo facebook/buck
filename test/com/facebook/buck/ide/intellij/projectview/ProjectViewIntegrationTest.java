@@ -17,9 +17,11 @@
 package com.facebook.buck.ide.intellij.projectview;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -32,6 +34,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,11 +43,37 @@ public class ProjectViewIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private Path viewPath;
+  private ProjectWorkspace workspace;
 
   @Before
   public void before() throws IOException {
     viewPath = Files.createTempDirectory("view");
-    viewPath.toFile().deleteOnExit();
+  }
+
+  @After
+  public void after() throws IOException {
+    MoreFiles.deleteRecursivelyIfExists(viewPath);
+    viewPath = null;
+    workspace = null;
+  }
+
+  private ProcessResult runBuckProjectAndVerify(
+      String folderWithTestData, boolean doSetup, String... commandArgs)
+      throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    if (doSetup) {
+      workspace =
+          TestDataHelper.createProjectWorkspaceForScenario(
+              this, folderWithTestData, temporaryFolder);
+      workspace.setUp();
+    }
+
+    ProcessResult result =
+        workspace.runBuckCommand(Lists.asList("project", commandArgs).toArray(new String[0]));
+    result.assertSuccess("buck project should exit cleanly");
+
+    return result;
   }
 
   // region Structural tests
@@ -55,7 +84,7 @@ public class ProjectViewIntegrationTest {
     assertEquals(0, viewPath.toFile().list().length);
 
     runBuckProjectAndVerify(
-        "structuralTests", "--view", viewPath.toString(), "//testdata:testdata");
+        "structuralTests", true, "--view", viewPath.toString(), "//testdata:testdata");
 
     assertTrue(Files.exists(viewPath));
     assertTrue(viewPath.toFile().list().length > 0);
@@ -67,25 +96,10 @@ public class ProjectViewIntegrationTest {
     checkDotIdeaDirectory();
   }
 
-  private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
-      throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, folderWithTestData, temporaryFolder);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(Lists.asList("project", commandArgs).toArray(new String[0]));
-    result.assertSuccess("buck project should exit cleanly");
-
-    return result;
-  }
-
   private void checkRootDotIml() {
     Path rootDotIml = viewPath.resolve("root.iml");
     assertTrue(Files.exists(rootDotIml));
-    //TODO(shemitz) Look inside the file!
+    // TODO(shemitz) Look inside the file!
   }
 
   private void checkBuckOut() {
@@ -163,4 +177,35 @@ public class ProjectViewIntegrationTest {
   }
 
   // endregion Structural tests
+
+  // region Update tests
+
+  @Test
+  public void testRefresh() throws IOException, InterruptedException {
+    Path rootDotIml = viewPath.resolve("root.iml");
+    Path buckOut = viewPath.resolve("buck-out");
+
+    assertTrue(Files.exists(viewPath));
+    assertFalse(Files.exists(rootDotIml));
+    assertEquals(0, viewPath.toFile().list().length);
+
+    runBuckProjectAndVerify(
+        "structuralTests", true, "--view", viewPath.toString(), "//testdata:testdata");
+
+    assertTrue(Files.exists(viewPath));
+    assertTrue(Files.exists(rootDotIml));
+    assertTrue(Files.exists(buckOut));
+    assertTrue(Files.isSymbolicLink(buckOut));
+
+    runBuckProjectAndVerify(
+        "structuralTests", false, "--view", viewPath.toString(), "//testdata:testdata");
+
+    assertTrue(Files.exists(viewPath));
+    assertTrue(Files.exists(rootDotIml));
+    assertTrue(Files.exists(buckOut));
+    assertTrue(Files.isSymbolicLink(buckOut));
+  }
+
+  // endregion Update tests
+
 }

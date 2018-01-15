@@ -34,8 +34,8 @@ import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,8 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
-        new TargetGraphHashing(eventBus, targetGraph, new DummyFileHashCache(), ImmutableList.of())
+        new TargetGraphHashing(
+                eventBus, targetGraph, new DummyFileHashCache(), 1, ImmutableList.of())
             .hashTargetGraph()
             .entrySet(),
         empty());
@@ -85,11 +86,11 @@ public class TargetGraphHashingTest {
                 projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
 
     Map<BuildTarget, HashCode> baseResult =
-        new TargetGraphHashing(eventBus, targetGraph, baseCache, ImmutableList.of(node))
+        new TargetGraphHashing(eventBus, targetGraph, baseCache, 1, ImmutableList.of(node))
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> modifiedResult =
-        new TargetGraphHashing(eventBus, targetGraph, modifiedCache, ImmutableList.of(node))
+        new TargetGraphHashing(eventBus, targetGraph, modifiedCache, 1, ImmutableList.of(node))
             .hashTargetGraph();
 
     assertThat(baseResult, aMapWithSize(1));
@@ -128,16 +129,16 @@ public class TargetGraphHashingTest {
                 projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
 
     Map<BuildTarget, HashCode> resultsA =
-        new TargetGraphHashing(eventBus, targetGraphA, fileHashCache, ImmutableList.of(nodeA))
+        new TargetGraphHashing(eventBus, targetGraphA, fileHashCache, 1, ImmutableList.of(nodeA))
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> resultsB =
-        new TargetGraphHashing(eventBus, targetGraphB, fileHashCache, ImmutableList.of(nodeB))
+        new TargetGraphHashing(eventBus, targetGraphB, fileHashCache, 1, ImmutableList.of(nodeB))
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> commonResults =
         new TargetGraphHashing(
-                eventBus, commonTargetGraph, fileHashCache, ImmutableList.of(nodeA, nodeB))
+                eventBus, commonTargetGraph, fileHashCache, 1, ImmutableList.of(nodeA, nodeB))
             .hashTargetGraph();
 
     assertThat(resultsA, aMapWithSize(1));
@@ -192,6 +193,7 @@ public class TargetGraphHashingTest {
                 eventBus,
                 targetGraphA,
                 fileHashCache,
+                1,
                 ImmutableList.of(targetGraphA.get(nodeTarget)))
             .hashTargetGraph();
 
@@ -200,6 +202,7 @@ public class TargetGraphHashingTest {
                 eventBus,
                 targetGraphB,
                 fileHashCache,
+                1,
                 ImmutableList.of(targetGraphB.get(nodeTarget)))
             .hashTargetGraph();
 

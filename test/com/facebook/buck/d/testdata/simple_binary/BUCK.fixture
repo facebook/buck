@@ -1,4 +1,4 @@
 d_binary(
-  name='xyzzy',
-  srcs=['xyzzy.d'],
+    name = "xyzzy",
+    srcs = ["xyzzy.d"],
 )

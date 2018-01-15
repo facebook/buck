@@ -60,6 +60,11 @@ public class FakeBuildEngine implements BuildEngine {
   }
 
   @Override
+  public void terminateBuildWithFailure(Throwable failure) {
+    // No-op
+  }
+
+  @Override
   public int getNumRulesToBuild(Iterable<BuildRule> rule) {
     return 0;
   }

@@ -31,7 +31,6 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -39,6 +38,7 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -47,12 +47,14 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -72,9 +74,10 @@ public class IjProjectCommandHelper {
   private final Parser parser;
   private final BuckConfig buckConfig;
   private final ActionGraphCache actionGraphCache;
-  private final VersionedTargetGraphCache versionedTargetGraphCache;
+  private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
   private final IjProjectConfig projectConfig;
   private final boolean enableParserProfiling;
   private final BuckBuildRunner buckBuildRunner;
@@ -88,9 +91,10 @@ public class IjProjectCommandHelper {
       ListeningExecutorService executor,
       BuckConfig buckConfig,
       ActionGraphCache actionGraphCache,
-      VersionedTargetGraphCache versionedTargetGraphCache,
+      InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       Cell cell,
+      RuleKeyConfiguration ruleKeyConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
       BuckBuildRunner buckBuildRunner,
@@ -105,6 +109,7 @@ public class IjProjectCommandHelper {
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.projectConfig = projectConfig;
     this.enableParserProfiling = enableParserProfiling;
     this.buckBuildRunner = buckBuildRunner;
@@ -114,14 +119,15 @@ public class IjProjectCommandHelper {
     this.projectViewParameters = projectViewParameters;
   }
 
-  public int parseTargetsAndRunProjectGenerator(List<String> arguments)
+  public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
       throws IOException, InterruptedException {
     if (projectViewParameters.hasViewPath() && arguments.isEmpty()) {
-      console
-          .getStdErr()
-          .println("\nParams are view_path target(s), but you didn't supply any targets");
+      throw new CommandLineException(
+          "params are view_path target(s), but you didn't supply any targets");
+    }
 
-      return 1;
+    if (projectViewParameters.hasViewPath()) {
+      console.printErrorText("`--view` option is deprecated and will be removed soon.");
     }
 
     List<String> targets = arguments;
@@ -146,9 +152,12 @@ public class IjProjectCommandHelper {
                       PerBuildState.SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
       projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
-    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
+    } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
+    } catch (HumanReadableException e) {
+      buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.BUILD_ERROR;
     }
 
     ImmutableSet<BuildTarget> graphRoots;
@@ -158,7 +167,7 @@ public class IjProjectCommandHelper {
               .getNodes()
               .stream()
               .map(TargetNode::getBuildTarget)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
     } else {
       graphRoots = passedInTargetsSet;
     }
@@ -167,13 +176,12 @@ public class IjProjectCommandHelper {
     try {
       targetGraphAndTargets =
           createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty(), executor);
-    } catch (BuildFileParseException
-        | TargetGraph.NoSuchNodeException
-        | BuildTargetException
-        | VersionException
-        | HumanReadableException e) {
+    } catch (BuildFileParseException | TargetGraph.NoSuchNodeException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
+    } catch (HumanReadableException e) {
+      buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.BUILD_ERROR;
     }
 
     if (projectViewParameters.hasViewPath()) {
@@ -181,8 +189,12 @@ public class IjProjectCommandHelper {
         projectGraph = targetGraphAndTargets.getTargetGraph();
       }
 
-      return ProjectView.run(
-          projectViewParameters, projectGraph, passedInTargetsSet, getActionGraph(projectGraph));
+      return ExitCode.map(
+          ProjectView.run(
+              projectViewParameters,
+              projectGraph,
+              passedInTargetsSet,
+              getActionGraph(projectGraph)));
     }
 
     if (projectGeneratorParameters.isDryRun()) {
@@ -190,14 +202,15 @@ public class IjProjectCommandHelper {
         console.getStdOut().println(targetNode.toString());
       }
 
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     return runIntellijProjectGenerator(targetGraphAndTargets);
   }
 
   private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
-    return actionGraphCache.getActionGraph(buckEventBus, targetGraph, buckConfig);
+    return actionGraphCache.getActionGraph(
+        buckEventBus, targetGraph, buckConfig, ruleKeyConfiguration);
   }
 
   private TargetGraph getProjectGraphForIde(
@@ -222,19 +235,19 @@ public class IjProjectCommandHelper {
   }
 
   /** Run intellij specific project generation actions. */
-  private int runIntellijProjectGenerator(final TargetGraphAndTargets targetGraphAndTargets)
+  private ExitCode runIntellijProjectGenerator(final TargetGraphAndTargets targetGraphAndTargets)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> requiredBuildTargets =
         writeProjectAndGetRequiredBuildTargets(targetGraphAndTargets);
 
     if (requiredBuildTargets.isEmpty()) {
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     if (projectConfig.isSkipBuildEnabled()) {
       ConsoleEvent.severe(
           "Please remember to buck build --deep the targets you intent to work with.");
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     return projectGeneratorParameters.isProcessAnnotations()
@@ -264,7 +277,7 @@ public class IjProjectCommandHelper {
     return project.write();
   }
 
-  private int buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
+  private ExitCode buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
       TargetGraphAndTargets targetGraphAndTargets, ImmutableSet<BuildTarget> requiredBuildTargets)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> annotatedTargets =
@@ -273,8 +286,8 @@ public class IjProjectCommandHelper {
     ImmutableSet<BuildTarget> unannotatedTargets =
         Sets.difference(requiredBuildTargets, annotatedTargets).immutableCopy();
 
-    int exitCode = runBuild(unannotatedTargets);
-    if (exitCode != 0) {
+    ExitCode exitCode = runBuild(unannotatedTargets);
+    if (exitCode != ExitCode.SUCCESS) {
       addBuildFailureError();
     }
 
@@ -282,15 +295,16 @@ public class IjProjectCommandHelper {
       return exitCode;
     }
 
-    int annotationExitCode = buckBuildRunner.runBuild(annotatedTargets, true);
-    if (exitCode == 0 && annotationExitCode != 0) {
+    ExitCode annotationExitCode = buckBuildRunner.runBuild(annotatedTargets, true);
+    if (exitCode == ExitCode.SUCCESS && annotationExitCode != ExitCode.SUCCESS) {
       addBuildFailureError();
     }
 
-    return exitCode == 0 ? annotationExitCode : exitCode;
+    return exitCode == ExitCode.SUCCESS ? annotationExitCode : exitCode;
   }
 
-  private int runBuild(ImmutableSet<BuildTarget> targets) throws IOException, InterruptedException {
+  private ExitCode runBuild(ImmutableSet<BuildTarget> targets)
+      throws IOException, InterruptedException {
     return buckBuildRunner.runBuild(targets, false);
   }
 
@@ -303,7 +317,7 @@ public class IjProjectCommandHelper {
               TargetNode<?, ?> targetNode = targetGraph.get(input);
               return targetNode != null && isTargetWithAnnotations(targetNode);
             })
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   private void addBuildFailureError() {

@@ -46,6 +46,14 @@ abstract class AbstractDistBuildClientStats {
 
   abstract Optional<Long> localGraphConstructionDurationMs();
 
+  abstract Optional<Long> localFileHashComputationDurationMs();
+
+  abstract Optional<Long> localTargetGraphSerializationDurationMs();
+
+  abstract Optional<Long> localUploadFromDirCacheDurationMs();
+
+  abstract Optional<Long> missingRulesUploadedFromDirCacheCount();
+
   abstract Optional<Long> performDistributedBuildDurationMs();
 
   abstract Optional<Long> createDistributedBuildDurationMs();

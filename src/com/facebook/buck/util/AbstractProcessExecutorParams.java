@@ -24,7 +24,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Value type passed to {@link ProcessExecutor} to launch a process. */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractProcessExecutorParams {
 

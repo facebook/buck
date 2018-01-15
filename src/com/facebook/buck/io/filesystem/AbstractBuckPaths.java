@@ -21,7 +21,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractBuckPaths {
 
@@ -115,5 +115,10 @@ abstract class AbstractBuckPaths {
   @Value.Derived
   public Path getLastOutputDir() {
     return getConfiguredBuckOut().resolve("last");
+  }
+
+  @Value.Derived
+  public Path getEmbeddedCellsBuckOutBaseDir() {
+    return getBuckOut().resolve("cells");
   }
 }

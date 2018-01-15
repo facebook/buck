@@ -39,7 +39,7 @@ class OmnibusNode implements NativeLinkable {
       String target,
       Iterable<? extends NativeLinkable> deps,
       Iterable<? extends NativeLinkable> exportedDeps,
-      Linkage linkage) {
+      NativeLinkable.Linkage linkage) {
     this.target = BuildTargetFactory.newInstance(target);
     this.deps = deps;
     this.exportedDeps = exportedDeps;
@@ -81,12 +81,12 @@ class OmnibusNode implements NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions) {
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
     return NativeLinkableInput.builder().addArgs(StringArg.of(getBuildTarget().toString())).build();
   }
 
   @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return linkage;
   }
 

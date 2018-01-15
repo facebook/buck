@@ -57,6 +57,13 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   }
 
   @Override
+  public void complete() {
+    asType();
+    getSuperclass();
+    getInterfaces();
+  }
+
+  @Override
   TreePath getTreePath() {
     return Preconditions.checkNotNull(super.getTreePath());
   }
@@ -74,7 +81,9 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   @Override
   public void addEnclosedElement(Element element) {
     if (!(element instanceof TreeBackedElement)) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          String.format(
+              "A type named %s does not exist. Make sure it is a canonical reference.", element));
     }
     super.addEnclosedElement(element);
   }

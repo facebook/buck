@@ -17,10 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -45,20 +43,12 @@ abstract class AbstractVersionedTool implements Tool {
   protected abstract ImmutableList<String> getExtraArgs();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract String getName();
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract String getVersion();
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableSortedSet.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
-  }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
@@ -68,10 +58,5 @@ abstract class AbstractVersionedTool implements Tool {
   @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     return ImmutableMap.of();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("name", getName()).setReflectively("version", getVersion());
   }
 }

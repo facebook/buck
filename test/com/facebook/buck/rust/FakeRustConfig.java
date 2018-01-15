@@ -20,22 +20,28 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
 
 public class FakeRustConfig extends RustBuckConfig {
-
+  public static final ProjectFilesystem filesystem = new FakeProjectFilesystem();
   public static final FakeRustConfig FAKE_RUST_CONFIG =
       new FakeRustConfig()
-          .setCompiler(new ConstantToolProvider(new HashedFileTool(Paths.get("/bin/rustc"))))
+          .setCompiler(
+              new ConstantToolProvider(
+                  new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/bin/rustc")))))
           .setLinker(
               new DefaultLinkerProvider(
                   LinkerProvider.Type.GNU,
-                  new ConstantToolProvider(new HashedFileTool(Paths.get("/bin/rustc")))));
+                  new ConstantToolProvider(
+                      new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/bin/rustc"))))));
 
   private Optional<ToolProvider> compiler = Optional.empty();
   private Optional<ImmutableList<String>> rustcFlags = Optional.empty();

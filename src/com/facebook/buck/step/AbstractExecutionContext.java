@@ -16,7 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -37,8 +36,8 @@ import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
@@ -50,7 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractExecutionContext implements Closeable {
 
@@ -97,15 +96,6 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter
   abstract ProjectFilesystemFactory getProjectFilesystemFactory();
-
-  /**
-   * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to
-   * specify one, an exception will be thrown.
-   */
-  @Value.Default
-  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
-    return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
-  }
 
   @Value.Default
   public long getDefaultTestTimeoutMillis() {
@@ -186,26 +176,6 @@ abstract class AbstractExecutionContext implements Closeable {
     return getConsole().getAnsi();
   }
 
-  /**
-   * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a {@link
-   * RuntimeException}. Use this when your logic requires the user to specify the location of an
-   * Android SDK. A user who is building a "pure Java" (i.e., not Android) project using Buck should
-   * never have to exercise this code path.
-   *
-   * <p>If the location of an Android SDK is optional, then use {@link
-   * #getAndroidPlatformTargetSupplier()}.
-   *
-   * @throws RuntimeException if no AndroidPlatformTarget is available
-   */
-  @Value.Lazy
-  public AndroidPlatformTarget getAndroidPlatformTarget() {
-    return getAndroidPlatformTargetSupplier().get();
-  }
-
-  public String getPathToAdbExecutable() {
-    return getAndroidPlatformTarget().getAdbExecutable().toString();
-  }
-
   public void logError(Throwable error, String msg, Object... formatArgs) {
     getBuckEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
@@ -223,24 +193,29 @@ abstract class AbstractExecutionContext implements Closeable {
             newStderr,
             this.getConsole().getAnsi());
 
+    // This should replace (or otherwise retain) all of the closeable parts of the context.
     return ExecutionContext.builder()
         .from(this)
         .setConsole(console)
         .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
         .setClassLoaderCache(getClassLoaderCache().addRef())
+        .setAndroidDevicesHelper(Optional.empty())
         .setWorkerProcessPools(new ConcurrentHashMap<String, WorkerProcessPool>())
         .build();
   }
 
   @Override
   public void close() throws IOException {
-    getClassLoaderCache().close();
-    try {
+    // Using a Closer makes it easy to ensure that exceptions from one of the closeables don't
+    // cancel the others.
+    try (Closer closer = Closer.create()) {
+      closer.register(getClassLoaderCache()::close);
+      getAndroidDevicesHelper().ifPresent(closer::register);
+      // The closer closes in reverse order, so do the clear first.
+      closer.register(getWorkerProcessPools()::clear);
       for (WorkerProcessPool pool : getWorkerProcessPools().values()) {
-        pool.close();
+        closer.register(pool);
       }
-    } finally {
-      getWorkerProcessPools().clear();
     }
   }
 }

@@ -22,9 +22,12 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleScheduleInfo;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
@@ -37,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** Contains platform independent settings for C/C++ rules. */
@@ -110,6 +114,15 @@ public class CxxBuckConfig {
     return delegate.getPath(cxxSection, name);
   }
 
+  @Nullable
+  public PathSourcePath getSourcePath(Path path) {
+    return delegate.getPathSourcePath(path);
+  }
+
+  public Optional<SourcePath> getSourcePath(String name) {
+    return delegate.getSourcePath(cxxSection, name);
+  }
+
   public Optional<String> getDefaultPlatform() {
     return delegate.getValue(cxxSection, "default_platform");
   }
@@ -178,7 +191,7 @@ public class CxxBuckConfig {
       return Optional.of(
           CxxToolProviderParams.builder()
               .setSource(source)
-              .setPath(delegate.getRequiredPath(cxxSection, field))
+              .setPath(delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, field)))
               .setType(type)
               .build());
     }
@@ -247,6 +260,12 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, "pch_enabled", true);
   }
 
+  public PchUnavailableMode getPchUnavailableMode() {
+    return delegate
+        .getEnum(cxxSection, "pch_unavailable", PchUnavailableMode.class)
+        .orElse(PchUnavailableMode.ERROR);
+  }
+
   public boolean sandboxSources() {
     return delegate.getBooleanValue(cxxSection, "sandbox_sources", false);
   }
@@ -307,6 +326,19 @@ public class CxxBuckConfig {
         cxxSection, "enable_deprecated_prebuilt_cxx_library_api", false);
   }
 
+  /** @return the list of flavors that buck will consider valid when building the target graph. */
+  public ImmutableSet<Flavor> getDeclaredPlatforms() {
+    return delegate
+        .getListWithoutComments(cxxSection, "declared_platforms")
+        .stream()
+        .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractCxxToolProviderParams {
@@ -315,7 +347,7 @@ public class CxxBuckConfig {
 
     public abstract Optional<BuildTarget> getBuildTarget();
 
-    public abstract Optional<Path> getPath();
+    public abstract Optional<PathSourcePath> getPath();
 
     public abstract Optional<CxxToolProvider.Type> getType();
 

@@ -1,4 +1,4 @@
 cxx_library(
-    name='lib2',
-    srcs=['lib2.c'],
+    name = "lib2",
+    srcs = ["lib2.c"],
 )

@@ -26,8 +26,9 @@ import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
 import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -47,11 +48,13 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -132,6 +135,9 @@ public class ProjectView {
 
   private final String repository;
 
+  private final Path configuredBuckOut;
+  private final Path configuredBuckOutGen;
+
   private ProjectView(
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
@@ -161,6 +167,17 @@ public class ProjectView {
         getIntellijSectionValue(OUTPUT_FONTS_FOLDER_KEY, OUTPUT_FONTS_FOLDER_DEFAULT);
     OUTPUT_RESOURCE_FOLDER =
         getIntellijSectionValue(OUTPUT_RESOURCE_FOLDER_KEY, OUTPUT_RESOURCE_FOLDER_DEFAULT);
+
+    BuildRule buildRule = Iterables.getFirst(actionGraph.getActionGraph().getNodes(), null);
+    if (buildRule == null) {
+      // If somehow there are no rules, we'll just use the default paths
+      configuredBuckOut = Paths.get(BUCK_OUT);
+      configuredBuckOutGen = configuredBuckOut.resolve("gen");
+    } else {
+      BuckPaths buckPaths = buildRule.getProjectFilesystem().getBuckPaths();
+      configuredBuckOut = buckPaths.getBuckOut();
+      configuredBuckOutGen = buckPaths.getGenDir();
+    }
   }
 
   private int run() {
@@ -186,8 +203,23 @@ public class ProjectView {
     buildAllDirectoriesAndSymlinks();
 
     stderr("\nSuccess.\n");
+    showAnyWarnings();
 
     return 0;
+  }
+
+  private void showAnyWarnings() {
+    int warnings = nameCollisions.size(); // We don't count "Can't handle" messages as warnings
+    if (warnings == 0) {
+      return;
+    }
+
+    String pluralMarker = warnings == 1 ? "" : "s";
+    stderr(
+        "%,d warning%s.%s\n",
+        warnings,
+        pluralMarker,
+        verbose() ? "" : String.format(" (Use -v 2 to see the warning message%s.)", pluralMarker));
   }
 
   // region getTestTargets
@@ -224,13 +256,18 @@ public class ProjectView {
 
     return inputs
         .stream()
-        //ignore non-english strings
-        .filter(input -> !(input.contains("/res/values-") && input.endsWith("strings.xml")))
+        // Ignore non-english strings, and localized /res/raw files
+        .filter(
+            input ->
+                !((input.contains("/res/values-") && input.endsWith("strings.xml"))
+                    || input.contains("/res/raw-")))
         .collect(Collectors.toList());
   }
 
   private List<String> pruneInputs(Collection<String> allInputs) {
-    Pattern resource = Pattern.compile("/res/(?!(?:values(?:-[^/]+)?)/)");
+    // We'll use this to group all the resources that are alternative versions of the same content,
+    // like drawables of different resolutions
+    Pattern resource = Pattern.compile("/res/(?!(?:values(?:-[^/]+)?|raw)/)");
 
     List<String> result = new ArrayList<>();
     Map<String, List<String>> resources = new HashMap<>();
@@ -317,7 +354,7 @@ public class ProjectView {
       return;
     }
 
-    if (input.contains(".") && verbosity.compareTo(Verbosity.STANDARD_INFORMATION) > 0) {
+    if (input.contains(".") && veryVerbose()) {
       stderr("Can't handle %s\n", input);
     }
   }
@@ -531,18 +568,21 @@ public class ProjectView {
 
   // region .idea folder
 
+  private static final String BIN = "bin";
   private static final String BUCK_OUT = "buck-out";
   private static final String COMPONENT = "component";
   private static final String CONTENT = "content";
   private static final String EXCLUDE_FOLDER = "excludeFolder";
   private static final String IS_TEST_SOURCE = "isTestSource";
   private static final String LIBRARY = "library";
+  private static final String LOG = "log";
   private static final String MODULES = "modules";
   private static final String NAME = "name";
   private static final String OPTION = "option";
   private static final String ORDER_ENTRY = "orderEntry";
   private static final String ROOT_IML = SharedConstants.ROOT_MODULE_NAME + ".iml";
   private static final String SOURCE_FOLDER = "sourceFolder";
+  private static final String TRASH = ".trash";
   private static final String TYPE = "type";
   private static final String URL = "url";
   private static final String VALUE = "value";
@@ -578,7 +618,7 @@ public class ProjectView {
     try (Writer writer = new FileWriter(filename)) {
       outputter.output(document, writer);
     } catch (IOException e) {
-      e.printStackTrace();
+      stderr("%s exception writing %s\n", e.getClass().getSimpleName(), filename);
     }
   }
 
@@ -831,8 +871,9 @@ public class ProjectView {
 
   private void writeRootDotIml(
       List<String> sourceFiles, Set<String> roots, List<String> libraries) {
-    String buckOut = fileJoin(viewPath, BUCK_OUT);
-    symlink(fileJoin(repository, BUCK_OUT), buckOut);
+    final String configuredBuckOutAsString = configuredBuckOut.toString();
+    String buckOut = fileJoin(viewPath, configuredBuckOutAsString);
+    symlink(fileJoin(repository, configuredBuckOutAsString), buckOut);
 
     String apkPath = null;
     Map<BuildTarget, String> outputs = getOutputs();
@@ -859,7 +900,7 @@ public class ProjectView {
 
     Element configuration = addElement(facet, "configuration");
 
-    String genFolder = fileJoin(File.separator, BUCK_OUT, "gen");
+    String genFolder = fileJoin(File.separator, configuredBuckOutGen.toString());
     addElement(
         configuration,
         OPTION,
@@ -974,16 +1015,16 @@ public class ProjectView {
   }
 
   private Set<String> getExcludedFolders(Set<String> sourceFolders, Set<String> roots) {
-    Set<String> rootFolders = allFoldersUnder(roots);
+    Set<String> candidates = allFoldersUnder(roots);
 
     // Remove any folder that's explicitly a source folder
-    rootFolders.removeAll(sourceFolders);
+    candidates.removeAll(sourceFolders);
 
     // Remove any folder that's the parent of a source folder. (IntelliJ can handle a sourceFolder
     // under an excludeFolder; Android Studio can not.) This is a quadratic operation, but in
     // practice only adds a couple of seconds on a large project
-    rootFolders =
-        rootFolders
+    Set<String> excludes =
+        candidates
             .stream()
             .filter(
                 root -> {
@@ -992,7 +1033,14 @@ public class ProjectView {
                 })
             .collect(Collectors.toSet());
 
-    return rootFolders;
+    // Add buck-out directories besides gen and annotation
+    // FIXME(shemitz) This is too hard-coded: This really should get the 'non-excludes' from
+    // pruneListOfAnnotationAndGeneratedFolders(), and look at the actual directories under buck-out
+    excludes.add(fileJoin(BUCK_OUT, BIN));
+    excludes.add(fileJoin(BUCK_OUT, LOG));
+    excludes.add(fileJoin(BUCK_OUT, TRASH));
+
+    return excludes;
   }
 
   private static Set<String> allFoldersUnder(Set<String> roots) {
@@ -1051,7 +1099,8 @@ public class ProjectView {
     getAnnotationFolders(folders);
     getGeneratedFolders(folders);
 
-    return folders.stream().sorted().collect(Collectors.toList());
+    return pruneListOfAnnotationAndGeneratedFolders(
+        folders.stream().sorted().collect(Collectors.toList()));
   }
 
   private void getAnnotationFolders(Collection<String> folders) {
@@ -1099,6 +1148,25 @@ public class ProjectView {
         });
   }
 
+  private Collection<String> pruneListOfAnnotationAndGeneratedFolders(List<String> folders) {
+    final int buckOutNameCount = configuredBuckOut.getNameCount();
+    Set<String> prunedPaths = new HashSet<>();
+
+    for (String folder : folders) {
+      Path path = Paths.get(folder);
+      if (!path.startsWith(configuredBuckOut) || path.equals(configuredBuckOut)) {
+        // The folder is not under the configured buck-out or *is* the configured buck-out.
+        // Likely, neither will never happen, but we don't want to blow up if either does
+        prunedPaths.add(folder);
+      } else {
+        Path nextName = path.getName(buckOutNameCount);
+        prunedPaths.add(configuredBuckOut.resolve(nextName).toString());
+      }
+    }
+
+    return prunedPaths;
+  }
+
   // endregion .idea folder
 
   // region symlinks, mkdir, and other file utilities
@@ -1115,6 +1183,8 @@ public class ProjectView {
   private final Set<Path> directoriesToMake = new HashSet<>();
   /** basefile -> link */
   private final Map<Path, Path> symlinksToCreate = new HashMap<>();
+
+  private final Set<Path> nameCollisions = new HashSet<>();
 
   private void scanExistingView() {
     Path root = Paths.get(viewPath);
@@ -1157,10 +1227,12 @@ public class ProjectView {
 
   private void buildAllDirectoriesAndSymlinks() {
     Set<Path> deletedDirectories = new HashSet<>();
+    Set<Path> absoluteDirectoriesToMake =
+        directoriesToMake.stream().map(Path::toAbsolutePath).collect(Collectors.toSet());
 
     // Delete any directories that should no longer exist
     for (Path path : existingDirectories) {
-      if (!directoriesToMake.contains(path)) {
+      if (!absoluteDirectoriesToMake.contains(path)) {
         if (dryRun) {
           stderr("rm -rf %s\n", path);
         } else {
@@ -1182,8 +1254,8 @@ public class ProjectView {
               try {
                 Files.delete(linkPath);
               } catch (IOException e) {
-                if (!linkInDeletedDirectories(deletedDirectories, linkPath)) {
-                  stderr("'%s' deleting symlink %s\n", e.getMessage(), linkPath);
+                if (!linkInDeletedDirectories(deletedDirectories, linkPath.toAbsolutePath())) {
+                  stderr("%s deleting symlink %s\n", e.getClass().getSimpleName(), linkPath);
                 }
               }
             }
@@ -1290,11 +1362,77 @@ public class ProjectView {
 
     try {
       Files.createSymbolicLink(newPath, oldPath);
+    } catch (FileAlreadyExistsException e) {
+      int locationIndex = indexOf(oldPath, "assets", "raw");
+      if (locationIndex >= 0) {
+        Path tail = oldPath.subpath(locationIndex, oldPath.getNameCount());
+
+        if (nameCollisions.contains(tail)) {
+          return; // It's already been reported
+        }
+        nameCollisions.add(tail);
+
+        if (!verbose()) {
+          return; // suppress the warning
+        }
+
+        stderr(
+            "\nWarning: Name collision in the Android '%s' directory!\n",
+            oldPath.getName(locationIndex));
+        targetGraph
+            .getNodes()
+            .stream()
+            .filter(node -> node.getInputs().stream().anyMatch(input -> input.endsWith(tail)))
+            .forEach(target -> stderr("\t%s brings in %s\n", target, tail));
+        try {
+          Path linked = Files.readSymbolicLink(newPath);
+          Path shortLink =
+              linked.subpath(Paths.get(repository).getNameCount(), linked.getNameCount());
+          stderr("Your Project View includes %s\n", shortLink);
+        } catch (IOException shouldBeImpossible) {
+          stderr("\nSomehow we got %s reading an existing symlink?\n", shouldBeImpossible);
+        }
+      } else {
+        unexpectedExceptionInCreateSymbolicLink(oldPath, newPath, e);
+      }
     } catch (IOException e) {
-      stderr(
-          "createSymbolicLink(%s, %s)\n%s:\n%s\n\n",
-          oldPath, newPath, e.getClass().getSimpleName(), e.getMessage());
+      unexpectedExceptionInCreateSymbolicLink(oldPath, newPath, e);
     }
+  }
+
+  private void unexpectedExceptionInCreateSymbolicLink(Path oldPath, Path newPath, IOException e) {
+    stderr(
+        "createSymbolicLink(%s, %s)\n%s:\n%s\n\n",
+        oldPath, newPath, e.getClass().getSimpleName(), e.getMessage());
+  }
+
+  /**
+   * Returns the index of the first element of {@code components} that is contained in the {@code
+   * path}, or -1 if none are. Only makes sense if the {@code path} will contain one (or none) of
+   * the {@code components}, or perhaps if sometimes you have (say) {@code .../foo/bar...} and other
+   * times you have {@code .../bar/foo/...}
+   */
+  private static int indexOf(Path path, String... components) {
+    for (String component : components) {
+      int index = indexOf(path, component);
+      if (index >= 0) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  private static int indexOf(Path path, String component) {
+    return indexOf(path, Paths.get(component));
+  }
+
+  private static int indexOf(Path path, Path component) {
+    for (int index = 0, count = path.getNameCount(); index < count; ++index) {
+      if (component.equals(path.getName(index))) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   private void deleteAll(Path root) {
@@ -1328,6 +1466,14 @@ public class ProjectView {
 
   private void stderr(String pattern, Object... parameters) {
     stdErr.format(pattern, parameters);
+  }
+
+  private boolean verbose() {
+    return verbosity.ordinal() > Verbosity.STANDARD_INFORMATION.ordinal();
+  }
+
+  private boolean veryVerbose() {
+    return verbosity.ordinal() > Verbosity.BINARY_OUTPUTS.ordinal();
   }
 
   // endregion Console IO

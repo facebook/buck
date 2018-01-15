@@ -36,7 +36,11 @@ public interface Flavored {
    * @return Whether a {@link com.facebook.buck.rules.BuildRule} of the given {@link Flavor} can be
    *     created.
    */
-  boolean hasFlavors(ImmutableSet<Flavor> flavors);
+  default boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return flavorDomains()
+        .map(domains -> domains.stream().anyMatch(domain -> domain.containsAnyOf(flavors)))
+        .orElse(false);
+  }
 
   default Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
     return Optional.empty();

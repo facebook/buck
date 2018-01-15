@@ -1,10 +1,19 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
 standard_java_test(
-    name = "skylark",
+    name = "function",
     deps = [
+        "//src/com/facebook/buck/io/filesystem/skylark:skylark",
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/skylark/function:function",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/skylark/io/impl:impl",
+        "//src/com/facebook/buck/skylark/packages:packages",
+        "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/bazel:skylark-lang",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
 )

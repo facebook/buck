@@ -55,6 +55,24 @@ public class RetryingHttpServiceTest {
   }
 
   @Test
+  public void testRetryOnceWithRetryInterval() throws IOException {
+    EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
+        .andThrow(new IOException())
+        .once();
+    EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
+        .andReturn(null)
+        .once();
+    EasyMock.replay(mockService);
+
+    try (RetryingHttpService service = new RetryingHttpService(eventBus, mockService, 1, 1)) {
+      HttpResponse response = service.makeRequest(null, null);
+      Assert.assertNull(response);
+    }
+
+    EasyMock.verify(mockService);
+  }
+
+  @Test
   public void testAllRetriesFailed() throws IOException {
     String errorMessage = "Super cool and amazing error msg.";
     EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))

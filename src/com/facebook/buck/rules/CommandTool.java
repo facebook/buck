@@ -18,12 +18,12 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Map;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A {@link Tool} based on a list of arguments formed by {@link SourcePath}s.
@@ -38,52 +38,23 @@ import java.util.Optional;
  * }</pre>
  */
 public class CommandTool implements Tool {
-
-  private final Optional<Tool> baseTool;
-  private final ImmutableList<Arg> args;
-  private final ImmutableSortedMap<String, Arg> environment;
-  private final ImmutableSortedSet<SourcePath> extraInputs;
-  private final ImmutableSortedSet<BuildRule> extraDeps;
+  @AddToRuleKey private final Optional<Tool> baseTool;
+  @AddToRuleKey private final ImmutableList<Arg> args;
+  @AddToRuleKey private final ImmutableSortedMap<String, Arg> environment;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> extraInputs;
+  @AddToRuleKey private final ImmutableSortedSet<NonHashableSourcePathContainer> nonHashableInputs;
 
   private CommandTool(
       Optional<Tool> baseTool,
       ImmutableList<Arg> args,
       ImmutableSortedMap<String, Arg> environment,
       ImmutableSortedSet<SourcePath> extraInputs,
-      ImmutableSortedSet<BuildRule> extraDeps) {
+      ImmutableSortedSet<NonHashableSourcePathContainer> nonHashableInputs) {
     this.baseTool = baseTool;
     this.args = args;
     this.environment = environment;
     this.extraInputs = extraInputs;
-    this.extraDeps = extraDeps;
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    ImmutableSortedSet.Builder<SourcePath> inputs = ImmutableSortedSet.naturalOrder();
-    if (baseTool.isPresent()) {
-      inputs.addAll(baseTool.get().getInputs());
-    }
-    for (Arg arg : args) {
-      inputs.addAll(arg.getInputs());
-    }
-    for (Map.Entry<String, Arg> entry : environment.entrySet()) {
-      inputs.addAll(entry.getValue().getInputs());
-    }
-
-    inputs.addAll(extraInputs);
-    return inputs.build();
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    if (baseTool.isPresent()) {
-      deps.addAll(baseTool.get().getDeps(ruleFinder));
-    }
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getInputs()));
-    deps.addAll(extraDeps);
-    return deps.build();
+    this.nonHashableInputs = nonHashableInputs;
   }
 
   @Override
@@ -93,7 +64,7 @@ public class CommandTool implements Tool {
       command.addAll(baseTool.get().getCommandPrefix(resolver));
     }
     for (Arg arg : args) {
-      arg.appendToCommandLine(command, resolver);
+      arg.appendToCommandLine(command::add, resolver);
     }
     return command.build();
   }
@@ -108,14 +79,6 @@ public class CommandTool implements Tool {
     return env.build();
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("baseTool", baseTool)
-        .setReflectively("args", args)
-        .setReflectively("environment", environment)
-        .setReflectively("extraInputs", extraInputs);
-  }
-
   // Builder for a `CommandTool`.
   public static class Builder {
 
@@ -125,8 +88,7 @@ public class CommandTool implements Tool {
         ImmutableSortedMap.naturalOrder();
     private final ImmutableSortedSet.Builder<SourcePath> extraInputs =
         ImmutableSortedSet.naturalOrder();
-    private final ImmutableSortedSet.Builder<BuildRule> extraDeps =
-        ImmutableSortedSet.naturalOrder();
+    private final Stream.Builder<SourcePath> nonHashableInputs = Stream.builder();
 
     public Builder(Optional<Tool> baseTool) {
       this.baseTool = baseTool;
@@ -170,19 +132,23 @@ public class CommandTool implements Tool {
       return addInputs(ImmutableList.copyOf(inputs));
     }
 
-    /** Adds additional non-argument deps to the tool. */
-    public Builder addDeps(Iterable<? extends BuildRule> deps) {
-      extraDeps.addAll(deps);
+    public Builder addNonHashableInput(SourcePath input) {
+      nonHashableInputs.add(input);
       return this;
-    }
-
-    public Builder addDep(BuildRule... deps) {
-      return addDeps(ImmutableList.copyOf(deps));
     }
 
     public CommandTool build() {
       return new CommandTool(
-          baseTool, args.build(), environment.build(), extraInputs.build(), extraDeps.build());
+          baseTool,
+          args.build(),
+          environment.build(),
+          extraInputs.build(),
+          nonHashableInputs
+              .build()
+              .map(NonHashableSourcePathContainer::new)
+              .collect(
+                  ImmutableSortedSet.toImmutableSortedSet(
+                      Comparator.comparing(NonHashableSourcePathContainer::getSourcePath))));
     }
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
@@ -30,11 +31,12 @@ import com.sun.source.util.Trees;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
 
 /**
  * Examines the non-private interfaces of types defined in one or more {@link CompilationUnitTree}s
@@ -44,66 +46,79 @@ import javax.lang.model.util.ElementFilter;
  */
 class InterfaceScanner {
   public interface Listener {
-    void onAnnotationTypeFound(TypeElement type, TreePath path);
+    void onTypeDeclared(TypeElement type, TreePath path);
 
-    void onTypeImported(TypeElement type);
+    /**
+     * An import statement was encountered.
+     *
+     * @param isStatic true for static imports
+     * @param isStarImport true for star imports
+     * @param leafmostElementPath the path of the leafmost known element in the imported type
+     *     expression
+     * @param leafmostElement the leafmost known element in the imported type expression. For
+     *     single-type imports, this is the imported type. For the rest, this is the type or package
+     *     enclosing the imported element(s).
+     * @param memberName for named static imports, the name of the static members to import.
+     *     Otherwise null.
+     */
+    void onImport(
+        boolean isStatic,
+        boolean isStarImport,
+        TreePath leafmostElementPath,
+        QualifiedNameable leafmostElement,
+        @Nullable Name memberName);
 
-    void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement);
+    void onTypeReferenceFound(TypeElement type, TreePath path, Element referencingElement);
 
     void onConstantReferenceFound(
-        VariableElement constant, TreePath path, Element enclosingElement);
+        VariableElement constant, TreePath path, Element referencingElement);
   }
 
-  private final Listener listener;
   private final Trees trees;
 
-  public InterfaceScanner(Trees trees, Listener listener) {
+  public InterfaceScanner(Trees trees) {
     this.trees = trees;
-    this.listener = listener;
   }
 
-  public void findReferences(Iterable<? extends CompilationUnitTree> files) {
-    files.forEach(file -> findReferencesInSingleFile(file));
-  }
-
-  private void findReferencesInSingleFile(CompilationUnitTree file) {
+  public void findReferences(CompilationUnitTree file, Listener listener) {
     // Scan the non-private interface portions of the tree, and report any references to types
     // or constants that are found.
     new TreeContextScanner<Void, Void>(trees) {
+      private boolean inInitializer = false;
+
+      @Override
+      public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
+        // We change the order relative to our superclass so that the imports get scanned first
+        // (in case they are needed to resolve the package annotations), and we don't bother
+        // scanning the package name because it is not needed.
+        scan(node.getImports(), aVoid);
+        scan(node.getPackageAnnotations(), aVoid);
+        scan(node.getTypeDecls(), aVoid);
+        return null;
+      }
+
       /** Reports types that are imported via single-type imports */
       @Override
-      public Void visitImport(ImportTree node, Void aVoid) {
-        MemberSelectTree typeNameTree = (MemberSelectTree) node.getQualifiedIdentifier();
-        if (typeNameTree.getIdentifier().contentEquals("*")) {
-          // Star import; caller doesn't care
-          return null;
-        }
+      public Void visitImport(ImportTree importTree, Void aVoid) {
+        TreePath importTreePath = getCurrentPath();
+        MemberSelectTree importedExpression =
+            (MemberSelectTree) importTree.getQualifiedIdentifier();
+        TreePath importedExpressionPath = new TreePath(importTreePath, importedExpression);
+        Name simpleName = importedExpression.getIdentifier();
 
-        TreePath importedTypePath = new TreePath(getCurrentPath(), typeNameTree);
+        boolean isStatic = importTree.isStatic();
+        boolean isStarImport = simpleName.contentEquals("*");
 
-        if (!node.isStatic()) {
-          // Single-type import; report to listener
-          Element importedElement = Preconditions.checkNotNull(trees.getElement(importedTypePath));
-          if (importedElement.getKind().isClass() || importedElement.getKind().isInterface()) {
-            listener.onTypeImported((TypeElement) importedElement);
-          }
-        } else {
-          // Static imports import all accessible elements of a given mame, so javac doesn't
-          // give us an Element for the full import expression like it does for a single-type
-          // import. We must scan the enclosing type to see if there's any nested class of
-          // the given name.
-          TreePath enclosingTypePath = new TreePath(importedTypePath, typeNameTree.getExpression());
-          Element enclosingType = Preconditions.checkNotNull(trees.getElement(enclosingTypePath));
-          for (TypeElement nestedType :
-              ElementFilter.typesIn(enclosingType.getEnclosedElements())) {
-            if (nestedType.getSimpleName().equals(typeNameTree.getIdentifier())) {
-              if (trees.isAccessible(trees.getScope(getCurrentPath()), nestedType)) {
-                listener.onTypeImported(nestedType);
-              }
-              break;
-            }
-          }
+        TreePath leafmostElementPath = importedExpressionPath;
+        if (isStarImport || isStatic) {
+          leafmostElementPath =
+              new TreePath(importedExpressionPath, importedExpression.getExpression());
         }
+        QualifiedNameable leafmostElement =
+            (QualifiedNameable) Preconditions.checkNotNull(trees.getElement(leafmostElementPath));
+
+        listener.onImport(isStatic, isStarImport, leafmostElementPath, leafmostElement, simpleName);
+
         return null;
       }
 
@@ -112,9 +127,7 @@ class InterfaceScanner {
       public Void visitClass(ClassTree node, Void aVoid) {
         Element element = getEnclosingElement();
 
-        if (element.getKind() == ElementKind.ANNOTATION_TYPE) {
-          listener.onAnnotationTypeFound((TypeElement) element, getCurrentPath());
-        }
+        listener.onTypeDeclared((TypeElement) element, getCurrentPath());
 
         // Skip private since they're not part of the interface
         if (!element.getKind().isClass() && isPrivate(element)) {
@@ -151,14 +164,18 @@ class InterfaceScanner {
         scan(node.getModifiers(), aVoid);
         scan(node.getType(), aVoid);
 
-        // Skip the initializers of variables that aren't static constants since they're not part
-        // of the interface
-        if (element.getConstantValue() == null
-            || !element.getModifiers().contains(Modifier.STATIC)) {
+        // Skip the initializers of variables that aren't compile-time constants since they're not
+        // part of the interface
+        if (element.getConstantValue() == null) {
           return null;
         }
 
-        scan(node.getInitializer(), aVoid);
+        inInitializer = true;
+        try {
+          scan(node.getInitializer(), aVoid);
+        } finally {
+          inInitializer = false;
+        }
 
         return null;
       }
@@ -187,27 +204,21 @@ class InterfaceScanner {
         // reference or constant reference that we need to report
         ElementKind kind = currentElement.getKind();
         if (kind.isClass() || kind.isInterface()) {
-          TypeElement typeElement = (TypeElement) currentElement;
-          if (typeElement.getEnclosingElement().getKind() == ElementKind.PACKAGE) {
-            // This is a fully-qualified name
-            reportType();
-            return null; // Stop; we don't need to report the package reference
-          }
-
-          // If it's not a package member, keep going; we want to report the outermost type
-          // that is actually named in the source, since that's the thing that might be imported
+          reportType();
         } else {
           // If it's not a class reference, it could be a reference to a constant field, either
           // as part of initializing a constant field or as a parameter to an annotation
           VariableElement variableElement = (VariableElement) currentElement;
           if (variableElement.getConstantValue() != null) {
             reportConstant();
-            // Keep going; there can also be a type reference that needs reporting
+          } else {
+            // Could be an enum constant, which is not considered a compile-time constant. Keep
+            // looking for the type reference.
+            return super.visitMemberSelect(node, aVoid);
           }
         }
 
-        // Look at the root of this member select; it might be a top-level type
-        return super.visitMemberSelect(node, aVoid);
+        return null;
       }
 
       /**
@@ -240,6 +251,10 @@ class InterfaceScanner {
       }
 
       private void reportType() {
+        if (inInitializer) {
+          return;
+        }
+
         TypeMirror currentType = Preconditions.checkNotNull(getCurrentType());
         if (currentType.getKind() != TypeKind.DECLARED) {
           return;

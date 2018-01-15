@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -58,9 +59,6 @@ public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
       switch (javacLocation) {
         case IN_PROCESS:
           javac = new JarBackedJavac(compilerClassName, fullJavacClasspath);
-          break;
-        case OUT_OF_PROCESS:
-          javac = new OutOfProcessJarBackedJavac(compilerClassName, fullJavacClasspath);
           break;
         default:
           throw new AssertionError("Unknown javac location: " + javacLocation);

@@ -50,6 +50,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     super.apply(target, context);
     addDepsAndSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
+    JavaLibraryRuleHelper.addNonSourceBuildTargets(target, context);
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
       context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());

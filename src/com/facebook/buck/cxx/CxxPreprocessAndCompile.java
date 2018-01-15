@@ -215,9 +215,9 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
         relativeInputPath,
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
-            compilerDelegate.getCommandPrefix(),
+            compilerDelegate.getCommandPrefix(resolver),
             Arg.stringify(arguments, resolver),
-            compilerDelegate.getEnvironment()),
+            compilerDelegate.getEnvironment(resolver)),
         headerPathNormalizer,
         sanitizer,
         scratchDir,
@@ -251,7 +251,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
     for (String flag :
         Arg.stringify(
             compilerDelegate.getCompilerFlags().getAllFlags(), context.getSourcePathResolver())) {
-      if (flag.equals("-ftest-coverage")) {
+      if (flag.equals("-ftest-coverage") && hasGcno(output)) {
         buildableContext.recordArtifact(getGcnoPath(output));
         break;
       }
@@ -274,6 +274,10 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
         .build();
   }
 
+  private static boolean hasGcno(Path output) {
+    return !MorePaths.getNameWithoutExtension(output).endsWith(".S");
+  }
+    
   @VisibleForTesting
   static Path getGcnoPath(Path output) {
     String basename = MorePaths.getNameWithoutExtension(output);

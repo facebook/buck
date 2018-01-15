@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -47,10 +47,10 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final SourcePath binaryJar;
   /**
-   * Strip out things that are intentionally not included in ABI jars generated from source, so that
-   * we can still detect bugs by binary comparison.
+   * Controls whether we strip out things that are intentionally not included in other forms of ABI
+   * generation, so that we can still detect bugs by binary comparison.
    */
-  @AddToRuleKey private final boolean sourceAbiCompatible;
+  @AddToRuleKey private final AbiGenerationMode compatibilityMode;
 
   private final Path outputPath;
   private final JarContentsSupplier abiJarContentsSupplier;
@@ -62,10 +62,10 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       SourcePath binaryJar,
-      boolean sourceAbiCompatible) {
+      AbiGenerationMode compatibilityMode) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.binaryJar = binaryJar;
-    this.sourceAbiCompatible = sourceAbiCompatible;
+    this.compatibilityMode = compatibilityMode;
     this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
     this.abiJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
@@ -77,7 +77,8 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams libraryParams,
       SourcePath library) {
-    return of(target, ruleFinder, projectFilesystem, libraryParams, library, false);
+    return of(
+        target, ruleFinder, projectFilesystem, libraryParams, library, AbiGenerationMode.CLASS);
   }
 
   public static CalculateClassAbi of(
@@ -86,7 +87,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams libraryParams,
       SourcePath library,
-      boolean sourceAbiCompatible) {
+      AbiGenerationMode compatibilityMode) {
     return new CalculateClassAbi(
         target,
         projectFilesystem,
@@ -95,7 +96,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .withoutExtraDeps(),
         DefaultSourcePathResolver.from(ruleFinder),
         library,
-        sourceAbiCompatible);
+        compatibilityMode);
   }
 
   public static Path getAbiJarPath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
@@ -120,7 +121,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 context.getSourcePathResolver().getAbsolutePath(binaryJar),
                 outputPath,
-                sourceAbiCompatible));
+                compatibilityMode));
 
     buildableContext.recordArtifact(outputPath);
 
@@ -143,7 +144,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public Object initializeFromDisk() throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     abiJarContentsSupplier.load();
     return new Object();

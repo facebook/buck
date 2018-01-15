@@ -21,7 +21,6 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -40,7 +39,7 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
             ? srcs
             : srcs.stream()
                 .filter(PathSourcePath.class::isInstance)
-                .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     this.javaFileParser = javaFileParser;
   }
 
@@ -57,7 +56,7 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
                   Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
                   return absolutePath;
                 })
-            .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     return SymbolExtractor.extractSymbols(javaFileParser, absolutePaths);
   }
 }

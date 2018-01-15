@@ -15,6 +15,17 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import static com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType.local;
+import static com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType.remote;
+
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheEntries;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType;
+import com.facebook.buck.artifact_cache.config.DirCacheEntry;
+import com.facebook.buck.artifact_cache.config.HttpCacheEntry;
+import com.facebook.buck.artifact_cache.config.MultiFetchType;
+import com.facebook.buck.artifact_cache.config.SQLiteCacheEntry;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -22,15 +33,15 @@ import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -122,6 +133,21 @@ public class ArtifactCaches implements ArtifactCacheFactory {
    */
   @Override
   public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(), distributedBuildModeEnabled);
+  }
+
+  @Override
+  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(local), distributedBuildModeEnabled);
+  }
+
+  @Override
+  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
+    return newInstanceInternal(ImmutableSet.of(remote), distributedBuildModeEnabled);
+  }
+
+  private ArtifactCache newInstanceInternal(
+      ImmutableSet<CacheType> cacheTypeBlacklist, boolean distributedBuildModeEnabled) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -133,6 +159,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             wifiSsid,
             httpWriteExecutorService,
             httpFetchExecutorService,
+            cacheTypeBlacklist,
             distributedBuildModeEnabled);
 
     if (asyncCloseable.isPresent()) {
@@ -176,6 +203,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
+      ImmutableSet<CacheType> cacheTypeBlacklist,
       boolean distributedBuildModeEnabled) {
     ImmutableSet<ArtifactCacheMode> modes = buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
@@ -184,6 +212,10 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     ArtifactCacheEntries cacheEntries = buckConfig.getCacheEntries();
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
     for (ArtifactCacheMode mode : modes) {
+      if (cacheTypeBlacklist.contains(mode.getCacheType())) {
+        continue;
+      }
+
       switch (mode) {
         case dir:
           initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
@@ -222,6 +254,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
                       args,
                       buckConfig.getHybridThriftEndpoint().get(),
                       distributedBuildModeEnabled,
+                      buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig, buckEventBus),
                       buckConfig.getHttpFetchConcurrency()),
               mode);
@@ -545,13 +578,13 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
   private static boolean getAndRecordMultiFetchEnabled(
       ArtifactCacheBuckConfig buckConfig, BuckEventBus eventBus) {
-    ArtifactCacheBuckConfig.MultiFetchType multiFetchType = buckConfig.getMultiFetchType();
-    if (multiFetchType == ArtifactCacheBuckConfig.MultiFetchType.EXPERIMENT) {
+    MultiFetchType multiFetchType = buckConfig.getMultiFetchType();
+    if (multiFetchType == MultiFetchType.EXPERIMENT) {
       multiFetchType =
           RandomizedTrial.getGroup(
               ArtifactCacheBuckConfig.MULTI_FETCH,
-              eventBus.getBuildId(),
-              ArtifactCacheBuckConfig.MultiFetchType.class);
+              eventBus.getBuildId().toString(),
+              MultiFetchType.class);
       switch (multiFetchType) {
         case DISABLED:
         case ENABLED:
@@ -563,7 +596,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
           throw new RuntimeException("RandomizedTrial picked invalid MultiFetchType.");
       }
     }
-    return multiFetchType == ArtifactCacheBuckConfig.MultiFetchType.ENABLED;
+    return multiFetchType == MultiFetchType.ENABLED;
   }
 
   private static class ProgressResponseBody extends ResponseBody {

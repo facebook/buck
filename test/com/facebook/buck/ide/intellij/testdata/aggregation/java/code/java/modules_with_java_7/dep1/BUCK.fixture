@@ -1,7 +1,7 @@
 java_library(
     name = "dep1",
-    source = "1.7",
     srcs = glob(["src/**/*.java"]),
+    source = "1.7",
     visibility = [
         "PUBLIC",
     ],

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
@@ -40,7 +41,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -59,7 +59,7 @@ public abstract class CompilerTreeApiTest {
 
   @Rule public TestCompiler testCompiler = new TestCompiler();
 
-  protected Elements elements;
+  protected ElementsExtended elements;
   protected Trees trees;
   protected Types types;
 

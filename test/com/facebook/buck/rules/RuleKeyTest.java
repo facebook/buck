@@ -27,14 +27,19 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.log.ConsoleHandler;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
+import com.facebook.buck.rules.keys.RuleKeyDiagnostics.Result;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyResult;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
+import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -44,6 +49,8 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +59,9 @@ import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.SortedSet;
+import javax.annotation.Nullable;
+import org.hamcrest.Matchers;
 import org.immutables.value.Value;
 import org.junit.Test;
 
@@ -92,12 +102,12 @@ public class RuleKeyTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(ruleResolver1);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0, hashCache, DefaultSourcePathResolver.from(ruleFinder1), ruleFinder1);
+        new TestDefaultRuleKeyFactory(
+            hashCache, DefaultSourcePathResolver.from(ruleFinder1), ruleFinder1);
     SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(ruleResolver2);
     DefaultRuleKeyFactory ruleKeyFactory2 =
-        new DefaultRuleKeyFactory(
-            0, hashCache, DefaultSourcePathResolver.from(ruleFinder2), ruleFinder2);
+        new TestDefaultRuleKeyFactory(
+            hashCache, DefaultSourcePathResolver.from(ruleFinder2), ruleFinder2);
 
     // Create a dependent build rule, //src/com/facebook/buck/cli:common.
     JavaLibraryBuilder builder =
@@ -294,13 +304,13 @@ public class RuleKeyTest {
     BuildRule buildRule = new FakeBuildRule(buildTarget);
 
     RuleKey empty1 =
-        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), resolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), resolver, ruleFinder)
             .build(buildRule);
     RuleKey empty2 =
-        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), resolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), resolver, ruleFinder)
             .build(buildRule);
     RuleKey empty3 =
-        new DefaultRuleKeyFactory(1, new DummyFileHashCache(), resolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(1, new DummyFileHashCache(), resolver, ruleFinder)
             .build(buildRule);
 
     assertThat(empty1, is(equalTo(empty2)));
@@ -606,9 +616,63 @@ public class RuleKeyTest {
         new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "foo", "xyzzy");
 
     RuleKey ruleKey1 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(buildRule1);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(buildRule1);
     RuleKey ruleKey2 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(buildRule2);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(buildRule2);
+
+    assertNotEquals(ruleKey1, ruleKey2);
+  }
+
+  @Test
+  public void ruleKeyIncludesClass() {
+    class AddsToRuleKey1 implements AddsToRuleKey {}
+    class AddsToRuleKey2 implements AddsToRuleKey {}
+    class SimpleBuildRule extends AbstractBuildRule {
+      @AddToRuleKey final AddsToRuleKey value;
+
+      protected SimpleBuildRule(
+          BuildTarget buildTarget, ProjectFilesystem projectFilesystem, AddsToRuleKey value) {
+        super(buildTarget, projectFilesystem);
+        this.value = value;
+      }
+
+      @Override
+      public SortedSet<BuildRule> getBuildDeps() {
+        return ImmutableSortedSet.of();
+      }
+
+      @Override
+      public ImmutableList<? extends Step> getBuildSteps(
+          BuildContext context, BuildableContext buildableContext) {
+        return ImmutableList.of();
+      }
+
+      @Nullable
+      @Override
+      public SourcePath getSourcePathToOutput() {
+        return null;
+      }
+    }
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    FileHashCache hashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+
+    RuleKey ruleKey1 =
+        new TestDefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(new SimpleBuildRule(target, projectFilesystem, new AddsToRuleKey1()));
+    RuleKey ruleKey2 =
+        new TestDefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+            .build(new SimpleBuildRule(target, projectFilesystem, new AddsToRuleKey2()));
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
@@ -646,9 +710,9 @@ public class RuleKeyTest {
         new NoopBuildRuleWithDeclaredAndExtraDeps(parentTarget, projectFilesystem, parentParams2);
 
     RuleKey ruleKey1 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(parentRule1);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(parentRule1);
     RuleKey ruleKey2 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(parentRule2);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(parentRule2);
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
@@ -678,7 +742,7 @@ public class RuleKeyTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
     RuleKeyFactory<RuleKey> ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder);
 
     RuleKey nullRuleKey =
         new NoopSetterRuleKeyBuilder(ruleFinder, pathResolver, hashCache, ruleKeyFactory)
@@ -700,7 +764,7 @@ public class RuleKeyTest {
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashCache, sourcePathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(hashCache, sourcePathResolver, ruleFinder);
 
     BuildTarget target = BuildTargetFactory.newInstance("//a:target");
 
@@ -758,6 +822,38 @@ public class RuleKeyTest {
 
     assertEquals(first, second);
     assertNotEquals(first, third);
+  }
+
+  @Test
+  public void lambdaAddsPseudoClassName() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    Result<RuleKey, String> result =
+        createFactory(resolver, ruleFinder)
+            .buildForDiagnostics((RuleKeyAppendable) (sink) -> {}, new StringRuleKeyHasher());
+    assertThat(
+        result.diagKey,
+        Matchers.containsString(
+            "string(\"com.facebook.buck.rules.RuleKeyTest$?????\"):key(.class)"));
+  }
+
+  @Test
+  public void anonymousClassAddsPseudoClassName() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    Result<RuleKey, String> result =
+        createFactory(resolver, ruleFinder)
+            .buildForDiagnostics(new AddsToRuleKey() {}, new StringRuleKeyHasher());
+    assertThat(
+        result.diagKey,
+        Matchers.containsString(
+            "string(\"com.facebook.buck.rules.RuleKeyTest$?????\"):key(.class)"));
   }
 
   @Value.Immutable
@@ -828,6 +924,36 @@ public class RuleKeyTest {
   }
 
   @Value.Immutable
+  @BuckStylePackageVisibleTuple
+  abstract static class AbstractTestPackageVisibleTuple implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract int getValue();
+  }
+
+  @Value.Immutable
+  @BuckStylePackageVisibleImmutable
+  abstract static class AbstractTestPackageVisibleImmutable implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract int getValue();
+  }
+
+  @Test
+  public void packageVisibleImmutablesCanUseAddToRuleKey() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    createBuilder(resolver, ruleFinder)
+        .setReflectively("value", TestPackageVisibleTuple.of(0))
+        .build(RuleKey::new);
+
+    createBuilder(resolver, ruleFinder)
+        .setReflectively("value", TestPackageVisibleImmutable.builder().setValue(0).build())
+        .build(RuleKey::new);
+  }
+
+  @Value.Immutable
   @BuckStyleTuple
   abstract static class AbstractTestRuleKeyAbstractImmutable implements AddsToRuleKey {
     @AddToRuleKey
@@ -838,6 +964,7 @@ public class RuleKeyTest {
 
   @Test(expected = UncheckedExecutionException.class)
   public void badUseOfAddValueMethodsToRuleKey() {
+    java.util.logging.Logger.getGlobal().addHandler(new ConsoleHandler());
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new SingleThreadedBuildRuleResolver(
@@ -906,18 +1033,13 @@ public class RuleKeyTest {
   abstract class DerivedFromImplementsBadUseOfAddValueMethodsToRuleKey
       extends ImplementsBadUseOfAddValueMethodsToRuleKey {}
 
-  private static class TestRuleKeyAppendable implements RuleKeyAppendable {
-    private final String value;
+  private static class TestRuleKeyAppendable implements AddsToRuleKey {
+    @AddToRuleKey private final String value;
+    @AddToRuleKey private final String foo = "foo";
+    @AddToRuleKey private final String bar = "bar";
 
     public TestRuleKeyAppendable(String value) {
       this.value = value;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("value", value)
-          .setReflectively("foo", "foo")
-          .setReflectively("bar", "bar");
     }
   }
 
@@ -948,6 +1070,14 @@ public class RuleKeyTest {
 
   private DefaultRuleKeyFactory.Builder<HashCode> createBuilder(
       SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
+    TestDefaultRuleKeyFactory factory = createFactory(resolver, ruleFinder);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
+    BuildRule buildRule = new FakeBuildRule(buildTarget);
+    return factory.newBuilderForTesting(buildRule);
+  }
+
+  private TestDefaultRuleKeyFactory createFactory(
+      SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
     FileHashCache fileHashCache =
         new FileHashCache() {
 
@@ -975,10 +1105,7 @@ public class RuleKeyTest {
           @Override
           public void set(Path path, HashCode hashCode) {}
         };
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
-    BuildRule buildRule = new FakeBuildRule(buildTarget);
-    return new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder)
-        .newBuilderForTesting(buildRule);
+    return new TestDefaultRuleKeyFactory(fileHashCache, resolver, ruleFinder);
   }
 
   private RuleKeyResult<RuleKey> buildResult(AbstractRuleKeyBuilder<HashCode> builder) {

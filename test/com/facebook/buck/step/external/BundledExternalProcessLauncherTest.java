@@ -21,10 +21,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.jvm.java.OutOfProcessJavacConnectionInterface;
-import com.facebook.buck.message_ipc.Connection;
-import com.facebook.buck.message_ipc.MessageSerializer;
-import com.facebook.buck.message_ipc.MessageTransport;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -65,37 +61,6 @@ public class BundledExternalProcessLauncherTest {
       process.ensureLaunchAndHandshake();
       WorkerJobResult jobResult = process.submitAndWaitForJob("jobArg");
       assertEquals(0, jobResult.getExitCode());
-    }
-  }
-
-  @Test
-  public void canLaunchOOPJavacEntryPointAndPing() throws Exception {
-    // Worker process is currently broken on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-
-    BundledExternalProcessLauncher launcher = new BundledExternalProcessLauncher();
-
-    Path tmpPath = Files.createTempDirectory("tmp").toAbsolutePath().normalize();
-    ProjectFilesystem projectFilesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
-
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
-    ProcessExecutorParams params =
-        ProcessExecutorParams.builder()
-            .setCommand(launcher.getCommandForOutOfProcessJavac())
-            .setEnvironment(launcher.getEnvForOutOfProcessJavac())
-            .setDirectory(tmpPath)
-            .build();
-
-    WorkerProcess process = new WorkerProcess(processExecutor, params, projectFilesystem, tmpPath);
-    MessageTransport transport =
-        new MessageTransport(process, new MessageSerializer(), () -> process.close());
-    try (Connection<OutOfProcessJavacConnectionInterface> conn = new Connection<>(transport)) {
-      conn.setRemoteInterface(
-          OutOfProcessJavacConnectionInterface.class,
-          OutOfProcessJavacConnectionInterface.class.getClassLoader());
-      int result = conn.getRemoteObjectProxy().ping(1234);
-      assertEquals(1234, result);
     }
   }
 }

@@ -28,13 +28,12 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,6 +43,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /** Saves and loads the {@link TargetNode}s needed for the build. */
@@ -111,13 +111,15 @@ public class DistBuildTargetGraphCodec {
             .flavors
             .stream()
             .map(InternalFlavor::of)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     return BuildTarget.of(unflavoredBuildTarget, flavors);
   }
 
   public TargetGraphAndBuildTargets createTargetGraph(
-      BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
+      BuildJobStateTargetGraph remoteTargetGraph,
+      Function<Integer, Cell> cellLookup,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
       throws IOException {
 
     ImmutableMap.Builder<BuildTarget, TargetNode<?, ?>> targetNodeIndexBuilder =
@@ -141,6 +143,7 @@ public class DistBuildTargetGraphCodec {
       TargetNode<?, ?> targetNode =
           parserTargetNodeFactory.createTargetNode(
               cell,
+              knownBuildRuleTypesProvider.get(cell),
               buildFilePath,
               target,
               rawNode,

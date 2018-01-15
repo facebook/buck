@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -41,15 +40,13 @@ public class CellPathResolverViewTest {
         new CellPathResolverView(
             getTestDelegate(), ImmutableSet.of("b", "c"), filesystem.getPath("foo/c"));
 
-    Assert.assertEquals(filesystem.getPath("foo/b"), view.getCellPath(Optional.of("b")));
-    Assert.assertEquals(filesystem.getPath("foo/c"), view.getCellPath(Optional.of("c")));
+    Assert.assertEquals(filesystem.getPath("foo/b"), view.getCellPath(Optional.of("b")).get());
+    Assert.assertEquals(filesystem.getPath("foo/c"), view.getCellPath(Optional.of("c")).get());
 
-    try {
-      view.getCellPath(Optional.of("a"));
-      Assert.fail("Should have thrown exception.");
-    } catch (HumanReadableException e) { // NOPMD
-      // Expected.
-    }
+    Assert.assertEquals(
+        "Looking up undeclared cell should return empty",
+        Optional.empty(),
+        view.getCellPath(Optional.of("a")));
 
     Assert.assertEquals(
         ImmutableMap.of(
@@ -63,7 +60,7 @@ public class CellPathResolverViewTest {
     CellPathResolverView view =
         new CellPathResolverView(
             getTestDelegate(), ImmutableSet.of("b", "c"), filesystem.getPath("foo/c"));
-    Assert.assertEquals(filesystem.getPath("foo/c"), view.getCellPath(Optional.empty()));
+    Assert.assertEquals(filesystem.getPath("foo/c"), view.getCellPath(Optional.empty()).get());
   }
 
   @Test

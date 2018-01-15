@@ -22,14 +22,17 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -127,22 +130,27 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor(),
-            ImmutableList.of(),
-            Optional.empty());
+            executionContext.getProcessExecutor());
 
     int exitCode =
         javac
             .newBuildInvocation(
                 javacExecutionContext,
+                DefaultSourcePathResolver.from(
+                    new SourcePathRuleFinder(
+                        new SingleThreadedBuildRuleResolver(
+                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                false,
+                null,
+                null,
+                AbiGenerationMode.CLASS,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -180,22 +188,27 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor(),
-            ImmutableList.of(),
-            Optional.empty());
+            executionContext.getProcessExecutor());
 
     int exitCode =
         javac
             .newBuildInvocation(
                 javacExecutionContext,
+                DefaultSourcePathResolver.from(
+                    new SourcePathRuleFinder(
+                        new SingleThreadedBuildRuleResolver(
+                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                false,
+                null,
+                null,
+                AbiGenerationMode.CLASS,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -280,11 +293,8 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor(),
-            ImmutableList.of(fakeJavacJar),
-            Optional.empty());
+            executionContext.getProcessExecutor());
 
     boolean caught = false;
 
@@ -292,12 +302,20 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
+              DefaultSourcePathResolver.from(
+                  new SourcePathRuleFinder(
+                      new SingleThreadedBuildRuleResolver(
+                          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
+              false,
+              null,
+              null,
+              AbiGenerationMode.CLASS,
               AbiGenerationMode.CLASS,
               null)
           .buildClasses();

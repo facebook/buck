@@ -38,7 +38,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -278,7 +278,7 @@ public class AndroidResourceIndexMiniAaptTest {
     aapt.processFileNamesInDirectory(filesystem, Paths.get("sample_res/transition-v19"));
     aapt.processValues(
         filesystem,
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId("")),
+        new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")),
         Paths.get("sample_res/values"));
 
     assertEquals(

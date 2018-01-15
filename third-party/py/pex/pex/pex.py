@@ -140,6 +140,11 @@ class PEX(object):  # noqa: T000
         new_modules[module_name] = module
         continue
 
+      # Unexpected objects, e.g. namespace packages, should just be dropped:
+      if not isinstance(module.__path__, list):
+        TRACER.log('Dropping %s' % (module_name,), V=3)
+        continue
+
       # Pop off site-impacting __path__ elements in-place.
       for k in reversed(range(len(module.__path__))):
         if cls._tainted_path(module.__path__[k], site_libs):

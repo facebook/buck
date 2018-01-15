@@ -16,23 +16,24 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import javax.annotation.Nullable;
 
 public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final JavaBuckConfig javaBuckConfig;
-  private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
+  private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavaConfiguredCompilerFactory(JavaBuckConfig javaBuckConfig) {
-    this(javaBuckConfig, ExtraClasspathFromContextFunction.EMPTY);
+    this(javaBuckConfig, ExtraClasspathProvider.EMPTY);
   }
 
   public JavaConfiguredCompilerFactory(
-      JavaBuckConfig javaBuckConfig,
-      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+      JavaBuckConfig javaBuckConfig, ExtraClasspathProvider extraClasspathProvider) {
     this.javaBuckConfig = javaBuckConfig;
-    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
+    this.extraClasspathProvider = extraClasspathProvider;
   }
 
   @Override
@@ -51,11 +52,31 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
+  public boolean shouldMigrateToSourceOnlyAbi() {
+    return shouldGenerateSourceAbi();
+  }
+
+  @Override
+  public boolean shouldGenerateSourceOnlyAbi() {
+    return shouldGenerateSourceAbi() && !javaBuckConfig.getAbiGenerationMode().usesDependencies();
+  }
+
+  @Override
   public ConfiguredCompiler configure(
-      @Nullable JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      @Nullable JvmLibraryArg arg,
+      JavacOptions javacOptions,
+      BuildRuleResolver buildRuleResolver) {
 
     return new JavacToJarStepFactory(
-        getJavac(resolver, arg), javacOptions, extraClasspathFromContextFunction);
+        sourcePathResolver,
+        ruleFinder,
+        projectFilesystem,
+        getJavac(buildRuleResolver, arg),
+        javacOptions,
+        extraClasspathProvider);
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

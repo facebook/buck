@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UserFlavor;
@@ -28,13 +27,16 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +72,8 @@ public class AuditFlavorsCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets =
         getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
             .stream()
@@ -80,13 +83,10 @@ public class AuditFlavorsCommand extends AbstractCommand {
                         input,
                         BuildTargetPatternParser.fullyQualified(),
                         params.getCell().getCellPathResolver()))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     if (targets.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Please specify at least one build target."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     ImmutableList.Builder<TargetNode<?, ?>> builder = ImmutableList.builder();
@@ -104,11 +104,11 @@ public class AuditFlavorsCommand extends AbstractCommand {
                     target);
         builder.add(targetNode);
       }
-    } catch (BuildFileParseException | BuildTargetException e) {
+    } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return ExitCode.PARSE_ERROR;
     }
     ImmutableList<TargetNode<?, ?>> targetNodes = builder.build();
 
@@ -118,7 +118,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
       printFlavors(targetNodes, params);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override
@@ -140,7 +140,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
             ImmutableSet<UserFlavor> userFlavors =
                 RichStream.from(domain.getFlavors().stream())
                     .filter(UserFlavor.class)
-                    .collect(MoreCollectors.toImmutableSet());
+                    .collect(ImmutableSet.toImmutableSet());
             if (userFlavors.isEmpty()) {
               continue;
             }
@@ -180,7 +180,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
             ImmutableSet<UserFlavor> userFlavors =
                 RichStream.from(domain.getFlavors().stream())
                     .filter(UserFlavor.class)
-                    .collect(MoreCollectors.toImmutableSet());
+                    .collect(ImmutableSet.toImmutableSet());
             if (userFlavors.isEmpty()) {
               continue;
             }
@@ -188,8 +188,8 @@ public class AuditFlavorsCommand extends AbstractCommand {
                 userFlavors
                     .stream()
                     .collect(
-                        MoreCollectors.toImmutableSortedMap(
-                            UserFlavor::getName, UserFlavor::getDescription));
+                        ImmutableSortedMap.toImmutableSortedMap(
+                            Ordering.natural(), UserFlavor::getName, UserFlavor::getDescription));
             flavorDomainsJson.put(domain.getName(), flavorsJson);
           }
         } else {

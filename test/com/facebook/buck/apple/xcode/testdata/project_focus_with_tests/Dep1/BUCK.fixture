@@ -1,14 +1,14 @@
 EMPTY_CONFIGS = {
-  'Debug': {},
-  'Release': {},
+    "Debug": {},
+    "Release": {},
 }
 
 apple_library(
-  name = 'Dep1',
-  configs = EMPTY_CONFIGS,
-  srcs = [],
-  frameworks = [],
-  deps = [],
-  visibility = ['PUBLIC'],
-  tests = ['//Tests:Tests'],
+    name = "Dep1",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    tests = ["//Tests:Tests"],
+    visibility = ["PUBLIC"],
+    deps = [],
 )

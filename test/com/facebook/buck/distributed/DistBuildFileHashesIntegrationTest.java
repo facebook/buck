@@ -34,11 +34,14 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -46,9 +49,13 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -72,8 +79,6 @@ public class DistBuildFileHashesIntegrationTest {
 
   private static final String SYMLINK_FILE_NAME = "SymlinkSourceFile.java";
 
-  private static final int KEY_SEED = 0;
-
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
@@ -94,6 +99,12 @@ public class DistBuildFileHashesIntegrationTest {
     BuckConfig rootCellConfig = FakeBuckConfig.builder().setFilesystem(rootFs).build();
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                new DefaultProcessExecutor(new TestConsole()),
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
@@ -103,7 +114,8 @@ public class DistBuildFileHashesIntegrationTest {
             new BroadcastEventListener(),
             rootCellConfig.getView(ParserConfig.class),
             typeCoercerFactory,
-            constructorArgMarshaller);
+            constructorArgMarshaller,
+            knownBuildRuleTypesProvider);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),
@@ -162,6 +174,12 @@ public class DistBuildFileHashesIntegrationTest {
             .build();
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                new DefaultProcessExecutor(new TestConsole()),
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
@@ -171,7 +189,8 @@ public class DistBuildFileHashesIntegrationTest {
             new BroadcastEventListener(),
             rootCellConfig.getView(ParserConfig.class),
             typeCoercerFactory,
-            constructorArgMarshaller);
+            constructorArgMarshaller,
+            knownBuildRuleTypesProvider);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),
@@ -209,15 +228,18 @@ public class DistBuildFileHashesIntegrationTest {
 
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
       throws InterruptedException, IOException {
-    ActionGraphCache cache = new ActionGraphCache();
+    ActionGraphCache cache =
+        new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     ActionGraphAndResolver actionGraphAndResolver =
         cache.getActionGraph(
             BuckEventBusForTests.newInstance(),
             true,
             false,
             targetGraph,
-            KEY_SEED,
-            ActionGraphParallelizationMode.DISABLED);
+            TestRuleKeyConfigurationFactory.create(),
+            ActionGraphParallelizationMode.DISABLED,
+            Optional.empty(),
+            false);
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -245,7 +267,7 @@ public class DistBuildFileHashesIntegrationTest {
         stackedCache,
         cellIndexer,
         MoreExecutors.newDirectExecutorService(),
-        /* keySeed */ KEY_SEED,
+        TestRuleKeyConfigurationFactory.create(),
         rootCell);
   }
 }

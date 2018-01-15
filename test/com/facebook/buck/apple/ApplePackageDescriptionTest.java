@@ -20,8 +20,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -37,9 +37,11 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
@@ -148,14 +150,19 @@ public class ApplePackageDescriptionTest {
 
   private ApplePackageDescription descriptionWithCommand(String command) {
     return new ApplePackageDescription(
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AppleCxxPlatformsProvider.DEFAULT_NAME,
+                AppleCxxPlatformsProvider.of(
+                    FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN))
+            .build(),
+        new NoSandboxExecutionStrategy(),
         FakeBuckConfig.builder()
             .setSections(
                 "[apple]",
                 "macosx_package_command = " + command.replace("$", "\\$"),
                 "macosx_package_extension = api")
             .build()
-            .getView(AppleConfig.class),
-        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
-        FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN);
+            .getView(AppleConfig.class));
   }
 }

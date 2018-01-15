@@ -35,11 +35,12 @@ Additionally, a path element <code>**</code> will match any subpath. For instanc
 {/call}
 
 {call buck.functionArg}
-  {param name : 'excludes' /}
+  {param name : 'exclude' /}
   {param default : '[]' /}
   {param desc}
-  A list of patterns to identify files that should be removed from the set
-  specified by the first argument.
+    A list of patterns to identify files that should be removed from the set
+    specified by the first argument. This argument cannot be used with <code>excludes</code>
+    because they serve the exact same purpose.
   {/param}
 {/call}
 
@@ -49,6 +50,16 @@ Additionally, a path element <code>**</code> will match any subpath. For instanc
   {param desc}
   Whether <code>*</code> and <code>**</code> patterns should capture file or directory names
   starting with a dot.
+  {/param}
+{/call}
+
+{call buck.functionArg}
+  {param name : 'excludes' /}
+  {param default : '[]' /}
+  {param desc}
+    DEPRECATED: Please use newer <code>exclude</code> parameter.<br>
+    A list of patterns to identify files that should be removed from the set
+    specified by the first argument.
   {/param}
 {/call}
 

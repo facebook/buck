@@ -19,6 +19,7 @@ package com.facebook.buck.lua;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -31,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -54,6 +56,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -79,12 +82,12 @@ public class CxxLuaExtensionDescription
             CxxLuaExtensionDescription.AbstractCxxLuaExtensionDescriptionArg>,
         VersionPropagator<CxxLuaExtensionDescriptionArg> {
 
-  private final FlavorDomain<LuaPlatform> luaPlatforms;
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
 
   public CxxLuaExtensionDescription(
-      FlavorDomain<LuaPlatform> luaPlatforms, CxxBuckConfig cxxBuckConfig) {
-    this.luaPlatforms = luaPlatforms;
+      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
   }
 
@@ -191,7 +194,7 @@ public class CxxLuaExtensionDescription
                 compilerFlags,
                 args.getPrefixHeader(),
                 args.getPrecompiledHeader(),
-                CxxSourceRuleFactory.PicType.PIC,
+                PicType.PIC,
                 sandboxTree)
             .requirePreprocessAndCompileRules(srcs);
 
@@ -238,8 +241,9 @@ public class CxxLuaExtensionDescription
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
+        args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
-        /* thinLto */ false,
+        CxxLinkOptions.of(),
         RichStream.from(args.getCxxDeps().get(ruleResolver, cxxPlatform))
             .filter(NativeLinkable.class)
             .concat(Stream.of(luaPlatform.getLuaCxxLibrary(ruleResolver)))
@@ -260,7 +264,8 @@ public class CxxLuaExtensionDescription
                     luaPlatform,
                     args))
             .build(),
-        Optional.empty());
+        Optional.empty(),
+        cellRoots);
   }
 
   @Override
@@ -277,6 +282,8 @@ public class CxxLuaExtensionDescription
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final CxxLuaExtensionDescriptionArg args) {
+
+    FlavorDomain<LuaPlatform> luaPlatforms = getLuaPlatformsProvider().getLuaPlatforms();
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -352,14 +359,20 @@ public class CxxLuaExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    for (LuaPlatform luaPlatform : luaPlatforms.getValues()) {
+    for (LuaPlatform luaPlatform : getLuaPlatformsProvider().getLuaPlatforms().getValues()) {
 
       // Add deps from lua C/C++ library.
       Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
 
       // Get any parse time deps from the C/C++ platforms.
-      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
+      targetGraphOnlyDepsBuilder.addAll(
+          CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
     }
+  }
+
+  private LuaPlatformsProvider getLuaPlatformsProvider() {
+    return toolchainProvider.getByName(
+        LuaPlatformsProvider.DEFAULT_NAME, LuaPlatformsProvider.class);
   }
 
   @BuckStyleImmutable

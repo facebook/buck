@@ -38,19 +38,24 @@ public final class BuildOutputInitializer<T> {
     this.initializableFromDisk = initializableFromDisk;
   }
 
+  /**
+   * Invalidates the cached build output. This should be called whenever the on disk state is about
+   * to change.
+   */
   public void invalidate() {
     buildOutput = null;
   }
 
-  public void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  /** Initializes the build output from the on disk state. */
+  public void initializeFromDisk() throws IOException {
     if (buildOutput == null) {
-      buildOutput = initializableFromDisk.initializeFromDisk(onDiskBuildInfo);
+      buildOutput = initializableFromDisk.initializeFromDisk();
     }
   }
 
   /**
    * This should be invoked only by the build engine (currently, {@link CachingBuildEngine}) that
-   * invoked {@link #initializeFromDisk(OnDiskBuildInfo)}.
+   * invoked {@link #initializeFromDisk()}.
    *
    * <p>
    *

@@ -1,12 +1,15 @@
 apple_resource(
-    name = 'foo-resources',
-    files = glob(['*.png']),
-    dirs = ['path/to/dir1', 'dir2'],
+    name = "foo-resources",
+    dirs = [
+        "path/to/dir1",
+        "dir2",
+    ],
+    files = glob(["*.png"]),
 )
 
 apple_test(
-    name='foo',
-    srcs = ['Foo.m'],
-    info_plist = 'Test.plist',
-    deps = [':foo-resources'],
+    name = "foo",
+    srcs = ["Foo.m"],
+    info_plist = "Test.plist",
+    deps = [":foo-resources"],
 )

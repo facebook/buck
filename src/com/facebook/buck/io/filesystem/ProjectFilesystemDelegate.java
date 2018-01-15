@@ -18,6 +18,7 @@ package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -45,6 +46,10 @@ public interface ProjectFilesystemDelegate {
 
   boolean exists(Path pathRelativeToProjectRoot, LinkOption... options);
 
-  /** @return details about this delegate suitable for writing to a log file. */
-  String getDetailsForLogging();
+  /**
+   * @return details about the delegate suitable for writing to a logger. It is recommended that the
+   *     keys of this map are unique in namespace of the things a logger may want to log. Values
+   *     must be {@link String}, {@code int}, or {@code boolean}.
+   */
+  ImmutableMap<String, ? extends Object> getDetailsForLogging();
 }

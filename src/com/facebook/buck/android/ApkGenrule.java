@@ -16,22 +16,27 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A specialization of a genrule that specifically allows the modification of apks. This is useful
@@ -50,15 +55,17 @@ import java.util.Optional;
  * )
  * </pre>
  */
-public class ApkGenrule extends Genrule implements HasInstallableApk {
+public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntimeDeps {
 
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
-  private final boolean isCacheable;
 
   ApkGenrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      BuildRuleResolver resolver,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       List<SourcePath> srcs,
@@ -67,24 +74,34 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
       Optional<Arg> cmdExe,
       Optional<String> type,
       SourcePath apk,
-      boolean isCacheable) {
+      boolean isCacheable,
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidNdk> androidNdk,
+      Optional<AndroidSdkLocation> androidSdkLocation) {
     super(
         buildTarget,
         projectFilesystem,
+        androidLegacyToolchain,
+        resolver,
         params,
+        sandboxExecutionStrategy,
         srcs,
         cmd,
         bash,
         cmdExe,
         type,
-        /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk");
-
+        /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk",
+        false,
+        isCacheable,
+        environmentExpansionSeparator,
+        androidNdk,
+        androidSdkLocation);
+    // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
     BuildRule rule = ruleFinder.getRule(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
-    this.isCacheable = isCacheable;
   }
 
   public HasInstallableApk getInstallableApk() {
@@ -100,19 +117,18 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
   }
 
   @Override
-  public boolean isCacheable() {
-    return isCacheable;
-  }
-
-  @Override
   protected void addEnvironmentVariables(
       SourcePathResolver pathResolver,
-      ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(pathResolver, context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
     String apkAbsolutePath =
         pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toString();
     environmentVariablesBuilder.put("APK", apkAbsolutePath);
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, ruleFinder);
   }
 }

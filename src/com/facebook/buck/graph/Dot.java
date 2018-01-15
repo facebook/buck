@@ -16,13 +16,14 @@
 
 package com.facebook.buck.graph;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Dot<T> {
 
@@ -30,7 +31,8 @@ public class Dot<T> {
   private final String graphName;
   private final Function<T, String> nodeToName;
   private final Function<T, String> nodeToTypeName;
-  private final Appendable output;
+  private final boolean bfsSorted;
+  private final Predicate<T> shouldContainNode;
   private static final Map<String, String> typeColors;
 
   static {
@@ -47,59 +49,69 @@ public class Dot<T> {
         }.build();
   }
 
-  public Dot(
-      DirectedAcyclicGraph<T> graph,
-      String graphName,
-      Function<T, String> nodeToName,
-      Function<T, String> nodeToTypeName,
-      Appendable output) {
-    this.graph = graph;
-    this.graphName = graphName;
-    this.nodeToName = nodeToName;
-    this.nodeToTypeName = nodeToTypeName;
-    this.output = output;
+  public static <T> Builder<T> builder(DirectedAcyclicGraph<T> graph, String graphName) {
+    return new Builder<>(graph, graphName);
   }
 
-  public void writeOutput() throws IOException {
-    output.append("digraph " + graphName + " {\n");
+  /**
+   * Builder class for Dot output
+   *
+   * @param <T>
+   */
+  public static class Builder<T> {
 
-    new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
+    private final DirectedAcyclicGraph<T> graph;
+    private final String graphName;
+    private Function<T, String> nodeToName;
+    private Function<T, String> nodeToTypeName;
+    private boolean bfsSorted;
+    private Predicate<T> shouldContainNode;
 
-      @Override
-      public void visit(T node) {
-        String source = nodeToName.apply(node);
-        String sourceType = nodeToTypeName.apply(node);
+    private Builder(DirectedAcyclicGraph<T> graph, String graphName) {
+      this.graph = graph;
+      this.graphName = graphName;
+      nodeToName = Object::toString;
+      nodeToTypeName = Object::toString;
+      bfsSorted = false;
+      shouldContainNode = node -> true;
+    }
 
-        try {
-          output.append(
-              String.format(
-                  "  %s [style=filled,color=%s];\n", source, Dot.colorFromType(sourceType)));
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-        for (T sink : graph.getOutgoingNodesFor(node)) {
-          String sinkName = nodeToName.apply(sink);
-          try {
-            output.append(String.format("  %s -> %s;\n", source, sinkName));
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }
-    }.traverse();
+    public Builder<T> setNodeToName(Function<T, String> func) {
+      nodeToName = func;
+      return this;
+    }
 
-    output.append("}\n");
+    public Builder<T> setNodeToTypeName(Function<T, String> func) {
+      nodeToTypeName = func;
+      return this;
+    }
+
+    public Builder<T> setBfsSorted(boolean sorted) {
+      bfsSorted = sorted;
+      return this;
+    }
+
+    public Builder<T> setNodesToFilter(Predicate<T> pred) {
+      shouldContainNode = pred;
+      return this;
+    }
+
+    public Dot<T> build() {
+      return new Dot<>(this);
+    }
   }
 
-  public static <T> void writeSubgraphOutput(
-      final DirectedAcyclicGraph<T> graph,
-      final String graphName,
-      final ImmutableSet<T> nodesToFilter,
-      final Function<T, String> nodeToName,
-      final Function<T, String> nodeToTypeName,
-      final Appendable output,
-      final boolean bfsSorted)
-      throws IOException {
+  private Dot(Builder<T> builder) {
+    this.graph = builder.graph;
+    this.graphName = builder.graphName;
+    this.nodeToName = builder.nodeToName;
+    this.nodeToTypeName = builder.nodeToTypeName;
+    this.bfsSorted = builder.bfsSorted;
+    this.shouldContainNode = builder.shouldContainNode;
+  }
+
+  /** Writes out the graph in dot format to the given output */
+  public void writeOutput(Appendable output) throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
     final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     output.append("digraph " + graphName + " {\n");
@@ -110,20 +122,15 @@ public class Dot<T> {
 
           @Override
           public Iterable<T> visit(T node) {
-            if (!nodesToFilter.contains(node)) {
+            if (!shouldContainNode.test(node)) {
               return ImmutableSet.<T>of();
             }
-            String source = nodeToName.apply(node);
-            String sourceType = nodeToTypeName.apply(node);
-            builder.add(
-                String.format(
-                    "  %s [style=filled,color=%s];\n", source, Dot.colorFromType(sourceType)));
+            builder.add(printNode(node, nodeToName, nodeToTypeName));
             ImmutableSortedSet<T> nodes =
                 ImmutableSortedSet.copyOf(
-                    Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains));
+                    Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
             for (T sink : nodes) {
-              String sinkName = nodeToName.apply(sink);
-              builder.add(String.format("  %s -> %s;\n", source, sinkName));
+              builder.add(printEdge(node, sink, nodeToName));
             }
             return nodes;
           }
@@ -135,17 +142,12 @@ public class Dot<T> {
 
         @Override
         public void visit(T node) {
-          if (!nodesToFilter.contains(node)) {
+          if (!shouldContainNode.test(node)) {
             return;
           }
-          String source = nodeToName.apply(node);
-          String sourceType = nodeToTypeName.apply(node);
-          sortedSetBuilder.add(
-              String.format(
-                  "  %s [style=filled,color=%s];\n", source, Dot.colorFromType(sourceType)));
-          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
-            String sinkName = nodeToName.apply(sink);
-            sortedSetBuilder.add(String.format("  %s -> %s;\n", source, sinkName));
+          sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName));
+          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test)) {
+            sortedSetBuilder.add(printEdge(node, sink, nodeToName));
           }
         }
       }.traverse();
@@ -159,6 +161,21 @@ public class Dot<T> {
     output.append("}\n");
   }
 
+  private static String escape(String str) {
+    // decide if node name should be escaped according to DOT specification
+    // https://en.wikipedia.org/wiki/DOT_(graph_description_language)
+    boolean needEscape =
+        str.startsWith("#")
+            || str.contains("//") // May occur within string due to cross-cell.
+            || str.contains(" ")
+            || str.contains("\"")
+            || str.contains("/*");
+    if (!needEscape) {
+      return str;
+    }
+    return "\"" + str.replace("\"", "\\\"") + "\"";
+  }
+
   public static String colorFromType(String type) {
     if (Dot.typeColors.containsKey(type)) {
       return Dot.typeColors.get(type);
@@ -167,5 +184,19 @@ public class Dot<T> {
     int g = 192 + (type.hashCode() / 64 % 64);
     int b = 192 + (type.hashCode() / 4096 % 64);
     return String.format("\"#%02X%02X%02X\"", r, g, b);
+  }
+
+  private static <T> String printNode(
+      T node, Function<T, String> nodeToName, Function<T, String> nodeToTypeName) {
+    String source = nodeToName.apply(node);
+    String sourceType = nodeToTypeName.apply(node);
+    return String.format(
+        "  %s [style=filled,color=%s];\n", escape(source), Dot.colorFromType(sourceType));
+  }
+
+  private static <T> String printEdge(T sourceN, T sinkN, Function<T, String> nodeToName) {
+    String sourceName = nodeToName.apply(sourceN);
+    String sinkName = nodeToName.apply(sinkN);
+    return String.format("  %s -> %s;\n", escape(sourceName), escape(sinkName));
   }
 }

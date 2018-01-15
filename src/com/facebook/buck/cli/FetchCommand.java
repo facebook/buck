@@ -18,11 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.StackedDownloader;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.StackedDownloader;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -32,12 +32,16 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.MetadataChecker;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
@@ -47,13 +51,11 @@ import java.io.IOException;
 public class FetchCommand extends BuildCommand {
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
 
     if (getArguments().isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("Must specify at least one build target to fetch."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
@@ -65,7 +67,7 @@ public class FetchCommand extends BuildCommand {
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
-    int exitCode;
+    int exitCodeInt;
     try (CommandThreadManager pool =
         new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()))) {
       ActionGraphAndResolver actionGraphAndResolver;
@@ -91,13 +93,14 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckEventBus(),
                     ruleGenerator,
                     result.getTargetGraph(),
-                    params.getBuckConfig().getActionGraphParallelizationMode()));
+                    params.getBuckConfig().getActionGraphParallelizationMode(),
+                    params.getBuckConfig().getShouldInstrumentActionGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
-      } catch (BuildTargetException | BuildFileParseException | VersionException e) {
+      } catch (BuildFileParseException | VersionException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+        return ExitCode.PARSE_ERROR;
       }
 
       MetadataChecker.checkAndCleanIfNeeded(params.getCell());
@@ -126,31 +129,35 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                   cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
                   RuleKeyFactories.of(
-                      params.getBuckConfig().getKeySeed(),
+                      params.getRuleKeyConfiguration(),
                       localCachingBuildEngineDelegate.getFileHashCache(),
                       actionGraphAndResolver.getResolver(),
-                      cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                      params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
-                  params.getBuckConfig().getFileHashCacheMode());
+                  new NoOpRemoteBuildRuleCompletionWaiter());
           Build build =
-              createBuild(
-                  params.getBuckConfig(),
+              new Build(
                   actionGraphAndResolver.getResolver(),
                   params.getCell(),
                   buildEngine,
                   params.getArtifactCacheFactory().newInstance(),
-                  params.getConsole(),
+                  params
+                      .getBuckConfig()
+                      .getView(JavaBuckConfig.class)
+                      .createDefaultJavaPackageFinder(),
                   params.getClock(),
-                  getExecutionContext())) {
-        exitCode =
+                  getExecutionContext(),
+                  isKeepGoing())) {
+        exitCodeInt =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,
-                isKeepGoing(),
                 params.getBuckEventBus(),
                 params.getConsole(),
                 getPathToBuildReport(params.getBuckConfig()));
       }
     }
+
+    ExitCode exitCode = ExitCode.map(exitCodeInt);
 
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 
@@ -164,7 +171,8 @@ public class FetchCommand extends BuildCommand {
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
     Downloader downloader =
-        StackedDownloader.createFromConfig(params.getBuckConfig(), params.getToolchainProvider());
+        StackedDownloader.createFromConfig(
+            params.getBuckConfig(), params.getCell().getToolchainProvider());
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(ImmutableSet.of(description));
   }

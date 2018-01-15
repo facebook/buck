@@ -18,39 +18,38 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringWithMacrosArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosArg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class CommandAliasDescription implements Description<CommandAliasDescriptionArg> {
@@ -93,13 +92,15 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
 
     for (StringWithMacros x : args.getArgs()) {
       toolBuilder.addArg(
-          StringWithMacrosArg.of(x, MACRO_EXPANDERS, buildTarget, cellRoots, resolver));
+          StringWithMacrosArg.of(
+              x, MACRO_EXPANDERS, Optional.empty(), buildTarget, cellRoots, resolver));
     }
 
     for (Map.Entry<String, StringWithMacros> x : args.getEnv().entrySet()) {
       toolBuilder.addEnv(
           x.getKey(),
-          StringWithMacrosArg.of(x.getValue(), MACRO_EXPANDERS, buildTarget, cellRoots, resolver));
+          StringWithMacrosArg.of(
+              x.getValue(), MACRO_EXPANDERS, Optional.empty(), buildTarget, cellRoots, resolver));
     }
 
     CommandTool commandTool = toolBuilder.build();
@@ -107,7 +108,8 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
     return new CommandAlias(
         buildTarget,
         projectFilesystem,
-        params.withExtraDeps(ImmutableSortedSet.copyOf(commandTool.getDeps(ruleFinder))),
+        params.withExtraDeps(
+            ImmutableSortedSet.copyOf(BuildableSupport.getDepsCollection(commandTool, ruleFinder))),
         commandTool);
   }
 
@@ -136,10 +138,9 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
   }
 
   private static class PlatformSpecificTool implements Tool {
-
-    private final Supplier<Tool> tool;
-    private final Optional<BuildTarget> genericExe;
-    private final ImmutableSortedMap<Platform, BuildTarget> platformExe;
+    @AddToRuleKey private final Supplier<Tool> tool;
+    @AddToRuleKey private final Optional<BuildTarget> genericExe;
+    @AddToRuleKey private final ImmutableSortedMap<Platform, BuildTarget> platformExe;
 
     private PlatformSpecificTool(
         Supplier<Tool> toolSupplier,
@@ -148,37 +149,6 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       this.tool = toolSupplier;
       this.genericExe = genericExe;
       this.platformExe = platformExe;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("genericExe", genericExe);
-      platformExe
-          .entrySet()
-          .forEach(
-              entry -> sink.setReflectively(entry.getKey().getPrintableName(), entry.getValue()));
-    }
-
-    @Override
-    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-      Tool tool;
-      try {
-        tool = this.tool.get();
-      } catch (UnsupportedPlatformException e) {
-        return ImmutableList.of();
-      }
-      return tool.getDeps(ruleFinder);
-    }
-
-    @Override
-    public ImmutableCollection<SourcePath> getInputs() {
-      Tool tool;
-      try {
-        tool = this.tool.get();
-      } catch (UnsupportedPlatformException e) {
-        return ImmutableList.of();
-      }
-      return tool.getInputs();
     }
 
     @Override
@@ -207,11 +177,21 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       }
 
       return new PlatformSpecificTool(
-          tool.map(t -> Suppliers.memoize(() -> asTool(t, resolver)))
+          tool.map(t -> MoreSuppliers.memoize(() -> asTool(t, resolver)))
               .orElse(
-                  () -> {
-                    throw new UnsupportedPlatformException(buildTarget, targetPlatform);
-                  }),
+                  () ->
+                      new Tool() {
+                        @Override
+                        public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+                          throw new UnsupportedPlatformException(buildTarget, targetPlatform);
+                        }
+
+                        @Override
+                        public ImmutableMap<String, String> getEnvironment(
+                            SourcePathResolver resolver) {
+                          throw new UnsupportedPlatformException(buildTarget, targetPlatform);
+                        }
+                      }),
           genericExe,
           platformExe);
     }

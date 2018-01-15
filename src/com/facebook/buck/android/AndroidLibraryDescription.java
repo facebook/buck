@@ -17,13 +17,14 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -38,7 +39,9 @@ import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -60,16 +63,16 @@ public class AndroidLibraryDescription
     SCALA,
   }
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions defaultOptions;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public AndroidLibraryDescription(
+      ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
-      JavacOptions defaultOptions,
       AndroidLibraryCompilerFactory compilerFactory) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.defaultOptions = defaultOptions;
     this.compilerFactory = compilerFactory;
   }
 
@@ -92,9 +95,22 @@ public class AndroidLibraryDescription
           buildTarget, projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
     }
 
+    if (args.isSkipNonUnionRDotJava()) {
+      Preconditions.checkArgument(
+          args.getResourceUnionPackage().isPresent(),
+          "union_package should be specified if skip_non_union_r_dot_java is set");
+    }
+
     boolean hasDummyRDotJavaFlavor = buildTarget.getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
+        JavacOptionsFactory.create(
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            args);
     AndroidLibrary.Builder androidLibraryBuilder =
         AndroidLibrary.builder(
             buildTarget,
@@ -121,6 +137,7 @@ public class AndroidLibraryDescription
         || flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR))
         || flavors.equals(ImmutableSet.of(HasJavaAbi.CLASS_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(HasJavaAbi.SOURCE_ABI_FLAVOR))
+        || flavors.equals(ImmutableSet.of(HasJavaAbi.SOURCE_ONLY_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR));
   }
 
@@ -145,10 +162,15 @@ public class AndroidLibraryDescription
 
     Optional<String> getResourceUnionPackage();
 
+    @Value.Default
+    default boolean isSkipNonUnionRDotJava() {
+      return false;
+    }
+
     Optional<String> getFinalRName();
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractAndroidLibraryDescriptionArg extends CoreArg {}
 }

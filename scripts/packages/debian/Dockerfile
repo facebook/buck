@@ -1,9 +1,9 @@
-FROM ubuntu:15.04
+FROM azul/zulu-openjdk:8
 ARG tag
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends curl ca-certificates \
       git pkg-config zip unzip \
-      g++ gcc openjdk-8-jdk \
+      g++ gcc \
       zlib1g-dev libarchive-dev \
       ca-certificates-java \
       ant \

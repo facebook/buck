@@ -1,50 +1,50 @@
 genrule(
-  name = 'resource',
-  srcs = [
-    'LameGenfile.java',
-    'resource.base.txt',
-  ],
-  bash = ('TEXT=`cat resource.base.txt`;' +
-    'sed \"s/REPLACEME/$TEXT/g\" LameGenfile.java > $OUT'),
-  cmd_exe = 'powershell.exe -Command ' +
-    'Out-File -Encoding ASCII $env:OUT -InputObject ' +
-    '((Get-Content LameGenfile.java)  -replace \'REPLACEME\', (Get-Content resource.base.txt))',
-  out = 'LameGenfile.java',
+    name = "resource",
+    srcs = [
+        "LameGenfile.java",
+        "resource.base.txt",
+    ],
+    out = "LameGenfile.java",
+    bash = ("TEXT=`cat resource.base.txt`;" +
+            "sed \"s/REPLACEME/$TEXT/g\" LameGenfile.java > $OUT"),
+    cmd_exe = "powershell.exe -Command " +
+              "Out-File -Encoding ASCII $env:OUT -InputObject " +
+              "((Get-Content LameGenfile.java)  -replace 'REPLACEME', (Get-Content resource.base.txt))",
 )
 
 java_library(
-  name = 'library',
-  srcs = [
-    ':resource',   
-  ],
+    name = "library",
+    srcs = [
+        ":resource",
+    ],
 )
 
 java_test(
-  name = 'test',
-  srcs = [
-    'LameTest.java',
-  ],
-  deps = [
-    ':junit',
-    ':library',
-  ],
+    name = "test",
+    srcs = [
+        "LameTest.java",
+    ],
+    deps = [
+        ":junit",
+        ":library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
-  deps = [
-    ':hamcrest-core',
-    ':hamcrest-library',
-  ],
+    name = "junit",
+    binary_jar = "junit-4.11.jar",
+    deps = [
+        ":hamcrest-core",
+        ":hamcrest-library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-core",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+    name = "hamcrest-library",
+    binary_jar = "hamcrest-library-1.3.jar",
 )

@@ -1,10 +1,10 @@
 groovy_library(
-  name = 'child',
-  srcs = ['Foo.groovy'],
-  deps = [
-    '//com/example/good:example',
-  ],
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "child",
+    srcs = ["Foo.groovy"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//com/example/good:example",
+    ],
 )

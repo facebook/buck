@@ -19,17 +19,17 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.AbiGenerationMode;
+import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
-import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -70,7 +70,14 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
-            new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY),
+            buildTarget,
+            new JavacToJarStepFactory(
+                resolver,
+                ruleFinder,
+                projectFilesystem,
+                javac,
+                javacOptions,
+                ExtraClasspathProvider.EMPTY),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
             /* resources */ ImmutableSortedSet.of(),
             /* resourcesRoot */ Optional.empty(),
@@ -81,6 +88,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
                 androidBuildConfig.getSourcePathToOutput()),
             /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,
+            AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
             /* sourceOnlyAbiRuleInfo */ null),
         /* proguardConfig */ Optional.empty(),

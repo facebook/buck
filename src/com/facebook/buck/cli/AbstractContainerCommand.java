@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -28,7 +29,6 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.concurrent.ScheduledExecutorService;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
@@ -61,26 +61,26 @@ public abstract class AbstractContainerCommand implements Command {
   protected abstract String getContainerCommandPrefix();
 
   @Override
-  public OptionalInt runHelp(PrintStream stream) {
+  public Optional<ExitCode> runHelp(PrintStream stream) {
     if (getSubcommand().isPresent()) {
       return getSubcommand().get().runHelp(stream);
-    } else if (helpScreen) {
-      printUsage(stream);
-      return OptionalInt.of(1);
-    } else {
-      return OptionalInt.empty();
     }
+    if (helpScreen) {
+      printUsage(stream);
+      return Optional.of(ExitCode.SUCCESS);
+    }
+    return Optional.empty();
   }
 
   @Override
-  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException {
     Optional<Command> subcommand = getSubcommand();
     if (subcommand.isPresent()) {
       return subcommand.get().run(params);
-    } else {
-      printUsage(params.getConsole().getStdErr());
-      return 1;
     }
+
+    printUsage(params.getConsole().getStdErr());
+    return ExitCode.COMMANDLINE_ERROR;
   }
 
   @Override

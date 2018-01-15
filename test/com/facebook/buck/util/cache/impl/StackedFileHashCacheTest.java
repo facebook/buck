@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.config.Config;
@@ -62,7 +61,7 @@ public class StackedFileHashCacheTest {
     return EnumSet.allOf(FileHashCacheMode.class)
         .stream()
         .map(v -> new Object[] {v})
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public StackedFileHashCacheTest(FileHashCacheMode fileHashCacheMode) {

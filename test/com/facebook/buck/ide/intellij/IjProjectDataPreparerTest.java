@@ -44,7 +44,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -360,7 +360,7 @@ public class IjProjectDataPreparerTest {
             Paths.get("lib/guava.jar"));
 
     FakeProjectFilesystem filesystemForExcludesTest =
-        new FakeProjectFilesystem(FakeClock.DO_NOT_CARE, Paths.get(".").toAbsolutePath(), paths);
+        new FakeProjectFilesystem(FakeClock.doNotCare(), Paths.get(".").toAbsolutePath(), paths);
 
     TargetNode<?, ?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))

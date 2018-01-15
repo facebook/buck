@@ -26,6 +26,7 @@ import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -70,10 +71,13 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   @Override
-  public String getDetailsForLogging() {
-    return String.format(
-        "EdenProjectFilesystemDelegate{mount=%s; disableSha1FastPath=%s}",
-        mount.getProjectRoot(), disableSha1FastPath);
+  public ImmutableMap<String, ? extends Object> getDetailsForLogging() {
+    return ImmutableMap.<String, Object>builder()
+        .put("filesystem", "eden")
+        .put("eden.filesystem", true)
+        .put("eden.mountPoint", mount.getProjectRoot().toString())
+        .put("eden.disableSha1FastPath", disableSha1FastPath)
+        .build();
   }
 
   @Override

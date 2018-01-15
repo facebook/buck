@@ -35,6 +35,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -110,7 +111,8 @@ public class HalideLibraryDescriptionTest {
         lib.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule buildRule =
         FluentIterable.from(input.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(new SourcePathRuleFinder(resolver)))
+            .transformAndConcat(
+                arg -> BuildableSupport.getDepsCollection(arg, new SourcePathRuleFinder(resolver)))
             .get(0);
     assertThat(buildRule, is(instanceOf(Archive.class)));
   }

@@ -1,80 +1,80 @@
 java_library(
-  name = 'NotBuckBlockJUnit4ClassRunner',
-  srcs = [ 'NotBuckBlockJUnit4ClassRunner.java', ],
-  deps = [
-    ':junit',
-  ],
+    name = "NotBuckBlockJUnit4ClassRunner",
+    srcs = ["NotBuckBlockJUnit4ClassRunner.java"],
+    deps = [
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'TestThatTakesTooLong',
-  srcs = [ 'TestThatTakesTooLong.java', ],
-  deps = [
-    ':junit',
-    ':NotBuckBlockJUnit4ClassRunner',
-  ],
+    name = "TestThatTakesTooLong",
+    srcs = ["TestThatTakesTooLong.java"],
+    deps = [
+        ":NotBuckBlockJUnit4ClassRunner",
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'TestThatRunsForever',
-  srcs = [ 'TestThatRunsForever.java', ],
-  deps = [
-    ':junit',
-    ':NotBuckBlockJUnit4ClassRunner',
-  ],
+    name = "TestThatRunsForever",
+    srcs = ["TestThatRunsForever.java"],
+    deps = [
+        ":NotBuckBlockJUnit4ClassRunner",
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation',
-  srcs = [ 'TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation.java', ],
-  deps = [
-    ':junit',
-    ':NotBuckBlockJUnit4ClassRunner',
-  ],
+    name = "TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation",
+    srcs = ["TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation.java"],
+    deps = [
+        ":NotBuckBlockJUnit4ClassRunner",
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule',
-  srcs = [ 'TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule.java', ],
-  deps = [
-    ':junit',
-    ':NotBuckBlockJUnit4ClassRunner',
-  ],
+    name = "TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule",
+    srcs = ["TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule.java"],
+    deps = [
+        ":NotBuckBlockJUnit4ClassRunner",
+        ":junit",
+    ],
 )
 
 java_library(
-  name = 'UtilityThatHoldsAReferenceToTheMainThread',
-  srcs = [ 'UtilityThatHoldsAReferenceToTheMainThread.java', ],
+    name = "UtilityThatHoldsAReferenceToTheMainThread",
+    srcs = ["UtilityThatHoldsAReferenceToTheMainThread.java"],
 )
 
 java_test(
-  name = 'MultipleTestsThatExpectToBeAbleToReuseTheMainThread',
-  srcs = [
-    'Test1.java',
-    'Test2.java',
-  ],
-  deps = [
-    ':junit',
-    ':NotBuckBlockJUnit4ClassRunner',
-    ':UtilityThatHoldsAReferenceToTheMainThread',
-  ],
+    name = "MultipleTestsThatExpectToBeAbleToReuseTheMainThread",
+    srcs = [
+        "Test1.java",
+        "Test2.java",
+    ],
+    deps = [
+        ":NotBuckBlockJUnit4ClassRunner",
+        ":UtilityThatHoldsAReferenceToTheMainThread",
+        ":junit",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
-  deps = [
-    ':hamcrest-core',
-    ':hamcrest-library',
-  ],
+    name = "junit",
+    binary_jar = "junit-4.11.jar",
+    deps = [
+        ":hamcrest-core",
+        ":hamcrest-library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-core",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+    name = "hamcrest-library",
+    binary_jar = "hamcrest-library-1.3.jar",
 )

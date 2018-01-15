@@ -37,13 +37,13 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -129,7 +129,7 @@ public class MergeAndroidResourcesSourcesTest {
     String resIn2 = filesystem.getRootPath().resolve("res_in_2").toString();
 
     assertThat(
-        FluentIterable.from(steps).transform(stepDescriptionFunction),
+        steps.stream().map(stepDescriptionFunction).collect(Collectors.toList()),
         Matchers.contains(
             Matchers.containsString("rm"),
             Matchers.containsString("mkdir"),

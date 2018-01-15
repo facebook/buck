@@ -1,0 +1,8 @@
+java_library(
+    name = "env",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+    ],
+)

@@ -244,6 +244,7 @@ available commands:
   clean       deletes any generated files
   fetch       downloads remote resources to your local machine
   install     builds and installs an application
+  kill        kill buckd for the current project
   project     generates project configuration files for an IDE
   query       provides facilities to query information about the target nodes graph
   root        prints the absolute path to the root of the current buck project
@@ -323,12 +324,12 @@ For some distros, the default packages may be older than what you would like. In
 </blockquote>
 </p>
 
-<span><block class="windows linux android" /></span>
+<span><block class="mac linux windows android" /></span>
 
-<h3>Environment Variables</h3>
+<h3>Android SDK and NDK</h3>
 
 <p>
-  You will need to tell Buck where to find our SDK and NDK.  Buck will look at the value of the <code>ANDROID_HOME</code> environment variable to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code> to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> to find an appropriate NDK from a directory containing multiple NDK versions.
+  You will need to tell Buck where to find our SDK and NDK.  Buck will look at the value of the <code>ANDROID_SDK</code>, <code>ANDROID_HOME</code>, or {call buckconfig.android_sdk_path /} to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code>, <code>NDK_HOME</code>, or {call buckconfig.ndk_path /} to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> or {call buckconfig.ndk_repository_path /} to find an appropriate NDK from a directory containing multiple NDK versions.
 </p>
 
 <span><block class="windows linux android other" /></span>
@@ -366,6 +367,7 @@ available commands:
   clean       deletes any generated files
   fetch       downloads remote resources to your local machine
   install     builds and installs an application
+  kill        kill buckd for the current project
   project     generates project configuration files for an IDE
   query       provides facilities to query information about the target nodes graph
   root        prints the absolute path to the root of the current buck project
@@ -543,7 +545,7 @@ ANDROID_SDK=&lt;path-to-sdk&gt;
 {/literal}
 
 <p>
-  Set the missing variables to the locations of Android SDK and Android NDK.
+  Set the missing variables to the locations of Android SDK and Android NDK or set the paths in your {call buck.concept_buckconfig /} file.
 </p>
 
 <p>
@@ -554,6 +556,14 @@ ANDROID_SDK=&lt;path-to-sdk&gt;
   <li>See {call buckconfig.android_build_tools_version /} to get the version of build tools in Android SDK.</li>
   <li>{call buckconfig.android_target /} points to the target.</li>
   <li>{call buckconfig.ndk_version /} points to the version of Android NDK.</li>
+</ul>
+
+Optionally:
+
+<ul>
+  <li>{call buckconfig.android_sdk_path /} is an absolute path to the Android SDK.</li>
+  <li>{call buckconfig.ndk_path /} is an absolute path to the Android NDK.</li>
+  <li>{call buckconfig.ndk_repository_path /} is an absolute path to the Android NDK repository.</li>
 </ul>
 
 <h3>Build the Android Sample</h3>

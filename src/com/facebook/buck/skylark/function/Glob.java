@@ -16,22 +16,21 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import com.facebook.buck.skylark.packages.PackageContext;
+import com.facebook.buck.skylark.packages.PackageFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.GlobList;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 import com.google.devtools.build.lib.syntax.Type;
-import com.google.devtools.build.lib.vfs.Path;
-import com.google.devtools.build.lib.vfs.UnixGlob;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * A factory for {@code glob} built-in function available in build files.
@@ -68,13 +67,13 @@ public class Glob {
     doc = "Returns a list of files that match glob search pattern.",
     parameters = {
       @Param(
-        name = "includes",
+        name = "include",
         type = SkylarkList.class,
         generic1 = String.class,
         doc = "a list of strings specifying patterns of files to include."
       ),
       @Param(
-        name = "excludes",
+        name = "exclude",
         type = SkylarkList.class,
         generic1 = String.class,
         defaultValue = "[]",
@@ -85,79 +84,53 @@ public class Glob {
       @Param(
         name = "exclude_directories",
         type = Boolean.class,
-        defaultValue = "False",
+        defaultValue = "True",
         positional = false,
         named = true,
         doc = "True indicates directories should not be matched."
       ),
     },
     documented = false,
+    useAst = true,
     useEnvironment = true
   )
-  private static final BuiltinFunction.Factory glob =
-      new BuiltinFunction.Factory(GLOB_FUNCTION_NAME) {
+  private static final BuiltinFunction glob =
+      new BuiltinFunction(GLOB_FUNCTION_NAME) {
         @SuppressWarnings("unused")
-        public BuiltinFunction create(Path basePath) {
-          return new BuiltinFunction(GLOB_FUNCTION_NAME, this) {
-            public SkylarkList<String> invoke(
-                SkylarkList<String> includes,
-                SkylarkList<String> excludes,
-                Boolean excludeDirectories,
-                Environment env)
-                throws EvalException, InterruptedException, IOException {
-
-              ImmutableSet<String> includePaths =
-                  resolvePathsMatchingGlobPatterns(
-                      Type.STRING_LIST.convert(includes, "'glob' includes"),
-                      basePath,
-                      excludeDirectories);
-              ImmutableSet<String> excludedPaths =
-                  resolvePathsMatchingGlobPatterns(
-                      Type.STRING_LIST.convert(excludes, "'glob' excludes"),
-                      basePath,
-                      excludeDirectories);
-              return SkylarkList.MutableList.copyOf(
-                  env,
-                  GlobList.captureResults(
-                      includes,
-                      excludes,
-                      Sets.difference(includePaths, excludedPaths)
-                          .stream()
-                          .sorted()
-                          .collect(MoreCollectors.toImmutableList())));
-            }
-          };
+        public SkylarkList<String> invoke(
+            SkylarkList<String> include,
+            SkylarkList<String> exclude,
+            Boolean excludeDirectories,
+            FuncallExpression ast,
+            Environment env)
+            throws EvalException, IOException {
+          PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
+          try {
+            return SkylarkList.MutableList.copyOf(
+                env,
+                GlobList.captureResults(
+                    include,
+                    exclude,
+                    packageContext
+                        .getGlobber()
+                        .run(
+                            Type.STRING_LIST.convert(include, "'glob' include"),
+                            Type.STRING_LIST.convert(exclude, "'glob' exclude"),
+                            excludeDirectories)
+                        .stream()
+                        .sorted()
+                        .collect(ImmutableList.toImmutableList())));
+          } catch (FileNotFoundException fnfe) {
+            throw new EvalException(ast.getLocation(), "Cannot find " + fnfe.getMessage());
+          }
         }
       };
 
   /**
-   * Resolves provided list of glob patterns into a set of paths.
-   *
-   * @param patterns The glob patterns to resolve.
-   * @param basePath The base path used when resolving glob patterns.
-   * @param excludeDirectories Flag indicating whether directories should be excluded from result.
-   * @return The set of paths corresponding to requested patterns.
-   */
-  private static ImmutableSet<String> resolvePathsMatchingGlobPatterns(
-      List<String> patterns, Path basePath, Boolean excludeDirectories) throws IOException {
-    UnixGlob.Builder includeGlobBuilder = UnixGlob.forPath(basePath).addPatterns(patterns);
-    if (excludeDirectories != null) {
-      includeGlobBuilder.setExcludeDirectories(excludeDirectories);
-    }
-    return includeGlobBuilder
-        .glob()
-        .stream()
-        .map(includePath -> includePath.relativeTo(basePath).getPathString())
-        .collect(MoreCollectors.toImmutableSet());
-  }
-
-  /**
    * Creates a built-in {@code glob} function that can resolve glob patterns under {@code basePath}.
-   *
-   * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static BuiltinFunction create(Path basePath) {
-    return glob.apply(basePath);
+  public static BuiltinFunction create() {
+    return glob;
   }
 
   static {

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
@@ -43,7 +44,7 @@ interface AbstractAndroidGraphEnhancementResult {
 
   ImmutableList<SourcePath> getPrimaryApkAssetZips();
 
-  ImmutableList<SourcePath> getExoResources();
+  ImmutableList<ExopackagePathAndHash> getExoResources();
 
   /**
    * This includes everything from the corresponding {@link

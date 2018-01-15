@@ -37,6 +37,7 @@ import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
@@ -96,9 +97,9 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     return commandBuilder
         .add(this.inferConfig.getInferTopLevel().toString())
-        .add("-a", "capture")
-        .add("--project_root", getProjectFilesystem().getRootPath().toString())
-        .add("--out", resultsDir.toString())
+        .add("capture")
+        .add("--results-dir", resultsDir.toString())
+        .add("--project-root", getProjectFilesystem().getRootPath().toString())
         .add("--")
         .add("clang")
         .add("@" + getArgfile())
@@ -126,7 +127,10 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .add(new WriteArgFileStep(context.getSourcePathResolver(), inputRelativePath))
         .add(
             new DefaultShellStep(
-                getProjectFilesystem().getRootPath(), frontendCommand, ImmutableMap.of()))
+                getBuildTarget(),
+                getProjectFilesystem().getRootPath(),
+                frontendCommand,
+                ImmutableMap.of()))
         .build();
   }
 
@@ -210,8 +214,8 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
         throws IOException, InterruptedException {
       getProjectFilesystem()
           .writeLinesToPath(
-              Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER), getArgfile());
-      return StepExecutionResult.SUCCESS;
+              Iterables.transform(getCompilerArgs(), Escaper.ARGFILE_ESCAPER::apply), getArgfile());
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.zip.CRC32;
 
 public class DeterministicZipBuilder implements Closeable {
   // TODO(cjhopman): Should this buffer the entries and then sort them by name? We may have to
@@ -49,6 +50,21 @@ public class DeterministicZipBuilder implements Closeable {
     outputEntry.setSize(dataLength);
     output.putNextEntry(outputEntry);
     ByteStreams.copy(data, output);
+    output.closeEntry();
+  }
+
+  public void addEntry(byte[] data, String name, int compressionLevel) throws IOException {
+    CustomZipEntry outputEntry = new CustomZipEntry(Paths.get(name));
+    outputEntry.setCompressionLevel(compressionLevel);
+    CRC32 crc = new CRC32();
+    crc.update(data);
+    outputEntry.setCrc(crc.getValue());
+    if (compressionLevel == 0) {
+      outputEntry.setCompressedSize(data.length);
+    }
+    outputEntry.setSize(data.length);
+    output.putNextEntry(outputEntry);
+    output.write(data);
     output.closeEntry();
   }
 

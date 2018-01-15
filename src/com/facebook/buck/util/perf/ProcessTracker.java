@@ -160,7 +160,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   @Override
-  protected Scheduler scheduler() {
+  protected AbstractScheduledService.Scheduler scheduler() {
     return Scheduler.newFixedRateSchedule(0L, 1000L, TimeUnit.MILLISECONDS);
   }
 

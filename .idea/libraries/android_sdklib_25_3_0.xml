@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="android-sdklib-25.3.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/android/sdklib-25.3.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/android/sdklib-25.3.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -56,6 +56,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
 
   private boolean isProcessingAnnotations = false;
   private int roundNumber = 0;
+  private boolean isLastRound = false;
 
   public TranslatingJavacPhaseTracer(JavacPhaseEventLogger logger) {
     this.logger = logger;
@@ -79,6 +80,14 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   @Override
   public void endEnter(List<String> filenames) {
     logger.endEnter(filenames);
+    if (isProcessingAnnotations && isLastRound) {
+      endAnnotationProcessing();
+    }
+  }
+
+  @Override
+  public void setIsLastRound(boolean isLastRound) {
+    this.isLastRound = isLastRound;
   }
 
   @Override
@@ -102,8 +111,6 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
 
   @Override
   public void beginAnalyze() {
-    maybeEndAnnotationProcessing();
-
     logger.beginAnalyze();
   }
 
@@ -131,10 +138,16 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   }
 
   private void maybeEndAnnotationProcessing() {
-    if (isProcessingAnnotations) {
+    if (isProcessingAnnotations && isLastRound) {
       logger.endAnnotationProcessingRound(true);
       logger.endAnnotationProcessing();
       isProcessingAnnotations = false;
     }
+  }
+
+  private void endAnnotationProcessing() {
+    logger.endAnnotationProcessingRound(true);
+    logger.endAnnotationProcessing();
+    isProcessingAnnotations = false;
   }
 }

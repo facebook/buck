@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 TYPES_SRCS = [
     "AbstractQuery.java",
 ]
@@ -17,7 +19,7 @@ java_library(
     name = "query",
     srcs = glob(
         ["*.java"],
-        excludes = TYPES_SRCS,
+        exclude = TYPES_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/rules/query:query",
@@ -30,8 +32,7 @@ java_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/jvm/core:classhash",
-        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",

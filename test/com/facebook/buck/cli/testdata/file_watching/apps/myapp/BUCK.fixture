@@ -1,6 +1,6 @@
 java_binary(
-  name = 'app',
-  deps = [
-    '//java/com/example/activity:activity',
-  ],
+    name = "app",
+    deps = [
+        "//java/com/example/activity:activity",
+    ],
 )

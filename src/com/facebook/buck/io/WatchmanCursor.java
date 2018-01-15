@@ -17,22 +17,22 @@
 package com.facebook.buck.io;
 
 public class WatchmanCursor {
-  private String mWatchmanCursor;
+  private String watchmanCursor;
 
   public WatchmanCursor(String initialCursor) {
-    this.mWatchmanCursor = initialCursor;
+    this.watchmanCursor = initialCursor;
   }
 
   public void set(String newCursor) {
-    mWatchmanCursor = newCursor;
+    watchmanCursor = newCursor;
   }
 
   public String get() {
-    return mWatchmanCursor;
+    return watchmanCursor;
   }
 
   @Override
   public String toString() {
-    return mWatchmanCursor;
+    return watchmanCursor;
   }
 }

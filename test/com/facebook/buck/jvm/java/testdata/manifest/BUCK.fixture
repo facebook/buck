@@ -1,5 +1,5 @@
 java_library(
-  name = 'library',
-  resources = ['foo.txt'],
-  manifest_file = 'manifest.mf',
+    name = "library",
+    manifest_file = "manifest.mf",
+    resources = ["foo.txt"],
 )

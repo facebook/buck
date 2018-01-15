@@ -19,28 +19,44 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacrosArg;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
+import com.fasterxml.jackson.core.io.CharTypes;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JsUtil {
+  private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
+      MACRO_EXPANDERS = ImmutableList.of(new LocationMacroExpander());
+  private static final int[] outputEscapes = CharTypes.get7BitOutputEscapes();
+
   private JsUtil() {}
 
   static WorkerShellStep workerShellStep(
@@ -65,6 +81,7 @@ public class JsUtil {
                             worker.getInstanceKey()))
                     : Optional.empty()));
     return new WorkerShellStep(
+        buildTarget,
         Optional.of(params),
         Optional.empty(),
         Optional.empty(),
@@ -103,7 +120,69 @@ public class JsUtil {
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(subpath));
   }
 
+  public static String getValueForFlavor(ImmutableMap<UserFlavor, String> map, Flavor flavor) {
+    return Preconditions.checkNotNull(map.get(flavor), "no string representation of the flavor");
+  }
+
+  private static final ImmutableMap<UserFlavor, String> PLATFORM_STRINGS =
+      ImmutableMap.of(
+          JsFlavors.ANDROID, "android",
+          JsFlavors.IOS, "ios");
+
+  static Optional<String> getPlatformString(Set<Flavor> flavors) {
+    return JsFlavors.PLATFORM_DOMAIN
+        .getFlavor(flavors)
+        .map(platform -> getValueForFlavor(PLATFORM_STRINGS, platform));
+  }
+
   public static String getSourcemapPath(JsBundleOutputs jsBundleOutputs) {
     return String.format("map/%s.map", jsBundleOutputs.getBundleName());
+  }
+
+  /**
+   * Wraps the {@link com.facebook.buck.rules.macros.StringWithMacros} coming from {@link
+   * HasExtraJson} so that it can be added to rule keys and expanded easily.
+   */
+  public static Optional<StringWithMacrosArg> getExtraJson(
+      HasExtraJson args,
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      CellPathResolver cellRoots) {
+    return args.getExtraJson()
+        .map(
+            stringWithMacros ->
+                StringWithMacrosArg.of(
+                    stringWithMacros,
+                    MACRO_EXPANDERS,
+                    Optional.empty(),
+                    target,
+                    cellRoots,
+                    resolver));
+  }
+
+  /** Expands JSON with macros, escaping macro values for interpolation into quoted strings. */
+  public static String expandJsonWithMacros(StringWithMacrosArg jsonStringWithMacros) {
+    return jsonStringWithMacros.expand(JsUtil::escapeJsonForStringEmbedding);
+  }
+
+  /** @return The input with all special JSON characters escaped, but not wrapped in quotes. */
+  public static String escapeJsonForStringEmbedding(String input) {
+    StringBuilder builder = new StringBuilder(input.length());
+    for (int i = 0; i < input.length(); i++) {
+      char c = input.charAt(i);
+      if (c > 0x7f || outputEscapes[c] == 0) {
+        builder.append(c);
+      } else if (outputEscapes[c] == -1) {
+        builder.append('\\').append('u').append('0').append('0');
+        if (c < 0x10) {
+          builder.append('0');
+        }
+        builder.append(Integer.toHexString(c));
+      } else {
+        builder.append('\\').append((char) outputEscapes[c]);
+      }
+    }
+
+    return builder.toString();
   }
 }

@@ -16,12 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -34,7 +30,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.InstallTrigger;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.NoopInstallable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -43,14 +38,14 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -72,24 +67,12 @@ public class InstallTriggerIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, sdkEnvironment, toolchainProvider) ->
-            new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider) {
-              @Override
-              public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
-                  throws IOException, InterruptedException {
-                FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
-                CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-
-                KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-                buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
-                buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
-                return buildRuleTypesBuilder
-                    .register(new InstallTriggerDescription())
-                    .register(new ExportFileDescription())
-                    .build();
-              }
-            });
+        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
+            cell ->
+                KnownBuildRuleTypes.builder()
+                    .addDescriptions(new InstallTriggerDescription())
+                    .addDescriptions(new ExportFileDescription())
+                    .build());
     workspace.setUp();
   }
 
@@ -143,7 +126,7 @@ public class InstallTriggerIntegrationTest {
             buildDeps
                 .stream()
                 .map(BuildRule::getSourcePathToOutput)
-                .collect(MoreCollectors.toImmutableSortedSet());
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
         this.buildDeps = buildDeps;
       }
 
@@ -161,7 +144,7 @@ public class InstallTriggerIntegrationTest {
               public StepExecutionResult execute(ExecutionContext context)
                   throws IOException, InterruptedException {
                 trigger.verify(context);
-                return StepExecutionResult.SUCCESS;
+                return StepExecutionResults.SUCCESS;
               }
             });
       }

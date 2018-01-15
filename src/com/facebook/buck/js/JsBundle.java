@@ -19,6 +19,8 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -26,15 +28,18 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.macros.StringWithMacrosArg;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.JsonBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.nio.file.Path;
+import java.util.Optional;
 
 public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implements JsBundleOutputs {
 
@@ -46,7 +51,14 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
 
   @AddToRuleKey private final ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups;
 
+  @AddToRuleKey private final Optional<StringWithMacrosArg> extraJson;
+
   @AddToRuleKey private final WorkerTool worker;
+
+  private static final ImmutableMap<UserFlavor, String> RAM_BUNDLE_STRINGS =
+      ImmutableMap.of(
+          JsFlavors.RAM_BUNDLE_INDEXED, "indexed",
+          JsFlavors.RAM_BUNDLE_FILES, "files");
 
   protected JsBundle(
       BuildTarget buildTarget,
@@ -54,10 +66,12 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
+      Optional<StringWithMacrosArg> extraJson,
       ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups,
       String bundleName,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
+    this.extraJson = extraJson;
     this.bundleName = bundleName;
     this.entryPoints = entryPoints;
     this.libraryPathGroups = libraryPathGroups;
@@ -72,40 +86,15 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     final SourcePath jsOutputDir = getSourcePathToOutput();
     final SourcePath sourceMapFile = getSourcePathToSourceMap();
     final SourcePath resourcesDir = getSourcePathToResources();
+    final SourcePath miscDirPath = getSourcePathToMisc();
 
     String jobArgs =
-        Stream.concat(
-                Stream.of(
-                    "bundle",
-                    JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
-                    // FIXME(T22331999): This is broken if paths contain spaces.
-                    JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
-                    libraryPathGroups
-                        .stream()
-                        .map(
-                            group ->
-                                group
-                                    .stream()
-                                    .map(sourcePathResolver::getAbsolutePath)
-                                    .map(path -> path.toString())
-                                    // FIXME(T22331999): This is broken if paths contain commas.
-                                    .collect(Collectors.joining(",")))
-                        .map(group -> "--lib-group " + group)
-                        .collect(Collectors.joining(" ")),
-                    String.format(
-                        "--root %s --sourcemap %s --assets %s --out %s/%s",
-                        getProjectFilesystem().getRootPath(),
-                        sourcePathResolver.getAbsolutePath(sourceMapFile),
-                        sourcePathResolver.getAbsolutePath(resourcesDir),
-                        sourcePathResolver.getAbsolutePath(jsOutputDir),
-                        bundleName)),
-                entryPoints.stream())
-            .filter(s -> !s.isEmpty())
-            .collect(Collectors.joining(" "));
+        getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(resourcesDir));
+    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(miscDirPath));
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -132,9 +121,63 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     sourcePathResolver.getRelativePath(resourcesDir))),
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    sourcePathResolver.getRelativePath(miscDirPath))),
             JsUtil.workerShellStep(
                 worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
         .build();
+  }
+
+  private String getJobArgs(
+      SourcePathResolver sourcePathResolver,
+      SourcePath jsOutputDir,
+      SourcePath sourceMapFile,
+      SourcePath resourcesDir,
+      SourcePath miscDirPath) {
+
+    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
+
+    return JsonBuilder.object()
+        .addString("assetsDirPath", sourcePathResolver.getAbsolutePath(resourcesDir).toString())
+        .addString(
+            "bundlePath",
+            String.format("%s/%s", sourcePathResolver.getAbsolutePath(jsOutputDir), bundleName))
+        .addString("command", "bundle")
+        .addArray("entryPoints", entryPoints.stream().collect(JsonBuilder.toArrayOfStrings()))
+        .addArray(
+            "libraryGroups",
+            libraryPathGroups
+                .stream()
+                .map(
+                    sourcePaths ->
+                        sourcePaths
+                            .stream()
+                            .map(sourcePathResolver::getAbsolutePath)
+                            .map(Path::toString)
+                            .collect(JsonBuilder.toArrayOfStrings()))
+                .collect(JsonBuilder.toArrayOfArrays()))
+        .addArray(
+            "libraries",
+            libraries
+                .stream()
+                .map(sourcePathResolver::getAbsolutePath)
+                .map(Path::toString)
+                .collect(JsonBuilder.toArrayOfStrings()))
+        .addString("platform", JsUtil.getPlatformString(flavors))
+        .addString(
+            "ramBundle",
+            JsFlavors.RAM_BUNDLE_DOMAIN
+                .getFlavor(flavors)
+                .map(mode -> JsUtil.getValueForFlavor(RAM_BUNDLE_STRINGS, mode)))
+        .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
+        .addString("rootPath", getProjectFilesystem().getRootPath().toString())
+        .addString("sourceMapPath", sourcePathResolver.getAbsolutePath(sourceMapFile).toString())
+        .addString("miscDirPath", sourcePathResolver.getAbsolutePath(miscDirPath).toString())
+        .addRaw("extraData", extraJson.map(JsUtil::expandJsonWithMacros))
+        .toString();
   }
 
   @Override

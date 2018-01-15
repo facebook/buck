@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
     extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
-  protected abstract String expand(SourcePathResolver resolver, BuildRule rule)
+  protected abstract String expand(SourcePathResolver resolver, M macro, BuildRule rule)
       throws MacroException;
 
   protected BuildRule resolve(BuildRuleResolver resolver, M input) throws MacroException {
@@ -72,20 +72,7 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
       throws MacroException {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    return expand(pathResolver, resolve(resolver, input));
-  }
-
-  protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      @SuppressWarnings("unused") BuildRuleResolver resolver, BuildRule rule)
-      throws MacroException {
-    return ImmutableList.of(rule);
-  }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
-      throws MacroException {
-    return extractBuildTimeDeps(resolver, resolve(resolver, input));
+    return expand(pathResolver, input, resolve(resolver, input));
   }
 
   @Override

@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -41,6 +40,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.collect.nestedset.NestedSetBuilder;
+import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
@@ -616,6 +617,20 @@ public class TypeCoercerTest {
         getCoerceException(
             TestFields.class.getField("eitherPathOrListOfStrings").getGenericType(),
             invalidListOfStrings));
+  }
+
+  @Test
+  public void canCoerceDepsetToImmutableList() throws Exception {
+    Type type = TestFields.class.getField("listOfStrings").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    SkylarkNestedSet depset =
+        SkylarkNestedSet.of(
+            String.class, NestedSetBuilder.<String>stableOrder().add("foo").add("bar").build());
+
+    Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), depset);
+    ImmutableList<String> expected = ImmutableList.of("foo", "bar");
+
+    assertEquals(expected, result);
   }
 
   @SuppressFieldNotInitialized

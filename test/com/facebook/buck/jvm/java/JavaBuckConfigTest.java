@@ -34,7 +34,8 @@ import com.facebook.buck.config.BuckConfigTestUtils;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -365,15 +366,6 @@ public class JavaBuckConfigTest {
     assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
 
     assertTrue(config.trackClassUsage());
-  }
-
-  @Test
-  public void testJavaLocationOutOfProcess()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    String content = Joiner.on('\n').join("[java]", "    location = OUT_OF_PROCESS");
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    assertThat(
-        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.OUT_OF_PROCESS));
   }
 
   @Test

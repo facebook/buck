@@ -1,5 +1,5 @@
 java_library(
-  name = 'libC',
-  srcs = ['C.java'],
-  visibility = ['PUBLIC'],
+    name = "libC",
+    srcs = ["C.java"],
+    visibility = ["PUBLIC"],
 )

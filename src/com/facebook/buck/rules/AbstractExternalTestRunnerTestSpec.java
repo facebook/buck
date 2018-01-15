@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializable;
@@ -94,7 +93,7 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
     }
     jsonGenerator.writeObjectField(
         "labels",
-        getLabels().stream().map(Object::toString).collect(MoreCollectors.toImmutableList()));
+        getLabels().stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     jsonGenerator.writeObjectField("contacts", getContacts());
     jsonGenerator.writeEndObject();
   }

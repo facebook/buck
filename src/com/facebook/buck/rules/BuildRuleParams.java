@@ -16,12 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.collect.SortedSets;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 
 /** Standard set of parameters that is passed to all build rules. */
 public class BuildRuleParams {
@@ -35,12 +36,13 @@ public class BuildRuleParams {
       final Supplier<? extends SortedSet<BuildRule>> declaredDeps,
       final Supplier<? extends SortedSet<BuildRule>> extraDeps,
       ImmutableSortedSet<BuildRule> targetGraphOnlyDeps) {
-    this.declaredDeps = Suppliers.memoize(declaredDeps);
-    this.extraDeps = Suppliers.memoize(extraDeps);
+    this.declaredDeps = MoreSuppliers.memoize(declaredDeps);
+    this.extraDeps = MoreSuppliers.memoize(extraDeps);
     this.targetGraphOnlyDeps = targetGraphOnlyDeps;
 
     this.totalBuildDeps =
-        Suppliers.memoize(() -> SortedSets.union(this.declaredDeps.get(), this.extraDeps.get()));
+        MoreSuppliers.memoize(
+            () -> SortedSets.union(this.declaredDeps.get(), this.extraDeps.get()));
   }
 
   public BuildRuleParams withDeclaredDeps(SortedSet<BuildRule> declaredDeps) {

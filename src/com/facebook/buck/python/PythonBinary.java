@@ -19,23 +19,23 @@ package com.facebook.buck.python;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public abstract class PythonBinary extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
@@ -49,7 +49,6 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
   public PythonBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
       PythonPlatform pythonPlatform,
       String mainModule,
@@ -57,7 +56,7 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableSet<String> preloadLibraries,
       String pexExtension,
       boolean legacyOutputPath) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;

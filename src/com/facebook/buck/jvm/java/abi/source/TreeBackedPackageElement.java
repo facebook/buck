@@ -37,7 +37,7 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
   private final PackageElement javacPackage;
   private final StandalonePackageType typeMirror;
   @Nullable private TreePath treePath;
-  private boolean resolved = false;
+  private boolean completed = false;
 
   public TreeBackedPackageElement(PackageElement javacPackage) {
     super(javacPackage, null, null, null);
@@ -54,13 +54,14 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
 
   @Override
   public List<? extends Element> getEnclosedElements() {
-    resolve();
+    complete();
 
     return super.getEnclosedElements();
   }
 
-  private void resolve() {
-    if (resolved) {
+  @Override
+  public void complete() {
+    if (completed) {
       return;
     }
 
@@ -86,7 +87,7 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
       }
     }
 
-    resolved = true;
+    completed = true;
   }
 
   @Override

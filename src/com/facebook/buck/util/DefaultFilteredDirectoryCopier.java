@@ -18,13 +18,13 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Predicate;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * This class allows the creation of copies of multiple directories, while filtering out files which
@@ -77,7 +77,7 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
           @Override
           public FileVisitResult visitFile(Path srcPath, BasicFileAttributes attributes)
               throws IOException {
-            if (pred.apply(srcPath)) {
+            if (pred.test(srcPath)) {
               Path destPath = destDir.resolve(srcDir.relativize(srcPath));
               filesystem.createParentDirs(destPath);
               filesystem.copy(srcPath, destPath, CopySourceMode.FILE);

@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -36,7 +35,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.zip.ZipEntry;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileObject;
@@ -50,13 +48,14 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     implements StandardJavaFileManager {
   private static final Logger LOG = Logger.get(JavaInMemoryFileManager.class);
 
-  private Path jarPath;
-  private StandardJavaFileManager delegate;
-  private Set<String> directoryPaths;
-  private Map<String, JarFileObject> fileForOutputPaths;
-  private Predicate<? super String> removeClassesPredicate;
+  private final Path jarPath;
+  private final String jarPathUri;
+  private final StandardJavaFileManager delegate;
+  private final Set<String> directoryPaths;
+  private final Map<String, JarFileObject> fileForOutputPaths;
+  private final Predicate<? super String> removeClassesPredicate;
 
-  private int FILENAME_LENGTH_LIMIT = 255;
+  private static final int FILENAME_LENGTH_LIMIT = 255;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
@@ -65,23 +64,10 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     super(standardManager);
     this.delegate = standardManager;
     this.jarPath = jarPath;
+    this.jarPathUri = "jar:" + jarPath.toUri() + "!/";
     this.directoryPaths = new HashSet<>();
     this.fileForOutputPaths = new HashMap<>();
     this.removeClassesPredicate = removeClassesPredicate;
-  }
-
-  /**
-   * Creates a ZipEntry for placing in the jar output stream. Sets the modification time to 0 for a
-   * deterministic jar.
-   *
-   * @param name the name of the entry
-   * @return the zip entry for the file specified
-   */
-  public static ZipEntry createEntry(String name) {
-    CustomZipEntry entry = new CustomZipEntry(name);
-    // We want deterministic JARs, so avoid mtimes.
-    entry.setFakeTime();
-    return entry;
   }
 
   private static String getPath(String className) {
@@ -235,6 +221,6 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   private URI getUriPath(String relativePath) {
-    return URI.create("jar:file:" + encodeURL(jarPath.toString()) + "!/" + encodeURL(relativePath));
+    return URI.create(jarPathUri + encodeURL(relativePath));
   }
 }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+
 public interface RulePipelineStateFactory<T extends RulePipelineState> {
-  T newInstance();
+  T newInstance(BuildContext context, BuildTarget firstTarget);
 }

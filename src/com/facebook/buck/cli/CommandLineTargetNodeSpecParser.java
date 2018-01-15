@@ -20,9 +20,12 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class CommandLineTargetNodeSpecParser {
@@ -82,6 +85,22 @@ public class CommandLineTargetNodeSpecParser {
     return cellName + "//" + target;
   }
 
+  /**
+   * Validates a {@code spec} and throws an exception for invalid ones.
+   *
+   * <p>Ideally validation should happen as part of spec creation and some of them actually happen,
+   * but others, especially those that require filesystem interactions, are too expensive to carry
+   * for every single build target.
+   */
+  private void validateTargetSpec(TargetNodeSpec spec, String buildTarget) {
+    Path cellPath = spec.getBuildFileSpec().getCellPath();
+    Path basePath = spec.getBuildFileSpec().getBasePath();
+    if (!Files.exists(cellPath.resolve(basePath))) {
+      throw new HumanReadableException(
+          "%s references non-existent directory %s", buildTarget, basePath);
+    }
+  }
+
   public ImmutableSet<TargetNodeSpec> parse(CellPathResolver cellNames, String arg) {
     ImmutableSet<String> resolvedArgs = config.getBuildTargetForAliasAsString(arg);
     if (resolvedArgs.isEmpty()) {
@@ -90,7 +109,9 @@ public class CommandLineTargetNodeSpecParser {
     ImmutableSet.Builder<TargetNodeSpec> specs = new ImmutableSet.Builder<>();
     for (String resolvedArg : resolvedArgs) {
       String buildTarget = normalizeBuildTargetString(resolvedArg);
-      specs.add(parser.parse(cellNames, buildTarget));
+      TargetNodeSpec spec = parser.parse(cellNames, buildTarget);
+      validateTargetSpec(spec, resolvedArg);
+      specs.add(spec);
     }
     return specs.build();
   }

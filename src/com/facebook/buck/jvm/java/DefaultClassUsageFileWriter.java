@@ -27,28 +27,14 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
-import javax.tools.StandardJavaFileManager;
 
 public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
-
-  private final Path relativePath;
-  private final ClassUsageTracker tracker = new ClassUsageTracker();
-
-  public DefaultClassUsageFileWriter(Path relativePath) {
-    this.relativePath = relativePath;
-  }
-
-  public Path getRelativePath() {
-    return relativePath;
-  }
-
   @Override
-  public StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner) {
-    return tracker.wrapFileManager(inner);
-  }
-
-  @Override
-  public void writeFile(ProjectFilesystem filesystem, CellPathResolver cellPathResolver) {
+  public void writeFile(
+      ClassUsageTracker tracker,
+      Path relativePath,
+      ProjectFilesystem filesystem,
+      CellPathResolver cellPathResolver) {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
       ObjectMappers.WRITER.writeValue(

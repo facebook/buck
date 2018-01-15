@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -39,9 +40,10 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,14 +60,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SimpleConsoleEventBusListenerTest {
-  private static final String STAMPEDE_ID_ONE = "stampedeIdOne";
-  private static final String STAMPEDE_ID_ONE_MESSAGE = "STAMPEDE ID: stampedeIdOne\n";
+  private static final StampedeId STAMPEDE_ID_ONE = new StampedeId().setId("stampedeIdOne");
+  private static final String STAMPEDE_ID_ONE_MESSAGE = "StampedeId=[stampedeIdOne]\n";
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
-  private static final String FINISHED_DOWNLOAD_STRING =
-      "DOWNLOADED 0.00 BYTES/SEC AVG, 0 ARTIFACTS, 0.00 BYTES";
+  private static final String FINISHED_DOWNLOAD_STRING = "DOWNLOADED 0 ARTIFACTS, 0.00 BYTES";
 
   private BuildRuleDurationTracker durationTracker;
 
@@ -142,13 +143,18 @@ public class SimpleConsoleEventBusListenerTest {
                 false,
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             threadId));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
+            1234L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     expectedOutput +=
         "BUILT  0.4s //banana:stand\n"
@@ -224,7 +230,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             1234L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -276,7 +282,7 @@ public class SimpleConsoleEventBusListenerTest {
             buildEventStarted, 500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0),
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -335,13 +341,18 @@ public class SimpleConsoleEventBusListenerTest {
                 false,
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             threadId));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
+            1234L,
+            TimeUnit.MILLISECONDS,
+            threadId));
 
     expectedOutput +=
         FINISHED_DOWNLOAD_STRING + "\n" + "BUILDING: FINISHED IN 1.2s\n" + "BUILD SUCCEEDED\n";

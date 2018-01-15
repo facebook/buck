@@ -16,21 +16,22 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class ShTestBuilder
     extends AbstractNodeBuilder<
         ShTestDescriptionArg.Builder, ShTestDescriptionArg, ShTestDescription, ShTest> {
 
   public ShTestBuilder(BuildTarget target) {
-    super(new ShTestDescription(Optional.empty()), target);
+    super(new ShTestDescription(FakeBuckConfig.builder().build()), target);
   }
 
   public ShTestBuilder setTest(SourcePath path) {
@@ -38,12 +39,12 @@ public class ShTestBuilder
     return this;
   }
 
-  public ShTestBuilder setArgs(ImmutableList<String> args) {
+  public ShTestBuilder setArgs(ImmutableList<StringWithMacros> args) {
     getArgForPopulating().setArgs(args);
     return this;
   }
 
-  public ShTestBuilder setEnv(ImmutableMap<String, String> env) {
+  public ShTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
     getArgForPopulating().setEnv(env);
     return this;
   }

@@ -1,22 +1,22 @@
 rust_binary(
-  name = 'thing',
-  srcs = [
-    'main.rs',
-  ],
-  deps = [
-    ':info',
-  ],
+    name = "thing",
+    srcs = [
+        "main.rs",
+    ],
+    deps = [
+        ":info",
+    ],
 )
 
 rust_library(
-  name = 'info',
-  srcs = [ ':generated' ],
+    name = "info",
+    srcs = [":generated"],
 )
 
 genrule(
-  name = 'generated',
-  out = 'info.rs',
-  cmd = """
+    name = "generated",
+    out = "info.rs",
+    cmd = """
   sleep 2
   echo "pub const INFO: &'static str = \\"this is generated info\\";" > $OUT
   """,

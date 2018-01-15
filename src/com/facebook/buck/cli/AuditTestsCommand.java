@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,13 +50,13 @@ public class AuditTestsCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets =
         ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("Must specify at least one build target."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
@@ -76,6 +78,7 @@ public class AuditTestsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 pool.getListeningExecutorService(),
                 params.getCell(),
+                params.getKnownBuildRuleTypesProvider(),
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =
@@ -94,7 +97,8 @@ public class AuditTestsCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      // TODO(buck_team): catch specific exceptions and output appropriate exit codes
+      return ExitCode.BUILD_ERROR;
     }
   }
 

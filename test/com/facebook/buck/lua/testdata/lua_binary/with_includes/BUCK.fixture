@@ -1,13 +1,13 @@
 lua_binary(
-  name = 'native_with_extension',
-  main_module = 'extension',
-  deps = [':extension'],
+    name = "native_with_extension",
+    main_module = "extension",
+    deps = [":extension"],
 )
 
 cxx_lua_extension(
-  name = 'extension',
-  base_module = '',
-  srcs = ['src/extension.c',],
-  headers = ['headers/extension.h',],
-  include_dirs = ['headers'],
+    name = "extension",
+    srcs = ["src/extension.c"],
+    base_module = "",
+    headers = ["headers/extension.h"],
+    include_dirs = ["headers"],
 )

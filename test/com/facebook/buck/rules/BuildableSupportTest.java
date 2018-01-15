@@ -22,7 +22,6 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -56,7 +55,10 @@ public class BuildableSupportTest {
           @AddToRuleKey SourcePath sourcePath = rule2.getSourcePathToOutput();
 
           @AddToRuleKey
-          Object ruleKeyAppendable = (RuleKeyAppendable) sink -> sink.setReflectively("key", rule3);
+          Object ruleKeyAppendable =
+              new AddsToRuleKey() {
+                @AddToRuleKey Object key = rule3;
+              };
 
           @AddToRuleKey ImmutableList<BuildRule> list = ImmutableList.of(rule4);
           @AddToRuleKey Optional<SourcePath> optional = Optional.of(rule5.getSourcePathToOutput());
@@ -64,7 +66,31 @@ public class BuildableSupportTest {
 
     MoreAsserts.assertSetEquals(
         rules,
-        BuildableSupport.deriveDeps(rule, ruleFinder).collect(MoreCollectors.toImmutableSet()));
+        BuildableSupport.deriveDeps(rule, ruleFinder).collect(ImmutableSet.toImmutableSet()));
+  }
+
+  @Test
+  public void testDeriveInputsFromAddsToRuleKeys() throws Exception {
+    PathSourcePath path1 = FakeSourcePath.of("path1");
+    PathSourcePath path2 = FakeSourcePath.of("path2");
+    PathSourcePath path3 = FakeSourcePath.of("path3");
+    AddsToRuleKey rule =
+        new AddsToRuleKey() {
+          @AddToRuleKey int value = 0;
+          @AddToRuleKey SourcePath sourcePath = path1;
+
+          @AddToRuleKey
+          Object ruleKeyAppendable =
+              new AddsToRuleKey() {
+                @AddToRuleKey SourcePath key = path2;
+              };
+
+          @AddToRuleKey Optional<SourcePath> optional = Optional.of(path3);
+        };
+
+    MoreAsserts.assertSetEquals(
+        ImmutableSet.of(path1, path2, path3),
+        BuildableSupport.deriveInputs(rule).collect(ImmutableSet.toImmutableSet()));
   }
 
   private BuildRule makeRule(

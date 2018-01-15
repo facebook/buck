@@ -19,11 +19,12 @@ package com.facebook.buck.json;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.json.HybridProjectBuildFileParser.Syntax;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicLong;
@@ -53,7 +54,10 @@ public class HybridProjectBuildFileParserTest {
 
   @Before
   public void setUp() throws Exception {
-    parser = new HybridProjectBuildFileParser(pythonDslParser, skylarkParser);
+    parser =
+        HybridProjectBuildFileParser.using(
+            ImmutableMap.of(Syntax.PYTHON_DSL, pythonDslParser, Syntax.SKYLARK, skylarkParser),
+            Syntax.PYTHON_DSL);
     buildFile = tmp.newFile("BUCK");
     processedBytes = new AtomicLong();
   }
@@ -130,6 +134,17 @@ public class HybridProjectBuildFileParserTest {
     thrown.expectMessage(
         "Unrecognized syntax [SKILARK] requested for build file [" + buildFile + "]");
     Files.write(buildFile, "# BUILD FILE SYNTAX: SKILARK".getBytes());
+    parser.getAll(buildFile, processedBytes);
+  }
+
+  @Test
+  public void getAllCallsFailsOnUnsupportedSyntax() throws Exception {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Syntax [PYTHON_DSL] is not supported for build file [" + buildFile + "]");
+    parser =
+        HybridProjectBuildFileParser.using(
+            ImmutableMap.of(Syntax.SKYLARK, skylarkParser), Syntax.SKYLARK);
+    Files.write(buildFile, "# BUILD FILE SYNTAX: PYTHON_DSL".getBytes());
     parser.getAll(buildFile, processedBytes);
   }
 

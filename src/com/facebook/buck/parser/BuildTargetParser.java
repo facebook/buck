@@ -78,7 +78,10 @@ public class BuildTargetParser {
     if (buildTargetName.contains(BUILD_RULE_PREFIX)
         && !buildTargetName.startsWith(BUILD_RULE_PREFIX)) {
       int slashIndex = buildTargetName.indexOf(BUILD_RULE_PREFIX);
-      givenCellName = Optional.of(buildTargetName.substring(0, slashIndex));
+      // in order to support Skylark way of referencing repositories but also preserve backwards
+      // compatibility, the '@' is simply ignored if it's present
+      int repoNameStartIndex = (buildTargetName.charAt(0) == '@') ? 1 : 0;
+      givenCellName = Optional.of(buildTargetName.substring(repoNameStartIndex, slashIndex));
       targetAfterCell = buildTargetName.substring(slashIndex);
     }
 
@@ -108,7 +111,13 @@ public class BuildTargetParser {
     baseName = baseName.replace('\\', '/');
     checkBaseName(baseName, buildTargetName);
 
-    Path cellPath = cellNames.getCellPath(givenCellName);
+    Path cellPath =
+        cellNames
+            .getCellPath(givenCellName)
+            .orElseThrow(
+                () ->
+                    new BuildTargetParseException(
+                        String.format("'%s' references an unknown cell.", buildTargetName)));
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder()
@@ -157,5 +166,18 @@ public class BuildTargetParser {
             String.format("Build target path cannot contain . or .. (found %s)", buildTargetName));
       }
     }
+  }
+
+  /**
+   * Converts a string (fully qualified target name) into {@link BuildTarget} objects.
+   *
+   * @param cellNames - {@link CellPathResolver} to map cell names to paths.
+   * @param buildTarget - a fully qualified target-name string.
+   * @return - corresponding {@link BuildTarget} object.
+   */
+  public static BuildTarget fullyQualifiedNameToBuildTarget(
+      CellPathResolver cellNames, String buildTarget) {
+    return BuildTargetParser.INSTANCE.parse(
+        buildTarget, BuildTargetPatternParser.fullyQualified(), cellNames);
   }
 }

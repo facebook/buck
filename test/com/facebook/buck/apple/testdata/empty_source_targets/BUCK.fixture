@@ -1,23 +1,23 @@
 apple_library(
-    name='none-swift',
-    srcs=['dummy.swift'],
+    name = "none-swift",
+    srcs = ["dummy.swift"],
 )
 
 apple_library(
-    name='real-none',
-    deps=[':second-real-none'],
+    name = "real-none",
+    deps = [":second-real-none"],
 )
 
 apple_library(
-    name='second-real-none',
+    name = "second-real-none",
 )
 
 apple_binary(
-    name='real-none2',
-    deps=[':dummymain'],
+    name = "real-none2",
+    deps = [":dummymain"],
 )
 
 apple_library(
-    name='dummymain',
-    srcs=['main.c'],
+    name = "dummymain",
+    srcs = ["main.c"],
 )

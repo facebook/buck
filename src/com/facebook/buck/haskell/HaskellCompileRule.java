@@ -17,11 +17,11 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PathShortener;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -33,8 +33,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -45,14 +45,14 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -67,6 +67,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -80,7 +81,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final ImmutableList<String> flags;
 
-  private final PreprocessorFlags ppFlags;
+  @AddToRuleKey private final PreprocessorFlags ppFlags;
   private final CxxPlatform cxxPlatform;
 
   @AddToRuleKey private boolean pic;
@@ -119,7 +120,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableList<String> flags,
       PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType,
+      PicType picType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
@@ -134,7 +135,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.flags = flags;
     this.ppFlags = ppFlags;
     this.cxxPlatform = cxxPlatform;
-    this.pic = (picType == CxxSourceRuleFactory.PicType.PIC);
+    this.pic = (picType == PicType.PIC);
     this.hsProfile = hsProfile;
     this.main = main;
     this.packageInfo = packageInfo;
@@ -157,7 +158,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableList<String> flags,
       final PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType,
+      PicType picType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
@@ -167,10 +168,10 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       final HaskellSources sources,
       Preprocessor preprocessor) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compiler.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder))
                     .addAll(ppFlags.getDeps(ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(includes))
                     .addAll(sources.getDeps(ruleFinder))
@@ -198,12 +199,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         packages,
         sources,
         preprocessor);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    ppFlags.appendToRuleKey(sink);
-    sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
   private Path getObjectDir() {
@@ -280,8 +275,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     private BuildContext buildContext;
 
-    public GhcStep(Path rootPath, BuildContext buildContext) {
-      super(rootPath);
+    public GhcStep(BuildTarget buildTarget, Path rootPath, BuildContext buildContext) {
+      super(Optional.of(buildTarget), rootPath);
       this.buildContext = buildContext;
     }
 
@@ -365,7 +360,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add(prepareOutputDir("object", getObjectDir(), getObjectSuffix()))
         .add(prepareOutputDir("interface", getInterfaceDir(), getInterfaceSuffix()))
         .add(prepareOutputDir("stub", getStubDir(), "h"))
-        .add(new GhcStep(getProjectFilesystem().getRootPath(), buildContext));
+        .add(new GhcStep(getBuildTarget(), getProjectFilesystem().getRootPath(), buildContext));
 
     return steps.build();
   }
@@ -423,6 +418,10 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getObjectDir());
   }
 
+  public SourcePath getStubsDir() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getStubDir());
+  }
+
   @VisibleForTesting
   protected ImmutableList<String> getFlags() {
     return flags;
@@ -473,7 +472,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                     return super.postVisitDirectory(dir, exc);
                   }
                 });
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }

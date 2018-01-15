@@ -21,7 +21,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Utility class to help match up start and end events */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractEventPair {
   @Value.Parameter

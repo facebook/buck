@@ -1,8 +1,8 @@
-STRING_VALUE = 'Fake Rule'
+STRING_VALUE = "Fake Rule"
 
 echo_genrule(
-  name='fake_genrule',
-  echo_str=STRING_VALUE,
-  out='fakeOut',
-  visibility = ['PUBLIC'],
+    name = "fake_genrule",
+    out = "fakeOut",
+    echo_str = STRING_VALUE,
+    visibility = ["PUBLIC"],
 )

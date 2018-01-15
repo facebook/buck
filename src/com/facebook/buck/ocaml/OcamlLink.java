@@ -30,7 +30,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -109,6 +108,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                         outputRelativePath.getParent())))
             .add(
                 OcamlLinkStep.create(
+                    getBuildTarget(),
                     getProjectFilesystem().getRootPath(),
                     cxxCompilerEnvironment,
                     cxxCompiler,
@@ -121,7 +121,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     inputs
                         .stream()
                         .map(context.getSourcePathResolver()::getAbsolutePath)
-                        .collect(MoreCollectors.toImmutableList()),
+                        .collect(ImmutableList.toImmutableList()),
                     isLibrary,
                     isBytecode,
                     context.getSourcePathResolver()));
@@ -139,6 +139,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<String> ocamlInput = ocamlInputBuilder.build();
       steps.add(
           new OcamlNativePluginStep(
+              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               cxxCompilerEnvironment,
               cxxCompiler,
@@ -150,7 +151,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               inputs
                   .stream()
                   .map(context.getSourcePathResolver()::getAbsolutePath)
-                  .collect(MoreCollectors.toImmutableList()),
+                  .collect(ImmutableList.toImmutableList()),
               ocamlInput));
     }
     return steps.build();

@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -62,7 +63,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
 import com.facebook.buck.versions.VersionUniverseVersionSelector;
@@ -202,7 +202,7 @@ public class CxxBinaryDescriptionTest {
             .setRuleFinder(ruleFinder)
             .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
             .setCxxPlatform(cxxPlatform)
-            .setPicType(CxxSourceRuleFactory.PicType.PDC)
+            .setPicType(PicType.PDC)
             .build();
 
     // Check that link rule has the expected deps: the object files for our sources and the
@@ -215,7 +215,7 @@ public class CxxBinaryDescriptionTest {
         rule.getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -225,7 +225,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -240,7 +240,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,

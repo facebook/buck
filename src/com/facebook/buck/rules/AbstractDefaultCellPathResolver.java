@@ -18,9 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -97,7 +97,10 @@ abstract class AbstractDefaultCellPathResolver implements CellPathResolver {
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
     for (String cellName : sortedCellNames) {
-      Path cellRoot = getCellPath(cellPaths, root, cellName);
+      Path cellRoot =
+          Preconditions.checkNotNull(
+              cellPaths.get(cellName),
+              "cellName is derived from the map, get() should always return a value.");
       try {
         cellRoot = cellRoot.toRealPath().normalize();
       } catch (IOException e) {
@@ -118,23 +121,13 @@ abstract class AbstractDefaultCellPathResolver implements CellPathResolver {
         root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
-  private static Path getCellPath(
-      ImmutableMap<String, Path> cellPaths, Path root, String cellName) {
-    Path path = cellPaths.get(cellName);
-    if (path == null) {
-      throw new HumanReadableException(
-          "In cell rooted at %s: cell named '%s' is not defined.", root, cellName);
-    }
-    return path;
-  }
-
-  private Path getCellPath(String cellName) {
-    return getCellPath(getCellPaths(), getRoot(), cellName);
-  }
-
   @Override
-  public Path getCellPath(Optional<String> cellName) {
-    return cellName.map(this::getCellPath).orElse(getRoot());
+  public Optional<Path> getCellPath(Optional<String> cellName) {
+    if (cellName.isPresent()) {
+      return Optional.ofNullable(getCellPaths().get(cellName.get()));
+    } else {
+      return Optional.of(getRoot());
+    }
   }
 
   @Override

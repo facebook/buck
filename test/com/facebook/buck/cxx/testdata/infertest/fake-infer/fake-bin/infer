@@ -15,27 +15,28 @@ function get_clang_argument {
     echo $2
 }
 
-# Get the last argument (e.g. to understand if it's analysis or capture, or version)
+# Get the first and last argument, e.g. to understand if it's analysis, capture, or version
 INPUT_ARGUMENTS=($@)
-LAST_ARG=$(echo ${INPUT_ARGUMENTS[${#INPUT_ARGUMENTS[@]} - 1]})
+FIRST_ARG=${INPUT_ARGUMENTS[0]}
+LAST_ARG=${INPUT_ARGUMENTS[${#INPUT_ARGUMENTS[@]} - 1]}
 
 # Check whether --version is given, then return a version on stderr and exit
 [ "$LAST_ARG" == "--version" ] \
-    && { echo -e "Infer version 0.12345\nabcdef" > /dev/stderr; exit 0; }
+    && { echo -e "Infer version 0.12345\nabcdef" >&2; exit 0; }
 
 # Check that the given results folder exists
-OUT="$(get_infer_argument "--out" "$@")"
-[ -d "$OUT" ] || { echo "No results dir passed"; exit 1; }
+OUT="$(get_infer_argument "--results-dir" "$@")"
+[ -d "$OUT" ] || { echo "No results dir passed in $@" >&2; exit 1; }
 
 # Check that the project root and the CWD where the compilation/analysis
 # is done, are always matching
-INPUT_PROJECT_ROOT="$(get_infer_argument "--project_root" "$@")"
-[ -d "$INPUT_PROJECT_ROOT" ] || { echo "No --project_root passed in input"; exit 1; }
+INPUT_PROJECT_ROOT="$(get_infer_argument "--project-root" "$@")"
+[ -d "$INPUT_PROJECT_ROOT" ] || { echo "No --project-root passed in input" >&2; exit 1; }
 PROJECT_ROOT=$(cd "$INPUT_PROJECT_ROOT" && pwd)
 [ "$PROJECT_ROOT" == "$PWD" ] \
-    || { echo "Infer is launched from a path that doesn't match with project_root"; exit 1; }
+    || { echo "Infer is launched from a path that doesn't match with project_root" >&2; exit 1; }
 
-case $LAST_ARG in
+case $FIRST_ARG in
     analyze)
         # --specs-dir-list-file must have absolute path
         SPECS_DIR_LIST_FILE="$(get_infer_argument "--specs-dir-list-file" "$@")"
@@ -46,7 +47,7 @@ case $LAST_ARG in
         touch $OUT/specs/mockedSpec.specs
         echo '[{"file":"aFile.c", "type":"NULL_DEREFERENCE", "line":123}]' > "$OUT/report.json"
         ;;
-    *)
+    capture)
         # capture case: check it's an argfile
         ARGFILE=${LAST_ARG/"@"}
         [ -f "$ARGFILE" ] || { echo "argfile $ARGFILE passed in input does not exist"; exit 1; }
@@ -67,5 +68,11 @@ case $LAST_ARG in
         SOURCE_FILENAME=${LAST_ARG_CONTENT}
         touch $OUT/captured/${FILENAME}_captured/$FILENAME.cfg
         cp "${SOURCE_FILENAME}.dep.mock" $DEPFILE
+        ;;
+    *)
+        echo "ERROR: Could not figure out infer subcommand in $@" >&2
+        echo "ERROR: It has to be passed as the first argument." >&2
+        echo "ERROR: The first argument was $FIRST_ARG" >&2
+        exit 1
         ;;
 esac

@@ -16,50 +16,28 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.collect.ImmutableCollection;
+import com.facebook.buck.util.MoreSuppliers;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
+/** A tool with a single file input. */
 public class HashedFileTool implements Tool {
+  @AddToRuleKey private final Supplier<? extends SourcePath> path;
 
-  private final Supplier<Path> path;
-
-  public HashedFileTool(Supplier<Path> path) {
-    this.path = path;
+  public HashedFileTool(Supplier<? extends SourcePath> path) {
+    this.path = MoreSuppliers.memoize(path);
   }
 
-  public HashedFileTool(Path path) {
-    this(() -> path);
-  }
-
-  @Override
-  @SuppressWarnings("deprecation")
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    Path path = this.path.get();
-    try {
-      sink.setPath(path.toAbsolutePath(), path);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableSortedSet.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
+  public HashedFileTool(@Nullable SourcePath path) {
+    this(() -> Preconditions.checkNotNull(path));
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return ImmutableList.of(path.get().toString());
+    return ImmutableList.of(resolver.getAbsolutePath(path.get()).toString());
   }
 
   @Override

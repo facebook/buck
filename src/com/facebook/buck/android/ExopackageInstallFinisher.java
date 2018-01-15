@@ -32,8 +32,8 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -51,6 +52,9 @@ import javax.annotation.Nullable;
  * <li>killing the app/process
  */
 public class ExopackageInstallFinisher extends AbstractBuildRule {
+  // Due to the InstallTrigger, this rule will run on every build. The @AddToRuleKey fields and any
+  // additional deps are required to just ensure that inputs are ready and that certain work (like
+  // installing files) has already happened.
   @AddToRuleKey private final InstallTrigger trigger;
   @AddToRuleKey private final SourcePath deviceExoContents;
   @AddToRuleKey private final SourcePath apkPath;
@@ -65,7 +69,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
       SourcePathRuleFinder sourcePathRuleFinder,
       ApkInfo apkInfo,
       ExopackageDeviceDirectoryLister directoryLister,
-      ExopackageFilesInstaller fileInstaller) {
+      ImmutableList<BuildRule> extraDeps) {
     super(installerTarget, projectFilesystem);
     this.trigger = new InstallTrigger(projectFilesystem);
     this.deviceExoContents = directoryLister.getSourcePathToOutput();
@@ -74,11 +78,11 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
     this.manifestPath = apkInfo.getManifestPath();
 
     this.depsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(directoryLister)
-                    .add(fileInstaller)
+                    .addAll(extraDeps)
                     .addAll(
                         sourcePathRuleFinder.filterBuildRuleInputs(
                             Arrays.asList(apkPath, manifestPath)))
@@ -111,7 +115,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
             context
                 .getAndroidDevicesHelper()
                 .get()
-                .adbCall(
+                .adbCallOrThrow(
                     "finishing_apk_installation_call",
                     device -> {
                       ExopackageInstaller installer =
@@ -129,7 +133,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
                       return true;
                     },
                     true);
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
   }

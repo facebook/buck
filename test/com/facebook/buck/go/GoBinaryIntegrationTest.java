@@ -70,6 +70,16 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithCgo() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//src/cgo_test:bin");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("fmt: Go string"));
+  }
+
+  @Test
   public void buildAfterChangeWorks() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);

@@ -17,10 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
-import com.facebook.buck.dalvik.EstimateDexWeightStep;
+import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -31,13 +31,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.ObjectMappers;
@@ -45,7 +45,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -61,6 +60,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -82,16 +82,32 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   @VisibleForTesting static final String REFERENCED_RESOURCES = "referenced_resources";
 
   @AddToRuleKey private final SourcePath javaLibrarySourcePath;
+  @AddToRuleKey private final String dexTool;
+
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       JavaLibrary javaLibrary) {
+    this(buildTarget, projectFilesystem, androidLegacyToolchain, params, javaLibrary, DxStep.DX);
+  }
+
+  DexProducedFromJavaLibrary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
+      BuildRuleParams params,
+      JavaLibrary javaLibrary,
+      String dexTool) {
     super(buildTarget, projectFilesystem, params);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.javaLibrary = javaLibrary;
+    this.dexTool = dexTool;
     this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
@@ -134,14 +150,19 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
       // merged into a final classes.dex that uses jumbo instructions.
       dx =
           new DxStep(
+              getBuildTarget(),
               getProjectFilesystem(),
+              androidLegacyToolchain,
               getPathToDex(),
               Collections.singleton(pathToOutputFile),
               EnumSet.of(
                   DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
                   DxStep.Option.RUN_IN_PROCESS,
                   DxStep.Option.NO_OPTIMIZE,
-                  DxStep.Option.FORCE_JUMBO));
+                  DxStep.Option.FORCE_JUMBO),
+              Optional.empty(),
+              dexTool,
+              dexTool.equals(DxStep.D8));
       steps.add(dx);
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -166,21 +187,24 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
               @Nullable Collection<String> referencedResources = dx.getResourcesReferencedInCode();
               if (referencedResources != null) {
-                buildableContext.addMetadata(
+                writeMetadataValues(
+                    buildableContext,
                     REFERENCED_RESOURCES,
                     Ordering.natural().immutableSortedCopy(referencedResources));
               }
             }
 
-            buildableContext.addMetadata(WEIGHT_ESTIMATE, String.valueOf(weightEstimate.get()));
+            writeMetadataValue(
+                buildableContext, WEIGHT_ESTIMATE, String.valueOf(weightEstimate.get()));
 
             // Record the classnames to hashes map.
-            buildableContext.addMetadata(
+            writeMetadataValue(
+                buildableContext,
                 CLASSNAMES_TO_HASHES,
                 ObjectMappers.WRITER.writeValueAsString(
                     Maps.transformValues(classNamesToHashes, Object::toString)));
 
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         };
     steps.add(recordArtifactAndMetadataStep);
@@ -189,17 +213,53 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   }
 
   @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    int weightEstimate = Integer.parseInt(onDiskBuildInfo.getValue(WEIGHT_ESTIMATE).get());
+  public BuildOutput initializeFromDisk() throws IOException {
+    int weightEstimate =
+        Integer.parseInt(
+            readMetadataValue(getProjectFilesystem(), getBuildTarget(), WEIGHT_ESTIMATE).get());
     Map<String, String> map =
         ObjectMappers.readValue(
-            onDiskBuildInfo.getValue(CLASSNAMES_TO_HASHES).get(),
+            readMetadataValue(getProjectFilesystem(), getBuildTarget(), CLASSNAMES_TO_HASHES).get(),
             new TypeReference<Map<String, String>>() {});
     Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, HashCode::fromString);
-    Optional<ImmutableList<String>> referencedResources =
-        onDiskBuildInfo.getValues(REFERENCED_RESOURCES);
+    Optional<ImmutableList<String>> referencedResources = readMetadataValues(REFERENCED_RESOURCES);
     return new BuildOutput(
         weightEstimate, ImmutableSortedMap.copyOf(classnamesToHashes), referencedResources);
+  }
+
+  private static Path getMetadataPath(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String key) {
+    return BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/metadata/" + key);
+  }
+
+  private void writeMetadataValues(
+      BuildableContext buildableContext, String key, ImmutableList<String> values)
+      throws IOException {
+    writeMetadataValue(buildableContext, key, ObjectMappers.WRITER.writeValueAsString(values));
+  }
+
+  private void writeMetadataValue(BuildableContext buildableContext, String key, String value)
+      throws IOException {
+    Path path = getMetadataPath(getProjectFilesystem(), getBuildTarget(), key);
+    getProjectFilesystem().mkdirs(path.getParent());
+    getProjectFilesystem().writeContentsToPath(value, path);
+    buildableContext.recordArtifact(path);
+  }
+
+  @VisibleForTesting
+  static Optional<String> readMetadataValue(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String key) {
+    Path path = getMetadataPath(projectFilesystem, buildTarget, key);
+    return projectFilesystem.readFileIfItExists(path);
+  }
+
+  private Optional<ImmutableList<String>> readMetadataValues(String key) throws IOException {
+    Optional<String> value = readMetadataValue(getProjectFilesystem(), getBuildTarget(), key);
+    if (value.isPresent()) {
+      return Optional.of(
+          ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {}));
+    }
+    return Optional.empty();
   }
 
   @Override
@@ -208,7 +268,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   }
 
   static class BuildOutput {
-    private final int weightEstimate;
+    @VisibleForTesting final int weightEstimate;
     private final ImmutableSortedMap<String, HashCode> classnamesToHashes;
     private final Optional<ImmutableList<String>> referencedResources;
 

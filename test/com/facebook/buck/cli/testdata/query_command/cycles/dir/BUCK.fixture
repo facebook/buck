@@ -1,13 +1,13 @@
 java_library(
-  name = 'g',
-  deps = [
-    '//cycles:h',
-  ],
+    name = "g",
+    deps = [
+        "//cycles:h",
+    ],
 )
 
 java_library(
-  name = 'i',
-  deps = [
-    '//cycles:f',
-  ],
+    name = "i",
+    deps = [
+        "//cycles:f",
+    ],
 )

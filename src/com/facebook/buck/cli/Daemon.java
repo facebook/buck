@@ -17,8 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FileHashCacheEvent;
@@ -33,6 +33,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -76,8 +77,12 @@ final class Daemon implements Closeable {
   private final BroadcastEventListener broadcastEventListener;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
-  Daemon(Cell rootCell, Optional<WebServer> webServerToReuse) {
+  Daemon(
+      Cell rootCell,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      Optional<WebServer> webServerToReuse) {
     this.rootCell = rootCell;
     this.fileEventBus = new EventBus("file-change-events");
 
@@ -99,8 +104,10 @@ final class Daemon implements Closeable {
     this.hashCaches = hashCachesBuilder.build();
 
     this.broadcastEventListener = new BroadcastEventListener();
-    this.actionGraphCache = new ActionGraphCache();
+    this.actionGraphCache =
+        new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     this.parser =
@@ -108,7 +115,8 @@ final class Daemon implements Closeable {
             this.broadcastEventListener,
             rootCell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory));
+            new ConstructorArgMarshaller(typeCoercerFactory),
+            knownBuildRuleTypesProvider);
     fileEventBus.register(parser);
 
     // Build the the rule key cache recycler.
@@ -211,6 +219,10 @@ final class Daemon implements Closeable {
     return hashCaches;
   }
 
+  KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider() {
+    return knownBuildRuleTypesProvider;
+  }
+
   ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {
     return persistentWorkerPools;
   }
@@ -226,11 +238,13 @@ final class Daemon implements Closeable {
     // so needs to be left in a consistent state even if the current command is interrupted
     // due to a client disconnection.
     synchronized (parser) {
-      LOG.info("Client disconnected.");
+      LOG.info("Nailgun server detects that client was disconnected");
       // Client should no longer be connected, but printing helps detect false disconnections.
-      err.println("Client disconnected.");
+      err.println(
+          "Server detected that Buck client has disconnected. If you see"
+              + " this message then it is probably false detection.");
 
-      throw new InterruptedException("Client disconnected.");
+      throw new InterruptedException("Client disconnected");
     }
   }
 

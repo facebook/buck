@@ -45,7 +45,8 @@ public abstract class JavaLibraryDeps {
         new Builder(resolver)
             .setDepTargets(args.getDeps())
             .setExportedDepTargets(args.getExportedDeps())
-            .setProvidedDepTargets(args.getProvidedDeps());
+            .setProvidedDepTargets(args.getProvidedDeps())
+            .setSourceOnlyAbiDepTargets(args.getSourceOnlyAbiDeps());
 
     if (args instanceof HasDepsQuery) {
       builder.setDepsQuery(((HasDepsQuery) args).getDepsQuery());
@@ -67,6 +68,9 @@ public abstract class JavaLibraryDeps {
 
   @Value.NaturalOrder
   abstract ImmutableSortedSet<BuildTarget> getExportedDepTargets();
+
+  @Value.NaturalOrder
+  abstract ImmutableSortedSet<BuildTarget> getSourceOnlyAbiDepTargets();
 
   abstract Optional<Query> getDepsQuery();
 
@@ -92,6 +96,11 @@ public abstract class JavaLibraryDeps {
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
     return resolve(getExportedDepTargets());
+  }
+
+  @Value.Lazy
+  public ImmutableSortedSet<BuildRule> getSourceOnlyAbiDeps() {
+    return resolve(getSourceOnlyAbiDepTargets());
   }
 
   private ImmutableSortedSet<BuildRule> resolve(Iterable<BuildTarget> targets) {

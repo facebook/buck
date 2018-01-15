@@ -2,6 +2,7 @@
 from util import Diagnostic, memoized
 import re
 import os.path
+import pywatchman
 
 
 COLLAPSE_SLASHES = re.compile(r'/+')
@@ -99,7 +100,11 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
         query_params["sync_timeout"] = 0
 
     query = ["query", watchman_watch_root, query_params]
-    res = watchman_client.query(*query)
+    try:
+        res = watchman_client.query(*query)
+    except pywatchman.SocketTimeout:
+        # Watchman timeouts are not fatal.  Fall back on the normal glob flow.
+        return None
     error_message = res.get('error')
     if error_message is not None:
         diagnostics.append(

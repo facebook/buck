@@ -207,7 +207,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_flags=--this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -221,7 +221,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_binary_flags=--this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -247,7 +247,7 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run", "--config", "rust.rustc_flags=--verbose --this-is-a-bad-option", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -258,7 +258,7 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:xyzzy_flags").getStderr(),
-        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
   }
 
   @Test
@@ -519,5 +519,89 @@ public class RustBinaryIntegrationTest {
             Matchers.containsString("Calling helloer"),
             Matchers.containsString("I'm printing hello!"),
             Matchers.containsString("Helloer called")));
+  }
+
+  @Test
+  public void duplicateCrateName() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "duplicate_crate", tmp);
+    workspace.setUp();
+
+    assertThat(
+        // Check that the build works with crates with duplicate names
+        workspace
+            .runBuckCommand("run", "//:top")
+            .assertSuccess("link with duplicate crate names")
+            .getStdout(),
+        // Make sure we actually get the distinct crates we wanted.
+        Matchers.allOf(
+            Matchers.containsString("I am top"),
+            Matchers.containsString("I am mid, calling thing\nthing2"),
+            Matchers.containsString("thing1")));
+  }
+
+  @Test
+  public void duplicateSharedCrateName() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "duplicate_crate", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:top_shared").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("I am top"),
+            Matchers.containsString("I am mid, calling thing\nthing2"),
+            Matchers.containsString("thing1")));
+  }
+
+  @Test
+  public void includeFileIncluded() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_include", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:include_included").assertSuccess().getStdout(),
+        Matchers.matchesPattern(
+            "^Got included stuff: /.*/buck-out/.*/included\\.rs\n"
+                + "subinclude has /.*/buck-out/.*/subdir/subinclude\\.rs\n$"));
+  }
+
+  @Test
+  public void includeFileMissing() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_include", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("run", "//:include_missing").assertFailure();
+  }
+
+  @Test
+  public void procmacroCompile() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
+    workspace.setUp();
+
+    assertThat(
+        // Check that we can build a procmacro crate
+        workspace.runBuckCommand("run", "//:test").assertSuccess("link with procmacro").getStdout(),
+        // Make sure we get a working executable.
+        Matchers.containsString("Hello"));
+  }
+
+  @Test
+  public void procmacroCompileShared() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
+    workspace.setUp();
+
+    assertThat(
+        // Check that we can build a procmacro crate
+        workspace
+            .runBuckCommand("run", "//:test_shared")
+            .assertSuccess("link with procmacro")
+            .getStdout(),
+        // Make sure we get a working executable
+        Matchers.containsString("Hello"));
   }
 }

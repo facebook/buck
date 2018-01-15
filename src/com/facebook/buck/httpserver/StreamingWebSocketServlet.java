@@ -28,7 +28,6 @@ import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
-@SuppressWarnings("serial")
 public class StreamingWebSocketServlet extends WebSocketServlet {
 
   // This is threadsafe

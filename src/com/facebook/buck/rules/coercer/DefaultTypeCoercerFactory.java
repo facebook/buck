@@ -23,7 +23,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -31,6 +30,7 @@ import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
+import com.facebook.buck.rules.macros.OutputMacro;
 import com.facebook.buck.rules.modern.InputPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -145,12 +145,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                   "classpath", ClasspathMacro.class,
                   "exe", ExecutableMacro.class,
                   "location", LocationMacro.class,
-                  "maven_coords", MavenCoordinatesMacro.class),
+                  "maven_coords", MavenCoordinatesMacro.class,
+                  "output", OutputMacro.class),
               ImmutableList.of(
                   new ClasspathMacroTypeCoercer(buildTargetTypeCoercer),
                   new ExecutableMacroTypeCoercer(buildTargetTypeCoercer),
                   new LocationMacroTypeCoercer(buildTargetTypeCoercer),
-                  new MavenCoordinatesMacroTypeCoercer(buildTargetTypeCoercer))),
+                  new MavenCoordinatesMacroTypeCoercer(buildTargetTypeCoercer),
+                  new OutputMacroTypeCoercer())),
         };
   }
 

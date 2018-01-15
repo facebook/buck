@@ -18,11 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 @BuckStyleTuple
@@ -37,7 +37,7 @@ public abstract class AbstractPathSourcePath implements SourcePath {
   // A supplier providing the path.  Used to resolve to `Path` used to access the file.
   protected abstract Supplier<Path> getRelativePathSupplier();
 
-  public static AbstractPathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
+  public static PathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
     return PathSourcePath.of(
         filesystem, relativePath.toString(), Suppliers.ofInstance(relativePath));
   }

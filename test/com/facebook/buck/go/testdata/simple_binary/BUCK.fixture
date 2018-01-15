@@ -1,6 +1,6 @@
 go_binary(
-  name = "xyzzy",
-  srcs = [
-    "main.go",
-  ],
+    name = "xyzzy",
+    srcs = [
+        "main.go",
+    ],
 )

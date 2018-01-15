@@ -17,20 +17,34 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
 import com.sun.source.util.TaskListener;
+import java.util.HashSet;
+import java.util.Set;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 
 class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerFactory {
   private final String ruleName;
-  private final boolean requiredForSourceAbi;
+  private final Set<String> targetsAvailableForSoruceOnly = new HashSet<>();
+  private boolean requiredForSourceAbi = false;
 
-  ValidatingTaskListenerFactory(String ruleName, boolean requiredForSourceAbi) {
+  ValidatingTaskListenerFactory(String ruleName) {
     this.ruleName = ruleName;
-    this.requiredForSourceAbi = requiredForSourceAbi;
+  }
+
+  public void setRuleIsRequiredForSourceAbi(boolean value) {
+    this.requiredForSourceAbi = value;
+  }
+
+  public void addTargetAvailableForSourceOnlyAbi(String target) {
+    targetsAvailableForSoruceOnly.add(target);
   }
 
   @Override
@@ -52,10 +66,27 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
           public void setFileManager(JavaFileManager fileManager) {}
 
           @Override
-          public boolean classIsOnBootClasspath(String binaryName) {
-            return binaryName.startsWith("java.");
+          public boolean elementIsAvailableForSourceOnlyAbi(Elements elements, Element element) {
+            if (targetsAvailableForSoruceOnly.contains(getOwningTarget(elements, element))) {
+              return true;
+            }
+            return elements
+                .getBinaryName(MoreElements.getTypeElement(element))
+                .toString()
+                .startsWith("java.");
+          }
+
+          @Override
+          public String getOwningTarget(Elements elements, Element element) {
+            PackageElement packageElement = MoreElements.getPackageElement(element);
+
+            return "//"
+                + packageElement.getQualifiedName().toString().replace('.', '/')
+                + ":"
+                + packageElement.getSimpleName();
           }
         },
+        () -> false,
         Diagnostic.Kind.ERROR);
   }
 }

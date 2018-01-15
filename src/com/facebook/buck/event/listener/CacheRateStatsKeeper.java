@@ -48,6 +48,7 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheHits = new AtomicInteger(0);
   private final AtomicInteger cacheIgnores = new AtomicInteger(0);
   private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
+  private final AtomicInteger unexpectedCacheMissesInStampedeBuildSlave = new AtomicInteger(0);
 
   protected volatile Optional<Integer> ruleCount = Optional.empty();
 
@@ -69,9 +70,12 @@ public class CacheRateStatsKeeper {
       case IGNORED:
         cacheIgnores.incrementAndGet();
         break;
+      case CONTAINS:
       case SKIPPED:
         throw new IllegalStateException(
-            "BuildRules shouldn't finish with SKIPPED cache result type.");
+            String.format(
+                "BuildRules shouldn't finish with %s cache result type.",
+                cacheResult.getType().toString()));
       case LOCAL_KEY_UNCHANGED_HIT:
         cacheLocalKeyUnchangedHits.incrementAndGet();
         break;
@@ -79,6 +83,10 @@ public class CacheRateStatsKeeper {
     if (cacheResult.getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
       updated.incrementAndGet();
     }
+  }
+
+  public void recordUnexpectedCacheMisses(int unexpectedMisses) {
+    unexpectedCacheMissesInStampedeBuildSlave.addAndGet(unexpectedMisses);
   }
 
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
@@ -99,6 +107,8 @@ public class CacheRateStatsKeeper {
     serializableStats.setCacheLocalKeyUnchangedHitsCount(cacheLocalKeyUnchangedHits.get());
     serializableStats.setCacheIgnoresCount(cacheIgnores.get());
     serializableStats.setCacheIgnoresCount(cacheIgnores.get());
+    serializableStats.setUnexpectedCacheMissesCount(
+        unexpectedCacheMissesInStampedeBuildSlave.get());
 
     return serializableStats;
   }

@@ -1,11 +1,12 @@
 ocaml_binary(
-    name = 'unused_var',
+    name = "unused_var",
     srcs = [
-        'unused_var.ml',
+        "unused_var.ml",
+    ],
+    compiler_flags = [
+        "-warn-error",
+        "+a",
     ],
     deps = [
-    ],
-    compiler_flags=[
-        '-warn-error', '+a',
     ],
 )

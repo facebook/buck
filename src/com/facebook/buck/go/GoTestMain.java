@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,9 +38,13 @@ import java.nio.file.Path;
 public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final Tool testMainGen;
   @AddToRuleKey private final ImmutableSet<SourcePath> testSources;
+  @AddToRuleKey private final GoTestCoverStep.Mode coverageMode;
 
   @AddToRuleKey(stringify = true)
   private final Path testPackage;
+
+  @AddToRuleKey(stringify = true)
+  private final ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables;
 
   private final Path output;
 
@@ -51,7 +54,9 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildRuleParams buildRuleParams,
       Tool testMainGen,
       ImmutableSet<SourcePath> testSources,
-      Path testPackage) {
+      Path testPackage,
+      ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables,
+      GoTestCoverStep.Mode coverageMode) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.testMainGen = testMainGen;
     this.testSources = testSources;
@@ -61,28 +66,34 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             getBuildTarget(),
             "%s/" + getBuildTarget().getShortName() + "_test_main.go");
+    this.coverVariables = coverVariables;
+    this.coverageMode = coverageMode;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
-    return ImmutableList.of(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
-        new GoTestMainStep(
-            getProjectFilesystem().getRootPath(),
-            testMainGen.getEnvironment(context.getSourcePathResolver()),
-            testMainGen.getCommandPrefix(context.getSourcePathResolver()),
-            /* coverageMode */ "",
-            /* coverageVariables */ ImmutableMap.of(),
-            testPackage,
-            testSources
-                .stream()
-                .map(context.getSourcePathResolver()::getAbsolutePath)
-                .collect(MoreCollectors.toImmutableList()),
-            output));
+    return ImmutableList.<Step>builder()
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
+        .add(
+            new GoTestMainStep(
+                getBuildTarget(),
+                getProjectFilesystem().getRootPath(),
+                testMainGen.getEnvironment(context.getSourcePathResolver()),
+                testMainGen.getCommandPrefix(context.getSourcePathResolver()),
+                coverageMode,
+                coverVariables,
+                testPackage,
+                testSources
+                    .stream()
+                    .map(context.getSourcePathResolver()::getAbsolutePath)
+                    .collect(ImmutableList.toImmutableList()),
+                output))
+        .build();
   }
 
   @Override

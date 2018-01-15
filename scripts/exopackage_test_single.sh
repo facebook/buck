@@ -39,7 +39,9 @@ fi
 
 # Copy the test project into a temp dir, then cd into it and make it a buck project.
 cp -r test/com/facebook/buck/android/testdata/exopackage-device/* $TMP_DIR
+buck build --out $TMP_DIR/buck.pex buck
 buck build --out $TMP_DIR/buck-android-support.jar buck-android-support
+
 cd $TMP_DIR
 for BUCKFILE in `find . -name BUCK.fixture` ; do
   mv $BUCKFILE ${BUCKFILE%%.fixture}
@@ -53,7 +55,7 @@ cat >.buckconfig <<EOF
   cpu_abis = armv7, x86
 EOF
 cat >.bucklogging.properties <<EOF
-com.facebook.buck.android.exopackage.ExopackageInstaller.level=FINER
+com.facebook.buck.android.exopackage.level=FINER
 EOF
 export NO_BUCKD=1
 
@@ -67,16 +69,18 @@ EXP_APP_NAME='Exo Test App'
 
 OUT_COUNT=0
 function installAndLaunch() {
-  buck install ${1:-//:exotest} | cat
+  ./buck.pex install ${1:-//:exotest} | cat
   adb logcat -c
   adb shell am start -n buck.exotest/exotest.LogActivity
   adb shell am start -n buck.exotest.meta/.ExoMetaLogActivity
   SECONDARY_DEX_INSTALLED=$(cat buck-out/log/build.trace | \
-    jq -r '[ .[] | select(.target_name == "install_secondary_dex") | select(.ph == "B") ] | length')
+    jq -r '[ .[] | select(.name == "install_secondary_dex") | select(.ph == "B") ] | length')
   NATIVE_LIBS_INSTALLED=$(cat buck-out/log/build.trace | \
-    jq -r '[ .[] | select(.target_name == "install_native_library") | select(.ph == "B") ] | length')
+    jq -r '[ .[] | select(.name == "install_native_library") | select(.ph == "B") ] | length')
   RESOURCE_APKS_INSTALLED=$(cat buck-out/log/build.trace | \
-    jq -r '[ .[] | select(.target_name == "install_resources") | select(.ph == "B") ] | length')
+    jq -r '[ .[] | select(.name == "install_resources") | select(.ph == "B") ] | length')
+  MODULAR_DEX_INSTALLED=$(cat buck-out/log/build.trace | \
+      jq -r '[ .[] | select(.name == "install_modular_dex") | select(.ph == "B") ] | length')
   sleep 1
   adb logcat -d '*:S' EXOPACKAGE_TEST:V EXOPACKAGE_TEST_META:V > out.txt
   cp out.txt out$((++OUT_COUNT)).txt
@@ -89,6 +93,7 @@ function installAndLaunch() {
   grep -q "IMAGE=$EXP_IMAGE" out.txt || (cat out.txt && false)
   grep -q "ASSET=$EXP_ASSET" out.txt || (cat out.txt && false)
   grep -q "ASSET_TWO=$EXP_ASSET2" out.txt || (cat out.txt && false)
+  grep -q "MODULE_ONE=$EXP_MODULE" out.txt || (cat out.txt && false)
 
   grep -q "META_ICON=.*_.*" out.txt || (cat out.txt && false)
   grep -q "META_NAME=$EXP_APP_NAME" out.txt || (cat out.txt && false)
@@ -121,6 +126,11 @@ function edit_java() {
   EXP_JAVA=$1
 }
 
+function edit_module() {
+  echo "$1" > module_value.txt
+  EXP_MODULE=$1
+}
+
 function edit_cpp1() {
   sedInPlace "s/one_../one_$1/" jni/one/one.c
   EXP_CPP1=one_$1
@@ -137,11 +147,12 @@ function change_label() {
   EXP_APP_NAME=$1
 }
 
-buck install //app-meta-tool:exometa
+./buck.pex install //app-meta-tool:exometa
 
 # Build and do a clean install of the app.  Launch it and capture logs.
 create_image 1
 edit_java '1a'
+edit_module '1a'
 
 installAndLaunch
 
@@ -150,12 +161,14 @@ test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 2
 # 1: exo-resources 2: exo-assets 3: exo-java-resources
 test "$RESOURCE_APKS_INSTALLED" = 3
+test "$MODULAR_DEX_INSTALLED" = 1
 
 change_label 'Exo App New Label'
 installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 1
+test "$MODULAR_DEX_INSTALLED" = 0
 
 # Change java code and do an incremental install of the app.  Launch it and capture logs.
 edit_java '2b'
@@ -165,6 +178,18 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 0
+test "$MODULAR_DEX_INSTALLED" = 0
+# Check for the new values in the logs.
+
+# Change modular code and do an incremental install of the app.  Launch it and capture logs.
+edit_module '2bpart2'
+installAndLaunch
+
+# Check for incremental module install.
+test "$SECONDARY_DEX_INSTALLED" = 0
+test "$NATIVE_LIBS_INSTALLED" = 0
+test "$RESOURCE_APKS_INSTALLED" = 0
+test "$MODULAR_DEX_INSTALLED" = 1
 # Check for the new values in the logs.
 
 # Change one of the native libraries, do an incremental install and capture logs.
@@ -175,6 +200,7 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 1
 test "$RESOURCE_APKS_INSTALLED" = 0
+test "$MODULAR_DEX_INSTALLED" = 0
 
 
 # Change both native and java code and do an incremental build.
@@ -186,6 +212,7 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 1
 test "$RESOURCE_APKS_INSTALLED" = 0
+test "$MODULAR_DEX_INSTALLED" = 0
 
 # Change an image and do an incremental build.
 create_image 5
@@ -193,6 +220,7 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 1
+test "$MODULAR_DEX_INSTALLED" = 0
 
 # Change an asset and do an incremental build.
 edit_asset '6f'
@@ -200,6 +228,7 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 1
+test "$MODULAR_DEX_INSTALLED" = 0
 
 # Change a resource and do an incremental build.
 edit_resource '7g'
@@ -207,6 +236,7 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 1
+test "$MODULAR_DEX_INSTALLED" = 0
 
 # Change all resources and do an incremental build.
 create_image 8
@@ -216,10 +246,12 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 2
+test "$MODULAR_DEX_INSTALLED" = 0
 
 
 # Change everything and do a incremental build.
 edit_java '9i'
+edit_module '9i'
 edit_cpp2 '9i'
 create_image 9
 edit_asset '9i'
@@ -228,6 +260,7 @@ installAndLaunch
 test "$SECONDARY_DEX_INSTALLED" = 1
 test "$NATIVE_LIBS_INSTALLED" = 1
 test "$RESOURCE_APKS_INSTALLED" = 2
+test "$MODULAR_DEX_INSTALLED" = 1
 
 # Change everything and do a no-exopackage incremental build.
 edit_java '10j'
@@ -241,11 +274,12 @@ installAndLaunch //:exotest-noexo
 test "$SECONDARY_DEX_INSTALLED" = 0
 test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 0
+test "$MODULAR_DEX_INSTALLED" = 0
 
 
 # Clean up after ourselves.
-buck uninstall //:exotest-noexo
-buck uninstall //app-meta-tool:exometa
+./buck.pex uninstall //:exotest-noexo
+./buck.pex uninstall //app-meta-tool:exometa
 adb uninstall com.facebook.buck.android.agent
 
 # Celebrate!  (And show that we succeeded, because grep doesn't print error messages.)

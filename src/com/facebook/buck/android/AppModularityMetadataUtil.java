@@ -51,7 +51,7 @@ public class AppModularityMetadataUtil {
       String line = lineIterator.next();
       if (inClassCheck) {
         // check to see if the line is a class.
-        if (line.startsWith(WriteAppModuleMetadataStep.CLASS_INDENTATION)) {
+        if (line.startsWith(WriteAppModuleMetadataStep.ITEM_INDENTATION)) {
           String className = line.trim();
           // add the pair to the map.
           builder.put(className, currentModule);

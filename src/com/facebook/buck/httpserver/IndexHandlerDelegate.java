@@ -16,25 +16,29 @@
 
 package com.facebook.buck.httpserver;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.template.soy.data.SoyMapData;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 import java.io.IOException;
+import java.net.URL;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.server.Request;
 
 /** Handles requests to the root URI, {@code /}. */
-class IndexHandlerDelegate extends AbstractTemplateHandlerDelegate {
-
-  IndexHandlerDelegate() {
-    super(ImmutableSet.of("index.soy"));
-  }
+class IndexHandlerDelegate implements TemplateHandlerDelegate {
 
   @Override
   public String getTemplateForRequest(Request baseRequest) {
-    return "buck.index";
+    return "index";
+  }
+
+  @Nullable
+  @Override
+  public ImmutableMap<String, Object> getDataForRequest(Request baseRequest) throws IOException {
+    return ImmutableMap.of();
   }
 
   @Override
-  public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
-    return new SoyMapData();
+  public URL getTemplateGroup() {
+    return Resources.getResource(IndexHandlerDelegate.class, "templates.stg");
   }
 }

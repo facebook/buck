@@ -32,7 +32,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.android.AndroidNdkHelper;
 import com.facebook.buck.android.AssumeAndroidPlatform;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
@@ -40,15 +40,18 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -56,6 +59,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -63,6 +67,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -383,13 +388,21 @@ public class InterCellIntegrationTest {
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                processExecutor,
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new Parser(
             new BroadcastEventListener(),
             primary.asCell().getBuckConfig().getView(ParserConfig.class),
             coercerFactory,
-            new ConstructorArgMarshaller(coercerFactory));
+            new ConstructorArgMarshaller(coercerFactory),
+            knownBuildRuleTypesProvider);
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Cell primaryCell = primary.asCell();
@@ -486,6 +499,21 @@ public class InterCellIntegrationTest {
     registerCell(root, "other", other);
     registerCell(root, "root", root);
     registerCell(other, "root", root);
+
+    root.runBuckBuild("//:rule", "other//:rule").assertSuccess();
+  }
+
+  @Test
+  public void buildFilesCanIncludeDefsFromOtherCellsUsingImplicitIncludes() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    ProjectWorkspace root = createWorkspace("inter-cell/includes/root");
+    ProjectWorkspace other = createWorkspace("inter-cell/includes/other");
+    registerCell(root, "other", other);
+    registerCell(root, "root", root);
+    registerCell(other, "root", root);
+    TestDataHelper.overrideBuckconfig(
+        root, ImmutableMap.of("buildfile", ImmutableMap.of("includes", "other//DEFS")));
 
     root.runBuckBuild("//:rule", "other//:rule").assertSuccess();
   }
@@ -862,7 +890,8 @@ public class InterCellIntegrationTest {
     // names, the rows can get out of sync.
     secondary.runBuckBuild("primary//:hello").assertSuccess();
 
-    // Introduce changes to both files, including a compile error, and build again.  The compiler error will cause
+    // Introduce changes to both files, including a compile error, and build again.  The compiler
+    // error will cause
     // the build to delete the //:hello rows from the DB, and delete .hello/metadata/RECORDED_PATHS
     String hello = primary.getFileContents("hello.cpp");
     String main = primary.getFileContents("main.cpp");

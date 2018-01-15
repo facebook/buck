@@ -17,10 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.android.resources.ResourcesZipBuilder;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -36,37 +36,30 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.function.Supplier;
 
 class AndroidBinaryBuildable implements AddsToRuleKey {
   /**
@@ -82,7 +75,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   static final String SMART_DEX_SECONDARY_DEX_SUBDIR =
       "assets/smart-dex-secondary-program-dex-jars";
 
-  @AddToRuleKey private final EnumSet<AndroidBinary.ExopackageMode> exopackageModes;
+  @AddToRuleKey private final EnumSet<ExopackageMode> exopackageModes;
 
   @AddToRuleKey private final SourcePath androidManifestPath;
 
@@ -95,7 +88,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey private final Optional<RedexOptions> redexOptions;
 
-  @SuppressWarnings("unused")
   @AddToRuleKey
   // Redex accesses some files that are indirectly referenced through the proguard command-line.txt.
   // TODO(cjhopman): Redex shouldn't do that, or this list should be constructed more carefully.
@@ -114,99 +106,55 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Post-process resource compression
   @AddToRuleKey private final boolean isCompressResources;
 
+  @AddToRuleKey private final int apkCompressionLevel;
+
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
+  private final AndroidSdkLocation androidSdkLocation;
+  private final AndroidLegacyToolchain androidLegacyToolchain;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
+      AndroidSdkLocation androidSdkLocation,
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
       Optional<RedexOptions> redexOptions,
       ImmutableList<SourcePath> additionalRedexInputs,
-      EnumSet<AndroidBinary.ExopackageMode> exopackageModes,
-      AndroidGraphEnhancementResult enhancementResult,
+      EnumSet<ExopackageMode> exopackageModes,
       Optional<Integer> xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Tool javaRuntimeLauncher,
       SourcePath androidManifestPath,
-      SourcePath resourcesApkPath,
-      ImmutableList<SourcePath> primaryApkAssetsZips,
-      boolean isCompressResources) {
+      boolean isCompressResources,
+      DexFilesInfo dexFilesInfo,
+      NativeFilesInfo nativeFilesInfo,
+      ResourceFilesInfo resourceFilesInfo,
+      ImmutableSortedSet<APKModule> apkModules,
+      int apkCompressionLevel) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
-
+    this.androidSdkLocation = androidSdkLocation;
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
     this.redexOptions = redexOptions;
     this.additionalRedexInputs = additionalRedexInputs;
     this.exopackageModes = exopackageModes;
     this.xzCompressionLevel = xzCompressionLevel;
-
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.androidManifestPath = androidManifestPath;
     this.isCompressResources = isCompressResources;
-    AndroidPackageableCollection packageableCollection =
-        enhancementResult.getPackageableCollection();
-
-    this.apkModules =
-        ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
-
-    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries =
-        enhancementResult.getCopyNativeLibraries();
-
-    boolean exopackageForNativeEnabled =
-        AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes);
-    Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
-    if (exopackageForNativeEnabled) {
-      nativeLibsDirs = Optional.empty();
-    } else {
-      nativeLibsDirs =
-          copyNativeLibraries.map(
-              cnl ->
-                  cnl.entrySet()
-                      .stream()
-                      .collect(
-                          MoreCollectors.toImmutableSortedMap(
-                              e -> e.getKey(), e -> e.getValue().getSourcePathToNativeLibsDir())));
-    }
-
-    Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs =
-        copyNativeLibraries.map(
-            cnl ->
-                cnl.entrySet()
-                    .stream()
-                    .filter(
-                        entry ->
-                            !exopackageForNativeEnabled
-                                || packageAssetLibraries
-                                || !entry.getKey().isRootModule())
-                    .collect(
-                        MoreCollectors.toImmutableSortedMap(
-                            e -> e.getKey(),
-                            e -> e.getValue().getSourcePathToNativeLibsAssetsDir())));
-
-    DexFilesInfo enhancementDexFilesInfo = enhancementResult.getDexFilesInfo();
-    if (AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      this.dexFilesInfo =
-          new DexFilesInfo(
-              enhancementDexFilesInfo.primaryDexPath,
-              ImmutableSortedSet.of(),
-              enhancementDexFilesInfo.proguardTextFilesPath);
-    } else {
-      this.dexFilesInfo = enhancementDexFilesInfo;
-    }
-    this.nativeFilesInfo = new NativeFilesInfo(nativeLibsDirs, nativeLibsAssetsDirs);
+    this.apkModules = apkModules;
+    this.dexFilesInfo = dexFilesInfo;
+    this.nativeFilesInfo = nativeFilesInfo;
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
-
-    this.resourceFilesInfo =
-        new ResourceFilesInfo(
-            ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars()),
-            resourcesApkPath,
-            primaryApkAssetsZips);
+    this.resourceFilesInfo = resourceFilesInfo;
+    this.apkCompressionLevel = apkCompressionLevel;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -240,7 +188,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     for (final APKModule module : apkModules) {
       boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
-      if (!AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes)
+      if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
           && nativeFilesInfo.nativeLibsDirs.isPresent()
           && nativeFilesInfo.nativeLibsDirs.get().containsKey(module)) {
         if (shouldPackageAssetLibraries) {
@@ -256,7 +204,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
       if (shouldPackageAssetLibraries) {
         Preconditions.checkState(
-            !AndroidBinary.ExopackageMode.enabledForResources(exopackageModes));
+            ExopackageMode.enabledForModules(exopackageModes)
+                || !ExopackageMode.enabledForResources(exopackageModes));
         Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
 
         final Path libSubdirectory =
@@ -281,7 +230,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         .map(pathResolver::getRelativePath)
         .forEach(zipFiles::add);
 
-    if (AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
       // We need to include a few dummy native libraries with our application so that Android knows
       // to run it as 32-bit.  Android defaults to 64-bit when no libraries are provided at all,
       // causing us to fail to load our 32-bit exopackage native libraries later.
@@ -311,12 +260,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .pathsToThirdPartyJars
             .stream()
             .map(resolver::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSet());
-
-    if (AndroidBinary.ExopackageMode.enabledForResources(exopackageModes)) {
-      steps.add(createMergedThirdPartyJarsStep(thirdPartyJars));
-      buildableContext.recordArtifact(getMergedThirdPartyJarsPath());
-    }
+            .collect(ImmutableSet.toImmutableSet());
 
     steps.add(
         new ApkBuilderStep(
@@ -331,7 +275,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             pathToKeystore,
             keystoreProperties,
             false,
-            javaRuntimeLauncher.getCommandPrefix(pathResolver)));
+            javaRuntimeLauncher.getCommandPrefix(pathResolver),
+            apkCompressionLevel));
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
     // the output non-deterministic.  So use an additional scrubbing step to zero these out.
@@ -364,7 +309,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               redexedApk));
     }
 
-    steps.add(new ZipalignStep(getProjectFilesystem().getRootPath(), apkToAlign, apkPath));
+    steps.add(
+        new ZipalignStep(
+            androidLegacyToolchain,
+            getBuildTarget(),
+            getProjectFilesystem().getRootPath(),
+            apkToAlign,
+            apkPath));
 
     buildableContext.recordArtifact(apkPath);
     return steps.build();
@@ -456,7 +407,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           filesystem.move(libPath, tempPath);
           outputAssetLibrariesBuilder.add(tempPath);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -501,14 +452,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         if (!metadata.isEmpty()) {
           filesystem.writeLinesToPath(metadata, metadataOutput);
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
 
   private Supplier<KeystoreProperties> getKeystorePropertiesSupplier(
       SourcePathResolver resolver, Path pathToKeystore) {
-    return Suppliers.memoize(
+    return MoreSuppliers.memoize(
         () -> {
           try {
             return KeystoreProperties.createFromPropertiesFile(
@@ -545,7 +496,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 context.getBuildCellRootPath(), getProjectFilesystem(), redexedApk.getParent())));
     ImmutableList<Step> redexSteps =
         ReDexStep.createSteps(
+            buildTarget,
             getProjectFilesystem(),
+            androidSdkLocation,
             resolver,
             redexOptions.get(),
             apkToRedexAndAlign,
@@ -566,62 +519,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         CopyStep.DirectoryMode.CONTENTS_ONLY);
   }
 
-  private Step createMergedThirdPartyJarsStep(ImmutableSet<Path> thirdPartyJars) {
-    return new AbstractExecutionStep("merging_third_party_jar_resources") {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
-        try (ResourcesZipBuilder builder =
-            new ResourcesZipBuilder(
-                getProjectFilesystem().resolve(getMergedThirdPartyJarsPath()))) {
-          for (Path jar : thirdPartyJars) {
-            try (ZipFile base = new ZipFile(jar.toFile())) {
-              for (ZipEntry inputEntry : Collections.list(base.entries())) {
-                if (inputEntry.isDirectory()) {
-                  continue;
-                }
-                String name = inputEntry.getName();
-                String ext = Files.getFileExtension(name);
-                String filename = Paths.get(name).getFileName().toString();
-                // Android's ApkBuilder filters out a lot of files from Java resources. Try to
-                // match its behavior.
-                // See https://android.googlesource.com/platform/sdk/+/jb-release/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java
-                if (name.startsWith(".")
-                    || name.endsWith("~")
-                    || name.startsWith("META-INF")
-                    || "aidl".equalsIgnoreCase(ext)
-                    || "rs".equalsIgnoreCase(ext)
-                    || "rsh".equalsIgnoreCase(ext)
-                    || "d".equalsIgnoreCase(ext)
-                    || "java".equalsIgnoreCase(ext)
-                    || "scala".equalsIgnoreCase(ext)
-                    || "class".equalsIgnoreCase(ext)
-                    || "scc".equalsIgnoreCase(ext)
-                    || "swp".equalsIgnoreCase(ext)
-                    || "thumbs.db".equalsIgnoreCase(filename)
-                    || "picasa.ini".equalsIgnoreCase(filename)
-                    || "package.html".equalsIgnoreCase(filename)
-                    || "overview.html".equalsIgnoreCase(filename)) {
-                  continue;
-                }
-                try (InputStream inputStream = base.getInputStream(inputEntry)) {
-                  builder.addEntry(
-                      inputStream,
-                      inputEntry.getSize(),
-                      inputEntry.getCrc(),
-                      name,
-                      Deflater.NO_COMPRESSION,
-                      false);
-                }
-              }
-            }
-          }
-        }
-        return StepExecutionResult.SUCCESS;
-      }
-    };
-  }
-
   public ProjectFilesystem getProjectFilesystem() {
     return filesystem;
   }
@@ -639,10 +536,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private Path getPathForNativeLibsAsAssets() {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "__native_libs_as_assets_%s__");
-  }
-
-  Path getMergedThirdPartyJarsPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.java.resources");
   }
 
   /** The APK at this path will be signed, but not zipaligned. */

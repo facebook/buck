@@ -32,6 +32,7 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
   private static final int SECONDARY_DEX_MASK = 1;
   private static final int NATIVE_LIBRARY_MASK = 2;
   private static final int RESOURCES_MASK = 4;
+  private static final int MODULES_MASK = 8;
 
   private final String delegateClassName;
   private final int exopackageFlags;
@@ -68,9 +69,18 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
     return (exopackageFlags & RESOURCES_MASK) != 0;
   }
 
+  private boolean isExopackageEnabledForModules() {
+    return (exopackageFlags & MODULES_MASK) != 0;
+  }
+
   private T createDelegate() {
     if (isExopackageEnabledForSecondaryDex()) {
-      ExopackageDexLoader.loadExopackageJars(this);
+      ExopackageDexLoader.loadExopackageJars(this, isExopackageEnabledForModules());
+      if (isExopackageEnabledForModules()) {
+        ExoHelper.setupHotswap(this);
+        // Enable all class-loads to resolve hotswapped classes
+        DelegatingClassLoader.getInstance().installHelperAboveApplicationClassLoader();
+      }
     }
 
     if (isExopackageEnabledForNativeLibraries()) {

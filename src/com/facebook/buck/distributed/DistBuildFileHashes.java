@@ -29,11 +29,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -43,6 +42,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -74,7 +74,7 @@ public class DistBuildFileHashes {
       StackedFileHashCache originalHashCache,
       DistBuildCellIndexer cellIndexer,
       ListeningExecutorService executorService,
-      int keySeed,
+      RuleKeyConfiguration ruleKeyConfiguration,
       final Cell rootCell) {
 
     this.remoteFileHashes = new HashMap<>();
@@ -96,7 +96,8 @@ public class DistBuildFileHashes {
             });
 
     this.ruleKeyFactories =
-        createRuleKeyFactories(sourcePathResolver, ruleFinder, recordingHashCache, keySeed);
+        createRuleKeyFactories(
+            sourcePathResolver, ruleFinder, recordingHashCache, ruleKeyConfiguration);
     this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes =
         fileHashesComputation(
@@ -105,7 +106,7 @@ public class DistBuildFileHashes {
             executorService);
   }
 
-  public RecordedFileHashes getRemoteFileHashes(Integer cellIndex) {
+  private RecordedFileHashes getRemoteFileHashes(Integer cellIndex) {
     if (!remoteFileHashes.containsKey(cellIndex)) {
       RecordedFileHashes fileHashes = new RecordedFileHashes(cellIndex);
       remoteFileHashes.put(cellIndex, fileHashes);
@@ -118,7 +119,7 @@ public class DistBuildFileHashes {
       final SourcePathResolver sourcePathResolver,
       final SourcePathRuleFinder ruleFinder,
       final FileHashCache fileHashCache,
-      final int keySeed) {
+      final RuleKeyConfiguration ruleKeyConfiguration) {
 
     return CacheBuilder.newBuilder()
         .build(
@@ -126,7 +127,10 @@ public class DistBuildFileHashes {
               @Override
               public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
                 return new DefaultRuleKeyFactory(
-                    new RuleKeyFieldLoader(keySeed), fileHashCache, sourcePathResolver, ruleFinder);
+                    new RuleKeyFieldLoader(ruleKeyConfiguration),
+                    fileHashCache,
+                    sourcePathResolver,
+                    ruleFinder);
               }
             });
   }
@@ -136,7 +140,7 @@ public class DistBuildFileHashes {
       final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories,
       ListeningExecutorService executorService) {
     List<ListenableFuture<Map.Entry<BuildRule, RuleKey>>> ruleKeyEntries = new ArrayList<>();
-    for (final BuildRule rule : actionGraph.getNodes()) {
+    for (final BuildRule rule : Sets.newLinkedHashSet(actionGraph.getNodes())) {
       ruleKeyEntries.add(
           executorService.submit(
               () ->
@@ -145,15 +149,7 @@ public class DistBuildFileHashes {
     }
     ListenableFuture<List<Map.Entry<BuildRule, RuleKey>>> ruleKeyComputation =
         Futures.allAsList(ruleKeyEntries);
-    return Futures.transform(
-        ruleKeyComputation,
-        new Function<List<Map.Entry<BuildRule, RuleKey>>, ImmutableMap<BuildRule, RuleKey>>() {
-          @Override
-          public ImmutableMap<BuildRule, RuleKey> apply(List<Map.Entry<BuildRule, RuleKey>> input) {
-            return ImmutableMap.copyOf(input);
-          }
-        },
-        executorService);
+    return Futures.transform(ruleKeyComputation, ImmutableMap::copyOf, executorService);
   }
 
   private static ListenableFuture<ImmutableList<RecordedFileHashes>> fileHashesComputation(
@@ -162,25 +158,19 @@ public class DistBuildFileHashes {
       ListeningExecutorService executorService) {
     return Futures.transform(
         ruleKeyComputationForSideEffect,
-        new Function<Void, ImmutableList<RecordedFileHashes>>() {
-          @Override
-          public ImmutableList<RecordedFileHashes> apply(Void input) {
-            return ImmutableList.copyOf(remoteFileHashes);
-          }
-        },
+        input -> ImmutableList.copyOf(remoteFileHashes),
         executorService);
   }
 
   public List<BuildJobStateFileHashes> getFileHashes() throws IOException, InterruptedException {
     try {
-
       ImmutableList<BuildJobStateFileHashes> hashes =
           fileHashes
               .get()
               .stream()
               .map(recordedHash -> recordedHash.getRemoteFileHashes())
               .filter(x -> x.getEntriesSize() > 0)
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       checkNoDuplicates(hashes);
       return hashes;
     } catch (ExecutionException e) {
@@ -188,6 +178,10 @@ public class DistBuildFileHashes {
       Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
       throw new RuntimeException(e.getCause());
     }
+  }
+
+  public ListenableFuture<?> getFileHashesComputationFuture() {
+    return fileHashes;
   }
 
   private void checkNoDuplicates(ImmutableList<BuildJobStateFileHashes> hashes) {

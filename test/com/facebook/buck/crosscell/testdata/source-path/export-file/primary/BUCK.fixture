@@ -36,5 +36,5 @@ java_library(
     name = "java_lib",
     srcs = [
         "secondary//:Main.java",
-    ]
+    ],
 )

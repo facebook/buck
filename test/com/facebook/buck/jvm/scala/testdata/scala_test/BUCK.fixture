@@ -1,74 +1,86 @@
 scala_test(
-    name='test-success',
-    srcs=['TestSuccess.scala'],
-    deps=[':scalatest', ':junit'],
+    name = "test-success",
+    srcs = ["TestSuccess.scala"],
+    deps = [
+        ":junit",
+        ":scalatest",
+    ],
 )
 
 scala_test(
-    name='test-failure',
-    srcs=['TestFailure.scala'],
-    deps=[':scalatest', ':junit'],
+    name = "test-failure",
+    srcs = ["TestFailure.scala"],
+    deps = [
+        ":junit",
+        ":scalatest",
+    ],
 )
 
 scala_test(
-    name='test-spinning',
-    srcs=['TestSpinning.scala'],
-    deps=[':scalatest', ':junit'],
-    test_rule_timeout_ms=100,
+    name = "test-spinning",
+    srcs = ["TestSpinning.scala"],
+    test_rule_timeout_ms = 100,
+    deps = [
+        ":junit",
+        ":scalatest",
+    ],
 )
 
 ###### Libs
 
 prebuilt_jar(
-    name='scalatest',
-    binary_jar='scalatest_2.11-2.2.4.jar',
-    deps=[':scala-xml'],
+    name = "scalatest",
+    binary_jar = "scalatest_2.11-2.2.4.jar",
+    deps = [":scala-xml"],
 )
 
 prebuilt_jar(
-    name='junit',
-    binary_jar='junit-4.12.jar',
-    deps=[':hamcrest-junit'],
+    name = "junit",
+    binary_jar = "junit-4.12.jar",
+    deps = [":hamcrest-junit"],
 )
 
 prebuilt_jar(
-    name='hamcrest-junit',
-    binary_jar='hamcrest-junit-2.0.0.0.jar',
-    deps=[':java-hamcrest'],
+    name = "hamcrest-junit",
+    binary_jar = "hamcrest-junit-2.0.0.0.jar",
+    deps = [":java-hamcrest"],
 )
 
 prebuilt_jar(
-    name='java-hamcrest',
-    binary_jar='java-hamcrest-2.0.0.0.jar',
+    name = "java-hamcrest",
+    binary_jar = "java-hamcrest-2.0.0.0.jar",
 )
 
 prebuilt_jar(
-    name='scala-xml',
-    binary_jar='scala-xml_2.11-1.0.2.jar',
-    deps=[':scala-library'],
+    name = "scala-xml",
+    binary_jar = "scala-xml_2.11-1.0.2.jar",
+    deps = [":scala-library"],
 )
 
 ###### Compiler
 
 prebuilt_jar(
-    name='scala-library',
-    binary_jar='scala-library-2.11.7.jar',
+    name = "scala-library",
+    binary_jar = "scala-library-2.11.7.jar",
 )
 
 prebuilt_jar(
-    name='scala-reflect',
-    binary_jar='scala-reflect-2.11.7.jar',
-    deps=[':scala-library'],
+    name = "scala-reflect",
+    binary_jar = "scala-reflect-2.11.7.jar",
+    deps = [":scala-library"],
 )
 
 prebuilt_jar(
-    name='scala-compiler-lib',
-    binary_jar='scala-compiler-2.11.7.jar',
-    deps=[':scala-library', ':scala-reflect'],
+    name = "scala-compiler-lib",
+    binary_jar = "scala-compiler-2.11.7.jar",
+    deps = [
+        ":scala-library",
+        ":scala-reflect",
+    ],
 )
 
 java_binary(
-    name='scala-compiler',
-    main_class='scala.tools.nsc.Main',
-    deps=[':scala-compiler-lib'],
+    name = "scala-compiler",
+    main_class = "scala.tools.nsc.Main",
+    deps = [":scala-compiler-lib"],
 )

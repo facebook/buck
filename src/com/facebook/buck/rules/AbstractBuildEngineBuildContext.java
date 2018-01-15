@@ -20,13 +20,13 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 /** Per-build context used by {@link BuildEngine}. */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractBuildEngineBuildContext {
   /**

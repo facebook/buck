@@ -59,7 +59,7 @@ public abstract class Counter {
     }
 
     Counter counter = (Counter) o;
-    return this.info.equals(counter);
+    return this.info.equals(counter.info);
   }
 
   @Override

@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 java_immutables_library(
     name = "project_generator",
     srcs = glob(["*.java"]),
@@ -10,8 +12,8 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/apple:rules",
-        "//src/com/facebook/buck/apple/clang:headermap",
+        "//src/com/facebook/buck/apple:apple",
+        "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/cli/output:output",
         "//src/com/facebook/buck/config:config",
@@ -37,6 +39,7 @@ java_immutables_library(
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
@@ -45,6 +48,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/rules/keys/config:config",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/shell:rules",

@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -32,12 +33,15 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.Test;
 
@@ -74,16 +78,27 @@ public class CommandAliasTest {
   }
 
   @Test
-  public void exposesAllDepsAsRuntimeDeps() {
+  public void exposesInputsAsRuntimeDeps() {
     ImmutableSortedSet<BuildRule> declaredDeps =
         ImmutableSortedSet.of(new FakeBuildRule("//:a"), new FakeBuildRule("//:b"));
     ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of(new FakeBuildRule("//:c"));
 
     BuildRule[] toolDeps = {
-      new FakeBuildRule("//:d"), new FakeBuildRule("//:e"),
+      new FakeBuildRule("//:d").setOutputFile("d"), new FakeBuildRule("//:e").setOutputFile("e"),
     };
 
-    Tool toolWithDeps = new CommandTool.Builder().addDep(toolDeps).build();
+    BuildRuleResolver ruleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    Stream.of(toolDeps).forEach(ruleResolver::addToIndex);
+
+    Tool toolWithDeps =
+        new CommandTool.Builder()
+            .addInputs(
+                Arrays.stream(toolDeps)
+                    .map(BuildRule::getSourcePathToOutput)
+                    .collect(Collectors.toList()))
+            .build();
 
     BuildRuleParams paramsWithDeps =
         new BuildRuleParams(() -> declaredDeps, () -> extraDeps, ImmutableSortedSet.of());
@@ -91,9 +106,9 @@ public class CommandAliasTest {
     assertEquals(
         Stream.concat(Stream.concat(declaredDeps.stream(), extraDeps.stream()), Stream.of(toolDeps))
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSortedSet()),
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         new CommandAlias(target, fs, paramsWithDeps, toolWithDeps)
-            .getRuntimeDeps(ruleFinder)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .getRuntimeDeps(new SourcePathRuleFinder(ruleResolver))
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 }

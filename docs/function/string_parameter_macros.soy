@@ -28,9 +28,12 @@ The following macros are supported:
   <li><code>$(classpath //:foo)</code> expands to the set of jars that are in the classpath of the given target</li>
   <li><code>$(exe //:foo)</code> expands to the executable output of given target if it exists</li>
   <li><code>$(location //:foo)</code> expands to the output file or directory of the given target</li>
+  <li><code>$(location //:foo[output])</code> expands to the named output file or directory of the given target, for rules that expose supplementary outputs.</li>
   <li><code>$(maven_coords //:foo)</code> expands to the maven coordinates associated with the given target</li>
+  <li><code>$(output name)</code> expands to the path of the named output of the rule the macro is used in. Only useful for rules which allows named supplementary outputs.</li>
   <li><code>$(query_targets "deps(//:foo)")</code> executes the given query and expands to the list of targets that match. See more information below.</li>
   <li><code>$(query_outputs "deps(//:foo)")</code> executes the given query and expands to the output files of the list of targets that match. See more information below.</li>
+  <li><code>$(query_targets_and_outputs [SEPARATOR] "deps(//:foo)")</code> executes the given query and expands to the target name and the output files of the list of targets that match. Targets and paths are separated by SEPARATOR if provided, or a space if it is not.</li>
 </ul>
 {/literal}
 {/param}
@@ -98,6 +101,37 @@ cmd = '$(query_targets "attrfilter(annotation_processors, com.foo.Processor, dep
 </pre>
 {/literal}
 
+{/param}
+
+{param furtherexp}
+<h2>Technical Details</h2>
+
+The EBNF grammar for a macro is as follows:
+{literal}<pre>
+macro = "$(", macro_name, whitespace, [arg_list], ")";
+macro_name = {all_ascii_chars - whitespace - parens};
+whitespace = "\t" | "\n" | " " | "\r";
+parens = "(" | ")";
+arg_list = arg | arg, whitespace, arg_list;
+arg = {all_ascii_chars - whitespace - parens}
+      | "(", arg, ")"
+      | "\"", [{-"\""}], "\""
+      | "'", [{-"'"}], "'";
+</pre>{/literal}
+
+
+<h3>FAQs</h3>
+<ul>
+  <li> <strong>When are macros evaluated?</strong> Macros are evaluated before the command is passed to the shell for execution. You can think of them as simple string replacements. </li>
+  <li> <strong>Can macros be nested?</strong> Macros cannot be nested. If you need to run a second macro on the output of another macro, create a nested <code>genrule</code> definition and use the <code>$(location)</code> macro
+  to read the output of the first one. </li>
+  <li> <strong>Are parens okay inside a macro?</strong> Inside a macro, parentheses must be balanced. Parentheses which are part of a quoted string are ignored. </li>
+  <li> <strong>Is whitespace okay inside a macro?</strong> Macro args are whitespace separated, so args which contain whitespace must be quoted.</li>
+  <li> <strong>Are nested quotes allowed?</strong> A single level of nested quotes is allowed (e.g. <code>"My name is 'Buck'." or 'My name is "Buck".'</code>). Note that when you use the macro
+  in a BUCK file, you must ensure that these quotes are properly escaped, so that the command which uses the macro forms a proper string. </li>
+</ul>
+
+<p>
 {/param}
 
 {/call} // buck.function

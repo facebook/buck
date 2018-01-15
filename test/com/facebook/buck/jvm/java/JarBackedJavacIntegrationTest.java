@@ -16,14 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assume.assumeThat;
-
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,23 +44,8 @@ public class JarBackedJavacIntegrationTest {
   }
 
   @Test
-  public void testOOPJarBackedJavacFromJavaLibrary() throws IOException {
-    assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckBuild("//:lib", "--config", "java.location=OUT_OF_PROCESS");
-    buildResult.assertSuccess();
-  }
-
-  @Test
   public void testJarBackedJavacFromJavaLibraryCachedProperly() throws IOException {
     runTestForCacheableJavaLibraryBuild(new String[] {"//:lib"});
-  }
-
-  @Test
-  public void testOOPJarBackedJavacFromJavaLibraryCachedProperly() throws IOException {
-    assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    runTestForCacheableJavaLibraryBuild(
-        new String[] {"//:lib", "--config", "java.location=OUT_OF_PROCESS"});
   }
 
   private void runTestForCacheableJavaLibraryBuild(String[] args) throws IOException {

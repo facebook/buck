@@ -17,10 +17,11 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import java.util.Collection;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Helper class that keeps a list of compiled patterns and provides a method to check whether a
@@ -30,12 +31,12 @@ import java.util.regex.Pattern;
  */
 public class PatternsMatcher {
 
-  private final Iterable<Pattern> patterns;
+  private final Collection<Pattern> patterns;
   private final boolean hasPatterns;
 
-  public PatternsMatcher(Iterable<String> rawPatterns) {
-    patterns = Iterables.transform(rawPatterns, Pattern::compile);
-    hasPatterns = rawPatterns.iterator().hasNext();
+  public PatternsMatcher(Collection<String> rawPatterns) {
+    patterns = rawPatterns.stream().map(Pattern::compile).collect(Collectors.toList());
+    hasPatterns = !patterns.isEmpty();
   }
 
   public PatternsMatcher(ImmutableSet<Pattern> compiledPatterns) {

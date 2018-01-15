@@ -17,10 +17,12 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -80,7 +82,10 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllNodesJob(
-      final Cell cell, final Path buildFile, AtomicLong processedBytes)
+      final Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      final Path buildFile,
+      AtomicLong processedBytes)
       throws BuildTargetException {
 
     if (shuttingDown()) {
@@ -102,10 +107,17 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public ListenableFuture<Map<String, Object>> getNodeJob(
-      final Cell cell, final BuildTarget buildTarget, AtomicLong processedBytes)
+      final Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      final BuildTarget buildTarget,
+      AtomicLong processedBytes)
       throws BuildTargetException {
     return Futures.transformAsync(
-        getAllNodesJob(cell, cell.getAbsolutePathToBuildFile(buildTarget), processedBytes),
+        getAllNodesJob(
+            cell,
+            knownBuildRuleTypes,
+            cell.getAbsolutePathToBuildFile(buildTarget),
+            processedBytes),
         input -> {
           for (Map<String, Object> rawNode : input) {
             Object shortName = rawNode.get("name");

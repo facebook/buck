@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ForkMode;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
@@ -62,6 +62,7 @@ public class RobolectricTest extends JavaTest {
 
   private static final Logger LOG = Logger.get(RobolectricTest.class);
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
   private final Optional<SourcePath> robolectricManifest;
   private final Optional<String> robolectricRuntimeDependency;
@@ -87,6 +88,7 @@ public class RobolectricTest extends JavaTest {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
+      AndroidLegacyToolchain androidLegacyToolchain,
       JavaLibrary compiledTestsLibrary,
       Set<String> labels,
       Set<String> contacts,
@@ -131,6 +133,7 @@ public class RobolectricTest extends JavaTest {
         stdOutLogLevel,
         stdErrLogLevel,
         unbundledResourcesRoot);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.optionalDummyRDotJava = optionalDummyRDotJava;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
@@ -156,7 +159,8 @@ public class RobolectricTest extends JavaTest {
 
   @Override
   protected ImmutableSet<Path> getBootClasspathEntries(ExecutionContext context) {
-    return ImmutableSet.copyOf(context.getAndroidPlatformTarget().getBootclasspathEntries());
+    return ImmutableSet.copyOf(
+        androidLegacyToolchain.getAndroidPlatformTarget().getBootclasspathEntries());
   }
 
   @Override
@@ -270,7 +274,7 @@ public class RobolectricTest extends JavaTest {
 
     return sourcePathStream
         .filter(Objects::nonNull)
-        .map(pathResolver::getRelativePath)
+        .map(input -> getProjectFilesystem().relativize(pathResolver.getAbsolutePath(input)))
         .filter(
             input -> {
               try {
@@ -296,8 +300,10 @@ public class RobolectricTest extends JavaTest {
         // Inherit any runtime deps from `JavaTest`.
         super.getRuntimeDeps(ruleFinder),
         Stream.of(
-                // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
-                // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
+                // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make
+                // the
+                // {@link DummyRDotJava} and any of its resource deps is available locally (if it
+                // exists)
                 // to run this test.
                 Optionals.toStream(optionalDummyRDotJava),
                 Optionals.toStream(optionalDummyRDotJava)

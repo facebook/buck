@@ -21,9 +21,8 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 @BuckStyleImmutable
@@ -47,6 +46,6 @@ abstract class AbstractCxxCompilationDatabaseEntry {
 
   @Value.Derived
   public String getCommand() {
-    return Joiner.on(' ').join(Iterables.transform(getArguments(), Escaper.SHELL_ESCAPER));
+    return getArguments().stream().map(Escaper.SHELL_ESCAPER).collect(Collectors.joining(" "));
   }
 }

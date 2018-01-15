@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
@@ -111,7 +112,8 @@ public class ShellStepTest {
     workingDirectory =
         workingDirectory == null ? Paths.get(".").toAbsolutePath().normalize() : workingDirectory;
 
-    return new ShellStep(workingDirectory) {
+    return new ShellStep(
+        Optional.of(BuildTargetFactory.newInstance("//dummy:target")), workingDirectory) {
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
         return env;

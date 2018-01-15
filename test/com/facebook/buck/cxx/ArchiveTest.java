@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -44,7 +45,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -61,15 +62,18 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 public class ArchiveTest {
-
   private static final Path AR = Paths.get("ar");
-  private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(new HashedFileTool(AR));
   private static final Path RANLIB = Paths.get("ranlib");
-  private static final Tool DEFAULT_RANLIB = new HashedFileTool(RANLIB);
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.of(
           FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
+
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final Archiver DEFAULT_ARCHIVER =
+      new GnuArchiver(new HashedFileTool(PathSourcePath.of(projectFilesystem, AR)));
+  private final Tool DEFAULT_RANLIB =
+      new HashedFileTool(PathSourcePath.of(projectFilesystem, RANLIB));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
@@ -79,7 +83,6 @@ public class ArchiveTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>builder()
@@ -93,7 +96,7 @@ public class ArchiveTest {
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
@@ -110,13 +113,15 @@ public class ArchiveTest {
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    new GnuArchiver(new HashedFileTool(Paths.get("different"))),
+                    new GnuArchiver(
+                        new HashedFileTool(
+                            PathSourcePath.of(projectFilesystem, Paths.get("different")))),
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
@@ -128,7 +133,7 @@ public class ArchiveTest {
 
     // Verify that changing the output path causes a rulekey change.
     RuleKey outputChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
@@ -146,7 +151,7 @@ public class ArchiveTest {
 
     // Verify that changing the inputs causes a rulekey change.
     RuleKey inputChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
@@ -164,13 +169,13 @@ public class ArchiveTest {
 
     // Verify that changing the type of archiver causes a rulekey change.
     RuleKey archiverTypeChange =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 Archive.from(
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    new BsdArchiver(new HashedFileTool(AR)),
+                    new BsdArchiver(new HashedFileTool(PathSourcePath.of(projectFilesystem, AR))),
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),

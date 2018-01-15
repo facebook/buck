@@ -52,7 +52,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -288,7 +287,7 @@ public class AndroidPackageableCollectorTest {
         ImmutableList.of(a, d, b, c)
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     assertEquals(
         "Android resources should be topologically sorted.",
@@ -432,7 +431,7 @@ public class AndroidPackageableCollectorTest {
             .getClasspathEntriesToDex()
             .stream()
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   private void assertResolvedEquals(
@@ -442,13 +441,7 @@ public class AndroidPackageableCollectorTest {
       ImmutableSet<SourcePath> actual) {
     assertEquals(
         message,
-        expected
-            .stream()
-            .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()),
-        actual
-            .stream()
-            .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()));
+        expected.stream().map(pathResolver::getRelativePath).collect(ImmutableSet.toImmutableSet()),
+        actual.stream().map(pathResolver::getRelativePath).collect(ImmutableSet.toImmutableSet()));
   }
 }

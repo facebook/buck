@@ -74,8 +74,7 @@ public class AndroidResourceFilterIntegrationTest {
         new DefaultAndroidDirectoryResolver(
             filesystem.getRootPath().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
-            Optional.empty(),
-            Optional.empty());
+            AndroidNdkHelper.DEFAULT_CONFIG);
     pathToAapt =
         AndroidPlatformTarget.getDefaultPlatformTarget(resolver, Optional.empty(), Optional.empty())
             .getAaptExecutable();
@@ -245,6 +244,11 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
+  public void testPostFilterResourcesAndBanDuplicates() throws IOException {
+    workspace.runBuckBuild("//apps/sample:app_post_filter_no_dups").assertSuccess();
+  }
+
+  @Test
   public void testApkWithStringsAsAssets() throws IOException {
     String target = "//apps/sample:app_comp_str";
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
@@ -260,7 +264,6 @@ public class AndroidResourceFilterIntegrationTest {
 
   @Test
   public void testStringArtifactsAreCached() throws InterruptedException, IOException {
-    Assume.assumeFalse(true);
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -357,7 +360,7 @@ public class AndroidResourceFilterIntegrationTest {
     // TODO(dreiss): Remove this when aapt2 is everywhere.
     ProjectWorkspace.ProcessResult foundAapt2 =
         workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+    Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
 
     String target = "//apps/sample:app_en";
     workspace.replaceFileContents("apps/sample/BUCK", "'aapt1', # app_en", "'aapt2',");

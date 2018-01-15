@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -30,12 +31,11 @@ import com.facebook.buck.worker.WorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class WorkerShellStep implements Step {
 
@@ -43,6 +43,9 @@ public class WorkerShellStep implements Step {
   private Optional<WorkerJobParams> bashParams;
   private Optional<WorkerJobParams> cmdExeParams;
   private WorkerProcessPoolFactory factory;
+
+  /** Target using this worker shell step. */
+  BuildTarget buildTarget;
 
   /**
    * Creates new shell step that uses worker process to delegate work. If platform-specific params
@@ -56,10 +59,12 @@ public class WorkerShellStep implements Step {
    *     cmd.exe (Windows shell).
    */
   public WorkerShellStep(
+      BuildTarget buildTarget,
       Optional<WorkerJobParams> cmdParams,
       Optional<WorkerJobParams> bashParams,
       Optional<WorkerJobParams> cmdExeParams,
       WorkerProcessPoolFactory factory) {
+    this.buildTarget = buildTarget;
     this.cmdParams = cmdParams;
     this.bashParams = bashParams;
     this.cmdExeParams = cmdExeParams;
@@ -81,19 +86,26 @@ public class WorkerShellStep implements Step {
       process = null; // to avoid finally below
 
       Verbosity verbosity = context.getVerbosity();
-      if (result.getStdout().isPresent()
-          && !result.getStdout().get().isEmpty()
-          && verbosity.shouldPrintOutput()) {
+      boolean showStdout =
+          result.getStdout().isPresent()
+              && !result.getStdout().get().isEmpty()
+              && verbosity.shouldPrintOutput();
+      boolean showStderr =
+          result.getStderr().isPresent()
+              && !result.getStderr().get().isEmpty()
+              && verbosity.shouldPrintStandardInformation();
+      if (showStdout) {
         context.postEvent(ConsoleEvent.info("%s", result.getStdout().get()));
       }
-      if (result.getStderr().isPresent()
-          && !result.getStderr().get().isEmpty()
-          && verbosity.shouldPrintStandardInformation()) {
+      if (showStderr) {
         if (result.getExitCode() == 0) {
           context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
         } else {
           context.postEvent(ConsoleEvent.severe("%s", result.getStderr().get()));
         }
+      }
+      if (showStdout || showStderr) {
+        context.postEvent(ConsoleEvent.info("    When building rule %s:", buildTarget));
       }
       return StepExecutionResult.of(result.getExitCode());
     } finally {
@@ -107,7 +119,7 @@ public class WorkerShellStep implements Step {
   String getExpandedJobArgs(ExecutionContext context) {
     return expandEnvironmentVariables(
         this.getWorkerJobParamsToUse(context.getPlatform()).getJobArgs(),
-        getEnvironmentVariables(context));
+        getEnvironmentVariables());
   }
 
   @VisibleForTesting
@@ -149,10 +161,8 @@ public class WorkerShellStep implements Step {
    * process.
    *
    * <p>By default, this method returns an empty map.
-   *
-   * @param context that may be useful when determining environment variables to include.
    */
-  protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  protected ImmutableMap<String, String> getEnvironmentVariables() {
     return ImmutableMap.of();
   }
 
@@ -171,11 +181,16 @@ public class WorkerShellStep implements Step {
     return String.format(
         "Sending job with args \'%s\' to the process started with \'%s\'",
         getExpandedJobArgs(context),
-        FluentIterable.from(
-                factory.getCommand(
-                    context.getPlatform(),
-                    getWorkerJobParamsToUse(context.getPlatform()).getWorkerProcessParams()))
-            .transform(Escaper.SHELL_ESCAPER)
-            .join(Joiner.on(' ')));
+        factory
+            .getCommand(
+                context.getPlatform(),
+                getWorkerJobParamsToUse(context.getPlatform()).getWorkerProcessParams())
+            .stream()
+            .map(Escaper.SHELL_ESCAPER)
+            .collect(Collectors.joining(" ")));
+  }
+
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 }

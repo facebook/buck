@@ -33,8 +33,8 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
-import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -96,7 +96,7 @@ public class WatchmanWatcherTest {
             ImmutableList.of());
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertTrue(eventBuffer.events.isEmpty());
   }
@@ -108,7 +108,7 @@ public class WatchmanWatcherTest {
             "files", ImmutableList.of(ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     WatchmanPathEvent pathEvent = (WatchmanPathEvent) eventBuffer.getOnlyEvent();
     assertEquals(WatchmanPathEvent.Kind.MODIFY, pathEvent.getKind());
@@ -126,7 +126,7 @@ public class WatchmanWatcherTest {
             ImmutableList.of(ImmutableMap.<String, Object>of("name", "foo/bar/baz", "new", true)));
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(
         "Should be create event.",
@@ -144,7 +144,7 @@ public class WatchmanWatcherTest {
                 ImmutableMap.<String, Object>of("name", "foo/bar/baz", "exists", false)));
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(
         "Should be delete event.",
@@ -165,7 +165,7 @@ public class WatchmanWatcherTest {
                     "exists", false)));
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(
         "Should be delete event.",
@@ -184,7 +184,7 @@ public class WatchmanWatcherTest {
                 ImmutableMap.<String, Object>of("name", "foo/bar/boz")));
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(
         "Path should match watchman output.",
@@ -209,7 +209,7 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of("files", changedFiles.build());
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertThat(eventBuffer.getOnlyEvent(), instanceOf(WatchmanOverflowEvent.class));
   }
@@ -227,7 +227,7 @@ public class WatchmanWatcherTest {
             10000 /* timeout */);
     try {
       watcher.postEvents(
-          BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+          BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
           WatchmanWatcher.FreshInstanceAction.NONE);
       fail("Should have thrown IOException.");
     } catch (IOException e) {
@@ -237,8 +237,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanInterruptedThenOverflowEventGenerated()
-      throws IOException, InterruptedException {
+  public void whenWatchmanInterruptedThenOverflowEventGenerated() throws IOException {
     String message = "Boo!";
     WatchmanWatcher watcher =
         createWatcher(
@@ -250,12 +249,12 @@ public class WatchmanWatcherTest {
             10000 /* timeout */);
     try {
       watcher.postEvents(
-          BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+          BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
           WatchmanWatcher.FreshInstanceAction.NONE);
+      fail("Should have thrown InterruptedException");
     } catch (InterruptedException e) {
       assertEquals("Should be test interruption.", e.getMessage(), message);
     }
-    assertTrue(Thread.currentThread().isInterrupted());
     assertThat(eventBuffer.getOnlyEvent(), instanceOf(WatchmanOverflowEvent.class));
   }
 
@@ -268,7 +267,7 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     try {
       watcher.postEvents(
-          BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+          BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
           WatchmanWatcher.FreshInstanceAction.NONE);
       fail("Should have thrown RuntimeException");
     } catch (RuntimeException e) {
@@ -287,7 +286,7 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     try {
       watcher.postEvents(
-          BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+          BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
           WatchmanWatcher.FreshInstanceAction.NONE);
     } finally {
       assertThat(eventBuffer.getOnlyEvent(), instanceOf(WatchmanOverflowEvent.class));
@@ -310,7 +309,7 @@ public class WatchmanWatcherTest {
 
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     assertThat(
@@ -335,7 +334,7 @@ public class WatchmanWatcherTest {
 
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
 
     assertTrue("no events were posted", eventBuffer.events.isEmpty());
@@ -362,7 +361,7 @@ public class WatchmanWatcherTest {
                 ImmutableMap.of(FAKE_UUID_QUERY, watchmanOutput)),
             -1 /* timeout */);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
 
     assertThat(
@@ -377,7 +376,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("path/to/repo", Optional.of("project")),
             ImmutableSet.of(),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
 
     assertThat(query.toList(""), hasItem(hasEntry("relative_root", "project")));
   }
@@ -390,7 +389,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(
                 new PathOrGlobMatcher(Paths.get("foo")),
                 new PathOrGlobMatcher(Paths.get("bar/baz"))),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(
             "/path/to/repo",
@@ -447,7 +446,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(
                 new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
                 new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(
             watchRoot,
@@ -472,7 +471,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(new PathOrGlobMatcher("*.pbxproj")),
-            ImmutableSet.of(Watchman.Capability.DIRNAME));
+            ImmutableSet.of(WatchmanFactory.Capability.DIRNAME));
     assertEquals(
         WatchmanQuery.of(
             "/path/to/repo",
@@ -500,7 +499,7 @@ public class WatchmanWatcherTest {
         ImmutableMap.of("files", ImmutableList.of(), "warning", "message");
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertTrue(eventBuffer.events.isEmpty());
   }
@@ -532,7 +531,7 @@ public class WatchmanWatcherTest {
         ImmutableMap.of("files", ImmutableList.of(), "warning", message);
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     Set<WatchmanDiagnostic> diagnostics = new HashSet<>();
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     buckEventBus.register(new WatchmanDiagnosticEventListener(buckEventBus, diagnostics));
     watcher.postEvents(buckEventBus, WatchmanWatcher.FreshInstanceAction.NONE);
     assertThat(
@@ -553,7 +552,7 @@ public class WatchmanWatcherTest {
     assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:0:0")));
 
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:0:1")));
@@ -573,7 +572,7 @@ public class WatchmanWatcherTest {
     assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:0:0")));
 
     watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
+        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:1:0")));
@@ -591,7 +590,7 @@ public class WatchmanWatcherTest {
 
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
     final Set<BuckEvent> events = new HashSet<>();
-    BuckEventBus bus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
+    BuckEventBus bus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     bus.register(
         new Object() {
           @Subscribe
@@ -617,25 +616,28 @@ public class WatchmanWatcherTest {
         ImmutableMap.of(
             "files", ImmutableList.of(ImmutableMap.<String, Object>of("name", "foo/bar/baz")));
 
+    WatchmanClient client =
+        new FakeWatchmanClient(
+            0,
+            ImmutableMap.of(
+                FAKE_CLOCK_QUERY,
+                watchmanRootOutput,
+                FAKE_SECONDARY_QUERY.toList("c:0:0"),
+                watchmanSecondaryOutput));
     WatchmanWatcher watcher =
         new WatchmanWatcher(
             eventBus,
-            new FakeWatchmanClient(
-                0,
-                ImmutableMap.of(
-                    FAKE_CLOCK_QUERY,
-                    watchmanRootOutput,
-                    FAKE_SECONDARY_QUERY.toList("c:0:0"),
-                    watchmanSecondaryOutput)),
+            () -> client,
             10000,
             ImmutableMap.of(
                 FAKE_ROOT, FAKE_QUERY,
                 FAKE_SECONDARY_ROOT, FAKE_SECONDARY_QUERY),
             ImmutableMap.of(
                 FAKE_ROOT, new WatchmanCursor("c:0:0"),
-                FAKE_SECONDARY_ROOT, new WatchmanCursor("c:0:0")));
+                FAKE_SECONDARY_ROOT, new WatchmanCursor("c:0:0")),
+            /* numThreads */ 1);
     final Set<BuckEvent> events = new HashSet<>();
-    BuckEventBus bus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
+    BuckEventBus bus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     bus.register(
         new Object() {
           @Subscribe
@@ -675,10 +677,11 @@ public class WatchmanWatcherTest {
       String sinceCursor) {
     return new WatchmanWatcher(
         eventBus,
-        watchmanClient,
+        () -> watchmanClient,
         timeoutMillis,
         ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
-        ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)));
+        ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)),
+        /* numThreads */ 1);
   }
 
   private static class EventBuffer {

@@ -18,12 +18,15 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.shell.programrunner.DirectProgramRunner;
+import com.facebook.buck.shell.programrunner.ProgramRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -39,7 +42,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   private final ProjectFilesystem projectFilesystem;
   private final CommandString commandString;
-  private final BuildTarget target;
+  private final ProgramRunner programRunner;
   private final LoadingCache<Platform, Path> scriptFilePath =
       CacheBuilder.newBuilder()
           .build(
@@ -56,13 +59,23 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   public AbstractGenruleStep(
       ProjectFilesystem projectFilesystem,
-      BuildTarget target,
+      BuildTarget buildTarget,
+      CommandString commandString,
+      Path workingDirectory,
+      ProgramRunner programRunner) {
+    super(Optional.of(buildTarget), workingDirectory);
+    this.projectFilesystem = projectFilesystem;
+    this.commandString = commandString;
+    this.programRunner = programRunner;
+  }
+
+  public AbstractGenruleStep(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
       CommandString commandString,
       Path workingDirectory) {
-    super(workingDirectory);
-    this.projectFilesystem = projectFilesystem;
-    this.target = target;
-    this.commandString = commandString;
+    this(
+        projectFilesystem, buildTarget, commandString, workingDirectory, new DirectProgramRunner());
   }
 
   @Override
@@ -77,18 +90,33 @@ public abstract class AbstractGenruleStep extends ShellStep {
     String scriptFileContents = getScriptFileContents(context);
     projectFilesystem.writeContentsToPath(
         scriptFileContents + System.lineSeparator(), scriptFilePath);
+
+    programRunner.prepareForRun(projectFilesystem, scriptFilePath);
+
     return super.execute(context);
+  }
+
+  private ImmutableList<String> getCommandLine(ExecutionContext context) {
+    ExecutionArgsAndCommand executionArgsAndCommand =
+        getExecutionArgsAndCommand(context.getPlatform());
+    ImmutableList.Builder<String> commandLineBuilder = ImmutableList.builder();
+
+    Path scriptFilePath = this.scriptFilePath.getUnchecked(context.getPlatform());
+
+    return commandLineBuilder
+        .addAll(executionArgsAndCommand.shellType.executionArgs)
+        .add(scriptFilePath.toString())
+        .build();
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ExecutionArgsAndCommand executionArgsAndCommand =
-        getExecutionArgsAndCommand(context.getPlatform());
-    Path scriptFilePath = this.scriptFilePath.getUnchecked(context.getPlatform());
-    return ImmutableList.<String>builder()
-        .addAll(executionArgsAndCommand.shellType.executionArgs)
-        .add(scriptFilePath.toString())
-        .build();
+    return programRunner.enhanceCommandLine(getCommandLine(context));
+  }
+
+  @Override
+  protected ImmutableList<String> getShellCommandArgsForDescription(ExecutionContext context) {
+    return programRunner.enhanceCommandLineForDescription(getCommandLine(context));
   }
 
   @Override
@@ -142,7 +170,8 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   private ExecutionArgsAndCommand getExecutionArgsAndCommand(Platform platform) {
-    return commandString.getCommandAndExecutionArgs(platform, target);
+    Preconditions.checkArgument(getBuildTarget().isPresent(), "buildTarget must not be empty");
+    return commandString.getCommandAndExecutionArgs(platform, getBuildTarget().get());
   }
 
   protected abstract void addEnvironmentVariables(
@@ -196,7 +225,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     }
 
     public ExecutionArgsAndCommand getCommandAndExecutionArgs(
-        Platform platform, BuildTarget target) {
+        Platform platform, BuildTarget buildTarget) {
       // The priority sequence is
       //   "cmd.exe /c winCommand" (Windows Only)
       //   "/bin/bash -e -c shCommand" (Non-windows Only)
@@ -210,7 +239,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else {
           throw new HumanReadableException(
               "You must specify either cmd_exe or cmd for genrule %s.",
-              target.getFullyQualifiedName());
+              buildTarget.getFullyQualifiedName());
         }
         return new ExecutionArgsAndCommand(ShellType.CMD_EXE, command);
       } else {
@@ -221,7 +250,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else {
           throw new HumanReadableException(
               "You must specify either bash or cmd for genrule %s.",
-              target.getFullyQualifiedName());
+              buildTarget.getFullyQualifiedName());
         }
         return new ExecutionArgsAndCommand(ShellType.BASH, command);
       }

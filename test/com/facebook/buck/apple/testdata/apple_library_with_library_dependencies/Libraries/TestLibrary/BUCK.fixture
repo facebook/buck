@@ -1,8 +1,8 @@
 apple_library(
-  name = 'TestLibrary',
-  info_plist = 'Info.plist',
-  srcs = ['TestClass.m'],
-  headers = ['TestClass.h'],
-  linker_flags = ['-lobjc'],
-  deps = ['//Libraries/TestLibraryDep:TestLibraryDep'],
+    name = "TestLibrary",
+    srcs = ["TestClass.m"],
+    headers = ["TestClass.h"],
+    info_plist = "Info.plist",
+    linker_flags = ["-lobjc"],
+    deps = ["//Libraries/TestLibraryDep:TestLibraryDep"],
 )

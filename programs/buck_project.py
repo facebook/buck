@@ -133,10 +133,12 @@ class BuckProject:
 class NoBuckConfigFoundException(Exception):
 
     def __init__(self):
-        message = textwrap.dedent("""\
+        no_buckconfig_message_path = ".no_buckconfig_message"
+        default_message = textwrap.dedent("""\
             This does not appear to be the root of a Buck project. Please 'cd'
             to the root of your project before running buck. If this really is
             the root of your project, run
             'touch .buckconfig'
             and then re-run your buck command.""")
+        message = get_file_contents_if_exists(no_buckconfig_message_path, default_message)
         Exception.__init__(self, message)

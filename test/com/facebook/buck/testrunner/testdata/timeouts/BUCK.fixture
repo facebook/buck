@@ -1,24 +1,24 @@
 java_test(
-  name = 'ExceedsAnnotationTimeoutTest',
-  srcs = ['ExceedsAnnotationTimeoutTest.java'],
-  deps = [
-    'buck//third-party/java/junit:junit',
-  ],
+    name = "ExceedsAnnotationTimeoutTest",
+    srcs = ["ExceedsAnnotationTimeoutTest.java"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
 )
 
 java_test(
-  name = 'TimeoutChangesBehaviorTest',
-  srcs = ['TimeoutChangesBehaviorTest.java'],
-  deps = [
-    'buck//third-party/java/junit:junit',
-  ],
+    name = "TimeoutChangesBehaviorTest",
+    srcs = ["TimeoutChangesBehaviorTest.java"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
 )
 
 java_test(
-  name = 'SleepTest',
-  srcs = ['SleepTest.java'],
-  deps = [
-    'buck//third-party/java/junit:junit',
-  ],
-  test_case_timeout_ms = 50,
+    name = "SleepTest",
+    srcs = ["SleepTest.java"],
+    test_case_timeout_ms = 50,
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
 )

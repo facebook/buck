@@ -17,10 +17,9 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -61,13 +60,11 @@ public class AndroidNdkHelper {
         new DefaultAndroidDirectoryResolver(
             workspace.asCell().getRoot().getFileSystem(),
             ImmutableMap.copyOf(System.getenv()),
-            Optional.empty(),
-            Optional.empty());
+            DEFAULT_CONFIG);
 
-    Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
-    assertTrue(ndkPath.isPresent());
+    Path ndkPath = androidResolver.getNdkOrThrow();
     Optional<String> ndkVersion =
-        DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath.get());
+        DefaultAndroidDirectoryResolver.findNdkVersionFromDirectory(ndkPath);
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 
     ImmutableCollection<NdkCxxPlatform> platforms =
@@ -75,7 +72,7 @@ public class AndroidNdkHelper {
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 AndroidNdkHelper.DEFAULT_CONFIG,
                 filesystem,
-                ndkPath.get(),
+                ndkPath,
                 NdkCxxPlatformCompiler.builder()
                     .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
                     .setVersion(gccVersion)

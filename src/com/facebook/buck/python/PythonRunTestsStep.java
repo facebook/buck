@@ -16,10 +16,12 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.HumanReadableException;
@@ -48,6 +50,7 @@ public class PythonRunTestsStep implements Step {
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
+  private final BuildTarget buildTarget;
 
   private final Consumer<Process> timeoutHandler =
       input -> {
@@ -57,6 +60,7 @@ public class PythonRunTestsStep implements Step {
   private boolean timedOut;
 
   public PythonRunTestsStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       String testName,
       ImmutableList<String> commandPrefix,
@@ -64,6 +68,7 @@ public class PythonRunTestsStep implements Step {
       TestSelectorList testSelectorList,
       Optional<Long> testRuleTimeoutMs,
       Path resultsOutputPath) {
+    this.buildTarget = buildTarget;
     this.workingDirectory = workingDirectory;
     this.testName = testName;
     this.commandPrefix = commandPrefix;
@@ -116,7 +121,7 @@ public class PythonRunTestsStep implements Step {
                 Optional.of(timeoutHandler));
 
     if (timedOut) {
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     } else if (result.getExitCode() != 0) {
       return StepExecutionResult.of(result);
     }
@@ -178,7 +183,7 @@ public class PythonRunTestsStep implements Step {
   }
 
   private ShellStep getShellStepWithArgs(final String... args) {
-    return new ShellStep(workingDirectory) {
+    return new ShellStep(Optional.of(buildTarget), workingDirectory) {
       @Override
       public StepExecutionResult execute(ExecutionContext context)
           throws InterruptedException, IOException {
@@ -188,7 +193,7 @@ public class PythonRunTestsStep implements Step {
         // return codes indicates that we succeeded in running the tests.
         if (executionResult.getExitCode() == 0
             || executionResult.getExitCode() == TEST_FAILURES_EXIT_CODE) {
-          return StepExecutionResult.SUCCESS;
+          return StepExecutionResults.SUCCESS;
         }
         return executionResult;
       }

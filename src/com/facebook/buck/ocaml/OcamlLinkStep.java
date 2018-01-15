@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
@@ -45,6 +46,7 @@ public class OcamlLinkStep extends ShellStep {
   private final ImmutableList<String> ocamlInput;
 
   public static OcamlLinkStep create(
+      BuildTarget target,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
@@ -72,6 +74,7 @@ public class OcamlLinkStep extends ShellStep {
     ImmutableList<String> ocamlInput = ocamlInputBuilder.build();
 
     return new OcamlLinkStep(
+        target,
         workingDirectory,
         environment,
         cxxCompiler,
@@ -89,6 +92,7 @@ public class OcamlLinkStep extends ShellStep {
   }
 
   private OcamlLinkStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
@@ -101,7 +105,7 @@ public class OcamlLinkStep extends ShellStep {
       ImmutableList<Path> input,
       boolean isLibrary,
       boolean isBytecode) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
     this.cxxCompiler = cxxCompiler;

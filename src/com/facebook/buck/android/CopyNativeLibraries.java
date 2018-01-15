@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
-import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,19 +40,20 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -61,6 +62,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -92,7 +94,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
       String moduleName) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(
-        !nativeLibDirectories.isEmpty() || !strippedLibs.isEmpty() || !strippedLibsAssets.isEmpty(),
+        !nativeLibDirectories.isEmpty()
+            || !nativeLibAssetDirectories.isEmpty()
+            || !strippedLibs.isEmpty()
+            || !strippedLibsAssets.isEmpty(),
         "There should be at least one native library to copy.");
     this.nativeLibDirectories = nativeLibDirectories;
     this.nativeLibAssetDirectories = nativeLibAssetDirectories;
@@ -101,10 +106,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     this.cpuFilters = cpuFilters;
     this.moduleName = moduleName;
     this.depsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Override
@@ -271,7 +276,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
           metadataLines.add(String.format("%s %s", relativePath, filesha1));
         }
         filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -318,13 +323,13 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.
                 if (!filesystem.exists(libSourceDir)) {
-                  return StepExecutionResult.SUCCESS;
+                  return StepExecutionResults.SUCCESS;
                 }
                 if (mkDirStep.execute(context).isSuccess()
                     && copyStep.execute(context).isSuccess()) {
-                  return StepExecutionResult.SUCCESS;
+                  return StepExecutionResults.SUCCESS;
                 }
-                return StepExecutionResult.ERROR;
+                return StepExecutionResults.ERROR;
               }
 
               @Override
@@ -372,7 +377,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                           .replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
               filesystem.move(exePath, fakeSoPath);
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
   }

@@ -18,10 +18,10 @@ package com.facebook.buck.step.external;
 
 import com.facebook.buck.build_type.BuildType;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -30,14 +30,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /** Provides methods for launching a java binary bundled within the buck binary. */
 public class BundledExternalProcessLauncher {
 
   enum EntryPoints {
     EXTERNAL_STEP_EXECUTOR("com.facebook.buck.step.external.executor.ExternalStepExecutorMain"),
-    OOP_JAVAC("com.facebook.buck.oop_javac.Main"),
     ;
 
     private final String entryPointName;
@@ -53,33 +51,6 @@ public class BundledExternalProcessLauncher {
 
   public ImmutableList<String> getCommandForStepExecutor() {
     return getCommand(EntryPoints.EXTERNAL_STEP_EXECUTOR);
-  }
-
-  public ImmutableList<String> getCommandForOutOfProcessJavac() {
-    return getCommand(EntryPoints.OOP_JAVAC);
-  }
-
-  public ImmutableMap<String, String> getEnvForOutOfProcessJavac() {
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    Map<String, String> environment = System.getenv();
-    if (environment.containsKey("JAVA_HOME")) {
-      builder.put("JAVA_HOME", environment.get("JAVA_HOME"));
-    }
-
-    BuildType buildType = BuildType.CURRENT_BUILD_TYPE.get();
-    switch (buildType) {
-      case LOCAL_ANT:
-        return builder.put("BUCK_CLASSPATH", getClassPathForAntBuild()).build();
-      case UNKNOWN:
-        return builder
-            .put("BUCK_CLASSPATH", getClasspathArgumentForUnknownBuild(EntryPoints.OOP_JAVAC))
-            .build();
-      case RELEASE_PEX:
-      case LOCAL_PEX:
-        return builder.build();
-      default:
-        throw new RuntimeException("Unknown build type " + buildType.toString());
-    }
   }
 
   private ImmutableList<String> getCommand(EntryPoints entryPoint) {
@@ -124,18 +95,25 @@ public class BundledExternalProcessLauncher {
   private String getClassPathForAntBuild() {
     // In this case we do want System.getenv, to get at the buckd env variables rather than
     // at the env that was used when the buck command is invoked.
-    String classPath = System.getenv("BUCK_CLASSPATH");
-    Preconditions.checkState(
-        classPath != null,
-        "Un-set BUCK_CLASSPATH means that either it "
-            + " was not configured by the launcher or we're in the wrong build mode.");
+    String classPath;
+    try {
+      classPath = BuckClasspath.getBuckClasspathFromEnvVarOrThrow();
+    } catch (Exception e) {
+      throw new IllegalStateException(
+          "Un-set "
+              + BuckClasspath.ENV_VAR_NAME
+              + " means that either it "
+              + " was not configured by the launcher or we're in the wrong build mode.",
+          e);
+    }
     // We expect there to be at least a single entry for every 3rd party lib, plus entries for the
     // build outputs. If we get a classpath with a single entry, that's most likely the server
     // JAR from the PEX, which means the build modes got mixed up.
     Preconditions.checkState(
         classPath.split(File.pathSeparator).length > 1,
-        "A short BUCK_CLASSPATH [%s] means that either it "
+        "A short %s [%s] means that either it "
             + " was not configured by the launcher correctly or we're in the wrong build mode.",
+        BuckClasspath.ENV_VAR_NAME,
         classPath);
     return classPath;
   }

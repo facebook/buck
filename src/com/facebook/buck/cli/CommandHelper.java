@@ -20,9 +20,9 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -50,7 +50,7 @@ public abstract class CommandHelper {
             .stream()
             .peek(Objects::requireNonNull)
             .map(CommandHelper::stringify)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetsNames);
   }

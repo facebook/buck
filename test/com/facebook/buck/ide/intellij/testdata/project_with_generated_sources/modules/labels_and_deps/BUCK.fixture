@@ -3,10 +3,10 @@ java_library(
     srcs = [
         "Test.java",
     ],
-    deps = [
-        "//libs:guava",
-    ],
     labels = [
         "guava_generated_sources",
+    ],
+    deps = [
+        "//libs:guava",
     ],
 )

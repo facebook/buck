@@ -1,39 +1,38 @@
 android_build_config(
-  name = 'build_config',
-  package = 'com.sample.android',
-  values = [
-    'String OVERRIDDEN_FIELD = "build_config"',
-    'String NOT_OVERRIDDEN_FIELD = "value"',
-  ],
+    name = "build_config",
+    package = "com.sample.android",
+    values = [
+        "String OVERRIDDEN_FIELD = \"build_config\"",
+        "String NOT_OVERRIDDEN_FIELD = \"value\"",
+    ],
 )
 
 android_library(
-  name = 'lib',
-  srcs = glob(['**/*.java']),
-  deps = [
-    ':build_config',
-  ],
+    name = "lib",
+    srcs = glob(["**/*.java"]),
+    deps = [
+        ":build_config",
+    ],
 )
 
 android_aar(
-  name = 'app_with_build_config',
-  manifest_skeleton = 'AndroidManifestSkeleton.xml',
-  deps = [
-    '//res/com/sample/base:base',
-    ':lib',
-  ],
-  build_config_values = [
-    'String OVERRIDDEN_FIELD = "android_aar"',
-  ],
-  include_build_config_class = True,
+    name = "app_with_build_config",
+    build_config_values = [
+        "String OVERRIDDEN_FIELD = \"android_aar\"",
+    ],
+    include_build_config_class = True,
+    manifest_skeleton = "AndroidManifestSkeleton.xml",
+    deps = [
+        ":lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_aar(
-  name = 'app_without_build_config',
-  manifest_skeleton = 'AndroidManifestSkeleton.xml',
-  deps = [
-    '//res/com/sample/base:base',
-    ':lib',
-  ],
+    name = "app_without_build_config",
+    manifest_skeleton = "AndroidManifestSkeleton.xml",
+    deps = [
+        ":lib",
+        "//res/com/sample/base:base",
+    ],
 )
-

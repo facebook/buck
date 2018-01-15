@@ -22,7 +22,6 @@ import javax.annotation.Nullable;
  * Exception with an error message that can sensibly be displayed to the user without a stacktrace.
  * This exception is meant only to be caught at the top level of the application.
  */
-@SuppressWarnings("serial")
 public class HumanReadableException extends RuntimeException
     implements ExceptionWithHumanReadableMessage {
 

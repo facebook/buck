@@ -16,9 +16,9 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -30,37 +30,29 @@ import org.immutables.value.Value;
 /** Represents a Haskell package used as a dependency during compilation. */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractHaskellPackage implements RuleKeyAppendable {
+abstract class AbstractHaskellPackage implements AddsToRuleKey {
 
   /** @return the package identifying information (i.e. name, version, identifier). */
+  @AddToRuleKey
   public abstract HaskellPackageInfo getInfo();
 
   /** @return the path to the package DB. */
+  @AddToRuleKey
   protected abstract SourcePath getPackageDb();
 
   /** @return the path to all libraries included in the package. */
+  @AddToRuleKey
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<SourcePath> getLibraries();
 
   /** @return the path to all interface directories included in the package. */
+  @AddToRuleKey
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<SourcePath> getInterfaces();
 
   /** @return the path to all interface directories included in the package. */
   @Value.NaturalOrder
   protected abstract ImmutableSortedSet<SourcePath> getObjects();
-
-  /**
-   * Adds information to the rule key that affects compilations that build using this package as a
-   * dependency.
-   */
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("info", getInfo());
-    sink.setReflectively("libraries", getLibraries());
-    sink.setReflectively("interfaces", getInterfaces());
-    sink.setReflectively("package-db", getPackageDb());
-  }
 
   /** @return all dependencies required to use this package at build time. */
   public final Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {

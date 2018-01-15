@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -84,16 +85,6 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testOOPFatJarWithOutput() throws IOException, InterruptedException {
-    setUpProjectWorkspaceForScenario("fat_jar");
-    Path jar =
-        workspace.buildAndReturnOutput("//:bin-output", "--config", "java.location=OUT_OF_PROCESS");
-    ProcessExecutor.Result result = workspace.runJar(jar);
-    assertEquals("output", result.getStdout().get().trim());
-    assertEquals("error", result.getStderr().get().trim());
-  }
-
-  @Test
   public void disableCachingForBinaries() throws IOException {
     setUpProjectWorkspaceForScenario("java_binary_with_blacklist");
     workspace.enableDirCache();
@@ -125,7 +116,9 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   public void fatJarWithExitCode() throws IOException {
     setUpProjectWorkspaceForScenario("fat_jar");
 
-    workspace.runBuckCommand("run", "//:bin-exit-code").assertSpecialExitCode("error", 5);
+    workspace
+        .runBuckCommand("run", "//:bin-exit-code")
+        .assertSpecialExitCode("error", ExitCode.BUILD_ERROR);
   }
 
   @Test
@@ -219,6 +212,8 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
             "//:bin-output",
             "--config",
             "java.source_level=8",
+            "--config",
+            "java.target_level=8",
             "--config",
             String.format("java.bootclasspath-8=clowntown.jar:%s", systemBootclasspath),
             "-v",

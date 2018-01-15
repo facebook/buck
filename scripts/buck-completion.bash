@@ -67,18 +67,22 @@ function _buck_completion_run() {
       ;;
 
     *)
-      case "${words[1]}" in
-        audit)      _buck_completion_try_audit      "$@";;
-        build)      _buck_completion_try_build      "$@";;
-        cache)      _buck_completion_try_cache      "$@";;
-        clean)      _buck_completion_try_clean      "$@";;
-        install)    _buck_completion_try_install    "$@";;
-        project)    _buck_completion_try_project    "$@";;
-        run)        _buck_completion_try_run        "$@";;
-        targets)    _buck_completion_try_targets    "$@";;
-        test)       _buck_completion_try_test       "$@";;
-        uninstall)  _buck_completion_try_uninstall  "$@";;
-      esac
+      if [[ "${word:0:1}" == "@" ]]; then
+        _buck_completion_try_arg_file "${word:1}"
+      else
+        case "${words[1]}" in
+          audit)      _buck_completion_try_audit      "$@";;
+          build)      _buck_completion_try_build      "$@";;
+          cache)      _buck_completion_try_cache      "$@";;
+          clean)      _buck_completion_try_clean      "$@";;
+          install)    _buck_completion_try_install    "$@";;
+          project)    _buck_completion_try_project    "$@";;
+          run)        _buck_completion_try_run        "$@";;
+          targets)    _buck_completion_try_targets    "$@";;
+          test)       _buck_completion_try_test       "$@";;
+          uninstall)  _buck_completion_try_uninstall  "$@";;
+        esac
+      fi
       ;;
   esac
 
@@ -258,6 +262,18 @@ function _buck_completion_try_file() {
 
   # Set return status
   [[ "${#COMPREPLY[@]}" > 0 ]]
+}
+
+function _buck_completion_try_arg_file() {
+  path="$1"
+  local -a raw_files; raw_files=( $(compgen -A file -- "$path") )
+  for p in "${raw_files[@]}"; do
+    if [[ -d "$p" ]]; then
+      _buck_completion_add_reply "@$p/"
+    else
+      _buck_completion_add_reply "@$p"
+    fi
+  done
 }
 
 function _buck_completion_try_serial() {

@@ -88,7 +88,7 @@ class DirectHeaderMap extends HeaderSymlinkTree {
   }
 
   @Override
-  public Optional<Path> getHeaderMap() {
-    return Optional.of(getProjectFilesystem().resolve(headerMapPath));
+  public Optional<SourcePath> getHeaderMapSourcePath() {
+    return Optional.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), headerMapPath));
   }
 }

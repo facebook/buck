@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "sandbox",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/config:config",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/shell/programrunner:programrunner",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+    ],
+)

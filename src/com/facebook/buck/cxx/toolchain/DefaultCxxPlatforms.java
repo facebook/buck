@@ -23,6 +23,9 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +34,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Utility class to create a C/C++ platform described in the "cxx" section of .buckconfig, with
@@ -74,6 +78,7 @@ public class DefaultCxxPlatforms {
     ImmutableMap<String, String> env = config.getEnvironment();
     Optional<CxxToolProvider.Type> defaultToolType = Optional.empty();
     String ranlibCommand;
+    PicType picTypeForSharedLinking;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
@@ -84,10 +89,11 @@ public class DefaultCxxPlatforms {
         defaultCxxFrontend = getExecutablePath("g++", DEFAULT_CXX_FRONTEND, env);
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
-        archiver = new GnuArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
+        archiver = new GnuArchiver(getHashedFileTool(config, "ar", DEFAULT_AR, env));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
+        picTypeForSharedLinking = PicType.PIC;
         break;
       case MACOS:
         sharedLibraryExtension = "dylib";
@@ -98,10 +104,11 @@ public class DefaultCxxPlatforms {
         defaultCxxFrontend = getExecutablePath("clang++", DEFAULT_OSX_CXX_FRONTEND, env);
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.DARWIN;
-        archiver = new BsdArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
+        archiver = new BsdArchiver(getHashedFileTool(config, "ar", DEFAULT_AR, env));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
+        picTypeForSharedLinking = PicType.PIC;
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
@@ -119,12 +126,13 @@ public class DefaultCxxPlatforms {
         linkerType = LinkerProvider.Type.WINDOWS;
         archiver =
             new WindowsArchiver(
-                new HashedFileTool(
-                    getExecutablePath(DEFAULT_WINDOWS_LIB, Paths.get(DEFAULT_WINDOWS_LIB), env)));
+                getHashedFileTool(
+                    config, DEFAULT_WINDOWS_LIB, Paths.get(DEFAULT_WINDOWS_LIB), env));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
         ranlibCommand = DEFAULT_WINDOWS_RANLIB;
+        picTypeForSharedLinking = PicType.PDC;
         break;
       case FREEBSD:
         sharedLibraryExtension = "so";
@@ -135,23 +143,32 @@ public class DefaultCxxPlatforms {
         defaultCxxFrontend = getExecutablePath("g++", DEFAULT_CXX_FRONTEND, env);
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
-        archiver = new BsdArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
+        archiver = new BsdArchiver(getHashedFileTool(config, "ar", DEFAULT_AR, env));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
+        picTypeForSharedLinking = PicType.PIC;
         break;
-        //$CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new RuntimeException(String.format("Unsupported platform: %s", platform));
     }
 
-    PreprocessorProvider aspp = new PreprocessorProvider(defaultCFrontend, defaultToolType);
-    CompilerProvider as = new CompilerProvider(defaultCFrontend, defaultToolType);
+    // These are wrapped behind suppliers because config.getSourcePath() verifies that the path
+    // exists and we only want to do that verification if the tool is actually needed.
+    Supplier<PathSourcePath> defaultCFrontendSupplier =
+        MoreSuppliers.memoize(() -> config.getSourcePath(defaultCFrontend));
+    Supplier<PathSourcePath> defaultCxxFrontendSupplier =
+        MoreSuppliers.memoize(() -> config.getSourcePath(defaultCxxFrontend));
+    PreprocessorProvider aspp = new PreprocessorProvider(defaultCFrontendSupplier, defaultToolType);
+    CompilerProvider as = new CompilerProvider(defaultCFrontendSupplier, defaultToolType);
 
-    PreprocessorProvider cpp = new PreprocessorProvider(defaultCFrontend, defaultToolType);
-    CompilerProvider cc = new CompilerProvider(defaultCFrontend, defaultToolType);
-    PreprocessorProvider cxxpp = new PreprocessorProvider(defaultCxxFrontend, defaultToolType);
-    CompilerProvider cxx = new CompilerProvider(defaultCxxFrontend, defaultToolType);
+    PreprocessorProvider cpp = new PreprocessorProvider(defaultCFrontendSupplier, defaultToolType);
+    CompilerProvider cc = new CompilerProvider(defaultCFrontendSupplier, defaultToolType);
+
+    PreprocessorProvider cxxpp =
+        new PreprocessorProvider(defaultCxxFrontendSupplier, defaultToolType);
+    CompilerProvider cxx = new CompilerProvider(defaultCxxFrontendSupplier, defaultToolType);
 
     return CxxPlatforms.build(
         FLAVOR,
@@ -164,13 +181,14 @@ public class DefaultCxxPlatforms {
         cpp,
         cxxpp,
         new DefaultLinkerProvider(
-            linkerType, new ConstantToolProvider(new HashedFileTool(defaultLinker))),
+            linkerType,
+            new ConstantToolProvider(
+                new HashedFileTool(() -> config.getSourcePath(defaultLinker)))),
         ImmutableList.of(),
-        new HashedFileTool(getExecutablePath("strip", DEFAULT_STRIP, env)),
+        getHashedFileTool(config, "strip", DEFAULT_STRIP, env),
         ArchiverProvider.from(archiver),
-        new ConstantToolProvider(
-            new HashedFileTool(getExecutablePath(ranlibCommand, DEFAULT_RANLIB, env))),
-        new PosixNmSymbolNameTool(new HashedFileTool(getExecutablePath("nm", DEFAULT_NM, env))),
+        new ConstantToolProvider(getHashedFileTool(config, ranlibCommand, DEFAULT_RANLIB, env)),
+        new PosixNmSymbolNameTool(getHashedFileTool(config, "nm", DEFAULT_NM, env)),
         ImmutableList.of(),
         ImmutableList.of(),
         ImmutableList.of(),
@@ -187,7 +205,17 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of()),
         ImmutableMap.of(),
         binaryExtension,
-        config.getHeaderVerification());
+        config.getHeaderVerification(),
+        picTypeForSharedLinking);
+  }
+
+  private static Tool getHashedFileTool(
+      CxxBuckConfig config,
+      String executableName,
+      Path unresolvedLocation,
+      ImmutableMap<String, String> env) {
+    return new HashedFileTool(
+        () -> config.getSourcePath(getExecutablePath(executableName, unresolvedLocation, env)));
   }
 
   private static Path getExecutablePath(

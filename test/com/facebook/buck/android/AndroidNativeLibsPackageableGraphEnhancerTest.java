@@ -24,9 +24,10 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.NdkCxxRuntime;
-import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
@@ -47,10 +48,11 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -84,13 +86,19 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
-            ImmutableMap.of(),
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -117,7 +125,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .getNativeLibDirectories()
             .stream()
             .map(sourcePathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(ImmutableList.toImmutableList()),
         Matchers.contains(ndkLibrary.getLibraryPath()));
   }
 
@@ -160,13 +168,19 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(nativePlatforms))
+                .build(),
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
-            nativePlatforms,
             ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -205,7 +219,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
                 .getStrippedObjectDescriptions()
                 .stream()
                 .map(StrippedObjectDescription::getSourcePath)
-                .collect(MoreCollectors.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     assertThat(
         stripRules,
         Matchers.contains(
@@ -230,13 +244,19 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
-            ImmutableMap.of(),
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -273,13 +293,19 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(ImmutableMap.of()))
+                .build(),
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
-            ImmutableMap.of(),
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -354,13 +380,19 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    NdkCxxPlatformsProvider.DEFAULT_NAME,
+                    NdkCxxPlatformsProvider.of(nativePlatforms))
+                .build(),
+            TestCellPathResolver.get(projectFilesystem),
             ruleResolver,
             target,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             originalParams,
-            nativePlatforms,
             ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),

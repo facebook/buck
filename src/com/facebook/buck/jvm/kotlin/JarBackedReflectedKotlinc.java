@@ -20,16 +20,13 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,7 +63,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   // Used to hang onto the KotlinDaemonShim for the life of the buckd process
   private static final Map<Set<String>, Object> kotlinShims = new ConcurrentHashMap<>();
 
-  private final ImmutableSet<SourcePath> compilerClassPath;
+  @AddToRuleKey private final ImmutableSet<SourcePath> compilerClassPath;
   private final Path annotationProcessingClassPath;
   private final Path pathToStdlibJar;
 
@@ -168,23 +165,6 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
         | ClassNotFoundException ex) {
       throw new RuntimeException(ex);
     }
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("kotlinc", "jar-backed")
-        .setReflectively("kotlinc.version", "in-memory")
-        .setReflectively("kotlinc.classpath", compilerClassPath);
   }
 
   private Object loadCompilerShim(ExecutionContext context) {

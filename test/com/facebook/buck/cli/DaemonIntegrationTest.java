@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.CommandMode;
@@ -62,7 +63,6 @@ import org.junit.rules.ExpectedException;
 
 public class DaemonIntegrationTest {
 
-  private static final int SUCCESS_EXIT_CODE = 0;
   private ScheduledExecutorService executorService;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -97,14 +97,10 @@ public class DaemonIntegrationTest {
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
-            createRunnableCommand(SUCCESS_EXIT_CODE, "build", "//:sleep"),
-            0,
-            TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.SUCCESS, "build", "//:sleep"), 0, TimeUnit.MILLISECONDS);
     Future<?> secondThread =
         executorService.schedule(
-            createRunnableCommand(Main.BUSY_EXIT_CODE, "build", "//:sleep"),
-            500L,
-            TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.BUSY, "build", "//:sleep"), 500L, TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }
@@ -177,12 +173,10 @@ public class DaemonIntegrationTest {
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
-            createRunnableCommand(SUCCESS_EXIT_CODE, "build", "//:sleep"),
-            0,
-            TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.SUCCESS, "build", "//:sleep"), 0, TimeUnit.MILLISECONDS);
     Future<?> secondThread =
         executorService.schedule(
-            createRunnableCommand(SUCCESS_EXIT_CODE, "targets"), 500L, TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.SUCCESS, "targets"), 500L, TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }
@@ -197,26 +191,26 @@ public class DaemonIntegrationTest {
     workspace.setUp();
     executorService.invokeAll(
         ImmutableList.of(
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep"),
-            createCallableCommand(SUCCESS_EXIT_CODE, "audit", "input", "//:sleep")));
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep"),
+            createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep")));
   }
 
-  private Runnable createRunnableCommand(final int expectedExitCode, final String... args) {
+  private Runnable createRunnableCommand(final ExitCode expectedExitCode, final String... args) {
     return () -> {
       try {
         Main main =
             new Main(
                 new CapturingPrintStream(),
                 new CapturingPrintStream(),
-                new ByteArrayInputStream("".getBytes("UTF-8")));
-        int exitCode =
+                new ByteArrayInputStream("".getBytes("UTF-8")),
+                Optional.of(new TestContext()));
+        ExitCode exitCode =
             main.runMainWithExitCode(
                 new BuildId(),
                 tmp.getRoot(),
-                Optional.of(new TestContext()),
                 ImmutableMap.copyOf(System.getenv()),
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
@@ -233,7 +227,7 @@ public class DaemonIntegrationTest {
     };
   }
 
-  private Callable<Object> createCallableCommand(int expectedExitCode, String... args) {
+  private Callable<Object> createCallableCommand(ExitCode expectedExitCode, String... args) {
     return callable(createRunnableCommand(expectedExitCode, args));
   }
 
@@ -369,7 +363,7 @@ public class DaemonIntegrationTest {
     String fileName = "apps/myapp/BUCK";
     Files.delete(workspace.getPath(fileName));
 
-    workspace.runBuckdCommand("build", "app").assertFailure();
+    workspace.runBuckdCommand("build", "app").assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -383,7 +377,9 @@ public class DaemonIntegrationTest {
     String fileName = "java/com/example/activity/BUCK";
     Files.delete(workspace.getPath(fileName));
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
+    workspace
+        .runBuckdCommand("build", "//java/com/example/activity:activity")
+        .assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -440,7 +436,7 @@ public class DaemonIntegrationTest {
         "Failure should be due to syntax error.",
         result.getStderr(),
         containsString("Syntax error"));
-    result.assertFailure();
+    result.assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -635,6 +631,6 @@ public class DaemonIntegrationTest {
 
     primary.runBuckdCommand("build", ":rule").assertSuccess();
     Files.write(secondary.getPath("included_by_primary.py"), new byte[] {});
-    primary.runBuckdCommand("build", ":rule").assertFailure();
+    primary.runBuckdCommand("build", ":rule").assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 }

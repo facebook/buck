@@ -1,15 +1,14 @@
 # generate the command that's being executed, to test building of command by run
 genrule(
-  name = 'real_command',
-  srcs = [
-    'command_template.sh',
-  ],
-  bash = 'echo BUILDING && cp $SRCS $OUT && chmod +x $OUT',
-  out = 'command.sh',
+    name = "real_command",
+    srcs = [
+        "command_template.sh",
+    ],
+    out = "command.sh",
+    bash = "echo BUILDING && cp $SRCS $OUT && chmod +x $OUT",
 )
 
 sh_binary(
-  name = 'command',
-  main = ':real_command',
+    name = "command",
+    main = ":real_command",
 )
-

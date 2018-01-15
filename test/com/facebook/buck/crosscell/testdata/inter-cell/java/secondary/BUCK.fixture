@@ -1,8 +1,7 @@
-
 java_library(
-  name = 'secondary_lib',
-  srcs = glob(['*.java']),
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "secondary_lib",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
 )

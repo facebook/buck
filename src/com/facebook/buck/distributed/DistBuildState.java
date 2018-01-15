@@ -16,43 +16,47 @@
 
 package com.facebook.buck.distributed;
 
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_TARGET_GRAPH_SERIALIZATION;
+
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
+import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DistBuildCellParams;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
-import com.facebook.buck.rules.SdkEnvironment;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import org.pf4j.PluginManager;
 
 /** Saves and restores the state of a build to/from a thrift data structure. */
 public class DistBuildState {
-
   private final BuildJobState remoteState;
   private final ImmutableBiMap<Integer, Cell> cells;
   private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
@@ -74,6 +78,7 @@ public class DistBuildState {
             });
   }
 
+  /** Creates a serializable {@link BuildJobState} object from the given parameters. */
   public static BuildJobState dump(
       DistBuildCellIndexer distributedBuildCellIndexer,
       DistBuildFileHashes fileHashes,
@@ -81,16 +86,41 @@ public class DistBuildState {
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> topLevelTargets)
       throws IOException, InterruptedException {
+    return dump(
+        distributedBuildCellIndexer,
+        fileHashes,
+        targetGraphCodec,
+        targetGraph,
+        topLevelTargets,
+        Optional.empty());
+  }
+
+  /**
+   * Creates a serializable {@link BuildJobState} object from the given parameters. Also records
+   * relevant statistics in the {@link ClientStatsTracker} if one is provided.
+   */
+  public static BuildJobState dump(
+      DistBuildCellIndexer distributedBuildCellIndexer,
+      DistBuildFileHashes fileHashes,
+      DistBuildTargetGraphCodec targetGraphCodec,
+      TargetGraph targetGraph,
+      ImmutableSet<BuildTarget> topLevelTargets,
+      Optional<ClientStatsTracker> clientStatsTracker)
+      throws IOException, InterruptedException {
     Preconditions.checkArgument(topLevelTargets.size() > 0);
     BuildJobState jobState = new BuildJobState();
     jobState.setFileHashes(fileHashes.getFileHashes());
+    jobState.setCells(distributedBuildCellIndexer.getState());
+
+    clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_TARGET_GRAPH_SERIALIZATION));
     jobState.setTargetGraph(
         targetGraphCodec.dump(targetGraph.getNodes(), distributedBuildCellIndexer));
-    jobState.setCells(distributedBuildCellIndexer.getState());
+    clientStatsTracker.ifPresent(tracker -> tracker.stopTimer(LOCAL_TARGET_GRAPH_SERIALIZATION));
 
     for (BuildTarget target : topLevelTargets) {
       jobState.addToTopLevelTargets(target.getFullyQualifiedName());
     }
+
     return jobState;
   }
 
@@ -98,8 +128,10 @@ public class DistBuildState {
       BuckConfig localBuckConfig, // e.g. the slave's .buckconfig
       BuildJobState jobState,
       Cell rootCell,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      SdkEnvironment sdkEnvironment,
+      ImmutableMap<String, String> environment,
+      ProcessExecutor processExecutor,
+      ExecutableFinder executableFinder,
+      PluginManager pluginManager,
       ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
@@ -132,13 +164,20 @@ public class DistBuildState {
           remoteCell.getCanonicalName().isEmpty()
               ? Optional.empty()
               : Optional.of(remoteCell.getCanonicalName());
-      cellParams.put(cellRoot, DistBuildCellParams.of(buckConfig, projectFilesystem, cellName));
+      cellParams.put(
+          cellRoot,
+          DistBuildCellParams.of(
+              buckConfig,
+              projectFilesystem,
+              cellName,
+              environment,
+              processExecutor,
+              executableFinder,
+              pluginManager));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 
-    CellProvider cellProvider =
-        CellProvider.createForDistributedBuild(
-            cellParams.build(), knownBuildRuleTypesFactory, sdkEnvironment);
+    CellProvider cellProvider = CellProviderFactory.createForDistributedBuild(cellParams.build());
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
@@ -192,9 +231,13 @@ public class DistBuildState {
     return Preconditions.checkNotNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
   }
 
-  public TargetGraphAndBuildTargets createTargetGraph(DistBuildTargetGraphCodec codec)
+  public TargetGraphAndBuildTargets createTargetGraph(
+      DistBuildTargetGraphCodec codec, KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
       throws IOException {
-    return codec.createTargetGraph(remoteState.getTargetGraph(), Functions.forMap(cells));
+    return codec.createTargetGraph(
+        remoteState.getTargetGraph(),
+        key -> Preconditions.checkNotNull(cells.get(key)),
+        knownBuildRuleTypesProvider);
   }
 
   public ProjectFileHashCache createRemoteFileHashCache(ProjectFileHashCache decoratedCache) {
@@ -211,7 +254,10 @@ public class DistBuildState {
   }
 
   public ProjectFileHashCache createMaterializerAndPreload(
-      ProjectFileHashCache decoratedCache, FileContentsProvider provider) throws IOException {
+      ProjectFileHashCache decoratedCache,
+      FileContentsProvider provider,
+      ListeningExecutorService executorService)
+      throws IOException {
     BuildJobStateFileHashes remoteFileHashes = fileHashes.get(decoratedCache.getFilesystem());
     if (remoteFileHashes == null) {
       // Roots that have no BuildJobStateFileHashes are deemed as not being Cells and don't get
@@ -220,7 +266,8 @@ public class DistBuildState {
     }
 
     MaterializerDummyFileHashCache materializer =
-        new MaterializerDummyFileHashCache(decoratedCache, remoteFileHashes, provider);
+        new MaterializerDummyFileHashCache(
+            decoratedCache, remoteFileHashes, provider, executorService);
 
     // Create all symlinks and touch all other files.
     DistBuildConfig remoteConfig = new DistBuildConfig(getRootCell().getBuckConfig());
@@ -228,5 +275,10 @@ public class DistBuildState {
     materializer.preloadAllFiles(materializeAllFilesDuringPreload);
 
     return materializer;
+  }
+
+  /** The RootCell of the Remote machine. */
+  public BuckConfig getRemoteRootCellConfig() {
+    return getRootCell().getBuckConfig();
   }
 }

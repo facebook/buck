@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -27,7 +28,6 @@ import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public abstract class ShellStep implements Step {
@@ -51,6 +52,9 @@ public abstract class ShellStep implements Step {
 
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
+
+  /** Target using this shell step. */
+  Optional<BuildTarget> buildTarget;
 
   /**
    * If specified, working directory will be different from build cell root. This should be relative
@@ -73,7 +77,8 @@ public abstract class ShellStep implements Step {
   private long startTime = 0L;
   private long endTime = 0L;
 
-  protected ShellStep(Path workingDirectory) {
+  protected ShellStep(Optional<BuildTarget> buildTarget, Path workingDirectory) {
+    this.buildTarget = buildTarget;
     this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
     this.stdout = Optional.empty();
     this.stderr = Optional.empty();
@@ -92,6 +97,9 @@ public abstract class ShellStep implements Step {
     builder.setCommand(getShellCommand(context));
     Map<String, String> environment = new HashMap<>();
     setProcessEnvironment(context, environment, workingDirectory.toString());
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Environment: %s", Joiner.on(" ").withKeyValueSeparator('=').join(environment));
+    }
     builder.setEnvironment(ImmutableMap.copyOf(environment));
     builder.setDirectory(context.getBuildCellRootPath().resolve(workingDirectory));
 
@@ -201,6 +209,10 @@ public abstract class ShellStep implements Step {
     return shellCommandArgs;
   }
 
+  protected ImmutableList<String> getShellCommandArgsForDescription(ExecutionContext context) {
+    return getShellCommand(context);
+  }
+
   @SuppressWarnings("unused")
   protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
     return Optional.empty();
@@ -221,7 +233,9 @@ public abstract class ShellStep implements Step {
 
     // Quote the arguments to the shell command as needed (this applies to $0 as well
     // e.g. if we run '/path/a b.sh' quoting is needed).
-    Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.SHELL_ESCAPER);
+    Iterable<String> cmd =
+        Iterables.transform(
+            getShellCommandArgsForDescription(context), Escaper.SHELL_ESCAPER::apply);
 
     String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
     // This is what the user might type in a shell to set the working directory correctly. The (...)
@@ -297,5 +311,9 @@ public abstract class ShellStep implements Step {
   @SuppressWarnings("unused")
   protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
     return Optional.empty();
+  }
+
+  public Optional<BuildTarget> getBuildTarget() {
+    return buildTarget;
   }
 }

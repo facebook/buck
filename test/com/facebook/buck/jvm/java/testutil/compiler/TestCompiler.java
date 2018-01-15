@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
 import com.facebook.buck.jvm.java.abi.source.api.ErrorSuppressingDiagnosticListener;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TreesMessager;
@@ -52,7 +53,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -87,6 +87,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   private final StandardJavaFileManager fileManager =
       javaCompiler.getStandardFileManager(diagnosticCollector, null, null);
   private final List<JavaFileObject> sourceFiles = new ArrayList<>();
+  private final List<String> additionalOptions = new ArrayList<>();
 
   private TestCompiler classpathCompiler;
   private BuckJavacTask javacTask;
@@ -182,6 +183,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     task.addPlugin(plugin, args);
   }
 
+  public void addCompilerOptions(List<String> options) {
+    additionalOptions.addAll(options);
+  }
+
   public void setProcessors(List<Processor> processors) {
     getJavacTask().setProcessors(processors);
   }
@@ -215,13 +220,13 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       Throwable cause = e.getCause();
       if (cause instanceof IOException) {
         throw (IOException) cause;
-      } else if (!getDiagnosticMessages().isEmpty()) {
+      } else if (!getErrorMessages().isEmpty()) {
         return Collections.emptyList();
       }
 
       throw new AssertionError(e);
     } finally {
-      if (!allowCompilationErrors && !diagnosticCollector.getDiagnosticMessages().isEmpty()) {
+      if (!allowCompilationErrors && !diagnosticCollector.getErrorMessages().isEmpty()) {
         fail(
             "Compilation failed! Diagnostics:\n"
                 + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
@@ -245,11 +250,15 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     return diagnosticCollector.getDiagnosticMessages();
   }
 
+  public List<String> getErrorMessages() {
+    return diagnosticCollector.getErrorMessages();
+  }
+
   public Classes getClasses() {
     return classes;
   }
 
-  public Elements getElements() {
+  public ElementsExtended getElements() {
     return getJavacTask().getElements();
   }
 
@@ -271,6 +280,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       compileClasspath();
 
       List<String> options = new ArrayList<>();
+      options.addAll(additionalOptions);
       options.add("-d");
       options.add(outputFolder.getRoot().toString());
       if (!classpath.isEmpty()) {
@@ -353,15 +363,23 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
    * diagnostic at the time its reported and collect that instead.
    */
   private static class DiagnosticMessageCollector<S> implements DiagnosticListener<S> {
-    private List<String> diagnostics = new ArrayList<>();
+    private List<Diagnostic<? extends S>> diagnostics = new ArrayList<>();
 
     @Override
     public void report(Diagnostic<? extends S> diagnostic) {
-      diagnostics.add(diagnostic.toString());
+      diagnostics.add(diagnostic);
     }
 
     private List<String> getDiagnosticMessages() {
-      return diagnostics;
+      return diagnostics.stream().map(Diagnostic::toString).collect(Collectors.toList());
+    }
+
+    private List<String> getErrorMessages() {
+      return diagnostics
+          .stream()
+          .filter(d -> d.getKind() == Diagnostic.Kind.ERROR)
+          .map(Diagnostic::toString)
+          .collect(Collectors.toList());
     }
   }
 }

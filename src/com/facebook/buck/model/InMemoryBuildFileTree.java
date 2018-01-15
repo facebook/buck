@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
@@ -112,7 +111,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
       return node.children
           .stream()
           .map(child -> MorePaths.relativize(path, child.basePath))
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
     }
   }
 

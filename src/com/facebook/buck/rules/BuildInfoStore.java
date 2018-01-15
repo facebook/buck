@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableMap;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,6 +35,8 @@ public interface BuildInfoStore extends Closeable {
 
   @Override
   void close();
+
+  ImmutableMap<String, String> getAllMetadata(BuildTarget buildTarget) throws IOException;
 
   void updateMetadata(BuildTarget buildTarget, Map<String, String> metadata) throws IOException;
 

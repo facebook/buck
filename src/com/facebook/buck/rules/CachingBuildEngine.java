@@ -29,15 +29,12 @@ import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +68,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   public static final ResourceAmounts RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS =
       ResourceAmounts.of(0, 0, 1, 0);
-  public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS = ResourceAmounts.ZERO;
+  public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS =
+      ResourceAmounts.zero();
 
   static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
   static final String STEP_TYPE_CONTEXT_KEY = "step_type";
@@ -146,12 +144,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
   private final BuildRulePipelinesRunner pipelinesRunner = new BuildRulePipelinesRunner();
+  private final ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator;
 
   private final BuildInfoStoreManager buildInfoStoreManager;
 
-  private final FileHashCacheMode fileHashCacheMode;
-
   private final boolean consoleLogBuildFailuresInline;
+
+  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
 
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
@@ -167,7 +166,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
       RuleKeyFactories ruleKeyFactories,
-      FileHashCacheMode fileHashCacheMode) {
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
@@ -185,12 +184,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
+    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
 
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
-    this.fileHashCacheMode = fileHashCacheMode;
     this.defaultRuleKeyDiagnostics =
         new RuleKeyDiagnostics<>(
             rule ->
@@ -202,6 +201,17 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     .getDefaultRuleKeyFactory()
                     .buildForDiagnostics(appendable, new StringRuleKeyHasher()));
     this.asyncCallbacks = new ConcurrentLinkedQueue<>();
+    this.ruleKeyCalculator =
+        new ParallelRuleKeyCalculator<>(
+            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS),
+            ruleKeyFactories.getDefaultRuleKeyFactory(),
+            ruleDeps,
+            (eventBus, rule) ->
+                BuildRuleEvent.ruleKeyCalculationScope(
+                    eventBus,
+                    rule,
+                    buildRuleDurationTracker,
+                    ruleKeyFactories.getDefaultRuleKeyFactory()));
   }
 
   /** This constructor MUST ONLY BE USED FOR TESTS. */
@@ -220,9 +230,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       RuleKeyFactories ruleKeyFactories,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
-      boolean consoleLogBuildFailuresInline,
-      FileHashCacheMode fileHashCacheMode) {
+      boolean consoleLogBuildFailuresInline) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
@@ -240,13 +250,24 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
-    this.fileHashCacheMode = fileHashCacheMode;
+    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
     this.defaultRuleKeyDiagnostics = RuleKeyDiagnostics.nop();
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
     this.asyncCallbacks = new ConcurrentLinkedQueue<>();
+    this.ruleKeyCalculator =
+        new ParallelRuleKeyCalculator<>(
+            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS),
+            ruleKeyFactories.getDefaultRuleKeyFactory(),
+            ruleDeps,
+            (eventBus, rule) ->
+                BuildRuleEvent.ruleKeyCalculationScope(
+                    eventBus,
+                    rule,
+                    buildRuleDurationTracker,
+                    ruleKeyFactories.getDefaultRuleKeyFactory()));
   }
 
   @Override
@@ -258,6 +279,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /// We might want to share rule-key calculation with other parts of code.
+  public ParallelRuleKeyCalculator<RuleKey> getRuleKeyCalculator() {
+    return ruleKeyCalculator;
   }
 
   /**
@@ -306,6 +332,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   @Override
   public RuleKey getRuleKey(BuildTarget buildTarget) {
     return Preconditions.checkNotNull(Futures.getUnchecked(ruleKeys.get(buildTarget)));
+  }
+
+  @Override
+  public void terminateBuildWithFailure(Throwable failure) {
+    firstFailure = failure;
   }
 
   // Dispatch and return a future resolving to a list of all results of this rules dependencies.
@@ -363,7 +394,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
     List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
     ImmutableSet<BuildRule> runtimeDeps =
-        resolver.getAllRules(runtimeDepPaths.collect(MoreCollectors.toImmutableSet()));
+        resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
     for (BuildRule dep : runtimeDeps) {
       runtimeDepResults.add(
           getBuildRuleResultWithRuntimeDepsUnlocked(dep, buildContext, executionContext));
@@ -428,62 +459,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return seen.size();
   }
 
-  private synchronized ListenableFuture<RuleKey> calculateRuleKey(
-      final BuildRule rule, final BuildEngineBuildContext context) {
-    ListenableFuture<RuleKey> fromOurCache = ruleKeys.get(rule.getBuildTarget());
-    if (fromOurCache != null) {
-      return fromOurCache;
-    }
-
-    RuleKey fromInternalCache = ruleKeyFactories.getDefaultRuleKeyFactory().getFromCache(rule);
-    if (fromInternalCache != null) {
-      ListenableFuture<RuleKey> future = Futures.immediateFuture(fromInternalCache);
-      // Record the rule key future.
-      ruleKeys.put(rule.getBuildTarget(), future);
-      // Because a rule key will be invalidated from the internal cache any time one of its
-      // dependents is invalidated, we know that all of our transitive deps are also in cache.
-      return future;
-    }
-
-    // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
-    // one, we need to wait for them to complete.
-    ListenableFuture<List<RuleKey>> depKeys =
-        Futures.transformAsync(
-            Futures.immediateFuture(ruleDeps.get(rule)),
-            deps -> {
-              List<ListenableFuture<RuleKey>> depKeys1 =
-                  new ArrayList<>(SortedSets.sizeEstimate(rule.getBuildDeps()));
-              for (BuildRule dep : deps) {
-                depKeys1.add(calculateRuleKey(dep, context));
-              }
-              return Futures.allAsList(depKeys1);
-            },
-            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
-
-    // Setup a future to calculate this rule key once the dependencies have been calculated.
-    ListenableFuture<RuleKey> calculated =
-        Futures.transform(
-            depKeys,
-            (List<RuleKey> input) -> {
-              try (Scope scope =
-                  BuildRuleEvent.ruleKeyCalculationScope(
-                      context.getEventBus(),
-                      rule,
-                      buildRuleDurationTracker,
-                      ruleKeyFactories.getDefaultRuleKeyFactory())) {
-                try {
-                  return ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
-                } catch (Exception e) {
-                  throw new BuckUncheckedExecutionException(
-                      e, String.format("When computing rulekey for %s.", rule));
-                }
-              }
-            },
-            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
-
-    // Record the rule key future.
-    ruleKeys.put(rule.getBuildTarget(), calculated);
-    return calculated;
+  private ListenableFuture<RuleKey> calculateRuleKey(
+      BuildRule rule, BuildEngineBuildContext context) {
+    return ruleKeyCalculator.calculate(context.getEventBus(), rule);
   }
 
   @Override
@@ -558,7 +536,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             defaultRuleKeyDiagnostics,
             depFiles,
             fileHashCache,
-            this.fileHashCacheMode,
             maxDepFileCacheEntries,
             metadataStorage,
             pathResolver,
@@ -573,7 +550,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             onDiskBuildInfo,
             buildInfoRecorder,
             buildableContext,
-            pipelinesRunner)
+            pipelinesRunner,
+            remoteBuildRuleCompletionWaiter)
         .build();
   }
 

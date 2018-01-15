@@ -19,10 +19,10 @@ package com.facebook.buck.file;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -31,11 +31,14 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteSource;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.SortedSet;
 
-public class WriteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+/** Write a constant to a file. */
+public class WriteFile extends AbstractBuildRule {
 
   @AddToRuleKey private final byte[] fileContents;
 
@@ -47,14 +50,12 @@ public class WriteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public WriteFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       String fileContents,
       Path output,
       boolean executable) {
     this(
         buildTarget,
         projectFilesystem,
-        buildRuleParams,
         fileContents.getBytes(StandardCharsets.UTF_8),
         output,
         executable);
@@ -63,11 +64,10 @@ public class WriteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public WriteFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       byte[] fileContents,
       Path output,
       boolean executable) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
 
     Preconditions.checkArgument(!output.isAbsolute(), "'%s' must not be absolute.", output);
 
@@ -95,5 +95,10 @@ public class WriteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   public byte[] getFileContents() {
     return fileContents.clone();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.of();
   }
 }

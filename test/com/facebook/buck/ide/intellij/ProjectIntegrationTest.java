@@ -39,6 +39,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testAndroidBinaryProject() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("android_binary");
+  }
+
+  @Test
   public void testVersion2BuckProject() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project1");
   }
@@ -153,6 +158,11 @@ public class ProjectIntegrationTest {
   @Test
   public void testPrebuiltJarWithJavadoc() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_prebuilt_jar");
+  }
+
+  @Test
+  public void testZipFile() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_zipfile");
   }
 
   @Test

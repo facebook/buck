@@ -32,6 +32,8 @@ import org.immutables.value.Value;
  *   <li>Supports setFoo() setters in the parent interface or abstract class
  *   <li>Ensures the generated class is public (even if the parent interface or abstract class is
  *       package private)
+ *   <li>Disable generating with* methods by default, as they cause excessive codegen. Enable it on
+ *       a case by case basis by setting {@code copy = true} explicitly.
  * </ol>
  */
 @Value.Style(
@@ -40,7 +42,8 @@ import org.immutables.value.Value;
   get = {"is*", "get*"},
   init = "set*",
   visibility = Value.Style.ImplementationVisibility.PUBLIC,
-  forceJacksonPropertyNames = false
+  forceJacksonPropertyNames = false,
+  defaults = @Value.Immutable(copy = false)
 )
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)

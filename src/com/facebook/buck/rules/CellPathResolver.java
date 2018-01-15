@@ -22,9 +22,10 @@ import java.util.Optional;
 public interface CellPathResolver {
   /**
    * @param cellName name of cell, Optional.empty() for root cell.
-   * @return Absolute path to the physical location of the cell.
+   * @return Absolute path to the physical location of the cell, or {@code Optional.empty()} if the
+   *     cell name cannot be resolved.
    */
-  Path getCellPath(Optional<String> cellName);
+  Optional<Path> getCellPath(Optional<String> cellName);
 
   /** @return absolute paths to all cells this resolver knows about. */
   ImmutableMap<String, Path> getCellPaths();

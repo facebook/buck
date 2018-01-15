@@ -18,19 +18,16 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
-import com.facebook.buck.cli.Main;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.zip.Unzip;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -230,19 +227,11 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testNativeLibraryDependent() throws InterruptedException, IOException {
-    Main.KnownBuildRuleTypesFactoryFactory factoryFactory =
-        (processExecutor, sdkEnvironment, toolchainProvider) -> {
-          TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-          testToolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
-          return new KnownBuildRuleTypesFactory(
-              processExecutor, sdkEnvironment, testToolchainProvider);
-        };
-
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_aar_native_deps/ndk_deps", tmp);
-    workspace.setKnownBuildRuleTypesFactoryFactory(factoryFactory);
+    workspace.setKnownBuildRuleTypesFactoryFactory(DefaultKnownBuildRuleTypesFactory::of);
     workspace.setUp();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();

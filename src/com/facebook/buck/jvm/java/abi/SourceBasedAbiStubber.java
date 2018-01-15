@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
 import com.facebook.buck.util.HumanReadableException;
 import java.lang.reflect.Constructor;
+import java.util.function.Supplier;
 import javax.tools.Diagnostic;
 
 public final class SourceBasedAbiStubber {
@@ -29,6 +30,7 @@ public final class SourceBasedAbiStubber {
       PluginClassLoader pluginLoader,
       BuckJavacTaskProxy task,
       SourceOnlyAbiRuleInfo ruleInfo,
+      Supplier<Boolean> errorsExist,
       Diagnostic.Kind messageKind) {
     try {
       Class<?> validatingTaskListenerClass =
@@ -36,10 +38,13 @@ public final class SourceBasedAbiStubber {
               "com.facebook.buck.jvm.java.abi.source.ValidatingTaskListener", Object.class);
       final Constructor<?> constructor =
           validatingTaskListenerClass.getConstructor(
-              BuckJavacTaskProxy.class, SourceOnlyAbiRuleInfo.class, Diagnostic.Kind.class);
+              BuckJavacTaskProxy.class,
+              SourceOnlyAbiRuleInfo.class,
+              Supplier.class,
+              Diagnostic.Kind.class);
 
       return BuckJavacTaskListener.wrapRealTaskListener(
-          pluginLoader, constructor.newInstance(task, ruleInfo, messageKind));
+          pluginLoader, constructor.newInstance(task, ruleInfo, errorsExist, messageKind));
     } catch (ReflectiveOperationException e) {
       throw new HumanReadableException(
           e,

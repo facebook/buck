@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +42,7 @@ class ActoolStep extends ShellStep {
   private final AppleAssetCatalogDescription.Optimization optimization;
 
   public ActoolStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       String applePlatformName,
       String targetSDKVersion,
@@ -51,7 +54,7 @@ class ActoolStep extends ShellStep {
       Optional<String> appIcon,
       Optional<String> launchImage,
       AppleAssetCatalogDescription.Optimization optimization) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.environment = environment;
@@ -94,7 +97,7 @@ class ActoolStep extends ShellStep {
     } else if (applePlatformName.equals(ApplePlatform.MACOSX.getName())) {
       commandBuilder.add("--target-device", "mac");
     } else {
-      //TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
+      // TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
       commandBuilder.add(
           "--target-device", "iphone",
           "--target-device", "ipad");

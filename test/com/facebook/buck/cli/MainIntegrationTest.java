@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class MainIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
 
-    result.assertFailure();
+    result.assertExitCode("nothing specified", ExitCode.COMMANDLINE_ERROR);
     assertThat(
         "When the user does not specify any arguments, the usage information should be displayed",
         result.getStderr(),
@@ -58,7 +59,7 @@ public class MainIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
 
-    result.assertFailure();
+    result.assertExitCode("nothing specified", ExitCode.COMMANDLINE_ERROR);
     assertThat(
         "Users instinctively try running `buck --help`, so it should print usage info.",
         result.getStderr(),
@@ -133,14 +134,18 @@ public class MainIntegrationTest {
             "  audit          lists the inputs for the specified target",
             "  build          builds the specified target",
             "  cache          makes calls to the artifact cache",
+            "  cachedelete    Delete artifacts from the local and remote cache",
             "  clean          deletes any generated files",
             "  distbuild      attaches to a distributed build (experimental)",
             "  doctor         debug and fix issues of Buck commands",
             "  fetch          downloads remote resources to your local machine",
+            "  fix            attempts to fix errors encountered in the previous build",
             "  help           "
                 + "shows this screen (or the help page of the specified command) and exits.",
             "  install        builds and installs an application",
+            "  kill           kill buckd for the current project",
             "  machoutils     provides some utils for Mach O binary files",
+            "  parser-cache   Load and save state of the parser cache",
             "  project        generates project configuration files for an IDE",
             "  publish        builds and publishes a library to a central repository",
             "  query          "

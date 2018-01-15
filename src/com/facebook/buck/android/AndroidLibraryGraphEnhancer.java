@@ -17,9 +17,9 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
-import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -28,6 +28,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.RichStream;
@@ -51,6 +52,7 @@ public class AndroidLibraryGraphEnhancer {
   private final Optional<String> finalRName;
   private final boolean useOldStyleableFormat;
   private final ProjectFilesystem projectFilesystem;
+  private final boolean skipNonUnionRDotJava;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
@@ -62,7 +64,8 @@ public class AndroidLibraryGraphEnhancer {
       boolean forceFinalResourceIds,
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
-      boolean useOldStyleableFormat) {
+      boolean useOldStyleableFormat,
+      boolean skipNonUnionRDotJava) {
     this.projectFilesystem = projectFilesystem;
     Preconditions.checkState(!HasJavaAbi.isAbiTarget(buildTarget));
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
@@ -78,6 +81,7 @@ public class AndroidLibraryGraphEnhancer {
     this.resourceUnionPackage = resourceUnionPackage;
     this.finalRName = finalRName;
     this.useOldStyleableFormat = useOldStyleableFormat;
+    this.skipNonUnionRDotJava = skipNonUnionRDotJava;
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
@@ -125,7 +129,12 @@ public class AndroidLibraryGraphEnhancer {
 
               JavacToJarStepFactory compileToJarStepFactory =
                   new JavacToJarStepFactory(
-                      javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY);
+                      DefaultSourcePathResolver.from(ruleFinder),
+                      ruleFinder,
+                      projectFilesystem,
+                      javac,
+                      javacOptions,
+                      ExtraClasspathProvider.EMPTY);
 
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,
@@ -136,7 +145,8 @@ public class AndroidLibraryGraphEnhancer {
                   forceFinalResourceIds,
                   resourceUnionPackage,
                   finalRName,
-                  useOldStyleableFormat);
+                  useOldStyleableFormat,
+                  skipNonUnionRDotJava);
             });
 
     return Optional.of((DummyRDotJava) dummyRDotJava);

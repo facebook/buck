@@ -21,10 +21,10 @@ import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -33,7 +33,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -43,36 +42,14 @@ import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
-public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
-
-  private final Tool tool;
-
+public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap, HasThinLTO {
   public DarwinLinker(Tool tool) {
-    this.tool = tool;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return tool.getDeps(ruleFinder);
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return tool.getInputs();
-  }
-
-  @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return tool.getCommandPrefix(resolver);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return tool.getEnvironment(resolver);
+    super(tool);
   }
 
   @Override
@@ -108,6 +85,7 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
   public Path thinLTOPath(Path output) {
     return Paths.get(output + "-lto");
   }
+
 
   @Override
   public Iterable<String> soname(String arg) {
@@ -180,8 +158,8 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
+  public SharedLibraryLoadingType getSharedLibraryLoadingType() {
+    return SharedLibraryLoadingType.RPATH;
   }
 
   /**
@@ -193,28 +171,16 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
    * contains the undefined symbols listed in the symbol files).
    */
   private static class UndefinedSymbolsArg implements Arg {
-
-    private final Iterable<? extends SourcePath> symbolFiles;
+    @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
 
     public UndefinedSymbolsArg(Iterable<? extends SourcePath> symbolFiles) {
       this.symbolFiles = symbolFiles;
     }
 
-    @Override
-    public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-      return ruleFinder.filterBuildRuleInputs(symbolFiles);
-    }
-
-    @Override
-    public ImmutableCollection<SourcePath> getInputs() {
-      return ImmutableList.copyOf(symbolFiles);
-    }
-
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
     // `-u` command line option.
     @Override
-    public void appendToCommandLine(
-        ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       Set<String> symbols = new LinkedHashSet<>();
       try {
         for (SourcePath path : symbolFiles) {
@@ -224,7 +190,7 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
         throw new RuntimeException(e);
       }
       for (String symbol : symbols) {
-        builder.addAll(Linkers.iXlinker("-u", symbol));
+        Linkers.iXlinker("-u", symbol).forEach(consumer);
       }
     }
 
@@ -248,11 +214,6 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
     @Override
     public int hashCode() {
       return Objects.hash(symbolFiles);
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("symbolFiles", symbolFiles);
     }
   }
 }

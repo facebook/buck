@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -28,7 +28,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +37,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -44,13 +45,14 @@ import java.util.function.Function;
  *
  * @see SupportsInputBasedRuleKey
  */
-public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
+public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final long inputSizeLimit;
+  private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
   private final SingleBuildRuleKeyCache<Result<RuleKey>> ruleKeyCache =
       new SingleBuildRuleKeyCache<>();
@@ -60,21 +62,19 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      long inputSizeLimit) {
+      long inputSizeLimit,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     this.ruleKeyFieldLoader = ruleKeyFieldLoader;
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
     this.inputSizeLimit = inputSizeLimit;
+    this.ruleKeyLogger = ruleKeyLogger;
   }
 
-  @VisibleForTesting
-  public InputBasedRuleKeyFactory(
-      int seed,
-      FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder) {
-    this(new RuleKeyFieldLoader(seed), hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE);
+  @Override
+  public Optional<Long> getInputSizeLimit() {
+    return Optional.of(inputSizeLimit);
   }
 
   private Result<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {
@@ -84,7 +84,8 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   private Result<RuleKey> calculateRuleKeyAppendableKey(AddsToRuleKey appendable) {
-    Builder<HashCode> subKeyBuilder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
+    Builder<HashCode> subKeyBuilder =
+        new Builder<>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
     AlterRuleKeys.amendKey(subKeyBuilder, appendable);
     return subKeyBuilder.buildResult(RuleKey::new);
   }
@@ -117,7 +118,7 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   private Builder<HashCode> newVerifyingBuilder(final BuildRule rule) {
     final Iterable<DependencyAggregation> aggregatedRules =
         Iterables.filter(rule.getBuildDeps(), DependencyAggregation.class);
-    return new Builder<HashCode>(RuleKeyBuilder.createDefaultHasher()) {
+    return new Builder<HashCode>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger)) {
       private boolean hasEffectiveDirectDep(BuildRule dep) {
         for (BuildRule aggregationRule : aggregatedRules) {
           if (aggregationRule.getBuildDeps().contains(dep)) {

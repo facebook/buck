@@ -26,7 +26,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -249,8 +249,8 @@ public class SwiftIOSBundleIntegrationTest {
 
     workspace.replaceFileContents(
         "BUCK",
-        "preferred_linkage = 'any', # iosdep1 preferred_linkage anchor",
-        "preferred_linkage = 'static'");
+        "preferred_linkage = \"any\",  # iosdep1 preferred_linkage anchor",
+        "preferred_linkage = \"static\"");
 
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(

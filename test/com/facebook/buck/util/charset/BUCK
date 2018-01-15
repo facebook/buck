@@ -1,0 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "charset",
+    deps = [
+        "//src/com/facebook/buck/util/charset:charset",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -293,6 +294,20 @@ public class QueryCommandIntegrationTest {
     assertThat(
         parseJSON(result.getStdout()),
         is(equalTo(parseJSON(workspace.getFileContents("stdout-one-seven-owner.json")))));
+  }
+
+  @Test
+  public void testOwnerOnAbsolutePath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    Path onePath = workspace.getPath("example/1.txt");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("query", "owner(%s)", onePath.toAbsolutePath().toString());
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//example:one"));
   }
 
   @Test
@@ -609,6 +624,26 @@ public class QueryCommandIntegrationTest {
         is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-bfs-deps-one.dot"))));
   }
 
+  @Test
+  public void testRankOutputForDeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("query", "--output", "minrank", "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-minrank-deps-one"))));
+
+    result = workspace.runBuckCommand("query", "--output", "maxrank", "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-maxrank-deps-one"))));
+  }
+
   class ParserProfileFinder extends SimpleFileVisitor<Path> {
     private Path profilerPath = null;
 
@@ -795,5 +830,45 @@ public class QueryCommandIntegrationTest {
     assertThat(
         Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout()),
         Matchers.containsInAnyOrder("//owners_violating_package_boundary/inner:lib"));
+  }
+
+  @Test
+  public void testTwoDifferentSetsPassedFromCommandLine() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "testsof(deps(%Ss)) union deps(%Ss)", "//example:four", "--", "//example:one");
+    result.assertSuccess();
+
+    List<String> output =
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout());
+    assertThat(output, Matchers.hasItems("//example:one", "//example:four-tests"));
+    assertThat(output, Matchers.not(Matchers.hasItem("//example:one-tests")));
+  }
+
+  @Test
+  public void testThreeDifferentSetsPassedFromCommandLine() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "testsof(deps(%Ss)) union (deps(%Ss) intersect deps(%Ss))",
+            "//example:four",
+            "--",
+            "//example:one",
+            "--",
+            "//example:two");
+    result.assertSuccess();
+
+    List<String> output =
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout());
+    assertThat(output, Matchers.hasItems("//example:two", "//example:four-tests"));
+    assertThat(
+        output,
+        Matchers.not(Matchers.hasItems("//example:one", "//example:one-tests", "//example:four")));
   }
 }

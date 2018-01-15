@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util.zip;
 
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.DefaultClock;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;

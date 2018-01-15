@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -86,7 +87,11 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     super(buildTarget, projectFilesystem);
     LOG.debug("Creating compilation database %s with runtime deps %s", buildTarget, runtimeDeps);
     this.compileRules = compileRules;
-    this.outputJsonFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s.json");
+    this.outputJsonFile =
+        BuildTargets.getGenPath(
+            getProjectFilesystem(),
+            buildTarget,
+            Paths.get("__%s", "compile_commands.json").toString());
     this.runtimeDeps = runtimeDeps;
   }
 

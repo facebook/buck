@@ -33,7 +33,6 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -80,7 +79,13 @@ public class AdbHelperTest {
       AdbOptions adbOptions,
       TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
-    return new AdbHelper(adbOptions, targetDeviceOptions, () -> executionContext, true);
+    return new AdbHelper(
+        adbOptions,
+        targetDeviceOptions,
+        TestAndroidLegacyToolchainFactory.create(),
+        () -> executionContext,
+        true,
+        ImmutableList.of());
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -397,7 +402,13 @@ public class AdbHelperTest {
   }
 
   private AdbHelper createAdbHelper(final List<IDevice> deviceList) {
-    return new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), () -> testContext, true) {
+    return new AdbHelper(
+        new AdbOptions(),
+        new TargetDeviceOptions(),
+        TestAndroidLegacyToolchainFactory.create(),
+        () -> testContext,
+        true,
+        ImmutableList.of()) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
         return deviceList
@@ -406,7 +417,7 @@ public class AdbHelperTest {
                 id ->
                     (AndroidDevice)
                         new RealAndroidDevice(testContext.getBuckEventBus(), id, testConsole))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
       }
     };
   }

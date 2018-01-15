@@ -26,6 +26,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -49,7 +50,7 @@ public class CxxTestIntegrationTest {
         ".buckconfig");
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertThat(stderr, Matchers.containsString("Timed out after 250 ms running test command"));
   }
@@ -67,7 +68,7 @@ public class CxxTestIntegrationTest {
 
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("test", target.getFullyQualifiedName());
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertThat(stderr, Matchers.containsString("Timed out after 100 ms running test command"));
   }

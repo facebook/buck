@@ -32,7 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -76,7 +75,11 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
                 return ((QueryBuildTarget) queryTarget).getBuildTarget();
               });
     } catch (QueryException e) {
-      throw new HumanReadableException(e, "Error executing query in macro for target %s", target);
+      throw new HumanReadableException(
+          e,
+          "Error executing query in macro for target %s: %s",
+          target,
+          e.getHumanReadableErrorMessage());
     }
   }
 
@@ -123,8 +126,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   abstract T fromQuery(Query query);
 
   @Override
-  protected final T parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
+  protected T parse(BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
     if (input.size() != 1) {
       throw new MacroException("One quoted query expression is expected");
@@ -150,7 +152,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     ImmutableList<QueryTarget> results;
 
     public QueryResults(Stream<QueryTarget> results) {
-      this.results = results.collect(MoreCollectors.toImmutableList());
+      this.results = results.collect(ImmutableList.toImmutableList());
     }
   }
 }

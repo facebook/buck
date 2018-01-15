@@ -18,9 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -56,11 +56,14 @@ public class VersionMatchedCollection<T> {
   }
 
   /** @return the only item that matches the given version map, or throw. */
-  public T getOnlyMatchingValue(ImmutableMap<BuildTarget, Version> selected) {
+  public T getOnlyMatchingValue(String source, ImmutableMap<BuildTarget, Version> selected) {
     ImmutableList<T> matching = getMatchingValues(selected);
-    Preconditions.checkState(!matching.isEmpty(), "no matches for %s found", selected);
-    Preconditions.checkState(
-        matching.size() < 2, "multiple matches for %s found: %s", selected, matching);
+    if (matching.size() != 1) {
+      throw new HumanReadableException(
+          "%s: expected at most a single match for %s, but found %s (from %s). "
+              + "Please add an entry which matches.",
+          source, selected, matching, values);
+    }
     return matching.get(0);
   }
 

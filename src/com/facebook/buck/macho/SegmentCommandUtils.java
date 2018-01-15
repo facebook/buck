@@ -15,10 +15,9 @@
  */
 package com.facebook.buck.macho;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
@@ -26,6 +25,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Function;
 
 public class SegmentCommandUtils {
 

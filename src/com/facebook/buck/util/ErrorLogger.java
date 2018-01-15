@@ -18,21 +18,33 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
+import com.facebook.buck.util.exceptions.BuckExecutionException;
 import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.exceptions.WrapsException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 public class ErrorLogger {
   private static final com.facebook.buck.log.Logger LOG =
       com.facebook.buck.log.Logger.get(ErrorLogger.class);
+  private boolean suppressStackTraces = false;
+
+  public ErrorLogger setSuppressStackTraces(boolean enabled) {
+    suppressStackTraces = enabled;
+    return this;
+  }
 
   @VisibleForTesting
   public interface LogImpl {
+
     void logUserVisible(String message);
 
     void logUserVisibleInternalError(String message);
@@ -41,6 +53,16 @@ public class ErrorLogger {
   }
 
   private final LogImpl logger;
+
+  public static void logGeneric(
+      EventDispatcher dispatcher, Throwable e, String format, Object... args) {
+    String context = args.length == 0 ? format : String.format(format, args);
+    logGeneric(dispatcher, new BuckExecutionException(e, context));
+  }
+
+  public static void logGeneric(EventDispatcher dispatcher, Throwable e) {
+    new ErrorLogger(dispatcher, "Error occurred: ", "Error occured: ").logException(e);
+  }
 
   public ErrorLogger(EventDispatcher dispatcher, String userPrefix, String verboseMessage) {
     this(
@@ -52,7 +74,8 @@ public class ErrorLogger {
 
           @Override
           public void logUserVisibleInternalError(String message) {
-            // TODO(cjhopman): This should be colored to make it obviously different from a user error.
+            // TODO(cjhopman): This should be colored to make it obviously different from a user
+            // error.
             dispatcher.post(ConsoleEvent.severe("Buck encountered an internal error\n" + message));
           }
 
@@ -69,6 +92,7 @@ public class ErrorLogger {
 
   public void logException(Throwable e) {
     logger.logVerbose(e);
+    Throwable parent = null;
 
     // TODO(cjhopman): Think about how to handle multiline context strings.
     List<String> context = new LinkedList<>();
@@ -80,16 +104,21 @@ public class ErrorLogger {
       if (!(cause instanceof Exception)) {
         break;
       }
+      // TODO(cjhopman): Should parent point to the closest parent with context instead of just the
+      // parent? If the parent doesn't include context, we're currently removing parts of the stack
+      // trace without any context to replace it.
+      parent = e;
       e = cause;
     }
 
-    logUserVisible(e, context);
+    logUserVisible(e, parent, context);
   }
 
-  protected void logUserVisible(Throwable rootCause, List<String> context) {
+  private void logUserVisible(
+      Throwable rootCause, @Nullable Throwable parent, List<String> context) {
     StringBuilder messageBuilder = new StringBuilder();
     // TODO(cjhopman): Based on verbosity, get the stacktrace here instead of just the message.
-    messageBuilder.append(getMessageForRootCause(rootCause));
+    messageBuilder.append(getMessageForRootCause(rootCause, parent));
     if (!context.isEmpty()) {
       messageBuilder.append("\n");
       messageBuilder.append(
@@ -103,11 +132,25 @@ public class ErrorLogger {
     }
   }
 
-  protected String getMessageForRootCause(Throwable rootCause) {
+  private String getMessageForRootCause(Throwable rootCause, @Nullable Throwable parent) {
     if (rootCause instanceof HumanReadableException) {
       return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
+    } else if (suppressStackTraces) {
+      return String.format("%s: %s", rootCause.getClass().getName(), rootCause.getMessage());
+    } else if (parent == null) {
+      return Throwables.getStackTraceAsString(rootCause);
     } else {
-      return rootCause.getMessage();
+      Preconditions.checkState(parent.getCause() == rootCause);
+      return getStackTraceOfCause(parent);
     }
+  }
+
+  private String getStackTraceOfCause(Throwable parent) {
+    // If there's a parent, print the parent's stack trace and then filter out it and its
+    // suppressed exceptions. This allows us to elide stack frames that are shared between the
+    // root cause and its parent.
+    return Pattern.compile(".*?\nCaused by: ", Pattern.DOTALL)
+        .matcher(Throwables.getStackTraceAsString(parent))
+        .replaceFirst("");
   }
 }

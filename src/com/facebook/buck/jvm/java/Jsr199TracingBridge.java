@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class Jsr199TracingBridge implements BuckTracingInterface {
   private final JavacEventSink eventSink;
-  private final BuildTarget buildTarget;
+  private BuildTarget buildTarget;
 
   public Jsr199TracingBridge(JavacEventSink eventSink, BuildTarget buildTarget) {
     this.eventSink = eventSink;
@@ -39,5 +39,9 @@ public class Jsr199TracingBridge implements BuckTracingInterface {
   @Override
   public void end(Map<String, String> args) {
     eventSink.reportCompilerPluginFinished(buildTarget, ImmutableMap.copyOf(args));
+  }
+
+  public void setBuildTarget(BuildTarget buildTarget) {
+    this.buildTarget = buildTarget;
   }
 }

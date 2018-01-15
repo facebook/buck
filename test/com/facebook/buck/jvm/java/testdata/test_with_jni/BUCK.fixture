@@ -1,120 +1,108 @@
-# Hack until Buck can provide the JDK include path automatically.
-# If JAVA_HOME is defined, we will use it.
-# Otherwise, just fake it with typedefs.
-import os
-if 'JAVA_HOME' in os.environ:
-  cppflags = [
-    '-DUSE_JNI_H',
-    '-I' + os.environ['JAVA_HOME'] + '/include',
-    '-I' + os.environ['JAVA_HOME'] + '/include/darwin',
-    '-I' + os.environ['JAVA_HOME'] + '/include/linux',
-  ]
-else:
-  cppflags = []
+include_defs("//DEFS")
 
-
+cppflags = create_cpp_flags()
 
 java_library(
-  name = 'jlib',
-  srcs = ['JLib.java'],
-  deps = [
-    ':jlib-native',
-  ],
+    name = "jlib",
+    srcs = ["JLib.java"],
+    deps = [
+        ":jlib-native",
+    ],
 )
 
 cxx_library(
-  name = 'jlib-native',
-  soname = 'libjtestlib.$(ext)',
-  preprocessor_flags = cppflags,
-  srcs = ['jlib.c'],
-  deps = [
-    ':helper-lib',
-  ],
+    name = "jlib-native",
+    srcs = ["jlib.c"],
+    preprocessor_flags = cppflags,
+    soname = "libjtestlib.$(ext)",
+    deps = [
+        ":helper-lib",
+    ],
 )
 
 cxx_library(
-  name = 'helper-lib',
-  exported_headers = ['helper.h'],
-  srcs = ['helper.c'],
+    name = "helper-lib",
+    srcs = ["helper.c"],
+    exported_headers = ["helper.h"],
 )
 
 prebuilt_jar(
-  name = 'junit-jar',
-  binary_jar = 'junit-4.11.jar',
+    name = "junit-jar",
+    binary_jar = "junit-4.11.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-jar',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-jar",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 java_test(
-  name = 'jtest',
-  srcs = ['JTest.java'],
-  use_cxx_libraries = True,
-  deps = [
-    ':jlib',
-    ':junit-jar',
-    ':hamcrest-jar',
-  ],
+    name = "jtest",
+    srcs = ["JTest.java"],
+    use_cxx_libraries = True,
+    deps = [
+        ":hamcrest-jar",
+        ":jlib",
+        ":junit-jar",
+    ],
 )
 
 cxx_library(
-  name = 'lib-broken',
-  srcs = ['broken.c'],
+    name = "lib-broken",
+    srcs = ["broken.c"],
 )
 
 java_test(
-  name = 'jtest-skip-dep',
-  srcs = ['JTest.java'],
-  use_cxx_libraries = True,
-  cxx_library_whitelist = [
-    '//:jlib-native',
-    '//:helper-lib',
-  ],
-  deps = [
-    ':jlib',
-    ':lib-broken',
-    ':junit-jar',
-    ':hamcrest-jar',
-  ],
+    name = "jtest-skip-dep",
+    srcs = ["JTest.java"],
+    cxx_library_whitelist = [
+        "//:jlib-native",
+        "//:helper-lib",
+    ],
+    use_cxx_libraries = True,
+    deps = [
+        ":hamcrest-jar",
+        ":jlib",
+        ":junit-jar",
+        ":lib-broken",
+    ],
 )
 
 cxx_library(
-  name = 'lib-pernicious',
-  soname = 'libpernicious.$(ext)',
-  srcs = ['pernicious.c'],
+    name = "lib-pernicious",
+    srcs = ["pernicious.c"],
+    soname = "libpernicious.$(ext)",
 )
 
 java_test(
-  name = 'jtest-pernicious',
-  srcs = ['JTestWithPernicious.java'],
-  use_cxx_libraries = True,
-  cxx_library_whitelist = [
-    '//:jlib-native',
-    '//:helper-lib',
-    '//:lib-pernicious',
-  ],
-  deps = [
-    ':jlib',
-    ':lib-pernicious',
-    ':junit-jar',
-    ':hamcrest-jar',
-  ],
+    name = "jtest-pernicious",
+    srcs = ["JTestWithPernicious.java"],
+    cxx_library_whitelist = [
+        "//:jlib-native",
+        "//:helper-lib",
+        "//:lib-pernicious",
+    ],
+    use_cxx_libraries = True,
+    deps = [
+        ":hamcrest-jar",
+        ":jlib",
+        ":junit-jar",
+        ":lib-pernicious",
+    ],
 )
 
 java_test(
-  name = 'jtest-symlink',
-  srcs = ['JTestWithoutPernicious.java'],
-  use_cxx_libraries = True,
-  cxx_library_whitelist = [
-    '//:jlib-native',#delete-1
-    '//:helper-lib',
-  ],
-  deps = [
-    ':jlib',
-    ':lib-pernicious',
-    ':junit-jar',
-    ':hamcrest-jar',
-  ],
+    name = "jtest-symlink",
+    srcs = ["JTestWithoutPernicious.java"],
+    cxx_library_whitelist = [
+        "//:jlib-native",  #delete-1
+        "//:helper-lib",
+    ],
+    use_cxx_libraries = True,
+    deps = [
+        ":hamcrest-jar",
+        ":jlib",
+        ":junit-jar",
+        ":lib-pernicious",
+    ],
 )

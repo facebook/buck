@@ -1,5 +1,5 @@
 java_library(
-  name = 'myapp',
-  srcs = glob(['*.java']),
-  visibility = [ 'PUBLIC' ],
+    name = "myapp",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
 )

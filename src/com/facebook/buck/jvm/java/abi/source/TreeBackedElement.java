@@ -65,6 +65,8 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
     return Preconditions.checkNotNull(canonicalizer);
   }
 
+  public abstract void complete();
+
   @Nullable
   /* package */ TreePath getTreePath() {
     return treePath;

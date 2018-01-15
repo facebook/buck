@@ -24,17 +24,17 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class InferBuckConfig implements RuleKeyAppendable {
 
@@ -57,30 +57,33 @@ public class InferBuckConfig implements RuleKeyAppendable {
   public InferBuckConfig(final BuckConfig delegate) {
     this.delegate = delegate;
     this.clangCompiler =
-        Suppliers.memoize(
-            () ->
-                new HashedFileTool(
-                    Preconditions.checkNotNull(
-                        getPathFromConfig(delegate, "clang_compiler").orElse(null),
-                        "clang_compiler path not found on the current configuration")));
+        MoreSuppliers.memoize(
+            () -> {
+              Optional<Path> clang_compiler = getPathFromConfig(delegate, "clang_compiler");
+              Preconditions.checkState(
+                  clang_compiler.isPresent(),
+                  "clang_compiler path not found on the current configuration");
+              return new HashedFileTool(() -> delegate.getPathSourcePath(clang_compiler.get()));
+            });
 
     this.clangPlugin =
-        Suppliers.memoize(
-            () ->
-                new HashedFileTool(
-                    Preconditions.checkNotNull(
-                        getPathFromConfig(delegate, "clang_plugin").orElse(null),
-                        "clang_plugin path not found on the current configuration")));
-
+        MoreSuppliers.memoize(
+            () -> {
+              Optional<Path> clang_compiler = getPathFromConfig(delegate, "clang_plugin");
+              Preconditions.checkState(
+                  clang_compiler.isPresent(),
+                  "clang_plugin path not found on the current configuration");
+              return new HashedFileTool(() -> delegate.getPathSourcePath(clang_compiler.get()));
+            });
     this.inferVersion =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               Path topLevel = InferBuckConfig.this.getInferTopLevel();
               ProcessExecutorParams params =
                   ProcessExecutorParams.builder()
                       .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
                       .build();
-              ProcessExecutor.Result result;
+              Result result;
               try {
                 result =
                     new DefaultProcessExecutor(Console.createNullConsole())
@@ -91,10 +94,14 @@ public class InferBuckConfig implements RuleKeyAppendable {
               } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
               }
-              Optional<String> stderr = result.getStderr();
-              String versionOutput = stderr.orElse("").trim();
-              Preconditions.checkState(!Strings.isNullOrEmpty(versionOutput));
-              return VersionedTool.of(topLevel, "infer", versionOutput);
+              Optional<String> versionOutput = result.getStdout();
+              if (!versionOutput.isPresent() || Strings.isNullOrEmpty(versionOutput.get())) {
+                // older versions of infer output on stderr
+                versionOutput = result.getStderr();
+              }
+              String versionString = versionOutput.orElse("").trim();
+              Preconditions.checkState(!Strings.isNullOrEmpty(versionString));
+              return VersionedTool.of(topLevel, "infer", versionString);
             });
   }
 

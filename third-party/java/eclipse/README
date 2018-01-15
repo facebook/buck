@@ -35,12 +35,3 @@ sha1sum "${jars[@]}"
 # c6a4c0c0bc6eb03bd3778d8f4737060d9b3e7562  org.eclipse.jdt.core.prefs
 # 75a5b85a4ed68d9d6dad499ad2b48936a647327d  org.eclipse.jdt.core_3.10.2.v20150120-1634.jar
 # 6dfc2f30f29e426dcc6b86826bd6d59f905bb01e  org.eclipse.osgi_3.10.2.v20150203-1939.jar
-
-jar xvf org.eclipse.jdt.core.source_3.10.2.v20150120-1634.jar jdtCompilerAdaptersrc
-find jdtCompilerAdaptersrc -name "*.java" | \
-  xargs javac -classpath $(printf ":%s" ${jars[@]}):$ANT_HOME/lib/ant.jar && \
-  cd jdtCompilerAdaptersrc && \
-  find . -name "*.class" | \
-  xargs jar cvf ../jdtCompilerAdapter.jar  org/eclipse/jdt/internal/antadapter/messages.properties
-
-# Don't forget to clean up after yourself.

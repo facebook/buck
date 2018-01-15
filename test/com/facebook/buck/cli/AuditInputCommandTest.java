@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -75,7 +74,6 @@ public class AuditInputCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             console,
             cell,
-            new FakeAndroidDirectoryResolver(),
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),

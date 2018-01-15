@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -31,7 +32,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** The components that get contributed to a top-level run of the C++ preprocessor. */
-@Value.Immutable
+@Value.Immutable(singleton = true)
 @BuckStyleImmutable
 abstract class AbstractCxxPreprocessorInput {
 
@@ -67,13 +68,11 @@ abstract class AbstractCxxPreprocessorInput {
     }
 
     for (Arg arg : getPreprocessorFlags().values()) {
-      builder.addAll(arg.getDeps(ruleFinder));
+      builder.addAll(BuildableSupport.getDepsCollection(arg, ruleFinder));
     }
 
     return builder.build();
   }
-
-  public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableMultimap.Builder<CxxSource.Type, Arg> preprocessorFlags = ImmutableMultimap.builder();

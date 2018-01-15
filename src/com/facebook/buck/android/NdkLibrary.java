@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -34,20 +35,20 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -65,6 +66,8 @@ import javax.annotation.Nullable;
  */
 public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements NativeLibraryBuildRule, AndroidPackageable {
+
+  private final AndroidNdk androidNdk;
 
   /** @see NativeLibraryBuildRule#isAsset() */
   @AddToRuleKey private final boolean isAsset;
@@ -85,22 +88,24 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final Optional<String> ndkVersion;
+  private final String ndkVersion;
 
   private final Function<String, String> macroExpander;
 
   protected NdkLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidNdk androidNdk,
       BuildRuleParams params,
       Path makefile,
       String makefileContents,
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
-      Optional<String> ndkVersion,
+      String ndkVersion,
       Function<String, String> macroExpander) {
     super(buildTarget, projectFilesystem, params);
+    this.androidNdk = androidNdk;
     this.isAsset = isAsset;
 
     this.root = buildTarget.getBasePath();
@@ -154,7 +159,9 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(new WriteFileStep(getProjectFilesystem(), makefileContents, makefile, false));
     steps.add(
         new NdkBuildStep(
+            getBuildTarget(),
             getProjectFilesystem(),
+            androidNdk,
             root,
             makefile,
             buildArtifactsDirectory,
@@ -189,7 +196,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             for (Path path : unstrippedSharedObjs) {
               buildableContext.recordArtifact(path);
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
 

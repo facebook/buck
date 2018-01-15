@@ -16,9 +16,21 @@
 
 package com.facebook.buck.toolchain;
 
+import java.util.Optional;
+
 public abstract class BaseToolchainProvider implements ToolchainProvider {
   @Override
   public <T extends Toolchain> T getByName(String toolchainName, Class<T> toolchainClass) {
     return toolchainClass.cast(getByName(toolchainName));
+  }
+
+  @Override
+  public <T extends Toolchain> Optional<T> getByNameIfPresent(
+      String toolchainName, Class<T> toolchainClass) {
+    if (isToolchainPresent(toolchainName)) {
+      return Optional.of(getByName(toolchainName, toolchainClass));
+    } else {
+      return Optional.empty();
+    }
   }
 }

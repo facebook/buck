@@ -1,10 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 java_library(
     name = "redex",
     srcs = [
         "ReDexStep.java",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/android:helpers",
+    ],
     tests = [
-        "//test/com/facebook/buck/android:binary-integration",
+        "//test/com/facebook/buck/android:binary-integration-1",
+        "//test/com/facebook/buck/android:binary-integration-2",
         "//test/com/facebook/buck/android/redex:redex",
     ],
     visibility = ["PUBLIC"],
@@ -12,7 +18,9 @@ java_library(
         ":options",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/args:args",

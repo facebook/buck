@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
 import com.facebook.buck.distributed.thrift.CreateBuildResponse;
@@ -54,6 +55,8 @@ import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
 import com.facebook.buck.distributed.thrift.SetCoordinatorResponse;
+import com.facebook.buck.distributed.thrift.SetFinalBuildStatusRequest;
+import com.facebook.buck.distributed.thrift.SetFinalBuildStatusResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
 import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
@@ -61,6 +64,7 @@ import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsResponse
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusResponse;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -100,17 +104,18 @@ public class DistBuildServiceTest {
   private FrontendService frontendService;
   private DistBuildService distBuildService;
   private ListeningExecutorService executor;
-  private DistBuildClientStatsTracker distBuildClientStatsTracker;
+  private ClientStatsTracker distBuildClientStatsTracker;
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
+  private static final String USERNAME = "unit_test_user";
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     frontendService = EasyMock.createStrictMock(FrontendService.class);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-    distBuildService = new DistBuildService(frontendService);
-    distBuildClientStatsTracker = new DistBuildClientStatsTracker(BUILD_LABEL);
+    distBuildService = new DistBuildService(frontendService, USERNAME);
+    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
   }
 
   @After
@@ -248,6 +253,7 @@ public class DistBuildServiceTest {
     stampedeId.setId(idString);
     buildJob.setStampedeId(stampedeId);
     createBuildResponse.setBuildJob(buildJob);
+    createBuildResponse.setWasAccepted(true);
     response.setCreateBuildResponse(createBuildResponse);
     response.setWasSuccessful(true);
     EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))
@@ -255,11 +261,14 @@ public class DistBuildServiceTest {
         .once();
     EasyMock.replay(frontendService);
 
-    BuildJob job = distBuildService.createBuild(BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID);
+    BuildJob job =
+        distBuildService.createBuild(
+            new BuildId("33-44"), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.CREATE_BUILD);
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());
     Assert.assertTrue(request.getValue().getCreateBuildRequest().isSetCreateTimestampMillis());
+    Assert.assertTrue(request.getValue().getCreateBuildRequest().isSetUsername());
 
     Assert.assertTrue(job.isSetStampedeId());
     Assert.assertTrue(job.getStampedeId().isSetId());
@@ -711,6 +720,32 @@ public class DistBuildServiceTest {
     Assert.assertEquals(stampedeId, minionsRequest.getStampedeId());
     Assert.assertEquals(minionCount, minionsRequest.getNumberOfMinions());
     Assert.assertEquals(minionQueueName, minionsRequest.getMinionQueue());
+    EasyMock.verify(frontendService);
+  }
+
+  @Test
+  public void testSetFinalBuildStatus() throws IOException {
+    Capture<FrontendRequest> request = EasyMock.newCapture();
+    FrontendResponse response =
+        new FrontendResponse()
+            .setWasSuccessful(true)
+            .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)
+            .setSetFinalBuildStatusResponse(new SetFinalBuildStatusResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))
+        .andReturn(response)
+        .once();
+    EasyMock.replay(frontendService);
+
+    StampedeId stampedeId = createStampedeId("coordinator has decided to set the final status");
+    BuildStatus finalStatus = BuildStatus.FINISHED_SUCCESSFULLY;
+    String finalStatusMessage = "Super cool message!!!!";
+    distBuildService.setFinalBuildStatus(stampedeId, finalStatus, finalStatusMessage);
+    Assert.assertEquals(FrontendRequestType.SET_FINAL_BUILD_STATUS, request.getValue().getType());
+    SetFinalBuildStatusRequest setStatusRequest =
+        request.getValue().getSetFinalBuildStatusRequest();
+    Assert.assertEquals(stampedeId, setStatusRequest.getStampedeId());
+    Assert.assertEquals(finalStatus, setStatusRequest.getBuildStatus());
+    Assert.assertEquals(finalStatusMessage, setStatusRequest.getBuildStatusMessage());
     EasyMock.verify(frontendService);
   }
 }

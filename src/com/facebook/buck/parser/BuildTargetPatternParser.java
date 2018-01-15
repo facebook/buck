@@ -74,19 +74,31 @@ public abstract class BuildTargetPatternParser<T> {
     }
   }
 
-  private T createWildCardPattern(CellPathResolver cellNames, String buildTargetPattern) {
+  private T createWildCardPattern(CellPathResolver cellNames, String buildTargetPatternWithCell) {
     if (!isWildCardAllowed()) {
       throw new BuildTargetParseException(
-          String.format("'%s' cannot end with '...'", buildTargetPattern));
+          String.format("'%s' cannot end with '...'", buildTargetPatternWithCell));
     }
 
     Path cellPath;
-    int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
+    String buildTargetPattern;
+    int index = buildTargetPatternWithCell.indexOf(BUILD_RULE_PREFIX);
     if (index > 0) {
-      cellPath = cellNames.getCellPath(Optional.of(buildTargetPattern.substring(0, index)));
-      buildTargetPattern = buildTargetPattern.substring(index);
+      cellPath =
+          cellNames
+              .getCellPath(Optional.of(buildTargetPatternWithCell.substring(0, index)))
+              .orElseThrow(
+                  () ->
+                      new BuildTargetParseException(
+                          String.format(
+                              "'%s' references an unknown cell", buildTargetPatternWithCell)));
+      buildTargetPattern = buildTargetPatternWithCell.substring(index);
     } else {
-      cellPath = cellNames.getCellPath(Optional.empty());
+      cellPath =
+          cellNames
+              .getCellPath(Optional.empty())
+              .orElseThrow(() -> new AssertionError("Root cell path should always be known"));
+      buildTargetPattern = buildTargetPatternWithCell;
     }
 
     if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {

@@ -16,11 +16,13 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class GoPackStep extends ShellStep {
   public enum Operation {
@@ -46,13 +48,14 @@ public class GoPackStep extends ShellStep {
   private final Path output;
 
   public GoPackStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> packCommandPrefix,
       Operation op,
       ImmutableList<Path> srcs,
       Path output) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.packCommandPrefix = packCommandPrefix;
     this.op = op;

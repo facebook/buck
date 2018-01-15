@@ -1,16 +1,16 @@
 java_library(
-  name = 'libA',
-  srcs = [
-      'A.java',
-      'D.java',
-  ],
-  deps = [
-      ':libB',
-      'secondary_cell//:libC',
-  ],
+    name = "libA",
+    srcs = [
+        "A.java",
+        "D.java",
+    ],
+    deps = [
+        "secondary_cell//:libC",
+        ":libB",
+    ],
 )
 
 java_library(
-    name = 'libB',
-    srcs = ['B.java'],
+    name = "libB",
+    srcs = ["B.java"],
 )

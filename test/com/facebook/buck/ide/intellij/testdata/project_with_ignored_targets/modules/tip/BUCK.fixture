@@ -1,9 +1,9 @@
 java_library(
-  name = 'tip',
-  srcs = [
-    'Test.java',
-  ],
-  deps = [
-    '//libs:guava',
-  ],
+    name = "tip",
+    srcs = [
+        "Test.java",
+    ],
+    deps = [
+        "//libs:guava",
+    ],
 )

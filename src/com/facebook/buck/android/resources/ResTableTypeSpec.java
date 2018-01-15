@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.resources;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.PrintStream;
@@ -50,7 +49,7 @@ public class ResTableTypeSpec extends ResChunk {
             .stream()
             .map(config -> ResTableType.slice(config, count))
             .filter(Objects::nonNull)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     return new ResTableTypeSpec(
         spec.id, count, copy(slice(spec.entryFlags, 0, 4 * count)), configs);

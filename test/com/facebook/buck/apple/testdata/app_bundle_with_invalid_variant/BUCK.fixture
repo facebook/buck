@@ -1,36 +1,36 @@
 apple_resource(
-  name = 'DemoAppResources',
-  files = glob(['*.png']),
-  dirs = ['Images'],
-  variants = [
-    'aa.lproj/Localizable.strings',
-    'bb.lproj/Localizable.strings',
-    'cc/Localizable.strings'
-  ],
+    name = "DemoAppResources",
+    dirs = ["Images"],
+    files = glob(["*.png"]),
+    variants = [
+        "aa.lproj/Localizable.strings",
+        "bb.lproj/Localizable.strings",
+        "cc/Localizable.strings",
+    ],
 )
 
 apple_bundle(
-  name = 'DemoApp',
-  binary = ':DemoAppBinary',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  deps = [':DemoAppResources'],
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    '*.h',
-  ]),
-  srcs = glob([
-    '*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
+    name = "DemoAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [":DemoAppResources"],
 )

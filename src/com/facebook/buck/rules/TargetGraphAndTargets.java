@@ -21,8 +21,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -80,7 +80,7 @@ public class TargetGraphAndTargets {
 
   public static TargetGraphAndTargets toVersionedTargetGraphAndTargets(
       TargetGraphAndTargets targetGraphAndTargets,
-      VersionedTargetGraphCache versionedTargetGraphCache,
+      InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       BuckEventBus buckEventBus,
       BuckConfig buckConfig,
       TypeCoercerFactory typeCoercerFactory,

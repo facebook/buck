@@ -27,9 +27,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -109,31 +108,11 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
             })
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
   boolean detectsTargetGraphOnlyDeps() {
     return false;
-  }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      QueryOutputsMacro input,
-      QueryResults precomputedWork)
-      throws MacroException {
-    return precomputedWork
-        .results
-        .stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-            })
-        .sorted()
-        .collect(MoreCollectors.toImmutableList());
   }
 }

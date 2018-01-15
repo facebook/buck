@@ -20,10 +20,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.junit.Test;
 

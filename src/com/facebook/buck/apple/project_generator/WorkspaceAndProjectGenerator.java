@@ -17,12 +17,15 @@
 package com.facebook.buck.apple.project_generator;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
+import com.facebook.buck.apple.project_generator.ProjectGenerator.Option;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -40,13 +43,12 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -58,6 +60,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -72,6 +75,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class WorkspaceAndProjectGenerator {
@@ -88,12 +92,14 @@ public class WorkspaceAndProjectGenerator {
   private final boolean combinedProject;
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
+  private final ImmutableSet<String> appleCxxFlavors;
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
   private final Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
   private final Function<TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode;
   private final BuckEventBus buckEventBus;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
@@ -103,6 +109,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableList.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
 
   public WorkspaceAndProjectGenerator(
@@ -110,20 +117,24 @@ public class WorkspaceAndProjectGenerator {
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescriptionArg workspaceArguments,
       BuildTarget workspaceBuildTarget,
-      Set<ProjectGenerator.Option> projectGeneratorOptions,
+      Set<Option> projectGeneratorOptions,
       boolean combinedProject,
       FocusedModuleTargetMatcher focusModules,
       boolean parallelizeBuild,
       CxxPlatform defaultCxxPlatform,
+      ImmutableSet<String> appleCxxFlavors,
       String buildFileName,
       Function<TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode,
       BuckEventBus buckEventBus,
+      RuleKeyConfiguration ruleKeyConfiguration,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
+      AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
     this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.dependenciesCache = new AppleDependenciesCache(projectGraph);
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.projGenerationStateCache = new ProjectGenerationStateCache();
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
@@ -131,6 +142,7 @@ public class WorkspaceAndProjectGenerator {
     this.combinedProject = combinedProject;
     this.parallelizeBuild = parallelizeBuild;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.appleCxxFlavors = appleCxxFlavors;
     this.buildFileName = buildFileName;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.buckEventBus = buckEventBus;
@@ -138,6 +150,7 @@ public class WorkspaceAndProjectGenerator {
     this.combinedProjectGenerator = Optional.empty();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.appleConfig = appleConfig;
 
     this.focusModules =
         focusModules.map(
@@ -233,7 +246,7 @@ public class WorkspaceAndProjectGenerator {
                 schemeNameToSrcTargetNode.values().stream().flatMap(Optionals::toStream),
                 buildForTestNodes.values().stream())
             .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
         ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
@@ -279,7 +292,7 @@ public class WorkspaceAndProjectGenerator {
         getRequiredBuildTargets()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     ImmutableMap<String, Object> data =
         ImmutableMap.of(
             "required-targets",
@@ -416,7 +429,7 @@ public class WorkspaceAndProjectGenerator {
             .getXcconfigPaths()
             .stream()
             .map((Path p) -> rootCell.getFilesystem().relativize(p))
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
     filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
     buildTargetToPbxTargetMapBuilder.putAll(result.getBuildTargetToGeneratedTargetMap());
@@ -460,15 +473,18 @@ public class WorkspaceAndProjectGenerator {
                 projectName,
                 buildFileName,
                 projectGeneratorOptions,
+                ruleKeyConfiguration,
                 isMainProject,
                 workspaceArguments.getSrcTarget(),
                 targetsInRequiredProjects,
                 focusModules,
                 defaultCxxPlatform,
+                appleCxxFlavors,
                 buildRuleResolverForNode,
                 buckEventBus,
                 halideBuckConfig,
                 cxxBuckConfig,
+                appleConfig,
                 swiftBuckConfig);
         projectGenerators.put(projectDirectory, generator);
         shouldGenerateProjects = true;
@@ -514,15 +530,18 @@ public class WorkspaceAndProjectGenerator {
             workspaceName,
             buildFileName,
             projectGeneratorOptions,
+            ruleKeyConfiguration,
             true,
             workspaceArguments.getSrcTarget(),
             targetsInRequiredProjects,
             focusModules,
             defaultCxxPlatform,
+            appleCxxFlavors,
             buildRuleResolverForNode,
             buckEventBus,
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
     combinedProjectGenerator = Optional.of(generator);
     generator.createXcodeProjects();
@@ -729,7 +748,7 @@ public class WorkspaceAndProjectGenerator {
                   .getTests()
                   .stream()
                   .filter(t -> focusModules.isFocusedOn(t))
-                  .collect(MoreCollectors.toImmutableList());
+                  .collect(ImmutableList.toImmutableList());
           // Show a warning if the target is not focused but the tests are.
           if (focusedTests.size() > 0 && !focusModules.isFocusedOn(node.getBuildTarget())) {
             buckEventBus.post(
@@ -781,17 +800,13 @@ public class WorkspaceAndProjectGenerator {
       final ImmutableSet<TargetNode<?, ?>> excludes) {
     return FluentIterable.from(nodes)
         .transformAndConcat(
-            new Function<TargetNode<?, ?>, Iterable<TargetNode<?, ?>>>() {
-              @Override
-              public Iterable<TargetNode<?, ?>> apply(TargetNode<?, ?> input) {
-                return AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            input ->
+                AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                     projectGraph,
                     Optional.of(dependenciesCache),
-                    AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                    RecursiveDependenciesMode.BUILDING,
                     input,
-                    Optional.empty());
-              }
-            })
+                    Optional.empty()))
         .append(nodes)
         .filter(
             input ->
@@ -832,7 +847,7 @@ public class WorkspaceAndProjectGenerator {
               .get(schemeName)
               .stream()
               .flatMap(Optionals::toStream)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
       ImmutableSet<TargetNode<AppleTestDescriptionArg, ?>> testNodes =
           getOrderedTestNodes(
               mainTarget,
@@ -878,7 +893,7 @@ public class WorkspaceAndProjectGenerator {
               .map(TargetNode::getBuildTarget)
               .map(buildTargetToPBXTarget::get)
               .filter(Objects::nonNull)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
       ImmutableSet<PBXTarget> orderedBuildTestTargets =
           buildForTestNodes
               .get(schemeName)
@@ -886,7 +901,7 @@ public class WorkspaceAndProjectGenerator {
               .map(TargetNode::getBuildTarget)
               .map(buildTargetToPBXTarget::get)
               .filter(Objects::nonNull)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
       ImmutableSet<PBXTarget> orderedRunTestTargets =
           ungroupedTests
               .get(schemeName)
@@ -894,7 +909,7 @@ public class WorkspaceAndProjectGenerator {
               .map(TargetNode::getBuildTarget)
               .map(buildTargetToPBXTarget::get)
               .filter(Objects::nonNull)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
       Optional<String> runnablePath = schemeConfigArg.getExplicitRunnablePath();
       Optional<String> remoteRunnablePath;
       if (schemeConfigArg.getIsRemoteRunnable().orElse(false)) {

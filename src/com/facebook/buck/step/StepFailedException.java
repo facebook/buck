@@ -22,7 +22,6 @@ import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.exceptions.WrapsException;
 import java.util.Optional;
 
-@SuppressWarnings("serial")
 public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
   private final Step step;
   private final String description;

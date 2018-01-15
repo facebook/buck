@@ -36,16 +36,16 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /** Packages the resources using {@code aapt}. */
@@ -59,6 +59,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
 
+  private final AndroidLegacyToolchain androidLegacyToolchain;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   static ImmutableSortedSet<BuildRule> getAllDeps(
@@ -87,6 +88,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   AaptPackageResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
@@ -96,13 +98,14 @@ public class AaptPackageResources extends AbstractBuildRule {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(buildTarget, projectFilesystem);
+    this.androidLegacyToolchain = androidLegacyToolchain;
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.skipCrunchPngs = skipCrunchPngs;
     this.includesVectorDrawables = includesVectorDrawables;
     this.manifestEntries = manifestEntries;
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 getAllDeps(
                     buildTarget,
@@ -172,6 +175,8 @@ public class AaptPackageResources extends AbstractBuildRule {
 
     steps.add(
         new AaptStep(
+            getBuildTarget(),
+            androidLegacyToolchain,
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getRelativeResDirectories(

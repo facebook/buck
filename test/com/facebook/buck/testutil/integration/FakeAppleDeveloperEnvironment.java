@@ -16,16 +16,18 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.apple.ApplePlatform;
-import com.facebook.buck.apple.CodeSignIdentityStore;
-import com.facebook.buck.apple.ProvisioningProfileMetadata;
-import com.facebook.buck.apple.ProvisioningProfileStore;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
+import com.facebook.buck.apple.toolchain.impl.CodeSignIdentityStoreFactory;
+import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Suppliers;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,14 +40,14 @@ public class FakeAppleDeveloperEnvironment {
   private FakeAppleDeveloperEnvironment() {}
 
   private static final int numCodeSigningIdentities =
-      CodeSignIdentityStore.fromSystem(
-              new DefaultProcessExecutor(new TestConsole()),
-              CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND)
-          .getIdentities()
+      CodeSignIdentityStoreFactory.fromSystem(
+              new DefaultProcessExecutor(new TestConsole()), AppleConfig.DEFAULT_IDENTITIES_COMMAND)
+          .getIdentitiesSupplier()
+          .get()
           .size();
 
   private static final boolean hasWildcardProvisioningProfile =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
               () -> {
                 ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
                 final Path searchPath =
@@ -57,8 +59,8 @@ public class FakeAppleDeveloperEnvironment {
                   return false;
                 }
                 ProvisioningProfileStore store =
-                    ProvisioningProfileStore.fromSearchPath(
-                        executor, ProvisioningProfileStore.DEFAULT_READ_COMMAND, searchPath);
+                    ProvisioningProfileStoreFactory.fromSearchPath(
+                        executor, AppleConfig.DEFAULT_READ_COMMAND, searchPath);
                 Optional<ProvisioningProfileMetadata> profile =
                     store.getBestProvisioningProfile(
                         "*",

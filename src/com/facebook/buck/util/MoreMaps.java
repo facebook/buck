@@ -16,14 +16,15 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Ordering;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public class MoreMaps {
@@ -78,7 +79,7 @@ public class MoreMaps {
         .entrySet()
         .stream()
         .collect(
-            MoreCollectors.toImmutableSortedMap(
-                e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));
+            ImmutableSortedMap.toImmutableSortedMap(
+                Ordering.natural(), e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));
   }
 }

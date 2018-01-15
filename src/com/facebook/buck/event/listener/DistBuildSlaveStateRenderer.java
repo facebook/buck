@@ -18,7 +18,6 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +50,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
     // TODO(shivanker): Implement 'sort by busyness' for Stampede BuildSlaves.
     return LongStream.range(0, slaveStatuses.size())
         .boxed()
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override

@@ -1,20 +1,16 @@
-java_immutables_library(
+load("//tools/build_rules:module_rules.bzl", "buck_module")
+
+buck_module(
     name = "dotnet",
     srcs = glob(["*.java"]),
-    visibility = [
-        "//src/com/facebook/buck/rules:types",
-        "//test/com/facebook/buck/dotnet:",
-    ],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:interfaces",
-        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
@@ -23,5 +19,8 @@ java_immutables_library(
         "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/dotnet:",
     ],
 )

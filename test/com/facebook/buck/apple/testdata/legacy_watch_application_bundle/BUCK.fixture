@@ -1,76 +1,75 @@
 apple_binary(
-  name = 'DemoWatchAppExtensionBinary',
-  compiler_flags = ['-fobjc-arc'],
-  headers = glob([
-    'WatchExtension/**/*.h',
-  ]),
-  srcs = glob([
-    'WatchExtension/**/*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/CoreGraphics.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/WatchConnectivity.framework',
-    '$SDKROOT/System/Library/Frameworks/WatchKit.framework',
-  ],
+    name = "DemoWatchAppExtensionBinary",
+    srcs = glob([
+        "WatchExtension/**/*.m",
+    ]),
+    compiler_flags = ["-fobjc-arc"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/CoreGraphics.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+        "$SDKROOT/System/Library/Frameworks/WatchConnectivity.framework",
+        "$SDKROOT/System/Library/Frameworks/WatchKit.framework",
+    ],
+    headers = glob([
+        "WatchExtension/**/*.h",
+    ]),
 )
 
 apple_bundle(
-  name = 'DemoWatchAppExtension',
-  binary = ':DemoWatchAppExtensionBinary',
-  deps = [':DemoWatchApp#legacy_watch'],
-  extension = 'appex',
-  info_plist = 'WatchExtension/Resources/Info.plist',
-  xcode_product_type = 'com.apple.product-type.watchkit-extension',
+    name = "DemoWatchAppExtension",
+    binary = ":DemoWatchAppExtensionBinary",
+    extension = "appex",
+    info_plist = "WatchExtension/Resources/Info.plist",
+    xcode_product_type = "com.apple.product-type.watchkit-extension",
+    deps = [":DemoWatchApp#legacy_watch"],
 )
 
 apple_binary(
-  name = 'DemoWatchAppBinary',
+    name = "DemoWatchAppBinary",
 )
 
 apple_bundle(
-  name = 'DemoWatchApp',
-  binary = ':DemoWatchAppBinary',
-  deps = [':DemoWatchAppResources'],
-  extension = 'app',
-  info_plist = 'WatchApplication/Info.plist',
-  xcode_product_type = 'com.apple.product-type.application.watchapp',
+    name = "DemoWatchApp",
+    binary = ":DemoWatchAppBinary",
+    extension = "app",
+    info_plist = "WatchApplication/Info.plist",
+    xcode_product_type = "com.apple.product-type.application.watchapp",
+    deps = [":DemoWatchAppResources"],
 )
 
 apple_resource(
-  name = 'DemoWatchAppResources',
-  files = ['WatchApplication/Interface.storyboard'],
-  dirs = [],
+    name = "DemoWatchAppResources",
+    dirs = [],
+    files = ["WatchApplication/Interface.storyboard"],
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  compiler_flags = ['-fobjc-arc'],
-  headers = glob([
-    '*.h',
-  ]),
-  srcs = glob([
-    '*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/CoreGraphics.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/WatchConnectivity.framework',
-  ],
+    name = "DemoAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    compiler_flags = ["-fobjc-arc"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/CoreGraphics.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+        "$SDKROOT/System/Library/Frameworks/WatchConnectivity.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
 )
 
 apple_bundle(
-  name = 'DemoApp',
-  binary = ':DemoAppBinary',
-  deps = [':DemoWatchAppExtension'],
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":DemoWatchAppExtension"],
 )
 
 apple_package(
-  name = 'DemoAppPackage',
-  bundle = ':DemoApp',
+    name = "DemoAppPackage",
+    bundle = ":DemoApp",
 )
-

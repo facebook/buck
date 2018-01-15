@@ -25,25 +25,29 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
+import com.google.common.primitives.Ints;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,12 +55,15 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 @VisibleForTesting
 public class RealAndroidDevice implements AndroidDevice {
@@ -79,6 +86,7 @@ public class RealAndroidDevice implements AndroidDevice {
   private final BuckEventBus eventBus;
   private final IDevice device;
   private final Console console;
+  private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ExopackageAgent> agent;
   private final int agentPort;
 
@@ -87,12 +95,14 @@ public class RealAndroidDevice implements AndroidDevice {
       IDevice device,
       Console console,
       @Nullable Path agentApkPath,
-      int agentPort) {
+      int agentPort,
+      ImmutableList<String> rapidInstallTypes) {
     this.eventBus = eventBus;
     this.device = device;
     this.console = console;
+    this.rapidInstallTypes = rapidInstallTypes;
     this.agent =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ExopackageAgent.installAgentIfNecessary(
                     eventBus,
@@ -103,7 +113,7 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(buckEventBus, device, console, null, -1);
+    this(buckEventBus, device, console, null, -1, ImmutableList.of());
   }
 
   /**
@@ -266,7 +276,6 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   /** Installs apk on device, copying apk to external storage first. */
-  @SuppressForbidden
   @Nullable
   private String deviceInstallPackageViaSd(String apk) {
     try {
@@ -290,7 +299,6 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @VisibleForTesting
   @Nullable
-  @SuppressForbidden
   public String deviceStartActivity(String activityToRun, boolean waitForDebugger) {
     try {
       ErrorParsingReceiver receiver =
@@ -371,7 +379,6 @@ public class RealAndroidDevice implements AndroidDevice {
    * com.facebook.buck.cli.UninstallCommand}.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  @SuppressForbidden
   public boolean uninstallApkFromDevice(String packageName, boolean keepData) {
     String name;
     if (device.isEmulator()) {
@@ -421,7 +428,6 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   @VisibleForTesting
-  @SuppressForbidden
   private boolean isDeviceTempWritable(String name) {
     StringBuilder loggingInfo = new StringBuilder();
     try {
@@ -626,24 +632,47 @@ public class RealAndroidDevice implements AndroidDevice {
     };
   }
 
-  @Override
-  public void installFile(final Path targetDevicePath, final Path source) throws Exception {
-    Preconditions.checkArgument(source.isAbsolute());
-    Preconditions.checkArgument(targetDevicePath.isAbsolute());
-    Closer closer = Closer.create();
-    FileInstallReceiver receiver = new FileInstallReceiver(closer, source);
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractRapidInstallMode {
+    abstract String getIpAddress();
+  }
 
-    String targetFileName = targetDevicePath.toString();
+  private Optional<RapidInstallMode> getRapidInstallMode() {
+    if (device.isEmulator() && rapidInstallTypes.contains("emu")) {
+      return Optional.of(RapidInstallMode.builder().setIpAddress("10.0.2.2").build()); // NOPMD
+    } else if (isLocalTransport() && rapidInstallTypes.contains("tcp")) {
+      String hostIpAddr = device.getSerialNumber().replaceAll("\\.[0-9:]+$", ".1");
+      return Optional.of(RapidInstallMode.builder().setIpAddress(hostIpAddr).build());
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    Optional<RapidInstallMode> rapidInstallMode = getRapidInstallMode();
+    if (rapidInstallMode.isPresent()) {
+      doRapidInstall(rapidInstallMode.get(), filesType, installPaths);
+    } else {
+      doMultiInstall(filesType, installPaths);
+    }
+  }
+
+  private void doMultiInstall(String filesType, Map<Path, Path> installPaths) throws Exception {
+    Closer closer = Closer.create();
+    BuckInitiatedInstallReceiver receiver =
+        new BuckInitiatedInstallReceiver(closer, filesType, installPaths);
+
     String command =
         "umask 022 && "
             + agent.get().getAgentCommand()
-            + "receive-file "
+            + "multi-receive-file "
+            + "-"
+            + " "
             + agentPort
             + " "
-            + Files.size(source)
-            + " "
-            + targetFileName
-            + " ; echo -n :$?";
+            + "1"
+            + ECHO_COMMAND_SUFFIX;
     LOG.debug("Executing %s", command);
 
     // If we fail to execute the command, stash the exception.  My experience during development
@@ -679,19 +708,81 @@ public class RealAndroidDevice implements AndroidDevice {
       throw shellException;
     }
 
+    for (Path targetFileName : installPaths.keySet()) {
+      chmod644(targetFileName);
+    }
+  }
+
+  void doRapidInstall(
+      RapidInstallMode rapidInstallMode, String filesType, Map<Path, Path> installPaths)
+      throws Exception {
+    Exception failure = null;
+    String command;
+    AgentInitiatedInstallReceiver receiver;
+
+    try (ServerSocket serverSocket = new ServerSocket(0)) {
+      int port = serverSocket.getLocalPort();
+      int nonce = (int) System.currentTimeMillis() & 0x7FFFFFFF;
+      receiver = new AgentInitiatedInstallReceiver(serverSocket, nonce, filesType, installPaths);
+      command =
+          "umask 022 && "
+              + agent.get().getAgentCommand()
+              + "multi-receive-file "
+              + rapidInstallMode.getIpAddress()
+              + " "
+              + port
+              + " "
+              + nonce
+              + ECHO_COMMAND_SUFFIX;
+      LOG.debug("Executing %s", command);
+
+      // If we fail to execute the command, stash the exception.  My experience during development
+      // has been that the exception from checkReceiverOutput is more actionable.
+      try {
+        device.executeShellCommand(command, receiver);
+      } catch (Exception e) {
+        failure = e;
+      }
+    }
+
+    if (receiver.getError().isPresent()) {
+      Exception prev = failure;
+      failure = receiver.getError().get();
+      if (prev != null) {
+        failure.addSuppressed(prev);
+      }
+    }
+
+    try {
+      checkReceiverOutput(command, receiver);
+    } catch (Exception e) {
+      if (failure != null) {
+        e.addSuppressed(failure);
+      }
+      failure = e;
+    }
+    if (failure != null) {
+      throw failure;
+    }
+
+    for (Path targetFileName : installPaths.keySet()) {
+      chmod644(targetFileName);
+    }
+  }
+
+  private void chmod644(Path targetDevicePath)
+      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+          IOException {
     // The standard Java libraries on Android always create new files un-readable by other users.
     // We use the shell user or root to create these files, so we need to explicitly set the mode
     // to allow the app to read them.  Ideally, the agent would do this automatically, but
     // there's no easy way to do this in Java.  We can drop this if we drop support for the
     // Java agent.
-    executeCommandWithErrorChecking("chmod 644 " + targetFileName);
+    executeCommandWithErrorChecking("chmod 644 " + targetDevicePath);
   }
 
   @Override
   public void mkDirP(String dirpath) throws Exception {
-    // Kind of a hack here.  The java agent can't force the proper permissions on the
-    // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
-    // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
     String mkdirCommand = agent.get().getMkDirCommand();
 
     executeCommandWithErrorChecking("umask 022 && " + mkdirCommand + " " + dirpath);
@@ -750,6 +841,27 @@ public class RealAndroidDevice implements AndroidDevice {
     }
   }
 
+  @Override
+  public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
+    StringBuilder commandBuilder = new StringBuilder();
+    commandBuilder.append("am broadcast -a ").append(action);
+    stringExtras
+        .entrySet()
+        .forEach(
+            entry ->
+                commandBuilder
+                    .append(" --es ")
+                    .append(Escaper.escapeAsShellString(entry.getKey()))
+                    .append(" ")
+                    .append(Escaper.escapeAsShellString(entry.getValue())));
+    try {
+      executeCommandWithErrorChecking(commandBuilder.toString());
+      eventBus.post(ConsoleEvent.warning("Successfully sent broadcast " + action));
+    } catch (AdbHelper.CommandFailedException e) {
+      eventBus.post(ConsoleEvent.warning("Unable to send broadcast " + action));
+    }
+  }
+
   /**
    * Implementation of {@link com.android.ddmlib.IShellOutputReceiver} with helper functions to
    * parse output lines and figure out if a call to {@link IDevice#executeShellCommand(String,
@@ -791,17 +903,37 @@ public class RealAndroidDevice implements AndroidDevice {
     }
   }
 
-  private class FileInstallReceiver extends CollectingOutputReceiver {
+  private class BuckInitiatedInstallReceiver extends CollectingOutputReceiver {
+    /*
+    The buck-initiated protocol:
+
+    Buck will invoke the agent with a port, and the agent will begin listening on the port.
+    The agent will generate a random session key of AgentUtil.TEXT_SECRET_KEY_SIZE hex characters.
+    The agent will send the session key to stdout, followed by a newline.
+    Buck will connect to the port.
+    Recent versions of ADB on Linux will not properly forward data that Buck sends immediately,
+    so the agent will accept the connection, then print "z1" (followed by a newline) to stdout
+    to confirm that the connection has been initiated.
+    Buck will send the session key to the agent, *without* a trailing newline.
+    At this point, the connection is authenticated and can be used for multi-file transfer.
+
+    Note that the secret key is meant to protect against a very specific attack:
+    a malicious Android app on the device quickly connecting to the agent
+    and sending infected files for installation.
+     */
+
     private final Closer closer;
-    private final Path source;
+    private final String filesType;
+    private final Map<Path, Path> installPaths;
     private boolean startedPayload;
     private boolean wrotePayload;
     @Nullable private OutputStream outToDevice;
     private Optional<Exception> error;
 
-    public FileInstallReceiver(Closer closer, Path source) {
+    BuckInitiatedInstallReceiver(Closer closer, String filesType, Map<Path, Path> installPaths) {
       this.closer = closer;
-      this.source = source;
+      this.filesType = filesType;
+      this.installPaths = installPaths;
       this.startedPayload = false;
       this.wrotePayload = false;
       this.error = Optional.empty();
@@ -827,9 +959,6 @@ public class RealAndroidDevice implements AndroidDevice {
           closer.register(outToDevice);
           // Need to wait for client to acknowledge that we've connected.
         }
-        if (outToDevice == null) {
-          throw new NullPointerException();
-        }
         if (!wrotePayload && getOutput().contains("z1")) {
           if (outToDevice == null) {
             throw new NullPointerException("outToDevice was null when protocol says it cannot be");
@@ -838,9 +967,8 @@ public class RealAndroidDevice implements AndroidDevice {
           wrotePayload = true;
           outToDevice.write(getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
           LOG.verbose("Wrote key");
-          com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-          outToDevice.flush();
-          LOG.verbose("Wrote file");
+          multiInstallFilesToStream(outToDevice, filesType, installPaths);
+          LOG.verbose("Wrote files");
         }
       } catch (IOException e) {
         error = Optional.of(e);
@@ -850,5 +978,122 @@ public class RealAndroidDevice implements AndroidDevice {
     public Optional<Exception> getError() {
       return error;
     }
+  }
+
+  private class AgentInitiatedInstallReceiver extends CollectingOutputReceiver {
+    /*
+    The agent-initiated protocol:
+
+    Buck will invoke the agent with an IP, port, and nonce (31-bit).
+    The agent will write a byte to stdout to trigger the ddmlib output receiver.
+    The agent will connect to the IP and port (where Buck or a proxy will already be listening).
+    The agent will write the nonce to the connection as a 4-byte big endian value.
+    The connection will then be used for a multi-file transfer.
+
+    Note that the nonce is not meant for security purposes.
+    It will be used to avoid confusing streams when tunnelling the connection over USB.
+     */
+
+    private static final int CONNECT_TIMEOUT_MS = 5000;
+    private static final int READ_TIMEOUT_MS = 5000;
+
+    private final ServerSocket serverSocket;
+    private final int nonce;
+    private String filesType;
+    private final Map<Path, Path> installPaths;
+    private Optional<Exception> error = Optional.empty();
+    private boolean startedSend = false;
+
+    AgentInitiatedInstallReceiver(
+        ServerSocket serverSocket, int nonce, String filesType, Map<Path, Path> installPaths) {
+      this.serverSocket = serverSocket;
+      this.nonce = nonce;
+      this.filesType = filesType;
+      this.installPaths = installPaths;
+    }
+
+    @Override
+    public void addOutput(byte[] data, int offset, int length) {
+      super.addOutput(data, offset, length);
+      // On exceptions, we want to still collect the full output of the command (so we can get its
+      // error code and possibly error message), so we just record that there was an error and only
+      // send further output to the base receiver.
+      if (error.isPresent()) {
+        return;
+      }
+
+      // The receiver will send us a byte or so to indicate its intent to connect.
+      // Only try to listen for it once.
+      if (!startedSend) {
+        startedSend = true;
+        try {
+          sendFiles();
+        } catch (IOException e) {
+          error = Optional.of(e);
+        }
+      }
+    }
+
+    private void sendFiles() throws IOException {
+      serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
+      try (Socket connectionSocket = serverSocket.accept()) {
+        connectionSocket.setSoTimeout(READ_TIMEOUT_MS);
+        byte[] readBuffer = new byte[4];
+        int got = connectionSocket.getInputStream().read(readBuffer);
+        if (got != readBuffer.length) {
+          throw new RuntimeException("Short read from agent.");
+        }
+        int gotNonce = Ints.fromByteArray(readBuffer);
+        if (gotNonce != nonce) {
+          throw new RuntimeException(
+              String.format("Got wrong nonce from agent.  Expected %d, got %d.", nonce, gotNonce));
+        }
+
+        // TODO(dreiss): Use write timeouts.
+        OutputStream stream = connectionSocket.getOutputStream();
+        multiInstallFilesToStream(stream, filesType, installPaths);
+      }
+    }
+
+    Optional<Exception> getError() {
+      return error;
+    }
+  }
+
+  /*
+  The multi-file install protocol:
+
+  First, a trusted byte stream from Buck to the agent will be established.
+  Buck will transmit a sequence of files to the agent.
+  Each file is preceded by a header.
+  The header starts with a 4-character uppercase hex number,  which is the size of the header
+  in bytes, starting from after the first space, followed by a space.
+  Next is file size as ASCII text followed by a space.
+  Next is the name of the file that the agent should write to, followed by a newline.
+  The full file contents follows the newline immediately, with no terminator.
+  The next file header begins immediately.
+  The agent recognizes two special file names, which must always have size 0.
+  "--continue" indicates that no file should be written.
+  This might be used in the future to avoid read timeouts.
+  "--complete" indicates that the transmission is complete, and the agent should exit.
+   */
+  private void multiInstallFilesToStream(
+      OutputStream stream, String filesType, Map<Path, Path> installPaths) throws IOException {
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      Path destination = entry.getKey();
+      Path source = entry.getValue();
+      try (SimplePerfEvent.Scope ignored =
+          SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+        // Slurp the file into RAM to make sure we know how many bytes we are getting.
+        byte[] bytes = Files.readAllBytes(source);
+        byte[] restOfHeader = (bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8);
+        byte[] headerPrefix = String.format("%04X ", restOfHeader.length).getBytes(Charsets.UTF_8);
+        stream.write(headerPrefix);
+        stream.write(restOfHeader);
+        stream.write(bytes);
+      }
+    }
+    stream.write("000D 0 --complete\n".getBytes(Charsets.UTF_8));
+    stream.flush();
   }
 }

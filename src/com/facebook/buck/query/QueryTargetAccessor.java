@@ -26,10 +26,10 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.function.Predicate;
 
 public class QueryTargetAccessor {
 
@@ -87,7 +87,7 @@ public class QueryTargetAccessor {
     final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
     info.traverse(
         value -> {
-          if (predicate.apply(value)) {
+          if (predicate.test(value)) {
             builder.add(value);
           }
         },

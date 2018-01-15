@@ -63,6 +63,23 @@
     Indicates that Buck should build a project slice with the tests of the specified targets only.
   {/param}
 {/call}
+
+{call buck.param}
+  {param name: 'exclude-artifacts  ' /}
+  {param desc}
+    Don't include references to the artifacts created by compiling a target in the
+    module representing that target. This can improve indexing times, but will mean generated code
+    does not show up in the ide. For example R files for Android.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'remove-unused-ij-libraries ' /}
+  {param desc}
+    After generating an IntelliJ project remove all IntelliJ libraries that are not used in the
+    project.
+  {/param}
+{/call}
 </ul>
 
 <h2>Supported IDEs</h2>

@@ -1,14 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
 java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        excludes = [
+        exclude = [
             "*Benchmark.java",
             "*Test.java",
         ],
     ),
     visibility = ["//test/..."],
     deps = [
+        "//src/com/facebook/buck/util/concurrent:concurrent",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

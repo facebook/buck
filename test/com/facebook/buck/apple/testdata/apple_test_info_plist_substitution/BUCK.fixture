@@ -1,5 +1,5 @@
 apple_test(
-    name='foo',
-    srcs = ['Foo.m'],
-    info_plist = 'Test.plist',
+    name = "foo",
+    srcs = ["Foo.m"],
+    info_plist = "Test.plist",
 )

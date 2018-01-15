@@ -39,6 +39,9 @@ public class HeaderSymlinkTree extends SymlinkTree {
    *
    * <p>If {@link #getHeaderMap()} is present, then the path it returns needs to be passed as an
    * include path as well and it has to be passed before the path returned from this method.
+   *
+   * <p>This path should not be added to rulekeys as a SourcePath (in some cases it points to the
+   * entire buck-out).
    */
   public Path getIncludePath() {
     return getRoot();
@@ -46,6 +49,10 @@ public class HeaderSymlinkTree extends SymlinkTree {
 
   /** Get path of the header map indexing this tree if one exists. */
   public Optional<Path> getHeaderMap() {
+    return Optional.empty();
+  }
+
+  public Optional<SourcePath> getHeaderMapSourcePath() {
     return Optional.empty();
   }
 }

@@ -23,7 +23,6 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -39,6 +38,7 @@ import com.facebook.buck.apple.AppleAssetCatalogBuilder;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
@@ -66,6 +66,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.config.BuckConfig;
@@ -84,8 +85,6 @@ import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.js.IosReactNativeLibraryBuilder;
-import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -107,6 +106,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -114,15 +114,12 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.timing.IncrementingFakeClock;
-import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
+import com.facebook.buck.util.timing.IncrementingFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -146,6 +143,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
@@ -171,6 +169,7 @@ public class ProjectGeneratorTest {
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
+  private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -202,6 +201,7 @@ public class ProjectGeneratorTest {
             "swift", ImmutableMap.of("version", "1.23"));
     BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
+    appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
   }
 
@@ -532,6 +532,142 @@ public class ProjectGeneratorTest {
     assertThatHeaderSymlinkTreeContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
         ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h"));
+  }
+
+  @Test
+  public void testModularLibraryMixedSourcesFlags() throws IOException {
+    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSwiftVersion(Optional.of("3"))
+            .setModular(true)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(libNode), ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertNotNull(project);
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
+    assertThat(settings.get("OTHER_SWIFT_FLAGS"), containsString("-import-underlying-module"));
+    assertThat(
+        settings.get("OTHER_SWIFT_FLAGS"),
+        containsString(
+            "-Xcc -ivfsoverlay -Xcc '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/objc-module-overlay.yaml'"));
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
+    assertTrue(
+        projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("objc-module-overlay.yaml")));
+    assertTrue(projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/module.modulemap")));
+    assertTrue(projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/objc.modulemap")));
+  }
+
+  @Test
+  public void testModularLibraryGeneratesUmbrella() throws IOException {
+    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib/foo.h")))
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSwiftVersion(Optional.of("3"))
+            .setModular(true)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(libNode),
+            ImmutableSet.of(ProjectGenerator.Option.GENERATE_MISSING_UMBRELLA_HEADER));
+
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertNotNull(project);
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
+    assertTrue(projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/lib.h")));
+  }
+
+  @Test
+  public void testModularLibraryDoesNotOverwriteExistingUmbrella() throws IOException {
+    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib/lib.h")))
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSwiftVersion(Optional.of("3"))
+            .setModular(true)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(libNode),
+            ImmutableSet.of(ProjectGenerator.Option.GENERATE_MISSING_UMBRELLA_HEADER));
+
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertNotNull(project);
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
+    Path umbrellaPath = headerSymlinkTrees.get(0).resolve("lib/lib.h");
+    assertTrue(projectFilesystem.isSymLink(umbrellaPath));
+    assertFalse(projectFilesystem.isFile(umbrellaPath));
+  }
+
+  @Test
+  public void testNonModularLibraryMixedSourcesFlags() throws IOException {
+    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSwiftVersion(Optional.of("3"))
+            .setModular(false)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(libNode), ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+    assertNotNull(project);
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
+    assertThat(settings.get("OTHER_SWIFT_FLAGS"), not(containsString("-import-underlying-module")));
+    assertThat(
+        settings.get("OTHER_SWIFT_FLAGS"),
+        not(
+            containsString(
+                "-Xcc -ivfsoverlay -Xcc ../buck-out/gen/_p/CwkbTNOBmb-pub/objc-module-overlay.yaml")));
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
+    assertFalse(
+        projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("objc-module-overlay.yaml")));
+    assertFalse(
+        projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/module.modulemap")));
+    assertFalse(projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/objc.modulemap")));
   }
 
   @Test
@@ -1320,12 +1456,8 @@ public class ProjectGeneratorTest {
 
       // Check the header map
       assertThat(
-          headerMap.lookup(key),
-          equalTo(
-              Paths.get("../../")
-                  .resolve(projectCell.getRoot().getFileName())
-                  .resolve(link)
-                  .toString()));
+          projectFilesystem.getBuckPaths().getConfiguredBuckOut().resolve(headerMap.lookup(key)),
+          equalTo(link));
     }
   }
 
@@ -1380,7 +1512,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
@@ -1462,7 +1594,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
@@ -1491,7 +1623,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals("../Foo/Foo-Prefix.pch", settings.get("GCC_PREFIX_HEADER"));
@@ -1524,7 +1656,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(libraryTarget, target, "Debug");
     assertEquals("../Foo/Foo-Prefix.pch", settings.get("GCC_PREFIX_HEADER"));
@@ -1550,7 +1682,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(
             projectGenerator.getGeneratedProject(), "//hi:lib#shared");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.DYNAMIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.DYNAMIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -1576,7 +1708,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -1738,7 +1870,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1794,7 +1926,8 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        String.format("$(inherited) -force_load %s %s", generatedLibraryPath, exportedLibraryPath),
+        String.format(
+            "$(inherited) -ObjC -force_load %s %s", generatedLibraryPath, exportedLibraryPath),
         settings.get("OTHER_LDFLAGS"));
   }
 
@@ -1824,7 +1957,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) ", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1848,7 +1981,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1880,7 +2013,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1912,7 +2045,7 @@ public class ProjectGeneratorTest {
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("-lbaz -lbaz", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-ObjC -lbaz -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1947,7 +2080,11 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator =
-        createProjectGeneratorForCombinedProject(ImmutableSet.of(node), ImmutableSet.of());
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(node),
+            ImmutableSet.of(node),
+            ImmutableSet.of(),
+            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
 
     projectGenerator.createXcodeProjects();
 
@@ -1964,17 +2101,19 @@ public class ProjectGeneratorTest {
         "-Wundeclared-selector -Wno-objc-designated-initializers "
             + "-Wundeclared-selector -Wno-objc-designated-initializers",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("$(inherited) ", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-ObjC -ObjC", settings.get("OTHER_LDFLAGS"));
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "
             + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
-        settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
-        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
-    assertEquals("-lbaz-iphone -lbaz-iphone", settings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertEquals(
+        "-ObjC -lbaz-iphone -ObjC -lbaz-iphone",
+        settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
   @Test
@@ -2061,7 +2200,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(node, dependentNode), ImmutableSet.of());
+            ImmutableSet.of(node, dependentNode),
+            ImmutableSet.of(node, dependentNode),
+            ImmutableSet.of(),
+            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
 
     projectGenerator.createXcodeProjects();
 
@@ -2073,12 +2215,12 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -fbar-iphone -Wno-deprecated -Wno-conversion -fbar-iphone",
-        settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
-        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
-    assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+        settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
 
     PBXTarget dependentTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
@@ -2090,12 +2232,12 @@ public class ProjectGeneratorTest {
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "
             + "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
-        dependentSettings.get("OTHER_CFLAGS[sdk=*iphone*]"));
+        dependentSettings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
-        dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
-    assertEquals(null, dependentSettings.get("OTHER_LDFLAGS[sdk=*iphone*]"));
+        dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertEquals(null, dependentSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
   @Test
@@ -2114,7 +2256,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     assertKeepsConfigurationsInMainGroup(projectGenerator.getGeneratedProject(), target);
@@ -2439,7 +2581,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
-    assertEquals(target.getProductType(), ProductType.UNIT_TEST);
+    assertEquals(target.getProductType(), ProductTypes.UNIT_TEST);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("xctest.xctest", productReference.getName());
@@ -2481,7 +2623,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:binary");
     assertHasConfigurations(target, "Debug");
-    assertEquals(target.getProductType(), ProductType.TOOL);
+    assertEquals(target.getProductType(), ProductTypes.TOOL);
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
@@ -2610,58 +2752,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleBundleRuleWithRNLibraryDependency() throws IOException {
-    BuildTarget rnLibraryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "rn_library", DEFAULT_FLAVOR);
-    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    ReactNativeBuckConfig buckConfig =
-        new ReactNativeBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of(
-                        "react-native",
-                        ImmutableMap.of("packager_worker", "react-native/packager.sh")))
-                .setFilesystem(filesystem)
-                .build());
-    TargetNode<?, ?> rnLibraryNode =
-        IosReactNativeLibraryBuilder.builder(rnLibraryTarget, buckConfig)
-            .setBundleName("Apps/Foo/FooBundle.js")
-            .setEntryPath(FakeSourcePath.of(filesystem, "js/FooApp.js"))
-            .build();
-
-    BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?, ?> sharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(sharedLibraryTarget).build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?, ?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(rnLibraryTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(rnLibraryNode, sharedLibraryNode, bundleNode));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    assertThat(target.getName(), equalTo("//foo:bundle"));
-    assertThat(target.isa(), equalTo("PBXNativeTarget"));
-
-    PBXShellScriptBuildPhase shellScriptBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXShellScriptBuildPhase.class);
-
-    assertThat(shellScriptBuildPhase.getShellScript(), startsWith("BASE_DIR="));
-  }
-
-  @Test
   public void testAppleBundleRuleForSharedLibraryFramework() throws IOException {
     BuildTarget sharedLibraryTarget =
         BuildTargetFactory.newInstance(
@@ -2686,7 +2776,7 @@ public class ProjectGeneratorTest {
 
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    assertEquals(target.getProductType(), ProductType.FRAMEWORK);
+    assertEquals(target.getProductType(), ProductTypes.FRAMEWORK);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("bundle.framework", productReference.getName());
@@ -2926,7 +3016,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(target.getProductType(), ProductType.APPLICATION);
+    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
 
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
@@ -3031,7 +3121,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/libshared.dylib"));
@@ -3090,7 +3180,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
@@ -3160,7 +3250,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
@@ -3187,7 +3277,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
     assertEquals("Should have exact number of build phases ", 0, target.getBuildPhases().size());
   }
 
@@ -3825,13 +3915,104 @@ public class ProjectGeneratorTest {
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getProductType(), ProductType.UI_TEST);
+    assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
     assertPBXTargetHasDependency(
         projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:HostApp");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
     // Check starts with as the remainder depends on the bundle style at build time.
     assertEquals(settings.get("TEST_TARGET_NAME"), "//foo:HostApp");
+  }
+
+  @Test
+  public void uiTestUsesUiTestTargetAsTargetWithBothUiTestTargetAndTestHostPresent()
+      throws IOException {
+    BuildTarget hostAppBinaryTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    TargetNode<?, ?> hostAppBinaryNode =
+        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
+
+    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
+    TargetNode<?, ?> hostAppNode =
+        AppleBundleBuilder.createBuilder(hostAppTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    BuildTarget uiTestTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "uiTestTarget");
+    TargetNode<?, ?> uiTargetAppNode =
+        AppleBundleBuilder.createBuilder(uiTestTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setTestHostApp(Optional.of(hostAppTarget))
+            .setUiTestTargetApp(Optional.of(uiTestTarget))
+            .isUiTest(true)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(hostAppBinaryNode, hostAppNode, uiTargetAppNode, testNode),
+            ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+    assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
+    assertPBXTargetHasDependency(
+        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
+    // Check starts with as the remainder depends on the bundle style at build time.
+    assertEquals(settings.get("TEST_TARGET_NAME"), "//foo:uiTestTarget");
+  }
+
+  @Test
+  public void uiTestUsesUiTestTargetAsTargetWithOnlyUiTestTarget() throws IOException {
+    BuildTarget hostAppBinaryTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
+    TargetNode<?, ?> hostAppBinaryNode =
+        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
+
+    BuildTarget uiTestTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "uiTestTarget");
+    TargetNode<?, ?> uiTargetAppNode =
+        AppleBundleBuilder.createBuilder(uiTestTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(hostAppBinaryTarget)
+            .build();
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setUiTestTargetApp(Optional.of(uiTestTarget))
+            .isUiTest(true)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(hostAppBinaryNode, uiTargetAppNode, testNode), ImmutableSet.of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget testPBXTarget =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+    assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
+    assertPBXTargetHasDependency(
+        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
+    // Check starts with as the remainder depends on the bundle style at build time.
+    assertEquals(settings.get("TEST_TARGET_NAME"), "//foo:uiTestTarget");
   }
 
   @Test
@@ -4220,7 +4401,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(
             projectGenerator.getGeneratedProject(), "//foo:framework_1#default,shared");
-    assertEquals(target.getProductType(), ProductType.FRAMEWORK);
+    assertEquals(target.getProductType(), ProductTypes.FRAMEWORK);
     for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
       if (buildPhase instanceof PBXCopyFilesBuildPhase) {
         PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
@@ -4319,7 +4500,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bundle");
-    assertEquals(target.getProductType(), ProductType.APPLICATION);
+    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
     assertThat(target.getBuildPhases().size(), Matchers.equalTo(1));
 
     PBXBuildPhase buildPhase = target.getBuildPhases().get(0);
@@ -4404,7 +4585,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(
             projectGenerator.getGeneratedProject(), bundleTarget.getFullyQualifiedName());
-    assertEquals(target.getProductType(), ProductType.APPLICATION);
+    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
     for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
       assertFalse(buildPhase instanceof PBXCopyFilesBuildPhase);
     }
@@ -4508,6 +4689,63 @@ public class ProjectGeneratorTest {
         buildSettings.get("DERIVED_FILE_DIR"));
     assertThat(
         buildSettings.get("SWIFT_INCLUDE_PATHS"), equalTo("$(inherited) $BUILT_PRODUCTS_DIR"));
+  }
+
+  @Test
+  public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibraryWithModuleName()
+      throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "BarWithSuffix");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .setModuleName("Bar")
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(node));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:BarWithSuffix");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+
+    assertThat(buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo("Bar-Swift.h"));
+    assertThat(buildSettings.get("PRODUCT_MODULE_NAME"), equalTo("Bar"));
+  }
+
+  @Test
+  public void testGeneratedProjectSettingForSwiftWholeModuleOptimizationForAppleLibrary()
+      throws IOException {
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "swift",
+            ImmutableMap.of(
+                "version", "3.0",
+                "project_wmo", "true"));
+
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    swiftBuckConfig = new SwiftBuckConfig(buckConfig);
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "Bar");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(node));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+
+    assertThat(buildSettings.get("COMPILER_INDEX_STORE_ENABLE"), equalTo("NO"));
+    assertThat(buildSettings.get("SWIFT_WHOLE_MODULE_OPTIMIZATION"), equalTo("YES"));
   }
 
   @Test
@@ -4638,6 +4876,134 @@ public class ProjectGeneratorTest {
                 })
             .toSet();
     assertThat(fakeDepPhases.size(), equalTo(1));
+
+    ImmutableMap<String, String> buildSettings =
+        getBuildSettings(barBuildTarget, pbxTarget, "Debug");
+    assertThat(buildSettings.get("DEPLOYMENT_POSTPROCESSING"), equalTo("NO"));
+  }
+
+  @Test
+  public void testSwiftRuntimeIsEmbeddedInBinary() throws IOException {
+    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    BuildTarget testLibTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "testlib");
+    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
+
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    TargetNode<?, ?> testLibNode =
+        AppleLibraryBuilder.createBuilder(testLibTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Bar.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    TargetNode<?, ?> binaryNode =
+        AppleBinaryBuilder.createBuilder(binaryTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
+            .setDeps(ImmutableSortedSet.of(libTarget))
+            .build();
+
+    TargetNode<?, ?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(binaryTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setTests(ImmutableSortedSet.of(testTarget))
+            .build();
+
+    TargetNode<?, ?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setDeps(ImmutableSortedSet.of(bundleTarget, testLibTarget))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(libNode, binaryNode, bundleNode, testNode, testLibNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
+    ImmutableMap<String, String> testBuildSettings =
+        getBuildSettings(testTarget, testPBXTarget, "Debug");
+
+    PBXTarget bundlePBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
+    ImmutableMap<String, String> bundleBuildSettings =
+        getBuildSettings(bundleTarget, bundlePBXTarget, "Debug");
+
+    assertThat(testBuildSettings.get("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES"), equalTo("YES"));
+    assertThat(bundleBuildSettings.get("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES"), equalTo("YES"));
+  }
+
+  @Test
+  public void testSwiftAddASTPathsLinkerFlags() throws IOException {
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "swift",
+            ImmutableMap.of(
+                "version", "3.0",
+                "project_add_ast_paths", "true"));
+
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    swiftBuckConfig = new SwiftBuckConfig(buckConfig);
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    TargetNode<?, ?> binaryNode =
+        AppleBinaryBuilder.createBuilder(binaryTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
+            .setDeps(ImmutableSortedSet.of(libTarget))
+            .build();
+
+    TargetNode<?, ?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(binaryTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(libNode, binaryNode, bundleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget bundlePBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
+    ImmutableMap<String, String> bundleBuildSettings =
+        getBuildSettings(bundleTarget, bundlePBXTarget, "Debug");
+
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/lib.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
   }
 
   @Test
@@ -4698,15 +5064,18 @@ public class ProjectGeneratorTest {
             PROJECT_NAME,
             "BUCK",
             ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
+            TestRuleKeyConfigurationFactory.create(),
             false, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
             FocusedModuleTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             getBuildRuleResolverNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
 
     projectGeneratorLib2.createXcodeProjects();
@@ -4726,8 +5095,7 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + "../buck-out/gen/_p/YAYFR3hXIb-priv/.hmap "
-            + "../buck-out/gen/_p/pub-hmap/.hmap "
-            + "../buck-out",
+            + "../buck-out/gen/_p/pub-hmap/.hmap",
         buildSettings2.get("HEADER_SEARCH_PATHS"));
 
     ProjectGenerator projectGeneratorLib1 =
@@ -4741,15 +5109,18 @@ public class ProjectGeneratorTest {
             PROJECT_NAME,
             "BUCK",
             ImmutableSet.of(ProjectGenerator.Option.MERGE_HEADER_MAPS),
+            TestRuleKeyConfigurationFactory.create(),
             true, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
             FocusedModuleTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
+            ImmutableSet.of(),
             getBuildRuleResolverNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
+            appleConfig,
             swiftBuckConfig);
 
     projectGeneratorLib1.createXcodeProjects();
@@ -4779,8 +5150,7 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap "
-            + "../buck-out/gen/_p/pub-hmap/.hmap "
-            + "../buck-out",
+            + "../buck-out/gen/_p/pub-hmap/.hmap",
         buildSettings1.get("HEADER_SEARCH_PATHS"));
 
     // For //foo:test
@@ -4795,8 +5165,7 @@ public class ProjectGeneratorTest {
         "$(inherited) "
             + "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap "
             + "../buck-out/gen/_p/pub-hmap/.hmap "
-            + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap "
-            + "../buck-out",
+            + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap",
         buildSettingsTest.get("HEADER_SEARCH_PATHS"));
   }
 
@@ -4809,11 +5178,21 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
+    return createProjectGeneratorForCombinedProject(
+        allNodes, initialTargetNodes, projectGeneratorOptions, ImmutableSet.of());
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      Collection<TargetNode<?, ?>> allNodes,
+      Collection<TargetNode<?, ?>> initialTargetNodes,
+      ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
+      ImmutableSet<String> appleCxxFlavors) {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
         allNodes,
         initialTargetNodes,
         projectGeneratorOptions,
+        appleCxxFlavors,
         getBuildRuleResolverNodeFunction(targetGraph));
   }
 
@@ -4822,7 +5201,11 @@ public class ProjectGeneratorTest {
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
-        allNodes, allNodes, projectGeneratorOptions, getBuildRuleResolverNodeFunction(targetGraph));
+        allNodes,
+        allNodes,
+        projectGeneratorOptions,
+        ImmutableSet.of(),
+        getBuildRuleResolverNodeFunction(targetGraph));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
@@ -4830,19 +5213,20 @@ public class ProjectGeneratorTest {
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
     return createProjectGeneratorForCombinedProject(
-        allNodes, allNodes, projectGeneratorOptions, buildRuleResolverForNode);
+        allNodes, allNodes, projectGeneratorOptions, ImmutableSet.of(), buildRuleResolverForNode);
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
+      ImmutableSet<String> appleCxxFlavors,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets =
         initialTargetNodes
             .stream()
             .map(TargetNode::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
@@ -4857,15 +5241,18 @@ public class ProjectGeneratorTest {
         PROJECT_NAME,
         "BUCK",
         projectGeneratorOptions,
+        TestRuleKeyConfigurationFactory.create(),
         false,
         Optional.empty(),
         ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),
         DEFAULT_PLATFORM,
+        appleCxxFlavors,
         buildRuleResolverForNode,
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
+        appleConfig,
         swiftBuckConfig);
   }
 

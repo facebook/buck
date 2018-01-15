@@ -36,6 +36,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.json.HasJsonField;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -49,6 +50,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -228,7 +230,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // Run `buck build`.
     ProcessResult buildResult =
         workspace.runBuckCommand("build", "//:raz", "-b", "FIRST_ORDER_ONLY");
-    buildResult.assertFailure("Build should have failed.");
+    buildResult.assertSpecialExitCode("invalid option -b", ExitCode.COMMANDLINE_ERROR);
 
     workspace.verify();
   }
@@ -275,17 +277,19 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     Path utilRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/RULE_KEY");
+        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/build/RULE_KEY");
     String utilRuleKey = getContents(utilRuleKeyPath);
     Path utilAbiRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, utilTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+        BuildTargets.getScratchPath(
+            filesystem, utilTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
     String utilAbiRuleKey = getContents(utilAbiRuleKeyPath);
 
     Path bizRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/RULE_KEY");
+        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/build/RULE_KEY");
     String bizRuleKey = getContents(bizRuleKeyPath);
     Path bizAbiRuleKeyPath =
-        BuildTargets.getScratchPath(filesystem, bizTarget, ".%s/metadata/INPUT_BASED_RULE_KEY");
+        BuildTargets.getScratchPath(
+            filesystem, bizTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
     String bizAbiRuleKey = getContents(bizAbiRuleKeyPath);
 
     Path utilOutputPath =
@@ -754,8 +758,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     workspace.runBuckBuild("//:binary").assertSuccess("Successful build should exit with 0.");
 
-    workspace.replaceFileContents("BUCK", "provided_deps = [ ':junit' ],", "");
-    workspace.replaceFileContents("BUCK", "deps = [ ':guava' ]", "deps = [ ':guava', ':junit' ]");
+    workspace.replaceFileContents("BUCK", "provided_deps = [\":junit\"],", "");
+    workspace.replaceFileContents("BUCK", "deps = [\":guava\"]", "deps = [ ':guava', ':junit' ]");
     workspace.resetBuildLogFile();
 
     workspace.runBuckBuild("//:binary").assertSuccess();
@@ -961,6 +965,26 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void parseErrorsShouldBeReportedGracefullyWithSourceOnlyAbi() throws IOException {
+    setUpProjectWorkspaceForScenario("parse_errors");
+
+    ProcessResult result =
+        workspace.runBuckBuild(
+            "-c", "java.abi_generation_mode=source_only", "//:errors#source-only-abi");
+    assertThat(result.getStderr(), Matchers.stringContainsInOrder("illegal start of expression"));
+  }
+
+  @Test
+  public void missingDepsShouldNotCrashSourceOnlyVerifier() throws IOException {
+    setUpProjectWorkspaceForScenario("missing_deps");
+
+    ProcessResult result =
+        workspace.runBuckBuild("-c", "java.abi_generation_mode=source_only", "//:errors");
+    result.assertFailure();
+    assertThat(result.getStderr(), Matchers.not(Matchers.stringContainsInOrder("Exception")));
+  }
+
+  @Test
   public void badImportsShouldNotCrashBuck() throws IOException {
     setUpProjectWorkspaceForScenario("import_errors");
 
@@ -976,12 +1000,15 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("ap_crashes");
 
     ProcessResult result = workspace.runBuckBuild("//:main");
-    // TODO(cjhopman): These shouldn't be reported as internal errors.
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "Buck encountered an internal error",
-            "java.lang.RuntimeException: Test crash!",
+            "Build failed:",
+            "The annotation processor com.example.buck.AnnotationProcessor has crashed.",
+            "java.lang.RuntimeException: java.lang.IllegalArgumentException: Test crash!   |\n|  at com.example.buck.AnnotationProcessor.process(AnnotationProcessor.java:22) |\n|  ...", // Buck frames have been stripped properly
+            "Caused by: java.lang.IllegalArgumentException: Test crash!", // Without then stripping
+            // out the caused
+            // exception!
             "    When running <javac>.",
             "    When building rule //:main."));
   }

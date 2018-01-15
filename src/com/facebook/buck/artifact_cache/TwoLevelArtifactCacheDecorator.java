@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.SamplingCounter;
@@ -27,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +39,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -155,10 +159,19 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 LOG.verbose(
                     "Found a second-level artifact with metadata: %s",
                     outputFileFetchResult.getMetadata());
-                // Note: in the case of a hit, we return fetchResult, rather than outputFileFetchResult,
+                // Note: in the case of a hit, we return fetchResult, rather than
+                // outputFileFetchResult,
                 // so that the client gets the correct metadata.
-
                 CacheResult finalResult = fetchResult.withTwoLevelContentHashKey(contentHashKey);
+
+                // The two level content hash was not part of the original metadata that was stored
+                // to the cache, don't include it in the result.
+                finalResult =
+                    finalResult.withMetadata(
+                        ImmutableMap.copyOf(
+                            RichStream.from(finalResult.getMetadata().entrySet())
+                                .filter(e -> !Objects.equals(e.getKey(), METADATA_KEY))
+                                .toOnceIterable()));
                 return Futures.immediateFuture(finalResult);
               },
               MoreExecutors.directExecutor());
@@ -177,6 +190,22 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
           }
           return delegate.store(info, output);
         });
+  }
+
+  /**
+   * Contains is supposed to be best-effort, but super-fast => Assume the second level is present.
+   */
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    return delegate.multiContainsAsync(ruleKeys);
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    // Artifact can be stored as two-level entry (rule key -> hash -> content)
+    // and delete operation only deletes first level (rule key -> hash) in that case.
+    return delegate.deleteAsync(ruleKeys);
   }
 
   @Override

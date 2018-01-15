@@ -1,0 +1,39 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "standard_java_test")
+
+java_immutables_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/util/timing:timing",
+    ],
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+standard_java_test(
+    name = "timing",
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

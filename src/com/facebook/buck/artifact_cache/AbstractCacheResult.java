@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractCacheResult {
 
@@ -99,7 +100,9 @@ abstract class AbstractCacheResult {
 
   public String getCacheSource() {
     Preconditions.checkState(
-        getType() == CacheResultType.HIT || getType() == CacheResultType.ERROR);
+        getType() == CacheResultType.HIT
+            || getType() == CacheResultType.ERROR
+            || getType() == CacheResultType.CONTAINS);
     return cacheSource().get();
   }
 
@@ -176,6 +179,17 @@ abstract class AbstractCacheResult {
     return IGNORED_RESULT;
   }
 
+  public static CacheResult contains(String cacheSource, ArtifactCacheMode cacheMode) {
+    return CacheResult.of(
+        CacheResultType.CONTAINS,
+        Optional.of(cacheSource),
+        Optional.of(cacheMode),
+        Optional.empty(),
+        Optional.of(ImmutableMap.of()),
+        Optional.empty(),
+        Optional.empty());
+  }
+
   public static CacheResult localKeyUnchangedHit() {
     return LOCAL_KEY_UNCHANGED_HIT_RESULT;
   }
@@ -212,7 +226,9 @@ abstract class AbstractCacheResult {
   protected void check() {
     Preconditions.checkState(
         cacheSource().isPresent()
-            || (getType() != CacheResultType.HIT && getType() != CacheResultType.ERROR));
+            || (getType() != CacheResultType.HIT
+                && getType() != CacheResultType.ERROR
+                && getType() != CacheResultType.CONTAINS));
     Preconditions.checkState(cacheError().isPresent() || getType() != CacheResultType.ERROR);
   }
 }

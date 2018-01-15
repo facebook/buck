@@ -16,9 +16,10 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_INDENTATION;
+import static com.facebook.buck.android.WriteAppModuleMetadataStep.ITEM_INDENTATION;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_SECTION_HEADER;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.MODULE_INDENTATION;
+import static com.facebook.buck.android.WriteAppModuleMetadataStep.DEPS_SECTION_HEADER;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -34,6 +35,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest {
+  private static final String EOL = System.lineSeparator();
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -58,29 +60,18 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER
-            + System.lineSeparator()
-            + MODULE_INDENTATION
-            + "dex"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/Sample"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/Sample2"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/Sample3"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/sample/app/MyApplication"
-            + System.lineSeparator()
-            + MODULE_INDENTATION
-            + "small_with_no_resource_deps"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/Small"
-            + System.lineSeparator();
+        CLASS_SECTION_HEADER + EOL
+            + MODULE_INDENTATION + "dex" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/Sample" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/Sample2" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/Sample3" + EOL
+                + ITEM_INDENTATION + "com/sample/app/MyApplication" + EOL
+            + MODULE_INDENTATION + "small_with_no_resource_deps" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/Small" + EOL
+            + DEPS_SECTION_HEADER + EOL
+                + MODULE_INDENTATION + "dex" + EOL
+                + MODULE_INDENTATION + "small_with_no_resource_deps" + EOL
+                    + ITEM_INDENTATION + "dex" + EOL;
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
@@ -91,32 +82,19 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata-inner-class";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER
-            + System.lineSeparator()
-            + MODULE_INDENTATION
-            + "dex"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/Sample"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/Sample2"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/Sample3"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/sample/app/MyApplication"
-            + System.lineSeparator()
-            + MODULE_INDENTATION
-            + "small_inner_class_with_no_resource_deps"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/SmallWithInnerClass"
-            + System.lineSeparator()
-            + CLASS_INDENTATION
-            + "com/facebook/sample/SmallWithInnerClass$Inner"
-            + System.lineSeparator();
+        CLASS_SECTION_HEADER + EOL
+            + MODULE_INDENTATION + "dex" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/Sample" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/Sample2" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/Sample3" + EOL
+                + ITEM_INDENTATION + "com/sample/app/MyApplication" + EOL
+            + MODULE_INDENTATION + "small_inner_class_with_no_resource_deps" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/SmallWithInnerClass" + EOL
+                + ITEM_INDENTATION + "com/facebook/sample/SmallWithInnerClass$Inner" + EOL
+            + DEPS_SECTION_HEADER + EOL
+                + MODULE_INDENTATION + "dex" + EOL
+                + MODULE_INDENTATION + "small_inner_class_with_no_resource_deps" + EOL
+                    + ITEM_INDENTATION + "dex" + EOL;
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);

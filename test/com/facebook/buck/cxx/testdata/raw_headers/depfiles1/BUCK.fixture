@@ -1,10 +1,10 @@
 cxx_library(
-  name = 'test',
-  raw_headers = [
-    'used.h',
-    'unused.h',
-  ],
-  srcs = [
-    'test.cpp',
-  ],
+    name = "test",
+    srcs = [
+        "test.cpp",
+    ],
+    raw_headers = [
+        "used.h",
+        "unused.h",
+    ],
 )

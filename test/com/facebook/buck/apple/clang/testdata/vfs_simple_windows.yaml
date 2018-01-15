@@ -1,0 +1,13 @@
+{
+  "version" : 0,
+  "case-sensitive" : false,
+  "roots" : [ {
+    "type" : "directory",
+    "name" : "C:\\virtual\\path",
+    "contents" : [ {
+      "type" : "file",
+      "name" : "module.modulemap",
+      "external-contents" : "C:\\real\\path\\overlayed.modulemap"
+    } ]
+  } ]
+}

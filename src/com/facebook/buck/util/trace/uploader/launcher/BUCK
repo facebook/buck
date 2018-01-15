@@ -1,0 +1,11 @@
+java_library(
+    name = "launcher",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/util/env:env",
+        "//third-party/java/guava:guava",
+    ],
+)

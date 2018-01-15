@@ -30,7 +30,8 @@
         <sourceOutputDir name="build-ij/immutables" />
         <sourceTestOutputDir name="build-ij/immutables-test" />
         <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
+        <option name="pf4j.storageClassName" value="org.pf4j.processor.ServiceProviderExtensionStorage" />
+        <processorPath>
           <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.5.6.jar" />
         </processorPath>
       </profile>

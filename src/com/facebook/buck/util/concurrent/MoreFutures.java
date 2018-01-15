@@ -32,6 +32,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class MoreFutures {
 
@@ -175,5 +176,23 @@ public class MoreFutures {
       Throwables.throwIfUnchecked(e.getCause());
       throw new RuntimeException(e.getCause());
     }
+  }
+
+  /**
+   * @return a {@link FutureCallback} which executes the given {@link Runnable} on both success and
+   *     error.
+   */
+  public static <V> FutureCallback<V> finallyCallback(Runnable runnable) {
+    return new FutureCallback<V>() {
+      @Override
+      public void onSuccess(@Nullable V result) {
+        runnable.run();
+      }
+
+      @Override
+      public void onFailure(@Nonnull Throwable t) {
+        runnable.run();
+      }
+    };
   }
 }

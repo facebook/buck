@@ -20,37 +20,41 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
@@ -61,6 +65,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
+import org.pf4j.PluginManager;
 
 /** Unit test for {@link CleanCommand}. */
 public class CleanCommandTest extends EasyMockSupport {
@@ -87,8 +92,8 @@ public class CleanCommandTest extends EasyMockSupport {
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
 
     // Simulate `buck clean`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
@@ -108,8 +113,8 @@ public class CleanCommandTest extends EasyMockSupport {
     assertTrue(projectFilesystem.exists(additionalPath));
 
     // Simulate `buck clean --project`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(additionalPath));
   }
@@ -133,43 +138,44 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell)
       throws InterruptedException, IOException {
-    Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-        AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ProcessExecutor processExecutor = new FakeProcessExecutor();
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
-    return CommandRunnerParams.builder()
-        .setConsole(new TestConsole())
-        .setBuildInfoStoreManager(new BuildInfoStoreManager())
-        .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
-        .setCell(cell)
-        .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
-        .setBuckEventBus(BuckEventBusForTests.newInstance())
-        .setTypeCoercerFactory(createMock(TypeCoercerFactory.class))
-        .setParser(createMock(Parser.class))
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setClock(new DefaultClock())
-        .setProcessManager(Optional.empty())
-        .setWebServer(Optional.empty())
-        .setBuckConfig(buckConfig)
-        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
-        .setExecutors(ImmutableMap.of())
-        .setScheduledExecutor(new FakeExecutor())
-        .setBuildEnvironmentDescription(CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)
-        .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
-        .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
-        .setActionGraphCache(new ActionGraphCache())
-        .setKnownBuildRuleTypesFactory(
-            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider))
-        .setSdkEnvironment(sdkEnvironment)
-        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setToolchainProvider(toolchainProvider)
-        .build();
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
+    return CommandRunnerParams.of(
+        new TestConsole(),
+        new ByteArrayInputStream("".getBytes("UTF-8")),
+        cell,
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker()),
+        new SingletonArtifactCacheFactory(new NoopArtifactCache()),
+        createMock(TypeCoercerFactory.class),
+        createMock(Parser.class),
+        BuckEventBusForTests.newInstance(),
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder(),
+        new DefaultClock(),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        buckConfig,
+        new StackedFileHashCache(ImmutableList.of()),
+        ImmutableMap.of(),
+        new FakeExecutor(),
+        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())),
+        new BuildInfoStoreManager(),
+        Optional.empty(),
+        Optional.empty(),
+        new DefaultProjectFilesystemFactory(),
+        TestRuleKeyConfigurationFactory.create(),
+        processExecutor,
+        new ExecutableFinder(),
+        pluginManager);
   }
 }

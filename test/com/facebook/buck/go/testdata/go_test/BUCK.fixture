@@ -1,60 +1,63 @@
 go_library(
-  name = 'base',
-  srcs = ['base.go'],
-  package_name = 'buck_base',
+    name = "base",
+    package_name = "buck_base",
+    srcs = ["base.go"],
 )
 
 go_library(
-  name = 'lib',
-  srcs = ['lib.go'],
-  deps = [':base'],
-  package_name = 'lib',
-  tests = [
-    ':test-success',
-    ':test-success-internal',
-    # test-success-bad isn't here to test for the requirement that it should be here.
-    ':test-failure'
-  ]
+    name = "lib",
+    package_name = "lib",
+    srcs = ["lib.go"],
+    tests = [
+        ":test-success",
+        ":test-success-internal",
+        # test-success-bad isn't here to test for the requirement that it should be here.
+        ":test-failure",
+    ],
+    deps = [":base"],
 )
 
 go_test(
-  name = 'test-success',
-  srcs = ['lib.go', 'lib_test.go'],
-  deps = [':base'],
-  package_name = 'lib',
+    name = "test-success",
+    package_name = "lib",
+    srcs = [
+        "lib.go",
+        "lib_test.go",
+    ],
+    deps = [":base"],
 )
 
 go_test(
-  name='test-success-internal',
-  srcs = ['lib_test.go'],
-  library = ':lib'
+    name = "test-success-internal",
+    srcs = ["lib_test.go"],
+    library = ":lib",
 )
 
 go_test(
-  name='test-success-bad',
-  srcs = ['lib_test.go'],
-  library = ':lib'
+    name = "test-success-bad",
+    srcs = ["lib_test.go"],
+    library = ":lib",
 )
 
 go_test(
-  name = 'test-failure',
-  srcs = ['bad_test.go'],
-  deps = [':lib'],
+    name = "test-failure",
+    srcs = ["bad_test.go"],
+    deps = [":lib"],
 )
 
 go_test(
-  name = 'test-panic',
-  srcs = ['panic_test.go'],
+    name = "test-panic",
+    srcs = ["panic_test.go"],
 )
 
 go_test(
-  name = 'test-with-resources',
-  srcs = ['test_with_resources.go'],
-  resources = ['testdata/input'],
+    name = "test-with-resources",
+    srcs = ["test_with_resources.go"],
+    resources = ["testdata/input"],
 )
 
 go_test(
-  name = 'test-spinning',
-  srcs = ['test_spinning.go'],
-  test_rule_timeout_ms = 500,
+    name = "test-spinning",
+    srcs = ["test_spinning.go"],
+    test_rule_timeout_ms = 500,
 )

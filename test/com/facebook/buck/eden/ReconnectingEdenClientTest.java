@@ -19,7 +19,7 @@ package com.facebook.buck.eden;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.SHA1Result;

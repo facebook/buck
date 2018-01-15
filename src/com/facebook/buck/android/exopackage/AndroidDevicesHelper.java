@@ -17,10 +17,11 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.HasInstallableApk;
-import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import java.io.Closeable;
 import java.io.IOException;
 import javax.annotation.Nullable;
 
@@ -32,7 +33,7 @@ import javax.annotation.Nullable;
  * AndroidDevice making it easy to provide different implementations in tests.
  */
 @VisibleForTesting
-public interface AndroidDevicesHelper {
+public interface AndroidDevicesHelper extends Closeable {
   /**
    * This is basically the same as AdbHelper.AdbCallable except that it takes an AndroidDevice
    * instead of an IDevice.
@@ -40,6 +41,14 @@ public interface AndroidDevicesHelper {
   interface AdbDeviceCallable {
 
     boolean apply(AndroidDevice device) throws Exception;
+  }
+
+  /** A simple wrapper around adbCall that will throw if adbCall returns false. */
+  default void adbCallOrThrow(String description, AdbDeviceCallable func, boolean quiet)
+      throws InterruptedException {
+    if (!adbCall(description, func, quiet)) {
+      throw new HumanReadableException(String.format("Error when running: <%s>", description));
+    }
   }
 
   boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
@@ -75,8 +84,7 @@ public interface AndroidDevicesHelper {
   boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
       throws InterruptedException;
 
-  @SuppressForbidden
-  int startActivity(
+  void startActivity(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,

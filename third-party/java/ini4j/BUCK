@@ -5,7 +5,7 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//src/com/facebook/buck/intellij/ideabuck:ideabuck-lib",
+        "//tools/ideabuck:ideabuck-lib",
         "//src/com/facebook/buck/util/config:config",
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util:util",

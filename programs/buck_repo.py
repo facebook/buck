@@ -1,19 +1,19 @@
 from __future__ import print_function
+import json
 import logging
 import os
+import os.path
 import sys
-import textwrap
 
 from tracing import Tracing
-from buck_tool import BuckTool, JAVA_MAX_HEAP_SIZE_MB, platform_path
-from buck_tool import BuckToolException
-from subprocutils import check_output, which
-import buck_version
+from buck_tool import BuckTool, platform_path
+from subprocutils import which
 
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
 
 RESOURCES = {
     "android_agent_path": "assets/android/agent.apk",
+    "fix_script": "programs/fixes/source_only_abi/autofix_source_only_abi_warnings.py",
     "buck_server": "bin/buck",
     "buck_build_type_info": "config/build_type/LOCAL_ANT/type.txt",
     "dx": "third-party/java/dx/etc/dx",
@@ -21,9 +21,6 @@ RESOURCES = {
     "libjcocoa.dylib": "third-party/java/ObjCBridge/libjcocoa.dylib",
     "logging_config_file": "config/logging.properties.st",
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
-    "path_to_asm_jar": "third-party/java/asm/asm-debug-all-6.0_BETA.jar",
-    "path_to_rawmanifest_py": "src/com/facebook/buck/util/versioncontrol/rawmanifest.py",
-    "path_to_intellij_py": "src/com/facebook/buck/ide/intellij/deprecated/intellij.py",
     "path_to_pex": "src/com/facebook/buck/python/make_pex.py",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "report_generator_jar": "build/report-generator.jar",
@@ -36,13 +33,16 @@ RESOURCES = {
     "path_to_python_dsl": "python-dsl",
 }
 
+BUCK_BINARY_HASH_LOCATION = os.path.join("build", "classes", "META-INF", "buck-binary-hash.txt")
+BUCK_INFO_LOCATION = os.path.join("build", "buck-info.json")
+
 
 class BuckRepo(BuckTool):
 
-    def __init__(self, buck_bin_dir, buck_project):
-        super(BuckRepo, self).__init__(buck_project)
-
+    def __init__(self, buck_bin_dir, buck_project, buck_reporter):
         self.buck_dir = platform_path(os.path.dirname(buck_bin_dir))
+
+        super(BuckRepo, self).__init__(buck_project, buck_reporter)
 
         dot_git = os.path.join(self.buck_dir, '.git')
         self.is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
@@ -60,27 +60,15 @@ class BuckRepo(BuckTool):
                     logging.info("Using fake buck version (via .fakebuckversion): {}".format(
                         self._fake_buck_version))
 
+    def _get_package_info(self):
+        return json.loads(self.__read_file(BUCK_INFO_LOCATION))
+
+    def __read_file(self, filename):
+        with open(os.path.join(self.buck_dir, filename)) as file:
+            return file.read().strip()
+
     def _join_buck_dir(self, relative_path):
         return os.path.join(self.buck_dir, *(relative_path.split('/')))
-
-    def _has_local_changes(self):
-        if not self.is_git:
-            return False
-
-        output = check_output(
-            ['git', 'ls-files', '-m'],
-            cwd=self.buck_dir)
-        return bool(output.strip())
-
-    def get_git_revision(self):
-        if not self.is_git:
-            return 'N/A'
-        return buck_version.get_git_revision(self.buck_dir)
-
-    def _get_git_commit_timestamp(self):
-        if self._is_buck_repo_dirty_override or not self.is_git:
-            return -1
-        return buck_version.get_git_revision_timestamp(self.buck_dir)
 
     def _get_resource_lock_path(self):
         return None
@@ -91,40 +79,24 @@ class BuckRepo(BuckTool):
     def _get_resource(self, resource, exe=False):
         return self._join_buck_dir(RESOURCES[resource.name])
 
-    def _get_buck_version_timestamp(self):
-        return self._get_git_commit_timestamp()
+    def _get_buck_git_commit(self):
+        return self._get_buck_version_uid()
 
-    def _get_buck_version_uid(self):
-        with Tracing('BuckRepo._get_buck_version_uid'):
-            if self._fake_buck_version:
-                return self._fake_buck_version
-
-            # First try to get the "clean" buck version.  If it succeeds,
-            # return it.
-            clean_version = buck_version.get_clean_buck_version(
-                self.buck_dir,
-                allow_dirty=self._is_buck_repo_dirty_override == "1")
-            if clean_version is not None:
-                return clean_version
-
-            return buck_version.get_dirty_buck_version(self.buck_dir)
-
-    def _is_buck_production(self):
-        return False
+    def _get_buck_repo_dirty(self):
+        return self._is_buck_repo_dirty_override == "1" or self._package_info['is_dirty']
 
     def _get_extra_java_args(self):
         with Tracing('BuckRepo._get_extra_java_args'):
             return [
-                "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
-                "-Dbuck.git_commit_timestamp={0}".format(
-                    self._get_git_commit_timestamp()),
-                "-Dbuck.git_dirty={0}".format(
-                  int(self._is_buck_repo_dirty_override == "1" or
-                      buck_version.is_dirty(self.buck_dir))),
+                "-Dbuck.git_dirty={0}".format(int(self._get_buck_repo_dirty())),
+                "-Dpf4j.pluginsDir={0}/build/buck-modules".format(self.buck_dir),
             ]
 
     def _get_bootstrap_classpath(self):
         return self._join_buck_dir("build/bootstrapper/bootstrapper.jar")
+
+    def _unpack_modules(self):
+        pass
 
     def _get_java_classpath(self):
         classpath_file_path = os.path.join(self.buck_dir, "build", "classpath", "classpaths")
@@ -137,6 +109,8 @@ class BuckRepo(BuckTool):
                 classpath_entries.append(line)
         return self._pathsep.join([self._join_buck_dir(p) for p in classpath_entries])
 
+    def _get_buck_binary_hash(self):
+        return self.__read_file(BUCK_BINARY_HASH_LOCATION)
 
     def __enter__(self):
         return self

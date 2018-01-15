@@ -1,4 +1,4 @@
 export_file(
-    name = 'dummy',
-    src = 'empty.txt',
+    name = "dummy",
+    src = "empty.txt",
 )

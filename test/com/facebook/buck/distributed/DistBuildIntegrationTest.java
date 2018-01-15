@@ -16,18 +16,30 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildStatusResponse;
+import com.facebook.buck.distributed.thrift.FrontendRequest;
+import com.facebook.buck.distributed.thrift.FrontendRequestType;
+import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.ReportCoordinatorAliveResponse;
+import com.facebook.buck.distributed.thrift.SetFinalBuildStatusResponse;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.testutil.integration.FakeFrontendHttpServer;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class DistBuildIntegrationTest {
+
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private void runSimpleDistBuildScenario(String scenario, String targetToBuild)
@@ -49,8 +61,12 @@ public class DistBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
-    destinationWorkspace
-        .runBuckDistBuildRun("--build-state-file", stateFilePath.toString())
+    runDistBuildWithFakeFrontend(
+            destinationWorkspace,
+            "--build-state-file",
+            stateFilePath.toString(),
+            "--buildslave-run-id",
+            "sl1")
         .assertSuccess();
   }
 
@@ -83,8 +99,12 @@ public class DistBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
-    destinationWorkspace
-        .runBuckDistBuildRun("--build-state-file", stateFilePath.toString())
+    runDistBuildWithFakeFrontend(
+            destinationWorkspace,
+            "--build-state-file",
+            stateFilePath.toString(),
+            "--buildslave-run-id",
+            "sl1")
         .assertSuccess();
   }
 
@@ -117,5 +137,56 @@ public class DistBuildIntegrationTest {
             this, scenario + "/" + cellSubDir, cellPath);
     sourceWorkspace.setUp();
     return sourceWorkspace;
+  }
+
+  private static ProjectWorkspace.ProcessResult runDistBuildWithFakeFrontend(
+      ProjectWorkspace workspace, String... args) throws IOException {
+    List<String> argsList = Lists.newArrayList(args);
+    try (Server frontendServer = new Server()) {
+      argsList.add(frontendServer.getStampedeConfigArg());
+      argsList.add(frontendServer.getPingEndpointConfigArg());
+      return workspace.runBuckDistBuildRun(argsList.toArray(new String[0]));
+    }
+  }
+
+  private static class Server extends FakeFrontendHttpServer {
+
+    public Server() throws IOException {
+      super();
+    }
+
+    @Override
+    public FrontendResponse handleRequest(FrontendRequest request) {
+      switch (request.getType()) {
+        case REPORT_COORDINATOR_ALIVE:
+          return new FrontendResponse()
+              .setType(FrontendRequestType.REPORT_COORDINATOR_ALIVE)
+              .setWasSuccessful(true)
+              .setReportCoordinatorAliveResponse(new ReportCoordinatorAliveResponse());
+
+        case SET_FINAL_BUILD_STATUS:
+          return new FrontendResponse()
+              .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)
+              .setWasSuccessful(true)
+              .setSetFinalBuildStatusResponse(new SetFinalBuildStatusResponse());
+
+        case BUILD_STATUS:
+          return new FrontendResponse()
+              .setType(FrontendRequestType.BUILD_STATUS)
+              .setWasSuccessful(true)
+              .setBuildStatusResponse(
+                  new BuildStatusResponse()
+                      .setBuildJob(
+                          new BuildJob()
+                              .setBuckBuildUuid("11-22")
+                              .setStampedeId(request.getBuildStatusRequest().getStampedeId())));
+
+          // $CASES-OMITTED$
+        default:
+          Assert.fail("Unexpected request type: " + request.getType());
+          // Never gets here.
+          return new FrontendResponse();
+      }
+    }
   }
 }

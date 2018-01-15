@@ -24,6 +24,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -79,6 +80,7 @@ public class JUnitStepTest {
 
     JUnitStep junit =
         new JUnitStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             filesystem,
             /* nativeLibsEnvironment */ ImmutableMap.of(),
             /* testRuleTimeoutMs */ Optional.empty(),
@@ -146,6 +148,7 @@ public class JUnitStepTest {
 
     JUnitStep junit =
         new JUnitStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             filesystem,
             /* nativeLibsEnvironment */ ImmutableMap.of(),
             /* testRuleTimeoutMs */ Optional.empty(),
@@ -196,6 +199,7 @@ public class JUnitStepTest {
 
     JUnitStep junit =
         new JUnitStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             filesystem,
             ImmutableMap.of(),
             /* testRuleTimeoutMs */ Optional.empty(),

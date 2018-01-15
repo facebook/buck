@@ -26,7 +26,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -218,6 +218,7 @@ public class CxxLibraryIntegrationTest {
   public void testCxxLibraryWithDefaultsInFlagBuildsSomething()
       throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);

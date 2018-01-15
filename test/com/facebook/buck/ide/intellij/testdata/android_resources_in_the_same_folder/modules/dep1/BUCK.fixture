@@ -1,10 +1,10 @@
 android_resource(
     name = "dep1",
-    package = "com.test",
-    res = subdir_glob([("res", "**")]),
     assets = subdir_glob([("assets", "**")]),
-    project_res = "proj-res",
+    package = "com.test",
     project_assets = "proj-assets",
+    project_res = "proj-res",
+    res = subdir_glob([("res", "**")]),
     visibility = [
         "PUBLIC",
     ],
@@ -13,10 +13,10 @@ android_resource(
 android_library(
     name = "dep2",
     srcs = glob(["src/**/*.java"]),
-    deps = [
-        ":dep1",
-    ],
     visibility = [
         "PUBLIC",
+    ],
+    deps = [
+        ":dep1",
     ],
 )

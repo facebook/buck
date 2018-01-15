@@ -21,6 +21,7 @@ import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -45,6 +46,8 @@ import org.immutables.value.Value;
 abstract class AbstractElfCompactSectionsStep implements Step {
 
   private static final long SHF_ALLOC = 0x2L;
+
+  abstract BuildTarget getBuildTarget();
 
   abstract ImmutableList<String> getObjcopyPrefix();
 
@@ -105,6 +108,7 @@ abstract class AbstractElfCompactSectionsStep implements Step {
     ImmutableMap<String, Long> addresses = getNewSectionAddresses();
     Step objcopy =
         new DefaultShellStep(
+            getBuildTarget(),
             getOutputFilesystem().getRootPath(),
             /* args */ getObjcopyCommand(addresses),
             /* env */ ImmutableMap.of());

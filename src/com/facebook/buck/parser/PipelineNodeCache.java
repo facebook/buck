@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.parser;
 
-import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.Cell;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

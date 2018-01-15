@@ -46,7 +46,7 @@ public class DBuckConfig {
 
   /** @return a Tool representing the D compiler to be used. */
   Tool getDCompiler() {
-    return new HashedFileTool(getDCompilerPath());
+    return new HashedFileTool(delegate.getPathSourcePath(getDCompilerPath()));
   }
 
   /** @return a list of flags that must be passed to the compiler. */
@@ -74,6 +74,10 @@ public class DBuckConfig {
       builder.add("-lphobos2", "-lpthread", "-lm");
       return builder.build();
     }
+  }
+
+  public BuckConfig getDelegate() {
+    return delegate;
   }
 
   /**

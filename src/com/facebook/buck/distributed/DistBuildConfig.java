@@ -40,6 +40,11 @@ public class DistBuildConfig {
   private static final String FRONTEND_REQUEST_TIMEOUT_MILLIS = "stampede_timeout_millis";
   private static final long REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(60);
 
+  // Connection and socket timeout used by minions in ThriftCoordinatorClient
+  private static final String COORDINATOR_CONNECTION_TIMEOUT_MILLIS =
+      "coordinator_connection_timeout_millis";
+  private static final int COORDINATOR_CONNECTION_TIMEOUT_MILLIS_DEFAULT_VALUE = 2000;
+
   @VisibleForTesting
   static final String ALWAYS_MATERIALIZE_WHITELIST = "always_materialize_whitelist";
 
@@ -62,9 +67,6 @@ public class DistBuildConfig {
 
   private static final String MINION_QUEUE = "minion_queue";
 
-  private static final String MAX_BUILD_NODES_PER_MINION = "max_build_nodes_per_minion";
-  private static final int DEFAULT_MAX_BUILD_NODES_PER_MINION = 100;
-
   private static final String SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS =
       "source_file_multi_fetch_buffer_period_ms";
   private static final String SOURCE_FILE_MULTI_FETCH_MAX_BUFFER_SIZE =
@@ -73,7 +75,57 @@ public class DistBuildConfig {
   private static final String MATERIALIZE_SOURCE_FILES_ON_DEMAND =
       "materialize_source_files_on_demand";
 
+  private static final String MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS =
+      "max_wait_for_remote_logs_to_be_available_millis";
+  private static final long DEFAULT_MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS =
+      TimeUnit.MINUTES.toMillis(5);
+
+  private static final String LOG_MATERIALIZATION_ENABLED = "log_materialization_enabled";
+  private static final boolean DEFAULT_LOG_MATERIALIZATION_ENABLED = false;
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
+
+  private static final String FRONTEND_REQUEST_MAX_RETRIES = "frontend_request_max_retries";
+  private static final int DEFAULT_FRONTEND_REQUEST_MAX_RETRIES = 3;
+
+  private static final String FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS =
+      "frontend_request_retry_interval_millis";
+  private static final long DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS = 1000;
+
+  private static final String MINION_POLL_LOOP_INTERVAL_MILLIS = "minion_poll_loop_interval_millis";
+  private static final long DEFAULT_MINION_POLL_LOOP_INTERVAL_MILLIS = 10;
+
+  private static final String HEARTBEAT_SERVICE_INTERVAL_MILLIS =
+      "heartbeat_service_interval_millis";
+  private static final long DEFAULT_HEARTBEAT_SERVICE_INTERVAL_MILLIS = 10000;
+
+  // If heartbeat takes longer than slow_heartbeat_warning_threshold_millis, record this as a
+  // warning.
+  private static final String SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS =
+      "slow_heartbeat_warning_threshold_millis";
+  private static final long DEFAULT_SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS = 15000;
+
+  private static final String MAX_MINION_SILENCE_MILLIS = "max_minion_silence_millis";
+  private static final long DEFAULT_MAX_MINION_SILENCE_MILLIS = TimeUnit.SECONDS.toMillis(30);
+
+  private static final String ENABLE_DEEP_REMOTE_BUILD = "enable_deep_remote_build";
+  private static final boolean DEFAULT_ENABLE_DEEP_REMOTE_BUILD = false;
+
+  private static final String ENABLE_ASYNC_LOGGING = "enable_async_logging";
+  private static final boolean DEFAULT_ENABLE_ASYNC_LOGGING = true;
+
+  private static final String ENABLE_UPLOADS_FROM_LOCAL_CACHE = "enable_uploads_from_local_cache";
+  private static final boolean DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE = false;
+
+  // Percentage of available CPU cores to use for the coordinator build.
+  // Default this to 75% to ensure coordinator is always responsive to requests from minions
+  private static final String COORDINATOR_BUILD_CAPACITY_RATIO = "coordinator_build_capacity_ratio";
+  private static final Double DEFAULT_COORDINATOR_BUILD_CAPACITY_RATIO = 0.75;
+
+  // Percentage of available CPU cores to use for the minion builds.
+  // Default this to 90% to ensure we never timeout requests to the coordinator.
+  private static final String MINION_BUILD_CAPACITY_RATIO = "minion_build_capacity_ratio";
+  private static final Double DEFAULT_MINION_BUILD_CAPACITY_RATIO = 0.9;
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -140,6 +192,12 @@ public class DistBuildConfig {
         .orElse(REQUEST_TIMEOUT_MILLIS_DEFAULT_VALUE);
   }
 
+  public int getCoordinatorConnectionTimeoutMillis() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, COORDINATOR_CONNECTION_TIMEOUT_MILLIS)
+        .orElse(COORDINATOR_CONNECTION_TIMEOUT_MILLIS_DEFAULT_VALUE);
+  }
+
   public BuildMode getBuildMode() {
     return buckConfig
         .getEnum(STAMPEDE_SECTION, BUILD_MODE, BuildMode.class)
@@ -156,12 +214,6 @@ public class DistBuildConfig {
     return buckConfig.getValue(STAMPEDE_SECTION, MINION_QUEUE);
   }
 
-  public int getMaxBuildNodesPerMinion() {
-    return buckConfig
-        .getInteger(STAMPEDE_SECTION, MAX_BUILD_NODES_PER_MINION)
-        .orElse(DEFAULT_MAX_BUILD_NODES_PER_MINION);
-  }
-
   public String getRepository() {
     return buckConfig.getValue(STAMPEDE_SECTION, REPOSITORY).orElse(DEFAULT_REPOSITORY);
   }
@@ -174,6 +226,82 @@ public class DistBuildConfig {
     return buckConfig.getValue(STAMPEDE_SECTION, BUILD_LABEL).orElse(DEFAULT_BUILD_LABEL);
   }
 
+  public long getMaxWaitForRemoteLogsToBeAvailableMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS)
+        .orElse(DEFAULT_MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS);
+  }
+
+  public boolean getLogMaterializationEnabled() {
+    return buckConfig
+        .getBoolean(STAMPEDE_SECTION, LOG_MATERIALIZATION_ENABLED)
+        .orElse(DEFAULT_LOG_MATERIALIZATION_ENABLED);
+  }
+
+  public long getMinionPollLoopIntervalMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, MINION_POLL_LOOP_INTERVAL_MILLIS)
+        .orElse(DEFAULT_MINION_POLL_LOOP_INTERVAL_MILLIS);
+  }
+
+  public boolean isDeepRemoteBuildEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_DEEP_REMOTE_BUILD, DEFAULT_ENABLE_DEEP_REMOTE_BUILD);
+  }
+
+  public boolean isAsyncLoggingEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_ASYNC_LOGGING, DEFAULT_ENABLE_ASYNC_LOGGING);
+  }
+
+  public long getHearbeatServiceRateMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, HEARTBEAT_SERVICE_INTERVAL_MILLIS)
+        .orElse(DEFAULT_HEARTBEAT_SERVICE_INTERVAL_MILLIS);
+  }
+
+  public long getSlowHeartbeatWarningThresholdMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS)
+        .orElse(DEFAULT_SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS);
+  }
+
+  public long getMaxMinionSilenceMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, MAX_MINION_SILENCE_MILLIS)
+        .orElse(DEFAULT_MAX_MINION_SILENCE_MILLIS);
+  }
+
+  public int getFrontendRequestMaxRetries() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, FRONTEND_REQUEST_MAX_RETRIES)
+        .orElse(DEFAULT_FRONTEND_REQUEST_MAX_RETRIES);
+  }
+
+  public long getFrontendRequestRetryIntervalMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS)
+        .orElse(DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS);
+  }
+
+  /** @return Ratio of available build capacity that should be used by coordinator */
+  public double getCoordinatorBuildCapacityRatio() {
+    Optional<String> configValue =
+        buckConfig.getValue(STAMPEDE_SECTION, COORDINATOR_BUILD_CAPACITY_RATIO);
+    return configValue.isPresent()
+        ? Double.valueOf(configValue.get())
+        : DEFAULT_COORDINATOR_BUILD_CAPACITY_RATIO;
+  }
+
+  /** @return Ratio of available build capacity that should be used by minions */
+  public double getMinionBuildCapacityRatio() {
+    Optional<String> configValue =
+        buckConfig.getValue(STAMPEDE_SECTION, MINION_BUILD_CAPACITY_RATIO);
+    return configValue.isPresent()
+        ? Double.valueOf(configValue.get())
+        : DEFAULT_MINION_BUILD_CAPACITY_RATIO;
+  }
+
   /**
    * Whether buck distributed build should stop building if remote/distributed build fails (true) or
    * if it should fallback to building locally if remote/distributed build fails (false).
@@ -183,6 +311,11 @@ public class DistBuildConfig {
         STAMPEDE_SECTION,
         ENABLE_SLOW_LOCAL_BUILD_FALLBACK,
         ENABLE_SLOW_LOCAL_BUILD_FALLBACK_DEFAULT_VALUE);
+  }
+
+  public boolean isUploadFromLocalCacheEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_UPLOADS_FROM_LOCAL_CACHE, DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE);
   }
 
   public OkHttpClient createOkHttpClient() {

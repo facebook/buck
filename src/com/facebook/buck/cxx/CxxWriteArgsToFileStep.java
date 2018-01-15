@@ -24,15 +24,15 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * This step takes a list of args, stringify, escape them (if escaper is present), and finally store
@@ -52,10 +52,7 @@ class CxxWriteArgsToFileStep implements Step {
     ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
     if (escaper.isPresent()) {
       argFileContents =
-          argFileContents
-              .stream()
-              .map(escaper.get()::apply)
-              .collect(MoreCollectors.toImmutableList());
+          argFileContents.stream().map(escaper.get()).collect(ImmutableList.toImmutableList());
     }
     return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
   }
@@ -76,11 +73,11 @@ class CxxWriteArgsToFileStep implements Step {
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
         ((FileListableLinkerInputArg) arg)
-            .appendToCommandLineRel(builder, currentCellPath, pathResolver);
+            .appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
       } else if (arg instanceof SourcePathArg) {
-        ((SourcePathArg) arg).appendToCommandLineRel(builder, currentCellPath, pathResolver);
+        ((SourcePathArg) arg).appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
       } else {
-        arg.appendToCommandLine(builder, pathResolver);
+        arg.appendToCommandLine(builder::add, pathResolver);
       }
     }
     return builder.build();
@@ -93,7 +90,7 @@ class CxxWriteArgsToFileStep implements Step {
       Files.createDirectories(argFilePath.getParent());
     }
     MoreFiles.writeLinesToFile(argFileContents, argFilePath);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

@@ -16,10 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidPlatformTargetSupplier;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
@@ -29,33 +25,38 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
-import com.facebook.buck.rules.SdkEnvironment;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -85,7 +86,6 @@ public class CommandRunnerParamsForTesting {
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       Console console,
       Cell cell,
-      AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
@@ -94,53 +94,53 @@ public class CommandRunnerParamsForTesting {
       JavaPackageFinder javaPackageFinder,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ProcessExecutor processExecutor = new FakeProcessExecutor();
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(config, processExecutor, toolchainProvider);
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                processExecutor,
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
-    return CommandRunnerParams.builder()
-        .setConsole(console)
-        .setBuildInfoStoreManager(new BuildInfoStoreManager())
-        .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
-        .setCell(cell)
-        .setAndroidPlatformTargetSupplier(
-            new AndroidPlatformTargetSupplier(
-                androidDirectoryResolver,
-                new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform)))
-        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(artifactCache))
-        .setBuckEventBus(eventBus)
-        .setTypeCoercerFactory(typeCoercerFactory)
-        .setParser(
-            new Parser(
-                new BroadcastEventListener(),
-                cell.getBuckConfig().getView(ParserConfig.class),
-                typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory)))
-        .setPlatform(platform)
-        .setEnvironment(environment)
-        .setJavaPackageFinder(javaPackageFinder)
-        .setClock(new DefaultClock())
-        .setProcessManager(Optional.empty())
-        .setWebServer(webServer)
-        .setBuckConfig(config)
-        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
-        .setExecutors(
-            ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()))
-        .setScheduledExecutor(new FakeExecutor())
-        .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
-        .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
-        .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
-        .setInvocationInfo(Optional.empty())
-        .setActionGraphCache(new ActionGraphCache())
-        .setKnownBuildRuleTypesFactory(
-            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider))
-        .setSdkEnvironment(sdkEnvironment)
-        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setToolchainProvider(toolchainProvider)
-        .build();
+    return CommandRunnerParams.of(
+        console,
+        new ByteArrayInputStream("".getBytes("UTF-8")),
+        cell,
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new CacheStatsTracker()),
+        new SingletonArtifactCacheFactory(artifactCache),
+        typeCoercerFactory,
+        new Parser(
+            new BroadcastEventListener(),
+            cell.getBuckConfig().getView(ParserConfig.class),
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
+            knownBuildRuleTypesProvider),
+        eventBus,
+        platform,
+        environment,
+        javaPackageFinder,
+        new DefaultClock(),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        Optional.empty(),
+        webServer,
+        Optional.empty(),
+        config,
+        new StackedFileHashCache(ImmutableList.of()),
+        ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),
+        new FakeExecutor(),
+        BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache(config.getMaxActionGraphCacheEntries()),
+        knownBuildRuleTypesProvider,
+        new BuildInfoStoreManager(),
+        Optional.empty(),
+        Optional.empty(),
+        new DefaultProjectFilesystemFactory(),
+        TestRuleKeyConfigurationFactory.create(),
+        processExecutor,
+        new ExecutableFinder(),
+        BuckPluginManagerFactory.createPluginManager());
   }
 
   public static Builder builder() {
@@ -149,7 +149,6 @@ public class CommandRunnerParamsForTesting {
 
   public static class Builder {
 
-    private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
     private BuckConfig config = FakeBuckConfig.builder().build();
@@ -163,7 +162,6 @@ public class CommandRunnerParamsForTesting {
       return createCommandRunnerParamsForTesting(
           console,
           new TestCellBuilder().build(),
-          androidDirectoryResolver,
           artifactCache,
           eventBus,
           config,

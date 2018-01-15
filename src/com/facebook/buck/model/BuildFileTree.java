@@ -16,7 +16,7 @@
 
 package com.facebook.buck.model;
 
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
@@ -54,6 +54,6 @@ public abstract class BuildFileTree {
 
     return StreamSupport.stream(targets.spliterator(), false)
         .map(BuildTarget::getBasePath)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

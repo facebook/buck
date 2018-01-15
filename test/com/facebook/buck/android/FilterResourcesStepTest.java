@@ -28,7 +28,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -126,12 +126,12 @@ public class FilterResourcesStepTest {
         getTestPathPredicate(
             true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.of());
 
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/whitelisted/res/values-af/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-af/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/whitelisted/res/values-af/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-af/integers.xml")));
 
-    assertFalse(filePredicate.apply(Paths.get("com/example/res/values-af/strings.xml")));
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values-af/strings.xml")));
   }
 
   @Test
@@ -139,15 +139,15 @@ public class FilterResourcesStepTest {
     Predicate<Path> filePredicate =
         getTestPathPredicate(false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"));
 
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es-rUS/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es/integers.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-en/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es-rUS/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-en/integers.xml")));
 
-    assertFalse(filePredicate.apply(Paths.get("com/example/res/values-en/strings.xml")));
-    assertFalse(filePredicate.apply(Paths.get("com/example/res/values-es-rES/strings.xml")));
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values-en/strings.xml")));
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values-es-rES/strings.xml")));
   }
 
   @Test
@@ -156,14 +156,14 @@ public class FilterResourcesStepTest {
         getTestPathPredicate(
             true, ImmutableSet.of(Paths.get("com/example/res")), ImmutableSet.of("es", "es_US"));
 
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es-rUS/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es/integers.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-en/integers.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-en/strings.xml")));
-    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es-rES/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es-rUS/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-en/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-en/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es-rES/strings.xml")));
   }
 
   @Test

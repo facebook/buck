@@ -18,6 +18,8 @@ package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -225,6 +227,44 @@ public class ArtifactCachesTest {
                 MoreExecutors.newDirectExecutorService(),
                 Optional.empty())
             .newInstance();
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
+  }
+
+  @Test
+  public void testCreateRemoteCacheOnly() throws Exception {
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir, http");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .remoteOnlyInstance(false);
+    assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
+  }
+
+  @Test
+  public void testCreateLocalCacheOnly() throws Exception {
+    ArtifactCacheBuckConfig cacheConfig =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "mode = dir, http");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    ArtifactCache artifactCache =
+        new ArtifactCaches(
+                cacheConfig,
+                buckEventBus,
+                projectFilesystem,
+                Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService(),
+                Optional.empty())
+            .localOnlyInstance(false);
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
   }
 

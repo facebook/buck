@@ -24,11 +24,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -54,6 +51,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
 /**
@@ -245,7 +243,7 @@ public class VersionedTargetGraphBuilder {
             .stream()
             .map(this::getNode)
             .map(RootAction::new)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     // Add actions to the `rootActions` member for bookkeeping.
     actions.forEach(a -> rootActions.put(a.getRoot().getBuildTarget(), a));
@@ -363,7 +361,7 @@ public class VersionedTargetGraphBuilder {
       // Now that everything is ready, return all the results.
       return StreamSupport.stream(targets.spliterator(), false)
           .map(index::get)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(ImmutableList.toImmutableList());
     }
 
     public Void getChecked() throws VersionException, InterruptedException {
@@ -419,7 +417,7 @@ public class VersionedTargetGraphBuilder {
             newNode);
         for (BuildTarget depTarget :
             FluentIterable.from(node.getParseDeps())
-                .filter(Predicates.or(isVersionPropagator, isVersioned))) {
+                .filter(isVersionPropagator.or(isVersioned)::test)) {
           targetGraphBuilder.addEdge(
               newNode,
               processVersionSubGraphNode(
@@ -430,7 +428,7 @@ public class VersionedTargetGraphBuilder {
         for (TargetNode<?, ?> dep :
             process(
                 FluentIterable.from(node.getParseDeps())
-                    .filter(Predicates.not(Predicates.or(isVersionPropagator, isVersioned))))) {
+                    .filter(isVersionPropagator.or(isVersioned).negate()::test))) {
           targetGraphBuilder.addEdge(newNode, dep);
         }
       }

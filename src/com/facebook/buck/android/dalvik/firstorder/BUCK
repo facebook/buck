@@ -1,0 +1,13 @@
+java_library(
+    name = "firstorder",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/android/dalvik/firstorder:firstorder",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -24,13 +25,15 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SupportsPipelining;
+import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -38,15 +41,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.SortedSet;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 public class CalculateSourceAbi extends AbstractBuildRule
     implements CalculateAbi,
         InitializableFromDisk<Object>,
+        SupportsDependencyFileRuleKey,
         SupportsInputBasedRuleKey,
         SupportsPipelining<JavacPipelineState> {
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
+  @AddToRuleKey private final int seed = 1;
   // This will be added to the rule key by virtue of being returned from getBuildDeps.
   private final ImmutableSortedSet<BuildRule> buildDeps;
   private final JarContentsSupplier outputJarContents;
@@ -94,7 +100,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
   }
 
   @Override
-  public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public Object initializeFromDisk() throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     outputJarContents.load();
     return new Object();
@@ -107,7 +113,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public boolean useRulePipelining() {
-    return true;
+    return !HasJavaAbi.isSourceOnlyAbiTarget(getBuildTarget());
   }
 
   @Nullable
@@ -119,12 +125,34 @@ public class CalculateSourceAbi extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
-    // TODO: Save javac for later rules in pipeline
-    return getBuildSteps(context, buildableContext);
+    return jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(
+        getBuildTarget(), context, buildableContext, state);
   }
 
   @Override
   public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
     return jarBuildStepsFactory;
+  }
+
+  @Override
+  public boolean useDependencyFileRuleKeys() {
+    return jarBuildStepsFactory.useDependencyFileRuleKeys();
+  }
+
+  @Override
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver);
+  }
+
+  @Override
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+    return jarBuildStepsFactory.getExistenceOfInterestPredicate(pathResolver);
+  }
+
+  @Override
+  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+      BuildContext context, CellPathResolver cellPathResolver) throws IOException {
+    return jarBuildStepsFactory.getInputsAfterBuildingLocally(
+        context, cellPathResolver, getBuildTarget());
   }
 }

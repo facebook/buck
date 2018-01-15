@@ -20,9 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 /** Expands to the path of a build rules output. */
 public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacro> {
@@ -36,17 +38,47 @@ public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacr
   protected LocationMacro parse(
       BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
-    return LocationMacro.of(parseBuildTarget(target, cellNames, input));
+    if (input.size() != 1) {
+      throw new MacroException(String.format("expected a single argument: %s", input));
+    }
+    LocationMacro.SplitResult parts = LocationMacro.splitSupplementaryOutputPart(input.get(0));
+    return LocationMacro.of(
+        parseBuildTarget(target, cellNames, ImmutableList.of(parts.target)),
+        parts.supplementaryOutput);
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
-    SourcePath output = rule.getSourcePathToOutput();
-    if (output == null) {
-      throw new MacroException(
-          String.format(
-              "%s used in location macro does not produce output", rule.getBuildTarget()));
+  protected String expand(SourcePathResolver resolver, LocationMacro macro, BuildRule rule)
+      throws MacroException {
+    Optional<String> supplementaryOutputIdentifier = macro.getSupplementaryOutputIdentifier();
+
+    SourcePath output;
+    if (supplementaryOutputIdentifier.isPresent()) {
+      if (rule instanceof HasSupplementaryOutputs) {
+        output =
+            ((HasSupplementaryOutputs) rule)
+                .getSourcePathToSupplementaryOutput(supplementaryOutputIdentifier.get());
+        if (output == null) {
+          throw new MacroException(
+              String.format(
+                  "%s used in location macro does not produce supplementary output %s",
+                  rule.getBuildTarget(), supplementaryOutputIdentifier.get()));
+        }
+      } else {
+        throw new MacroException(
+            String.format(
+                "%s used in location macro does not produce supplementary output",
+                rule.getBuildTarget()));
+      }
+    } else {
+      output = rule.getSourcePathToOutput();
+      if (output == null) {
+        throw new MacroException(
+            String.format(
+                "%s used in location macro does not produce output", rule.getBuildTarget()));
+      }
     }
+
     return resolver.getAbsolutePath(output).toString();
   }
 }

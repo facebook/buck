@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 TYPES = [
     "InputPath.java",
     "AbstractLimitedSourcePath.java",
@@ -22,11 +24,12 @@ java_library(
     name = "modern",
     srcs = glob(
         ["**/*.java"],
-        excludes = TYPES,
+        exclude = TYPES,
     ),
     exported_deps = [
         ":types",
     ],
+    tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event:interfaces",

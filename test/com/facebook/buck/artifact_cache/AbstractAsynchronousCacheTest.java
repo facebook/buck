@@ -19,15 +19,18 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.AbstractAsynchronousCache.CacheEventListener;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.ExplicitRunExecutorService;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
@@ -86,7 +89,8 @@ public class AbstractAsynchronousCacheTest {
       MoreAsserts.assertIterablesEquals(
           ImmutableList.of(keys.get(7), keys.get(1)), requestedRuleKeys.get(7));
 
-      // And finally, there's less than concurrency left and it'll go to fetch() instead of multiFetch().
+      // And finally, there's less than concurrency left and it'll go to fetch() instead of
+      // multiFetch().
       MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(5)), requestedRuleKeys.get(8));
       MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(1)), requestedRuleKeys.get(9));
     }
@@ -110,7 +114,7 @@ public class AbstractAsynchronousCacheTest {
     public void fetchScheduled(RuleKey ruleKey) {}
 
     @Override
-    public FetchRequestEvents fetchStarted(RuleKey ruleKey) {
+    public CacheEventListener.FetchRequestEvents fetchStarted(RuleKey ruleKey) {
       return new FetchRequestEvents() {
         @Override
         public void finished(FetchResult result) {}
@@ -121,7 +125,8 @@ public class AbstractAsynchronousCacheTest {
     }
 
     @Override
-    public MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> keys) {
+    public CacheEventListener.MultiFetchRequestEvents multiFetchStarted(
+        ImmutableList<RuleKey> keys) {
       return new MultiFetchRequestEvents() {
         @Override
         public void skipped(int keyIndex) {}
@@ -169,6 +174,12 @@ public class AbstractAsynchronousCacheTest {
       return hit();
     }
 
+    @Override
+    protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
+        throws IOException {
+      throw new UnsupportedOperationException("multiContains is not supported");
+    }
+
     private FetchResult hit() {
       return FetchResult.builder().setCacheResult(CacheResult.hit(getName(), getMode())).build();
     }
@@ -183,6 +194,11 @@ public class AbstractAsynchronousCacheTest {
     }
 
     @Override
+    protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
+      throw new RuntimeException("Delete operation is not supported");
+    }
+
+    @Override
     protected MultiFetchResult multiFetchImpl(
         Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
       List<FetchResult> result = new ArrayList<>();
@@ -190,7 +206,7 @@ public class AbstractAsynchronousCacheTest {
       ImmutableList<RuleKey> keys =
           RichStream.from(requests)
               .map(FetchRequest::getRuleKey)
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       requestedRuleKeys.add(keys);
       while (result.size() < keys.size()) {
         result.add(skip());

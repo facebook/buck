@@ -1,5 +1,5 @@
 genrule(
-  name = 'test-library',
-  cmd = 'echo "hello" > $OUT',
-  out = 'test-library',
+    name = "test-library",
+    out = "test-library",
+    cmd = "echo \"hello\" > $OUT",
 )

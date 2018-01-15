@@ -1,64 +1,64 @@
 cxx_library(
-  name = 'a',
-  srcs = [
-    'a.c',
-  ],
-  exported_lang_preprocessor_flags = {
-    'c': ['-DA_CFLAG'],
-    'cxx': ['-DA_CXXFLAG'],
-  },
-  exported_linker_flags = [
-    '-a-ld-flag',
-  ],
-  deps = [
-    ':b',
-  ],
+    name = "a",
+    srcs = [
+        "a.c",
+    ],
+    exported_lang_preprocessor_flags = {
+        "c": ["-DA_CFLAG"],
+        "cxx": ["-DA_CXXFLAG"],
+    },
+    exported_linker_flags = [
+        "-a-ld-flag",
+    ],
+    deps = [
+        ":b",
+    ],
 )
 
 cxx_library(
-  name = 'b',
-  srcs = [
-    'b.c',
-  ],
-  exported_lang_preprocessor_flags = {
-    'c': ['-DB_CFLAG'],
-    'cxx': ['-DB_CXXFLAG'],
-  },
-  exported_linker_flags = [
-    '-b-ld-flag',
-  ],
+    name = "b",
+    srcs = [
+        "b.c",
+    ],
+    exported_lang_preprocessor_flags = {
+        "c": ["-DB_CFLAG"],
+        "cxx": ["-DB_CXXFLAG"],
+    },
+    exported_linker_flags = [
+        "-b-ld-flag",
+    ],
 )
 
 cxx_library(
-  name = 'c',
-  srcs = [
-    'c.c',
-  ],
-  exported_lang_preprocessor_flags = {
-    'c': ['-DC_CFLAG'],
-    'cxx': ['-DC_CXXFLAG'],
-  },
-  exported_linker_flags = [
-    '-c-ld-flag',
-  ],
+    name = "c",
+    srcs = [
+        "c.c",
+    ],
+    exported_lang_preprocessor_flags = {
+        "c": ["-DC_CFLAG"],
+        "cxx": ["-DC_CXXFLAG"],
+    },
+    exported_linker_flags = [
+        "-c-ld-flag",
+    ],
 )
 
 cxx_library(
-  name = 'header',
-  exported_headers = {
-    'header.h': 'real_header.h',
-  },
+    name = "header",
+    exported_headers = {
+        "header.h": "real_header.h",
+    },
 )
 
 cxx_binary(
-  name = 'binary',
-  srcs = [
-    'binary.c'
-  ],
+    name = "binary",
+    srcs = [
+        "binary.c",
+    ],
 )
 
 cxx_genrule(
-  name = 'rule',
-  out = 'rule.out',
-  cmd = '@CMD@ > $OUT',
+    name = "rule",
+    out = "rule.out",
+    cmd = "@CMD@ > $OUT",
 )

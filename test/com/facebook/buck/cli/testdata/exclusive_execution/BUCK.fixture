@@ -1,13 +1,13 @@
 genrule(
-  name = 'sleep',
-  srcs = [],
-  bash = 'sleep 1s && touch "$OUT"',
-  cmd_exe = 'powershell -command "Start-Sleep -s 1 | Out-File -Encoding ASCII $env:OUT"',
-  out = 'sleep',
+    name = "sleep",
+    srcs = [],
+    out = "sleep",
+    bash = "sleep 1s && touch \"$OUT\"",
+    cmd_exe = "powershell -command \"Start-Sleep -s 1 | Out-File -Encoding ASCII $env:OUT\"",
 )
 
 java_test(
-  name = 'test',
-  srcs = ['SleepTest.java'],
-  deps = ['//lib:junit'],
+    name = "test",
+    srcs = ["SleepTest.java"],
+    deps = ["//lib:junit"],
 )

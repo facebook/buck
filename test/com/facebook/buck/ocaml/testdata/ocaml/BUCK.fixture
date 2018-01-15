@@ -1,34 +1,34 @@
 ocaml_binary(
-    name='main',
-    srcs=[
-        'main.ml'
+    name = "main",
+    srcs = [
+        "main.ml",
     ],
-    deps=[
-        ':plus_lib'
+    warnings_flags = "-27",
+    deps = [
+        ":plus_lib",
     ],
-    warnings_flags='-27',
 )
 
 ocaml_library(
-    name = 'plus_lib',
+    name = "plus_lib",
     srcs = [
-        'plus/plus.ml',
+        "plus/plus.ml",
     ],
-    warnings_flags='-27',
     visibility = [
-        'PUBLIC',
-    ]
+        "PUBLIC",
+    ],
+    warnings_flags = "-27",
 )
 
 ocaml_binary(
-    name = 'plus',
+    name = "plus",
     srcs = [
-        'plus/main.ml',
-    ],
-    deps = [
-        ':plus_lib',
+        "plus/main.ml",
     ],
     visibility = [
-        'PUBLIC',
-    ]
+        "PUBLIC",
+    ],
+    deps = [
+        ":plus_lib",
+    ],
 )

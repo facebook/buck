@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -51,6 +52,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -80,7 +82,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -286,7 +287,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule archiveRule =
         resolver.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-                target, cxxPlatform.getFlavor(), CxxSourceRuleFactory.PicType.PDC));
+                target, cxxPlatform.getFlavor(), PicType.PDC));
     assertNotNull(archiveRule);
     assertEquals(
         ImmutableSet.of(
@@ -296,7 +297,7 @@ public class CxxLibraryDescriptionTest {
             .getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -306,7 +307,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -324,7 +325,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -469,11 +470,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
         CxxSourceRuleFactoryHelper.of(
-            filesystem.getRootPath(),
-            target,
-            cxxPlatform,
-            cxxBuckConfig,
-            CxxSourceRuleFactory.PicType.PDC);
+            filesystem.getRootPath(), target, cxxPlatform, cxxBuckConfig, PicType.PDC);
 
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(target, cxxBuckConfig)
@@ -533,7 +530,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule staticRule =
         resolver.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-                target, cxxPlatform.getFlavor(), CxxSourceRuleFactory.PicType.PDC));
+                target, cxxPlatform.getFlavor(), PicType.PDC));
     assertNotNull(staticRule);
     assertEquals(
         ImmutableSet.of(
@@ -543,7 +540,7 @@ public class CxxLibraryDescriptionTest {
             .getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -553,7 +550,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -570,7 +567,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -583,11 +580,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
         CxxSourceRuleFactoryHelper.of(
-            filesystem.getRootPath(),
-            target,
-            cxxPlatform,
-            cxxBuckConfig,
-            CxxSourceRuleFactory.PicType.PIC);
+            filesystem.getRootPath(), target, cxxPlatform, cxxBuckConfig, PicType.PIC);
     rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED);
     BuildRule sharedRule =
         resolver.getRule(
@@ -603,7 +596,7 @@ public class CxxLibraryDescriptionTest {
             .getBuildDeps()
             .stream()
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -613,7 +606,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule1)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -630,7 +623,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule2)
             .map(BuildRule::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -700,7 +693,8 @@ public class CxxLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
     Arg firstArg = nativeLinkableInput.getArgs().get(0);
     assertThat(firstArg, instanceOf(FileListableLinkerInputArg.class));
-    ImmutableCollection<BuildRule> deps = firstArg.getDeps(new SourcePathRuleFinder(resolver));
+    ImmutableCollection<BuildRule> deps =
+        BuildableSupport.getDepsCollection(firstArg, new SourcePathRuleFinder(resolver));
     assertThat(deps.size(), is(1));
     BuildRule buildRule = deps.asList().get(0);
     assertThat(
@@ -892,7 +886,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
             .toSet(),
         hasItem(loc));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -937,7 +931,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
             .toSet(),
         hasItem(loc));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -984,7 +978,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
             .toSet(),
         not(hasItem(loc)));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -1156,7 +1150,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         cxxLibrary
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         hasItem(cxxBinaryBuilder.getTarget()));
   }
 

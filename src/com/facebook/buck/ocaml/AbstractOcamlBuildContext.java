@@ -25,10 +25,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -56,7 +56,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
+abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
   static final String OCAML_COMPILED_BYTECODE_DIR = "bc";
   static final String OCAML_COMPILED_DIR = "opt";
   private static final String OCAML_GENERATED_SOURCE_DIR = "gen";
@@ -71,8 +71,10 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
 
   public abstract boolean isLibrary();
 
+  @AddToRuleKey
   public abstract List<Arg> getFlags();
 
+  @AddToRuleKey
   public abstract List<SourcePath> getInput();
 
   public abstract List<String> getNativeIncludes();
@@ -98,16 +100,22 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
 
   public abstract ImmutableSortedSet<BuildRule> getBytecodeLinkDeps();
 
+  @AddToRuleKey
   public abstract Optional<Tool> getOcamlDepTool();
 
+  @AddToRuleKey
   public abstract Optional<Tool> getOcamlCompiler();
 
+  @AddToRuleKey
   public abstract Optional<Tool> getOcamlDebug();
 
+  @AddToRuleKey
   public abstract Optional<Tool> getYaccCompiler();
 
+  @AddToRuleKey
   public abstract Optional<Tool> getLexCompiler();
 
+  @AddToRuleKey
   public abstract Optional<Tool> getOcamlBytecodeCompiler();
 
   protected abstract List<String> getCFlags();
@@ -119,35 +127,39 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
   protected abstract Preprocessor getCPreprocessor();
 
   public ImmutableList<SourcePath> getCInput() {
-    return FluentIterable.from(getInput())
+    return getInput()
+        .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_C))
-        .toSet()
-        .asList();
+        .distinct()
+        .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getLexInput() {
-    return FluentIterable.from(getInput())
+    return getInput()
+        .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLL))
-        .toSet()
-        .asList();
+        .distinct()
+        .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getYaccInput() {
-    return FluentIterable.from(getInput())
+    return getInput()
+        .stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLY))
-        .toSet()
-        .asList();
+        .distinct()
+        .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getMLInput() {
     return FluentIterable.from(getInput())
         .filter(
             OcamlUtil.sourcePathExt(
-                getSourcePathResolver(),
-                OcamlCompilables.OCAML_ML,
-                OcamlCompilables.OCAML_RE,
-                OcamlCompilables.OCAML_MLI,
-                OcamlCompilables.OCAML_REI))
+                    getSourcePathResolver(),
+                    OcamlCompilables.OCAML_ML,
+                    OcamlCompilables.OCAML_RE,
+                    OcamlCompilables.OCAML_MLI,
+                    OcamlCompilables.OCAML_REI)
+                ::test)
         .append(getLexOutput(getLexInput()))
         .append(getYaccOutput(getYaccInput()))
         .toSet()
@@ -313,18 +325,6 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
             });
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("flags", getFlags())
-        .setReflectively("input", getInput())
-        .setReflectively("lexCompiler", getLexCompiler())
-        .setReflectively("ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
-        .setReflectively("ocamlCompiler", getOcamlCompiler())
-        .setReflectively("ocamlDebug", getOcamlDebug())
-        .setReflectively("ocamlDepTool", getOcamlDepTool())
-        .setReflectively("yaccCompiler", getYaccCompiler());
-  }
-
   public ImmutableList<Arg> getCCompileFlags() {
     ImmutableList.Builder<Arg> compileFlags = ImmutableList.builder();
 
@@ -362,7 +362,8 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
     return addPrefix("-ccopt", getLdFlags());
   }
 
-  public static OcamlBuildContext.Builder builder(OcamlBuckConfig config) {
+  public static OcamlBuildContext.Builder builder(
+      OcamlToolchain ocamlToolchain, OcamlBuckConfig config) {
     return OcamlBuildContext.builder()
         .setOcamlDepTool(config.getOcamlDepTool())
         .setOcamlCompiler(config.getOcamlCompiler())
@@ -371,7 +372,7 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
         .setLexCompiler(config.getLexCompiler())
         .setOcamlBytecodeCompiler(config.getOcamlBytecodeCompiler())
         .setOcamlInteropIncludesDir(config.getOcamlInteropIncludesDir())
-        .setCFlags(config.getCFlags())
-        .setLdFlags(config.getLdFlags());
+        .setCFlags(ocamlToolchain.getCFlags())
+        .setLdFlags(ocamlToolchain.getLdFlags());
   }
 }

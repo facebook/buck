@@ -23,7 +23,6 @@ import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +70,7 @@ public class BuildLogHelper {
         .build()
         .stream()
         .sorted(Comparator.comparing(BuildLogEntry::getLastModifiedTime).reversed())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @SuppressWarnings("unchecked")

@@ -1,31 +1,31 @@
 EMPTY_CONFIGS = {
-  'Debug': {},
-  'Release': {},
+    "Debug": {},
+    "Release": {},
 }
 
 apple_library(
-  name = 'Dep1',
-  configs = EMPTY_CONFIGS,
-  srcs = [],
-  frameworks = [],
-  deps = [],
-  visibility = ['PUBLIC'],
+    name = "Dep1",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    visibility = ["PUBLIC"],
+    deps = [],
 )
 
 apple_library(
-  name = 'Dep2',
-  configs = EMPTY_CONFIGS,
-  srcs = [],
-  frameworks = [],
-  deps = [],
-  visibility = ['PUBLIC'],
+    name = "Dep2",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    visibility = ["PUBLIC"],
+    deps = [],
 )
 
 apple_library(
-  name = 'Dep3',
-  configs = EMPTY_CONFIGS,
-  srcs = [],
-  frameworks = [],
-  deps = [],
-  visibility = ['PUBLIC'],
+    name = "Dep3",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    visibility = ["PUBLIC"],
+    deps = [],
 )

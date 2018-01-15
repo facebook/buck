@@ -29,4 +29,8 @@ public class ThriftException extends IOException {
   public ThriftException(String message) {
     super(message);
   }
+
+  public ThriftException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

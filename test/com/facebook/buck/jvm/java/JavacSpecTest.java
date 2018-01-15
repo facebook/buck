@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,21 +75,14 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsOutOfProcJavacIfRequested() {
-    specBuilder.setJavacLocation(Javac.Location.OUT_OF_PROCESS);
-    Javac javac = getJavac();
-
-    assertTrue(javac instanceof OutOfProcessJdkProvidedInMemoryJavac);
-  }
-
-  @Test
   public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
-    SourcePath javacPath = FakeSourcePath.of("path/to/javac");
+    Path externalPath = Paths.get("/foo/bar/path/to/javac");
+    SourcePath javacPath = FakeSourcePath.of(externalPath);
 
     specBuilder.setJavacPath(Either.ofRight(javacPath));
     ExternalJavac javac = (ExternalJavac) getJavac();
-
-    assertThat(javac.getInputs(), Matchers.contains(javacPath));
+    assertTrue(javac.getActualPath().isLeft());
+    assertEquals(externalPath, javac.getActualPath().getLeft());
   }
 
   @Test
@@ -99,7 +94,8 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either);
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(sourcePath));
+    assertTrue(javac.getActualPath().isLeft());
+    assertEquals(externalJavac, javac.getActualPath().getLeft());
   }
 
   @Test
@@ -111,7 +107,8 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either).setJavacPath(Either.ofLeft(Paths.get("does-not-exist")));
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(sourcePath));
+    assertTrue(javac.getActualPath().isLeft());
+    assertEquals(externalJavacPath, javac.getActualPath().getLeft());
   }
 
   @Test
@@ -121,7 +118,9 @@ public class JavacSpecTest {
     specBuilder.setJavacJarPath(javacJarPath);
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(javacJarPath));
+    assertThat(
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
+        Matchers.contains(javacJarPath));
   }
 
   @Test
@@ -136,7 +135,9 @@ public class JavacSpecTest {
     specBuilder.setCompiler(either);
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
+    assertThat(
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
+        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test
@@ -154,17 +155,9 @@ public class JavacSpecTest {
             PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
-    assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
-  }
-
-  @Test
-  public void returnsOutOfProcessJarBackedJavacIfRequested() throws IOException {
-    SourcePath javacJarPath = FakeSourcePath.of("path/to/javac.jar");
-
-    specBuilder.setJavacJarPath(javacJarPath).setJavacLocation(Javac.Location.OUT_OF_PROCESS);
-    OutOfProcessJarBackedJavac javac = (OutOfProcessJarBackedJavac) getJavac();
-
-    assertThat(javac.getInputs(), Matchers.contains(javacJarPath));
+    assertThat(
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
+        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test

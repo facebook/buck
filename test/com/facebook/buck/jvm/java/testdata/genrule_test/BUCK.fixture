@@ -1,49 +1,49 @@
 genrule(
-  name = 'resource',
-  srcs = [
-    'resource.base.txt'
-  ],
-  bash = 'eval cat $SRCS > $OUT',
-  cmd_exe = 'powershell.exe -Command Out-File -Encoding ASCII $env:OUT -InputObject (Get-Content $env:SRCS)',
-  out = 'resource.txt',
+    name = "resource",
+    srcs = [
+        "resource.base.txt",
+    ],
+    out = "resource.txt",
+    bash = "eval cat $SRCS > $OUT",
+    cmd_exe = "powershell.exe -Command Out-File -Encoding ASCII $env:OUT -InputObject (Get-Content $env:SRCS)",
 )
 
 java_library(
-  name = 'library',
-  srcs = [
-    'LibraryClass.java',
-  ],
-  resources = [
-    ':resource'
-  ],
+    name = "library",
+    srcs = [
+        "LibraryClass.java",
+    ],
+    resources = [
+        ":resource",
+    ],
 )
 
 java_test(
-  name = 'test',
-  srcs = [
-    'LameTest.java',
-  ],
-  deps = [
-    ':junit',
-    ':library',
-  ],
+    name = "test",
+    srcs = [
+        "LameTest.java",
+    ],
+    deps = [
+        ":junit",
+        ":library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
-  deps = [
-    ':hamcrest-core',
-    ':hamcrest-library',
-  ],
+    name = "junit",
+    binary_jar = "junit-4.11.jar",
+    deps = [
+        ":hamcrest-core",
+        ":hamcrest-library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-core",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+    name = "hamcrest-library",
+    binary_jar = "hamcrest-library-1.3.jar",
 )

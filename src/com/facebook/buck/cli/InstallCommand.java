@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidInstallConfig;
+import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
@@ -26,12 +27,12 @@ import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
-import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
@@ -40,13 +41,13 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
@@ -62,11 +63,13 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.UnixUserIdFetcher;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -98,7 +101,8 @@ public class InstallCommand extends BuildCommand {
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 5s";
-  private static final InstallResult FAILURE = InstallResult.builder().setExitCode(1).build();
+  private static final InstallResult FAILURE =
+      InstallResult.builder().setExitCode(ExitCode.RUN_ERROR).build();
 
   @VisibleForTesting static final String RUN_LONG_ARG = "--run";
   @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
@@ -204,11 +208,9 @@ public class InstallCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    int exitCode = checkArguments(params);
-    if (exitCode != 0) {
-      return exitCode;
-    }
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
+    assertArguments(params);
 
     try (CommandThreadManager pool =
             new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));
@@ -217,30 +219,26 @@ public class InstallCommand extends BuildCommand {
       ImmutableSet<String> installHelperTargets;
       try {
         installHelperTargets = getInstallHelperTargets(params, pool.getListeningExecutorService());
-      } catch (BuildTargetException | BuildFileParseException e) {
+      } catch (BuildFileParseException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+        return ExitCode.PARSE_ERROR;
       }
 
       // Build the targets
-      exitCode = super.run(params, pool, installHelperTargets);
-      if (exitCode != 0) {
+      ExitCode exitCode = super.run(params, pool, installHelperTargets);
+      if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
       }
     }
 
     // Install the targets
     try {
-      exitCode = install(params);
+      return install(params);
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e.getHumanReadableErrorMessage());
     }
-    if (exitCode != 0) {
-      return exitCode;
-    }
-    return exitCode;
   }
 
   @Override
@@ -268,11 +266,11 @@ public class InstallCommand extends BuildCommand {
     return builder.build();
   }
 
-  private int install(CommandRunnerParams params)
+  private ExitCode install(CommandRunnerParams params)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
 
     Build build = super.getBuild();
-    int exitCode = 0;
+    ExitCode exitCode = ExitCode.SUCCESS;
 
     for (BuildTarget buildTarget : getBuildTargets()) {
 
@@ -283,7 +281,7 @@ public class InstallCommand extends BuildCommand {
       if (buildRule instanceof HasInstallableApk) {
         exitCode =
             installApk((HasInstallableApk) buildRule, getExecutionContext(), pathResolver, params);
-        if (exitCode != 0) {
+        if (exitCode != ExitCode.SUCCESS) {
           return exitCode;
         }
       } else if (buildRule instanceof AppleBundle) {
@@ -302,11 +300,11 @@ public class InstallCommand extends BuildCommand {
             .post(
                 InstallEvent.finished(
                     started,
-                    installResult.getExitCode() == 0,
+                    installResult.getExitCode() == ExitCode.SUCCESS,
                     installResult.getLaunchedPid(),
                     Optional.empty()));
         exitCode = installResult.getExitCode();
-        if (exitCode != 0) {
+        if (exitCode != ExitCode.SUCCESS) {
           return exitCode;
         }
       } else if (!(buildRule instanceof NoopInstallable)) {
@@ -318,7 +316,7 @@ public class InstallCommand extends BuildCommand {
                         "Specified rule %s must be of type android_binary() or apk_genrule() or "
                             + "apple_bundle() but was %s().\n",
                         buildRule.getFullyQualifiedName(), buildRule.getType())));
-        return 1;
+        return ExitCode.BUILD_ERROR;
       }
     }
     return exitCode;
@@ -329,6 +327,10 @@ public class InstallCommand extends BuildCommand {
     return super.getExecutionContextBuilder(params)
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
+                params
+                    .getCell()
+                    .getToolchainProvider()
+                    .getByName(AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 adbOptions(params.getBuckConfig()),
@@ -399,7 +401,7 @@ public class InstallCommand extends BuildCommand {
     return installHelperTargets.build();
   }
 
-  private int installApk(
+  private ExitCode installApk(
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
       SourcePathResolver pathResolver,
@@ -428,7 +430,7 @@ public class InstallCommand extends BuildCommand {
       if (!adbHelper.installApk(
           pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process)) {
         params.getConsole().printBuildFailure("Install failed.");
-        return 1;
+        return ExitCode.RUN_ERROR;
       }
     } else if (shouldUninstallFirst()) {
       // TODO(cjhopman): Figure out how to support this (maybe write some options to the trigger
@@ -442,7 +444,7 @@ public class InstallCommand extends BuildCommand {
       // TODO(cjhopman): Figure out what to do about killing a process.
       InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
       params.getBuckEventBus().post(started);
-      adbHelper.adbCall("concurrent install", (device) -> true, false);
+      adbHelper.adbCallOrThrow("concurrent install", (device) -> true, false);
       InstallEvent.Finished finished =
           InstallEvent.finished(
               started,
@@ -457,16 +459,19 @@ public class InstallCommand extends BuildCommand {
     // We've installed the application successfully.
     // Are any of --activity, --process, or --run present?
     if (shouldStartActivity()) {
-      int exitCode =
-          adbHelper.startActivity(
-              pathResolver, hasInstallableApk, getActivityToStart(), waitForDebugger);
-      if (exitCode != 0) {
-        params.getConsole().printBuildFailure("Starting activity failed.");
-        return exitCode;
+      try {
+        adbHelper.startActivity(
+            pathResolver, hasInstallableApk, getActivityToStart(), waitForDebugger);
+      } catch (HumanReadableException hre) {
+        LOG.warn(hre, "Unable to start activity");
+        params.getConsole().printBuildFailure(hre.getMessage());
+        return ExitCode.RUN_ERROR;
+      } catch (Exception e) {
+        throw new BuckUncheckedExecutionException("When starting activity.");
       }
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   private InstallResult installAppleBundle(
@@ -630,7 +635,7 @@ public class InstallCommand extends BuildCommand {
         }
 
         if (helper.runBundleOnDevice(selectedUdid, appleBundleId.get())) {
-          return InstallResult.builder().setExitCode(0).build();
+          return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
         } else {
           params
               .getConsole()
@@ -645,7 +650,7 @@ public class InstallCommand extends BuildCommand {
           return FAILURE;
         }
       } else {
-        return InstallResult.builder().setExitCode(0).build();
+        return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
       }
     } else {
       params
@@ -838,7 +843,7 @@ public class InstallCommand extends BuildCommand {
                           "Successfully installed %s. (Use `buck install -r %s` to run.)"),
                   getArguments().get(0),
                   getArguments().get(0)));
-      return InstallResult.builder().setExitCode(0).build();
+      return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
     }
   }
 
@@ -900,7 +905,10 @@ public class InstallCommand extends BuildCommand {
                 waitForDebugger ? " (waiting for debugger)" : "",
                 launchedPid.get()));
 
-    return InstallResult.builder().setExitCode(0).setLaunchedPid(launchedPid.get()).build();
+    return InstallResult.builder()
+        .setExitCode(ExitCode.SUCCESS)
+        .setLaunchedPid(launchedPid.get())
+        .build();
   }
 
   private Optional<AppleSimulator> getAppleSimulatorForBundle(

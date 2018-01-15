@@ -112,6 +112,28 @@ public class BuckArgsMethodsTest {
   }
 
   @Test
+  public void passThroughFlagsAreNotProcessed() throws Exception {
+    Path arg = tmp.newFile("argsfile");
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", "--", "--flagfile", arg.toString()), tmp.getRoot()),
+        Matchers.contains("arg1", "--", "--flagfile", arg.toString()));
+  }
+
+  @Test
+  public void flagFileFlagIsProcessedBeforePassThroughMarker() throws Exception {
+    Path arg = tmp.newFile("argsfile");
+    Files.write(arg, ImmutableList.of("arg2", "arg3"));
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", "--flagfile", arg.toString(), "--", "--flagfile", "foo"),
+            tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3", "--", "--flagfile", "foo"));
+  }
+
+  @Test
   public void bothAtFileSyntaxAreSupported() throws Exception {
     Path argsfile = tmp.newFile("argsfile");
     Files.write(argsfile, ImmutableList.of("arg2", "arg3"));

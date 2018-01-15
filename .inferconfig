@@ -1,4 +1,5 @@
 {
+  "biabduction": false,
   "eradicate": true,
   "checkers-whitelist-path-regex": [
     "src",

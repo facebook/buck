@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -37,7 +38,7 @@ public class DepsBuilder {
   }
 
   private DepsBuilder add(Tool tool) {
-    builder.addAll(tool.getDeps(ruleFinder));
+    builder.addAll(BuildableSupport.getDepsCollection(tool, ruleFinder));
     return this;
   }
 
@@ -58,7 +59,7 @@ public class DepsBuilder {
   public DepsBuilder add(PreprocessorDelegate delegate) {
     add(delegate.getPreprocessor());
     for (Arg arg : delegate.getPreprocessorFlags().getOtherFlags().getAllFlags()) {
-      builder.addAll(arg.getDeps(ruleFinder));
+      builder.addAll(BuildableSupport.getDepsCollection(arg, ruleFinder));
     }
     return this;
   }

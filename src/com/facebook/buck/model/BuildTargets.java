@@ -20,8 +20,6 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,6 +27,7 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /** Static helpers for working with build targets. */
 public class BuildTargets {
@@ -168,10 +167,10 @@ public class BuildTargets {
       FlavorDomain<?> domain, BuildTarget buildTarget, FluentIterable<BuildTarget> deps) {
     if (domain.containsAnyOf(buildTarget.getFlavors())) {
       FluentIterable<BuildTarget> targetsWithFlavorsAlready =
-          deps.filter(BuildTargets.containsFlavors(domain));
+          deps.filter(BuildTargets.containsFlavors(domain)::test);
 
       FluentIterable<BuildTarget> targetsWithoutFlavors =
-          deps.filter(Predicates.not(BuildTargets.containsFlavors(domain)));
+          deps.filter(BuildTargets.containsFlavors(domain).negate()::test);
 
       deps =
           targetsWithFlavorsAlready.append(

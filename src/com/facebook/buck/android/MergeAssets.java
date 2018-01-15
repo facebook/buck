@@ -35,14 +35,14 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -58,6 +58,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -88,10 +89,10 @@ public class MergeAssets extends AbstractBuildRule {
     this.baseApk = baseApk;
     this.assetsDirectories = assetsDirectories;
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Override
@@ -132,12 +133,12 @@ public class MergeAssets extends AbstractBuildRule {
                           !Files.getFileExtension(file.toString()).equals("gz"),
                           "BUCK doesn't support adding .gz files to assets (%s).",
                           file);
-                      assets.put(absolutePath, absolutePath.relativize(file));
+                      assets.put(absolutePath, absolutePath.relativize(file.normalize()));
                       return super.visitFile(file, attrs);
                     }
                   });
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
     steps.add(
@@ -160,7 +161,8 @@ public class MergeAssets extends AbstractBuildRule {
   }
 
   private static class MergeAssetsStep extends AbstractExecutionStep {
-    // See https://android.googlesource.com/platform/frameworks/base.git/+/nougat-release/tools/aapt/Package.cpp
+    // See
+    // https://android.googlesource.com/platform/frameworks/base.git/+/nougat-release/tools/aapt/Package.cpp
     private static final ImmutableSet<String> NO_COMPRESS_EXTENSIONS =
         ImmutableSet.of(
             "jpg", "jpeg", "png", "gif", "wav", "mp2", "mp3", "ogg", "aac", "mpg", "mpeg", "mid",
@@ -227,7 +229,7 @@ public class MergeAssets extends AbstractBuildRule {
           }
         }
       }
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 }

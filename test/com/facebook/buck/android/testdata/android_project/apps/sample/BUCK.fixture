@@ -1,855 +1,942 @@
 android_binary(
-  name = 'app',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "app",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_exported_and_provided_deps',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib_with_dep_with_exported_and_provided_deps',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_with_exported_and_provided_deps",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib_with_dep_with_exported_and_provided_deps",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_en',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  locales = ['en'],
-  aapt_mode = 'aapt1', # app_en
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_en",
+    aapt_mode = "aapt1",  # app_en
+    keystore = "//keystores:debug",
+    locales = ["en"],
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_res_overrides',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  aapt_mode = 'aapt1',  # app_with_res_overrides
-  deps = [
-    '//res/com/sample/override:override',
-  ],
+    name = "app_with_res_overrides",
+    aapt_mode = "aapt1",  # app_with_res_overrides
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//res/com/sample/override:override",
+    ],
 )
 
 genrule(
-  name = 'strings_dump_overrides',
-  # Using the DX environment variable here is a total hack.
-  # Ideally, we'd have a special genrule that made the Android
-  # tools available.
-  bash = '`dirname $DX`/aapt dump strings $(location :app_with_res_overrides) > $OUT',
-  out = 'dump_overrides_resources.txt',
-)
-
-
-android_binary(
-  name = 'app_reorder_dex',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  reorder_classes_intra_dex = True,
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "strings_dump_overrides",
+    out = "dump_overrides_resources.txt",
+    # Using the DX environment variable here is a total hack.
+    # Ideally, we'd have a special genrule that made the Android
+    # tools available.
+    bash = "`dirname $DX`/aapt dump strings $(location :app_with_res_overrides) > $OUT",
 )
 
 android_binary(
-  name = 'app_mdpi',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
-  resource_filter = ['mdpi']
+    name = "app_reorder_dex",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    reorder_classes_intra_dex = True,
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_hdpi_xhdpi',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
-  resource_filter = ['hdpi', 'xhdpi']
+    name = "app_mdpi",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    resource_filter = ["mdpi"],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_post_filter_cmd',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//scripts:postfilter',
-  ],
-  post_filter_resources_cmd = '$(exe //scripts:postfilter)',
-  resource_filter = ['hdpi', 'xhdpi']
+    name = "app_hdpi_xhdpi",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    resource_filter = [
+        "hdpi",
+        "xhdpi",
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_str',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
-  resource_compression = 'enabled_strings_only',
+    name = "app_post_filter_cmd",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    post_filter_resources_cmd = "$(exe //scripts:postfilter)",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+        "//scripts:postfilter",
+    ],
 )
 
 android_binary(
-  name = 'app_comp_str',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
-  resource_compression = 'enabled_with_strings_as_assets',
+    name = "app_post_filter_no_dups",
+    duplicate_resource_behavior = "ban_by_default",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    post_filter_resources_cmd = "$(exe //scripts:postfilter)",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+        "//scripts:postfilter",
+    ],
 )
 
 android_binary(
-  name = 'app_comp_str_xhdpi',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
-  resource_compression = 'enabled_with_strings_as_assets',
-  resource_filter = ['xhdpi']
+    name = "app_str",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    resource_compression = "enabled_strings_only",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_res_lib_dep',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-      '//res/com/sample/base:base_with_lib_dep',
-  ],
+    name = "app_comp_str",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    resource_compression = "enabled_with_strings_as_assets",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_multiple_rdot_java_packages',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//java/com/sample2:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_comp_str_xhdpi",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    resource_compression = "enabled_with_strings_as_assets",
+    resource_filter = ["xhdpi"],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_deps_resource_with_ignored_file',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//res/com/sample/with_ignored_file:res',
-  ],
+    name = "app_res_lib_dep",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//res/com/sample/base:base_with_lib_dep",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_dep',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'arm',
-    'armv7',
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:lib',
-  ],
+    name = "app_with_multiple_rdot_java_packages",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//java/com/sample2:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_disguised_exe',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//native/mybinary/jni:mybinary',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_deps_resource_with_ignored_file",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+        "//res/com/sample/with_ignored_file:res",
+    ],
 )
 
 android_binary(
-  name = 'app_with_ndk_library',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//native/fakenative/jni:fakenative',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_cxx_lib_dep",
+    cpu_filters = [
+        "arm",
+        "armv7",
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/cxx:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_prebuilt_native_libs',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  package_asset_libraries = True,
-  deps = [
-    '//native/fakenative/jni:prebuilt_native',
-    '//native/fakenative/jni:prebuilt_native_asset',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_with_disguised_exe",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/mybinary/jni:mybinary",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_dep_modular',
-  manifest = 'AndroidManifest.xml',
-  application_module_targets = [
-    '//native/cxx:lib',
-  ],
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'arm',
-    'armv7',
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:lib',
-  ],
+    name = "app_with_ndk_library",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/fakenative/jni:fakenative",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_dep_no_filters',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:lib',
-  ],
+    name = "app_with_prebuilt_native_libs",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    deps = [
+        "//native/fakenative/jni:prebuilt_native",
+        "//native/fakenative/jni:prebuilt_native_asset",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_xdso_dce',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  enable_relinker = True,
-  relinker_whitelist = [
-    "^_Z12preserved(Bot|Mid)v$",
-  ],
-  cpu_filters = [],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/xdsodce:top',
-  ],
+    name = "app_with_prebuilt_native_libs_modular",
+    application_module_configs = {
+        "prebuilt": ["//native/fakenative/jni:prebuilt_native"],
+        "prebuilt_asset": ["//native/fakenative/jni:prebuilt_native_asset"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    deps = [
+        "//native/fakenative/jni:prebuilt_native",
+        "//native/fakenative/jni:prebuilt_native_asset",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_xdso_dce_modular',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  enable_relinker = True,
-  cpu_filters = [],
-  application_module_targets = [
-    '//native/xdsodce:top',
-    '//native/xdsodce:mid',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/xdsodce:top',
-  ],
+    name = "app_cxx_lib_dep_modular",
+    application_module_targets = [
+        "//native/cxx:lib",
+    ],
+    cpu_filters = [
+        "arm",
+        "armv7",
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/cxx:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_no_xdso_dce',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/xdsodce:top',
-  ],
+    name = "app_cxx_lib_dep_no_filters",
+    cpu_filters = [],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/cxx:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_no_cxx_deps',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'arm',
-    'armv7',
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-  ],
+    name = "app_xdso_dce",
+    cpu_filters = [],
+    enable_relinker = True,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    relinker_whitelist = [
+        "^_Z12preserved(Bot|Mid)v$",
+    ],
+    deps = [
+        "//native/xdsodce:top",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_proguard_dontobfuscate',
-  proguard_config = 'dontobfuscate.pro',
-  package_type = 'release',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_xdso_dce_modular",
+    application_module_targets = [
+        "//native/xdsodce:top",
+        "//native/xdsodce:mid",
+    ],
+    cpu_filters = [],
+    enable_relinker = True,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/xdsodce:top",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_no_xdso_dce",
+    cpu_filters = [],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/xdsodce:top",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_no_cxx_deps",
+    cpu_filters = [
+        "arm",
+        "armv7",
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_proguard_dontobfuscate",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "release",
+    proguard_config = "dontobfuscate.pro",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
+)
+
+genrule(
+    name = "proguard_output_dontobfuscate",
+    out = "proguard_output_dontobfuscate.txt",
+    bash = "cat >$OUT $(location :app_proguard_dontobfuscate#proguard_text_output)/configuration.txt",
+)
+
+android_binary(
+    name = "app_proguard_dontobfuscate_no_aapt",
+    ignore_aapt_proguard_config = True,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "release",
+    proguard_config = "dontobfuscate.pro",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
+)
+
+genrule(
+    name = "proguard_output_dontobfuscate_no_aapt",
+    out = "proguard_output_dontobfuscate_no_aapt.txt",
+    bash = "cat >$OUT $(location :app_proguard_dontobfuscate_no_aapt#proguard_text_output)/configuration.txt",
 )
 
 android_aar(
-  name = 'nearly_empty_aar',
-  manifest_skeleton = 'AndroidManifest.xml',
+    name = "nearly_empty_aar",
+    manifest_skeleton = "AndroidManifest.xml",
 )
 
 android_binary(
-  name = 'app_static_cxx_lib_dep',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:headeronly',
-  ],
+    name = "app_static_cxx_lib_dep",
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:headeronly",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_native_lib_proguard',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  package_type = 'release',
-  proguard_config = 'dontobfuscate.pro',
-  cpu_filters = [
-    'arm',
-    'armv7',
-    'x86',
-  ],
-  native_library_proguard_config_generator = '//native/proguard_gen:generator',
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:lib',
-  ],
+    name = "app_with_native_lib_proguard",
+    cpu_filters = [
+        "arm",
+        "armv7",
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_proguard_config_generator = "//native/proguard_gen:generator",
+    package_type = "release",
+    proguard_config = "dontobfuscate.pro",
+    deps = [
+        "//native/cxx:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_asset',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-  ],
-  package_asset_libraries = True
+    name = "app_cxx_lib_asset",
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_different_rule_name',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-  ],
-  package_asset_libraries = True
+    name = "app_cxx_different_rule_name",
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_asset_no_package',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:libasset',
-  ],
-  package_asset_libraries = False
+    name = "app_cxx_lib_asset_no_package",
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = False,
+    deps = [
+        "//native/cxx:libasset",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_compress_lib_asset',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-    '//native/cxx:libasset2',
-  ],
-  package_asset_libraries = True,
-  compress_asset_libraries = True
+    name = "app_compress_lib_asset",
+    compress_asset_libraries = True,
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//native/cxx:libasset2",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_compress_lib_asset_modular',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  application_module_targets = [
-    '//native/cxx:libasset',
-  ],
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-    '//native/cxx:libasset2',
-  ],
-  package_asset_libraries = True,
-  compress_asset_libraries = True
+    name = "app_compress_lib_asset_modular",
+    application_module_targets = [
+        "//native/cxx:libasset",
+    ],
+    compress_asset_libraries = True,
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//native/cxx:libasset2",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_compress_lib_asset_modular_map',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  application_module_configs = {
-    'native.cxx.libasset' : ['//native/cxx:libasset'],
-  },
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-    '//native/cxx:libasset2',
-  ],
-  package_asset_libraries = True,
-  compress_asset_libraries = True
+    name = "app_compress_lib_asset_modular_map",
+    application_module_configs = {
+        "native.cxx.libasset": ["//native/cxx:libasset"],
+    },
+    compress_asset_libraries = True,
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//native/cxx:libasset2",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_asset_no_package_modular',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  application_module_targets = [
-    '//native/cxx:libasset',
-  ],
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-    '//native/cxx:libasset2',
-  ],
-  package_asset_libraries = False,
-  compress_asset_libraries = True
+    name = "app_cxx_lib_asset_no_package_modular",
+    application_module_targets = [
+        "//native/cxx:libasset",
+    ],
+    compress_asset_libraries = True,
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = False,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//native/cxx:libasset2",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_asset_no_package_modular_map',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  application_module_configs = {
-    'native.cxx.libasset' : ['//native/cxx:libasset'],
-  },
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-    '//native/cxx:libasset2',
-  ],
-  package_asset_libraries = False,
-  compress_asset_libraries = True
+    name = "app_cxx_lib_asset_no_package_modular_map",
+    application_module_configs = {
+        "native.cxx.libasset": ["//native/cxx:libasset"],
+    },
+    compress_asset_libraries = True,
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = False,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//native/cxx:libasset2",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_no_package_modular',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  application_module_targets = [
-    '//native/cxx:foo1',
-    '//native/cxx:libasset',
-  ],
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-    '//native/cxx:libasset2',
-  ],
-  package_asset_libraries = False,
-  compress_asset_libraries = True
+    name = "app_cxx_lib_no_package_modular",
+    application_module_targets = [
+        "//native/cxx:foo1",
+        "//native/cxx:libasset",
+    ],
+    compress_asset_libraries = True,
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = False,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//native/cxx:libasset2",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_cxx_lib_no_package_modular_map',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  application_module_configs = {
-    'native.cxx.foo1' : ['//native/cxx:foo1'],
-    'native.cxx.libasset' : ['//native/cxx:libasset'],
-  },
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:foo1',
-    '//native/cxx:foo2',
-    '//native/cxx:libasset',
-    '//native/cxx:libasset2',
-  ],
-  package_asset_libraries = False,
-  compress_asset_libraries = True
+    name = "app_cxx_lib_no_package_modular_map",
+    application_module_configs = {
+        "native.cxx.foo1": ["//native/cxx:foo1"],
+        "native.cxx.libasset": ["//native/cxx:libasset"],
+    },
+    compress_asset_libraries = True,
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_asset_libraries = False,
+    deps = [
+        "//native/cxx:foo1",
+        "//native/cxx:foo2",
+        "//native/cxx:libasset",
+        "//native/cxx:libasset2",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_header_only_cxx_lib_dep',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  cpu_filters = [
-    'x86',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:headeronly',
-  ],
+    name = "app_header_only_cxx_lib_dep",
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/cxx:headeronly",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_x86_lib',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:x86-only',
-  ],
+    name = "app_with_x86_lib",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/cxx:x86-only",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_no_res',
-  manifest = 'AndroidManifestNoRes.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/small:small_with_no_resource_deps',
-  ],
+    name = "app_with_no_res",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifestNoRes.xml",
+    deps = [
+        "//java/com/sample/small:small_with_no_resource_deps",
+    ],
 )
 
 android_binary(
-  name = 'app_with_no_res_or_predex',
-  manifest = 'AndroidManifestNoRes.xml',
-  keystore = '//keystores:debug',
-  package_type = 'release',
-  proguard_config = 'dontobfuscate.pro',
-  deps = [
-    '//java/com/sample/small:small_with_no_resource_deps',
-  ],
-)
-
-
-android_binary(
-  name = 'app_with_aar_and_no_res',
-  manifest = 'AndroidManifestNoRes.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//third-party:card-io',
-  ],
+    name = "app_with_no_res_or_predex",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifestNoRes.xml",
+    package_type = "release",
+    proguard_config = "dontobfuscate.pro",
+    deps = [
+        "//java/com/sample/small:small_with_no_resource_deps",
+    ],
 )
 
 android_binary(
-  name = 'app_redex',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  proguard_config = 'dontobfuscate.pro',
-  package_type = 'release',
-  redex = True,
-  redex_config = 'redex-config.json',
-  redex_extra_args = [
-    '-Jmy_param_name={"foo": true}',
-    '--redex-binary',
-    'redex-binary',
-    '-j $(location //java/com/sample/lib:lib)',
-    '-S coldstart_classes=$(location //tools/redex:secondary_dex_head.list)',
-  ],
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_with_aar_and_no_res",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifestNoRes.xml",
+    deps = [
+        "//third-party:card-io",
+    ],
+)
+
+android_binary(
+    name = "app_redex",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "release",
+    proguard_config = "dontobfuscate.pro",
+    redex = True,
+    redex_config = "redex-config.json",
+    redex_extra_args = [
+        "-Jmy_param_name={\"foo\": true}",
+        "--redex-binary",
+        "redex-binary",
+        "-j $(location //java/com/sample/lib:lib)",
+        "-S coldstart_classes=$(location //tools/redex:secondary_dex_head.list)",
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
 )
 
 genrule(
-  # Hackily check for the presence of aapt2 until all of our users have it.
-  name = 'check_for_aapt2',
-  bash = 'test -x `dirname $DX`/aapt2 > $OUT',
-  out = 'does-aapt2-exist',
+    # Hackily check for the presence of aapt2 until all of our users have it.
+    name = "check_for_aapt2",
+    out = "does-aapt2-exist",
+    bash = "test -x `dirname $DX`/aapt2 > $OUT",
 )
 
 android_binary(
-  name = 'app_with_aapt2',
-  aapt_mode = 'aapt2',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_with_aapt2",
+    aapt_mode = "aapt2",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_d8",
+    dex_tool = "d8",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/lib8:lib8",
+        "//res/com/sample/base:base",
+    ],
 )
 
 genrule(
-  name = 'disassemble_app_with_aapt2',
-  bash = ' && '.join([
-      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_aapt2)',
-      'cat $TMP/com/*/R*.smali > $OUT',
-      ]),
-  out = 'disassembled_aapt2.smali',
+    name = "disassemble_app_with_aapt2",
+    out = "disassembled_aapt2.smali",
+    bash = " && ".join([
+        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_aapt2)",
+        "cat $TMP/com/*/R*.smali > $OUT",
+    ]),
 )
 
 genrule(
-  name = 'resource_dump_app_with_aapt2',
-  # Using the DX environment variable here is a total hack.
-  # Ideally, we'd have a special genrule that made the Android
-  # tools available.
-  bash = '`dirname $DX`/aapt dump resources $(location :app_with_aapt2) > $OUT',
-  out = 'dump_aapt2_resources.txt',
+    name = "resource_dump_app_with_aapt2",
+    out = "dump_aapt2_resources.txt",
+    # Using the DX environment variable here is a total hack.
+    # Ideally, we'd have a special genrule that made the Android
+    # tools available.
+    bash = "`dirname $DX`/aapt dump resources $(location :app_with_aapt2) > $OUT",
 )
 
 android_instrumentation_apk(
-  name = 'instrumentation_apk',
-  manifest = 'AndroidInstrumentationManifest.xml',
-  apk = ':app',
-  deps = [
-    '//third-party:card-io',
-  ],
+    name = "instrumentation_apk",
+    apk = ":app",
+    manifest = "AndroidInstrumentationManifest.xml",
+    deps = [
+        "//third-party:card-io",
+    ],
 )
 
 android_binary(
-  name = 'app_with_merged_libs',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'lib1.so': ['.*/merge:[AB]'],
-    'lib2.so': ['.*/merge:[EF]'],
-  },
-  native_library_merge_glue = '//native/merge:glue_1',
-  native_library_merge_code_generator = '//native/merge:codegen',
+    name = "app_with_merged_libs",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_code_generator = "//native/merge:codegen",
+    native_library_merge_glue = "//native/merge:glue_1",
+    native_library_merge_map = {
+        "lib1.so": [".*/merge:[AB]"],
+        "lib2.so": [".*/merge:[EF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_merged_libs_modular',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  application_module_targets = [
-    '//native/merge:A',
-  ],
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'lib1.so': ['.*/merge:[AB]'],
-    'lib2.so': ['.*/merge:[EF]'],
-  },
-  native_library_merge_glue = '//native/merge:glue_1',
-  native_library_merge_code_generator = '//native/merge:codegen',
+    name = "app_with_merged_libs_modular",
+    application_module_targets = [
+        "//native/merge:A",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_code_generator = "//native/merge:codegen",
+    native_library_merge_glue = "//native/merge:glue_1",
+    native_library_merge_map = {
+        "lib1.so": [".*/merge:[AB]"],
+        "lib2.so": [".*/merge:[EF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 genrule(
-  name = 'disassemble_app_with_merged_libs_gencode',
-  bash = ' && '.join([
-      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_merged_libs)',
-      'cat $TMP/com/gen/*.smali > $OUT',
-      ]),
-  out = 'disassembled_gencode.smali',
+    name = "disassemble_app_with_merged_libs_gencode",
+    out = "disassembled_gencode.smali",
+    bash = " && ".join([
+        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_merged_libs)",
+        "cat $TMP/com/gen/*.smali > $OUT",
+    ]),
 )
 
 android_binary(
-  name = 'app_with_merge_lib_into_two_targets',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'lib1.so': ['.*/merge:[AB]'],
-    'lib2.so': ['.*/merge:[BC]'],
-  },
+    name = "app_with_merge_lib_into_two_targets",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "lib1.so": [".*/merge:[AB]"],
+        "lib2.so": [".*/merge:[BC]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_circular_merged_libs',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'libbroken.so': ['.*/merge:[CF]'],
-  },
+    name = "app_with_circular_merged_libs",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "libbroken.so": [".*/merge:[CF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_circular_merged_libs_including_root',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:C',
-  ],
-  native_library_merge_map = {
-    'libbroken.so': ['.*/merge:[CF]'],
-  },
+    name = "app_with_circular_merged_libs_including_root",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "libbroken.so": [".*/merge:[CF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:C",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_cross_asset_merged_libs',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'libbroken.so': ['.*/merge:[AC]'],
-  },
+    name = "app_with_cross_asset_merged_libs",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "libbroken.so": [".*/merge:[AC]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_alternate_merge_glue',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'lib1.so': ['.*/merge:[AB]'],
-    'lib2.so': ['.*/merge:[EF]'],
-  },
-  native_library_merge_glue = '//native/merge:glue_2',
+    name = "app_with_alternate_merge_glue",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_glue = "//native/merge:glue_2",
+    native_library_merge_map = {
+        "lib1.so": [".*/merge:[AB]"],
+        "lib2.so": [".*/merge:[EF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_alternate_merge_glue_and_localized_symbols',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'lib1.so': ['.*/merge:[AB]'],
-    'lib2.so': ['.*/merge:[EF]'],
-  },
-  native_library_merge_glue = '//native/merge:glue_2',
-  native_library_merge_localized_symbols = ['glue_2'],
+    name = "app_with_alternate_merge_glue_and_localized_symbols",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_glue = "//native/merge:glue_2",
+    native_library_merge_localized_symbols = ["glue_2"],
+    native_library_merge_map = {
+        "lib1.so": [".*/merge:[AB]"],
+        "lib2.so": [".*/merge:[EF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_invalid_native_lib_merge_glue',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'lib1.so': ['.*/merge:[AB]'],
-    'lib2.so': ['.*/merge:[EF]'],
-  },
-  native_library_merge_glue = '//keystores:debug',
+    name = "app_with_invalid_native_lib_merge_glue",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_glue = "//keystores:debug",
+    native_library_merge_map = {
+        "lib1.so": [".*/merge:[AB]"],
+        "lib2.so": [".*/merge:[EF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_merge_into_existing_lib',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//native/merge:A',
-  ],
-  native_library_merge_map = {
-    'lib2e.so': ['.*/merge:[EF]'],
-  },
+    name = "app_with_merge_into_existing_lib",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "lib2e.so": [".*/merge:[EF]"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_static_symbols',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//res/com/sample/base:base',
-    '//native/cxx:symbols',
-  ],
+    name = "app_with_static_symbols",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/cxx:symbols",
+        "//res/com/sample/base:base",
+    ],
 )
 
 android_binary(
-  name = 'app_with_string_source_map_and_aapt2',
-  build_string_source_map = True,
-  aapt_mode = 'aapt2',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-  ],
+    name = "app_with_string_resources_and_aapt2",
+    aapt_mode = "aapt2",
+    build_string_source_map = True,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",  # [ res/com/sample/title/res/values/strings.xml ]
+        "//res/com/sample/base:base",  # [ res/com/sample/base/res/values/strings.xml ]
+    ],
 )
 
 android_binary(
-  name = 'app_with_string_source_map',
-  build_string_source_map = True,
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  deps = [
-    '//java/com/sample/lib:lib',
-    '//res/com/sample/base:base',
-    '//res/com/sample/with_generated_strings:res',
-  ],
+    name = "app_with_string_resources",
+    build_string_source_map = True,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",  # [ res/com/sample/title/res/values/strings.xml ]
+        "//res/com/sample/base:base",  # [ res/com/sample/base/res/values/strings.xml ]
+        "//res/com/sample/with_generated_strings:res",  # [ res/com/sample/with_generate_strings/res/values/strings.xml ]
+    ],
+)
+
+android_binary(
+    name = "app_with_merged_manifest",
+    keystore = "//keystores:debug",
+    manifest_skeleton = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//manifests:lib1",
+        "//manifests:lib2",
+        "//res/com/sample/base:base",
+    ],
+)
+
+genrule(
+    name = "dump_merged_manifest",
+    out = "dump_merged_manifest.txt",
+    # Using the DX environment variable here is a total hack.
+    # Ideally, we'd have a special genrule that made the Android
+    # tools available.
+    bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_merged_manifest) AndroidManifest.xml > $OUT",
 )

@@ -20,7 +20,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -30,6 +29,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -171,7 +171,7 @@ public class AppleSimulatorController {
    * @return The number of milliseconds waited if the specified simulator booted, {@code
    *     Optional.empty()} otherwise.
    */
-  public Optional<Long> waitForSimulatorToBoot(long timeoutMillis, final String simulatorUdid)
+  private Optional<Long> waitForSimulatorToBoot(long timeoutMillis, final String simulatorUdid)
       throws IOException, InterruptedException {
     return waitForSimulatorState(
         timeoutMillis,
@@ -194,7 +194,7 @@ public class AppleSimulatorController {
     long millisWaited = 0;
     while (!stateReached && millisWaited < timeoutMillis) {
       LOG.debug("Checking if simulator state %s reached..", description);
-      if (predicate.apply(
+      if (predicate.test(
           AppleSimulatorDiscovery.discoverAppleSimulators(processExecutor, simctlPath))) {
         LOG.debug("Simulator state %s reached.", description);
         stateReached = true;

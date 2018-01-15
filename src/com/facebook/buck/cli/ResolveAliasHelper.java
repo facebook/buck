@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
@@ -39,7 +39,7 @@ public class ResolveAliasHelper {
    * qualified (non-alias) target to be verified by checking the build files. Prints the build
    * target that each alias maps to on its own line to standard out.
    */
-  public static int resolveAlias(
+  public static void resolveAlias(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       boolean enableProfiling,
@@ -68,8 +68,6 @@ public class ResolveAliasHelper {
     for (String resolvedAlias : resolvedAliases) {
       params.getConsole().getStdOut().println(resolvedAlias);
     }
-
-    return 0;
   }
 
   /** Verify that the given target is a valid full-qualified (non-alias) target. */
@@ -87,19 +85,15 @@ public class ResolveAliasHelper {
     Path buildFile;
     try {
       buildFile = owningCell.getAbsolutePathToBuildFile(buildTarget);
-    } catch (Cell.MissingBuildFileException e) {
+    } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }
 
     // Get all valid targets in our target directory by reading the build file.
     ImmutableSet<TargetNode<?, ?>> targetNodes;
-    try {
-      targetNodes =
-          parser.getAllTargetNodes(
-              params.getBuckEventBus(), owningCell, enableProfiling, executor, buildFile);
-    } catch (BuildFileParseException e) {
-      throw new HumanReadableException(e);
-    }
+    targetNodes =
+        parser.getAllTargetNodes(
+            params.getBuckEventBus(), owningCell, enableProfiling, executor, buildFile);
 
     // Check that the given target is a valid target.
     for (TargetNode<?, ?> candidate : targetNodes) {

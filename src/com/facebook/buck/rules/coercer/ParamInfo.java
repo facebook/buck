@@ -20,11 +20,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Types;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.lang.reflect.InvocationTargetException;
@@ -33,6 +32,7 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Represents a single field that can be represented in buck build files. */
@@ -72,12 +72,13 @@ public class ParamInfo implements Comparable<ParamInfo> {
     this.setter = setter;
 
     this.closestGetterOnAbstractClassOrInterface =
-        Suppliers.memoize(this::findClosestGetterOnAbstractClassOrInterface);
+        MoreSuppliers.memoize(this::findClosestGetterOnAbstractClassOrInterface);
 
     this.concreteGetter =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
-              // This needs to get (and invoke) the concrete Immutable class's getter, not the abstract
+              // This needs to get (and invoke) the concrete Immutable class's getter, not the
+              // abstract
               // getter from a superclass.
               // Accordingly, we manually find the getter there, rather than using
               // closestGetterOnAbstractClassOrInterface.
@@ -101,7 +102,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
                       setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
             });
     this.isOptional =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               Method getter = closestGetterOnAbstractClassOrInterface.get();
               Class<?> type = getter.getReturnType();

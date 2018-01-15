@@ -1,12 +1,20 @@
 java_library(
-  name = 'a',
-  srcs = ['A.java', 'B.java', 'RemovableC.java'],
-  resources = ['test/pkg/RemovableC.txt'],
-  remove_classes = ['test.pkg.RemovableC', 'test.pkg.B\$MemberD', '^*Deletable*']
+    name = "a",
+    srcs = [
+        "A.java",
+        "B.java",
+        "RemovableC.java",
+    ],
+    remove_classes = [
+        "test.pkg.RemovableC",
+        "test.pkg.B\$MemberD",
+        "^*Deletable*",
+    ],
+    resources = ["test/pkg/RemovableC.txt"],
 )
 
 java_binary(
-  name = 'binary',
-  deps = [':a'],
-  main_class = 'A',
+    name = "binary",
+    main_class = "A",
+    deps = [":a"],
 )

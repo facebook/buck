@@ -16,8 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableCollection;
 import javax.annotation.Nullable;
 
@@ -26,7 +29,12 @@ public abstract class ConfiguredCompilerFactory {
   // TODO(jkeljo): args is not actually Nullable in all subclasses, but it is also not
   // straightforward to create a safe "empty" default value. Find a fix.
   public abstract ConfiguredCompiler configure(
-      @Nullable JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver);
+      SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      @Nullable JvmLibraryArg args,
+      JavacOptions javacOptions,
+      BuildRuleResolver buildRuleResolver);
 
   public boolean trackClassUsage(@SuppressWarnings("unused") JavacOptions javacOptions) {
     return false;
@@ -40,6 +48,14 @@ public abstract class ConfiguredCompilerFactory {
   }
 
   public boolean shouldGenerateSourceAbi() {
+    return false;
+  }
+
+  public boolean shouldGenerateSourceOnlyAbi() {
+    return false;
+  }
+
+  public boolean shouldMigrateToSourceOnlyAbi() {
     return false;
   }
 

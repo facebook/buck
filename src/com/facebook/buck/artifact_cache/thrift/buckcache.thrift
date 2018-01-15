@@ -15,6 +15,9 @@ enum BuckCacheRequestType {
   FETCH = 100,
   STORE = 101,
   MULTI_FETCH = 102,
+  // `DELETE` is a define somewhere inside glibc
+  DELETE_REQUEST = 105,
+  CONTAINS = 107,
 }
 
 struct RuleKey {
@@ -26,10 +29,28 @@ struct ArtifactMetadata {
   2: optional map<string, string> metadata;
   3: optional string buildTarget;
   4: optional string repository;
-  // 5: DEPRECATED
+  5: optional string artifactPayloadCrc32;  // DEPRECATED: Will be removed soon.
   6: optional string scheduleType;
   7: optional string artifactPayloadMd5;
   8: optional bool distributedBuildModeEnabled;
+}
+
+enum ContainsResultType {
+  CONTAINS = 0,
+  DOES_NOT_CONTAIN = 1,
+  UNKNOWN_DUE_TO_TRANSIENT_ERRORS = 2,
+}
+
+struct ContainsDebugInfo {
+  // Fastest store to return a cache hit.
+  1: optional string fastestCacheHitStore;
+  // The store ID, indicating ZippyDB or Memcached, to return a cache hit.
+  2: optional string fastestCacheHitStoreId;
+}
+
+struct ContainsResult {
+  1: optional ContainsResultType resultType;
+  2: optional ContainsDebugInfo debugInfo;
 }
 
 struct FetchDebugInfo {
@@ -40,11 +61,14 @@ struct FetchDebugInfo {
 
   // Fastest store to return a cache hit.
   3: optional string fastestCacheHitStore;
+  // The store ID, indicating ZippyDB or Memcached, to return a cache hit.
+  4: optional string fastestCacheHitStoreId;
 }
 
 struct StoreDebugInfo {
   // All stores used in the write.
   1: optional list<string> storesWrittenInto;
+  2: optional i64 artifactSizeBytes;
 }
 
 struct BuckCacheStoreRequest {
@@ -74,6 +98,26 @@ struct BuckCacheFetchResponse {
   // If this field is not present then the payload is passed via a different
   // out of band method.
   100: optional binary payload;
+}
+
+// NOTE: The contains request is only supposed to be best-effort. A CONTAINS
+// result only means that it is highly likely that we contain the artifact.
+// And a DOES_NOT_CONTAIN result means that it might still be present in stores
+// like Memcache, where we do not have a contains check. The third result type
+// of UNKNOWN_DUE_TO_TRANSIENT_ERRORS means that some stores returned a MISS,
+// while others errored out.
+struct BuckCacheMultiContainsRequest {
+  1: optional list<RuleKey> ruleKeys;
+  2: optional string repository;
+  3: optional string scheduleType;
+  4: optional bool distributedBuildModeEnabled;
+}
+
+struct BuckCacheMultiContainsResponse {
+  1: optional list<ContainsResult> results;
+
+  // All stores used to look up the artifact.
+  2: optional list<string> storesLookedUp;
 }
 
 enum FetchResultType {
@@ -116,13 +160,34 @@ struct PayloadInfo {
   1: optional i64 sizeBytes;
 }
 
+struct BuckCacheDeleteRequest {
+  1: optional list<RuleKey> ruleKeys;
+  2: optional string repository;
+  3: optional string scheduleType;
+  4: optional bool distributedBuildModeEnabled;
+}
+
+struct DeleteDebugInfo {
+  1: optional list<string> storesDeletedFrom;
+}
+
+struct BuckCacheDeleteResponse {
+  1: optional DeleteDebugInfo debugInfo;
+}
+
 struct BuckCacheRequest {
   1: optional BuckCacheRequestType type = BuckCacheRequestType.UNKNOWN;
+
+  // Can be unset if request is not initiated by buck build,
+  // e. g. if buckcache is called by command-line fetch utility.
+  2: optional string buckBuildId;
 
   100: optional list<PayloadInfo> payloads;
   101: optional BuckCacheFetchRequest fetchRequest;
   102: optional BuckCacheStoreRequest storeRequest;
   103: optional BuckCacheMultiFetchRequest multiFetchRequest;
+  105: optional BuckCacheDeleteRequest deleteRequest;
+  107: optional BuckCacheMultiContainsRequest multiContainsRequest;
 }
 
 struct BuckCacheResponse {
@@ -135,4 +200,6 @@ struct BuckCacheResponse {
   101: optional BuckCacheFetchResponse fetchResponse;
   102: optional BuckCacheStoreResponse storeResponse;
   103: optional BuckCacheMultiFetchResponse multiFetchResponse;
+  105: optional BuckCacheDeleteResponse deleteResponse;
+  107: optional BuckCacheMultiContainsResponse multiContainsResponse;
 }

@@ -27,8 +27,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -40,13 +42,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule,
         NativeTestable,
         HasRuntimeDeps,
         HasAppleDebugSymbolDeps,
-        SupportsInputBasedRuleKey {
+        SupportsInputBasedRuleKey,
+        HasSupplementaryOutputs {
 
   private final BuildRuleResolver ruleResolver;
   private final CxxPlatform cxxPlatform;
@@ -151,15 +155,35 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
   }
 
+  @Override
+  public boolean isCacheable() {
+    return false; // CxxBinary is a wrapper rule, and takes < 1ms to complete.
+  }
+
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return Stream.concat(getDeclaredDeps().stream(), executable.getDeps(ruleFinder).stream())
+    return Stream.concat(
+            getDeclaredDeps().stream(),
+            BuildableSupport.getDepsCollection(executable, ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }
 
   public CxxPlatform getCxxPlatform() {
     return cxxPlatform;
+  }
+
+  @Nullable
+  @Override
+  public SourcePath getSourcePathToSupplementaryOutput(String name) {
+    if (linkRule instanceof HasSupplementaryOutputs) {
+      SourcePath path =
+          ((HasSupplementaryOutputs) linkRule).getSourcePathToSupplementaryOutput(name);
+      if (path != null) {
+        return ForwardingBuildTargetSourcePath.of(getBuildTarget(), path);
+      }
+    }
+    return null;
   }
 }

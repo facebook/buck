@@ -47,7 +47,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -74,18 +74,20 @@ public class CxxCollectAndLogInferDependenciesStepTest {
       ProjectFilesystem filesystem,
       InferBuckConfig inferBuckConfig)
       throws Exception {
-    RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
-        new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-          @Override
-          public void appendToRuleKey(RuleKeyObjectSink sink) {
-            // Do nothing.
-          }
+    class FrameworkPathAppendableFunction
+        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+      @Override
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        // Do nothing.
+      }
 
-          @Override
-          public Path apply(FrameworkPath input) {
-            return Paths.get("test", "framework", "path", input.toString());
-          }
-        };
+      @Override
+      public Path apply(FrameworkPath input) {
+        return Paths.get("test", "framework", "path", input.toString());
+      }
+    }
+    RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
+        new FrameworkPathAppendableFunction();
 
     SourcePath preprocessor = FakeSourcePath.of(filesystem, "preprocessor");
     Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();
@@ -140,7 +142,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(testBuildTarget, analyzeRule.getAbsolutePathToResultsDir())
@@ -175,7 +177,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(testBuildTarget, analyzeRule.getAbsolutePathToResultsDir())
@@ -231,7 +233,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
@@ -290,7 +292,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())

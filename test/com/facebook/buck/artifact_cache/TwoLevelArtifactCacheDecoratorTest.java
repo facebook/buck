@@ -16,7 +16,6 @@
 
 package com.facebook.buck.artifact_cache;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
@@ -76,6 +75,30 @@ public class TwoLevelArtifactCacheDecoratorTest {
           Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey2, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
       assertThat(inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(3));
+    }
+  }
+
+  @Test
+  public void testResultDoesntHaveAddedMetadata() throws InterruptedException, IOException {
+    try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
+        TwoLevelArtifactCacheDecorator twoLevelCache =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
+                BuckEventBusForTests.newInstance(),
+                /* performTwoLevelStores */ true,
+                /* minimumTwoLevelStoredArtifactSize */ 0L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
+      LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
+      twoLevelCache.store(
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
+          BorrowablePath.notBorrowablePath(dummyFile.get()));
+      CacheResult cacheResult =
+          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile));
+      assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.HIT));
+      assertThat(
+          cacheResult.getMetadata().keySet(),
+          Matchers.not(Matchers.contains(TwoLevelArtifactCacheDecorator.METADATA_KEY)));
     }
   }
 
@@ -146,11 +169,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
 
       CacheResult fetch1 = Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile));
       CacheResult fetch2 = Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey2, dummyFile));
-      // Content hashes should be the same
-      assertEquals(
-          fetch1.getMetadata().get(TwoLevelArtifactCacheDecorator.METADATA_KEY),
-          fetch2.getMetadata().get(TwoLevelArtifactCacheDecorator.METADATA_KEY));
-      // But the metadata shouldn't be shared
+      // The metadata shouldn't be shared
       assertNotEquals(
           fetch1.getMetadata().get(testMetadataKey), fetch2.getMetadata().get(testMetadataKey));
     }

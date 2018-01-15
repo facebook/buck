@@ -1,0 +1,35 @@
+apple_binary(
+    name = "AppBinary",
+    srcs = ["App/App.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    headers = ["App/App.h"],
+)
+
+apple_bundle(
+    name = "App",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "App/App.plist",
+    deps = [
+        ":Service",
+    ],
+)
+
+apple_binary(
+    name = "ServiceBinary",
+    srcs = ["Service/Service.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+)
+
+apple_bundle(
+    name = "Service",
+    binary = ":ServiceBinary",
+    extension = "xpc",
+    info_plist = "Service/Service.plist",
+)

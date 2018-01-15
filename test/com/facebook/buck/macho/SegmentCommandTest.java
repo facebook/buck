@@ -18,7 +18,7 @@ package com.facebook.buck.macho;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;

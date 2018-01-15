@@ -22,6 +22,7 @@ import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
@@ -48,7 +49,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   @VisibleForTesting
   static final String SDK_NOT_FOUND_MESSAGE =
       "Android SDK could not be found. Make sure to set "
-          + "one of these environment variables: ANDROID_SDK, ANDROID_HOME";
+          + "one of these environment variables: ANDROID_SDK, ANDROID_HOME, "
+          + "or android.sdk_path in your .buckconfig";
 
   @VisibleForTesting
   static final String TOOLS_NEED_SDK_MESSAGE =
@@ -58,11 +60,16 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   @VisibleForTesting
   static final String NDK_NOT_FOUND_MESSAGE =
       "Android NDK could not be found. Make sure to set "
-          + "one of these  environment variables: ANDROID_NDK_REPOSITORY, ANDROID_NDK or NDK_HOME]";
+          + "one of these  environment variables: ANDROID_NDK_REPOSITORY, ANDROID_NDK, or NDK_HOME "
+          + "or ndk.ndk_path or ndk.ndk_repository_path in your .buckconfig";
 
   @VisibleForTesting
   static final String NDK_TARGET_VERSION_IS_EMPTY_MESSAGE =
       "buckconfig entry [ndk] ndk_version is an empty string.";
+
+  @VisibleForTesting
+  static final String INVALID_DIRECTORY_MESSAGE_TEMPLATE =
+      "Configuration '%s' points to an invalid directory '%s'.";
 
   public static final ImmutableSet<String> BUILD_TOOL_PREFIXES =
       ImmutableSet.of("android-", "build-tools-");
@@ -75,26 +82,30 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private Optional<String> sdkErrorMessage;
   private Optional<String> buildToolsErrorMessage;
   private Optional<String> ndkErrorMessage;
+  private Optional<String> discoveredBuildToolsVersion;
   private final Optional<Path> sdk;
   private final Optional<Path> buildTools;
   private final Optional<Path> ndk;
 
   public DefaultAndroidDirectoryResolver(
-      FileSystem fileSystem,
-      ImmutableMap<String, String> environment,
-      Optional<String> targetBuildToolsVersion,
-      Optional<String> targetNdkVersion) {
+      FileSystem fileSystem, ImmutableMap<String, String> environment, AndroidBuckConfig config) {
     this.fileSystem = fileSystem;
     this.environment = environment;
-    this.targetBuildToolsVersion = targetBuildToolsVersion;
-    this.targetNdkVersion = targetNdkVersion;
+    this.targetBuildToolsVersion = config.getBuildToolsVersion();
+    this.targetNdkVersion = config.getNdkVersion();
 
     this.sdkErrorMessage = Optional.empty();
     this.buildToolsErrorMessage = Optional.empty();
     this.ndkErrorMessage = Optional.empty();
-    this.sdk = findSdk();
-    this.buildTools = findBuildTools();
-    this.ndk = findNdk();
+
+    Optional<Path> sdkPath = findSdk(config);
+    Optional<Path> buildToolsPath = findBuildTools(sdkPath);
+    Optional<Path> ndkPath = findNdk(config);
+    this.sdk = sdkPath;
+    this.buildTools = buildToolsPath;
+    this.ndk = ndkPath;
+
+    this.discoveredBuildToolsVersion = Optional.empty();
   }
 
   @Override
@@ -127,23 +138,51 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   @Override
-  public Optional<Path> getNdkOrAbsent() {
-    return ndk;
-  }
-
-  @Override
   public Optional<String> getNdkVersion() {
-    Optional<Path> ndkPath = getNdkOrAbsent();
-    if (!ndkPath.isPresent()) {
+    if (!ndk.isPresent()) {
       return Optional.empty();
     }
-    return findNdkVersion(ndkPath.get());
+    return findNdkVersion(ndk.get());
   }
 
-  private Optional<Path> findSdk() {
+  /**
+   * Returns Android SDK build tools version that was either discovered or provided during creation.
+   */
+  @VisibleForTesting
+  public Optional<String> getBuildToolsVersion() {
+    return discoveredBuildToolsVersion.isPresent()
+        ? discoveredBuildToolsVersion
+        : targetBuildToolsVersion;
+  }
+
+  private Pair<String, Optional<String>> getEnvironmentVariable(String key) {
+    return new Pair<String, Optional<String>>(key, Optional.ofNullable(environment.get(key)));
+  }
+
+  private Optional<Path> findFirstDirectory(
+      ImmutableList<Pair<String, Optional<String>>> possiblePaths) {
+    for (Pair<String, Optional<String>> possiblePath : possiblePaths) {
+      if (possiblePath.getSecond().isPresent()) {
+        Path dirPath = fileSystem.getPath(possiblePath.getSecond().get());
+        if (!Files.isDirectory(dirPath)) {
+          throw new RuntimeException(
+              String.format(INVALID_DIRECTORY_MESSAGE_TEMPLATE, possiblePath.getFirst(), dirPath));
+        }
+        return Optional.of(dirPath);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<Path> findSdk(AndroidBuckConfig config) {
     Optional<Path> sdkPath;
     try {
-      sdkPath = findDirectoryByEnvironmentVariables("ANDROID_SDK", "ANDROID_HOME");
+      sdkPath =
+          findFirstDirectory(
+              ImmutableList.of(
+                  getEnvironmentVariable("ANDROID_SDK"),
+                  getEnvironmentVariable("ANDROID_HOME"),
+                  new Pair<String, Optional<String>>("android.sdk_path", config.getSdkPath())));
     } catch (RuntimeException e) {
       sdkErrorMessage = Optional.of(e.getMessage());
       return Optional.empty();
@@ -155,39 +194,12 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return sdkPath;
   }
 
-  private Optional<Path> findDirectoryByEnvironmentVariables(String... environmentVariables) {
-    Path dirPath = null;
-    String dirPathEnvironmentVariable = null;
-
-    // First, try to find a value in each of the environment variables, in order.
-    for (String environmentVariable : environmentVariables) {
-      String environmentVariableValue = environment.get(environmentVariable);
-      if (environmentVariableValue != null) {
-        dirPath = fileSystem.getPath(environmentVariableValue);
-        dirPathEnvironmentVariable = environmentVariable;
-        break;
-      }
-    }
-
-    // If a dirPath was found, verify that it maps to a directory before returning it.
-    if (dirPath == null) {
-      return Optional.empty();
-    }
-    if (!Files.isDirectory(dirPath)) {
-      throw new RuntimeException(
-          String.format(
-              "Environment variable '%s' points to a path that is not a directory: '%s'.",
-              dirPathEnvironmentVariable, dirPath));
-    }
-    return Optional.of(dirPath);
-  }
-
-  private Optional<Path> findBuildTools() {
-    if (!sdk.isPresent()) {
+  private Optional<Path> findBuildTools(Optional<Path> sdkPath) {
+    if (!sdkPath.isPresent()) {
       buildToolsErrorMessage = Optional.of(TOOLS_NEED_SDK_MESSAGE);
       return Optional.empty();
     }
-    final Path sdkDir = sdk.get();
+    final Path sdkDir = sdkPath.get();
     final Path toolsDir = sdkDir.resolve("build-tools");
 
     if (toolsDir.toFile().isDirectory()) {
@@ -227,7 +239,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
       if (targetBuildToolsVersion.isPresent()) {
         if (directories.length == 0) {
-          buildToolsErrorMessage = unableToFindTargetBuildTools();
+          buildToolsErrorMessage = unableToFindTargetBuildTools(sdkPath.get());
           return Optional.empty();
         } else {
           return Optional.of(directories[0].toPath());
@@ -258,37 +270,62 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
                     + ").");
         return Optional.empty();
       }
+      discoveredBuildToolsVersion = Optional.of(newestBuildDirVersion);
       return Optional.of(newestBuildDir.toPath());
     }
     if (targetBuildToolsVersion.isPresent()) {
       // We were looking for a specific version, but we aren't going to find it at this point since
       // nothing under platform-tools was versioned.
-      buildToolsErrorMessage = unableToFindTargetBuildTools();
+      buildToolsErrorMessage = unableToFindTargetBuildTools(sdkPath.get());
       return Optional.empty();
     }
     // Build tools used to exist inside of platform-tools, so fallback to that.
     return Optional.of(sdkDir.resolve("platform-tools"));
   }
 
-  private Optional<Path> findNdk() {
-    Optional<Path> repository = Optional.empty();
+  private Optional<Path> findNdk(AndroidBuckConfig config) {
     try {
-      repository = findDirectoryByEnvironmentVariables("ANDROID_NDK_REPOSITORY");
+      Optional<Path> ndkRepositoryPath =
+          findFirstDirectory(ImmutableList.of(getEnvironmentVariable("ANDROID_NDK_REPOSITORY")));
+      if (ndkRepositoryPath.isPresent()) {
+        return findNdkFromRepository(ndkRepositoryPath.get());
+      }
     } catch (RuntimeException e) {
       ndkErrorMessage = Optional.of(e.getMessage());
     }
-    if (repository.isPresent()) {
-      return findNdkFromRepository(repository.get());
-    }
-
-    Optional<Path> directory = Optional.empty();
     try {
-      directory = findDirectoryByEnvironmentVariables("ANDROID_NDK", "NDK_HOME");
+      Optional<Path> ndkDirectoryPath =
+          findFirstDirectory(
+              ImmutableList.of(
+                  getEnvironmentVariable("ANDROID_NDK"), getEnvironmentVariable("NDK_HOME")));
+      if (ndkDirectoryPath.isPresent()) {
+        return findNdkFromDirectory(ndkDirectoryPath.get());
+      }
     } catch (RuntimeException e) {
       ndkErrorMessage = Optional.of(e.getMessage());
     }
-    if (directory.isPresent()) {
-      return findNdkFromDirectory(directory.get());
+    try {
+      Optional<Path> ndkRepositoryPath =
+          findFirstDirectory(
+              ImmutableList.of(
+                  new Pair<String, Optional<String>>(
+                      "ndk.ndk_repository_path", config.getNdkRepositoryPath())));
+      if (ndkRepositoryPath.isPresent()) {
+        return findNdkFromRepository(ndkRepositoryPath.get());
+      }
+    } catch (RuntimeException e) {
+      ndkErrorMessage = Optional.of(e.getMessage());
+    }
+    try {
+      Optional<Path> ndkDirectoryPath =
+          findFirstDirectory(
+              ImmutableList.of(
+                  new Pair<String, Optional<String>>("ndk.ndk_path", config.getNdkPath())));
+      if (ndkDirectoryPath.isPresent()) {
+        return findNdkFromDirectory(ndkDirectoryPath.get());
+      }
+    } catch (RuntimeException e) {
+      ndkErrorMessage = Optional.of(e.getMessage());
     }
 
     if (!ndkErrorMessage.isPresent()) {
@@ -445,18 +482,17 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return name;
   }
 
-  private Optional<String> unableToFindTargetBuildTools() {
+  private Optional<String> unableToFindTargetBuildTools(Path sdkPath) {
     return Optional.of(
         "Unable to find build-tools version "
             + targetBuildToolsVersion.get()
             + ", which is specified by your config.  Please see "
             + "https://buckbuild.com/concept/buckconfig.html#android.build_tools_version for more "
             + "details about the setting.  To install the correct version of the tools, run `"
-            + Escaper.escapeAsShellString(sdk.get().resolve("tools/android").toString())
-            + " update "
-            + "sdk --force --no-ui --all --filter build-tools-"
+            + Escaper.escapeAsShellString(sdkPath.resolve("tools/bin/sdkmanager").toString())
+            + " \"build-tools;"
             + targetBuildToolsVersion.get()
-            + "`");
+            + "\"`");
   }
 
   private boolean versionsMatch(String expected, String candidate) {
@@ -478,7 +514,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
     return Objects.equals(targetBuildToolsVersion, that.targetBuildToolsVersion)
         && Objects.equals(targetNdkVersion, that.targetNdkVersion)
-        && Objects.equals(getNdkOrAbsent(), that.getNdkOrAbsent());
+        && Objects.equals(ndk, that.ndk);
   }
 
   @Override

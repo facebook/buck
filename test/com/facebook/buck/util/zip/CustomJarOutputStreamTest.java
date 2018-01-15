@@ -16,6 +16,7 @@
 package com.facebook.buck.util.zip;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
@@ -72,17 +73,53 @@ public class CustomJarOutputStreamTest {
       writer.writeEntry(entryName, hashingContents);
       writer.close();
 
-      try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
-        jar.getNextJarEntry();
-        JarEntry manifestEntry = jar.getNextJarEntry();
-        assertEquals(JarFile.MANIFEST_NAME, manifestEntry.getName());
-        Manifest manifest = new Manifest();
-        manifest.read(jar);
-
-        String expectedHash = hashingContents.hash().toString();
-        assertEquals(
-            expectedHash, manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
-      }
+      String expectedHash = hashingContents.hash().toString();
+      assertEntryHash(entryName, expectedHash);
     }
+  }
+
+  @Test
+  public void manifestContainsEntryHashesOfEmptyHashedEntries() throws IOException {
+    String entryName = "A";
+    InputStream contents = new ByteArrayInputStream(new byte[0]);
+    try (HashingInputStream hashingContents =
+        new HashingInputStream(Hashing.murmur3_128(), contents)) {
+      writer.putNextEntry(new CustomZipEntry(entryName));
+      writer.closeEntry();
+      writer.close();
+
+      String expectedHash = hashingContents.hash().toString();
+      assertEntryHash(entryName, expectedHash);
+    }
+  }
+
+  @Test
+  public void manifestDoesNotContainEntryHashesOfDirectories() throws IOException {
+    String entryName = "A/";
+    writer.putNextEntry(new CustomZipEntry(entryName));
+    writer.closeEntry();
+    writer.close();
+
+    assertNoEntryHash(entryName);
+  }
+
+  private void assertEntryHash(String entryName, String expectedHash) throws IOException {
+    Manifest manifest = getManifest();
+    assertEquals(expectedHash, manifest.getEntries().get(entryName).getValue("Murmur3-128-Digest"));
+  }
+
+  private void assertNoEntryHash(String entryName) throws IOException {
+    assertFalse(getManifest().getEntries().containsKey(entryName));
+  }
+
+  private Manifest getManifest() throws IOException {
+    Manifest manifest = new Manifest();
+    try (JarInputStream jar = new JarInputStream(new ByteArrayInputStream(out.toByteArray()))) {
+      jar.getNextJarEntry();
+      JarEntry manifestEntry = jar.getNextJarEntry();
+      assertEquals(JarFile.MANIFEST_NAME, manifestEntry.getName());
+      manifest.read(jar);
+    }
+    return manifest;
   }
 }

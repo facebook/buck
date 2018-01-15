@@ -43,4 +43,22 @@ public class TargetGraphHashingIntegrationTest {
     String hash = workspace.runBuckCommand("targets", "--show-target-hash", "//:empty").getStdout();
     assertThat(hash, Matchers.equalTo(expectedHash));
   }
+
+  @Test
+  public void hashDoesNotChangeWithParallelization() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "java_library_resources_root_target_hash", tmp);
+    workspace.setUp();
+
+    String expectedHash =
+        workspace
+            .runBuckCommand("-c", "build.threads=1", "targets", "--show-target-hash", "//:empty")
+            .getStdout();
+    String hash =
+        workspace
+            .runBuckCommand("-c", "build.threads=10", "targets", "--show-target-hash", "//:empty")
+            .getStdout();
+    assertThat(hash, Matchers.equalTo(expectedHash));
+  }
 }

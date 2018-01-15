@@ -1,31 +1,31 @@
 python_binary(
-    name='zip',
-    main='zip.py',
+    name = "zip",
+    main = "zip.py",
 )
 
 genrule(
-    name='file.src.zip',
-    out='file.src.zip',
-    cmd='$(exe :zip) mod $OUT $SRCS',
-    srcs=[
-       'file.py',
+    name = "file.src.zip",
+    srcs = [
+        "file.py",
     ],
+    out = "file.src.zip",
+    cmd = "$(exe :zip) mod $OUT $SRCS",
 )
 
 python_library(
-    name='file_zip_lib',
-    base_module='',
-    srcs=[
-        ':file.src.zip',
+    name = "file_zip_lib",
+    srcs = [
+        ":file.src.zip",
     ],
+    base_module = "",
 )
 
 python_test(
-    name='test',
-    srcs=[
-        'test.py',
+    name = "test",
+    srcs = [
+        "test.py",
     ],
-    deps=[
-        ':file_zip_lib',
+    deps = [
+        ":file_zip_lib",
     ],
 )

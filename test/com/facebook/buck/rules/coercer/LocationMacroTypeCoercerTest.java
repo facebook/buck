@@ -27,6 +27,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -41,7 +42,13 @@ public class LocationMacroTypeCoercerTest {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
     assertThat(
         coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("//:test")),
-        Matchers.equalTo(LocationMacro.of(BuildTargetFactory.newInstance("//:test"))));
+        Matchers.equalTo(
+            LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.empty())));
+
+    assertThat(
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("//:test[foo]")),
+        Matchers.equalTo(
+            LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.of("foo"))));
   }
 
   @Test(expected = CoerceFailedException.class)

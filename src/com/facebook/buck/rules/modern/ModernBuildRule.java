@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -36,13 +35,13 @@ import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -138,7 +137,7 @@ public class ModernBuildRule<T extends Buildable>
       SourcePathRuleFinder ruleFinder) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
-    this.deps = Suppliers.memoize(this::computeDeps);
+    this.deps = MoreSuppliers.memoize(this::computeDeps);
     this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.outputPathResolver =
@@ -278,7 +277,7 @@ public class ModernBuildRule<T extends Buildable>
   }
 
   @Override
-  public final DataHolder initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public final DataHolder initializeFromDisk() throws IOException {
     // TODO(cjhopman): implement
     return new DataHolder();
   }

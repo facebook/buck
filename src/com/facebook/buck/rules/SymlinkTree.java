@@ -26,6 +26,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -209,11 +210,11 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
                           Level.SEVERE,
                           String.format(
                               "Path '%s' should not contain '%s'.", entry.getKey(), pathPart)));
-              return StepExecutionResult.ERROR;
+              return StepExecutionResults.ERROR;
             }
           }
         }
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
     };
   }
@@ -239,6 +240,14 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
 
   public Path getRoot() {
     return getProjectFilesystem().resolve(root);
+  }
+
+  public SourcePath getRootSourcePath() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), root);
+  }
+
+  public SourcePath getRootSourcePath(String subdir) {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), root.resolve(subdir));
   }
 
   public ImmutableSortedMap<Path, SourcePath> getLinks() {

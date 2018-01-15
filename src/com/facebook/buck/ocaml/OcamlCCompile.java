@@ -51,7 +51,10 @@ public class OcamlCCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), args.output.getParent())),
         new OcamlCCompileStep(
-            context.getSourcePathResolver(), getProjectFilesystem().getRootPath(), args));
+            getBuildTarget(),
+            context.getSourcePathResolver(),
+            getProjectFilesystem().getRootPath(),
+            args));
   }
 
   @Override

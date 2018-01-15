@@ -17,6 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.string.AsciiBoxStringBuilder;
+import com.google.common.base.Throwables;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -48,44 +53,39 @@ class TracingProcessorWrapper implements Processor {
 
   @Override
   public Set<String> getSupportedOptions() {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS)) {
       return innerProcessor.getSupportedOptions();
-    } finally {
-      end(started);
+    } catch (RuntimeException | Error e) {
+      throw wrapAnnotationProcessorCrashException(e);
     }
   }
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES);
-    try {
+    try (Scope scope =
+        new Scope(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES)) {
       return innerProcessor.getSupportedAnnotationTypes();
-    } finally {
-      end(started);
+    } catch (RuntimeException | Error e) {
+      throw wrapAnnotationProcessorCrashException(e);
     }
   }
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION);
-    try {
+    try (Scope scope =
+        new Scope(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION)) {
       return innerProcessor.getSupportedSourceVersion();
-    } finally {
-      end(started);
+    } catch (RuntimeException | Error e) {
+      throw wrapAnnotationProcessorCrashException(e);
     }
   }
 
   @Override
   public void init(ProcessingEnvironment processingEnv) {
-    AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.INIT);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.INIT)) {
       innerProcessor.init(processingEnv);
-    } finally {
-      end(started);
+    } catch (RuntimeException | Error e) {
+      throw wrapAnnotationProcessorCrashException(e);
     }
   }
 
@@ -93,41 +93,93 @@ class TracingProcessorWrapper implements Processor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     roundNumber += 1;
     isLastRound = roundEnv.processingOver();
-    AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.PROCESS);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.PROCESS)) {
       return innerProcessor.process(annotations, roundEnv);
-    } finally {
-      end(started);
+    } catch (RuntimeException | Error e) {
+      throw wrapAnnotationProcessorCrashException(e);
     }
+  }
+
+  private HumanReadableException wrapAnnotationProcessorCrashException(Throwable e) {
+    List<String> filteredStackTraceLines = getStackTraceEndingAtAnnotationProcessor(e);
+
+    int maxLineLength = filteredStackTraceLines.stream().mapToInt(String::length).max().orElse(75);
+
+    AsciiBoxStringBuilder messageBuilder =
+        new AsciiBoxStringBuilder(maxLineLength)
+            .writeLine("The annotation processor %s has crashed.\n", annotationProcessorName)
+            .writeLine(
+                "This is likely a bug in the annotation processor itself, though there may be changes you can make to your code to work around it. Examine the exception stack trace below and consult the annotation processor's troubleshooting guide.\n");
+
+    filteredStackTraceLines.forEach(messageBuilder::writeLine);
+
+    return new HumanReadableException(e, "\n" + messageBuilder.toString());
+  }
+
+  private List<String> getStackTraceEndingAtAnnotationProcessor(Throwable e) {
+    String[] stackTraceLines = Throwables.getStackTraceAsString(e).split("\n");
+    List<String> filteredStackTraceLines = new ArrayList<>();
+
+    boolean skippingBuckFrames = false;
+    int numFramesSkipped = 0;
+    for (String stackTraceLine : stackTraceLines) {
+      if (stackTraceLine.contains(TracingProcessorWrapper.class.getSimpleName())) {
+        skippingBuckFrames = true;
+        numFramesSkipped = 0;
+      } else if (stackTraceLine.contains("Caused by:")) {
+        skippingBuckFrames = false;
+        if (numFramesSkipped > 0) {
+          // Mimic the skipped frames logic of inner exceptions for the frames we've skipped
+          filteredStackTraceLines.add(String.format("\t... %d more", numFramesSkipped));
+        }
+      }
+
+      if (skippingBuckFrames) {
+        numFramesSkipped += 1;
+        continue;
+      }
+
+      filteredStackTraceLines.add(stackTraceLine);
+    }
+    return filteredStackTraceLines;
   }
 
   @Override
   public Iterable<? extends Completion> getCompletions(
       Element element, AnnotationMirror annotation, ExecutableElement member, String userText) {
-    AnnotationProcessingEvent.Started started =
-        begin(AnnotationProcessingEvent.Operation.GET_COMPLETIONS);
-    try {
+    try (Scope scope = new Scope(AnnotationProcessingEvent.Operation.GET_COMPLETIONS)) {
       return innerProcessor.getCompletions(element, annotation, member, userText);
-    } finally {
-      end(started);
     }
   }
 
-  private AnnotationProcessingEvent.Started begin(AnnotationProcessingEvent.Operation operation) {
-    AnnotationProcessingEvent.Started started =
-        AnnotationProcessingEvent.started(
-            buildTarget, annotationProcessorName, operation, roundNumber, isLastRound);
-    eventSink.reportAnnotationProcessingEventStarted(
-        buildTarget, annotationProcessorName, operation.toString(), roundNumber, isLastRound);
-    return started;
-  }
+  private class Scope implements AutoCloseable {
+    private final AnnotationProcessingEvent.Started started;
 
-  private void end(AnnotationProcessingEvent.Started started) {
-    eventSink.reportAnnotationProcessingEventFinished(
-        started.getBuildTarget(),
-        started.getAnnotationProcessorName(),
-        started.getOperation().toString(),
-        started.getRound(),
-        started.isLastRound());
+    public Scope(AnnotationProcessingEvent.Operation operation) {
+      started = begin(operation);
+    }
+
+    @Override
+    public void close() {
+      end(started);
+    }
+
+    private AnnotationProcessingEvent.Started begin(AnnotationProcessingEvent.Operation operation) {
+      AnnotationProcessingEvent.Started started =
+          AnnotationProcessingEvent.started(
+              buildTarget, annotationProcessorName, operation, roundNumber, isLastRound);
+      eventSink.reportAnnotationProcessingEventStarted(
+          buildTarget, annotationProcessorName, operation.toString(), roundNumber, isLastRound);
+      return started;
+    }
+
+    private void end(AnnotationProcessingEvent.Started started) {
+      eventSink.reportAnnotationProcessingEventFinished(
+          started.getBuildTarget(),
+          started.getAnnotationProcessorName(),
+          started.getOperation().toString(),
+          started.getRound(),
+          started.isLastRound());
+    }
   }
 }

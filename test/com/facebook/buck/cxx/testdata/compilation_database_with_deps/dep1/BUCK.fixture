@@ -1,12 +1,15 @@
 cxx_library(
-  name = 'dep1',
-  srcs = [
-    'dep1.cpp',
-  ],
-  deps = [
-    '//dep2:dep2',
-  ],
-  headers = glob(['*.h']),
-  exported_headers = glob(['*.h'], excludes=['*_private.h']),
-  visibility = [ 'PUBLIC' ],
+    name = "dep1",
+    srcs = [
+        "dep1.cpp",
+    ],
+    exported_headers = glob(
+        ["*.h"],
+        excludes = ["*_private.h"],
+    ),
+    headers = glob(["*.h"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//dep2:dep2",
+    ],
 )

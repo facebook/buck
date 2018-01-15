@@ -20,10 +20,12 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -33,7 +35,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,10 +43,9 @@ import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -59,6 +59,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -83,6 +84,7 @@ import javax.annotation.Nullable;
 public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary,
         HasClasspathEntries,
+        HasClasspathDeps,
         ExportDependencies,
         InitializableFromDisk<JavaLibrary.Data>,
         AndroidPackageable,
@@ -91,8 +93,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         SupportsDependencyFileRuleKey,
         SupportsPipelining<JavacPipelineState>,
         JavaLibraryWithTests {
-
-  private static final Path METADATA_DIR = Paths.get("META-INF");
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   @AddToRuleKey private final Optional<String> mavenCoords;
@@ -193,19 +193,19 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.abiJar = abiJar;
 
     this.outputClasspathEntriesSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 JavaLibraryClasspathProvider.getOutputClasspathJars(
                     DefaultJavaLibrary.this, sourcePathForOutputJar()));
 
     this.transitiveClasspathsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 JavaLibraryClasspathProvider.getClasspathsFromLibraries(
                     getTransitiveClasspathDeps()));
 
     this.transitiveClasspathDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -330,11 +330,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   /** Instructs this rule to report the ABI it has on disk as its current ABI. */
   @Override
-  public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public JavaLibrary.Data initializeFromDisk() throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     outputJarContentsSupplier.load();
-    return JavaLibraryRules.initializeFromDisk(
-        getBuildTarget(), getProjectFilesystem(), onDiskBuildInfo);
+    return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
   }
 
   @Override
@@ -398,18 +397,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    // Annotation processors might enumerate all files under a certain path and then generate
-    // code based on that list (without actually reading the files), making the list of files
-    // itself a used dependency that must be part of the dependency-based key. We don't
-    // currently have the instrumentation to detect such enumeration perfectly, but annotation
-    // processors are most commonly looking for files under META-INF, so as a stopgap we add
-    // the listing of META-INF to the rule key.
-    return (SourcePath path) ->
-        (path instanceof ArchiveMemberSourcePath)
-            && pathResolver
-                .getRelativeArchiveMemberPath(path)
-                .getMemberPath()
-                .startsWith(METADATA_DIR);
+    return jarBuildStepsFactory.getExistenceOfInterestPredicate(pathResolver);
   }
 
   @Override
@@ -421,7 +409,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public boolean useRulePipelining() {
-    return true;
+    return jarBuildStepsFactory.useRulePipelining();
   }
 
   @Override
@@ -438,7 +426,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
-    // TODO: Reuse the javac
-    return getBuildSteps(context, buildableContext);
+    return jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
+        context, buildableContext, state);
   }
 }

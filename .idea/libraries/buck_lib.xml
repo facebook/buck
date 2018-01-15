@@ -3,7 +3,6 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/third-party/java/android/sdklib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-20.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ini4j/ini4j-0.5.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.4.0.jar!/" />
@@ -12,12 +11,8 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.1.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/stringtemplate/ST-4.0.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ObjCBridge/ObjCBridge.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.10.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.10.0-patched.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/slf4j-jdk14-1.7.5.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/caliper/caliper-1.0-all.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/caliper/java-allocation-instrumenter-3.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/okhttp/okhttp-3.6.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/okio/okio-1.11.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-3.3-SNAPSHOT.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.7.8.jar!/" />
@@ -27,25 +22,22 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-6.0_BETA.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-20.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.4.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-4.4.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-0.9.2-SNAPSHOT-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.1.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-3.3-SNAPSHOT-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.10.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.10.0-patched-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/slf4j-jdk14-1.7.5-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/sqlite/sqlite-jdbc-3.20.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-6.0_BETA-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

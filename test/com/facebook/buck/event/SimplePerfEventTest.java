@@ -18,7 +18,7 @@ package com.facebook.buck.event;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

@@ -16,11 +16,13 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
 
 class CxxLinkStep extends ShellStep {
 
@@ -32,12 +34,13 @@ class CxxLinkStep extends ShellStep {
   private final Path scratchDir;
 
   public CxxLinkStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> linker,
       Path argFilePath,
       Path scratchDir) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.linker = linker;
     this.argFilePath = argFilePath;

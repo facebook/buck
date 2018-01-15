@@ -16,11 +16,13 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /** Run strip on a binary. */
 public class StripStep extends ShellStep {
@@ -32,13 +34,14 @@ public class StripStep extends ShellStep {
   private final Path destination;
 
   public StripStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> stripCommandPrefix,
       ImmutableList<String> flags,
       Path source,
       Path destination) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.stripCommandPrefix = stripCommandPrefix;
     this.flags = flags;
