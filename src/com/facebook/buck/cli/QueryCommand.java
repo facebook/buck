@@ -59,6 +59,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -336,10 +337,8 @@ public class QueryCommand extends AbstractCommand {
 
     PrintStream stdOut = params.getConsole().getStdOut();
     if (shouldOutputAttributes()) {
-      ImmutableSortedMap<String, SortedMap<String, Object>> attributes =
-          collectAttributes(params, env, queryResult);
       ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
-          extendAttributesWithRankMetadata(outputFormat, entries, attributes);
+          extendAttributesWithRankMetadata(params, env, outputFormat, entries);
       printAttributes(attributesWithRanks, stdOut);
     } else {
       for (Map.Entry<TargetNode<?, ?>, Integer> entry : entries) {
@@ -350,12 +349,17 @@ public class QueryCommand extends AbstractCommand {
     }
   }
 
-  /** Returns {@code attributes} with included min/max rank metadata into. */
+  /**
+   * Returns {@code attributes} with included min/max rank metadata into keyed by the result of
+   * {@link #toPresentationForm(TargetNode)}
+   */
   private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
       extendAttributesWithRankMetadata(
+          CommandRunnerParams params,
+          BuckQueryEnvironment env,
           OutputFormat outputFormat,
-          List<Entry<TargetNode<?, ?>, Integer>> entries,
-          Map<String, SortedMap<String, Object>> attributes) {
+          List<Entry<TargetNode<?, ?>, Integer>> entries) {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
     ImmutableMap<String, Integer> rankIndex =
         entries
             .stream()
@@ -371,8 +375,15 @@ public class QueryCommand extends AbstractCommand {
                 entry -> toPresentationForm(entry.getKey()),
                 entry -> {
                   String label = toPresentationForm(entry.getKey());
+                  // NOTE: for resiliency in case attributes cannot be resolved a map with only
+                  // minrank is returned, which means clients should be prepared to deal with
+                  // potentially missing fields. Consider not returning a node in such case, since
+                  // most likely an attempt to use that node would fail anyways.
+                  SortedMap<String, Object> attributes =
+                      getAttributes(params, env, patternsMatcher, entry.getKey())
+                          .orElseGet(TreeMap::new);
                   return ImmutableSortedMap.<String, Object>naturalOrder()
-                      .putAll(attributes.get(label))
+                      .putAll(attributes)
                       .put(outputFormat.name().toLowerCase(), rankIndex.get(label))
                       .build();
                 }));
@@ -450,27 +461,13 @@ public class QueryCommand extends AbstractCommand {
       }
       TargetNode<?, ?> node = env.getNode(target);
       try {
-        SortedMap<String, Object> sortedTargetRule =
-            params.getParser().getRawTargetNode(env.getParserState(), params.getCell(), node);
-        if (sortedTargetRule == null) {
-          params
-              .getConsole()
-              .printErrorText(
-                  "unable to find rule for target "
-                      + node.getBuildTarget().getFullyQualifiedName());
+        Optional<SortedMap<String, Object>> attributes =
+            getAttributes(params, env, patternsMatcher, node);
+        if (!attributes.isPresent()) {
           continue;
         }
-        SortedMap<String, Object> attributes = new TreeMap<>();
-        if (patternsMatcher.hasPatterns()) {
-          for (String key : sortedTargetRule.keySet()) {
-            String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
-            if (patternsMatcher.matches(snakeCaseKey)) {
-              attributes.put(snakeCaseKey, sortedTargetRule.get(key));
-            }
-          }
-        }
 
-        attributesBuilder.put(toPresentationForm(node), attributes);
+        attributesBuilder.put(toPresentationForm(node), attributes.get());
       } catch (BuildFileParseException e) {
         params
             .getConsole()
@@ -480,6 +477,32 @@ public class QueryCommand extends AbstractCommand {
       }
     }
     return attributesBuilder.build();
+  }
+
+  private Optional<SortedMap<String, Object>> getAttributes(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      PatternsMatcher patternsMatcher,
+      TargetNode<?, ?> node) {
+    SortedMap<String, Object> sortedTargetRule =
+        params.getParser().getRawTargetNode(env.getParserState(), params.getCell(), node);
+    if (sortedTargetRule == null) {
+      params
+          .getConsole()
+          .printErrorText(
+              "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+      return Optional.empty();
+    }
+    SortedMap<String, Object> attributes = new TreeMap<>();
+    if (patternsMatcher.hasPatterns()) {
+      for (String key : sortedTargetRule.keySet()) {
+        String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
+        if (patternsMatcher.matches(snakeCaseKey)) {
+          attributes.put(snakeCaseKey, sortedTargetRule.get(key));
+        }
+      }
+    }
+    return Optional.of(attributes);
   }
 
   private String toPresentationForm(TargetNode<?, ?> node) {
