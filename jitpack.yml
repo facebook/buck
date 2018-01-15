@@ -1,0 +1,9 @@
+jdk:
+  - oraclejdk8
+install:
+   - set -exo pipefail
+   - ant
+   - bin/buck build buck
+   - SHA=$(git rev-parse HEAD)
+   - PEX=$(bin/buck targets --show-output buck | awk '{print $2}')
+   - mvn install:install-file -Dfile="$PEX" -DgroupId="$GROUP" -DartifactId="$ARTIFACT" -Dversion="$SHA" -Dpackaging="pex" -DgeneratePom=true
