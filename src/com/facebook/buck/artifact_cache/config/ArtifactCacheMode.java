@@ -17,6 +17,7 @@
 package com.facebook.buck.artifact_cache.config;
 
 public enum ArtifactCacheMode {
+  unknown(CacheType.local),
   dir(CacheType.local),
   http(CacheType.remote),
   sqlite(CacheType.local),

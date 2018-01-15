@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.CacheCountersSummary;
 import com.facebook.buck.artifact_cache.CacheCountersSummaryEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -45,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -168,6 +170,12 @@ public class CacheCommand extends AbstractCommand {
     String resultString = "";
     int goodRuns = 0;
 
+    HashMap<ArtifactCacheMode, AtomicInteger> cacheHitsPerMode = new HashMap<>();
+    HashMap<ArtifactCacheMode, AtomicInteger> cacheErrorsPerMode = new HashMap<>();
+    for (ArtifactCacheMode mode : ArtifactCacheMode.values()) {
+      cacheHitsPerMode.put(mode, new AtomicInteger(0));
+      cacheErrorsPerMode.put(mode, new AtomicInteger(0));
+    }
     int cacheHits = 0;
     int cacheMisses = 0;
     int cacheErrors = 0;
@@ -179,13 +187,21 @@ public class CacheCommand extends AbstractCommand {
         goodRuns++;
       }
       resultString += r.resultString;
-
+      ArtifactCacheMode artifactCacheMode = r.cacheResultMode.orElse(ArtifactCacheMode.unknown);
       switch (r.cacheResultType) {
         case ERROR:
+          if (cacheErrorsPerMode.containsKey(artifactCacheMode)) {
+            cacheErrorsPerMode.get(artifactCacheMode).incrementAndGet();
+          }
           ++cacheErrors;
           break;
-        case HIT:
         case CONTAINS:
+          // Ignore it since it will be counted as a hit later.
+          break;
+        case HIT:
+          if (cacheHitsPerMode.containsKey(artifactCacheMode)) {
+            cacheHitsPerMode.get(artifactCacheMode).incrementAndGet();
+          }
           ++cacheHits;
           break;
         case MISS:
@@ -224,8 +240,10 @@ public class CacheCommand extends AbstractCommand {
         .post(
             CacheCountersSummaryEvent.newSummary(
                 CacheCountersSummary.builder()
-                    .setTotalCacheErrors(cacheErrors)
+                    .setCacheHitsPerMode(cacheHitsPerMode)
+                    .setCacheErrorsPerMode(cacheErrorsPerMode)
                     .setTotalCacheHits(cacheHits)
+                    .setTotalCacheErrors(cacheErrors)
                     .setTotalCacheMisses(cacheMisses)
                     .setTotalCacheIgnores(cacheIgnored)
                     .setTotalCacheLocalKeyUnchangedHits(localKeyUnchanged)
@@ -336,6 +354,7 @@ public class CacheCommand extends AbstractCommand {
     Path tmpDir;
     Path artifact;
     CacheResultType cacheResultType;
+    Optional<ArtifactCacheMode> cacheResultMode;
     String statusString;
     String cacheResult;
     StringBuilder resultString;
@@ -357,6 +376,7 @@ public class CacheCommand extends AbstractCommand {
       this.resultString = new StringBuilder();
       this.completed = false;
       this.cacheResultType = CacheResultType.IGNORED;
+      this.cacheResultMode = Optional.of(ArtifactCacheMode.unknown);
     }
 
     @Override
@@ -373,6 +393,7 @@ public class CacheCommand extends AbstractCommand {
           Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(artifact)));
       cacheResult = cacheResultToString(success);
       cacheResultType = success.getType();
+      cacheResultMode = success.cacheMode();
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {
         statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);

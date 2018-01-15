@@ -217,6 +217,8 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       }
 
       switch (mode) {
+        case unknown:
+          break;
         case dir:
           initializeDirCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
           break;
