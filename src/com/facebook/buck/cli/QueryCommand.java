@@ -361,8 +361,7 @@ public class QueryCommand extends AbstractCommand {
             .stream()
             .collect(
                 ImmutableMap.toImmutableMap(
-                    entry -> entry.getKey().getBuildTarget().getFullyQualifiedName(),
-                    Entry::getValue));
+                    entry -> toPresentationForm(entry.getKey()), Entry::getValue));
     return entries
         .stream()
         .collect(

@@ -671,6 +671,43 @@ public class QueryCommandIntegrationTest {
                 workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
   }
 
+  @Test
+  public void testRankOutputWithAttributesIgnoresFlavors() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "deps(//example:one#no-linkermap)",
+            "--output",
+            "minrank",
+            "--output-attributes",
+            "name");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-minrank-deps-one-with-attributes.json"))));
+
+    result =
+        workspace.runBuckCommand(
+            "query",
+            "deps(//example:one#no-linkermap)",
+            "--output",
+            "maxrank",
+            "--output-attributes",
+            "name");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
+  }
+
   class ParserProfileFinder extends SimpleFileVisitor<Path> {
     private Path profilerPath = null;
 
