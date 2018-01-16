@@ -77,9 +77,11 @@ public class RuleKeyStressRunnerTest {
             String.format("--rulekeys-log-path=%s", temporaryPaths.getRoot().resolve("0.bin.log")),
             "--show-rulekey",
             "--show-transitive-rulekeys",
+            "@",
+            "Random hashes configured",
+            "Reading arguments from @",
             "//:test1",
-            "//:test2",
-            "Random hashes configured");
+            "//:test2");
 
     List<String> expectedOutput2 =
         ImmutableList.of(
@@ -89,9 +91,11 @@ public class RuleKeyStressRunnerTest {
             String.format("--rulekeys-log-path=%s", temporaryPaths.getRoot().resolve("1.bin.log")),
             "--show-rulekey",
             "--show-transitive-rulekeys",
+            "@",
+            "Random hashes configured",
+            "Reading arguments from @",
             "//:test1",
-            "//:test2",
-            "Random hashes configured");
+            "//:test2");
 
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
@@ -108,8 +112,18 @@ public class RuleKeyStressRunnerTest {
 
     Assert.assertEquals(0, commands.get(0).run(testStream1));
     Assert.assertEquals(0, commands.get(1).run(testStream2));
-    Assert.assertEquals(expectedOutput1, Arrays.asList(testStream1.getOutputLines()));
-    Assert.assertEquals(expectedOutput2, Arrays.asList(testStream2.getOutputLines()));
+    assertAllStartWithPrefix(Arrays.asList(testStream1.getOutputLines()), expectedOutput1);
+    assertAllStartWithPrefix(Arrays.asList(testStream2.getOutputLines()), expectedOutput2);
+  }
+
+  private void assertAllStartWithPrefix(List<String> lines, List<String> expectedPrefixes) {
+    Assert.assertEquals(expectedPrefixes.size(), lines.size());
+    for (int i = 0; i < lines.size(); i++) {
+      String line = lines.get(i);
+      String expected = expectedPrefixes.get(i);
+      Assert.assertTrue(
+          String.format("Line %s must start with %s", line, expected), line.startsWith(expected));
+    }
   }
 
   @Test

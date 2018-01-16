@@ -99,7 +99,8 @@ public class TargetsStressRunner {
               buckBinPath,
               "query",
               buckArgs,
-              ImmutableList.<String>builder().add("deps(%s)").addAll(targets).build(),
+              ImmutableList.of("deps(%s)"),
+              targets,
               Optional.empty(),
               true);
       int returnCode = runner.run(writer);
@@ -137,6 +138,7 @@ public class TargetsStressRunner {
                     "targets",
                     buckArgs,
                     targetArgs,
+                    ImmutableList.of(),
                     repositoryPath,
                     true))
         .collect(Collectors.toList());

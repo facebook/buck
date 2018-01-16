@@ -64,6 +64,11 @@ public class TestBinWriterTest {
     expectedOutputBuilder.add("    print(arg)");
     expectedOutputBuilder.add("if \"PYTHONHASHSEED\" in os.environ:");
     expectedOutputBuilder.add("    print(\"Random hashes configured\")");
+    expectedOutputBuilder.add("for arg in sys.argv:");
+    expectedOutputBuilder.add("    if arg.startswith(\"@\"):");
+    expectedOutputBuilder.add("        print(\"Reading arguments from \" + arg)");
+    expectedOutputBuilder.add("        for line in open(arg.lstrip(\"@\")):");
+    expectedOutputBuilder.add("            print(line.rstrip())");
     expectedOutputBuilder.add("sys.exit(1)");
     List<String> expectedOutput = expectedOutputBuilder.build();
 

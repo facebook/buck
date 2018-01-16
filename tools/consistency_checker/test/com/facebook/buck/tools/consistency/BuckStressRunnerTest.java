@@ -73,6 +73,7 @@ public class BuckStressRunnerTest {
                         "targets",
                         ImmutableList.of(),
                         ImmutableList.of(),
+                        ImmutableList.of(),
                         Optional.empty(),
                         false))
             .collect(Collectors.toList());
@@ -108,6 +109,7 @@ public class BuckStressRunnerTest {
                         Optional.of("python"),
                         binPath.toAbsolutePath().toString(),
                         "targets",
+                        ImmutableList.of(),
                         ImmutableList.of(),
                         ImmutableList.of(),
                         Optional.empty(),
@@ -158,6 +160,7 @@ public class BuckStressRunnerTest {
                   Optional.of("python"),
                   tempPath.toAbsolutePath().toString(),
                   "targets",
+                  ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),
                   Optional.empty(),

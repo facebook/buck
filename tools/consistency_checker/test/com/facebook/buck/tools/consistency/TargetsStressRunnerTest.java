@@ -26,7 +26,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -72,9 +71,11 @@ public class TargetsStressRunnerTest {
             tempBinPath.toAbsolutePath().toString(),
             "query",
             "deps(%s)",
+            "@",
+            "Random hashes configured",
+            "Reading arguments from @",
             "//:target1",
-            "//:target2",
-            "Random hashes configured");
+            "//:target2");
 
     Path targetsFile = temporaryPaths.newFile("targets_list");
     try {
@@ -87,7 +88,7 @@ public class TargetsStressRunnerTest {
               ImmutableList.of("//:target1", "//:target2"));
       runner.writeTargetsListToFile(targetsFile);
     } catch (Exception e) {
-      Assert.assertEquals(expectedCommand, Files.readAllLines(targetsFile));
+      assertAllStartWithPrefix(Files.readAllLines(targetsFile), expectedCommand);
       throw e;
     }
   }
@@ -154,15 +155,29 @@ public class TargetsStressRunnerTest {
             "config=value",
             "--show-target-hash",
             String.format("@%s", targetsFile.toAbsolutePath().toString()),
-            "Random hashes configured");
+            "Random hashes configured",
+            "Reading arguments from @");
 
     List<BuckRunner> runners = runner.getBuckRunners(2, targetsFile, Optional.empty());
 
     Assert.assertEquals(2, runners.size());
     runners.get(0).run(testStream1);
     runners.get(1).run(testStream2);
-    Assert.assertEquals(expectedCommand, Arrays.asList(testStream1.getOutputLines()));
-    Assert.assertEquals(expectedCommand, Arrays.asList(testStream2.getOutputLines()));
+    ImmutableList<String> outputLines1 = ImmutableList.copyOf(testStream1.getOutputLines());
+    ImmutableList<String> outputLines2 = ImmutableList.copyOf(testStream2.getOutputLines());
+
+    assertAllStartWithPrefix(outputLines1, expectedCommand);
+    assertAllStartWithPrefix(outputLines2, expectedCommand);
+  }
+
+  private void assertAllStartWithPrefix(List<String> lines, List<String> expectedPrefixes) {
+    Assert.assertEquals(expectedPrefixes.size(), lines.size());
+    for (int i = 0; i < lines.size(); i++) {
+      String line = lines.get(i);
+      String expected = expectedPrefixes.get(i);
+      Assert.assertTrue(
+          String.format("Line %s must start with %s", line, expected), line.startsWith(expected));
+    }
   }
 
   @Test

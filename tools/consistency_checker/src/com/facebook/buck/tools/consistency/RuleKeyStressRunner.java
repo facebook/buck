@@ -97,14 +97,19 @@ public class RuleKeyStressRunner {
             i -> {
               Path binLogPath = logDir.resolve(String.format("%s.bin.log", i));
               List<String> targetsArgs =
-                  ImmutableList.<String>builder()
-                      .add(String.format("--rulekeys-log-path=%s", binLogPath.toAbsolutePath()))
-                      .add("--show-rulekey")
-                      .add("--show-transitive-rulekeys")
-                      .addAll(targets)
-                      .build();
+                  ImmutableList.of(
+                      String.format("--rulekeys-log-path=%s", binLogPath.toAbsolutePath()),
+                      "--show-rulekey",
+                      "--show-transitive-rulekeys");
               return new BuckRunner(
-                  interpreter, buckBinPath, "targets", buckArgs, targetsArgs, repositoryPath, true);
+                  interpreter,
+                  buckBinPath,
+                  "targets",
+                  buckArgs,
+                  targetsArgs,
+                  targets,
+                  repositoryPath,
+                  true);
             })
         .collect(Collectors.toList());
   }
