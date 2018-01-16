@@ -88,6 +88,14 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
         allocator.dequeueZeroDependencyNodes(
             request.getMinionId(), request.getFinishedTargets(), request.getMaxWorkUnitsToFetch());
 
+    // TODO(alisdair): experiment with only sending started event for first node in chain,
+    // and then send events for later nodes in the chain as their children finish.
+    ImmutableList.Builder<String> startedTargetsBuilder = ImmutableList.<String>builder();
+    for (WorkUnit workUnit : newWorkUnitsForMinion) {
+      startedTargetsBuilder.addAll(workUnit.getBuildTargets());
+    }
+    buildRuleFinishedPublisher.createBuildRuleStartedEvents(startedTargetsBuilder.build());
+
     chromeTraceTracker.updateWork(
         request.getMinionId(), request.getFinishedTargets(), newWorkUnitsForMinion);
 

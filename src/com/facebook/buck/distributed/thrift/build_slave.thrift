@@ -15,8 +15,9 @@ include "stampede.thrift"
 enum BuildSlaveEventType {
     UNKNOWN = 0,
     CONSOLE_EVENT = 1,
-    BUILD_RULE_FINISHED_EVENT = 2,
-    ALL_BUILD_RULES_FINISHED_EVENT = 3,
+    BUILD_RULE_STARTED_EVENT = 2,
+    BUILD_RULE_FINISHED_EVENT = 3,
+    ALL_BUILD_RULES_FINISHED_EVENT = 4,
 }
 
 struct BuildSlaveEvent {
@@ -25,7 +26,9 @@ struct BuildSlaveEvent {
     3: optional stampede.BuildSlaveRunId buildSlaveRunId;
 
     10: optional BuildSlaveConsoleEvent consoleEvent;
-    11: optional BuildRuleFinishedEvent buildRuleFinishedEvent;
+
+    11: optional BuildRuleStartedEvent buildRuleStartedEvent;
+    12: optional BuildRuleFinishedEvent buildRuleFinishedEvent;
 }
 
 enum ConsoleEventSeverity {
@@ -38,6 +41,10 @@ struct BuildSlaveConsoleEvent {
     1: optional string message;
     2: optional ConsoleEventSeverity severity;
     3: optional i64 timestampMillis;
+}
+
+struct BuildRuleStartedEvent {
+    1: optional string buildTarget;
 }
 
 struct BuildRuleFinishedEvent {

@@ -20,6 +20,10 @@ import com.google.common.collect.ImmutableList;
 
 /** No-op implementation of BuildRuleFinishedPublisher */
 public class NoOpBuildRuleFinishedPublisher implements BuildRuleFinishedPublisher {
+
+  @Override
+  public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {}
+
   @Override
   public void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets) {}
 }

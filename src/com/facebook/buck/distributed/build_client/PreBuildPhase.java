@@ -98,7 +98,7 @@ public class PreBuildPhase {
       String repository,
       String tenantId,
       ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculatorFuture)
-      throws IOException, InterruptedException {
+      throws IOException {
     EventSender eventSender = new EventSender(eventBus);
 
     distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);
@@ -109,7 +109,6 @@ public class PreBuildPhase {
     final StampedeId stampedeId = job.getStampedeId();
     eventBus.post(new DistBuildCreatedEvent(stampedeId));
 
-    distBuildClientStats.setStampedeId(stampedeId.getId());
     LOG.info("Created job. Build id = " + stampedeId.getId());
 
     eventSender.postDistBuildStatusEvent(job, ImmutableList.of(), "SERIALIZING AND UPLOADING DATA");

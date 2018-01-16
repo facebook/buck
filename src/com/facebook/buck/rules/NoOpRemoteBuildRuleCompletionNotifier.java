@@ -19,6 +19,9 @@ package com.facebook.buck.rules;
 public class NoOpRemoteBuildRuleCompletionNotifier implements RemoteBuildRuleCompletionNotifier {
 
   @Override
+  public void signalStartedRemoteBuildingOfBuildRule(String buildTarget) {}
+
+  @Override
   public void signalCompletionOfBuildRule(String buildTarget) {}
 
   @Override

@@ -23,6 +23,16 @@ import com.google.common.util.concurrent.ListenableFuture;
 public interface RemoteBuildRuleCompletionWaiter {
 
   /**
+   * Local Buck builds will never wait for remote completion of rule before building locally.
+   * Stampede builds always wait if always_wait_for_remote_build_before_proceeding_locally=true, and
+   * will also wait if set to false but the build rule has already started building remotely.
+   *
+   * @param buildTarget
+   * @return
+   */
+  boolean shouldWaitForRemoteCompletionOfBuildRule(String buildTarget);
+
+  /**
    * When performing a remote/distributed build, Future will get set once the given build target has
    * finished building remotely. For a non remote build, this operation is a no-op and the Future
    * will return immediately.

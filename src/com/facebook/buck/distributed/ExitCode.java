@@ -17,6 +17,15 @@ package com.facebook.buck.distributed;
 
 /** Distributed build exit codes used by Stampede. */
 public enum ExitCode {
+  /** Real exit code hasn't been generated yet */
+  DISTRIBUTED_PENDING_EXIT_CODE(10),
+
+  /** Real exit code hasn't been generated yet */
+  LOCAL_PENDING_EXIT_CODE(11),
+
+  /** Local build finished before the remote build */
+  LOCAL_BUILD_FINISHED_FIRST(20),
+
   /** Forced coordinator shutdown */
   UNEXPECTED_STOP_EXIT_CODE(42),
 

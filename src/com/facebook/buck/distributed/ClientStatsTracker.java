@@ -62,25 +62,6 @@ public class ClientStatsTracker {
     MATERIALIZE_SLAVE_LOGS,
   }
 
-  private static final DistBuildClientStat[] REQUIRED_STATS = {
-    LOCAL_PREPARATION,
-    LOCAL_GRAPH_CONSTRUCTION,
-    LOCAL_FILE_HASH_COMPUTATION,
-    LOCAL_TARGET_GRAPH_SERIALIZATION,
-    PERFORM_DISTRIBUTED_BUILD,
-    POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
-    CREATE_DISTRIBUTED_BUILD,
-    UPLOAD_MISSING_FILES,
-    UPLOAD_TARGET_GRAPH,
-    UPLOAD_BUCK_DOT_FILES,
-    SET_BUCK_VERSION,
-    // TODO(ruibm): Understand why these are commented out and fix it.
-    // POST_BUILD_ANALYSIS only happens if remote build was successful
-    // PUBLISH_BUILD_SLAVE_FINISHED_STATS is optional
-    // MATERIALIZE_SLAVE_LOGS is optional
-    // PERFORM_LOCAL_BUILD only happens if remote build was successful
-  };
-
   @GuardedBy("this")
   private final Map<DistBuildClientStat, Stopwatch> stopwatchesByType = new HashMap<>();
 
@@ -118,19 +99,12 @@ public class ClientStatsTracker {
         distributedBuildExitCode.isPresent(), "distributedBuildExitCode not set");
     Preconditions.checkArgument(
         isLocalFallbackBuildEnabled.isPresent(), "isLocalFallbackBuildEnabled not set");
-    Preconditions.checkArgument(
-        missingFilesUploadedCount.isPresent(), "missingFilesUploadedCount not set");
 
     if (performedLocalBuild) {
       Preconditions.checkArgument(localBuildExitCode.isPresent());
       Preconditions.checkNotNull(
           durationsMsByType.get(PERFORM_LOCAL_BUILD),
           "No time was recorded for stat: " + PERFORM_LOCAL_BUILD);
-    }
-
-    for (DistBuildClientStat stat : REQUIRED_STATS) {
-      Preconditions.checkNotNull(
-          durationsMsByType.get(stat), "No time was recorded for stat: " + stat);
     }
   }
 
@@ -215,7 +189,7 @@ public class ClientStatsTracker {
     this.stampedeId = Optional.of(stampedeId);
   }
 
-  public void setDistributedBuildExitCode(int distributedBuildExitCode) {
+  public synchronized void setDistributedBuildExitCode(int distributedBuildExitCode) {
     this.distributedBuildExitCode = Optional.of(distributedBuildExitCode);
   }
 
@@ -241,6 +215,9 @@ public class ClientStatsTracker {
   }
 
   public synchronized void startTimer(DistBuildClientStat stat) {
+    if (stopwatchesByType.containsKey(stat)) {
+      return;
+    }
     Stopwatch stopwatch = Stopwatch.createStarted();
     stopwatchesByType.put(stat, stopwatch);
   }

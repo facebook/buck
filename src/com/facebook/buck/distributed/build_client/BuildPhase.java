@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.build_slave.MultiSlaveBuildModeRunnerFactor
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildRuleFinishedEvent;
+import com.facebook.buck.distributed.thrift.BuildRuleStartedEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
@@ -195,7 +196,7 @@ public class BuildPhase {
         new DefaultClock());
   }
 
-  private void runCoordinatorAsync(
+  private void runLocalCoordinatorAsync(
       WeightedListeningExecutorService executorService,
       StampedeId stampedeId,
       InvocationInfo invocationInfo,
@@ -212,13 +213,23 @@ public class BuildPhase {
                 .build());
 
     BuildRuleFinishedPublisher finishedRulePublisher =
-        targets -> {
-          synchronized (buildRuleFinishedEventsLock) {
-            for (String target : targets) {
-              pendingBuildRuleFinishedEvent.add(
-                  new TimestampedEvent<>(
-                      clock.currentTimeMillis(),
-                      new BuildRuleFinishedEvent().setBuildTarget(target)));
+        new BuildRuleFinishedPublisher() {
+          @Override
+          public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {
+            for (String target : startedTargets) {
+              remoteBuildRuleCompletionNotifier.signalStartedRemoteBuildingOfBuildRule(target);
+            }
+          }
+
+          @Override
+          public void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets) {
+            synchronized (buildRuleFinishedEventsLock) {
+              for (String target : finishedTargets) {
+                pendingBuildRuleFinishedEvent.add(
+                    new TimestampedEvent<>(
+                        clock.currentTimeMillis(),
+                        new BuildRuleFinishedEvent().setBuildTarget(target)));
+              }
             }
           }
         };
@@ -273,15 +284,23 @@ public class BuildPhase {
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =
         scheduler.scheduleWithFixedDelay(
-            () ->
+            () -> {
+              try {
                 fetchBuildInformationFromServerAndPublishPendingEvents(
-                    job, eventSender, executorService),
+                    job, eventSender, executorService);
+              } catch (InterruptedException e) {
+                LOG.warn(
+                    e, "fetchBuildInformationFromServerAndPublishPendingEvents was interrupted");
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e); // Ensure we don't schedule any more fetches
+              }
+            },
             0,
             statusPollIntervalMillis,
             TimeUnit.MILLISECONDS);
 
     if (buildMode.equals(DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR)) {
-      runCoordinatorAsync(executorService, stampedeId, invocationInfo, localRuleKeyCalculator);
+      runLocalCoordinatorAsync(executorService, stampedeId, invocationInfo, localRuleKeyCalculator);
     }
 
     BuildJob finalJob;
@@ -289,6 +308,12 @@ public class BuildPhase {
     try {
       distBuildStatusUpdatingFuture.get();
       throw new RuntimeException("Unreachable State.");
+    } catch (InterruptedException ex) {
+      // Important to cancel distBuildStatusUpdatingFuture, otherwise the async task will
+      // keep blocking the ScheduledExecutorService that it runs inside
+      distBuildStatusUpdatingFuture.cancel(true);
+      Thread.currentThread().interrupt();
+      throw ex;
     } catch (ExecutionException e) {
       if (e.getCause() instanceof JobCompletedException) {
         // Everything is awesome.
@@ -310,7 +335,8 @@ public class BuildPhase {
   }
 
   private BuildJob fetchBuildInformationFromServerAndPublishPendingEvents(
-      BuildJob job, EventSender eventSender, ListeningExecutorService networkExecutorService) {
+      BuildJob job, EventSender eventSender, ListeningExecutorService networkExecutorService)
+      throws InterruptedException {
     final StampedeId stampedeId = job.getStampedeId();
 
     try {
@@ -350,10 +376,15 @@ public class BuildPhase {
       eventSender.postDistBuildStatusEvent(job, slaveStatuses);
       slaveEventsFuture.get();
       logStreamingFuture.get();
+    } catch (InterruptedException ex) {
+      // Ensure all async work is interrupted too.
+      slaveStatusesFuture.cancel(true);
+      slaveEventsFuture.cancel(true);
+      logStreamingFuture.cancel(true);
+      Thread.currentThread().interrupt();
+      throw ex;
     } catch (ExecutionException e) {
       LOG.error(e, "Failed to get slave statuses, events or logs.");
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
     }
 
     publishPendingBuildRuleFinishedEvents();
@@ -475,6 +506,12 @@ public class BuildPhase {
                     ConsoleEvent consoleEvent =
                         DistBuildUtil.createConsoleEvent(slaveEvent.getConsoleEvent());
                     eventSender.postConsoleEvent(consoleEvent);
+                    break;
+                  case BUILD_RULE_STARTED_EVENT:
+                    BuildRuleStartedEvent buildRuleStartedEvent =
+                        slaveEvent.getBuildRuleStartedEvent();
+                    remoteBuildRuleCompletionNotifier.signalStartedRemoteBuildingOfBuildRule(
+                        buildRuleStartedEvent.getBuildTarget());
                     break;
                   case BUILD_RULE_FINISHED_EVENT:
                     BuildRuleFinishedEvent buildRuleFinishedEvent =

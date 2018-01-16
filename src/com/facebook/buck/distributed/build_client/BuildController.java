@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** High level controls the distributed build. */
 public class BuildController {
@@ -54,6 +55,8 @@ public class BuildController {
   private final PreBuildPhase preBuildPhase;
   private final BuildPhase buildPhase;
   private final PostBuildPhase postBuildPhase;
+
+  private final AtomicReference<StampedeId> stampedeIdReference;
 
   /** Result of a distributed build execution. */
   public static class ExecutionResult {
@@ -81,7 +84,9 @@ public class BuildController {
       long maxTimeoutWaitingForLogsMillis,
       int statusPollIntervalMillis,
       boolean logMaterializationEnabled,
-      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
+      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
+      AtomicReference<StampedeId> stampedeIdReference) {
+    this.stampedeIdReference = stampedeIdReference;
     this.preBuildPhase =
         new PreBuildPhase(
             distBuildService,
@@ -127,7 +132,8 @@ public class BuildController {
       ScheduledExecutorService scheduler,
       long maxTimeoutWaitingForLogsMillis,
       boolean logMaterializationEnabled,
-      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
+      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
+      AtomicReference<StampedeId> stampedeIdReference) {
     this(
         buildExecutorArgs,
         topLevelTargets,
@@ -143,7 +149,8 @@ public class BuildController {
         maxTimeoutWaitingForLogsMillis,
         DEFAULT_STATUS_POLL_INTERVAL_MILLIS,
         logMaterializationEnabled,
-        remoteBuildRuleCompletionNotifier);
+        remoteBuildRuleCompletionNotifier,
+        stampedeIdReference);
   }
 
   /** Executes the tbuild and prints failures to the event bus. */
@@ -173,23 +180,28 @@ public class BuildController {
               repository,
               tenantId,
               ruleKeyCalculatorFuture);
-    } catch (Exception ex) {
+    } catch (IOException | RuntimeException ex) {
       LOG.error(ex, "Distributed build preparation steps failed.");
-      StampedeId stampedeId = new StampedeId();
-      stampedeId.setId("UNKNOWN_ID");
-      return createFailedExecutionResult(stampedeId, ExitCode.PREPARATION_STEP_FAILED);
+      return createFailedExecutionResult(
+          Preconditions.checkNotNull(stampedeIdReference.get()), ExitCode.PREPARATION_STEP_FAILED);
     }
 
     stampedeIdAndPendingPrepFuture = Preconditions.checkNotNull(stampedeIdAndPendingPrepFuture);
-    StampedeId stampedeId = stampedeIdAndPendingPrepFuture.getFirst();
+    stampedeIdReference.set(stampedeIdAndPendingPrepFuture.getFirst());
 
     ListenableFuture<Void> pendingPrepFuture = stampedeIdAndPendingPrepFuture.getSecond();
     try {
       LOG.info("Waiting for pre-build preparation to finish.");
       pendingPrepFuture.get();
+      LOG.info("Pre-build preparation finished.");
+    } catch (InterruptedException ex) {
+      pendingPrepFuture.cancel(true);
+      Thread.currentThread().interrupt();
+      throw ex;
     } catch (ExecutionException ex) {
       LOG.error(ex, "Distributed build preparation async steps failed.");
-      return createFailedExecutionResult(stampedeId, ExitCode.PREPARATION_ASYNC_STEP_FAILED);
+      return createFailedExecutionResult(
+          stampedeIdReference.get(), ExitCode.PREPARATION_ASYNC_STEP_FAILED);
     }
 
     BuildPhase.BuildResult buildResult = null;
@@ -200,14 +212,15 @@ public class BuildController {
           buildPhase.runDistBuildAndUpdateConsoleStatus(
               executorService,
               eventSender,
-              stampedeId,
+              Preconditions.checkNotNull(stampedeIdReference.get()),
               buildMode,
               invocationInfo,
               ruleKeyCalculatorFuture);
-    } catch (Exception ex) {
+    } catch (IOException | RuntimeException ex) { // Important: Don't swallow InterruptedException
       LOG.error(ex, "Distributed build step failed.");
       return createFailedExecutionResult(
-          stampedeId, ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION);
+          Preconditions.checkNotNull(stampedeIdReference.get()),
+          ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION);
     }
 
     // Note: always returns distributed exit code 0

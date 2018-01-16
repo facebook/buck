@@ -18,8 +18,11 @@ package com.facebook.buck.distributed.build_slave;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Used by Coordinator service to signal to local client that a rule has finished building remotely.
+ * Used by Coordinator service to signal to local client that a rule has started or finished
+ * building remotely. TODO(alisdair): rename this class as now handles both started/finished
  */
 public interface BuildRuleFinishedPublisher {
+  void createBuildRuleStartedEvents(ImmutableList<String> startedTargets);
+
   void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets);
 }

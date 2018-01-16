@@ -21,6 +21,13 @@ package com.facebook.buck.rules;
  */
 public interface RemoteBuildRuleCompletionNotifier {
   /**
+   * Signals that an individual build rule has started building remotely
+   *
+   * @param buildTarget
+   */
+  void signalStartedRemoteBuildingOfBuildRule(String buildTarget);
+
+  /**
    * Signals that an individual build rule has completed remotely
    *
    * @param buildTarget

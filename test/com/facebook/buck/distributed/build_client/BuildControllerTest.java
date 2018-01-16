@@ -79,6 +79,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
@@ -145,6 +146,10 @@ public class BuildControllerTest {
                     .build())
             .build();
 
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId("some_stampede_id");
+    AtomicReference<StampedeId> stampedeIdRef = new AtomicReference<>(stampedeId);
+
     return new BuildController(
         executorArgs,
         ImmutableSet.of(),
@@ -160,7 +165,8 @@ public class BuildControllerTest {
         0,
         1,
         true,
-        new RemoteBuildRuleSynchronizer());
+        new RemoteBuildRuleSynchronizer(true),
+        stampedeIdRef);
   }
 
   private BuildController.ExecutionResult runBuildWithController(BuildController buildController)

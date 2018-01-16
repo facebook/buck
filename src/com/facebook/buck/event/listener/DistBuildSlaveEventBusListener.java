@@ -87,6 +87,7 @@ public class DistBuildSlaveEventBusListener
   @GuardedBy("consoleEventsLock")
   private final List<BuildSlaveConsoleEvent> consoleEvents = new LinkedList<>();
 
+  private final List<String> startedTargetsToSignal = new LinkedList<>();
   private final List<String> finishedTargetsToSignal = new LinkedList<>();
 
   private final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
@@ -296,6 +297,38 @@ public class DistBuildSlaveEventBusListener
     }
   }
 
+  private void sendBuildRuleStartedEvents() {
+    if (distBuildService == null) {
+      return;
+    }
+
+    ImmutableList<String> startedTargetsCopy;
+    synchronized (startedTargetsToSignal) {
+      startedTargetsCopy = ImmutableList.copyOf(startedTargetsToSignal);
+    }
+
+    if (startedTargetsCopy.size() == 0) {
+      return;
+    }
+
+    for (String target : startedTargetsCopy) {
+      LOG.info(String.format("Publishing build rule started event for target [%s]", target));
+    }
+
+    try {
+      distBuildService.uploadBuildRuleStartedEvents(
+          stampedeId, buildSlaveRunId, startedTargetsCopy);
+    } catch (IOException e) {
+      LOG.error(e, "Could not upload build rule started events to frontend.");
+    }
+
+    // Only remove events once we are sure they have been sent to the client, otherwise
+    // client will freeze up waiting for targets until end of the build.
+    synchronized (startedTargetsToSignal) {
+      startedTargetsToSignal.removeAll(startedTargetsCopy);
+    }
+  }
+
   private void sendConsoleEventsToFrontend() {
     if (distBuildService == null) {
       return;
@@ -328,8 +361,9 @@ public class DistBuildSlaveEventBusListener
         LOG.info("Sending server updates..");
         sendStatusToFrontend();
         sendConsoleEventsToFrontend();
+        sendBuildRuleStartedEvents();
         sendBuildRuleCompletedEvents();
-      } catch (Exception ex) {
+      } catch (RuntimeException ex) {
         LOG.error(ex, "Failed to send slave server updates.");
       }
     }
@@ -347,7 +381,7 @@ public class DistBuildSlaveEventBusListener
           distBuildService.sendAllBuildRulesPublishedEvent(stampedeId, buildSlaveRunId);
         }
 
-      } catch (Exception e) {
+      } catch (RuntimeException | IOException e) {
         LOG.error(e, "Failed to send slave final server updates.");
       }
     }
@@ -439,6 +473,19 @@ public class DistBuildSlaveEventBusListener
   @Subscribe
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
     httpCacheUploadStats.processHttpArtifactCacheFinishedEvent(event);
+  }
+
+  @Override
+  public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {
+    if (startedTargets.size() == 0) {
+      return;
+    }
+    for (String target : startedTargets) {
+      LOG.info(String.format("Queueing build rule started event for target [%s]", target));
+    }
+    synchronized (startedTargetsToSignal) {
+      startedTargetsToSignal.addAll(startedTargets);
+    }
   }
 
   @Override

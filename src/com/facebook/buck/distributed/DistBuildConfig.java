@@ -114,6 +114,11 @@ public class DistBuildConfig {
   private static final String ENABLE_ASYNC_LOGGING = "enable_async_logging";
   private static final boolean DEFAULT_ENABLE_ASYNC_LOGGING = true;
 
+  private static final String ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
+      "always_wait_for_remote_build_before_proceeding_locally";
+  private static final boolean DEFAULT_ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
+      true;
+
   private static final String ENABLE_UPLOADS_FROM_LOCAL_CACHE = "enable_uploads_from_local_cache";
   private static final boolean DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE = false;
 
@@ -252,6 +257,20 @@ public class DistBuildConfig {
   public boolean isAsyncLoggingEnabled() {
     return buckConfig.getBooleanValue(
         STAMPEDE_SECTION, ENABLE_ASYNC_LOGGING, DEFAULT_ENABLE_ASYNC_LOGGING);
+  }
+
+  /**
+   * If true, local Stampede client will wait for remote build of rule to complete before building
+   * locally. If false, it will go ahead building locally if remote build of rule hasn't started
+   * yet.
+   *
+   * @return
+   */
+  public boolean shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION,
+        ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY,
+        DEFAULT_ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY);
   }
 
   public long getHearbeatServiceRateMillis() {

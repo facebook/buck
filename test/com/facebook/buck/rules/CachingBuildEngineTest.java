@@ -3850,9 +3850,9 @@ public class CachingBuildEngineTest {
           secondState);
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testBuildLocallyWithImmediateRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(true);
 
       // Signal completion of the build rule before the caching build engine requests it.
       // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
@@ -3872,11 +3872,16 @@ public class CachingBuildEngineTest {
           "Building locally should invalidate InitializableFromDisk state.",
           firstState,
           secondState);
+
+      // Check that the build engine waited for the remote build of rule to finish.
+      assertTrue(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testBuildLocallyWithDelayedRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(true);
 
       // Signal the completion of the build rule asynchronously.
       // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
@@ -3908,6 +3913,80 @@ public class CachingBuildEngineTest {
           secondState);
 
       signalBuildRuleCompletedThread.join(1000);
+
+      // Check that the build engine waited for the remote build of rule to finish.
+      assertTrue(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
+    }
+
+    @Test(timeout = 10000)
+    public void testBuildLocallyWhenRemoteBuildNotStartedAndAlwaysWaitSetToFalse()
+        throws Exception {
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(false);
+
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput("new content");
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Building locally should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+
+      // Check that the build engine did not wait for the remote build of rule to finish
+      assertFalse(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
+    }
+
+    @Test(timeout = 10000)
+    public void testBuildLocallyWhenRemoteBuildStartedAndAlwaysWaitSetToFalse() throws Exception {
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(true);
+
+      // Signal that the build has started, which should ensure build waits.
+      synchronizer.signalStartedRemoteBuildingOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+
+      // Signal the completion of the build rule asynchronously.
+      // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
+      // Future that later has its completion handler invoked by the Thread below.
+      Thread signalBuildRuleCompletedThread =
+          new Thread(
+              () -> {
+                try {
+                  Thread.sleep(10);
+                } catch (InterruptedException e) {
+                  fail("Test was interrupted");
+                }
+                synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+              });
+      signalBuildRuleCompletedThread.start();
+
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput("new content");
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Building locally should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+
+      signalBuildRuleCompletedThread.join(1000);
+
+      // Check that the build engine waited for the remote build of rule to finish.
+      assertTrue(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
     }
 
     private BuildEngineBuildContext createBuildContext(BuildId buildId) {

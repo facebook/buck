@@ -854,26 +854,18 @@ class CachingBuildRuleBuilder {
     AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
     ListenableFuture<Optional<BuildResult>> buildResultFuture;
 
-    // If this is a distributed build, wait for cachable rules to be marked as
-    // finished by the remote build before attempting to fetch from cache.
-    ListenableFuture<Void> remoteBuildRuleFinishedFuture =
-        remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule);
-
     // 2. Rule key cache lookup.
     buildResultFuture =
         // TODO(cjhopman): This should follow the same, simple pattern as everything else. With a
         // large ui.thread_line_limit, SuperConsole tries to redraw more lines than are available.
         // These cache threads make it more likely to hit that problem when SuperConsole is aware
         // of them.
-        Futures.transformAsync(
-            remoteBuildRuleFinishedFuture,
-            (Void v) ->
-                Futures.transform(
-                    performRuleKeyCacheCheck(),
-                    cacheResult -> {
-                      rulekeyCacheResult.set(cacheResult);
-                      return getBuildResultForRuleKeyCacheResult(cacheResult);
-                    }));
+        Futures.transform(
+            performRuleKeyCacheCheck(),
+            cacheResult -> {
+              rulekeyCacheResult.set(cacheResult);
+              return getBuildResultForRuleKeyCacheResult(cacheResult);
+            });
 
     // 3. Build deps.
     buildResultFuture =
@@ -945,7 +937,33 @@ class CachingBuildRuleBuilder {
               MoreExecutors.newDirectExecutorService());
     }
 
-    // 9. Build the current rule locally, if we have to.
+    // 9. Check if rule has started being built remotely (i.e. by Stampede).
+    // If it has, then wait, otherwise go ahead and built locally.
+    buildResultFuture =
+        transformBuildResultAsyncIfNotPresent(
+            buildResultFuture,
+            () -> {
+              if (!remoteBuildRuleCompletionWaiter.shouldWaitForRemoteCompletionOfBuildRule(
+                  rule.getFullyQualifiedName())) {
+                // Start building locally right away, as remote build hasn't started yet.
+                // Note: this code path is also used for regular local Buck builds, these use
+                // NoOpRemoteBuildRuleCompletionWaiter that always returns false for above call.
+                return Futures.immediateFuture(Optional.empty());
+              }
+
+              // Once remote build has finished, download artifact from cache using default key
+              return Futures.transformAsync(
+                  remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule),
+                  (Void v) ->
+                      Futures.transform(
+                          performRuleKeyCacheCheck(),
+                          cacheResult -> {
+                            rulekeyCacheResult.set(cacheResult);
+                            return getBuildResultForRuleKeyCacheResult(cacheResult);
+                          }));
+            });
+
+    // 10. Build the current rule locally, if we have to.
     buildResultFuture =
         transformBuildResultAsyncIfNotPresent(
             buildResultFuture,

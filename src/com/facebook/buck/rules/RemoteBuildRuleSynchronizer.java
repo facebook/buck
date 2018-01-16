@@ -16,6 +16,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.log.Logger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -36,7 +37,15 @@ public class RemoteBuildRuleSynchronizer
 
   private final Map<String, SettableFuture<Void>> resultFuturesByBuildTarget = new HashMap<>();
   private final Set<String> completedRules = new HashSet<>();
+  private final Set<String> startedRules = new HashSet<>();
   private boolean remoteBuildFinished = false;
+
+  private final boolean alwaysWaitForRemoteBuildBeforeProceedingLocally;
+
+  public RemoteBuildRuleSynchronizer(boolean alwaysWaitForRemoteBuildBeforeProceedingLocally) {
+    this.alwaysWaitForRemoteBuildBeforeProceedingLocally =
+        alwaysWaitForRemoteBuildBeforeProceedingLocally;
+  }
 
   @Override
   public synchronized ListenableFuture<Void> waitForBuildRuleToFinishRemotely(BuildRule buildRule) {
@@ -66,6 +75,24 @@ public class RemoteBuildRuleSynchronizer
     createCompletionFutureIfNotPresent(buildTarget).set(null);
   }
 
+  @Override
+  public synchronized void signalStartedRemoteBuildingOfBuildRule(String buildTarget) {
+    LOG.info(String.format("Target [%s] has started building remotely", buildTarget));
+    startedRules.add(buildTarget);
+  }
+
+  @Override
+  public synchronized boolean shouldWaitForRemoteCompletionOfBuildRule(String buildTarget) {
+    // If alwaysWaitForRemoteBuildBeforeProceedingLocally set, then CachingBuildEngine
+    // should wait for remote build of rule before attempting to build locally,
+    // even if it hasn't started building remotely yet.
+    if (alwaysWaitForRemoteBuildBeforeProceedingLocally) {
+      return true;
+    }
+
+    return startedRules.contains(buildTarget);
+  }
+
   /** When the remote build has finished (or failed), all rules should be unlocked. */
   @Override
   public synchronized void signalCompletionOfRemoteBuild() {
@@ -77,6 +104,11 @@ public class RemoteBuildRuleSynchronizer
     }
     // Set flag so that all future waitForBuildRuleToFinishRemotely calls return immediately.
     remoteBuildFinished = true;
+  }
+
+  @VisibleForTesting
+  protected synchronized boolean buildCompletionWaitingFutureCreatedForTarget(String buildTarget) {
+    return resultFuturesByBuildTarget.containsKey(buildTarget);
   }
 
   private SettableFuture<Void> createCompletionFutureIfNotPresent(String buildTarget) {
