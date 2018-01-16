@@ -478,22 +478,28 @@ public final class Main {
     }
   }
 
-  private Config setupDefaultConfig(Path canonicalRootPath, BuckCommand command)
+  private ImmutableMap<RelativeCellName, Path> getCellMapping(Path canonicalRootPath)
       throws IOException {
-    ImmutableMap<RelativeCellName, Path> cellMapping =
-        DefaultCellPathResolver.bootstrapPathMapping(
-            canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
+    return DefaultCellPathResolver.bootstrapPathMapping(
+        canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
+  }
+
+  private Config setupDefaultConfig(
+      ImmutableMap<RelativeCellName, Path> cellMapping, BuckCommand command) throws IOException {
+    Path rootPath = cellMapping.get(RelativeCellName.ROOT_CELL_NAME);
+    Preconditions.checkNotNull(rootPath, "Root cell should be implicitly added");
     RawConfig rootCellConfigOverrides;
+
     try {
       ImmutableMap<Path, RawConfig> overridesByPath =
           command.getConfigOverrides().getOverridesByPath(cellMapping);
       rootCellConfigOverrides =
-          Optional.ofNullable(overridesByPath.get(canonicalRootPath)).orElse(RawConfig.of());
+          Optional.ofNullable(overridesByPath.get(rootPath)).orElse(RawConfig.of());
     } catch (MalformedOverridesException exception) {
       rootCellConfigOverrides =
           command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
     }
-    return Configs.createDefaultConfig(canonicalRootPath, rootCellConfigOverrides);
+    return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
   }
 
   private ImmutableSet<Path> getProjectWatchList(
@@ -541,8 +547,11 @@ public final class Main {
 
     ExitCode exitCode = ExitCode.SUCCESS;
 
+    // Setup filesystem and buck config.
+    Path canonicalRootPath = projectRoot.toRealPath().normalize();
+    ImmutableMap<RelativeCellName, Path> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
-        BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
+        BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
 
     // Parse command line arguments
     BuckCommand command = new BuckCommand();
@@ -567,9 +576,7 @@ public final class Main {
       pluginManager = BuckPluginManagerFactory.createPluginManager();
     }
 
-    // Setup filesystem and buck config.
-    Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    Config config = setupDefaultConfig(canonicalRootPath, command);
+    Config config = setupDefaultConfig(rootCellMapping, command);
 
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     ProjectFilesystem filesystem =

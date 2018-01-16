@@ -16,8 +16,11 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.rules.RelativeCellName;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -86,7 +89,8 @@ public class BuckArgsMethods {
    * @param projectRoot path against which any {@code @args} path arguments will be resolved.
    * @return args array with AT-files expanded.
    */
-  public static ImmutableList<String> expandAtFiles(Iterable<String> args, Path projectRoot) {
+  public static ImmutableList<String> expandAtFiles(
+      Iterable<String> args, ImmutableMap<RelativeCellName, Path> cellMapping) {
     Iterator<String> argsIterator = args.iterator();
     ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
     while (argsIterator.hasNext()) {
@@ -101,9 +105,9 @@ public class BuckArgsMethods {
         if (!argsIterator.hasNext()) {
           throw new HumanReadableException(arg + " should be followed by a path.");
         }
-        argumentsBuilder.addAll(expandFile(argsIterator.next(), projectRoot));
+        argumentsBuilder.addAll(expandFile(argsIterator.next(), cellMapping));
       } else if (arg.startsWith("@")) {
-        argumentsBuilder.addAll(expandFile(arg.substring(1), projectRoot));
+        argumentsBuilder.addAll(expandFile(arg.substring(1), cellMapping));
       } else {
         argumentsBuilder.add(arg);
       }
@@ -112,9 +116,27 @@ public class BuckArgsMethods {
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
-  private static Iterable<? extends String> expandFile(String arg, Path projectRoot) {
-    String[] parts = arg.split("#", 2);
+  private static Iterable<? extends String> expandFile(
+      String arg, ImmutableMap<RelativeCellName, Path> cellMapping) {
+    BuckCellArg argfile = BuckCellArg.of(arg);
+    String[] parts = argfile.getArg().split("#", 2);
     String unresolvedArgsPath = parts[0];
+    Path projectRoot = null;
+
+    // Try to resolve the name to a path if present
+    if (argfile.getCellName().isPresent()) {
+      projectRoot = cellMapping.get(RelativeCellName.fromComponents(argfile.getCellName().get()));
+      if (projectRoot == null) {
+        String cellName = argfile.getCellName().get();
+        throw new HumanReadableException(
+            String.format(
+                "The cell '%s' was not found. Did you mean '%s/%s'?",
+                cellName, cellName, unresolvedArgsPath));
+      }
+    } else {
+      projectRoot = cellMapping.get(RelativeCellName.ROOT_CELL_NAME);
+    }
+    Preconditions.checkNotNull(projectRoot, "Project root not resolved");
     Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
 
     if (!Files.exists(argsPath)) {
