@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.CoordinatorService.Iface;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
@@ -190,11 +191,19 @@ public class ThriftCoordinatorServer implements Closeable {
   /** Checks whether the BuildStatus has not been set to terminated remotely. */
   public void checkBuildStatusIsNotTerminated() throws IOException {
     BuildJob buildJob = distBuildService.getCurrentBuildJobState(stampedeId);
-    if (buildJob.isSetStatus() && BuildStatusUtil.isTerminalBuildStatus(buildJob.getStatus())) {
+    BuildStatus status = buildJob.getStatus();
+    if (!buildJob.isSetStatus() || !BuildStatusUtil.isTerminalBuildStatus(status)) {
+      return;
+    }
+
+    if (status == BuildStatus.FINISHED_SUCCESSFULLY) {
       exitCodeFuture.complete(
           ExitState.setByServers(
-              ExitCode.BUILD_TERMINATED_REMOTELY_EXIT_CODE.getCode(),
-              "Build finalised externally."));
+              ExitCode.DISTRIBUTED_BUILD_SUCCESSFUL.getCode(), "Build succeeded externally."));
+    } else {
+      exitCodeFuture.complete(
+          ExitState.setByServers(
+              ExitCode.BUILD_FAILED_EXTERNALLY_EXIT_CODE.getCode(), "Build failed externally."));
     }
   }
 

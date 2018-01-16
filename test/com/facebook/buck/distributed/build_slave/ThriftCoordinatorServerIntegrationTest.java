@@ -16,10 +16,15 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
@@ -66,7 +71,7 @@ public class ThriftCoordinatorServerIntegrationTest {
     EasyMock.expectLastCall().once();
     eventListener.onThriftServerClosing(EasyMock.capture(exitState));
     EasyMock.expectLastCall().once();
-    EasyMock.replay(eventListener);
+    replay(eventListener);
 
     try (ThriftCoordinatorServer server =
             createCoordinatorServer(OptionalInt.empty(), diamondQueue, eventListener);
@@ -211,6 +216,85 @@ public class ThriftCoordinatorServerIntegrationTest {
 
       Assert.assertEquals(
           ExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(),
+          server.waitUntilBuildCompletesAndReturnExitCode());
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testCoordinatorExitsCodeIsZeroIfSucceededExternally() throws Exception {
+    SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
+    future.set(BuildTargetsQueueTest.createDiamondDependencyQueue());
+
+    SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
+    ThriftCoordinatorServer.EventListener eventListener =
+        EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
+    DistBuildService distBuildService = EasyMock.createNiceMock(DistBuildService.class);
+
+    // Give coordinator BuildJob in FINISHED_SUCCESSFULLY state, at which point it should exit
+    // gracefully.
+    BuildJob buildJob = new BuildJob();
+    buildJob.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
+    expect(distBuildService.getCurrentBuildJobState(STAMPEDE_ID)).andReturn(buildJob);
+    replay(distBuildService);
+
+    try (ThriftCoordinatorServer server =
+            new ThriftCoordinatorServer(
+                OptionalInt.empty(),
+                queueFuture,
+                STAMPEDE_ID,
+                eventListener,
+                new NoOpBuildRuleFinishedPublisher(),
+                EasyMock.createNiceMock(MinionHealthTracker.class),
+                distBuildService);
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
+      server.start();
+      client.start(server.getPort());
+
+      server.checkBuildStatusIsNotTerminated();
+
+      Assert.assertEquals(
+          ExitCode.DISTRIBUTED_BUILD_SUCCESSFUL.getCode(),
+          server.waitUntilBuildCompletesAndReturnExitCode());
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testCoordinatorExitsCodeIsNonZeroIfFailedExternally() throws Exception {
+    SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
+    future.set(BuildTargetsQueueTest.createDiamondDependencyQueue());
+
+    SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
+    ThriftCoordinatorServer.EventListener eventListener =
+        EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
+    DistBuildService distBuildService = EasyMock.createNiceMock(DistBuildService.class);
+
+    // Give coordinator BuildJob in FAILED state, at which point it should exit with an error.
+    BuildJob buildJob = new BuildJob();
+    buildJob.setStatus(BuildStatus.FAILED);
+    expect(distBuildService.getCurrentBuildJobState(STAMPEDE_ID)).andReturn(buildJob);
+    replay(distBuildService);
+
+    try (ThriftCoordinatorServer server =
+            new ThriftCoordinatorServer(
+                OptionalInt.empty(),
+                queueFuture,
+                STAMPEDE_ID,
+                eventListener,
+                new NoOpBuildRuleFinishedPublisher(),
+                EasyMock.createNiceMock(MinionHealthTracker.class),
+                distBuildService);
+        ThriftCoordinatorClient client =
+            new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
+      server.start();
+      client.start(server.getPort());
+
+      server.checkBuildStatusIsNotTerminated();
+
+      Assert.assertEquals(
+          ExitCode.BUILD_FAILED_EXTERNALLY_EXIT_CODE.getCode(),
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
