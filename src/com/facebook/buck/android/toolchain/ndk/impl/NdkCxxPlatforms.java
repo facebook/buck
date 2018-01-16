@@ -530,6 +530,12 @@ public class NdkCxxPlatforms {
           Linker.LinkableDepType.SHARED, "-l" + cxxRuntime.sharedName);
       cxxPlatformBuilder.putRuntimeLdflags(
           Linker.LinkableDepType.STATIC, "-l" + cxxRuntime.staticName);
+
+      String ndkVersion = readVersion(ndkRoot);
+      if (getNdkMajorVersion(ndkVersion) >= 12 && cxxRuntime == NdkCxxRuntime.LIBCXX) {
+        cxxPlatformBuilder.putRuntimeLdflags(
+          Linker.LinkableDepType.STATIC, "-lc++abi");
+      }
     }
 
     CxxPlatform cxxPlatform = cxxPlatformBuilder.build();
