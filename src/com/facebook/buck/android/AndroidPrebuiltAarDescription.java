@@ -170,11 +170,11 @@ public class AndroidPrebuiltAarDescription
           args.getRequiredForSourceOnlyAbi());
     }
 
-    AndroidPlatformTarget androidPlatformTarget =
-        toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
-
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      AndroidPlatformTarget androidPlatformTarget =
+          toolchainProvider.getByName(
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
