@@ -826,6 +826,7 @@ public class DistBuildService implements Closeable {
   /** Sets the final BuildStatus of the BuildJob. */
   public void setFinalBuildStatus(StampedeId stampedeId, BuildStatus status, String statusMessage)
       throws IOException {
+    Preconditions.checkArgument(BuildStatusUtil.isTerminalBuildStatus(status));
     SetFinalBuildStatusRequest request =
         new SetFinalBuildStatusRequest()
             .setStampedeId(stampedeId)

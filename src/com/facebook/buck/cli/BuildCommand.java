@@ -880,6 +880,7 @@ public class BuildCommand extends AbstractCommand {
         terminateStampedeBuild(
             distBuildService,
             Preconditions.checkNotNull(stampedeIdReference.get()),
+            BuildStatus.FINISHED_SUCCESSFULLY,
             "Local build finished first");
       }
 
@@ -938,7 +939,10 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void terminateStampedeBuild(
-      DistBuildService distBuildService, StampedeId stampedeId, String statusMessage) {
+      DistBuildService distBuildService,
+      StampedeId stampedeId,
+      BuildStatus finalStatus,
+      String statusMessage) {
     if (stampedeId.getId().equals(PENDING_STAMPEDE_ID)) {
       LOG.warn("Can't terminate distributed build as no Stampede ID yet. Skipping..");
       return; // There is no ID yet, so we can't kill anything
@@ -948,7 +952,7 @@ public class BuildCommand extends AbstractCommand {
         String.format("Terminating distributed build with Stampede ID [%s]", stampedeId.getId()));
 
     try {
-      distBuildService.setFinalBuildStatus(stampedeId, BuildStatus.FAILED, statusMessage);
+      distBuildService.setFinalBuildStatus(stampedeId, finalStatus, statusMessage);
     } catch (IOException | RuntimeException e) {
       LOG.error(e, "Failed to terminate distributed build");
     }
@@ -1037,6 +1041,7 @@ public class BuildCommand extends AbstractCommand {
         terminateStampedeBuild(
             distBuildService,
             Preconditions.checkNotNull(stampedeIdReference.get()),
+            BuildStatus.FAILED,
             "Exception thrown in Stampede client.");
       }
 
