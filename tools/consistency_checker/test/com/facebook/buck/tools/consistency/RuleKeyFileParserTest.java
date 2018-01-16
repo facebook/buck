@@ -165,4 +165,36 @@ public class RuleKeyFileParserTest {
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, ImmutableSet.of("//:name1"));
   }
+
+  @Test
+  public void handlesRecursiveRules() throws ParseException, IOException {
+    FullRuleKey ruleKey1 = new FullRuleKey("key1", "//src:name1", "DEFAULT", ImmutableMap.of());
+    FullRuleKey ruleKey2 = new FullRuleKey("key2", "//test:name2", "DEFAULT", ImmutableMap.of());
+    FullRuleKey ruleKey3 =
+        new FullRuleKey("key3", "//test/foo:name3", "DEFAULT", ImmutableMap.of());
+    FullRuleKey ruleKey4 = new FullRuleKey("key4", "//:name4", "DEFAULT", ImmutableMap.of());
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+      logger.write(ruleKey1);
+      logger.write(ruleKey2);
+      logger.write(ruleKey3);
+      logger.write(ruleKey4);
+    }
+
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
+    ParsedRuleKeyFile parsedFile =
+        parser.parseFile(
+            logPath,
+            ImmutableSet.of("//src/...", "//test:", "//non_existent:", "//non_existent2/..."));
+
+    Assert.assertEquals(2, parsedFile.rootNodes.size());
+    Assert.assertEquals("key1", parsedFile.rootNodes.get("//src:name1").ruleKey.key);
+    Assert.assertEquals("key2", parsedFile.rootNodes.get("//test:name2").ruleKey.key);
+    Assert.assertEquals(logPath, parsedFile.filename);
+    Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
+    Assert.assertEquals(4, parsedFile.rules.size());
+    Assert.assertEquals(ruleKey1, parsedFile.rules.get("key1").ruleKey);
+    Assert.assertEquals(ruleKey2, parsedFile.rules.get("key2").ruleKey);
+    Assert.assertEquals(ruleKey3, parsedFile.rules.get("key3").ruleKey);
+    Assert.assertEquals(ruleKey4, parsedFile.rules.get("key4").ruleKey);
+  }
 }

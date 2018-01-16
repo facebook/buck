@@ -18,13 +18,13 @@ package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /** A class that can parse out length prefixed, thrift compact encoded rule keys. */
 public class RuleKeyFileParser {
@@ -94,6 +94,22 @@ public class RuleKeyFileParser {
    */
   public ParsedRuleKeyFile parseFile(Path filename, ImmutableSet<String> targetNames)
       throws ParseException {
+    // If //foo/bar/... is passed in, we want to find all targets that start with
+    // //foo/bar, and that are of the right type, and add them as root nodes
+    ImmutableList<String> recursiveTargetPrefixes =
+        targetNames
+            .stream()
+            .filter(name -> name.endsWith("/...") || name.endsWith(":"))
+            .map(
+                name -> {
+                  int idx = name.lastIndexOf("/...");
+                  if (idx != -1) {
+                    return name.substring(0, idx);
+                  } else {
+                    return name;
+                  }
+                })
+            .collect(ImmutableList.toImmutableList());
     long startNanos = System.nanoTime();
     int initialSize;
     try {
@@ -105,16 +121,23 @@ public class RuleKeyFileParser {
 
     final ImmutableMap.Builder<String, RuleKeyNode> rootNodesBuilder = ImmutableMap.builder();
     final Map<String, RuleKeyNode> rules = new HashMap<>();
-    // Made into an array so we can mutate from the inside of the visitor
-    final AtomicReference<RuleKeyNode> rootNode = new AtomicReference<>(null);
 
     try {
       reader.readFile(
           filename,
           ruleKey -> {
             RuleKeyNode newNode = new RuleKeyNode(ruleKey);
-            if ("DEFAULT".equals(ruleKey.type) && targetNames.contains(ruleKey.name)) {
-              rootNodesBuilder.put(ruleKey.name, newNode);
+            if ("DEFAULT".equals(ruleKey.type)) {
+              // If either a specific rule is present, or if the target starts with one of the
+              // prefixes
+              if (targetNames.contains(ruleKey.name)
+                  || recursiveTargetPrefixes
+                      .stream()
+                      .filter(prefix -> ruleKey.name.startsWith(prefix))
+                      .findFirst()
+                      .isPresent()) {
+                rootNodesBuilder.put(ruleKey.name, newNode);
+              }
             }
             RuleKeyNode oldValue = rules.put(ruleKey.key, newNode);
             if (oldValue != null && !oldValue.ruleKey.equals(newNode.ruleKey)) {
@@ -137,7 +160,9 @@ public class RuleKeyFileParser {
 
     ImmutableMap<String, RuleKeyNode> rootNodes = rootNodesBuilder.build();
     for (String targetName : targetNames) {
-      if (!rootNodes.containsKey(targetName)) {
+      if (!targetName.endsWith("/...")
+          && !targetName.endsWith(":")
+          && !rootNodes.containsKey(targetName)) {
         throw new ParseException(filename, "Could not find %s in %s", targetName, filename);
       }
     }
