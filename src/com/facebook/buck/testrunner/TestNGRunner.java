@@ -105,8 +105,6 @@ public final class TestNGRunner extends BaseRunner {
     return hasAtLeastOneTestMethod;
   }
 
-  }
-
   public class FilteringAnnotationTransformer implements IAnnotationTransformer {
     final List<TestResult> results;
 
