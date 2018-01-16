@@ -453,8 +453,11 @@ public class QueryCommand extends AbstractCommand {
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
-    ImmutableSortedMap.Builder<String, SortedMap<String, Object>> attributesBuilder =
-        ImmutableSortedMap.naturalOrder();
+    // use HashMap instead of ImmutableSortedMap.Builder to allow duplicates
+    // TODO(buckteam): figure out if duplicates should actually be allowed. It seems like the only
+    // reason why duplicates may occur is because TargetNode's unflavored name is used as a key,
+    // which may or may not be a good idea
+    Map<String, SortedMap<String, Object>> attributesMap = new HashMap<>();
     for (QueryTarget target : queryResult) {
       if (!(target instanceof QueryBuildTarget)) {
         continue;
@@ -467,7 +470,7 @@ public class QueryCommand extends AbstractCommand {
           continue;
         }
 
-        attributesBuilder.put(toPresentationForm(node), attributes.get());
+        attributesMap.put(toPresentationForm(node), attributes.get());
       } catch (BuildFileParseException e) {
         params
             .getConsole()
@@ -476,7 +479,9 @@ public class QueryCommand extends AbstractCommand {
         continue;
       }
     }
-    return attributesBuilder.build();
+    return ImmutableSortedMap.<String, SortedMap<String, Object>>naturalOrder()
+        .putAll(attributesMap)
+        .build();
   }
 
   private Optional<SortedMap<String, Object>> getAttributes(
