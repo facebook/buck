@@ -43,6 +43,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -77,6 +79,8 @@ public class JarBuildStepsFactory
   @AddToRuleKey private final AbiGenerationMode abiGenerationMode;
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
   @Nullable private final Supplier<SourceOnlyAbiRuleInfo> ruleInfoSupplier;
+
+  private final Map<BuildTarget, SourcePath> sourcePathsToOutput = new HashMap<>();
 
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
@@ -127,9 +131,12 @@ public class JarBuildStepsFactory
 
   @Nullable
   public SourcePath getSourcePathToOutput(BuildTarget buildTarget) {
-    return getOutputJarPath(buildTarget)
-        .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
-        .orElse(null);
+    return sourcePathsToOutput.computeIfAbsent(
+        buildTarget,
+        x ->
+            getOutputJarPath(buildTarget)
+                .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
+                .orElse(null));
   }
 
   @VisibleForTesting
