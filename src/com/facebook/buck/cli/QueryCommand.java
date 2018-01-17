@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static java.util.stream.Collectors.toList;
-
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.Dot;
@@ -324,28 +322,26 @@ public class QueryCommand extends AbstractCommand {
             env.getNodesFromQueryTargets(queryResult)::contains,
             outputFormat);
 
-    // Also sort by name to ensure output is deterministic
-    List<Map.Entry<TargetNode<?, ?>, Integer>> entries =
-        ranks
-            .entrySet()
-            .stream()
-            .sorted(
-                Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getValue)
-                    .thenComparing(
-                        Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getKey)))
-            .collect(toList());
-
     PrintStream stdOut = params.getConsole().getStdOut();
     if (shouldOutputAttributes()) {
       ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
-          extendAttributesWithRankMetadata(params, env, outputFormat, entries);
+          extendAttributesWithRankMetadata(params, env, outputFormat, ranks.entrySet());
       printAttributes(attributesWithRanks, stdOut);
     } else {
-      for (Map.Entry<TargetNode<?, ?>, Integer> entry : entries) {
-        int rank = entry.getValue();
-        String name = toPresentationForm(entry.getKey());
-        stdOut.println(rank + " " + name);
-      }
+      ranks
+          .entrySet()
+          .stream()
+          // sort by rank and target nodes to break ties in order to make output deterministic
+          .sorted(
+              Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getValue)
+                  .thenComparing(
+                      Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getKey)))
+          .forEach(
+              entry -> {
+                int rank = entry.getValue();
+                String name = toPresentationForm(entry.getKey());
+                stdOut.println(rank + " " + name);
+              });
     }
   }
 
@@ -353,7 +349,7 @@ public class QueryCommand extends AbstractCommand {
    * Returns {@code attributes} with included min/max rank metadata into keyed by the result of
    * {@link #toPresentationForm(TargetNode)}
    *
-   * @param rankEntries A list of pairs that map {@link TargetNode}s to their rank value (min or max
+   * @param rankEntries A set of pairs that map {@link TargetNode}s to their rank value (min or max)
    *     depending on {@code outputFormat}.
    */
   private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
@@ -361,7 +357,7 @@ public class QueryCommand extends AbstractCommand {
           CommandRunnerParams params,
           BuckQueryEnvironment env,
           OutputFormat outputFormat,
-          List<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
+          Set<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
     ImmutableMap<String, Integer> rankIndex =
         rankEntries
