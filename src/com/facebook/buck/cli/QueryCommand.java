@@ -352,21 +352,24 @@ public class QueryCommand extends AbstractCommand {
   /**
    * Returns {@code attributes} with included min/max rank metadata into keyed by the result of
    * {@link #toPresentationForm(TargetNode)}
+   *
+   * @param rankEntries A list of pairs that map {@link TargetNode}s to their rank value (min or max
+   *     depending on {@code outputFormat}.
    */
   private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
       extendAttributesWithRankMetadata(
           CommandRunnerParams params,
           BuckQueryEnvironment env,
           OutputFormat outputFormat,
-          List<Entry<TargetNode<?, ?>, Integer>> entries) {
+          List<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
     ImmutableMap<String, Integer> rankIndex =
-        entries
+        rankEntries
             .stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     entry -> toPresentationForm(entry.getKey()), Entry::getValue));
-    return entries
+    return rankEntries
         .stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
