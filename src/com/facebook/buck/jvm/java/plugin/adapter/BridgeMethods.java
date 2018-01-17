@@ -198,7 +198,7 @@ public class BridgeMethods {
 
     private boolean isHiddenInType(ExecutableElement hidden, TypeElement subclass) {
       for (TypeElement type = subclass; type != null; type = MoreElements.getSuperclass(type)) {
-        for (ExecutableElement hider : ElementFilter.methodsIn(type.getEnclosedElements())) {
+        for (ExecutableElement hider : elements.getDeclaredMethods(type, hidden.getSimpleName())) {
           if (elements.hides(hider, hidden)) {
             return true;
           }
