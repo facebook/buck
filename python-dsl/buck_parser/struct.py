@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import with_statement
 
+import copy
 import json
 
 
@@ -48,6 +49,13 @@ class Struct(object):
     def _asdict(self):
         """Converts this struct into dict."""
         return self._get_kwargs()
+
+    def __deepcopy__(self, memodict=None):
+        """Returns a deep copy of this instance."""
+        return Struct(**copy.deepcopy(self._get_kwargs(), memo=memodict or {}))
+
+    def __eq__(self, other):
+        return isinstance(other, Struct) and self._get_kwargs() == other._get_kwargs()
 
 
 def struct(**kwargs):
